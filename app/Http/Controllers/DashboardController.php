@@ -54,6 +54,7 @@ class DashboardController
         $tujuan = Satuan::where('kode', '!=', 'ADMIN')->where('id', '!=', $satuan->id)->orderBy('urutan')->get();
         $defaultDanpus = $tujuan->firstWhere('kode', 'DANPUS');
         $mode = $kode === 'SATLAKDUKTEK' ? 'duktek' : 'standar';
+        $modePimpinan = in_array($kode, ['DANPUS', 'WADAN'], true);
         // Semua satuan dapat menindaklanjuti laporan yang ditujukan kepadanya.
         // DANPUS/WADAN tetap memakai label status khusus di controller.
         $canReview = true;
@@ -75,9 +76,24 @@ class DashboardController
         $monitoringSatlak = collect(); $laporanSatlak = collect();
         if ($mode === 'duktek') {
             $satlakIds = Satuan::whereIn('kode', ['SATLAKKAL','SATLAKSISOS','SATLAKDAK'])->pluck('id');
-            $laporanSatlak = Laporan::with('satuan')->whereIn('satuan_id', $satlakIds)->latest()->get();
+            $laporanSatlak = Laporan::with(['satuan','tujuanSatuan'])->whereIn('satuan_id', $satlakIds)->latest()->get();
             $monitoringSatlak = Satuan::whereIn('kode', ['SATLAKKAL','SATLAKSISOS','SATLAKDAK'])->orderBy('urutan')->get()->map(fn ($satlak) => ['nama' => $satlak->nama, 'total' => $laporanSatlak->where('satuan_id',$satlak->id)->count()]);
         }
-        return view('siberad.dashboards.laporan-role', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanMasuk','laporanSatlak','monitoringSatlak','mode','canReview','canSend','description') + ['defaultTujuanId' => $defaultDanpus?->id, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'menunggu' => $laporanTerkirim->where('status','Menunggu')->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'masuk' => $laporanMasuk->count()]]);
+        $monitoringPimpinanSatlak = collect();
+        $laporanPimpinanSatlak = collect();
+        if ($modePimpinan) {
+            $satlakIds = Satuan::where('kategori', Satuan::KATEGORI_SATLAK)->pluck('id');
+            $laporanPimpinanSatlak = Laporan::with(['satuan','tujuanSatuan'])->whereIn('satuan_id', $satlakIds)->latest()->get();
+            $monitoringPimpinanSatlak = Satuan::whereIn('id', $satlakIds)->orderBy('urutan')->get()->map(fn ($satlak) => [
+                'id' => $satlak->id,
+                'kode' => $satlak->kode,
+                'nama' => $satlak->nama,
+                'total' => $laporanPimpinanSatlak->where('satuan_id', $satlak->id)->count(),
+                'menunggu' => $laporanPimpinanSatlak->where('satuan_id', $satlak->id)->where('status', 'Menunggu')->count(),
+                'diterima' => $laporanPimpinanSatlak->where('satuan_id', $satlak->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count(),
+                'ditolak' => $laporanPimpinanSatlak->where('satuan_id', $satlak->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count(),
+            ]);
+        }
+        return view('siberad.dashboards.laporan-role', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanMasuk','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description') + ['defaultTujuanId' => $defaultDanpus?->id, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'menunggu' => $laporanTerkirim->where('status','Menunggu')->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'masuk' => $laporanMasuk->count()]]);
     }
 }
