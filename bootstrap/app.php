@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\InjectDashboardUi;
 use App\Http\Middleware\RemoveDecorativeSeparators;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
         $middleware->append(RemoveDecorativeSeparators::class);
+        $middleware->append(InjectDashboardUi::class);
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
