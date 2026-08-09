@@ -1,15 +1,14 @@
 <style>
   /*
-   * Submenu Danpus:
-   * - tanpa bullet/titik
-   * - ukuran teks sama dengan menu induk
-   * - awal teks submenu sejajar dengan awal teks menu induk
-   * - jarak vertikal dibuat konsisten dan tidak terlalu renggang
+   * Submenu Danpus dibuat polos dan mengikuti alignment menu utama.
    * Menu utama tidak disentuh.
    */
   .side-nav-group .side-dropdown-menu {
-    padding-top: 4px !important;
-    padding-bottom: 4px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .side-nav-group .side-sub-link {
@@ -17,11 +16,12 @@
     align-items: center !important;
     gap: 0 !important;
     margin: 0 !important;
-    padding: 8px 0 8px 29px !important;
-    min-height: 40px !important;
+    padding: 4px 0 4px 18px !important;
+    min-height: 38px !important;
     box-sizing: border-box !important;
-    font-size: inherit !important;
-    line-height: 1.35 !important;
+    font-size: 17px !important;
+    line-height: 1.25 !important;
+    font-weight: 500 !important;
   }
 
   .side-nav-group .side-sub-link .sub-dot {
