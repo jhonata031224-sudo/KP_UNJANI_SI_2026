@@ -1,22 +1,18 @@
 <style>
   /*
-   * KHUSUS SIDEBAR DANPUS.
-   * Ukuran font menu dan submenu dibuat konsisten dan proporsional.
-   * Posisi, titik submenu, dan menu utama tidak diubah selain ukuran font.
+   * KHUSUS SIDEBAR DANPUS/PIMPINAN.
+   * Menu utama (Dashboard Pimpinan), judul grup (Pantauan Aktivitas
+   * Satlak, Pelaporan), dan submenu (SATLAKKAL dst, Laporan Masuk,
+   * Riwayat/Status Laporan) sudah sama-sama font-size:13.5px dan
+   * font-weight:500 lewat style dasarnya masing-masing. Jangan
+   * menambahkan override font-size di sini lagi -- itulah yang
+   * sebelumnya membuat submenu tampak lebih besar dari menu utama.
    */
   .side-nav-group .side-dropdown-menu {
     padding: 2px 0 !important;
     margin: 0 !important;
   }
 
-  /* Menu utama Danpus: Dashboard, Pantauan, dan Pelaporan. */
-  .side-nav-group .side-link,
-  .side-nav-group .side-dropdown-toggle {
-    font-size: 16px !important;
-    line-height: 22px !important;
-  }
-
-  /* Submenu Danpus dibuat sedikit lebih kecil agar hierarki terlihat jelas. */
   .side-nav-group .side-sub-link {
     display: flex !important;
     align-items: center !important;
@@ -26,9 +22,6 @@
     min-height: 36px !important;
     height: 36px !important;
     box-sizing: border-box !important;
-    font-size: 15px !important;
-    font-weight: 500 !important;
-    line-height: 22px !important;
   }
 
   /* Submenu Danpus harus polos tanpa simbol titik. */
