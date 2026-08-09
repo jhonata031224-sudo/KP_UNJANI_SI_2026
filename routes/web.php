@@ -31,25 +31,18 @@ use App\Models\Satuan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    // Satuan dikelompokkan per kategori untuk ditampilkan di dropdown login.
     $satuans = Satuan::orderBy('urutan')->get()->groupBy('kategori');
-
     return view('siberad.landing.welcome', [
         'satuans' => $satuans,
         'pengaturan' => Pengaturan::current(),
     ]);
 });
 
-// Form login berada di landing page (modal), bukan halaman tersendiri.
-// Route GET ini mencegah error 405 kalau ada yang membuka /login langsung
-// atau saat middleware auth mengarahkan pengguna yang belum login ke sini.
 Route::get('/login', function () {
     return redirect('/');
 });
 
-// Gambar captcha untuk form login — di-generate ulang tiap kali diminta.
 Route::get('/captcha/image', [CaptchaController::class, 'image'])->name('captcha.image');
-
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('login');
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
@@ -57,73 +50,57 @@ Route::get('/dashboard', DashboardController::class)
     ->middleware('auth')
     ->name('dashboard');
 
-// Kirim laporan dari satuan pengirim (mis. Satuan Pelaksanaan Dukungan Teknologi) ke DANPUS,
-// sekaligus memicu notifikasi database ke seluruh akun DANPUS.
 Route::post('/laporan', [LaporanController::class, 'store'])
     ->middleware('auth')
     ->name('laporan.store');
 
-// Hapus laporan dari riwayat — hanya satuan tujuan (mis. DANPUS) yang boleh
-// menghapus laporan yang ditujukan kepadanya (dicek di controller).
+Route::patch('/laporan/{laporan}/status', [LaporanController::class, 'updateStatus'])
+    ->middleware('auth')
+    ->name('laporan.status');
+
 Route::delete('/laporan/{laporan}', [LaporanController::class, 'destroy'])
     ->middleware('auth')
     ->name('laporan.destroy');
 
 // ===== Laporan Publikasi ke DANPUS (Satuan Pelaksanaan Siber Sosial) =====
-// Dipakai fitur Buat Laporan Publikasi, Draft, Kirim ke DANPUS, Upload
-// Dokumentasi, dan Hapus Draft pada dashboard Satuan Pelaksanaan Siber Sosial.
 Route::post('/laporan-publikasi', [LaporanPublikasiController::class, 'store'])
     ->middleware('auth')
     ->name('laporan-publikasi.store');
-
 Route::patch('/laporan-publikasi/{laporanPublikasi}', [LaporanPublikasiController::class, 'update'])
     ->middleware('auth')
     ->name('laporan-publikasi.update');
-
 Route::post('/laporan-publikasi/{laporanPublikasi}/kirim', [LaporanPublikasiController::class, 'kirim'])
     ->middleware('auth')
     ->name('laporan-publikasi.kirim');
-
 Route::post('/laporan-publikasi/{laporanPublikasi}/dokumentasi', [LaporanPublikasiController::class, 'uploadDokumentasi'])
     ->middleware('auth')
     ->name('laporan-publikasi.upload-dokumentasi');
-
 Route::delete('/laporan-publikasi-dokumen/{dokumen}', [LaporanPublikasiController::class, 'destroyDokumentasi'])
     ->middleware('auth')
     ->name('laporan-publikasi-dokumen.destroy');
-
 Route::delete('/laporan-publikasi/{laporanPublikasi}', [LaporanPublikasiController::class, 'destroy'])
     ->middleware('auth')
     ->name('laporan-publikasi.destroy');
 
-// ===== Laporan Monitoring & Recovery ke DANPUS (Satuan Pelaksanaan Penangkalan) =====
-// Dipakai fitur Buat Laporan Monitoring & Recovery, Draft, Kirim/Kirim Ulang
-// (setelah Direvisi), Upload Lampiran, dan Hapus Draft pada dashboard Satuan Pelaksanaan Penangkalan.
+// ===== Laporan Monitoring & Recovery ke DANPUS =====
 Route::post('/laporan-monitoring', [LaporanMonitoringController::class, 'store'])
     ->middleware('auth')
     ->name('laporan-monitoring.store');
-
 Route::patch('/laporan-monitoring/{laporanMonitoring}', [LaporanMonitoringController::class, 'update'])
     ->middleware('auth')
     ->name('laporan-monitoring.update');
-
 Route::post('/laporan-monitoring/{laporanMonitoring}/kirim', [LaporanMonitoringController::class, 'kirim'])
     ->middleware('auth')
     ->name('laporan-monitoring.kirim');
-
 Route::post('/laporan-monitoring/{laporanMonitoring}/lampiran', [LaporanMonitoringController::class, 'uploadLampiran'])
     ->middleware('auth')
     ->name('laporan-monitoring.upload-lampiran');
-
 Route::delete('/laporan-monitoring-lampiran/{lampiran}', [LaporanMonitoringController::class, 'destroyLampiran'])
     ->middleware('auth')
     ->name('laporan-monitoring-lampiran.destroy');
-
 Route::delete('/laporan-monitoring/{laporanMonitoring}', [LaporanMonitoringController::class, 'destroy'])
     ->middleware('auth')
     ->name('laporan-monitoring.destroy');
-
-// Aksi DANPUS: Setujui / Tolak / Minta Revisi laporan monitoring dari Satuan Pelaksanaan Penangkalan.
 Route::patch('/laporan-monitoring/{laporanMonitoring}/status', [DanpusLaporanMonitoringController::class, 'updateStatus'])
     ->middleware('auth')
     ->name('laporan-monitoring.update-status');
@@ -133,170 +110,59 @@ Route::post('/notifikasi/baca-semua', [NotifikasiController::class, 'bacaSemua']
     ->name('notifikasi.baca-semua');
 
 // ===== Manajemen Akun Media Sosial =====
-// Akun resmi yang dikelola satuan (mis. Instagram resmi Satuan Pelaksanaan Siber Sosial),
-// dipakai fitur "Manajemen Akun Media Sosial".
-Route::post('/akun-medsos', [AkunMedsosController::class, 'store'])
-    ->middleware('auth')
-    ->name('akun-medsos.store');
-
-Route::patch('/akun-medsos/{akunMedsos}', [AkunMedsosController::class, 'update'])
-    ->middleware('auth')
-    ->name('akun-medsos.update');
-
-Route::delete('/akun-medsos/{akunMedsos}', [AkunMedsosController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('akun-medsos.destroy');
+Route::post('/akun-medsos', [AkunMedsosController::class, 'store'])->middleware('auth')->name('akun-medsos.store');
+Route::patch('/akun-medsos/{akunMedsos}', [AkunMedsosController::class, 'update'])->middleware('auth')->name('akun-medsos.update');
+Route::delete('/akun-medsos/{akunMedsos}', [AkunMedsosController::class, 'destroy'])->middleware('auth')->name('akun-medsos.destroy');
 
 // ===== Postingan Media Sosial =====
-// Mencakup fitur "Membuat Posting", "Menjadwalkan Posting", "Kalender
-// Konten", "Upload Foto/Video", "Monitoring Engagement", "Statistik
-// Performa", dan "Arsip Seluruh Posting".
-Route::post('/posting', [PostinganController::class, 'store'])
-    ->middleware('auth')
-    ->name('posting.store');
-
-Route::post('/posting/{posting}/terbitkan', [PostinganController::class, 'terbitkan'])
-    ->middleware('auth')
-    ->name('posting.terbitkan');
-
-Route::patch('/posting/{posting}/engagement', [PostinganController::class, 'updateEngagement'])
-    ->middleware('auth')
-    ->name('posting.engagement');
-
-Route::delete('/posting/{posting}', [PostinganController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('posting.destroy');
+Route::post('/posting', [PostinganController::class, 'store'])->middleware('auth')->name('posting.store');
+Route::post('/posting/{posting}/terbitkan', [PostinganController::class, 'terbitkan'])->middleware('auth')->name('posting.terbitkan');
+Route::patch('/posting/{posting}/engagement', [PostinganController::class, 'updateEngagement'])->middleware('auth')->name('posting.engagement');
+Route::delete('/posting/{posting}', [PostinganController::class, 'destroy'])->middleware('auth')->name('posting.destroy');
 
 // ===== Satuan Pelaksanaan Dukungan Teknologi =====
-// Mencakup fitur "Riset & Pengembangan" (CRUD proyek riset), "Log Uji &
-// Pengembangan", dan "Log Dukungan Teknis" ke Satuan Pelaksanaan Penangkalan,
-// Siber Sosial, dan Penindakan.
-Route::post('/proyek-riset', [ProyekRisetController::class, 'store'])
-    ->middleware('auth')
-    ->name('proyek-riset.store');
+Route::post('/proyek-riset', [ProyekRisetController::class, 'store'])->middleware('auth')->name('proyek-riset.store');
+Route::patch('/proyek-riset/{proyekRiset}', [ProyekRisetController::class, 'update'])->middleware('auth')->name('proyek-riset.update');
+Route::delete('/proyek-riset/{proyekRiset}', [ProyekRisetController::class, 'destroy'])->middleware('auth')->name('proyek-riset.destroy');
+Route::post('/log-uji', [LogUjiPengembanganController::class, 'store'])->middleware('auth')->name('log-uji.store');
+Route::delete('/log-uji/{logUjiPengembangan}', [LogUjiPengembanganController::class, 'destroy'])->middleware('auth')->name('log-uji.destroy');
+Route::post('/dukungan-teknis', [DukunganTeknisController::class, 'store'])->middleware('auth')->name('dukungan-teknis.store');
+Route::delete('/dukungan-teknis/{dukunganTeknisLog}', [DukunganTeknisController::class, 'destroy'])->middleware('auth')->name('dukungan-teknis.destroy');
 
-Route::patch('/proyek-riset/{proyekRiset}', [ProyekRisetController::class, 'update'])
-    ->middleware('auth')
-    ->name('proyek-riset.update');
+// ===== Administrasi Personel =====
+Route::post('/personel', [PersonelController::class, 'store'])->middleware('auth')->name('personel.store');
+Route::patch('/personel/{personel}', [PersonelController::class, 'update'])->middleware('auth')->name('personel.update');
+Route::delete('/personel/{personel}', [PersonelController::class, 'destroy'])->middleware('auth')->name('personel.destroy');
+Route::post('/pangkat', [PangkatController::class, 'store'])->middleware('auth')->name('pangkat.store');
+Route::patch('/pangkat/{pangkat}', [PangkatController::class, 'update'])->middleware('auth')->name('pangkat.update');
+Route::delete('/pangkat/{pangkat}', [PangkatController::class, 'destroy'])->middleware('auth')->name('pangkat.destroy');
+Route::post('/jabatan', [JabatanController::class, 'store'])->middleware('auth')->name('jabatan.store');
+Route::patch('/jabatan/{jabatan}', [JabatanController::class, 'update'])->middleware('auth')->name('jabatan.update');
+Route::delete('/jabatan/{jabatan}', [JabatanController::class, 'destroy'])->middleware('auth')->name('jabatan.destroy');
+Route::post('/personel-mutasi', [PersonelMutasiController::class, 'store'])->middleware('auth')->name('personel-mutasi.store');
+Route::patch('/personel-mutasi/{mutasi}', [PersonelMutasiController::class, 'update'])->middleware('auth')->name('personel-mutasi.update');
+Route::delete('/personel-mutasi/{mutasi}', [PersonelMutasiController::class, 'destroy'])->middleware('auth')->name('personel-mutasi.destroy');
+Route::post('/personel-dokumen', [PersonelDokumenController::class, 'store'])->middleware('auth')->name('personel-dokumen.store');
+Route::delete('/personel-dokumen/{dokumen}', [PersonelDokumenController::class, 'destroy'])->middleware('auth')->name('personel-dokumen.destroy');
 
-Route::delete('/proyek-riset/{proyekRiset}', [ProyekRisetController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('proyek-riset.destroy');
-
-Route::post('/log-uji', [LogUjiPengembanganController::class, 'store'])
-    ->middleware('auth')
-    ->name('log-uji.store');
-
-Route::delete('/log-uji/{logUjiPengembangan}', [LogUjiPengembanganController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('log-uji.destroy');
-
-Route::post('/dukungan-teknis', [DukunganTeknisController::class, 'store'])
-    ->middleware('auth')
-    ->name('dukungan-teknis.store');
-
-Route::delete('/dukungan-teknis/{dukunganTeknisLog}', [DukunganTeknisController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('dukungan-teknis.destroy');
-
-// ===== Administrasi Personel (Binfung) =====
-// Mencakup fitur "Data Personel", "Tambah/Edit Personel", "Mutasi",
-// "Pangkat", "Jabatan", "Satuan" (referensi), "Upload Dokumen", dan
-// "Riwayat" pada dashboard Binfung.
-Route::post('/personel', [PersonelController::class, 'store'])
-    ->middleware('auth')
-    ->name('personel.store');
-
-Route::patch('/personel/{personel}', [PersonelController::class, 'update'])
-    ->middleware('auth')
-    ->name('personel.update');
-
-Route::delete('/personel/{personel}', [PersonelController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('personel.destroy');
-
-Route::post('/pangkat', [PangkatController::class, 'store'])
-    ->middleware('auth')
-    ->name('pangkat.store');
-
-Route::patch('/pangkat/{pangkat}', [PangkatController::class, 'update'])
-    ->middleware('auth')
-    ->name('pangkat.update');
-
-Route::delete('/pangkat/{pangkat}', [PangkatController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('pangkat.destroy');
-
-Route::post('/jabatan', [JabatanController::class, 'store'])
-    ->middleware('auth')
-    ->name('jabatan.store');
-
-Route::patch('/jabatan/{jabatan}', [JabatanController::class, 'update'])
-    ->middleware('auth')
-    ->name('jabatan.update');
-
-Route::delete('/jabatan/{jabatan}', [JabatanController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('jabatan.destroy');
-
-Route::post('/personel-mutasi', [PersonelMutasiController::class, 'store'])
-    ->middleware('auth')
-    ->name('personel-mutasi.store');
-
-Route::patch('/personel-mutasi/{mutasi}', [PersonelMutasiController::class, 'update'])
-    ->middleware('auth')
-    ->name('personel-mutasi.update');
-
-Route::delete('/personel-mutasi/{mutasi}', [PersonelMutasiController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('personel-mutasi.destroy');
-
-Route::post('/personel-dokumen', [PersonelDokumenController::class, 'store'])
-    ->middleware('auth')
-    ->name('personel-dokumen.store');
-
-Route::delete('/personel-dokumen/{dokumen}', [PersonelDokumenController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('personel-dokumen.destroy');
-
-// ===== Kelola Sistem (Admin) =====
-// Seluruh route di sini khusus untuk akun bersatuan ADMIN, ditegakkan oleh
-// middleware 'admin'. Mencakup CRUD Pengguna, CRUD Satlak, Role & Hak
-// Akses, Pengaturan Sistem, Backup Database, dan Laporan Pengguna &
-// Aktivitas (Export PDF/Excel) — fitur-fitur pada Dashboard Admin.
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Manajemen Pengguna (CRUD User)
     Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
     Route::patch('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
     Route::post('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('users.reset-password');
-
-    // Manajemen Satlak
     Route::post('/satuan', [SatuanController::class, 'store'])->name('satuan.store');
     Route::patch('/satuan/{satuan}', [SatuanController::class, 'update'])->name('satuan.update');
     Route::delete('/satuan/{satuan}', [SatuanController::class, 'destroy'])->name('satuan.destroy');
-
-    // Manajemen Role & Hak Akses
     Route::patch('/satuan/{satuan}/permissions', [PermissionController::class, 'update'])->name('satuan.permissions');
-
-    // Pengaturan Konten Landing Page (Beranda, Fitur, Tentang, Kontak)
     Route::patch('/pengaturan/landing', [SettingController::class, 'updateLanding'])->name('pengaturan.landing.update');
-
-    // Backup Database (opsional)
     Route::post('/backup', [BackupController::class, 'store'])->name('backup.store');
     Route::get('/backup/{filename}/download', [BackupController::class, 'download'])->name('backup.download');
-
-    // Laporan Pengguna & Aktivitas + Export PDF/Excel
     Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/cetak', [ReportController::class, 'printView'])->name('laporan.cetak');
     Route::get('/laporan/export/pengguna', [ReportController::class, 'exportUsersExcel'])->name('laporan.export-pengguna');
     Route::get('/laporan/export/aktivitas', [ReportController::class, 'exportActivityExcel'])->name('laporan.export-aktivitas');
-
-    // Pengumuman (broadcast ke seluruh satuan, tampil sebagai banner di dashboard)
     Route::post('/pengumuman', [PengumumanController::class, 'store'])->name('pengumuman.store');
     Route::patch('/pengumuman/{pengumuman}/toggle', [PengumumanController::class, 'toggle'])->name('pengumuman.toggle');
     Route::delete('/pengumuman/{pengumuman}', [PengumumanController::class, 'destroy'])->name('pengumuman.destroy');
-
-    // Monitoring Sesi Login Aktif (paksa logout satu perangkat/browser)
     Route::delete('/sessions/{id}', [SessionController::class, 'destroy'])->name('sessions.destroy');
 });
