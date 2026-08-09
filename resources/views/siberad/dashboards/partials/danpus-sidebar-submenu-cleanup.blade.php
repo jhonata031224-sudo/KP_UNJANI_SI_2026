@@ -1,6 +1,6 @@
 <style>
   /*
-   * Submenu Danpus dibuat mengikuti tipografi dan ritme menu utama.
+   * Submenu Danpus dibuat lebih kecil dan tetap konsisten.
    * Hanya submenu yang diatur; menu utama tidak disentuh.
    */
   .side-nav-group .side-dropdown-menu {
@@ -17,9 +17,9 @@
     min-height: 36px !important;
     height: 36px !important;
     box-sizing: border-box !important;
-    font-size: 17px !important;
+    font-size: 15px !important;
     font-weight: 500 !important;
-    line-height: 24px !important;
+    line-height: 22px !important;
   }
 
   .side-nav-group .side-sub-link .sub-dot {
