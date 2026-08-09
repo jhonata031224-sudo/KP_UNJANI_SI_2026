@@ -55,13 +55,14 @@ class LaporanController extends Controller
     }
 
     /**
-     * Review dilakukan oleh satuan penerima agar alur tetap antar-satuan.
-     * Admin tidak menjadi bagian dari alur operasional laporan.
+     * Setiap satuan penerima dapat menindaklanjuti laporan yang masuk.
+     * DANPUS/WADAN tetap menggunakan label status khusus untuk menjaga
+     * alur koordinasi tingkat pimpinan.
      */
     public function updateStatus(Request $request, Laporan $laporan): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => ['required', 'in:Disetujui,Ditolak,Revisi,Disetujui DANPUS,Ditolak DANPUS,Revisi DANPUS,Disetujui WADAN,Ditolak WADAN,Revisi WADAN'],
+            'status' => ['required', 'in:Diterima,Ditolak,Revisi,Disetujui,Disetujui DANPUS,Ditolak DANPUS,Revisi DANPUS,Disetujui WADAN,Ditolak WADAN,Revisi WADAN'],
         ]);
 
         $user = $request->user()->load('satuan');
@@ -70,13 +71,18 @@ class LaporanController extends Controller
         abort_unless((int) $laporan->tujuan_satuan_id === (int) $satuan->id, 403, 'Anda bukan penerima laporan ini.');
 
         $kode = strtoupper((string) $satuan->kode);
-        abort_unless(in_array($kode, ['DANPUS', 'WADAN'], true), 403, 'Akun ini tidak memiliki kewenangan review laporan.');
-
         $aksi = strtolower((string) $validated['status']);
+
         $validated['status'] = match ($kode) {
-            'DANPUS' => str_contains($aksi, 'setuj') ? 'Disetujui DANPUS' : (str_contains($aksi, 'tolak') ? 'Ditolak DANPUS' : 'Revisi DANPUS'),
-            'WADAN' => str_contains($aksi, 'setuj') ? 'Disetujui WADAN' : (str_contains($aksi, 'tolak') ? 'Ditolak WADAN' : 'Revisi WADAN'),
-            default => $validated['status'],
+            'DANPUS' => str_contains($aksi, 'setuj') || str_contains($aksi, 'terima')
+                ? 'Disetujui DANPUS'
+                : (str_contains($aksi, 'tolak') ? 'Ditolak DANPUS' : 'Revisi DANPUS'),
+            'WADAN' => str_contains($aksi, 'setuj') || str_contains($aksi, 'terima')
+                ? 'Disetujui WADAN'
+                : (str_contains($aksi, 'tolak') ? 'Ditolak WADAN' : 'Revisi WADAN'),
+            default => str_contains($aksi, 'terima') || str_contains($aksi, 'setuj')
+                ? 'Diterima'
+                : (str_contains($aksi, 'tolak') ? 'Ditolak' : 'Revisi'),
         };
 
         $laporan->update(['status' => $validated['status']]);
