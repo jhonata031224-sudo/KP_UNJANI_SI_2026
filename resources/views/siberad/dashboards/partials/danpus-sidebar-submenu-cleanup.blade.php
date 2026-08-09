@@ -1,15 +1,7 @@
 <style>
-  /*
-   * KHUSUS SIDEBAR DANPUS/PIMPINAN.
-   * Menu utama (Dashboard Pimpinan), judul grup (Pantauan Aktivitas
-   * Satlak, Pelaporan), dan submenu (SATLAKKAL dst, Laporan Masuk,
-   * Riwayat/Status Laporan) sudah sama-sama font-size:13.5px dan
-   * font-weight:500 lewat style dasarnya masing-masing. Jangan
-   * menambahkan override font-size di sini lagi -- itulah yang
-   * sebelumnya membuat submenu tampak lebih besar dari menu utama.
-   */
+  /* KHUSUS SIDEBAR DANPUS: submenu rapat dan seimbang. */
   .side-nav-group .side-dropdown-menu {
-    padding: 2px 0 !important;
+    padding: 0 !important;
     margin: 0 !important;
   }
 
@@ -17,18 +9,21 @@
     display: flex !important;
     align-items: center !important;
     gap: 0 !important;
-    /* margin:2px 0 menyamai .side-nav-group-title, supaya jarak antar
-       baris submenu persis sama dengan jarak antar baris menu utama. */
-    margin: 2px 0 !important;
-    /* 20px + padding-left .side-subnav (8px) = 28px, menyamai pangkal
-       teks menu utama & judul grup (padding-left 12px + dot 6px + gap 10px). */
-    padding: 4px 0 4px 20px !important;
-    min-height: 36px !important;
-    height: 36px !important;
+    margin: 0 !important;
+    padding: 2px 0 2px 20px !important;
+    min-height: 32px !important;
+    height: 32px !important;
     box-sizing: border-box !important;
   }
 
-  /* Submenu Danpus harus polos tanpa simbol titik. */
+  .side-nav-group .side-dropdown-menu .side-sub-link:first-child {
+    margin-top: 2px !important;
+  }
+
+  .side-nav-group .side-dropdown-menu .side-sub-link + .side-sub-link {
+    margin-top: 0 !important;
+  }
+
   .side-nav-group .side-sub-link .sub-dot,
   .side-nav-group .side-dropdown-menu .side-sub-link::before,
   .side-nav-group .side-dropdown-menu .side-sub-link::after {
@@ -43,7 +38,6 @@
         dot.remove();
       });
     }
-
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', removeDanpusSubmenuDots);
     } else {
