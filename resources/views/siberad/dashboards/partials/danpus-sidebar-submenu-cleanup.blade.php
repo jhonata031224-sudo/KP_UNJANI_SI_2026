@@ -17,7 +17,9 @@
     display: flex !important;
     align-items: center !important;
     gap: 0 !important;
-    margin: 0 !important;
+    /* margin:2px 0 menyamai .side-nav-group-title, supaya jarak antar
+       baris submenu persis sama dengan jarak antar baris menu utama. */
+    margin: 2px 0 !important;
     /* 20px + padding-left .side-subnav (8px) = 28px, menyamai pangkal
        teks menu utama & judul grup (padding-left 12px + dot 6px + gap 10px). */
     padding: 4px 0 4px 20px !important;
