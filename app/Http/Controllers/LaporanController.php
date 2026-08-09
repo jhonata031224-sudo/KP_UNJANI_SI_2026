@@ -63,6 +63,9 @@ class LaporanController extends Controller
     {
         $validated = $request->validate([
             'status' => ['required', 'in:Diterima,Ditolak,Revisi,Disetujui,Disetujui DANPUS,Ditolak DANPUS,Revisi DANPUS,Disetujui WADAN,Ditolak WADAN,Revisi WADAN'],
+            'catatan' => ['nullable', 'string', 'max:5000', 'required_if:status,Ditolak,Ditolak DANPUS,Ditolak WADAN'],
+        ], [
+            'catatan.required_if' => 'Catatan penolakan wajib diisi.',
         ]);
 
         $user = $request->user()->load('satuan');
@@ -73,7 +76,7 @@ class LaporanController extends Controller
         $kode = strtoupper((string) $satuan->kode);
         $aksi = strtolower((string) $validated['status']);
 
-        $validated['status'] = match ($kode) {
+        $statusFinal = match ($kode) {
             'DANPUS' => str_contains($aksi, 'setuj') || str_contains($aksi, 'terima')
                 ? 'Disetujui DANPUS'
                 : (str_contains($aksi, 'tolak') ? 'Ditolak DANPUS' : 'Revisi DANPUS'),
@@ -85,7 +88,12 @@ class LaporanController extends Controller
                 : (str_contains($aksi, 'tolak') ? 'Ditolak' : 'Revisi'),
         };
 
-        $laporan->update(['status' => $validated['status']]);
+        $laporan->update([
+            'status' => $statusFinal,
+            'catatan' => str_contains(strtolower($statusFinal), 'tolak')
+                ? $validated['catatan']
+                : ($validated['catatan'] ?? null),
+        ]);
 
         return back()->with('status', 'Status laporan berhasil diperbarui menjadi '.$laporan->status.'.');
     }
