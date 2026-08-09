@@ -17,7 +17,7 @@
   (function(){
     var style = document.createElement('style');
     style.setAttribute('data-danpus-submenu-fix', 'true');
-    style.textContent = '\n      .side-dropdown-menu,\n      .side-dropdown-menu ul,\n      .side-dropdown-menu li { list-style:none !important; }\n      .side-dropdown-menu *::before,\n      .side-dropdown-menu *::after { content:none !important; display:none !important; }\n      .side-dropdown-menu .side-sublink .dot,\n      .side-dropdown-menu .side-sublink > span:first-child:not(.side-link-label) { display:none !important; }\n      .side-dropdown-menu .side-sublink { padding-left:32px !important; gap:0 !important; }\n    ';
+    style.textContent = '\n      /* Hilangkan seluruh jenis bullet/titik dari SEMUA submenu Danpus. */\n      .side-dropdown-menu,\n      .side-dropdown-menu ul,\n      .side-dropdown-menu ol,\n      .side-dropdown-menu li { list-style:none !important; list-style-type:none !important; }\n      .side-dropdown-menu li::marker { content:"" !important; display:none !important; }\n      .side-dropdown-menu a::before,\n      .side-dropdown-menu a::after,\n      .side-dropdown-menu .side-sublink::before,\n      .side-dropdown-menu .side-sublink::after { content:none !important; display:none !important; }\n      .side-dropdown-menu .dot,\n      .side-dropdown-menu .side-sublink .dot { display:none !important; width:0 !important; min-width:0 !important; margin:0 !important; padding:0 !important; }\n      .side-dropdown-menu .side-sublink { padding-left:32px !important; padding-right:12px !important; gap:0 !important; list-style:none !important; background-image:none !important; }\n    ';
     document.head.appendChild(style);
   })();
 
@@ -26,9 +26,11 @@
     function removeSubmenuBullets(link){
       if (!link) return;
       link.style.setProperty('list-style', 'none', 'important');
+      link.style.setProperty('list-style-type', 'none', 'important');
       link.style.setProperty('background-image', 'none', 'important');
       var dot = link.querySelector('.dot');
       if (dot) dot.remove();
+      // Hapus marker/span dekoratif pertama pada submenu jika memang bukan teks.
       Array.prototype.slice.call(link.children).forEach(function(child){
         if (child.tagName === 'SPAN' && !child.textContent.trim() && !child.classList.contains('side-link-label')) {
           child.remove();
@@ -104,7 +106,7 @@
       nav.appendChild(makeGroup('Pelaporan', [laporan, riwayat]));
 
       // Pastikan submenu tetap bersih walaupun ada script lain yang merender ulang link.
-      nav.querySelectorAll('.side-dropdown-menu .side-sublink').forEach(removeSubmenuBullets);
+      nav.querySelectorAll('.side-dropdown-menu a, .side-dropdown-menu .side-sublink').forEach(removeSubmenuBullets);
 
       function syncGroupState(){
         nav.querySelectorAll('.side-dropdown').forEach(function(group){
@@ -113,6 +115,23 @@
         });
       }
       syncGroupState();
+
+      // Pengaman terakhir: jika script/CSS lain menambahkan kembali bullet,
+      // submenu tetap dipaksa polos tanpa mengubah menu utama.
+      function enforcePlainSubmenus(){
+        nav.querySelectorAll('.side-dropdown-menu a').forEach(function(link){
+          removeSubmenuBullets(link);
+        });
+      }
+      enforcePlainSubmenus();
+      setTimeout(enforcePlainSubmenus, 50);
+      setTimeout(enforcePlainSubmenus, 250);
+      setTimeout(enforcePlainSubmenus, 1000);
+
+      if (window.MutationObserver) {
+        var observer = new MutationObserver(function(){ enforcePlainSubmenus(); });
+        observer.observe(nav, { childList:true, subtree:true });
+      }
     }
 
     if (document.readyState === 'loading') {
