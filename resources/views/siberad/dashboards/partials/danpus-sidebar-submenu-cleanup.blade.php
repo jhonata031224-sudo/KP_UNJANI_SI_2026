@@ -1,14 +1,22 @@
 <style>
   /*
    * KHUSUS SIDEBAR DANPUS.
-   * Submenu dibuat lebih kecil dan pangkal teksnya sejajar dengan
-   * pangkal teks menu utama. Menu utama tidak disentuh.
+   * Ukuran font menu dan submenu dibuat konsisten dan proporsional.
+   * Posisi, titik submenu, dan menu utama tidak diubah selain ukuran font.
    */
   .side-nav-group .side-dropdown-menu {
     padding: 2px 0 !important;
     margin: 0 !important;
   }
 
+  /* Menu utama Danpus: Dashboard, Pantauan, dan Pelaporan. */
+  .side-nav-group .side-link,
+  .side-nav-group .side-dropdown-toggle {
+    font-size: 16px !important;
+    line-height: 22px !important;
+  }
+
+  /* Submenu Danpus dibuat sedikit lebih kecil agar hierarki terlihat jelas. */
   .side-nav-group .side-sub-link {
     display: flex !important;
     align-items: center !important;
