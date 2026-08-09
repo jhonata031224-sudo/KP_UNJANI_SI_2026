@@ -50,7 +50,16 @@ class DashboardController
     {
         abort_unless($satuan, 403, 'Akun belum terhubung ke satuan.');
         $laporanTerkirim = Laporan::with('tujuanSatuan')->where('satuan_id', $satuan->id)->latest()->get();
-        $laporanMasuk = Laporan::with(['satuan','tujuanSatuan'])->where('tujuan_satuan_id', $satuan->id)->latest()->get();
+        // Laporan yang sudah diterima/disetujui atau ditolak tidak lagi tampil di antrean "Laporan Masuk".
+        // Riwayat tetap menyimpan seluruh laporan karena data tidak dihapus dari database.
+        $laporanMasuk = Laporan::with(['satuan','tujuanSatuan'])
+            ->where('tujuan_satuan_id', $satuan->id)
+            ->where(function ($query) {
+                $query->where('status', 'Menunggu')
+                    ->orWhere('status', 'like', 'Revisi%');
+            })
+            ->latest()
+            ->get();
         $tujuan = Satuan::where('kode', '!=', 'ADMIN')->where('id', '!=', $satuan->id)->orderBy('urutan')->get();
         $defaultDanpus = $tujuan->firstWhere('kode', 'DANPUS');
         $mode = $kode === 'SATLAKDUKTEK' ? 'duktek' : 'standar';
