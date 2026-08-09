@@ -17,7 +17,6 @@ class Laporan extends Model
         'proyek',
         'perihal',
         'deskripsi',
-        'catatan',
         'prioritas',
         'lampiran_path',
         'status',
