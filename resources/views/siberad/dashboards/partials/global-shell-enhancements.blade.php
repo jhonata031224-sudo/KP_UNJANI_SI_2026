@@ -151,8 +151,6 @@
       if (form.dataset.globalLogoutBound === '1') return;
       form.dataset.globalLogoutBound = '1';
       form.addEventListener('submit', function (e) {
-        // Hentikan listener lain (termasuk confirm() lama) agar semua dashboard
-        // memakai popup konfirmasi yang sama.
         e.preventDefault();
         e.stopImmediatePropagation();
         openConfirm(form);
@@ -171,9 +169,6 @@
     });
   }
 
-  // laporan-pimpinan lama memiliki listener window.confirm yang dipasang
-  // sebelum lapisan ini. Untuk pesan logout lama, biarkan listener tersebut
-  // lolos dan kemudian lapisan global mengambil alih submit dengan popup.
   var originalConfirm = window.confirm;
   window.confirm = function (message) {
     if (message === 'Keluar dari akun SIBERAD?') return true;
@@ -182,5 +177,173 @@
 
   initNotifications();
   initLogoutConfirm();
+
+  // =========================================================
+  // GLOBAL LAPORAN: aksi hanya dari detail + form catatan penolakan
+  // =========================================================
+  (function initReportActions() {
+    var isDanpus = !!document.querySelector('.pimp-hero h1') &&
+      /Komandan Pusat/i.test(document.querySelector('.pimp-hero h1').textContent || '');
+
+    function injectStyles() {
+      if (document.getElementById('globalReportActionStyles')) return;
+      var style = document.createElement('style');
+      style.id = 'globalReportActionStyles';
+      style.textContent = `
+        .review-actions form, .action-row form { display:none !important; }
+        #detailActions, #reportDetailModal .modal-actions { align-items:center; }
+        #detailActions form, #reportDetailModal .modal-actions form { display:inline-flex !important; margin:0 0 0 8px; }
+        #detailActions .approve, #reportDetailModal .modal-actions .approve { border-color:var(--green)!important; color:var(--green)!important; }
+        #detailActions .revise, #reportDetailModal .modal-actions .revise { border-color:var(--amber)!important; color:var(--amber)!important; }
+        #detailActions .reject, #reportDetailModal .modal-actions .reject { border-color:var(--red)!important; color:var(--red)!important; }
+        .report-reject-overlay { position:fixed; inset:0; z-index:1200; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(0,0,0,.55); }
+        .report-reject-overlay.open { display:flex; }
+        .report-reject-card { width:min(560px,100%); background:var(--panel,#fff); color:var(--text,#17212b); border:1px solid var(--border-soft,#ddd); border-radius:14px; padding:22px; box-shadow:0 25px 70px rgba(0,0,0,.25); }
+        .report-reject-card h3 { margin:0 0 6px; font-family:var(--display); font-size:19px; }
+        .report-reject-card p { margin:0 0 16px; font-size:12px; color:var(--text-muted); line-height:1.6; }
+        .report-reject-card label { display:block; font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:7px; }
+        .report-reject-card textarea { width:100%; min-height:130px; box-sizing:border-box; resize:vertical; padding:10px 11px; border:1px solid var(--border); border-radius:8px; background:var(--panel-alt); color:var(--text); font:inherit; font-size:13px; }
+        .report-reject-card .reject-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+        .report-reject-card .reject-actions button { border:1px solid var(--border); border-radius:8px; padding:8px 13px; background:var(--panel-alt); color:var(--text); cursor:pointer; }
+        .report-reject-card .reject-actions .confirm-reject { border-color:var(--red); color:var(--red); }
+        .report-detail-note { margin-right:auto; font-size:11px; color:var(--text-muted); }
+        .report-rejection-note { border-color:rgba(198,40,40,.3)!important; background:rgba(181,52,47,.08)!important; }
+      `;
+      document.head.appendChild(style);
+    }
+
+    function ensureRejectModal() {
+      var existing = document.getElementById('reportRejectOverlay');
+      if (existing) return existing;
+      var overlay = document.createElement('div');
+      overlay.className = 'report-reject-overlay';
+      overlay.id = 'reportRejectOverlay';
+      overlay.innerHTML = '<div class="report-reject-card" role="dialog" aria-modal="true" aria-labelledby="reportRejectTitle">' +
+        '<h3 id="reportRejectTitle">Catatan Penolakan</h3>' +
+        '<p>Berikan catatan atau keterangan alasan laporan ditolak. Catatan ini wajib diisi dan akan tersimpan bersama status laporan.</p>' +
+        '<form id="reportRejectForm" method="POST">' +
+        '<input type="hidden" name="_token" value="{{ csrf_token() }}">' +
+        '<input type="hidden" name="_method" value="PATCH">' +
+        '<input type="hidden" name="status" value="Ditolak">' +
+        '<label for="reportRejectNote">Catatan / Keterangan <span style="color:var(--red)">*</span></label>' +
+        '<textarea id="reportRejectNote" name="catatan" required maxlength="5000" placeholder="Tuliskan alasan atau keterangan penolakan..."></textarea>' +
+        '<div class="reject-actions"><button type="button" id="cancelReportReject">Batal</button><button type="submit" class="confirm-reject">Tolak Laporan</button></div>' +
+        '</form></div>';
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', function(e){ if(e.target === overlay) closeRejectModal(); });
+      document.getElementById('cancelReportReject')?.addEventListener('click', closeRejectModal);
+      document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.classList.contains('open')) closeRejectModal(); });
+      return overlay;
+    }
+
+    function closeRejectModal() {
+      var overlay = document.getElementById('reportRejectOverlay');
+      if (!overlay) return;
+      overlay.classList.remove('open');
+      var form = document.getElementById('reportRejectForm');
+      if (form) form.reset();
+    }
+
+    function openRejectModal(sourceForm) {
+      var overlay = ensureRejectModal();
+      var form = document.getElementById('reportRejectForm');
+      if (!form) return;
+      form.action = sourceForm.getAttribute('action') || '';
+      var sourceStatus = sourceForm.querySelector('input[name="status"]');
+      var targetStatus = form.querySelector('input[name="status"]');
+      if (targetStatus) targetStatus.value = sourceStatus?.value || 'Ditolak';
+      var note = document.getElementById('reportRejectNote');
+      if (note) note.value = '';
+      overlay.classList.add('open');
+      setTimeout(function(){ note?.focus(); }, 50);
+    }
+
+    function getActionsContainer() {
+      var actions = document.getElementById('detailActions');
+      if (actions) return actions;
+      var modal = document.getElementById('reportDetailModal');
+      if (!modal) return null;
+      actions = modal.querySelector('.modal-actions');
+      if (!actions) {
+        actions = document.createElement('div');
+        actions.className = 'modal-actions';
+        modal.querySelector('.report-modal-card')?.appendChild(actions);
+      }
+      return actions;
+    }
+
+    function populateDetailActions(detailButton) {
+      var actions = getActionsContainer();
+      if (!actions) return;
+      var container = detailButton.closest('.review-actions, .action-row');
+      var forms = container ? Array.prototype.slice.call(container.querySelectorAll('form')) : [];
+      actions.innerHTML = '';
+
+      if (!forms.length || detailButton.dataset.readonly === '1') {
+        var readonly = document.createElement('span');
+        readonly.className = 'report-detail-note';
+        readonly.textContent = detailButton.dataset.readonly === '1'
+          ? 'Mode pemantauan — detail ini hanya untuk melihat aktivitas laporan.'
+          : 'Tidak ada tindakan yang tersedia untuk laporan ini.';
+        actions.appendChild(readonly);
+        return;
+      }
+
+      var note = document.createElement('span');
+      note.className = 'report-detail-note';
+      note.textContent = 'Tindak lanjuti laporan dari detail ini.';
+      actions.appendChild(note);
+
+      forms.forEach(function(originalForm){
+        var statusInput = originalForm.querySelector('input[name="status"]');
+        var status = statusInput ? String(statusInput.value || '').toLowerCase() : '';
+        var isReject = status.indexOf('tolak') !== -1;
+        var isRevise = status.indexOf('revisi') !== -1;
+        if (isDanpus && isRevise) return;
+
+        if (isReject) {
+          var rejectButton = document.createElement('button');
+          rejectButton.type = 'button';
+          rejectButton.className = 'reject';
+          rejectButton.textContent = 'Tolak';
+          rejectButton.addEventListener('click', function(){ openRejectModal(originalForm); });
+          actions.appendChild(rejectButton);
+          return;
+        }
+
+        var clone = originalForm.cloneNode(true);
+        clone.style.display = 'inline-flex';
+        var button = clone.querySelector('button[type="submit"]');
+        if (button) {
+          button.classList.remove('approve','revise','reject');
+          if (status.indexOf('diterima') !== -1 || status.indexOf('setujui') !== -1 || status.indexOf('setuj') !== -1) button.classList.add('approve');
+          else if (isRevise) button.classList.add('revise');
+        }
+        actions.appendChild(clone);
+      });
+    }
+
+    function renameStatusMenu() {
+      document.querySelectorAll('.side-sub-link').forEach(function(link){
+        if (link.textContent.trim() === 'Status Laporan') link.textContent = 'Riwayat Laporan';
+      });
+      document.querySelectorAll('h2').forEach(function(h){
+        if (h.textContent.trim() === 'Status Laporan') h.textContent = 'Riwayat Laporan';
+      });
+    }
+
+    injectStyles();
+    renameStatusMenu();
+
+    document.querySelectorAll('.review-actions form, .action-row form').forEach(function(form){
+      form.style.display = 'none';
+    });
+
+    document.addEventListener('click', function(e){
+      var detailButton = e.target.closest('.review-actions .detail-btn, .action-row .detail-btn');
+      if (!detailButton) return;
+      setTimeout(function(){ populateDetailActions(detailButton); }, 0);
+    });
+  })();
 })();
 </script>
