@@ -94,12 +94,11 @@
       <div class="side-dropdown" id="laporanDropdown">
         <button type="button" class="side-link side-dropdown-toggle" id="laporanToggle" aria-expanded="false" aria-controls="laporanSubmenu">
           <span class="dot"></span>
-          <span class="side-link-label">Laporan Kegiatan</span>
+          <span class="side-link-label">Laporan</span>
           <svg class="side-dropdown-arrow" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
         </button>
         <div class="side-dropdown-menu" id="laporanSubmenu">
-          <a href="#" class="side-link side-sublink" data-tab-link="tambah-laporan">Buat Laporan</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="draft-laporan">Draft Laporan</a>
+          <a href="#" class="side-link side-sublink" data-tab-link="tambah-laporan">Tambah Laporan</a>
           <a href="#" class="side-link side-sublink" data-tab-link="status-laporan">Status Laporan</a>
           <a href="#" class="side-link side-sublink" data-tab-link="riwayat-laporan">Riwayat Laporan</a>
         </div>
