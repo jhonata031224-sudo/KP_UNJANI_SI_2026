@@ -12,6 +12,15 @@
     });
   }
 
+  // Submenu Danpus tidak menggunakan titik/bullet.
+  // Titik pada menu utama tetap dipertahankan.
+  (function(){
+    var style = document.createElement('style');
+    style.setAttribute('data-danpus-submenu-fix', 'true');
+    style.textContent = '\n      .side-dropdown-menu .side-sublink::before,\n      .side-dropdown-menu .side-sublink::after { content:none !important; display:none !important; }\n      .side-dropdown-menu .side-sublink .dot { display:none !important; }\n      .side-dropdown-menu .side-sublink { padding-left:32px !important; gap:0 !important; }\n    ';
+    document.head.appendChild(style);
+  })();
+
   // Rapikan sidebar Danpus menjadi menu utama + submenu dropdown.
   // Hanya dijalankan pada halaman yang memiliki tab monitoring Danpus,
   // sehingga sidebar role lain tidak ikut berubah.
