@@ -12,19 +12,30 @@
     });
   }
 
-  // Submenu Danpus tidak menggunakan titik/bullet.
-  // Titik pada menu utama tetap dipertahankan.
+  // Hanya submenu Danpus yang tidak menggunakan titik/bullet.
+  // Menu utama tetap mempertahankan titiknya.
   (function(){
     var style = document.createElement('style');
     style.setAttribute('data-danpus-submenu-fix', 'true');
-    style.textContent = '\n      .side-dropdown-menu .side-sublink::before,\n      .side-dropdown-menu .side-sublink::after { content:none !important; display:none !important; }\n      .side-dropdown-menu .side-sublink .dot { display:none !important; }\n      .side-dropdown-menu .side-sublink { padding-left:32px !important; gap:0 !important; }\n    ';
+    style.textContent = '\n      .side-dropdown-menu,\n      .side-dropdown-menu ul,\n      .side-dropdown-menu li { list-style:none !important; }\n      .side-dropdown-menu *::before,\n      .side-dropdown-menu *::after { content:none !important; display:none !important; }\n      .side-dropdown-menu .side-sublink .dot,\n      .side-dropdown-menu .side-sublink > span:first-child:not(.side-link-label) { display:none !important; }\n      .side-dropdown-menu .side-sublink { padding-left:32px !important; gap:0 !important; }\n    ';
     document.head.appendChild(style);
   })();
 
   // Rapikan sidebar Danpus menjadi menu utama + submenu dropdown.
-  // Hanya dijalankan pada halaman yang memiliki tab monitoring Danpus,
-  // sehingga sidebar role lain tidak ikut berubah.
   (function(){
+    function removeSubmenuBullets(link){
+      if (!link) return;
+      link.style.setProperty('list-style', 'none', 'important');
+      link.style.setProperty('background-image', 'none', 'important');
+      var dot = link.querySelector('.dot');
+      if (dot) dot.remove();
+      Array.prototype.slice.call(link.children).forEach(function(child){
+        if (child.tagName === 'SPAN' && !child.textContent.trim() && !child.classList.contains('side-link-label')) {
+          child.remove();
+        }
+      });
+    }
+
     function initDanpusSidebar(){
       var nav = document.querySelector('.side-nav');
       if (!nav || !nav.querySelector('[data-tab-link="laporan-monitoring"]')) return;
@@ -70,8 +81,7 @@
         children.forEach(function(link){
           link.classList.add('side-sublink');
           link.classList.remove('active');
-          var dot = link.querySelector('.dot');
-          if (dot) dot.remove();
+          removeSubmenuBullets(link);
           menu.appendChild(link);
         });
 
@@ -84,7 +94,6 @@
         return group;
       }
 
-      // Bersihkan posisi awal lalu susun kembali tanpa mengubah target tab.
       nav.innerHTML = '';
       var label = document.createElement('div');
       label.className = 'side-nav-label';
@@ -94,7 +103,9 @@
       nav.appendChild(makeGroup('Pantauan Aktivitas Satlak', [monitoring, statusSatuan]));
       nav.appendChild(makeGroup('Pelaporan', [laporan, riwayat]));
 
-      // Pastikan submenu terbuka jika halaman sedang berada pada salah satu tab anak.
+      // Pastikan submenu tetap bersih walaupun ada script lain yang merender ulang link.
+      nav.querySelectorAll('.side-dropdown-menu .side-sublink').forEach(removeSubmenuBullets);
+
       function syncGroupState(){
         nav.querySelectorAll('.side-dropdown').forEach(function(group){
           var activeChild = group.querySelector('.side-sublink.active');
