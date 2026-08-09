@@ -118,7 +118,10 @@
       .review-actions form,
       .action-row form { display:none !important; }
       #detailActions,
-      #reportDetailModal .modal-actions { align-items:center; }
+      #reportDetailModal .modal-actions {
+        align-items:center;
+        gap:10px;
+      }
       #detailActions form,
       #reportDetailModal .modal-actions form { display:inline-flex !important; margin:0; }
       #detailActions button,
