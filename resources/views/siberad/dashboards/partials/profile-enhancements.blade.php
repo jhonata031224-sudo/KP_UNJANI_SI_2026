@@ -107,4 +107,93 @@
     reader.readAsDataURL(file);
   });
 })();
+
+// ===== AKSI LAPORAN MASUK DIPINDAHKAN KE DETAIL =====
+(function(){
+  function injectStyles(){
+    if (document.getElementById('laporanDetailActionStyles')) return;
+    var style = document.createElement('style');
+    style.id = 'laporanDetailActionStyles';
+    style.textContent = `
+      .review-actions form,
+      .action-row form { display:none !important; }
+      #detailActions,
+      #reportDetailModal .modal-actions { align-items:center; }
+      #detailActions form,
+      #reportDetailModal .modal-actions form { display:inline-flex !important; margin:0; }
+      #detailActions button,
+      #reportDetailModal .modal-actions form button { border:1px solid var(--border); background:var(--panel-alt); color:var(--text); border-radius:7px; padding:7px 11px; font-size:11px; cursor:pointer; font-family:var(--body); }
+      #detailActions .approve,
+      #reportDetailModal .modal-actions .approve { border-color:var(--green); color:var(--green); }
+      #detailActions .revise,
+      #reportDetailModal .modal-actions .revise { border-color:var(--amber); color:var(--amber); }
+      #detailActions .reject,
+      #reportDetailModal .modal-actions .reject { border-color:var(--red); color:var(--red); }
+      #detailActions .detail-action-note,
+      #reportDetailModal .modal-actions .detail-action-note { margin-right:auto; font-size:11px; color:var(--text-muted); }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function getModalActions(){
+    return document.getElementById('detailActions') || document.querySelector('#reportDetailModal .modal-actions');
+  }
+
+  function populateDetailActions(detailButton){
+    var actions = getModalActions();
+    if (!actions) return;
+
+    var container = detailButton.closest('.review-actions, .action-row');
+    var forms = container ? Array.prototype.slice.call(container.querySelectorAll('form')) : [];
+    actions.innerHTML = '';
+
+    if (!forms.length) {
+      var note = document.createElement('span');
+      note.className = 'detail-action-note';
+      note.textContent = detailButton.dataset.readonly === '1'
+        ? 'Mode pemantauan — detail ini hanya untuk melihat aktivitas laporan.'
+        : 'Tidak ada tindakan yang tersedia untuk laporan ini.';
+      actions.appendChild(note);
+      return;
+    }
+
+    var note = document.createElement('span');
+    note.className = 'detail-action-note';
+    note.textContent = 'Tindak lanjuti laporan dari detail ini.';
+    actions.appendChild(note);
+
+    forms.forEach(function(originalForm){
+      var clone = originalForm.cloneNode(true);
+      clone.classList.add('detail-action-form');
+      clone.style.display = 'inline-flex';
+      var statusInput = clone.querySelector('input[name="status"]');
+      var status = statusInput ? String(statusInput.value || '').toLowerCase() : '';
+      var button = clone.querySelector('button[type="submit"]');
+      if (button) {
+        button.classList.remove('approve','revise','reject');
+        if (status.indexOf('diterima') !== -1 || status.indexOf('disetujui') !== -1) button.classList.add('approve');
+        else if (status.indexOf('revisi') !== -1) button.classList.add('revise');
+        else if (status.indexOf('tolak') !== -1) button.classList.add('reject');
+      }
+      actions.appendChild(clone);
+    });
+  }
+
+  function removeRedundantSummaryMenu(){
+    document.querySelectorAll('.side-sub-link').forEach(function(link){
+      if (link.textContent.trim() === 'Ringkasan 4 Satlak') link.remove();
+    });
+  }
+
+  injectStyles();
+  removeRedundantSummaryMenu();
+
+  // Delegasi event agar berlaku untuk semua dashboard role yang memakai
+  // tombol Detail + form aksi pada Laporan Masuk.
+  document.addEventListener('click', function(e){
+    var detailButton = e.target.closest('.review-actions .detail-btn, .action-row .detail-btn');
+    if (!detailButton) return;
+    window.setTimeout(function(){ populateDetailActions(detailButton); }, 0);
+  });
+})();
 </script>
