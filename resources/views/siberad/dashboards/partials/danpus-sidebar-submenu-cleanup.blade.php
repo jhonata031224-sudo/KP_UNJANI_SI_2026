@@ -60,9 +60,17 @@
       });
     }
 
+    function removeDanpusProfileHelpText() {
+      var profileHelp = document.querySelector('#profilePhotoView .profile-help-text');
+      if (profileHelp) {
+        profileHelp.remove();
+      }
+    }
+
     function applyDanpusSubmenuFix() {
       removeDanpusSubmenuDots();
       normalizeDanpusSubmenuText();
+      removeDanpusProfileHelpText();
     }
 
     if (document.readyState === 'loading') {
