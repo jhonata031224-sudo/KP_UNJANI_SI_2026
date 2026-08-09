@@ -12,6 +12,15 @@
     });
   }
 
+  // Rapikan submenu sidebar: submenu tidak memakai bullet/titik dan
+  // seluruh submenu memiliki posisi teks yang konsisten.
+  (function(){
+    var style = document.createElement('style');
+    style.setAttribute('data-siberad-sidebar-submenu-fix', 'true');
+    style.textContent = '\n      .side-dropdown-menu .side-sublink .dot { display:none !important; }\n      .side-dropdown-menu .side-sublink { padding-left:32px !important; gap:0 !important; }\n    ';
+    document.head.appendChild(style);
+  })();
+
   // Batasi tinggi tabel supaya hanya menampilkan N baris pertama secara utuh;
   // sisa datanya bisa di-scroll di dalam card-nya sendiri (bukan scroll halaman).
   // Aktif hanya pada tabel yang diberi atribut data-row-limit="N".
