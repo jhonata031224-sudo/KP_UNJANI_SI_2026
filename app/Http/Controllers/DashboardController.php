@@ -50,13 +50,11 @@ class DashboardController
     {
         abort_unless($satuan, 403, 'Akun belum terhubung ke satuan.');
         $laporanTerkirim = Laporan::with('tujuanSatuan')->where('satuan_id', $satuan->id)->latest()->get();
-        $laporanMasuk = Laporan::with('satuan')->where('tujuan_satuan_id', $satuan->id)->latest()->get();
+        $laporanMasuk = Laporan::with(['satuan','tujuanSatuan'])->where('tujuan_satuan_id', $satuan->id)->latest()->get();
         $tujuan = Satuan::where('kode', '!=', 'ADMIN')->where('id', '!=', $satuan->id)->orderBy('urutan')->get();
         $defaultDanpus = $tujuan->firstWhere('kode', 'DANPUS');
         $mode = $kode === 'SATLAKDUKTEK' ? 'duktek' : 'standar';
         $modePimpinan = in_array($kode, ['DANPUS', 'WADAN'], true);
-        // Semua satuan dapat menindaklanjuti laporan yang ditujukan kepadanya.
-        // DANPUS/WADAN tetap memakai label status khusus di controller.
         $canReview = true;
         $canSend = $kode !== 'DANPUS';
         $description = match ($kode) {
@@ -93,6 +91,7 @@ class DashboardController
                 'diterima' => $laporanPimpinanSatlak->where('satuan_id', $satlak->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count(),
                 'ditolak' => $laporanPimpinanSatlak->where('satuan_id', $satlak->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count(),
             ]);
+            return view('siberad.dashboards.laporan-pimpinan', compact('user','satuan','laporanMasuk','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description'));
         }
         return view('siberad.dashboards.laporan-role', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanMasuk','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description') + ['defaultTujuanId' => $defaultDanpus?->id, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'menunggu' => $laporanTerkirim->where('status','Menunggu')->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'masuk' => $laporanMasuk->count()]]);
     }
