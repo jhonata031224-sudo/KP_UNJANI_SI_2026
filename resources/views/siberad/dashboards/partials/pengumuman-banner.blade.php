@@ -16,22 +16,16 @@
 
   <style>
     .pengumuman-banner-wrap{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
-    .pengumuman-banner{
-      display:flex;align-items:flex-start;gap:12px;
-      background:var(--gold-dim);border:1px solid var(--border);border-radius:10px;
-      padding:13px 16px;
-    }
+    .pengumuman-banner{display:flex;align-items:flex-start;gap:12px;background:var(--gold-dim);border:1px solid var(--border);border-radius:10px;padding:13px 16px;}
     .pengumuman-banner svg{width:19px;height:19px;color:var(--gold-bright);flex-shrink:0;margin-top:2px;}
     .pengumuman-banner-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
     .pengumuman-banner-body b{font-family:var(--display);font-size:13.5px;color:var(--text);}
     .pengumuman-banner-body span{font-size:12.5px;color:var(--text-muted);line-height:1.55;}
-    .pengumuman-banner-close{
-      background:none;border:none;cursor:pointer;color:var(--text-dim);flex-shrink:0;
-      padding:2px;line-height:0;
-    }
+    .pengumuman-banner-close{background:none;border:none;cursor:pointer;color:var(--text-dim);flex-shrink:0;padding:2px;line-height:0;}
     .pengumuman-banner-close:hover{color:var(--gold-bright);}
     .pengumuman-banner-close svg{width:15px;height:15px;margin:0;}
   </style>
 @endif
 
 @include('siberad.dashboards.partials.profile-enhancements')
+@include('siberad.dashboards.partials.notification-controls')
