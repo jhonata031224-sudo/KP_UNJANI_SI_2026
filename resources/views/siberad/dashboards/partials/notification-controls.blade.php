@@ -19,7 +19,13 @@
     })->values() ?? []);
 
     var items = Array.prototype.slice.call(dropdown.querySelectorAll('.profile-dropdown-item'));
-    var visibleItems = [];
+
+    // Hilangkan tombol "Tandai dibaca" dari header notifikasi.
+    var header = dropdown.querySelector('.profile-dropdown-head');
+    if (header) {
+      var markReadForm = header.querySelector('form');
+      if (markReadForm) markReadForm.remove();
+    }
 
     items.forEach(function (item, index) {
       var notification = notifications[index];
@@ -32,7 +38,6 @@
       item.classList.add('siberad-notif-item');
       item.style.position = 'relative';
       item.style.paddingRight = '38px';
-      visibleItems.push(item);
 
       var closeBtn = document.createElement('button');
       closeBtn.type = 'button';
@@ -52,14 +57,14 @@
       item.appendChild(closeBtn);
     });
 
-    var header = dropdown.querySelector('.profile-dropdown-head');
+    // Tombol penutup panel menggunakan teks "Tutup", bukan ikon X.
     if (header && !header.querySelector('.siberad-notif-close')) {
       var closePanel = document.createElement('button');
       closePanel.type = 'button';
       closePanel.className = 'siberad-notif-close';
       closePanel.setAttribute('aria-label', 'Tutup notifikasi');
       closePanel.title = 'Tutup notifikasi';
-      closePanel.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
+      closePanel.textContent = 'Tutup';
       closePanel.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -71,11 +76,11 @@
     var style = document.createElement('style');
     style.setAttribute('data-notification-controls', 'true');
     style.textContent = `
-      #notifDropdown .profile-dropdown-head{position:relative;padding-right:70px!important;}
-      .siberad-notif-remove,.siberad-notif-close{display:flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--text-dim);cursor:pointer;border-radius:6px;padding:4px;line-height:0;transition:.15s ease;}
-      .siberad-notif-remove{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:26px;height:26px;}
-      .siberad-notif-close{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;}
-      .siberad-notif-remove svg,.siberad-notif-close svg{width:16px;height:16px;}
+      #notifDropdown .profile-dropdown-head{position:relative;padding-right:58px!important;}
+      .siberad-notif-remove,.siberad-notif-close{display:flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--text-dim);cursor:pointer;border-radius:6px;line-height:1;transition:.15s ease;}
+      .siberad-notif-remove{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:26px;height:26px;padding:4px;}
+      .siberad-notif-close{position:absolute;right:10px;top:50%;transform:translateY(-50%);padding:4px 2px;font-size:11px;font-weight:600;}
+      .siberad-notif-remove svg{width:16px;height:16px;}
       .siberad-notif-remove:hover,.siberad-notif-close:hover{background:var(--hover-tint);color:var(--red);}
       .siberad-notif-item{transition:opacity .15s ease,transform .15s ease;}
       #notifDropdown .siberad-notif-empty-runtime{text-align:center;padding:22px 10px;color:var(--text-dim);font-size:12px;}
