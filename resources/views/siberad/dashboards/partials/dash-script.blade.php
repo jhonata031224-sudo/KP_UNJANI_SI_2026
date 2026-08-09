@@ -115,4 +115,28 @@
       });
     }
   })();
+
+  // Bersihkan pemisah dekoratif dari teks yang tampil di seluruh dashboard role.
+  // Tanda hubung di dalam kata seperti "antar-satuan" tidak diubah.
+  (function(){
+    function cleanDecorativeSeparators(root) {
+      if (!root) return;
+      var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      var nodes = [];
+      var node;
+      while (node = walker.nextNode()) nodes.push(node);
+      nodes.forEach(function(textNode){
+        if (!textNode.nodeValue || !textNode.nodeValue.trim()) return;
+        var value = textNode.nodeValue;
+        value = value.replace(/\s*\/\/\s*/g, ' ');
+        value = value.replace(/(^|\s)[-—](?=\s|$)/g, '$1');
+        textNode.nodeValue = value.replace(/ {2,}/g, ' ');
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function(){ cleanDecorativeSeparators(document.body); });
+    } else {
+      cleanDecorativeSeparators(document.body);
+    }
+  })();
 </script>
