@@ -33,3 +33,5 @@
     .pengumuman-banner-close svg{width:15px;height:15px;margin:0;}
   </style>
 @endif
+
+@include('siberad.dashboards.partials.profile-enhancements')
