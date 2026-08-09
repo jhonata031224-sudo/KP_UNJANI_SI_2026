@@ -1,7 +1,8 @@
 <style>
   /*
-   * Submenu Danpus dibuat lebih kecil dan tetap konsisten.
-   * Hanya submenu yang diatur; menu utama tidak disentuh.
+   * KHUSUS SIDEBAR DANPUS.
+   * Submenu dibuat lebih kecil dan pangkal teksnya sejajar dengan
+   * pangkal teks menu utama. Menu utama tidak disentuh.
    */
   .side-nav-group .side-dropdown-menu {
     padding: 2px 0 !important;
@@ -13,7 +14,7 @@
     align-items: center !important;
     gap: 0 !important;
     margin: 0 !important;
-    padding: 4px 0 4px 29px !important;
+    padding: 4px 0 4px 17px !important;
     min-height: 36px !important;
     height: 36px !important;
     box-sizing: border-box !important;
@@ -22,8 +23,12 @@
     line-height: 22px !important;
   }
 
-  .side-nav-group .side-sub-link .sub-dot {
+  /* Submenu Danpus harus polos tanpa simbol titik. */
+  .side-nav-group .side-sub-link .sub-dot,
+  .side-nav-group .side-dropdown-menu .side-sub-link::before,
+  .side-nav-group .side-dropdown-menu .side-sub-link::after {
     display: none !important;
+    content: none !important;
   }
 </style>
 <script>
