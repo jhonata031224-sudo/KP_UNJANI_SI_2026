@@ -14,6 +14,7 @@
     min-height: 32px !important;
     height: 32px !important;
     box-sizing: border-box !important;
+    text-transform: none !important;
   }
 
   .side-nav-group .side-dropdown-menu .side-sub-link:first-child {
@@ -33,15 +34,41 @@
 </style>
 <script>
   (function () {
+    function normalizeDanpusSubmenuText() {
+      var labels = {
+        'SATLAKKAL': 'Satlakkal',
+        'SATLAKSISOS': 'Satlaksisos',
+        'SATLAKDAK': 'Satlakdak',
+        'SATLAKDUKTEK': 'Satlakduktek'
+      };
+
+      document.querySelectorAll('.side-nav-group .side-sub-link').forEach(function (link) {
+        var text = link.textContent.trim();
+        if (labels[text]) {
+          Array.prototype.slice.call(link.childNodes).forEach(function (node) {
+            if (node.nodeType === Node.TEXT_NODE && node.nodeValue.trim()) {
+              node.nodeValue = node.nodeValue.replace(text, labels[text]);
+            }
+          });
+        }
+      });
+    }
+
     function removeDanpusSubmenuDots() {
       document.querySelectorAll('.side-nav-group .side-sub-link .sub-dot').forEach(function (dot) {
         dot.remove();
       });
     }
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', removeDanpusSubmenuDots);
-    } else {
+
+    function applyDanpusSubmenuFix() {
       removeDanpusSubmenuDots();
+      normalizeDanpusSubmenuText();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', applyDanpusSubmenuFix);
+    } else {
+      applyDanpusSubmenuFix();
     }
   })();
 </script>
