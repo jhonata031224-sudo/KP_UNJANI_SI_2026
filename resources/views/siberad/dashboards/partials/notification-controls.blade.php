@@ -5,6 +5,7 @@
   function initNotificationControls() {
     var menu = document.getElementById('notifMenu');
     var dropdown = document.getElementById('notifDropdown');
+    var notifBtn = document.getElementById('notifBtn');
     if (!menu || !dropdown) return;
 
     var storageKey = 'siberad-dismissed-notifications-{{ auth()->id() }}';
@@ -96,11 +97,30 @@
       }
     }
 
+    // Titik merah hanya tampil jika masih ada notifikasi yang benar-benar tersedia.
+    // Saat semua notifikasi dihapus/dismissed, titik otomatis disembunyikan.
+    function getNotificationDot() {
+      if (!notifBtn) return null;
+      var dot = notifBtn.querySelector('.siberad-notif-dot');
+      if (dot) return dot;
+      var spans = Array.prototype.slice.call(notifBtn.querySelectorAll('span'));
+      return spans.find(function (span) {
+        var style = span.getAttribute('style') || '';
+        return style.indexOf('background:var(--red)') !== -1 || style.indexOf('background: var(--red)') !== -1;
+      }) || null;
+    }
+
+    function syncNotificationDot() {
+      var dot = getNotificationDot();
+      if (!dot) return;
+      var remaining = dropdown.querySelectorAll('.siberad-notif-item').length;
+      dot.style.display = remaining > 0 ? 'block' : 'none';
+    }
+
     function refreshNotificationState() {
       var remaining = dropdown.querySelectorAll('.siberad-notif-item');
-      var dot = document.querySelector('#notifBtn .siberad-notif-dot');
+      syncNotificationDot();
       if (!remaining.length) {
-        if (dot) dot.remove();
         var oldEmpty = dropdown.querySelector('.siberad-notif-empty-runtime');
         if (!oldEmpty) {
           var empty = document.createElement('div');
@@ -108,6 +128,9 @@
           empty.textContent = 'Belum ada notifikasi saat ini.';
           dropdown.appendChild(empty);
         }
+      } else {
+        var oldEmpty = dropdown.querySelector('.siberad-notif-empty-runtime');
+        if (oldEmpty) oldEmpty.remove();
       }
     }
 
