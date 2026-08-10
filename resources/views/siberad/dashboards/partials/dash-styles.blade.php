@@ -133,7 +133,11 @@
     width:var(--sidebar-w);flex-shrink:0;background:var(--surface);backdrop-filter:blur(12px);
     border-right:1px solid var(--border-soft);
     display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
-    transition:transform .25s ease;z-index:40;
+    /* Harus tetap di atas .topbar, yang di-boost paksa ke z-index:100000 lewat
+       partials/notification-controls.blade.php supaya dropdown notifikasi
+       tidak ketutup konten. Kalau tidak, tombol ciutkan sidebar (yang sengaja
+       menjorok 16px ke area topbar) ikut ketutup dan jadi tak terlihat. */
+    transition:transform .25s ease;z-index:100010;
   }
   .side-brand{height:82px;padding:0 22px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;gap:13px;box-sizing:border-box;background:var(--surface);flex-shrink:0;position:relative;}
   .side-brand img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:1px solid var(--border-strong);box-shadow:0 0 0 3px rgba(212,175,55,.08);flex-shrink:0;}
