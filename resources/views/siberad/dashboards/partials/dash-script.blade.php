@@ -102,7 +102,7 @@
       label.textContent = 'Menu';
       nav.appendChild(label);
       nav.appendChild(dashboard);
-      nav.appendChild(makeGroup('Pantauan Aktivitas Satlak', [monitoring, statusSatuan]));
+      nav.appendChild(makeGroup('Log Aktivitas', [monitoring, statusSatuan]));
       nav.appendChild(makeGroup('Pelaporan', [laporan, riwayat]));
 
       // Pastikan submenu tetap bersih walaupun ada script lain yang merender ulang link.
