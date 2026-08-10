@@ -349,7 +349,7 @@
     margin-top:-12px;margin-bottom:14px;
   }
   .login-submit{border:none;cursor:pointer;justify-content:center;margin-top:4px;width:100%;}
-  .captcha-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .captcha-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;}
   .captcha-img{height:50px;border-radius:8px;border:1px solid var(--border);flex-shrink:0;}
   .captcha-refresh{
     width:38px;height:38px;flex-shrink:0;border-radius:8px;cursor:pointer;
