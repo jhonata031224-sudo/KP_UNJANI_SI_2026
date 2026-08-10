@@ -249,7 +249,7 @@
           <div class="stat-card">
             <div class="lbl">Total Satuan</div>
             <div class="val">{{ $stats['total_satuan'] }}</div>
-            <div class="sub">4 Satlak &middot; 4 Direktorat &middot; 2 Pimpinan</div>
+            <div class="sub">Seluruh Satlak &amp; unit terkait &middot; 4 Direktorat &middot; 2 Pimpinan</div>
           </div>
           <div class="stat-card">
             <div class="lbl">Insiden Aktif</div>
