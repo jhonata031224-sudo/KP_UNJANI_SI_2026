@@ -29,6 +29,22 @@ class ActivityLog extends Model
     }
 
     /**
+     * Format nama pengguna/unit yang ditampilkan pada log aktivitas.
+     * Beberapa nama unit tersimpan dalam bentuk uppercase, tetapi pada
+     * tampilan log ingin ditulis dengan kapitalisasi normal.
+     */
+    public function getNamaPenggunaAttribute($value): ?string
+    {
+        return match (strtoupper((string) $value)) {
+            'BINMAT' => 'Binmat',
+            'BINFUNG' => 'Binfung',
+            'BINUM' => 'Binum',
+            'DIKLAT' => 'Diklat',
+            default => $value,
+        };
+    }
+
+    /**
      * Catat satu baris log aktivitas. Dipanggil dari controller mana pun
      * (login/logout, CRUD pengguna, CRUD satuan, dll.) untuk mengisi menu
      * "Monitoring Aktivitas Sistem" & "Laporan Pengguna & Aktivitas".
