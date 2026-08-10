@@ -37,22 +37,28 @@
     if (!dropdown) dropdown = menu.querySelector('#notifDropdown');
     if (!button || !dropdown) return;
 
+    menu.classList.add('notif-menu');
+    actions.style.position = 'relative';
+    actions.style.zIndex = '99998';
     menu.style.position = 'relative';
-    menu.style.zIndex = '1300';
+    menu.style.zIndex = '99999';
+    menu.style.pointerEvents = 'auto';
     button.style.position = 'relative';
-    button.style.zIndex = '1301';
-    dropdown.style.zIndex = '1302';
+    button.style.zIndex = '100000';
+    button.style.pointerEvents = 'auto';
+    dropdown.style.zIndex = '100001';
+    dropdown.style.pointerEvents = 'auto';
 
     var style = document.getElementById('siberad-notification-style');
     if (!style) {
       style = document.createElement('style');
       style.id = 'siberad-notification-style';
       style.textContent = `
-        .notif-menu{position:relative!important;z-index:1300!important;}
-        .notif-menu>#notifBtn{position:relative!important;z-index:1301!important;cursor:pointer!important;pointer-events:auto!important;}
+        .notif-menu{position:relative!important;z-index:99999!important;pointer-events:auto!important;}
+        .notif-menu>#notifBtn{position:relative!important;z-index:100000!important;cursor:pointer!important;pointer-events:auto!important;}
         .notif-menu>#notifBtn svg{width:19px;height:19px;display:block;pointer-events:none;}
         .siberad-notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--panel,#0c2417);pointer-events:none;}
-        #notifDropdown{position:absolute!important;z-index:1302!important;min-width:280px;right:0;top:calc(100% + 8px);}
+        #notifDropdown{position:absolute!important;z-index:100001!important;min-width:280px;right:0;top:calc(100% + 8px);pointer-events:auto!important;}
         #notifDropdown .notif-head{display:flex;align-items:center;min-height:22px;}
         #notifDropdown .siberad-notif-list{display:flex;flex-direction:column;}
         #notifDropdown .siberad-notif-item{position:relative;padding:11px 38px 11px 12px;border-bottom:1px solid var(--border-soft);}
@@ -80,6 +86,12 @@
       list.className = 'siberad-notif-list';
       dropdown.appendChild(list);
     }
+
+    var header = dropdown.querySelector('.notif-head') || dropdown.querySelector('.profile-dropdown-head');
+    if (header) header.classList.add('notif-head');
+    Array.prototype.slice.call(dropdown.children).forEach(function (child) {
+      if (child !== header && child !== list) child.remove();
+    });
 
     function escapeHtml(value) {
       var div = document.createElement('div');
@@ -121,6 +133,7 @@
 
     function close() {
       dropdown.classList.remove('open');
+      button.classList.remove('open');
       button.setAttribute('aria-expanded', 'false');
     }
 
@@ -128,7 +141,15 @@
       if (event) { event.preventDefault(); event.stopPropagation(); }
       if (dropdown.classList.contains('open')) close();
       else {
+        var profileDropdown = document.getElementById('profileDropdown');
+        var profileBtn = document.getElementById('profileMenuBtn');
+        if (profileDropdown) profileDropdown.classList.remove('open');
+        if (profileBtn) {
+          profileBtn.classList.remove('open');
+          profileBtn.setAttribute('aria-expanded', 'false');
+        }
         dropdown.classList.add('open');
+        button.classList.add('open');
         button.setAttribute('aria-expanded', 'true');
       }
     }
@@ -148,7 +169,11 @@
         if (currentMenu && !currentMenu.contains(target)) {
           var currentDropdown = document.getElementById('notifDropdown');
           if (currentDropdown) currentDropdown.classList.remove('open');
-          if (currentMenu.querySelector('#notifBtn')) currentMenu.querySelector('#notifBtn').setAttribute('aria-expanded', 'false');
+          var currentButton = currentMenu.querySelector('#notifBtn');
+          if (currentButton) {
+            currentButton.classList.remove('open');
+            currentButton.setAttribute('aria-expanded', 'false');
+          }
         }
       }, true);
     }
