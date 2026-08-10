@@ -17,7 +17,7 @@
   (function(){
     var style = document.createElement('style');
     style.setAttribute('data-danpus-submenu-fix', 'true');
-    style.textContent = '\n      .side-dropdown-menu,\n      .side-dropdown-menu ul,\n      .side-dropdown-menu ol,\n      .side-dropdown-menu li { list-style:none !important; list-style-type:none !important; }\n      .side-dropdown-menu li::marker { content:"" !important; display:none !important; }\n      .side-dropdown-menu a::before,\n      .side-dropdown-menu a::after,\n      .side-dropdown-menu .side-sublink::before,\n      .side-dropdown-menu .side-sublink::after { content:none !important; display:none !important; }\n      .side-dropdown-menu .dot,\n      .side-dropdown-menu .side-sublink .dot { display:none !important; width:0 !important; min-width:0 !important; margin:0 !important; padding:0 !important; }\n      .side-dropdown-menu .side-sublink { padding-left:32px !important; padding-right:12px !important; gap:0 !important; list-style:none !important; background-image:none !important; }\n    ';
+    style.textContent = '\n      /* Hilangkan seluruh jenis bullet/titik dari SEMUA submenu Danpus. */\n      .side-dropdown-menu,\n      .side-dropdown-menu ul,\n      .side-dropdown-menu ol,\n      .side-dropdown-menu li { list-style:none !important; list-style-type:none !important; }\n      .side-dropdown-menu li::marker { content:"" !important; display:none !important; }\n      .side-dropdown-menu a::before,\n      .side-dropdown-menu a::after,\n      .side-dropdown-menu .side-sublink::before,\n      .side-dropdown-menu .side-sublink::after { content:none !important; display:none !important; }\n      .side-dropdown-menu .dot,\n      .side-dropdown-menu .side-sublink .dot { display:none !important; width:0 !important; min-width:0 !important; margin:0 !important; padding:0 !important; }\n      .side-dropdown-menu .side-sublink { padding-left:32px !important; padding-right:12px !important; gap:0 !important; list-style:none !important; background-image:none !important; }\n    ';
     document.head.appendChild(style);
   })();
 
@@ -30,8 +30,11 @@
       link.style.setProperty('background-image', 'none', 'important');
       var dot = link.querySelector('.dot');
       if (dot) dot.remove();
+      // Hapus marker/span dekoratif pertama pada submenu jika memang bukan teks.
       Array.prototype.slice.call(link.children).forEach(function(child){
-        if (child.tagName === 'SPAN' && !child.textContent.trim() && !child.classList.contains('side-link-label')) child.remove();
+        if (child.tagName === 'SPAN' && !child.textContent.trim() && !child.classList.contains('side-link-label')) {
+          child.remove();
+        }
       });
     }
 
@@ -66,23 +69,30 @@
       function makeGroup(label, children){
         var group = document.createElement('div');
         group.className = 'side-dropdown';
+
         var toggle = document.createElement('button');
         toggle.type = 'button';
         toggle.className = 'side-link side-dropdown-toggle';
         toggle.innerHTML = '<span class="dot"></span><span class="side-link-label"></span>';
         toggle.querySelector('.side-link-label').textContent = label;
         toggle.appendChild(makeIcon());
+
         var menu = document.createElement('div');
         menu.className = 'side-dropdown-menu';
+
         children.forEach(function(link){
           link.classList.add('side-sublink');
           link.classList.remove('active');
           removeSubmenuBullets(link);
           menu.appendChild(link);
         });
+
         group.appendChild(toggle);
         group.appendChild(menu);
-        toggle.addEventListener('click', function(){ group.classList.toggle('open'); });
+
+        toggle.addEventListener('click', function(){
+          group.classList.toggle('open');
+        });
         return group;
       }
 
@@ -95,6 +105,7 @@
       nav.appendChild(makeGroup('Log Aktivitas', [monitoring, statusSatuan]));
       nav.appendChild(makeGroup('Pelaporan', [laporan, riwayat]));
 
+      // Pastikan submenu tetap bersih walaupun ada script lain yang merender ulang link.
       nav.querySelectorAll('.side-dropdown-menu a, .side-dropdown-menu .side-sublink').forEach(removeSubmenuBullets);
 
       function syncGroupState(){
@@ -105,78 +116,29 @@
       }
       syncGroupState();
 
+      // Pengaman terakhir: jika script/CSS lain menambahkan kembali bullet,
+      // submenu tetap dipaksa polos tanpa mengubah menu utama.
       function enforcePlainSubmenus(){
-        nav.querySelectorAll('.side-dropdown-menu a').forEach(function(link){ removeSubmenuBullets(link); });
+        nav.querySelectorAll('.side-dropdown-menu a').forEach(function(link){
+          removeSubmenuBullets(link);
+        });
       }
       enforcePlainSubmenus();
       setTimeout(enforcePlainSubmenus, 50);
       setTimeout(enforcePlainSubmenus, 250);
       setTimeout(enforcePlainSubmenus, 1000);
+
       if (window.MutationObserver) {
         var observer = new MutationObserver(function(){ enforcePlainSubmenus(); });
         observer.observe(nav, { childList:true, subtree:true });
       }
     }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initDanpusSidebar);
-    else initDanpusSidebar();
-  })();
 
-  // Stabilkan dropdown Laporan pada halaman Satlak berbasis laporan-role/satlakduktek.
-  // Script ini sengaja hanya aktif bila struktur dropdown Satlak memang ada.
-  (function(){
-    function initSatlakLaporan(){
-      var nav = document.querySelector('.side-nav');
-      var dropdown = document.getElementById('laporanDropdown');
-      var toggle = document.getElementById('laporanToggle');
-      if (!nav || !dropdown || !toggle) return;
-      if (dropdown.dataset.stableReady === '1') return;
-      dropdown.dataset.stableReady = '1';
-
-      var menu = dropdown.querySelector('.side-dropdown-menu');
-      if (!menu) return;
-
-      var css = document.createElement('style');
-      css.setAttribute('data-satlak-laporan-fix','true');
-      css.textContent = `
-        #laporanDropdown { width:100%; margin:0; }
-        #laporanDropdown > #laporanToggle,
-        #laporanDropdown > .side-dropdown-toggle { width:100%; min-height:40px; display:flex; align-items:center; gap:10px; padding:10px 12px; box-sizing:border-box; border:1px solid transparent; border-radius:9px; background:transparent; color:var(--text-muted); font-family:var(--body); font-size:13.5px; font-weight:500; line-height:1.25; text-align:left; cursor:pointer; }
-        #laporanDropdown > #laporanToggle:hover,
-        #laporanDropdown > .side-dropdown-toggle:hover { background:var(--hover-tint); color:var(--text); }
-        #laporanDropdown > #laporanToggle .side-link-label { flex:1; min-width:0; }
-        #laporanDropdown > #laporanToggle .dot { width:6px; height:6px; min-width:6px; border-radius:50%; background:currentColor; opacity:.6; flex:0 0 6px; }
-        #laporanDropdown .side-dropdown-arrow { width:14px; height:14px; flex:0 0 14px; margin-left:auto; stroke:currentColor; fill:none; stroke-width:2.2; transform:none; transition:transform .2s ease; }
-        #laporanDropdown.open .side-dropdown-arrow { transform:rotate(180deg); }
-        #laporanDropdown .side-dropdown-menu { display:flex; flex-direction:column; gap:2px; max-height:0; overflow:hidden; margin:0; padding:0; transition:max-height .22s ease; }
-        #laporanDropdown.open .side-dropdown-menu { max-height:220px; margin-top:2px; }
-        #laporanDropdown .side-sublink { display:flex; align-items:center; width:100%; min-height:34px; padding:8px 12px 8px 32px !important; box-sizing:border-box; border-radius:8px; color:var(--text-muted); font-family:var(--body); font-size:12.5px !important; font-weight:500; line-height:1.25; text-decoration:none; white-space:nowrap; }
-        #laporanDropdown .side-sublink:hover { background:var(--hover-tint); color:var(--text); }
-        #laporanDropdown .side-sublink.active { background:var(--gold-dim); color:var(--gold-bright); border-color:var(--border); font-weight:600; }
-        #laporanDropdown .side-sublink .dot { display:none !important; }
-      `;
-      document.head.appendChild(css);
-
-      function sync(){
-        var open = dropdown.classList.contains('open');
-        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-        toggle.style.transform = 'none';
-        toggle.style.rotate = '0deg';
-      }
-      toggle.addEventListener('click', function(){ setTimeout(sync, 0); });
-      sync();
-
-      // Jika ada script lain yang menyentuh sidebar, jangan biarkan dropdown
-      // berubah ukuran/posisi atau kehilangan submenu setelah halaman selesai render.
-      if (window.MutationObserver) {
-        var observer = new MutationObserver(function(){
-          if (!document.getElementById('laporanDropdown')) return;
-          sync();
-        });
-        observer.observe(nav, { childList:true, subtree:true, attributes:true, attributeFilter:['class','style'] });
-      }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initDanpusSidebar);
+    } else {
+      initDanpusSidebar();
     }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSatlakLaporan);
-    else initSatlakLaporan();
   })();
 
   // Batasi tinggi tabel supaya hanya menampilkan N baris pertama secara utuh;
@@ -205,7 +167,6 @@
     if (!panel) return;
     panel.querySelectorAll('[data-row-limit]').forEach(terapkanRowLimitWrap);
   }
-  window.terapkanRowLimit = terapkanRowLimit;
 
   // Tab switching sederhana (prototype — belum tersambung ke backend laporan)
   const links = document.querySelectorAll('[data-tab-link]');
@@ -226,6 +187,7 @@
       window.scrollTo({top:0, behavior:'smooth'});
     });
   });
+
   document.querySelectorAll('.tab-panel.active').forEach(terapkanRowLimit);
 
   // Ganti tema (dark / light) — 1 tombol, tersimpan di localStorage, berlaku di semua halaman.
@@ -266,7 +228,10 @@
         textNode.nodeValue = value.replace(/ {2,}/g, ' ');
       });
     }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ cleanDecorativeSeparators(document.body); });
-    else cleanDecorativeSeparators(document.body);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function(){ cleanDecorativeSeparators(document.body); });
+    } else {
+      cleanDecorativeSeparators(document.body);
+    }
   })();
 </script>
