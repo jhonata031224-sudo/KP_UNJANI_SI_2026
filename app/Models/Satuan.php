@@ -90,4 +90,43 @@ class Satuan extends Model
     {
         return $this->hasMany(Personel::class);
     }
+
+    /**
+     * Kode 4 Satlak operasional (Penangkalan, Siber Sosial, Penindakan, Duktek).
+     */
+    public const KODE_SATLAK = ['SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK', 'SATLAKDUKTEK'];
+
+    /**
+     * Kode satuan pembinaan/direktorat (Binfung, Binum, Diklat, Binmat).
+     */
+    public const KODE_PEMBINAAN = ['BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT'];
+
+    /**
+     * Alur tujuan laporan resmi (hierarki komando):
+     * - Satlak hanya boleh lapor ke SDIR (koordinasi) atau DANPUS/WADAN (tujuan utama).
+     *   Satlak tidak boleh saling kirim ke sesama Satlak maupun ke satuan pembinaan.
+     * - SDIR boleh koordinasi ke Satlak dan melapor ke DANPUS.
+     * - Satuan pembinaan (Binmat, Binfung, Binum, Diklat) langsung lapor ke DANPUS.
+     * - Satuan lain (mis. WADAN) tidak dibatasi di sini (kembalikan null).
+     *
+     * @return string[]|null Daftar kode satuan tujuan yang diizinkan, atau null jika tidak dibatasi.
+     */
+    public static function kodeTujuanUntuk(?string $kodeAsal): ?array
+    {
+        $kodeAsal = strtoupper((string) $kodeAsal);
+
+        if (in_array($kodeAsal, self::KODE_SATLAK, true)) {
+            return ['SDIR', 'DANPUS', 'WADAN'];
+        }
+
+        if ($kodeAsal === 'SDIR') {
+            return [...self::KODE_SATLAK, 'DANPUS'];
+        }
+
+        if (in_array($kodeAsal, self::KODE_PEMBINAAN, true)) {
+            return ['DANPUS'];
+        }
+
+        return null;
+    }
 }

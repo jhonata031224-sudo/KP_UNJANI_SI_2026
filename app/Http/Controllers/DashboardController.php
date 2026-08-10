@@ -60,7 +60,10 @@ class DashboardController
             })
             ->latest()
             ->get();
-        $tujuan = Satuan::where('kode', '!=', 'ADMIN')->where('id', '!=', $satuan->id)->orderBy('urutan')->get();
+        $kodeTujuanDiizinkan = Satuan::kodeTujuanUntuk($kode);
+        $tujuan = $kodeTujuanDiizinkan !== null
+            ? Satuan::whereIn('kode', $kodeTujuanDiizinkan)->orderBy('urutan')->get()
+            : Satuan::where('kode', '!=', 'ADMIN')->where('id', '!=', $satuan->id)->orderBy('urutan')->get();
         $defaultDanpus = $tujuan->firstWhere('kode', 'DANPUS');
         $mode = $kode === 'SATLAKDUKTEK' ? 'duktek' : 'standar';
         $modePimpinan = in_array($kode, ['DANPUS', 'WADAN'], true);
