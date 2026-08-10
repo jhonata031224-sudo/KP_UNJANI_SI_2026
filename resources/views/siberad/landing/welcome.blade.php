@@ -208,6 +208,11 @@
     background:linear-gradient(90deg, transparent, var(--border-strong), transparent);
   }
 
+  .moto-desc{
+    color:var(--text-muted);line-height:1.85;font-size:15.5px;max-width:780px;
+    padding-left:18px;border-left:2px solid var(--gold-bright);
+  }
+
   /* ================= NAV ================= */
   header{
     position:sticky;top:0;z-index:20;
@@ -871,10 +876,10 @@
           </div>
         </div>
 
-        <div style="margin-top:56px;" data-reveal>
+        <div class="moto-panel" style="margin:56px 0 40px;" data-reveal>
           <div class="eyebrow">Moto</div>
-          <h3 style="font-family:var(--display);font-size:clamp(26px,3vw,34px);font-weight:700;margin:14px 0 14px;text-transform:uppercase;letter-spacing:.04em;">{{ $pengaturan->tentang_moto_judul }}</h3>
-          <p style="color:var(--text-muted);line-height:1.8;font-size:15px;max-width:820px;">
+          <h3 style="font-family:var(--display);font-size:clamp(26px,3vw,34px);font-weight:700;margin:14px 0 18px;text-transform:uppercase;letter-spacing:.04em;">{{ $pengaturan->tentang_moto_judul }}</h3>
+          <p class="moto-desc">
             {{ $pengaturan->tentang_moto_deskripsi }}
           </p>
         </div>
