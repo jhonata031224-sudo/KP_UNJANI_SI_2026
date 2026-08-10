@@ -194,6 +194,18 @@
     };
     window.addEventListener('resize', function () { window.siberadRepositionSubnavFlyouts(); });
 
+    // Semua grup di HTML defaultnya class="open" (biar langsung kebuka pas
+    // sidebar lebar). Tapi kalau sidebar-nya lagi diciutkan (dari
+    // localStorage, mis. abis hard refresh), "open" berarti tampil sebagai
+    // flyout position:fixed -- kalau ketiga grup dibiarkan open sekaligus,
+    // flyout-nya numpuk saling tindih karena belum direposisi. Tutup semua
+    // dulu di sini, biarkan tab aktif (kalau ada) yang buka ulang grupnya
+    // sendiri lewat has-active-child di bawah.
+    if (sidebar && sidebar.classList.contains('collapsed')) {
+      groups.forEach(function (g) { g.classList.remove('open'); });
+    }
+    groups.forEach(positionGroupFlyout);
+
     groups.forEach(function (g) {
       var btn = g.querySelector('.side-nav-group-title');
       btn.addEventListener('click', function (e) {
