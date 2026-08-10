@@ -77,8 +77,13 @@
 
     var button = document.getElementById('notifBtn');
     var dropdown = document.getElementById('notifDropdown');
-    if (!button || !dropdown || button.dataset.bound === '1') return;
-    button.dataset.bound = '1';
+    // Pakai flag yang sama dengan partials/notification-controls.blade.php:
+    // kalau tombol notifikasi itu sudah dibuat & di-bind di sana (yang jalan
+    // lebih dulu lewat pengumuman-banner.blade.php), jangan bind listener klik
+    // lagi di sini. Dua listener pada tombol yang sama akan saling
+    // membatalkan (buka lalu langsung tertutup lagi di klik yang sama).
+    if (!button || !dropdown || button.dataset.notifBound === '1') return;
+    button.dataset.notifBound = '1';
 
     function closeNotif() {
       dropdown.classList.remove('open');

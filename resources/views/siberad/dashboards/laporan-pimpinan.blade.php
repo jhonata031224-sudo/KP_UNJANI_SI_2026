@@ -40,27 +40,41 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
   // Toggle collapse sidebar (termasuk resize .content/.pimp-page) ditangani
   // bareng oleh script siberadInitSidebarCollapse di dash-styles.blade.php.
 
+  // Toggle & penerapan tema awal untuk tombol ini normalnya sudah ditangani
+  // oleh initRoleUi() di partials/pengumuman-banner.blade.php (dijalankan
+  // lebih dulu, ditandai lewat dataset.uiBound). Kalau dua listener klik
+  // terpasang di tombol yang sama, keduanya saling membatalkan dalam satu
+  // klik (ganti tema lalu langsung balik lagi) — makanya di-guard di sini.
   const themeBtn=document.getElementById('themeToggleBtn');
-  const THEME_KEY='siberad-theme';
-  function applyTheme(theme){
-    if(theme==='light') document.documentElement.setAttribute('data-theme','light');
-    else document.documentElement.removeAttribute('data-theme');
-    themeBtn?.setAttribute('aria-pressed',theme==='light'?'true':'false');
+  if (themeBtn && !themeBtn.dataset.uiBound) {
+    themeBtn.dataset.uiBound = '1';
+    const THEME_KEY='siberad-theme';
+    function applyTheme(theme){
+      if(theme==='light') document.documentElement.setAttribute('data-theme','light');
+      else document.documentElement.removeAttribute('data-theme');
+      themeBtn.setAttribute('aria-pressed',theme==='light'?'true':'false');
+    }
+    let savedTheme='dark';
+    try{savedTheme=localStorage.getItem(THEME_KEY)||'dark';}catch(e){}
+    applyTheme(savedTheme);
+    themeBtn.addEventListener('click',()=>{
+      const current=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';
+      const next=current==='light'?'dark':'light';
+      try{localStorage.setItem(THEME_KEY,next);}catch(e){}
+      applyTheme(next);
+    });
   }
-  let savedTheme='dark';
-  try{savedTheme=localStorage.getItem(THEME_KEY)||'dark';}catch(e){}
-  applyTheme(savedTheme);
-  themeBtn?.addEventListener('click',()=>{
-    const current=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';
-    const next=current==='light'?'dark':'light';
-    try{localStorage.setItem(THEME_KEY,next);}catch(e){}
-    applyTheme(next);
-  });
 
   const profileBtn=document.getElementById('profileMenuBtn'),drop=document.getElementById('profileDropdown'),profileMenu=document.getElementById('profileMenu');
   function closeProfile(){drop?.classList.remove('open');profileBtn?.classList.remove('open');profileBtn?.setAttribute('aria-expanded','false');}
   function openProfile(){drop?.classList.add('open');profileBtn?.classList.add('open');profileBtn?.setAttribute('aria-expanded','true');}
-  profileBtn?.addEventListener('click',e=>{e.stopPropagation();drop?.classList.contains('open')?closeProfile():openProfile()});
+  // Sama seperti tema: toggle klik tombol profil juga sudah ditangani oleh
+  // initRoleUi() di pengumuman-banner.blade.php. Guard dengan flag yang sama
+  // supaya tidak dobel-bind.
+  if (profileBtn && !profileBtn.dataset.uiBound) {
+    profileBtn.dataset.uiBound = '1';
+    profileBtn.addEventListener('click',e=>{e.stopPropagation();drop?.classList.contains('open')?closeProfile():openProfile()});
+  }
   document.addEventListener('click',e=>{if(profileMenu&&!profileMenu.contains(e.target))closeProfile()});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeProfile()});
 
