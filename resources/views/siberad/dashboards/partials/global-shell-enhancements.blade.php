@@ -167,7 +167,14 @@
       if (e.target === overlay) closeConfirm();
     });
     confirmBtn?.addEventListener('click', function () {
-      if (pendingForm) pendingForm.submit();
+      if (!pendingForm) return;
+      // Reset menu tab tersimpan supaya login berikutnya selalu mulai dari Dashboard.
+      try {
+        Object.keys(sessionStorage).forEach(function (k) {
+          if (k.indexOf('siberad-') === 0) sessionStorage.removeItem(k);
+        });
+      } catch (e) {}
+      pendingForm.submit();
     });
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && overlay.classList.contains('open')) closeConfirm();

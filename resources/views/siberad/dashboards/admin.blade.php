@@ -113,47 +113,47 @@
     </div>
     <nav class="side-nav">
       <div class="side-nav-label">Menu</div>
-      <a href="#" class="side-link active" data-tab-link="dashboard"><span class="dot"></span>Dashboard</a>
+      <a href="#" class="side-link active" data-tab-link="dashboard"><span class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg></span>Dashboard</a>
 
       <div class="side-dropdown" id="penggunaDropdown">
         <button type="button" class="side-link side-dropdown-toggle" id="penggunaToggle" aria-expanded="false" aria-controls="penggunaSubmenu">
-          <span class="dot"></span>
+          <span class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
           <span class="side-link-label">Kelola Pengguna</span>
           <svg class="side-dropdown-arrow" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
         </button>
         <div class="side-dropdown-menu" id="penggunaSubmenu">
-          <a href="#" class="side-link side-sublink" data-tab-link="pengguna">Daftar Pengguna</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="reset-password">Permintaan Reset Password</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="pengumuman">Pengumuman</a>
+          <a href="#" class="side-link side-sublink" data-tab-link="pengguna"><span class="dot"></span>Daftar Pengguna</a>
+          <a href="#" class="side-link side-sublink" data-tab-link="reset-password"><span class="dot"></span>Permintaan Reset Password</a>
+          <a href="#" class="side-link side-sublink" data-tab-link="pengumuman"><span class="dot"></span>Pengumuman</a>
         </div>
       </div>
 
       <div class="side-dropdown" id="monitoringDropdown">
         <button type="button" class="side-link side-dropdown-toggle" id="monitoringToggle" aria-expanded="false" aria-controls="monitoringSubmenu">
-          <span class="dot"></span>
+          <span class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
           <span class="side-link-label">Monitoring</span>
           <svg class="side-dropdown-arrow" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
         </button>
         <div class="side-dropdown-menu" id="monitoringSubmenu">
-          <a href="#" class="side-link side-sublink" data-tab-link="rekap-laporan">Rekap Laporan</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="sesi-aktif">Sesi Aktif</a>
+          <a href="#" class="side-link side-sublink" data-tab-link="rekap-laporan"><span class="dot"></span>Rekap Laporan</a>
+          <a href="#" class="side-link side-sublink" data-tab-link="sesi-aktif"><span class="dot"></span>Sesi Aktif</a>
         </div>
       </div>
 
       <div class="side-dropdown" id="sistemDropdown">
         <button type="button" class="side-link side-dropdown-toggle" id="sistemToggle" aria-expanded="false" aria-controls="sistemSubmenu">
-          <span class="dot"></span>
+          <span class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
           <span class="side-link-label">Kelola Sistem</span>
           <svg class="side-dropdown-arrow" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
         </button>
         <div class="side-dropdown-menu" id="sistemSubmenu">
-          <a href="#" class="side-link side-sublink" data-tab-link="satlak">Manajemen Satuan</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="role-akses">Role &amp; Hak Akses</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="data-master">Data Master</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="log-aktivitas">Log Aktivitas</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="backup">Backup Database</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="laporan-admin">Laporan &amp; Export</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="pengaturan-umum">Pengaturan Umum</a>
+          <a href="#" class="side-link side-sublink" data-tab-link="satlak"><span class="dot"></span>Manajemen Satuan</a>
+          <a href="#" class="side-link side-sublink" data-tab-link="role-akses"><span class="dot"></span>Role &amp; Hak Akses</a>
+          <a href="#" class="side-link side-sublink" data-tab-link="data-master"><span class="dot"></span>Data Master</a>
+          <a href="#" class="side-link side-sublink" data-tab-link="log-aktivitas"><span class="dot"></span>Log Aktivitas</a>
+          <a href="#" class="side-link side-sublink" data-tab-link="backup"><span class="dot"></span>Backup Database</a>
+          <a href="#" class="side-link side-sublink" data-tab-link="laporan-admin"><span class="dot"></span>Laporan &amp; Export</a>
+          <a href="#" class="side-link side-sublink" data-tab-link="pengaturan-umum"><span class="dot"></span>Pengaturan Umum</a>
         </div>
       </div>
     </nav>
