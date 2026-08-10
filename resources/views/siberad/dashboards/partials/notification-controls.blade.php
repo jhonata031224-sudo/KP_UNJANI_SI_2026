@@ -3,80 +3,108 @@
   'use strict';
 
   function initNotificationControls() {
+    var actions = document.querySelector('.topbar-actions');
+    if (!actions) return;
+
     var menu = document.getElementById('notifMenu');
+    var button = document.getElementById('notifBtn');
     var dropdown = document.getElementById('notifDropdown');
-    var notifBtn = document.getElementById('notifBtn');
 
-    /*
-     * Sebagian dashboard (termasuk Satlak KAL dan Satlak Siber Sosial)
-     * hanya memiliki tombol tema + profil. Buat komponen notifikasi yang
-     * sama secara konsisten di sini supaya seluruh dashboard memakai UI,
-     * perilaku, dan empty state yang sama.
-     */
-    if (!menu || !dropdown || !notifBtn) {
-      var actions = document.querySelector('.topbar-actions');
-      if (actions && !document.getElementById('notifMenu')) {
-        menu = document.createElement('div');
-        menu.className = 'profile-menu';
-        menu.id = 'notifMenu';
+    /* Pastikan struktur notifikasi selalu lengkap. */
+    if (!menu) {
+      menu = document.createElement('div');
+      menu.className = 'profile-menu notif-menu';
+      menu.id = 'notifMenu';
 
-        notifBtn = document.createElement('button');
-        notifBtn.type = 'button';
-        notifBtn.className = 'btn-icon-toggle';
-        notifBtn.id = 'notifBtn';
-        notifBtn.setAttribute('aria-label', 'Notifikasi');
-        notifBtn.setAttribute('aria-haspopup', 'menu');
-        notifBtn.setAttribute('aria-expanded', 'false');
-        notifBtn.style.position = 'relative';
-        notifBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--gold-bright) !important;color:var(--gold-bright) !important;"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" style="fill:var(--gold-dim) !important;stroke:var(--gold-bright) !important;"></path><path d="M13.73 21a2 2 0 0 1-3.46 0" style="fill:none !important;stroke:var(--gold-bright) !important;"></path></svg><span class="siberad-notif-dot" style="position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--panel,#0c2417);"></span>';
+      button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn-icon-toggle';
+      button.id = 'notifBtn';
+      button.setAttribute('aria-label', 'Notifikasi');
+      button.setAttribute('aria-haspopup', 'menu');
+      button.setAttribute('aria-expanded', 'false');
+      button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg><span class="siberad-notif-dot"></span>';
 
+      dropdown = document.createElement('div');
+      dropdown.className = 'profile-dropdown';
+      dropdown.id = 'notifDropdown';
+      dropdown.setAttribute('role', 'menu');
+      dropdown.innerHTML = '<div class="profile-dropdown-head notif-head"><div class="profile-dropdown-name">Notifikasi</div></div><div class="siberad-notif-list"></div>';
+
+      menu.appendChild(button);
+      menu.appendChild(dropdown);
+
+      var profileMenu = document.getElementById('profileMenu');
+      if (profileMenu && profileMenu.parentNode === actions) actions.insertBefore(menu, profileMenu);
+      else actions.appendChild(menu);
+    } else {
+      /* Jika markup lama hanya memiliki salah satu elemen, lengkapi tanpa membuat menu kedua. */
+      button = button || menu.querySelector('#notifBtn');
+      dropdown = dropdown || menu.querySelector('#notifDropdown');
+
+      if (!button) {
+        button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn-icon-toggle';
+        button.id = 'notifBtn';
+        button.setAttribute('aria-label', 'Notifikasi');
+        button.setAttribute('aria-haspopup', 'menu');
+        button.setAttribute('aria-expanded', 'false');
+        button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg><span class="siberad-notif-dot"></span>';
+        menu.insertBefore(button, menu.firstChild);
+      }
+
+      if (!dropdown) {
         dropdown = document.createElement('div');
         dropdown.className = 'profile-dropdown';
         dropdown.id = 'notifDropdown';
         dropdown.setAttribute('role', 'menu');
-        dropdown.setAttribute('aria-label', 'Notifikasi');
-        dropdown.innerHTML = '<div class="profile-dropdown-head" style="border-bottom:1px solid var(--border-soft);"><div class="profile-dropdown-name" style="font-size:14px;">Notifikasi</div></div>';
-
-        menu.appendChild(notifBtn);
+        dropdown.innerHTML = '<div class="profile-dropdown-head notif-head"><div class="profile-dropdown-name">Notifikasi</div></div><div class="siberad-notif-list"></div>';
         menu.appendChild(dropdown);
-
-        var profileMenu = document.getElementById('profileMenu');
-        if (profileMenu && profileMenu.parentNode === actions) {
-          actions.insertBefore(menu, profileMenu);
-        } else {
-          actions.appendChild(menu);
-        }
       }
     }
 
-    menu = document.getElementById('notifMenu');
-    dropdown = document.getElementById('notifDropdown');
-    notifBtn = document.getElementById('notifBtn');
-    if (!menu || !dropdown || !notifBtn) return;
+    if (!button || !dropdown) return;
 
-    var storageKey = 'siberad-dismissed-notifications-{{ auth()->id() }}';
-    var dismissed = [];
-    try {
-      dismissed = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      if (!Array.isArray(dismissed)) dismissed = [];
-    } catch (e) { dismissed = []; }
+    var style = document.getElementById('siberad-notification-style');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'siberad-notification-style';
+      style.textContent = `
+        .notif-menu{position:relative;}
+        .notif-menu>#notifBtn{position:relative;z-index:2;}
+        .notif-menu>#notifBtn svg{width:19px;height:19px;display:block;}
+        .siberad-notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--panel,#0c2417);}
+        #notifDropdown{z-index:1200;}
+        #notifDropdown .notif-head{display:flex;align-items:center;justify-content:space-between;min-height:22px;}
+        #notifDropdown .siberad-notif-list{display:flex;flex-direction:column;}
+        #notifDropdown .siberad-notif-item{position:relative;padding:11px 38px 11px 12px;border-bottom:1px solid var(--border-soft);cursor:default;}
+        #notifDropdown .siberad-notif-item:last-child{border-bottom:0;}
+        #notifDropdown .siberad-notif-item p{margin:0;font-size:12px;line-height:1.45;color:var(--text);}
+        #notifDropdown .siberad-notif-item small{display:block;margin-top:3px;font-size:10px;color:var(--text-dim);}
+        #notifDropdown .siberad-notif-remove{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:0;border-radius:5px;background:transparent;color:var(--text-dim);cursor:pointer;padding:4px;}
+        #notifDropdown .siberad-notif-remove:hover{background:var(--hover-tint);color:var(--red);}
+        #notifDropdown .siberad-notif-remove svg{width:15px;height:15px;display:block;}
+        #notifDropdown .siberad-notif-empty-runtime{padding:18px 12px;text-align:center;color:var(--text-muted);font-size:12px;line-height:1.5;}
+      `;
+      document.head.appendChild(style);
+    }
 
     var notifications = @json(auth()->user()?->unreadNotifications?->map(function ($n) {
       return ['id' => $n->id, 'message' => $n->data['pesan'] ?? 'Status laporan diperbarui.', 'time' => optional($n->created_at)->diffForHumans()];
     })->values() ?? []);
 
-    /* Jika komponen baru dibuat oleh script, isi item notifikasi di sini. */
-    if (!dropdown.querySelector('.profile-dropdown-item') && notifications.length) {
-      notifications.forEach(function (notification) {
-        var item = document.createElement('div');
-        item.className = 'profile-dropdown-item';
-        item.setAttribute('role', 'menuitem');
-        item.innerHTML = '<div style="display:flex;flex-direction:column;gap:3px;min-width:0;"><span style="font-size:12px;line-height:1.45;">' + escapeHtml(notification.message) + '</span><small style="font-size:10px;color:var(--text-dim);">' + escapeHtml(notification.time || '') + '</small></div>';
-        dropdown.appendChild(item);
-      });
-    }
+    var storageKey = 'siberad-dismissed-notifications-{{ auth()->id() }}';
+    var dismissed = [];
+    try { dismissed = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch (e) { dismissed = []; }
+    if (!Array.isArray(dismissed)) dismissed = [];
 
-    var items = Array.prototype.slice.call(dropdown.querySelectorAll('.profile-dropdown-item'));
+    var list = dropdown.querySelector('.siberad-notif-list');
+    if (!list) {
+      list = document.createElement('div');
+      list.className = 'siberad-notif-list';
+      dropdown.appendChild(list);
+    }
 
     function escapeHtml(value) {
       var div = document.createElement('div');
@@ -84,137 +112,73 @@
       return div.innerHTML;
     }
 
-    var header = dropdown.querySelector('.profile-dropdown-head');
-    if (header) {
-      var markReadForm = header.querySelector('form');
-      if (markReadForm) markReadForm.remove();
-    }
+    function render() {
+      list.innerHTML = '';
+      var visible = notifications.filter(function (n) { return dismissed.indexOf(String(n.id)) === -1; });
 
-    items.forEach(function (item, index) {
-      var notification = notifications[index];
-      if (!notification) return;
-      if (dismissed.indexOf(String(notification.id)) !== -1) {
-        item.remove();
-        return;
+      if (!visible.length) {
+        var empty = document.createElement('div');
+        empty.className = 'siberad-notif-empty-runtime';
+        empty.textContent = 'Belum ada notifikasi saat ini.';
+        list.appendChild(empty);
+      } else {
+        visible.forEach(function (notification) {
+          var item = document.createElement('div');
+          item.className = 'siberad-notif-item';
+          item.innerHTML = '<p>' + escapeHtml(notification.message) + '</p><small>' + escapeHtml(notification.time || '') + '</small>';
+
+          var remove = document.createElement('button');
+          remove.type = 'button';
+          remove.className = 'siberad-notif-remove';
+          remove.setAttribute('aria-label', 'Hapus notifikasi');
+          remove.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
+          remove.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            dismissed.push(String(notification.id));
+            dismissed = dismissed.filter(function (id, index, arr) { return arr.indexOf(id) === index; });
+            try { localStorage.setItem(storageKey, JSON.stringify(dismissed)); } catch (e) {}
+            render();
+          });
+
+          item.appendChild(remove);
+          list.appendChild(item);
+        });
       }
 
-      item.classList.add('siberad-notif-item');
-      item.style.position = 'relative';
-      item.style.paddingRight = '38px';
-
-      var closeBtn = document.createElement('button');
-      closeBtn.type = 'button';
-      closeBtn.className = 'siberad-notif-remove';
-      closeBtn.setAttribute('aria-label', 'Hapus notifikasi');
-      closeBtn.title = 'Hapus notifikasi';
-      closeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
-      closeBtn.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        dismissed.push(String(notification.id));
-        dismissed = dismissed.filter(function (id, i, arr) { return arr.indexOf(id) === i; });
-        try { localStorage.setItem(storageKey, JSON.stringify(dismissed)); } catch (err) {}
-        item.remove();
-        refreshNotificationState();
-      });
-      item.appendChild(closeBtn);
-    });
-
-    if (header && !header.querySelector('.siberad-notif-close')) {
-      var closePanel = document.createElement('button');
-      closePanel.type = 'button';
-      closePanel.className = 'siberad-notif-close';
-      closePanel.setAttribute('aria-label', 'Tutup notifikasi');
-      closePanel.title = 'Tutup notifikasi';
-      closePanel.textContent = 'Tutup';
-      closePanel.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        closeNotificationPanel();
-      });
-      header.appendChild(closePanel);
+      var dot = button.querySelector('.siberad-notif-dot');
+      if (dot) dot.style.display = visible.length ? 'block' : 'none';
     }
 
-    var style = document.querySelector('style[data-notification-controls]');
-    if (!style) {
-      style = document.createElement('style');
-      style.setAttribute('data-notification-controls', 'true');
-      style.textContent = `
-        #notifDropdown .profile-dropdown-head{position:relative;padding-right:58px!important;}
-        .siberad-notif-remove,.siberad-notif-close{display:flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--text-dim);cursor:pointer;border-radius:6px;line-height:1;transition:.15s ease;}
-        .siberad-notif-remove{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:26px;height:26px;padding:4px;}
-        .siberad-notif-close{position:absolute;right:10px;top:50%;transform:translateY(-50%);padding:4px 2px;font-size:11px;font-weight:600;}
-        .siberad-notif-remove svg{width:16px;height:16px;}
-        .siberad-notif-remove:hover,.siberad-notif-close:hover{background:var(--hover-tint);color:var(--red);}
-        .siberad-notif-item{transition:opacity .15s ease,transform .15s ease;}
-        #notifDropdown .siberad-notif-empty-runtime{text-align:center;padding:22px 10px;color:var(--text-dim);font-size:12px;}
-        #notifDropdown .siberad-notif-empty-runtime p{margin:0;font-size:12.5px;line-height:1.6;color:var(--text-muted);}
-      `;
-      document.head.appendChild(style);
-    }
-
-    function closeNotificationPanel() {
+    function close() {
       dropdown.classList.remove('open');
-      notifBtn.classList.remove('open');
-      notifBtn.setAttribute('aria-expanded', 'false');
+      button.classList.remove('open');
+      button.setAttribute('aria-expanded', 'false');
     }
 
-    function getNotificationDot() {
-      var dot = notifBtn.querySelector('.siberad-notif-dot');
-      if (dot) return dot;
-      var spans = Array.prototype.slice.call(notifBtn.querySelectorAll('span'));
-      return spans.find(function (span) {
-        var style = span.getAttribute('style') || '';
-        return style.indexOf('background:var(--red)') !== -1 || style.indexOf('background: var(--red)') !== -1;
-      }) || null;
-    }
-
-    function syncNotificationDot() {
-      var dot = getNotificationDot();
-      if (!dot) return;
-      var remaining = dropdown.querySelectorAll('.siberad-notif-item').length;
-      dot.style.display = remaining > 0 ? 'block' : 'none';
-    }
-
-    function refreshNotificationState() {
-      var remaining = dropdown.querySelectorAll('.siberad-notif-item');
-      syncNotificationDot();
-      var oldEmpty = dropdown.querySelector('.siberad-notif-empty-runtime');
-      if (!remaining.length) {
-        if (!oldEmpty) {
-          var empty = document.createElement('div');
-          empty.className = 'siberad-notif-empty-runtime';
-          empty.innerHTML = '<p>Belum ada notifikasi saat ini.</p>';
-          dropdown.appendChild(empty);
+    if (!button.dataset.notifBound) {
+      button.dataset.notifBound = '1';
+      button.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        var open = dropdown.classList.contains('open');
+        if (open) close();
+        else {
+          dropdown.classList.add('open');
+          button.classList.add('open');
+          button.setAttribute('aria-expanded', 'true');
         }
-      } else if (oldEmpty) {
-        oldEmpty.remove();
-      }
-    }
-
-    /* Pastikan tombol notifikasi dapat dibuka pada semua dashboard. */
-    if (!notifBtn.dataset.notifBound) {
-      notifBtn.dataset.notifBound = '1';
-      notifBtn.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        var isOpen = dropdown.classList.toggle('open');
-        notifBtn.classList.toggle('open', isOpen);
-        notifBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
       });
-      document.addEventListener('click', function (e) {
-        if (!menu.contains(e.target)) closeNotificationPanel();
+
+      document.addEventListener('click', function (event) {
+        if (!menu.contains(event.target)) close();
       });
     }
 
-    /* Empty state sengaja TANPA ikon lonceng di dalam popup. */
-    refreshNotificationState();
+    render();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initNotificationControls);
-  } else {
-    initNotificationControls();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initNotificationControls);
+  else initNotificationControls();
 })();
 </script>
