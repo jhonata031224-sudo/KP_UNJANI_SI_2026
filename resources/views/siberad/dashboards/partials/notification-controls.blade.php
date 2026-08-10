@@ -38,27 +38,23 @@
     if (!button || !dropdown) return;
 
     menu.classList.add('notif-menu');
-    actions.style.position = 'relative';
-    actions.style.zIndex = '99998';
-    menu.style.position = 'relative';
-    menu.style.zIndex = '99999';
-    menu.style.pointerEvents = 'auto';
-    button.style.position = 'relative';
-    button.style.zIndex = '100000';
-    button.style.pointerEvents = 'auto';
-    dropdown.style.zIndex = '100001';
-    dropdown.style.pointerEvents = 'auto';
 
+    // Keep the entire topbar above dashboard/content layers. The previous
+    // implementation only raised the notification element itself, which is
+    // ineffective when its parent stacking context is underneath the content.
     var style = document.getElementById('siberad-notification-style');
     if (!style) {
       style = document.createElement('style');
       style.id = 'siberad-notification-style';
       style.textContent = `
-        .notif-menu{position:relative!important;z-index:99999!important;pointer-events:auto!important;}
-        .notif-menu>#notifBtn{position:relative!important;z-index:100000!important;cursor:pointer!important;pointer-events:auto!important;}
+        .topbar{position:relative!important;z-index:100000!important;}
+        .topbar-actions{position:relative!important;z-index:100001!important;pointer-events:auto!important;}
+        .topbar-actions>*{pointer-events:auto!important;}
+        .notif-menu{position:relative!important;z-index:100002!important;pointer-events:auto!important;}
+        .notif-menu>#notifBtn{position:relative!important;z-index:100003!important;display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important;pointer-events:auto!important;}
         .notif-menu>#notifBtn svg{width:19px;height:19px;display:block;pointer-events:none;}
         .siberad-notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--panel,#0c2417);pointer-events:none;}
-        #notifDropdown{position:absolute!important;z-index:100001!important;min-width:280px;right:0;top:calc(100% + 8px);pointer-events:auto!important;}
+        #notifDropdown{position:absolute!important;z-index:100004!important;min-width:280px;right:0;top:calc(100% + 8px);pointer-events:auto!important;}
         #notifDropdown .notif-head{display:flex;align-items:center;min-height:22px;}
         #notifDropdown .siberad-notif-list{display:flex;flex-direction:column;}
         #notifDropdown .siberad-notif-item{position:relative;padding:11px 38px 11px 12px;border-bottom:1px solid var(--border-soft);}
