@@ -30,7 +30,7 @@
 <script>
 (function(){
   function normalizeDanpusSubmenuText(){
-    var labels={'SATLAKKAL':'Satlakkal','SATLAKSISOS':'Satlaksisos','SATLAKDAK':'Satlakdak','SATLAKDUKTEK':'Satlakduktek'};
+    var labels={'SATLAKKAL':'Satlakkal','SATLAKSISOS':'Satlaksisos','SATLAKDAK':'Satlakdak','SATLAKDUKTEK':'Satlakduktek','BINFUNG':'Binfung','BINUM':'Binum','BINMAT':'Binmat','DIKLAT':'Diklat'};
     document.querySelectorAll('.side-nav-group .side-sub-link').forEach(function(link){
       var text=link.textContent.trim();
       if(labels[text]) Array.prototype.slice.call(link.childNodes).forEach(function(node){
