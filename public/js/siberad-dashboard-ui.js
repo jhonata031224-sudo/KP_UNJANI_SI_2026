@@ -2,7 +2,7 @@
   'use strict';
 
   function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>\'"]/g, function (ch) {
+    return String(value ?? '').replace(/[&<>\'\"]/g, function (ch) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[ch];
     });
   }
@@ -22,6 +22,17 @@
       .siberad-notif-empty{text-align:center;padding:20px 6px 8px;color:var(--text-dim);}
       .siberad-notif-empty svg{margin:0 auto 14px;display:block;}
       .siberad-notif-empty p{margin:0;font-size:12.5px;line-height:1.6;color:var(--text-muted);}
+
+      /* Rapikan submenu sidebar Laporan agar konsisten dengan dropdown referensi Danpus. */
+      .side-dropdown .side-sublink{display:flex!important;align-items:center!important;gap:0!important;min-height:32px!important;height:32px!important;padding:7px 12px 7px 32px!important;margin:0!important;font-size:12.5px!important;font-weight:500!important;line-height:1.2!important;text-transform:none!important;}
+      .side-dropdown .side-sublink .dot{display:none!important;}
+      .side-dropdown .side-dropdown-menu{gap:1px!important;padding:0!important;margin:0!important;}
+      .side-dropdown.open .side-dropdown-menu{margin-top:3px!important;}
+      .side-dropdown .side-sublink:hover{color:var(--text)!important;background:var(--hover-tint)!important;}
+      .side-dropdown .side-sublink.active{color:var(--gold-bright)!important;background:var(--gold-dim)!important;border-color:var(--border)!important;font-weight:600!important;}
+      .side-dropdown-toggle{font-size:13.5px!important;font-weight:500!important;}
+      .side-dropdown.open .side-dropdown-toggle{color:var(--text)!important;}
+
       .siberad-logout-overlay{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(18,20,15,.42);backdrop-filter:blur(8px);}
       .siberad-logout-overlay.open{display:flex;}
       .siberad-logout-card{width:min(420px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--border-soft);border-radius:16px;padding:30px 30px 28px;box-shadow:0 24px 70px rgba(0,0,0,.28);text-align:center;}
