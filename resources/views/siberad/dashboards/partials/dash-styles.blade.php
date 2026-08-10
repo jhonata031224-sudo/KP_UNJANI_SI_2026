@@ -473,10 +473,11 @@
   .form-field.full{grid-column:1/-1;}
   .form-field label{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--text-dim);text-transform:uppercase;}
   .form-field input,.form-field select,.form-field textarea{
-    border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-family:var(--body);font-size:13.5px;
+    border:1px solid var(--border);border-radius:10px;padding:11px 13px;font-family:var(--body);font-size:13.5px;
     background:var(--bg-deep);color:var(--text);
   }
-  .form-field select option{background:var(--panel-2);color:var(--text);}
+  .form-field select{cursor:pointer;}
+  .form-field select option{background:var(--panel-2);color:var(--text);padding:10px 14px;margin:2px 0;}
   .form-field input:focus,.form-field select:focus,.form-field textarea:focus{outline:none;border-color:var(--gold);}
   .form-field input::placeholder,.form-field textarea::placeholder{color:var(--text-dim);}
   .form-hint{font-size:11px;color:var(--text-dim);}
