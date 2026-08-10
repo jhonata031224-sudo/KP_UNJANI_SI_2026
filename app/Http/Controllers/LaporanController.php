@@ -111,7 +111,14 @@ class LaporanController extends Controller
     {
         $user = $request->user()->load('satuan');
         $satuan = $user->satuan;
-        abort_unless($satuan && $laporan->tujuan_satuan_id === $satuan->id, 403);
+        abort_unless($satuan, 403);
+
+        $isPenerimaLaporan = (int) $laporan->tujuan_satuan_id === (int) $satuan->id;
+        $isPimpinanRiwayatSatlak = in_array(strtoupper((string) $satuan->kode), ['DANPUS', 'WADAN'], true)
+            && $laporan->satuan
+            && $laporan->satuan->kategori === Satuan::KATEGORI_SATLAK;
+
+        abort_unless($isPenerimaLaporan || $isPimpinanRiwayatSatlak, 403);
 
         if ($laporan->lampiran_path) {
             Storage::disk('public')->delete($laporan->lampiran_path);
