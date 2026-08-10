@@ -71,15 +71,26 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 
   ['monitorGroup','reportGroup'].forEach(id=>{const g=document.getElementById(id),b=g?.querySelector('.side-nav-group-title');b?.addEventListener('click',()=>g.classList.toggle('open'))});
 
-  function showSection(id,link){
+  const ACTIVE_TAB_KEY='siberad-pimpinan-active-tab';
+  function showSection(id,link,skipSave){
     document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
     const el=document.getElementById(id);if(el)el.classList.add('active');
     document.querySelectorAll('.side-sub-link,.side-link').forEach(a=>a.classList.remove('active'));
     if(link)link.classList.add('active');
     sidebar?.classList.remove('open');
     window.scrollTo({top:0,behavior:'smooth'});
+    if(!skipSave){try{sessionStorage.setItem(ACTIVE_TAB_KEY,id)}catch(e){}}
   }
   document.querySelectorAll('.side-link[href^="#"],.side-sub-link[href^="#"],.card-link[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const id=a.getAttribute('href').slice(1);if(document.getElementById(id)){e.preventDefault();showSection(id,a)}}));
+
+  (function restoreActiveTab(){
+    let savedId=null;
+    try{savedId=sessionStorage.getItem(ACTIVE_TAB_KEY)}catch(e){}
+    if(!savedId||!document.getElementById(savedId))return;
+    const link=document.querySelector('.side-link[href="#'+savedId+'"],.side-sub-link[href="#'+savedId+'"]');
+    showSection(savedId,link,true);
+    if(link){const group=link.closest('.side-nav-group');if(group)group.classList.add('open')}
+  })();
 
   document.querySelectorAll('.logout-form').forEach(form=>form.addEventListener('submit',e=>{if(!window.confirm('Keluar dari akun SIBERAD?'))e.preventDefault()}));
 
