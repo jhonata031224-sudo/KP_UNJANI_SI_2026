@@ -191,25 +191,28 @@
   document.querySelectorAll('.tab-panel.active').forEach(terapkanRowLimit);
 
   // Ganti tema (dark / light) — 1 tombol, tersimpan di localStorage, berlaku di semua halaman.
+  // Guard dataset.uiBound: kalau tombol ini sudah dibind duluan oleh script
+  // lain di halaman (mis. inline script Admin atau pengumuman-banner.blade.php),
+  // skip di sini supaya tidak ada dua listener klik yang saling membatalkan.
   (function(){
     var THEME_KEY = 'siberad-theme';
     var btn = document.getElementById('themeToggleBtn');
+    if (!btn || btn.dataset.uiBound) return;
+    btn.dataset.uiBound = '1';
     function applyTheme(theme){
       if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
       else document.documentElement.removeAttribute('data-theme');
-      if (btn) btn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
+      btn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
     }
     var saved = 'dark';
     try { saved = localStorage.getItem(THEME_KEY) || 'dark'; } catch (e) {}
     applyTheme(saved);
-    if (btn) {
-      btn.addEventListener('click', function(){
-        var current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-        var next = current === 'light' ? 'dark' : 'light';
-        try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
-        applyTheme(next);
-      });
-    }
+    btn.addEventListener('click', function(){
+      var current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      var next = current === 'light' ? 'dark' : 'light';
+      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+      applyTheme(next);
+    });
   })();
 
   // Bersihkan pemisah dekoratif dari teks yang tampil di seluruh dashboard role.

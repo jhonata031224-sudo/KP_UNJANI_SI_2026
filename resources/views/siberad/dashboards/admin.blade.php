@@ -35,6 +35,9 @@
   .table-filter:focus{outline:none;border-color:var(--gold);}
   .table-empty-row td{text-align:center;color:var(--text-dim);font-size:12.5px;padding:26px 12px !important;}
   @media(max-width:640px){.table-toolbar{flex-direction:column;}.table-filter{width:100%;}}
+
+  .side-nav-group{margin:0}.side-nav-group-title{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;margin:2px 0;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--text-muted);font-family:var(--body);font-size:13.5px;font-weight:500;cursor:pointer;text-align:left;box-sizing:border-box;transition:background .15s ease,color .15s ease}.side-nav-group-title:hover{background:var(--hover-tint);color:var(--text)}.side-nav-group.open .side-nav-group-title{color:var(--text)}.side-nav-group-title .side-text{flex:1}.side-nav-group-title .chevron{margin-left:auto;width:15px;height:15px;flex-shrink:0;opacity:.6;transition:transform .25s cubic-bezier(.4,0,.2,1),opacity .2s ease}.side-nav-group.open .chevron{transform:rotate(180deg);opacity:1}.side-subnav{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;overflow:hidden}.side-subnav>div{min-height:0;padding:3px 0;margin-left:18px;border-left:1px solid var(--border-soft)}.side-nav-group.open .side-subnav{grid-template-rows:1fr;opacity:1}.side-sub-link{position:relative;display:flex;align-items:center;gap:10px;padding:9px 12px 9px 17px;border-radius:0 9px 9px 0;color:var(--text-muted);font-family:var(--body);font-size:13px;font-weight:500;text-decoration:none;margin:1px 0;box-sizing:border-box;transition:background .15s ease,color .15s ease}.side-sub-link:hover{background:var(--hover-tint);color:var(--text)}.side-sub-link .sub-dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5;flex:0 0 auto;transition:opacity .15s ease,background .15s ease,box-shadow .15s ease}.side-sub-link.active{background:var(--gold-dim);color:var(--gold-bright);font-weight:600}.side-sub-link.active:before{content:"";position:absolute;left:-1px;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--gold-bright)}.side-sub-link.active .sub-dot{background:var(--gold-bright);opacity:1;box-shadow:0 0 0 3px rgba(201,122,0,.15)}.side-subnav-label{display:none}
+  .sidebar.collapsed .side-subnav{display:none}.sidebar.collapsed .side-nav-group.open .side-subnav{display:block;position:fixed;min-width:216px;background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);padding:8px;z-index:100020}.sidebar.collapsed .side-subnav>div{margin-left:0;border-left:none;padding:0}.sidebar.collapsed .side-subnav-label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);padding:4px 10px 8px}.sidebar.collapsed .side-sub-link{padding:9px 10px;border-radius:8px}.sidebar.collapsed .side-nav-group.has-active-child .side-nav-group-title{color:var(--gold-bright);background:var(--gold-dim)}
 </style>
 </head>
 <body>
@@ -110,79 +113,126 @@
     <div class="side-brand">
       <img src="{{ asset('images/logo-pussiberad.jpg') }}" alt="Lambang Pussiberad">
       <div class="logo">SIBER<span>AD</span></div>
+      <button type="button" class="side-collapse-btn" id="sideCollapseBtn" aria-label="Ciutkan sidebar" title="Ciutkan sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg></button>
     </div>
     <nav class="side-nav">
-      <a href="#" class="side-link active" data-tab-link="dashboard"><span class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg></span>Dashboard</a>
+      <a href="#" class="side-link active" data-tab-link="dashboard" title="Dashboard"><span class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg></span><span class="side-text">Dashboard</span></a>
 
-      <div class="side-dropdown" id="penggunaDropdown">
-        <button type="button" class="side-link side-dropdown-toggle" id="penggunaToggle" aria-expanded="false" aria-controls="penggunaSubmenu">
+      <div class="side-nav-group open" id="penggunaGroup">
+        <button type="button" class="side-nav-group-title" id="penggunaToggle" title="Kelola Pengguna">
           <span class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-          <span class="side-link-label">Kelola Pengguna</span>
-          <svg class="side-dropdown-arrow" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
+          <span class="side-text">Kelola Pengguna</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
         </button>
-        <div class="side-dropdown-menu" id="penggunaSubmenu">
-          <a href="#" class="side-link side-sublink" data-tab-link="pengguna"><span class="dot"></span>Daftar Pengguna</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="reset-password"><span class="dot"></span>Permintaan Reset Password</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="pengumuman"><span class="dot"></span>Pengumuman</a>
-        </div>
+        <div class="side-subnav"><div>
+          <span class="side-subnav-label">Kelola Pengguna</span>
+          <a href="#" class="side-sub-link" data-tab-link="pengguna" title="Daftar Pengguna"><span class="sub-dot"></span>Daftar Pengguna</a>
+          <a href="#" class="side-sub-link" data-tab-link="reset-password" title="Permintaan Reset Password"><span class="sub-dot"></span>Permintaan Reset Password</a>
+          <a href="#" class="side-sub-link" data-tab-link="pengumuman" title="Pengumuman"><span class="sub-dot"></span>Pengumuman</a>
+        </div></div>
       </div>
 
-      <div class="side-dropdown" id="monitoringDropdown">
-        <button type="button" class="side-link side-dropdown-toggle" id="monitoringToggle" aria-expanded="false" aria-controls="monitoringSubmenu">
+      <div class="side-nav-group open" id="monitoringGroup">
+        <button type="button" class="side-nav-group-title" id="monitoringToggle" title="Monitoring">
           <span class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
-          <span class="side-link-label">Monitoring</span>
-          <svg class="side-dropdown-arrow" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
+          <span class="side-text">Monitoring</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
         </button>
-        <div class="side-dropdown-menu" id="monitoringSubmenu">
-          <a href="#" class="side-link side-sublink" data-tab-link="rekap-laporan"><span class="dot"></span>Rekap Laporan</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="sesi-aktif"><span class="dot"></span>Sesi Aktif</a>
-        </div>
+        <div class="side-subnav"><div>
+          <span class="side-subnav-label">Monitoring</span>
+          <a href="#" class="side-sub-link" data-tab-link="rekap-laporan" title="Rekap Laporan"><span class="sub-dot"></span>Rekap Laporan</a>
+          <a href="#" class="side-sub-link" data-tab-link="sesi-aktif" title="Sesi Aktif"><span class="sub-dot"></span>Sesi Aktif</a>
+        </div></div>
       </div>
 
-      <div class="side-dropdown" id="sistemDropdown">
-        <button type="button" class="side-link side-dropdown-toggle" id="sistemToggle" aria-expanded="false" aria-controls="sistemSubmenu">
+      <div class="side-nav-group open" id="sistemGroup">
+        <button type="button" class="side-nav-group-title" id="sistemToggle" title="Kelola Sistem">
           <span class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
-          <span class="side-link-label">Kelola Sistem</span>
-          <svg class="side-dropdown-arrow" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
+          <span class="side-text">Kelola Sistem</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
         </button>
-        <div class="side-dropdown-menu" id="sistemSubmenu">
-          <a href="#" class="side-link side-sublink" data-tab-link="satlak"><span class="dot"></span>Manajemen Satuan</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="role-akses"><span class="dot"></span>Role &amp; Hak Akses</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="data-master"><span class="dot"></span>Data Master</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="log-aktivitas"><span class="dot"></span>Log Aktivitas</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="backup"><span class="dot"></span>Backup Database</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="laporan-admin"><span class="dot"></span>Laporan &amp; Export</a>
-          <a href="#" class="side-link side-sublink" data-tab-link="pengaturan-umum"><span class="dot"></span>Pengaturan Umum</a>
-        </div>
+        <div class="side-subnav"><div>
+          <span class="side-subnav-label">Kelola Sistem</span>
+          <a href="#" class="side-sub-link" data-tab-link="satlak" title="Manajemen Satuan"><span class="sub-dot"></span>Manajemen Satuan</a>
+          <a href="#" class="side-sub-link" data-tab-link="role-akses" title="Role &amp; Hak Akses"><span class="sub-dot"></span>Role &amp; Hak Akses</a>
+          <a href="#" class="side-sub-link" data-tab-link="data-master" title="Data Master"><span class="sub-dot"></span>Data Master</a>
+          <a href="#" class="side-sub-link" data-tab-link="log-aktivitas" title="Log Aktivitas"><span class="sub-dot"></span>Log Aktivitas</a>
+          <a href="#" class="side-sub-link" data-tab-link="backup" title="Backup Database"><span class="sub-dot"></span>Backup Database</a>
+          <a href="#" class="side-sub-link" data-tab-link="laporan-admin" title="Laporan &amp; Export"><span class="sub-dot"></span>Laporan &amp; Export</a>
+          <a href="#" class="side-sub-link" data-tab-link="pengaturan-umum" title="Pengaturan Umum"><span class="sub-dot"></span>Pengaturan Umum</a>
+        </div></div>
       </div>
     </nav>
     <div class="side-foot">
       <form class="logout logout-form" method="POST" action="{{ route('logout') }}">
         @csrf
-        <button type="submit">Keluar</button>
+        <button type="submit" title="Keluar"><span class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span><span class="side-text">Keluar</span></button>
       </form>
     </div>
   </aside>
+  <script>try{if(localStorage.getItem('siberad-sidebar-collapsed')==='1')document.getElementById('sidebar').classList.add('collapsed');}catch(e){}</script>
 
   <script>
   (function () {
-    var dropdowns = [
-      { wrap: 'penggunaDropdown', toggle: 'penggunaToggle' },
-      { wrap: 'monitoringDropdown', toggle: 'monitoringToggle' },
-      { wrap: 'sistemDropdown', toggle: 'sistemToggle' }
-    ];
-    dropdowns.forEach(function (cfg) {
-      var dropdown = document.getElementById(cfg.wrap);
-      var toggle = document.getElementById(cfg.toggle);
-      if (!dropdown || !toggle) return;
+    var sidebar = document.getElementById('sidebar');
+    var groups = Array.prototype.slice.call(document.querySelectorAll('.side-nav-group'));
 
-      var subActive = dropdown.querySelector('.side-sublink.active');
-      if (subActive) dropdown.classList.add('open');
+    function positionGroupFlyout(g) {
+      var subnav = g.querySelector('.side-subnav');
+      var btn = g.querySelector('.side-nav-group-title');
+      if (!subnav || !btn) return;
+      if (!sidebar || !sidebar.classList.contains('collapsed') || !g.classList.contains('open')) {
+        subnav.style.top = ''; subnav.style.left = '';
+        return;
+      }
+      var r = btn.getBoundingClientRect();
+      subnav.style.top = r.top + 'px';
+      subnav.style.left = (r.right + 8) + 'px';
+    }
+    window.siberadRepositionSubnavFlyouts = function () {
+      groups.forEach(positionGroupFlyout);
+    };
+    window.addEventListener('resize', function () { window.siberadRepositionSubnavFlyouts(); });
 
-      toggle.addEventListener('click', function (e) {
-        e.preventDefault();
-        var isOpen = dropdown.classList.toggle('open');
-        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    groups.forEach(function (g) {
+      var btn = g.querySelector('.side-nav-group-title');
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var willOpen = !g.classList.contains('open');
+        if (willOpen && sidebar && sidebar.classList.contains('collapsed')) {
+          groups.forEach(function (other) {
+            if (other === g) return;
+            other.classList.remove('open');
+            positionGroupFlyout(other);
+          });
+        }
+        g.classList.toggle('open');
+        positionGroupFlyout(g);
+      });
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!sidebar || !sidebar.classList.contains('collapsed')) return;
+      groups.forEach(function (g) {
+        if (g.contains(e.target)) return;
+        g.classList.remove('open');
+        positionGroupFlyout(g);
+      });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' || !sidebar || !sidebar.classList.contains('collapsed')) return;
+      groups.forEach(function (g) { g.classList.remove('open'); positionGroupFlyout(g); });
+    });
+
+    document.querySelectorAll('[data-tab-link]').forEach(function (link) {
+      link.addEventListener('click', function () {
+        groups.forEach(function (g) { g.classList.remove('has-active-child'); });
+        var group = link.closest('.side-nav-group');
+        if (group) group.classList.add('has-active-child');
+        if (sidebar && sidebar.classList.contains('collapsed') && group) {
+          group.classList.remove('open');
+          positionGroupFlyout(group);
+        }
       });
     });
   })();
@@ -205,7 +255,7 @@
               <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" style="fill:var(--gold-dim) !important;stroke:var(--gold-bright) !important;"></path>
               <path d="M13.73 21a2 2 0 0 1-3.46 0" style="fill:none !important;stroke:var(--gold-bright) !important;"></path>
             </svg>
-            <span style="position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--panel,#0c2417);"></span>
+            <span class="siberad-notif-dot" style="position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--panel,#0c2417);{{ auth()->user()?->unreadNotifications->count() ? '' : 'display:none;' }}"></span>
           </button>
 
           <div class="profile-dropdown" id="notifDropdown" role="menu" aria-label="Notifikasi">
@@ -268,6 +318,44 @@
     </div>
 
     
+    <script>
+    (function () {
+      // Tombol tema, notifikasi, dan profil di topbar bisa dibind dua kali:
+      // sekali di sini/lewat script Admin sendiri di bawah, sekali lagi lewat
+      // partials/pengumuman-banner.blade.php (initRoleUi) atau
+      // partials/dash-script.blade.php yang ikut ter-include di halaman ini.
+      // Dua listener klik pada tombol yang sama saling membatalkan dalam satu
+      // klik (buka lalu langsung tertutup lagi), jadi kelihatan seperti tidak
+      // merespons. Wiring tema dilakukan tuntas di sini dan langsung ditandai
+      // "sudah dibind" (dataset.uiBound) SEBELUM partial lain sempat jalan,
+      // supaya partial lain skip. Tombol profil & notifikasi sudah punya
+      // implementasi sendiri yang lebih lengkap di bawah, jadi cukup ditandai
+      // di sini biar partial lain tidak ikut bind.
+      var themeBtn = document.getElementById('themeToggleBtn');
+      if (themeBtn && !themeBtn.dataset.uiBound) {
+        themeBtn.dataset.uiBound = '1';
+        var THEME_KEY = 'siberad-theme';
+        function applyTheme(theme) {
+          if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+          else document.documentElement.removeAttribute('data-theme');
+          themeBtn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
+        }
+        var savedTheme = 'dark';
+        try { savedTheme = localStorage.getItem(THEME_KEY) || 'dark'; } catch (e) {}
+        applyTheme(savedTheme);
+        themeBtn.addEventListener('click', function () {
+          var current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+          var next = current === 'light' ? 'dark' : 'light';
+          try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+          applyTheme(next);
+        });
+      }
+
+      var profileBtn = document.getElementById('profileMenuBtn');
+      if (profileBtn) profileBtn.dataset.uiBound = '1';
+    })();
+    </script>
+
     <div class="content">
       @include('siberad.dashboards.partials.pengumuman-banner')
 
@@ -1618,6 +1706,17 @@
         var dropdown = document.getElementById('notifDropdown');
         var wrapper = document.getElementById('notifMenu');
         if (!notifBtn || !dropdown || !wrapper) return;
+        // partials/notification-controls.blade.php ikut ter-include lewat
+        // pengumuman-banner.blade.php, tapi baru jalan pas event
+        // DOMContentLoaded (jadi SETELAH script inline ini, yang jalan
+        // langsung waktu parser sampai sini). Dia isi dropdown ini dengan
+        // notifikasi asli (tetap jalan, tidak digguard) tapi toggle klik-nya
+        // sendiri digated lewat dataset.notifBound. Klaim flag itu di sini
+        // duluan supaya nanti dia skip bind toggle klik-nya sendiri —
+        // kalau kedua-duanya bind, satu klik langsung kebuka-lalu-tertutup
+        // lagi (dua listener saling membatalkan).
+        if (notifBtn.dataset.notifBound) return;
+        notifBtn.dataset.notifBound = '1';
 
         function closeNotif() {
           dropdown.classList.remove('open');

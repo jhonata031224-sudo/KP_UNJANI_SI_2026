@@ -1,13 +1,14 @@
 <script>
 (function(){
-  // Konfirmasi keluar dibuat sama seperti perilaku di dashboard main.
-  document.querySelectorAll('.logout-form').forEach(function(form){
-    if (form.dataset.logoutConfirmBound === '1') return;
-    form.dataset.logoutConfirmBound = '1';
-    form.addEventListener('submit', function(e){
-      if (!window.confirm('Keluar dari akun SIBERAD?')) e.preventDefault();
-    });
-  });
+  // Konfirmasi keluar SUDAH ditangani oleh modal custom di masing-masing
+  // halaman (lihat #logoutConfirmOverlay di admin.blade.php, atau
+  // initLogoutConfirm() di partials/global-shell-enhancements.blade.php —
+  // dua-duanya ikut ter-include di semua halaman yang memuat partial ini).
+  // Script ini dulu punya fallback window.confirm() sendiri di sini, tapi
+  // karena partial ini jalan LEBIH DULU (synchronous, bukan nunggu
+  // DOMContentLoaded) daripada modal custom yang dipasang belakangan, popup
+  // bawaan browser itu selalu menang duluan dan muncul dobel bareng modal
+  // custom-nya. Dihapus supaya cuma satu modal (yang custom) yang jalan.
 
   // Fitur foto profil mengikuti mekanisme dashboard main: lokal per akun,
   // tanpa mengubah data akun/backend. JPG, PNG, WEBP maksimal 5 MB.
