@@ -1217,6 +1217,10 @@
     siberadShowToast('error', {!! json_encode($errors->first()) !!});
   @endif
 
+  @if(session('logout_success'))
+    siberadShowToast('success', 'Anda berhasil logout dari SIBERAD.');
+  @endif
+
   // ---------- scroll reveal ----------
   const revealEls = document.querySelectorAll('[data-reveal]');
   const io = new IntersectionObserver((entries)=>{
