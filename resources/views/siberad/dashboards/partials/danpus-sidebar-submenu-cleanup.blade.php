@@ -32,7 +32,7 @@
     content: none !important;
   }
 
-  /* Danpus: submenu Satlak menampilkan log aktivitas, bukan tabel data. */
+  /* Log aktivitas Satlak: hanya menampilkan log, tanpa tabel/kolom data tambahan. */
   .danpus-activity-log {
     display: flex;
     flex-direction: column;
@@ -112,33 +112,6 @@
     white-space: nowrap;
   }
 
-  .danpus-activity-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-    margin-top: 10px;
-  }
-
-  .danpus-activity-meta span {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 8px;
-    border: 1px solid var(--p-border);
-    border-radius: 999px;
-    background: var(--p-surface);
-    color: var(--p-muted);
-    font-size: 9px;
-    font-weight: 700;
-  }
-
-  .danpus-activity-action {
-    margin-top: 10px;
-  }
-
-  .danpus-activity-action .detail-btn {
-    padding: 6px 10px;
-  }
-
   .danpus-activity-empty {
     padding: 25px 12px;
     text-align: center;
@@ -170,12 +143,13 @@
 
       document.querySelectorAll('.side-nav-group .side-sub-link').forEach(function (link) {
         var text = link.textContent.trim();
-        if (!labels[text]) return;
-        Array.prototype.slice.call(link.childNodes).forEach(function (node) {
-          if (node.nodeType === Node.TEXT_NODE && node.nodeValue.trim()) {
-            node.nodeValue = node.nodeValue.replace(text, labels[text]);
-          }
-        });
+        if (labels[text]) {
+          Array.prototype.slice.call(link.childNodes).forEach(function (node) {
+            if (node.nodeType === Node.TEXT_NODE && node.nodeValue.trim()) {
+              node.nodeValue = node.nodeValue.replace(text, labels[text]);
+            }
+          });
+        }
       });
     }
 
@@ -187,7 +161,9 @@
 
     function removeDanpusProfileHelpText() {
       var profileHelp = document.querySelector('#profilePhotoView .profile-help-text');
-      if (profileHelp) profileHelp.remove();
+      if (profileHelp) {
+        profileHelp.remove();
+      }
     }
 
     function buildActivityTimeline() {
@@ -196,16 +172,14 @@
         return;
       @endif
 
-      /* Mendukung id section lama maupun hasil refactor selama mengandung "satlak". */
-      document.querySelectorAll('section[id*="satlak"] .clean-table-wrap').forEach(function (wrapper) {
+      document.querySelectorAll('section[id^="satlak-"] .clean-table-wrap').forEach(function (wrapper) {
         if (wrapper.dataset.timelineReady === '1') return;
-
         var table = wrapper.querySelector('table');
         if (!table) return;
 
         var rows = Array.from(table.querySelectorAll('tbody tr'));
         var validRows = rows.filter(function (row) {
-          return row.querySelector('td') && row.querySelector('.detail-btn');
+          return row.querySelector('td');
         });
 
         var timeline = document.createElement('div');
@@ -219,7 +193,6 @@
         } else {
           validRows.forEach(function (row) {
             var cells = row.querySelectorAll('td');
-            var detail = row.querySelector('.detail-btn');
             var item = document.createElement('article');
             item.className = 'danpus-activity-item';
 
@@ -261,27 +234,6 @@
             head.appendChild(date);
             card.appendChild(head);
 
-            var meta = document.createElement('div');
-            meta.className = 'danpus-activity-meta';
-
-            [
-              ['Tujuan', cells[1]?.textContent.trim() || '-'],
-              ['Prioritas', cells[2]?.textContent.trim() || '-'],
-              ['Status', cells[3]?.textContent.trim() || '-']
-            ].forEach(function (entry) {
-              var badge = document.createElement('span');
-              badge.textContent = entry[0] + ': ' + entry[1];
-              meta.appendChild(badge);
-            });
-            card.appendChild(meta);
-
-            if (detail) {
-              var action = document.createElement('div');
-              action.className = 'danpus-activity-action';
-              action.appendChild(detail.cloneNode(true));
-              card.appendChild(action);
-            }
-
             item.appendChild(card);
             timeline.appendChild(item);
           });
@@ -300,29 +252,10 @@
       buildActivityTimeline();
     }
 
-    function scheduleTimelineRefresh() {
-      window.setTimeout(buildActivityTimeline, 50);
-      window.setTimeout(buildActivityTimeline, 250);
-      window.setTimeout(buildActivityTimeline, 700);
-    }
-
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', applyDanpusSubmenuFix);
     } else {
       applyDanpusSubmenuFix();
-    }
-
-    /* Jika submenu Satlak membuka konten secara dinamis, timeline tetap terbentuk. */
-    document.addEventListener('click', function (event) {
-      var link = event.target.closest && event.target.closest('.side-nav-group .side-sub-link');
-      if (link) scheduleTimelineRefresh();
-    });
-
-    if (window.MutationObserver) {
-      var observer = new MutationObserver(function () {
-        scheduleTimelineRefresh();
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
     }
   })();
 </script>
