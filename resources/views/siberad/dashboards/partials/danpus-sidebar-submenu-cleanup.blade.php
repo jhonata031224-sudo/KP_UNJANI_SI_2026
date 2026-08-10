@@ -32,7 +32,7 @@
     content: none !important;
   }
 
-  /* Log aktivitas Satlak: menggantikan tampilan tabel menjadi timeline. */
+  /* Danpus: submenu Satlak menampilkan log aktivitas, bukan tabel data. */
   .danpus-activity-log {
     display: flex;
     flex-direction: column;
@@ -170,13 +170,12 @@
 
       document.querySelectorAll('.side-nav-group .side-sub-link').forEach(function (link) {
         var text = link.textContent.trim();
-        if (labels[text]) {
-          Array.prototype.slice.call(link.childNodes).forEach(function (node) {
-            if (node.nodeType === Node.TEXT_NODE && node.nodeValue.trim()) {
-              node.nodeValue = node.nodeValue.replace(text, labels[text]);
-            }
-          });
-        }
+        if (!labels[text]) return;
+        Array.prototype.slice.call(link.childNodes).forEach(function (node) {
+          if (node.nodeType === Node.TEXT_NODE && node.nodeValue.trim()) {
+            node.nodeValue = node.nodeValue.replace(text, labels[text]);
+          }
+        });
       });
     }
 
@@ -188,9 +187,7 @@
 
     function removeDanpusProfileHelpText() {
       var profileHelp = document.querySelector('#profilePhotoView .profile-help-text');
-      if (profileHelp) {
-        profileHelp.remove();
-      }
+      if (profileHelp) profileHelp.remove();
     }
 
     function buildActivityTimeline() {
@@ -199,8 +196,10 @@
         return;
       @endif
 
-      document.querySelectorAll('section[id^="satlak-"] .clean-table-wrap').forEach(function (wrapper) {
+      /* Mendukung id section lama maupun hasil refactor selama mengandung "satlak". */
+      document.querySelectorAll('section[id*="satlak"] .clean-table-wrap').forEach(function (wrapper) {
         if (wrapper.dataset.timelineReady === '1') return;
+
         var table = wrapper.querySelector('table');
         if (!table) return;
 
@@ -301,10 +300,29 @@
       buildActivityTimeline();
     }
 
+    function scheduleTimelineRefresh() {
+      window.setTimeout(buildActivityTimeline, 50);
+      window.setTimeout(buildActivityTimeline, 250);
+      window.setTimeout(buildActivityTimeline, 700);
+    }
+
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', applyDanpusSubmenuFix);
     } else {
       applyDanpusSubmenuFix();
+    }
+
+    /* Jika submenu Satlak membuka konten secara dinamis, timeline tetap terbentuk. */
+    document.addEventListener('click', function (event) {
+      var link = event.target.closest && event.target.closest('.side-nav-group .side-sub-link');
+      if (link) scheduleTimelineRefresh();
+    });
+
+    if (window.MutationObserver) {
+      var observer = new MutationObserver(function () {
+        scheduleTimelineRefresh();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
     }
   })();
 </script>
