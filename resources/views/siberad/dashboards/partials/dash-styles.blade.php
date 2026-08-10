@@ -654,6 +654,13 @@
         (window.siberadCharts || []).forEach(function(chart){
           try{ chart.resize(); }catch(e){}
         });
+        // Kalau view ini punya submenu grup di sidebar (mis. dashboard
+        // pimpinan Danpus/Wadan), reposisikan flyout submenunya. Fungsi ini
+        // cuma ada kalau view-nya punya .side-nav-group, jadi aman di-skip
+        // (no-op) untuk role lain.
+        if (typeof window.siberadRepositionSubnavFlyouts === 'function') {
+          window.siberadRepositionSubnavFlyouts();
+        }
       }, 260);
     }
 
