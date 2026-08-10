@@ -134,7 +134,15 @@
       }
     }
 
-    refreshNotificationState();
+    // Jika awalnya tidak ada notifikasi sama sekali, Blade sudah merender blok
+    // kosong statis sendiri — jangan tambah blok runtime kedua, cukup sinkronkan
+    // titik merah. Tapi jika ada item yang semuanya sudah pernah di-dismiss di
+    // atas, dropdown perlu blok kosong runtime agar tidak tampil kosong melompong.
+    if (items.length > 0) {
+      refreshNotificationState();
+    } else {
+      syncNotificationDot();
+    }
   }
 
   if (document.readyState === 'loading') {
