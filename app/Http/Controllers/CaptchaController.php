@@ -13,8 +13,8 @@ class CaptchaController extends Controller
      */
     public function image(): Response
     {
-        $width = 160;
-        $height = 50;
+        $width = 260;
+        $height = 90;
 
         // Karakter membingungkan (0/O, 1/l/I) dibuang supaya tetap terbaca.
         $karakter = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
@@ -29,22 +29,39 @@ class CaptchaController extends Controller
         imagefill($image, 0, 0, $bg);
 
         // Garis noise di belakang teks.
-        for ($i = 0; $i < 7; $i++) {
+        for ($i = 0; $i < 9; $i++) {
             $warnaGaris = imagecolorallocate($image, random_int(40, 90), random_int(90, 140), random_int(60, 100));
             imageline($image, random_int(0, $width), random_int(0, $height), random_int(0, $width), random_int(0, $height), $warnaGaris);
         }
 
-        // Tiap karakter digambar satu-satu dengan warna & posisi vertikal acak.
-        $x = 14;
+        // Tiap karakter digambar di kanvas kecil lalu diperbesar (scale 3x) ke
+        // kanvas utama, supaya ukurannya jauh lebih besar & tebal — tanpa font
+        // TTF eksternal — sehingga lebih mudah dibaca (termasuk untuk lansia).
+        $scale = 3;
+        $fontW = imagefontwidth(5);
+        $fontH = imagefontheight(5);
+        $x = 18;
         for ($i = 0; $i < strlen($kode); $i++) {
             $warnaTeks = imagecolorallocate($image, random_int(200, 255), random_int(190, 230), random_int(90, 140));
-            $y = random_int(10, 22);
-            imagestring($image, 5, $x, $y, $kode[$i], $warnaTeks);
-            $x += random_int(24, 30);
+
+            $charCanvas = imagecreatetruecolor($fontW, $fontH);
+            $charBg = imagecolorallocate($charCanvas, 10, 26, 18);
+            imagefill($charCanvas, 0, 0, $charBg);
+            imagestring($charCanvas, 5, 0, 0, $kode[$i], $warnaTeks);
+
+            $y = random_int(14, 28);
+            imagecopyresampled(
+                $image, $charCanvas,
+                $x, $y, 0, 0,
+                $fontW * $scale, $fontH * $scale, $fontW, $fontH
+            );
+            imagedestroy($charCanvas);
+
+            $x += random_int(38, 46);
         }
 
         // Titik noise di depan teks.
-        for ($i = 0; $i < 120; $i++) {
+        for ($i = 0; $i < 260; $i++) {
             $warnaTitik = imagecolorallocate($image, random_int(30, 200), random_int(30, 200), random_int(30, 200));
             imagesetpixel($image, random_int(0, $width - 1), random_int(0, $height - 1), $warnaTitik);
         }

@@ -349,16 +349,16 @@
     margin-top:-12px;margin-bottom:14px;
   }
   .login-submit{border:none;cursor:pointer;justify-content:center;margin-top:4px;width:100%;}
-  .captcha-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-  .captcha-img{height:38px;border-radius:8px;border:1px solid var(--border);flex-shrink:0;}
-  .captcha-row .captcha-input{width:auto;flex:1;min-width:0;margin-bottom:0;}
+  .captcha-row{display:flex;align-items:center;gap:6px;margin-bottom:12px;}
+  .captcha-img{height:56px;border-radius:8px;border:1px solid var(--border);flex-shrink:0;}
+  .captcha-row .captcha-input{width:auto;flex:1;min-width:0;margin-bottom:0;padding:9px 10px;font-size:12px;}
   .captcha-refresh{
-    width:38px;height:38px;flex-shrink:0;border-radius:8px;cursor:pointer;
+    width:36px;height:36px;flex-shrink:0;border-radius:8px;cursor:pointer;
     background:var(--bg-deep);border:1px solid var(--border);color:var(--text-muted);
     display:flex;align-items:center;justify-content:center;
     transition:border-color .2s ease,color .2s ease,transform .2s ease;
   }
-  .captcha-refresh svg{width:16px;height:16px;}
+  .captcha-refresh svg{width:15px;height:15px;}
   .captcha-refresh:hover{border-color:var(--gold);color:var(--gold-bright);transform:rotate(90deg);}
   .login-foot{
     margin-top:20px;padding-top:16px;border-top:1px solid var(--border-soft);
