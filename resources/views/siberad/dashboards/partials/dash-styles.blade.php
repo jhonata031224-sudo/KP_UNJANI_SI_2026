@@ -11,11 +11,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#081a12;
-    --bg-deep:#04100a;
-    --panel:#0c2417;
-    --panel-2:#0f2c1c;
-    --panel-alt:#0a2015;
+    --bg:#151e19;
+    --bg-deep:#0d120f;
+    --panel:#222f29;
+    --panel-2:#2b3b33;
+    --panel-alt:#1b2721;
     --border:rgba(212,175,55,.22);
     --border-soft:rgba(212,175,55,.13);
     --border-strong:rgba(212,175,55,.42);
@@ -46,7 +46,7 @@
 
     /* permukaan blur sidebar/topbar + tint hover — HARUS ikut tema,
        sebelumnya di-hardcode gelap sehingga tidak berubah saat light mode */
-    --surface:rgba(6,20,13,.92);
+    --surface:rgba(13,18,15,.92);
     --hover-tint:rgba(255,255,255,.04);
 
     color-scheme:dark;

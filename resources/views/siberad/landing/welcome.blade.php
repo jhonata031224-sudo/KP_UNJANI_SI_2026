@@ -13,11 +13,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#081a12;
-    --bg-deep:#04100a;
-    --panel:#0c2417;
-    --panel-2:#0f2c1c;
-    --panel-alt:#0a2015;
+    --bg:#151e19;
+    --bg-deep:#0d120f;
+    --panel:#222f29;
+    --panel-2:#2b3b33;
+    --panel-alt:#1b2721;
     --border:rgba(212,175,55,.22);
     --border-soft:rgba(212,175,55,.13);
     --border-strong:rgba(212,175,55,.42);
@@ -36,14 +36,14 @@
     --mono:'JetBrains Mono', monospace;
     --body:'Inter', sans-serif;
 
-    --header-bg:rgba(6,20,13,.82);
-    --overlay-bg:rgba(3,10,6,.72);
-    --hero-ov-1:rgba(4,16,10,.97);
-    --hero-ov-2:rgba(4,16,10,.93);
-    --hero-ov-3:rgba(4,16,10,.72);
-    --hero-ov-4:rgba(4,16,10,.9);
-    --hero-ov-top:rgba(4,16,10,1);
-    --hero-ov-top-fade:rgba(4,16,10,0);
+    --header-bg:rgba(13,18,15,.82);
+    --overlay-bg:rgba(9,13,11,.72);
+    --hero-ov-1:rgba(13,18,15,.97);
+    --hero-ov-2:rgba(13,18,15,.93);
+    --hero-ov-3:rgba(13,18,15,.72);
+    --hero-ov-4:rgba(13,18,15,.9);
+    --hero-ov-top:rgba(13,18,15,1);
+    --hero-ov-top-fade:rgba(13,18,15,0);
     --chip-bg:transparent;
     --chip-border:transparent;
     --chip-shadow:none;
