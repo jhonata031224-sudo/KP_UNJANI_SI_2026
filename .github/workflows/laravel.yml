@@ -2,9 +2,9 @@ name: Laravel CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "refactor-fokus-laporan" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "refactor-fokus-laporan" ]
 
 jobs:
   test:
