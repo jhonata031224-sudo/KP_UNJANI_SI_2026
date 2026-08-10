@@ -185,17 +185,15 @@
     var isDanpus = !!document.querySelector('.pimp-hero h1') &&
       /Komandan Pusat/i.test(document.querySelector('.pimp-hero h1').textContent || '');
 
+    // Base/warna tombol #detailActions & #reportDetailModal .modal-actions sudah
+    // didefinisikan sekali di partials/profile-enhancements.blade.php (selalu ikut
+    // ter-include lewat pengumuman-banner di setiap view yang memuat file ini).
+    // Jangan duplikasi rule itu di sini lagi.
     function injectStyles() {
       if (document.getElementById('globalReportActionStyles')) return;
       var style = document.createElement('style');
       style.id = 'globalReportActionStyles';
       style.textContent = `
-        .review-actions form, .action-row form { display:none !important; }
-        #detailActions, #reportDetailModal .modal-actions { align-items:center; }
-        #detailActions form, #reportDetailModal .modal-actions form { display:inline-flex !important; margin:0 0 0 8px; }
-        #detailActions .approve, #reportDetailModal .modal-actions .approve { border-color:var(--green)!important; color:var(--green)!important; }
-        #detailActions .revise, #reportDetailModal .modal-actions .revise { border-color:var(--amber)!important; color:var(--amber)!important; }
-        #detailActions .reject, #reportDetailModal .modal-actions .reject { border-color:var(--red)!important; color:var(--red)!important; }
         .report-reject-overlay { position:fixed; inset:0; z-index:1200; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(0,0,0,.55); }
         .report-reject-overlay.open { display:flex; }
         .report-reject-card { width:min(560px,100%); background:var(--panel,#fff); color:var(--text,#17212b); border:1px solid var(--border-soft,#ddd); border-radius:14px; padding:22px; box-shadow:0 25px 70px rgba(0,0,0,.25); }
