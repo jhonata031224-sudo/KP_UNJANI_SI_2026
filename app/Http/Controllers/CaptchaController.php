@@ -16,8 +16,8 @@ class CaptchaController extends Controller
         $width = 260;
         $height = 90;
 
-        // Karakter membingungkan (0/O, 1/l/I) dibuang supaya tetap terbaca.
-        $karakter = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+        // Karakter membingungkan (0/O, 1/l/I, V/v yang mirip U/u di font ini) dibuang supaya tetap terbaca.
+        $karakter = 'ABCDEFGHJKLMNPQRSTWXYZabcdefghijkmnpqrstuwxyz23456789';
         $kode = '';
         for ($i = 0; $i < 5; $i++) {
             $kode .= $karakter[random_int(0, strlen($karakter) - 1)];
@@ -44,6 +44,10 @@ class CaptchaController extends Controller
         for ($i = 0; $i < strlen($kode); $i++) {
             $warnaTeks = imagecolorallocate($image, random_int(200, 255), random_int(190, 230), random_int(90, 140));
 
+            // Catatan: sempat dicoba digambar dobel (geser 1px) biar lebih
+            // tebal, tapi di font bitmap kecil ini guratan huruf seperti
+            // "m"/"w" jadi rapat dan malah menyatu tak terbaca — jadi cukup
+            // satu kali gambar, ukurannya sudah cukup jelas berkat scale 3x.
             $charCanvas = imagecreatetruecolor($fontW, $fontH);
             $charBg = imagecolorallocate($charCanvas, 10, 26, 18);
             imagefill($charCanvas, 0, 0, $charBg);

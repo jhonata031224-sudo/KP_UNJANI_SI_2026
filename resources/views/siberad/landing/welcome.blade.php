@@ -354,6 +354,21 @@
     display:block;font-family:var(--mono);font-size:11px;color:#e07a72;
     margin-top:-12px;margin-bottom:14px;
   }
+  .login-error.client-error{
+    margin-top:2px;margin-bottom:18px;display:flex;align-items:center;gap:6px;
+    animation:loginErrorIn .2s ease;
+  }
+  .login-error.client-error::before{
+    content:"";width:14px;height:14px;flex-shrink:0;border-radius:50%;
+    background:#e07a72;
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='8' x2='12' y2='13'/%3E%3Ccircle cx='12' cy='16.5' r='.6' fill='%23000' stroke='none'/%3E%3Ccircle cx='12' cy='12' r='9.3'/%3E%3C/svg%3E") center/contain no-repeat;
+    mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='8' x2='12' y2='13'/%3E%3Ccircle cx='12' cy='16.5' r='.6' fill='%23000' stroke='none'/%3E%3Ccircle cx='12' cy='12' r='9.3'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+  @keyframes loginErrorIn{from{opacity:0;transform:translateY(-3px);}to{opacity:1;transform:translateY(0);}}
+  .login-input.field-invalid,.captcha-row .field-invalid{
+    border-color:#e07a72 !important;
+    box-shadow:0 0 0 3px rgba(224,122,114,.15);
+  }
   .login-submit{border:none;cursor:pointer;justify-content:center;margin-top:4px;width:100%;}
   .captcha-row{display:flex;align-items:center;gap:6px;margin-bottom:12px;}
   .captcha-img{height:56px;border-radius:8px;border:1px solid var(--border);flex-shrink:0;}
@@ -653,6 +668,40 @@
   @media (prefers-reduced-motion: reduce){
     *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
   }
+
+  /* ===== toast notifikasi ===== */
+  .toast-stack{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2000;width:min(400px,86vw);pointer-events:none;height:0;}
+  .toast{
+    position:absolute;top:0;left:50%;overflow:hidden;
+    pointer-events:auto;display:flex;align-items:center;gap:11px;padding:13px 18px 15px;border-radius:11px;
+    background:var(--panel);border:1px solid var(--border-soft);box-shadow:0 15px 40px rgba(0,0,0,.35);
+    font-family:var(--body);font-size:13px;color:var(--text);width:100%;box-sizing:border-box;
+    opacity:0;transform:translate(-50%,-26px) scale(.97);
+    transition:top .8s cubic-bezier(.34,1.2,.64,1);
+    animation:toastIn .35s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  .toast.leaving{animation:toastOut .4s cubic-bezier(.4,0,.2,1) forwards;}
+  .toast.success{border-color:rgba(63,194,125,.4);}
+  .toast.success .toast-icon{background:var(--green-dim);color:var(--green-bright);}
+  .toast.success .toast-bar{background:var(--green-bright);}
+  .toast.error{border-color:rgba(198,40,40,.35);}
+  .toast.error .toast-icon{background:var(--red-dim);color:var(--red);}
+  .toast.error .toast-bar{background:var(--red);}
+  .toast-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .toast-icon svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.4;}
+  .toast-body{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .toast-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;}
+  .toast.success .toast-label{color:var(--green-bright);}
+  .toast.error .toast-label{color:var(--red);}
+  .toast-text{font-family:var(--body);font-size:13.5px;font-weight:600;line-height:1.4;color:var(--text);}
+  .toast-bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform-origin:left;animation:toastBar 3s linear forwards;}
+  @keyframes toastIn{to{opacity:1;transform:translate(-50%,0) scale(1);}}
+  @keyframes toastOut{
+    0%{opacity:1;transform:translate(-50%,0) scale(1);}
+    35%{opacity:1;transform:translate(-50%,-6px) scale(1.05);}
+    100%{opacity:0;transform:translate(-50%,-30px) scale(.9);}
+  }
+  @keyframes toastBar{from{transform:scaleX(1);}to{transform:scaleX(0);}}
 </style>
 <script>
   (function(){
@@ -723,9 +772,6 @@
         @csrf
         <label class="login-label" for="loginUser">NRP / Username</label>
         <input class="login-input" id="loginUser" name="username" type="text" value="{{ old('username') }}" autocomplete="off" placeholder="Masukan NRP atau Username" required>
-        @error('username')
-          <span class="login-error">{{ $message }}</span>
-        @enderror
         <label class="login-label" for="loginPass">Password</label>
         <div class="login-field">
           <input class="login-input" id="loginPass" name="password" type="password" autocomplete="new-password" placeholder="Masukan Password" required>
@@ -734,9 +780,6 @@
             <svg class="icon-eye-off" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c7 0 10.5 7 10.5 7a13.6 13.6 0 0 1-3.2 4.1M6.6 6.6C3.5 8.5 1.5 12 1.5 12s3.5 7 10.5 7a10.6 10.6 0 0 0 4.2-.85"/><path d="M9.5 9.7a3.2 3.2 0 0 0 4.5 4.5"/></svg>
           </button>
         </div>
-        @error('password')
-          <span class="login-error">{{ $message }}</span>
-        @enderror
         <label class="login-label" for="loginCaptcha">Captcha</label>
         <div class="captcha-row">
           <img id="captchaImg" class="captcha-img" src="{{ route('captcha.image') }}?t={{ microtime(true) }}" alt="Kode captcha">
@@ -745,9 +788,6 @@
           </button>
           <input class="login-input captcha-input" id="loginCaptcha" name="captcha" type="text" autocomplete="off" placeholder="Masukan Captcha" required>
         </div>
-        @error('captcha')
-          <span class="login-error">{{ $message }}</span>
-        @enderror
         <button class="btn btn-primary login-submit" type="submit">Masuk</button>
       </form>
       <div class="login-foot">
@@ -1019,7 +1059,55 @@
   loginClose.addEventListener('click', closeLogin);
   loginOverlay.addEventListener('click', (e)=>{ if(e.target === loginOverlay) closeLogin(); });
   document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeLogin(); });
-  // form login dikirim langsung via POST ke route('login') — tanpa intercept JS
+
+  // ---------- submit login via AJAX (biar gagal login tidak refresh halaman) ----------
+  loginForm.addEventListener('submit', async function(e){
+    e.preventDefault();
+    const submitBtn = loginForm.querySelector('.login-submit');
+    submitBtn.disabled = true;
+    try{
+      const res = await fetch(loginForm.action, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: new FormData(loginForm),
+        redirect: 'manual',
+      });
+
+      // redirect:'manual' bikin browser berhenti di respons redirect (302) tanpa
+      // mengikutinya otomatis — supaya navigasi ke dashboard jadi satu-satunya
+      // request berikutnya yang membaca flash session "login_success" (kalau
+      // fetch ikut redirect sendiri, flash-nya keburu "dipakai" di request
+      // tersembunyi itu dan toast sukses jadi tidak muncul).
+      if(res.type === 'opaqueredirect' || res.ok){
+        window.location.href = '{{ route('dashboard') }}';
+        return;
+      }
+
+      if(res.status === 422){
+        const data = await res.json();
+        const errors = data.errors || {};
+        const keys = Object.keys(errors);
+        if(keys.length){
+          keys.forEach((key, i) => {
+            setTimeout(() => siberadShowToast('error', errors[key][0]), i * 150);
+          });
+        } else {
+          siberadShowToast('error', data.message || 'Login gagal.');
+        }
+      } else {
+        siberadShowToast('error', 'Terjadi kesalahan. Coba lagi.');
+      }
+
+      const captchaField = document.getElementById('loginCaptcha');
+      if(captchaField) captchaField.value = '';
+      const captchaImgEl = document.getElementById('captchaImg');
+      if(captchaImgEl) captchaImgEl.src = '{{ route('captcha.image') }}?t=' + Date.now();
+    } catch(err){
+      siberadShowToast('error', 'Gagal terhubung ke server. Periksa koneksi Anda.');
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
 
   // ---------- toggle tampilkan/sembunyikan NRP/Username & Password ----------
   document.querySelectorAll('.field-toggle').forEach(btn => {
@@ -1032,6 +1120,33 @@
     });
   });
 
+  // ---------- pesan validasi custom (ganti "Please fill out this field.") ----------
+  const customMessages = {
+    loginUser: 'NRP/Username wajib diisi.',
+    loginPass: 'Password wajib diisi.',
+    loginCaptcha: 'Captcha wajib diisi.',
+  };
+  loginForm.querySelectorAll('input[required]').forEach(input => {
+    const anchor = input.closest('.login-field, .captcha-row') || input;
+    let msg = anchor.nextElementSibling;
+    if (!msg || !msg.classList.contains('client-error')) {
+      msg = document.createElement('span');
+      msg.className = 'login-error client-error';
+      msg.style.display = 'none';
+      anchor.insertAdjacentElement('afterend', msg);
+    }
+    input.addEventListener('invalid', (e) => {
+      e.preventDefault();
+      input.classList.add('field-invalid');
+      msg.textContent = customMessages[input.id] || 'Kolom ini wajib diisi.';
+      msg.style.display = 'block';
+    });
+    input.addEventListener('input', () => {
+      input.classList.remove('field-invalid');
+      msg.style.display = 'none';
+    });
+  });
+
   // ---------- muat ulang gambar captcha ----------
   const captchaImg = document.getElementById('captchaImg');
   const captchaRefresh = document.getElementById('captchaRefresh');
@@ -1041,8 +1156,65 @@
     });
   }
 
+  // ---------- toast notifikasi ----------
+  var siberadToastQueue = [];
+  function siberadShowToast(type, message){
+    var stack = document.getElementById('siberadToastStack');
+    if(!stack){ stack=document.createElement('div'); stack.id='siberadToastStack'; stack.className='toast-stack'; document.body.appendChild(stack); }
+    var toast=document.createElement('div');
+    toast.className='toast '+type;
+    var icon = type==='success'
+      ? '<path d="M20 6L9 17l-5-5"></path>'
+      : '<line x1="12" y1="8" x2="12" y2="13"></line><circle cx="12" cy="16.5" r=".6" fill="currentColor" stroke="none"></circle><circle cx="12" cy="12" r="9.3"></circle>';
+    var label = type==='success' ? 'Berhasil' : 'Gagal';
+    toast.innerHTML = '<span class="toast-icon"><svg viewBox="0 0 24 24">'+icon+'</svg></span><span class="toast-body"><span class="toast-label"></span><span class="toast-text"></span></span><span class="toast-bar"></span>';
+    toast.querySelector('.toast-label').textContent = label;
+    toast.querySelector('.toast-text').textContent = message;
+    toast.style.top = '0px';
+    stack.prepend(toast);
+    siberadRelayoutToasts(stack);
+
+    // Antrean FIFO: toast yang muncul duluan HARUS mulai hilang duluan juga,
+    // jadi urutan animasi keluar tidak pernah kebalik walau timer selisih dikit.
+    var entry = { el: toast, leaving: false, readyAt: Date.now() + 3000 };
+    siberadToastQueue.push(entry);
+
+    function tryLeave(){
+      if(entry.leaving) return;
+      if(Date.now() < entry.readyAt) return;
+      var idx = siberadToastQueue.indexOf(entry);
+      if(idx > 0 && siberadToastQueue.slice(0, idx).some(function(e){ return !e.leaving; })) return;
+      entry.leaving = true;
+      toast.classList.add('leaving');
+      setTimeout(function(){
+        toast.remove();
+        var i = siberadToastQueue.indexOf(entry);
+        if(i > -1) siberadToastQueue.splice(i, 1);
+        siberadRelayoutToasts(stack);
+      }, 400);
+    }
+
+    setTimeout(function poll(){
+      tryLeave();
+      if(!entry.leaving) setTimeout(poll, 100);
+    }, 3000);
+  }
+  // Susun ulang posisi (top) tiap toast berdasarkan urutan & tinggi aktualnya
+  // — perubahan nilai top otomatis dianimasikan lewat transition CSS, jadi
+  // toast lama beneran "geser" turun, bukan loncat/ketimpa toast baru.
+  function siberadRelayoutToasts(stack){
+    requestAnimationFrame(function(){
+      var y = 0, gap = 10;
+      Array.prototype.forEach.call(stack.children, function(el){
+        el.style.top = y + 'px';
+        y += el.offsetHeight + gap;
+      });
+    });
+  }
+
   @if ($errors->any())
     openLogin();
+    siberadShowToast('error', {!! json_encode($errors->first()) !!});
   @endif
 
   // ---------- scroll reveal ----------

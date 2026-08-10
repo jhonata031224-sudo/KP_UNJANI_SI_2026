@@ -29,24 +29,36 @@ class AuthenticatedSessionController extends Controller
         $captchaBenar = hash_equals((string) $request->session()->get('captcha_code'), $credentials['captcha']);
         $request->session()->forget('captcha_code');
 
-        if (! $captchaBenar) {
-            throw ValidationException::withMessages([
-                'captcha' => 'Kode captcha salah.',
-            ]);
-        }
-
-        if (! Auth::attempt([
+        // Kredensial dicek pakai validate() (bukan attempt()) supaya tidak
+        // langsung login kalau ternyata captcha-nya salah. Dua-duanya dicek
+        // independen supaya kalau kredensial DAN captcha sama-sama salah,
+        // pesan errornya muncul untuk keduanya — bukan cuma yang tercek duluan.
+        $kredensialBenar = Auth::validate([
             'username' => $credentials['username'],
             'password' => $credentials['password'],
-        ], $request->boolean('remember'))) {
-            throw ValidationException::withMessages([
-                'username' => 'NRP/Username atau password salah.',
-            ]);
+        ]);
+
+        $errors = [];
+        if (! $kredensialBenar) {
+            $errors['username'] = 'NRP/Username atau password salah.';
         }
+        if (! $captchaBenar) {
+            $errors['captcha'] = 'Kode captcha salah.';
+        }
+        if ($errors) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        Auth::attempt([
+            'username' => $credentials['username'],
+            'password' => $credentials['password'],
+        ], $request->boolean('remember'));
 
         $request->session()->regenerate();
 
         ActivityLog::catat('login', 'Berhasil login ke SIBERAD.', $request->user());
+
+        $request->session()->flash('login_success', $request->user()->name);
 
         return redirect()->intended(route('dashboard'));
     }

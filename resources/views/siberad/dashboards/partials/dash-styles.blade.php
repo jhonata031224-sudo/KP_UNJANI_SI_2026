@@ -503,4 +503,100 @@
     .content{padding:22px 16px 60px;}
     .topbar{padding:0 16px;}
   }
+
+  /* ===== toast notifikasi ===== */
+  .toast-stack{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2000;width:min(400px,86vw);pointer-events:none;height:0;}
+  .toast{
+    position:absolute;top:0;left:50%;overflow:hidden;
+    pointer-events:auto;display:flex;align-items:center;gap:11px;padding:13px 18px 15px;border-radius:11px;
+    background:var(--panel);border:1px solid var(--border-soft);box-shadow:0 15px 40px rgba(0,0,0,.35);
+    font-family:var(--body);font-size:13px;color:var(--text);width:100%;box-sizing:border-box;
+    opacity:0;transform:translate(-50%,-26px) scale(.97);
+    transition:top .8s cubic-bezier(.34,1.2,.64,1);
+    animation:toastIn .35s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  .toast.leaving{animation:toastOut .4s cubic-bezier(.4,0,.2,1) forwards;}
+  .toast.success{border-color:rgba(63,194,125,.4);}
+  .toast.success .toast-icon{background:var(--green-dim);color:var(--green-bright);}
+  .toast.success .toast-bar{background:var(--green-bright);}
+  .toast.error{border-color:rgba(198,40,40,.35);}
+  .toast.error .toast-icon{background:var(--red-dim);color:var(--red);}
+  .toast.error .toast-bar{background:var(--red);}
+  .toast-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .toast-icon svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.4;}
+  .toast-body{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .toast-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;}
+  .toast.success .toast-label{color:var(--green-bright);}
+  .toast.error .toast-label{color:var(--red);}
+  .toast-text{font-family:var(--body);font-size:13.5px;font-weight:600;line-height:1.4;color:var(--text);}
+  .toast-bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform-origin:left;animation:toastBar 3s linear forwards;}
+  @keyframes toastIn{to{opacity:1;transform:translate(-50%,0) scale(1);}}
+  @keyframes toastOut{
+    0%{opacity:1;transform:translate(-50%,0) scale(1);}
+    35%{opacity:1;transform:translate(-50%,-6px) scale(1.05);}
+    100%{opacity:0;transform:translate(-50%,-30px) scale(.9);}
+  }
+  @keyframes toastBar{from{transform:scaleX(1);}to{transform:scaleX(0);}}
 </style>
+<script>
+  var siberadToastQueue = [];
+  function siberadShowToast(type, message){
+    var stack = document.getElementById('siberadToastStack');
+    if(!stack){ stack=document.createElement('div'); stack.id='siberadToastStack'; stack.className='toast-stack'; document.body.appendChild(stack); }
+    var toast=document.createElement('div');
+    toast.className='toast '+type;
+    var icon = type==='success'
+      ? '<path d="M20 6L9 17l-5-5"></path>'
+      : '<line x1="12" y1="8" x2="12" y2="13"></line><circle cx="12" cy="16.5" r=".6" fill="currentColor" stroke="none"></circle><circle cx="12" cy="12" r="9.3"></circle>';
+    var label = type==='success' ? 'Berhasil' : 'Gagal';
+    toast.innerHTML = '<span class="toast-icon"><svg viewBox="0 0 24 24">'+icon+'</svg></span><span class="toast-body"><span class="toast-label"></span><span class="toast-text"></span></span><span class="toast-bar"></span>';
+    toast.querySelector('.toast-label').textContent = label;
+    toast.querySelector('.toast-text').textContent = message;
+    toast.style.top = '0px';
+    stack.prepend(toast);
+    siberadRelayoutToasts(stack);
+
+    // Antrean FIFO: toast yang muncul duluan HARUS mulai hilang duluan juga,
+    // jadi urutan animasi keluar tidak pernah kebalik walau timer selisih dikit.
+    var entry = { el: toast, leaving: false, readyAt: Date.now() + 3000 };
+    siberadToastQueue.push(entry);
+
+    function tryLeave(){
+      if(entry.leaving) return;
+      if(Date.now() < entry.readyAt) return;
+      var idx = siberadToastQueue.indexOf(entry);
+      if(idx > 0 && siberadToastQueue.slice(0, idx).some(function(e){ return !e.leaving; })) return;
+      entry.leaving = true;
+      toast.classList.add('leaving');
+      setTimeout(function(){
+        toast.remove();
+        var i = siberadToastQueue.indexOf(entry);
+        if(i > -1) siberadToastQueue.splice(i, 1);
+        siberadRelayoutToasts(stack);
+      }, 400);
+    }
+
+    setTimeout(function poll(){
+      tryLeave();
+      if(!entry.leaving) setTimeout(poll, 100);
+    }, 3000);
+  }
+  // Susun ulang posisi (top) tiap toast berdasarkan urutan & tinggi aktualnya
+  // — perubahan nilai top otomatis dianimasikan lewat transition CSS, jadi
+  // toast lama beneran "geser" turun, bukan loncat/ketimpa toast baru.
+  function siberadRelayoutToasts(stack){
+    requestAnimationFrame(function(){
+      var y = 0, gap = 10;
+      Array.prototype.forEach.call(stack.children, function(el){
+        el.style.top = y + 'px';
+        y += el.offsetHeight + gap;
+      });
+    });
+  }
+  window.siberadShowToast = siberadShowToast;
+  @if(session('login_success'))
+    document.addEventListener('DOMContentLoaded', function(){
+      siberadShowToast('success', {!! json_encode('Selamat Datang '.session('login_success')) !!});
+    });
+  @endif
+</script>
