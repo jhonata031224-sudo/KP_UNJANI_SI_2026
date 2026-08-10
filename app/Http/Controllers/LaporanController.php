@@ -31,6 +31,15 @@ class LaporanController extends Controller
         abort_if(strtoupper((string) $tujuan->kode) === 'ADMIN', 422, 'Laporan tidak dapat ditujukan ke Admin.');
         abort_if((int) $tujuan->id === (int) $satuanAsal->id, 422, 'Tujuan laporan tidak boleh sama dengan satuan pengirim.');
 
+        $kodeTujuanDiizinkan = Satuan::kodeTujuanUntuk($satuanAsal->kode);
+        if ($kodeTujuanDiizinkan !== null) {
+            abort_unless(
+                in_array(strtoupper((string) $tujuan->kode), $kodeTujuanDiizinkan, true),
+                422,
+                'Tujuan laporan tidak sesuai dengan alur pelaporan satuan Anda.'
+            );
+        }
+
         $lampiranPath = $request->hasFile('lampiran')
             ? $request->file('lampiran')->store('lampiran-laporan', 'public')
             : null;
