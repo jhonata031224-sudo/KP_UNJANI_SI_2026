@@ -29,3 +29,105 @@
 
 @include('siberad.dashboards.partials.profile-enhancements')
 @include('siberad.dashboards.partials.notification-controls')
+
+{{-- Inisialisasi UI dashboard role. Tidak mengubah struktur sidebar. --}}
+<script>
+(function () {
+  function initRoleUi() {
+    var sidebar = document.getElementById('sidebar');
+    var menuBtn = document.getElementById('menuBtn');
+    if (menuBtn && sidebar && !menuBtn.dataset.uiBound) {
+      menuBtn.dataset.uiBound = '1';
+      menuBtn.addEventListener('click', function () { sidebar.classList.toggle('open'); });
+    }
+
+    var links = document.querySelectorAll('.side-link[href^="#"]');
+    var panels = document.querySelectorAll('.tab-panel');
+    links.forEach(function (link) {
+      if (link.dataset.tabBound) return;
+      link.dataset.tabBound = '1';
+      link.addEventListener('click', function (e) {
+        var id = link.getAttribute('href').slice(1);
+        var panel = document.getElementById(id);
+        if (!panel) return;
+        e.preventDefault();
+        panels.forEach(function (p) { p.classList.remove('active'); });
+        panel.classList.add('active');
+        links.forEach(function (l) { l.classList.remove('active'); });
+        link.classList.add('active');
+        try { sessionStorage.setItem('siberad-role-active-tab', id); } catch (err) {}
+        if (sidebar && window.innerWidth <= 900) sidebar.classList.remove('open');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    var themeBtn = document.getElementById('themeToggleBtn');
+    if (themeBtn && !themeBtn.dataset.uiBound) {
+      themeBtn.dataset.uiBound = '1';
+      var key = 'siberad-theme';
+      function applyTheme(theme) {
+        if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        else document.documentElement.removeAttribute('data-theme');
+        themeBtn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
+      }
+      var saved = 'dark';
+      try { saved = localStorage.getItem(key) || 'dark'; } catch (err) {}
+      applyTheme(saved);
+      themeBtn.addEventListener('click', function () {
+        var current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        var next = current === 'light' ? 'dark' : 'light';
+        try { localStorage.setItem(key, next); } catch (err) {}
+        applyTheme(next);
+      });
+    }
+
+    var profileBtn = document.getElementById('profileMenuBtn');
+    var profileDrop = document.getElementById('profileDropdown');
+    if (profileBtn && profileDrop && !profileBtn.dataset.uiBound) {
+      profileBtn.dataset.uiBound = '1';
+      profileBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        profileDrop.classList.toggle('open');
+      });
+      document.addEventListener('click', function (e) {
+        if (!profileDrop.parentElement.contains(e.target)) profileDrop.classList.remove('open');
+      });
+    }
+
+    window.openProfileModal = window.openProfileModal || function (id) {
+      var overlay = document.getElementById('profileModalOverlay');
+      if (!overlay) return;
+      overlay.querySelectorAll('.profile-dropdown-view').forEach(function (view) {
+        view.style.display = view.id === id ? 'block' : 'none';
+      });
+      overlay.classList.add('open');
+      if (profileDrop) profileDrop.classList.remove('open');
+    };
+
+    var closeProfile = document.getElementById('profileModalCloseBtn');
+    if (closeProfile && !closeProfile.dataset.uiBound) {
+      closeProfile.dataset.uiBound = '1';
+      closeProfile.addEventListener('click', function () {
+        var overlay = document.getElementById('profileModalOverlay');
+        if (overlay) overlay.classList.remove('open');
+      });
+    }
+
+    var savedTab = null;
+    try { savedTab = sessionStorage.getItem('siberad-role-active-tab'); } catch (err) {}
+    if (savedTab) {
+      var savedPanel = document.getElementById(savedTab);
+      var savedLink = document.querySelector('.side-link[href="#' + savedTab + '"]');
+      if (savedPanel && savedLink) {
+        panels.forEach(function (p) { p.classList.remove('active'); });
+        savedPanel.classList.add('active');
+        links.forEach(function (l) { l.classList.remove('active'); });
+        savedLink.classList.add('active');
+      }
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initRoleUi);
+  else initRoleUi();
+})();
+</script>
