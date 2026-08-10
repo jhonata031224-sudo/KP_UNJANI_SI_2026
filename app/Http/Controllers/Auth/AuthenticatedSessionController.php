@@ -24,10 +24,9 @@ class AuthenticatedSessionController extends Controller
             'captcha' => ['required', 'string'],
         ]);
 
-        // Dibandingkan case-insensitive — gambar captcha memang campur huruf
-        // besar/kecil untuk noise visual, tapi mengetik ulang case yang pas
-        // terlalu menyulitkan pengguna.
-        $captchaBenar = strcasecmp($credentials['captcha'], (string) $request->session()->get('captcha_code')) === 0;
+        // Dibandingkan case-sensitive — captcha memang campur huruf besar/kecil
+        // sebagai bagian dari kode yang harus diketik persis.
+        $captchaBenar = hash_equals((string) $request->session()->get('captcha_code'), $credentials['captcha']);
         $request->session()->forget('captcha_code');
 
         if (! $captchaBenar) {
