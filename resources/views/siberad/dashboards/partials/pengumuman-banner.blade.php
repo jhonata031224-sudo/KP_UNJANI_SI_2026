@@ -131,3 +131,38 @@
   else initRoleUi();
 })();
 </script>
+
+{{-- Normalisasi nama satuan tertentu pada Log Aktivitas Admin. --}}
+<script>
+(function () {
+  function normalisasiNamaLogAktivitas() {
+    var table = document.getElementById('tblLogAktivitas');
+    if (!table) return;
+
+    var normalisasi = {
+      'BINMAT': 'Binmat',
+      'BINFUNG': 'Binfung',
+      'BINUM': 'Binum',
+      'DIKLAT': 'Diklat'
+    };
+
+    table.querySelectorAll('tbody tr').forEach(function (row) {
+      var cells = row.children;
+      if (cells.length < 2) return;
+
+      var pengguna = cells[1];
+      var teks = pengguna.textContent;
+      Object.keys(normalisasi).forEach(function (nama) {
+        teks = teks.replace(new RegExp('\\b' + nama + '\\b', 'g'), normalisasi[nama]);
+      });
+      pengguna.textContent = teks;
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', normalisasiNamaLogAktivitas);
+  } else {
+    normalisasiNamaLogAktivitas();
+  }
+})();
+</script>
