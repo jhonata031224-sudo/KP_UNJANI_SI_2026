@@ -2,7 +2,7 @@
   'use strict';
 
   function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>\'\"]/g, function (ch) {
+    return String(value ?? '').replace(/[&<>\'"]/g, function (ch) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[ch];
     });
   }
