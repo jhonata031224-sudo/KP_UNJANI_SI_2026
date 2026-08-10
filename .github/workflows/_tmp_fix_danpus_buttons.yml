@@ -1,0 +1,54 @@
+name: Temporary fix DANPUS report buttons
+
+on:
+  push:
+    branches:
+      - refactor-fokus-laporan
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: ${{ !contains(github.event.head_commit.message, 'fix: rapikan tombol detail laporan') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Apply button UI fix
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('resources/views/siberad/dashboards/danpus.blade.php')
+          text = path.read_text(encoding='utf-8')
+
+          old_css = '''  <style>\n    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;}\n    .detail-item{display:flex;flex-direction:column;gap:4px;}\n    .detail-item.full{grid-column:1 / -1;}\n    .detail-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);}\n  </style>'''
+
+          new_css = '''  <style>\n    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;}\n    .detail-item{display:flex;flex-direction:column;gap:4px;}\n    .detail-item.full{grid-column:1 / -1;}\n    .detail-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);}\n\n    /* Tombol aksi pada Detail Laporan DANPUS dibuat seragam ukurannya. */\n    #detailAksi{\n      display:flex;\n      align-items:center;\n      justify-content:flex-end;\n      gap:10px;\n      flex-wrap:wrap;\n    }\n    #detailAksi .btn{\n      display:inline-flex;\n      align-items:center;\n      justify-content:center;\n      min-width:110px;\n      height:40px;\n      padding:0 16px;\n      margin:0;\n      box-sizing:border-box;\n      border-radius:8px;\n      line-height:1;\n      white-space:nowrap;\n    }\n    #detailAksi .btn-ghost-red{\n      border:1px solid var(--red);\n      background:var(--red-dim);\n      color:var(--red);\n    }\n    #detailAksi .btn-ghost-red:hover{\n      background:var(--red);\n      color:#fff;\n    }\n  </style>'''
+
+          old_js = '''      if(l.status === 'Menunggu'){\n        aksiWrap.innerHTML =\n          '<button type="button" class="btn btn-ghost-red" onclick="tutupDetailLaporan(); bukaKonfirmasiLaporan(' + index + ", 'tolak', '" + satuanEsc + "', '" + perihalEsc + "')\\">Tolak Laporan</button>" +\n          '<button type="button" class="btn btn-primary" onclick="tutupDetailLaporan(); bukaKonfirmasiLaporan(' + index + ", 'setuju', '" + satuanEsc + "', '" + perihalEsc + "')\\">Setujui Laporan</button>';\n      } else {'''
+
+          new_js = '''      if(l.status === 'Menunggu'){\n        aksiWrap.innerHTML =\n          '<button type="button" class="btn btn-primary" onclick="tutupDetailLaporan(); bukaKonfirmasiLaporan(' + index + ", 'setuju', '" + satuanEsc + "', '" + perihalEsc + "')\\">Terima</button>' +\n          '<button type="button" class="btn btn-ghost-red" onclick="tutupDetailLaporan(); bukaKonfirmasiLaporan(' + index + ", 'tolak', '" + satuanEsc + "', '" + perihalEsc + "')\\">Tolak</button>';\n      } else {'''
+
+          if old_css not in text:
+              raise SystemExit('CSS target tidak ditemukan; file tidak diubah.')
+          if old_js not in text:
+              raise SystemExit('JavaScript target tidak ditemukan; file tidak diubah.')
+
+          text = text.replace(old_css, new_css, 1)
+          text = text.replace(old_js, new_js, 1)
+          path.write_text(text, encoding='utf-8')
+
+      - name: Commit fix and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/_tmp_fix_danpus_buttons.yml
+          git add resources/views/siberad/dashboards/danpus.blade.php
+          git diff --cached --check
+          git diff --cached -- resources/views/siberad/dashboards/danpus.blade.php
+          git commit -m "fix: rapikan tombol detail laporan"
+          git push
