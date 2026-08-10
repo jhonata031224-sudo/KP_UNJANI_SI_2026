@@ -132,22 +132,22 @@
   .sidebar{
     width:var(--sidebar-w);flex-shrink:0;background:var(--surface);backdrop-filter:blur(12px);
     border-right:1px solid var(--border-soft);
-    display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;
+    display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
     transition:transform .25s ease;z-index:40;
   }
-  .side-brand{height:82px;padding:0 22px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;gap:13px;box-sizing:border-box;position:sticky;top:0;z-index:5;background:var(--surface);flex-shrink:0;}
+  .side-brand{height:82px;padding:0 22px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;gap:13px;box-sizing:border-box;background:var(--surface);flex-shrink:0;position:relative;}
   .side-brand img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:1px solid var(--border-strong);box-shadow:0 0 0 3px rgba(212,175,55,.08);flex-shrink:0;}
   .side-brand .logo{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:.03em;text-transform:uppercase;}
   .side-brand .logo span{color:var(--gold-bright);}
   .side-unit{padding:16px 22px;border-bottom:1px solid var(--border-soft);}
   .side-unit .eyebrow{margin-bottom:6px;}
   .side-unit .name{font-family:var(--display);font-weight:700;font-size:16px;line-height:1.3;letter-spacing:.01em;}
-  .side-nav{padding:14px 12px;flex:1;}
+  .side-nav{padding:14px 12px;flex:1;display:flex;flex-direction:column;gap:2px;overflow-y:auto;overflow-x:hidden;}
   .side-nav-label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase;padding:10px 10px 6px;}
   .side-link{
     display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;
     color:var(--text-muted);font-size:13.5px;font-weight:500;cursor:pointer;border:1px solid transparent;
-    text-decoration:none;font-family:var(--body);
+    text-decoration:none;font-family:var(--body);box-sizing:border-box;
   }
   .side-link:hover{background:var(--hover-tint);color:var(--text);}
   .side-link.active{background:var(--gold-dim);color:var(--gold-bright);border-color:var(--border);font-weight:600;}
@@ -173,8 +173,13 @@
     width:100%;font-family:var(--mono);font-size:11.5px;border:1px solid var(--border);background:transparent;
     padding:9px 12px;border-radius:8px;cursor:pointer;color:var(--text-muted);letter-spacing:.04em;
     text-transform:uppercase;transition:border-color .2s ease,color .2s ease;
+    display:flex;align-items:center;gap:10px;text-align:left;box-sizing:border-box;
   }
   form.logout button:hover{border-color:var(--red);color:var(--red);}
+  .side-icon{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:.85;}
+  .side-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;}
+  .side-link .side-text{flex:1;}
+  .sidebar.collapsed form.logout button{justify-content:center;padding:9px;gap:0;}
 
   /* ===== main ===== */
   .main{flex:1;min-width:0;}
@@ -324,6 +329,17 @@
   }
 
   .content{padding:30px 32px 64px;max-width:1180px;position:relative;z-index:1;}
+  .side-collapse-btn{position:absolute;right:-1px;top:50%;transform:translateY(-50%);background:var(--panel,var(--surface));border:1px solid var(--border-strong,var(--border-soft));border-radius:8px;width:16px;height:52px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);box-shadow:0 2px 8px rgba(0,0,0,.3);z-index:6;transition:right .3s cubic-bezier(.4,0,.2,1),background .15s ease,color .15s ease,border-color .15s ease;}
+  .side-collapse-btn:hover{background:var(--gold-dim);color:var(--gold-bright);border-color:var(--gold,var(--border-strong));}
+  .side-collapse-btn svg{width:11px;height:11px;transition:transform .25s ease;}
+  .sidebar.collapsed{width:76px;}
+  .sidebar.collapsed .side-collapse-btn{right:-16px;}
+  .sidebar.collapsed .side-collapse-btn svg{transform:rotate(180deg);}
+  .sidebar.collapsed .side-brand{padding:0;justify-content:center;}
+  .sidebar.collapsed .side-brand .logo{display:none;}
+  .sidebar.collapsed .side-nav-label,.sidebar.collapsed .side-text,.sidebar.collapsed .chevron,.sidebar.collapsed .side-subnav{display:none;}
+  .sidebar.collapsed .side-link,.sidebar.collapsed .side-nav-group-title{justify-content:center;padding:10px;gap:0;}
+  .sidebar{transition:width .25s cubic-bezier(.4,0,.2,1);}
   .tab-panel{display:none;}
   .tab-panel.active{display:block;animation:fadeIn .25s ease;}
   @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
@@ -599,4 +615,57 @@
       siberadShowToast('success', {!! json_encode('Selamat Datang '.session('login_success')) !!});
     });
   @endif
+
+  // ===== toggle collapse sidebar (dipakai semua dashboard) =====
+  // Saat sidebar dikecilkan, batas lebar konten (.content, dan .pimp-page
+  // kalau ada) ikut dilebarkan lewat inline style supaya ruang yang
+  // dibebaskan sidebar beneran dipakai — bukan cuma jadi margin kosong.
+  // Dibungkus DOMContentLoaded karena file ini di-include di <head>,
+  // sebelum elemen #sidebar (di <body>) ada.
+  function siberadInitSidebarCollapse(){
+    var sidebar = document.getElementById('sidebar');
+    var btn = document.getElementById('sideCollapseBtn');
+    if(!sidebar || !btn) return;
+    var KEY = 'siberad-sidebar-collapsed';
+
+    var pendingApply = 0;
+    function apply(collapsed){
+      // Sidebar-nya sendiri yang dianimasikan (lebar berubah halus lewat
+      // CSS transition). Lebar konten (.content/.pimp-page) sengaja diubah
+      // INSTAN, tapi baru DITUNDA sampai animasi sidebar selesai (~260ms),
+      // supaya Chart.js cuma perlu resize SEKALI ke ukuran final yang
+      // stabil — bukan berkali-kali ke ukuran yang masih berubah-ubah
+      // selagi transisi jalan (ini yang bikin chart "nyangkut" kalau
+      // sidebar dibuka-tutup berkali-kali).
+      sidebar.classList.toggle('collapsed', collapsed);
+
+      pendingApply++;
+      var myApply = pendingApply;
+      setTimeout(function(){
+        if(myApply !== pendingApply) return; // ada toggle baru menyusul, batalkan yang lama
+        var content = document.querySelector('.content');
+        if(content) content.style.maxWidth = collapsed ? '1360px' : '';
+        var pimpPage = document.querySelector('.pimp-page');
+        if(pimpPage) pimpPage.style.maxWidth = collapsed ? '1680px' : '';
+        (window.siberadCharts || []).forEach(function(chart){
+          try{ chart.resize(); }catch(e){}
+        });
+      }, 260);
+    }
+
+    btn.addEventListener('click', function(){
+      var collapsed = !sidebar.classList.contains('collapsed');
+      apply(collapsed);
+      try{ localStorage.setItem(KEY, collapsed ? '1' : '0'); }catch(e){}
+    });
+
+    try{
+      if(localStorage.getItem(KEY) === '1') apply(true);
+    }catch(e){}
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', siberadInitSidebarCollapse);
+  } else {
+    siberadInitSidebarCollapse();
+  }
 </script>
