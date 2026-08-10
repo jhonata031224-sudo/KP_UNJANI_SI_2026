@@ -349,8 +349,9 @@
     margin-top:-12px;margin-bottom:14px;
   }
   .login-submit{border:none;cursor:pointer;justify-content:center;margin-top:4px;width:100%;}
-  .captcha-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;}
-  .captcha-img{height:50px;border-radius:8px;border:1px solid var(--border);flex-shrink:0;}
+  .captcha-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .captcha-img{height:38px;border-radius:8px;border:1px solid var(--border);flex-shrink:0;}
+  .captcha-row .captcha-input{width:auto;flex:1;min-width:0;margin-bottom:0;}
   .captcha-refresh{
     width:38px;height:38px;flex-shrink:0;border-radius:8px;cursor:pointer;
     background:var(--bg-deep);border:1px solid var(--border);color:var(--text-muted);
@@ -715,13 +716,13 @@
       <form class="login-form" id="loginForm" method="POST" action="{{ route('login') }}" autocomplete="off">
         @csrf
         <label class="login-label" for="loginUser">NRP / Username</label>
-        <input class="login-input" id="loginUser" name="username" type="text" value="{{ old('username') }}" autocomplete="off" required>
+        <input class="login-input" id="loginUser" name="username" type="text" value="{{ old('username') }}" autocomplete="off" placeholder="Masukan NRP atau Username" required>
         @error('username')
           <span class="login-error">{{ $message }}</span>
         @enderror
         <label class="login-label" for="loginPass">Password</label>
         <div class="login-field">
-          <input class="login-input" id="loginPass" name="password" type="password" autocomplete="new-password" required>
+          <input class="login-input" id="loginPass" name="password" type="password" autocomplete="new-password" placeholder="Masukan Password" required>
           <button class="field-toggle" type="button" data-target="loginPass" aria-label="Tampilkan Password">
             <svg class="icon-eye" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3.2"/></svg>
             <svg class="icon-eye-off" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c7 0 10.5 7 10.5 7a13.6 13.6 0 0 1-3.2 4.1M6.6 6.6C3.5 8.5 1.5 12 1.5 12s3.5 7 10.5 7a10.6 10.6 0 0 0 4.2-.85"/><path d="M9.5 9.7a3.2 3.2 0 0 0 4.5 4.5"/></svg>
@@ -736,8 +737,8 @@
           <button class="captcha-refresh" type="button" id="captchaRefresh" aria-label="Muat ulang captcha">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>
           </button>
+          <input class="login-input captcha-input" id="loginCaptcha" name="captcha" type="text" autocomplete="off" placeholder="Masukan Captcha" required>
         </div>
-        <input class="login-input" id="loginCaptcha" name="captcha" type="text" autocomplete="off" placeholder="Ketik kode di atas" required>
         @error('captcha')
           <span class="login-error">{{ $message }}</span>
         @enderror
