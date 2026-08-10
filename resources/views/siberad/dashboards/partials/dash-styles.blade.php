@@ -308,7 +308,8 @@
   .profile-form-notice{background:var(--gold-dim);border:1px solid var(--border);color:var(--text-muted);border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.6;margin:2px 2px 16px;}
   .profile-form-notice b{color:var(--gold-bright);}
   .profile-form{display:flex;flex-direction:column;gap:14px;padding:0 2px 4px;}
-  .profile-form-field{display:flex;flex-direction:column;gap:6px;}
+  .profile-form-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+  .profile-form-field:last-of-type{margin-bottom:0;}
   .profile-form-field label{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--text-dim);text-transform:uppercase;}
   .profile-form-field input,.profile-form-field textarea{
     border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:var(--body);font-size:14px;
