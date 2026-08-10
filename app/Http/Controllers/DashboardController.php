@@ -92,16 +92,26 @@ class DashboardController
         $monitoringPimpinanSatlak = collect();
         $laporanPimpinanSatlak = collect();
         if ($modePimpinan) {
-            $satlakIds = Satuan::where('kategori', Satuan::KATEGORI_SATLAK)->pluck('id');
-            $laporanPimpinanSatlak = Laporan::with(['satuan','tujuanSatuan'])->whereIn('satuan_id', $satlakIds)->latest()->get();
-            $monitoringPimpinanSatlak = Satuan::whereIn('id', $satlakIds)->orderBy('urutan')->get()->map(fn ($satlak) => [
-                'id' => $satlak->id,
-                'kode' => $satlak->kode,
-                'nama' => $satlak->nama,
-                'total' => $laporanPimpinanSatlak->where('satuan_id', $satlak->id)->count(),
-                'menunggu' => $laporanPimpinanSatlak->where('satuan_id', $satlak->id)->where('status', 'Menunggu')->count(),
-                'diterima' => $laporanPimpinanSatlak->where('satuan_id', $satlak->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count(),
-                'ditolak' => $laporanPimpinanSatlak->where('satuan_id', $satlak->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count(),
+            // Danpus/Wadan memantau aktivitas operasional dan pembinaan dalam satu log terpusat.
+            // Tetap mempertahankan nama variabel lama agar seluruh tampilan pimpinan yang sudah ada
+            // langsung menggunakan data tambahan tanpa mengubah alur/detail laporan.
+            $kodeSatuanPimpinan = [
+                'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK', 'SATLAKDUKTEK',
+                'BINMAT', 'BINFUNG', 'BINUM', 'DIKLAT',
+            ];
+            $satuanPimpinanIds = Satuan::whereIn('kode', $kodeSatuanPimpinan)->pluck('id');
+            $laporanPimpinanSatlak = Laporan::with(['satuan','tujuanSatuan'])
+                ->whereIn('satuan_id', $satuanPimpinanIds)
+                ->latest()
+                ->get();
+            $monitoringPimpinanSatlak = Satuan::whereIn('id', $satuanPimpinanIds)->orderBy('urutan')->get()->map(fn ($satuanPimpinan) => [
+                'id' => $satuanPimpinan->id,
+                'kode' => $satuanPimpinan->kode,
+                'nama' => $satuanPimpinan->nama,
+                'total' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->count(),
+                'menunggu' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->where('status', 'Menunggu')->count(),
+                'diterima' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count(),
+                'ditolak' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count(),
             ]);
             return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','laporanMasuk','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description'));
         }
