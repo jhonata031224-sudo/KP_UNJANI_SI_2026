@@ -328,7 +328,12 @@
 
     function renameStatusMenu() {
       document.querySelectorAll('.side-sub-link').forEach(function(link){
-        if (link.textContent.trim() === 'Status Laporan') link.textContent = 'Riwayat Laporan';
+        if (link.textContent.trim() !== 'Status Laporan') return;
+        var textNode = Array.prototype.slice.call(link.childNodes).find(function(node){
+          return node.nodeType === Node.TEXT_NODE && node.nodeValue.trim();
+        });
+        if (textNode) textNode.nodeValue = 'Riwayat Laporan';
+        else link.textContent = 'Riwayat Laporan';
       });
       document.querySelectorAll('h2').forEach(function(h){
         if (h.textContent.trim() === 'Status Laporan') h.textContent = 'Riwayat Laporan';

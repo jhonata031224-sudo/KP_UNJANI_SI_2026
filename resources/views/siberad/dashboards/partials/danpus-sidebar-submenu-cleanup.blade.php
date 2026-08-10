@@ -1,9 +1,9 @@
 <style>
   .side-nav-group .side-dropdown-menu{padding:0!important;margin:0!important}
-  .side-nav-group .side-sub-link{display:flex!important;align-items:center!important;gap:0!important;margin:0!important;padding:2px 0 2px 20px!important;min-height:32px!important;height:32px!important;box-sizing:border-box!important;text-transform:none!important}
+  .side-nav-group .side-sub-link{display:flex!important;align-items:center!important;gap:8px!important;margin:0!important;padding:2px 0 2px 17px!important;min-height:32px!important;height:32px!important;box-sizing:border-box!important;text-transform:none!important}
   .side-nav-group .side-dropdown-menu .side-sub-link:first-child{margin-top:2px!important}
   .side-nav-group .side-dropdown-menu .side-sub-link+.side-sub-link{margin-top:0!important}
-  .side-nav-group .side-sub-link .sub-dot,.side-nav-group .side-dropdown-menu .side-sub-link:before,.side-nav-group .side-dropdown-menu .side-sub-link:after{display:none!important;content:none!important}
+  .side-nav-group .side-dropdown-menu .side-sub-link:before,.side-nav-group .side-dropdown-menu .side-sub-link:after{display:none!important;content:none!important}
 
   /* Log aktivitas Danpus dibuat sebagai alur proses laporan, seperti tracking paket. */
   .danpus-activity-log{display:flex;flex-direction:column;gap:0;margin-top:4px}
@@ -38,7 +38,6 @@
       });
     });
   }
-  function removeDanpusSubmenuDots(){document.querySelectorAll('.side-nav-group .side-sub-link .sub-dot').forEach(function(dot){dot.remove()})}
   function removeDanpusProfileHelpText(){var el=document.querySelector('#profilePhotoView .profile-help-text');if(el)el.remove()}
 
   function getCellText(cells,index){return cells[index]?cells[index].textContent.trim():''}
@@ -98,7 +97,7 @@
       wrapper.dataset.timelineReady='1';
     });
   }
-  function applyDanpusSubmenuFix(){removeDanpusSubmenuDots();normalizeDanpusSubmenuText();removeDanpusProfileHelpText();buildActivityTimeline()}
+  function applyDanpusSubmenuFix(){normalizeDanpusSubmenuText();removeDanpusProfileHelpText();buildActivityTimeline()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyDanpusSubmenuFix);else applyDanpusSubmenuFix();
 })();
 </script>
