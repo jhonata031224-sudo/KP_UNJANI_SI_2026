@@ -8,6 +8,7 @@
 <title>SIBERAD — Sistem Informasi Berbasis Elektronik Angkatan Darat | PUSSIBERAD</title>
 <meta name="description" content="SIBERAD — Sistem Informasi Berbasis Elektronik Angkatan Darat. Platform pelaporan dan monitoring resmi Pusat Siber Angkatan Darat (PUSSIBERAD).">
 <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-pussiberad.jpg') }}">
+<link rel="preload" as="image" href="{{ asset('images/logo-pussiberad.jpg') }}" fetchpriority="high">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
