@@ -80,7 +80,7 @@ class InjectDashboardUi
 
         $asset = asset('js/siberad-dashboard-ui.js');
         $injection = '<script>window.__SIBERAD_NOTIFICATIONS__ = '.$notificationJson.'; window.__SIBERAD_CSRF__ = '.$csrfJson.';</script>'
-            .'<script src="'.e($asset).'"> </script>'
+            .'<script src="'.e($asset).'"></script>'
             .$fixedHeaderInjection;
 
         $pos = strripos($html, '</body>');
