@@ -33,9 +33,9 @@ class PermintaanLaporanController extends Controller
     {
         abort_unless($this->isPimpinan($request) || $this->isPengirim($request), 403);
 
-        // Permintaan Laporan tetap berada di dalam shell dashboard yang sama.
-        // Pimpinan dan satuan pengirim diarahkan ke section yang sesuai.
-        return redirect()->to(route('dashboard').'#permintaan-laporan');
+        // Tetap memakai shell dashboard dan sidebar Pelaporan yang sama,
+        // tetapi Permintaan Laporan dibuka sebagai halaman/tab mandiri.
+        return redirect()->to(route('dashboard').'?tab=permintaan-laporan');
     }
 
     public function store(Request $request): RedirectResponse
@@ -74,6 +74,7 @@ class PermintaanLaporanController extends Controller
                 ]);
                 $created->push($permintaan);
 
+                // Setiap pengguna pada satuan tujuan mendapat notifikasi database.
                 foreach (User::where('satuan_id', $satuan->id)->get() as $penerima) {
                     $penerima->notify(new PermintaanLaporanBaru($permintaan));
                 }
