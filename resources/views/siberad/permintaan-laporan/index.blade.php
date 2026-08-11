@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Permintaan Laporan — SIBERAD</title>
+<link rel="icon" type="image/jpeg" href="{{ asset('images/logo-pussiberad.jpg') }}">
+@include('siberad.dashboards.partials.dash-styles')
+<style>
+body{background:var(--bg)!important;color:var(--text)}
+.req-layout{min-height:100vh;padding:34px 38px 50px;margin-left:0;box-sizing:border-box}
+.req-wrap{max-width:1320px;margin:0 auto}
+.req-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:22px}
+.req-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:7px}
+.req-title{margin:0;font-family:var(--display);font-size:30px;line-height:1.15}
+.req-subtitle{margin:8px 0 0;color:var(--text-muted);font-size:13px;line-height:1.6}
+.req-new{border:0;background:var(--gold-bright);color:#fff;border-radius:10px;padding:11px 16px;font-weight:700;font-size:12px;cursor:pointer;box-shadow:0 8px 18px rgba(201,122,0,.22)}
+.req-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.req-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.07);padding:20px;min-width:0}
+.req-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:15px}
+.req-card h2{font-family:var(--display);font-size:19px;margin:0}.req-card p{font-size:11px;color:var(--text-muted);margin:5px 0 0;line-height:1.5}
+.req-count{font-family:var(--mono);font-size:11px;color:var(--text-muted);white-space:nowrap}
+.req-table-wrap{overflow-x:auto}.req-table{width:100%;border-collapse:collapse;min-width:820px}.req-table th{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);text-align:left;padding:10px 11px;border-bottom:1px solid var(--border);white-space:nowrap}.req-table td{padding:13px 11px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle}.req-table tr:last-child td{border-bottom:0}.subject{font-weight:800}.muted{font-size:10px;color:var(--text-muted);margin-top:3px}.status{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:10px;font-weight:800;white-space:nowrap}.status.wait{color:#a86d00;background:rgba(224,168,58,.12);border:1px solid rgba(224,168,58,.3)}.status.work{color:#2563a5;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25)}.status.ok{color:#16834b;background:rgba(63,194,125,.12);border:1px solid rgba(63,194,125,.25)}.status.bad{color:#c83b3b;background:rgba(200,59,59,.1);border:1px solid rgba(200,59,59,.25)}
+.deadline{font-weight:700}.deadline.late{color:#c83b3b}.deadline.soon{color:#a86d00}
+.empty{padding:34px 20px;text-align:center;color:var(--text-muted);font-size:12px;background:var(--panel-alt);border:1px dashed var(--border);border-radius:12px}
+.alert{margin-bottom:18px;padding:11px 14px;border-radius:10px;background:rgba(63,194,125,.1);border:1px solid rgba(63,194,125,.25);color:#176b42;font-size:12px}
+.form-modal{position:fixed;inset:0;background:rgba(15,23,42,.48);display:none;align-items:center;justify-content:center;padding:20px;z-index:10050}.form-modal.open{display:flex}.form-card{width:min(720px,100%);max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:22px;box-shadow:0 25px 70px rgba(15,23,42,.25)}.form-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}.form-head h3{font-family:var(--display);font-size:21px;margin:0}.close{border:1px solid var(--border);background:var(--panel-alt);color:var(--text-muted);width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:19px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}.field label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted)}.field input,.field textarea,.field select{width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:9px;background:var(--panel-alt);color:var(--text);padding:10px 11px;font:inherit;font-size:12px;outline:none}.field textarea{min-height:110px;resize:vertical}.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--gold-bright);box-shadow:0 0 0 3px rgba(201,122,0,.1)}.check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.check{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--border);border-radius:9px;background:var(--panel-alt);font-size:11px;cursor:pointer}.check input{width:auto}.form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.btn-secondary,.btn-primary{border:1px solid var(--border);border-radius:9px;padding:9px 14px;font-size:11px;font-weight:700;cursor:pointer}.btn-secondary{background:var(--panel-alt);color:var(--text)}.btn-primary{border-color:var(--gold-bright);background:var(--gold-bright);color:#fff}
+.topbar-lite{height:66px;border-bottom:1px solid var(--border);background:var(--panel);display:flex;align-items:center;justify-content:flex-end;padding:0 38px;box-sizing:border-box;gap:10px}.profile-mini{width:38px;height:38px;border-radius:9px;border:1px solid var(--gold-soft,#ead5aa);background:var(--gold-dim,rgba(201,122,0,.1));display:flex;align-items:center;justify-content:center;color:var(--gold-bright);font-weight:800}
+@media(max-width:900px){.req-layout{padding:25px 20px 40px}.req-hero{display:block}.req-new{margin-top:15px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.check-grid{grid-template-columns:1fr}.topbar-lite{padding:0 20px}}
+@media(max-width:600px){.req-layout{padding:20px 14px 35px}.req-title{font-size:25px}.req-card{padding:15px}}
+</style>
+</head>
+<body>
+<div class="topbar-lite"><div class="profile-mini">{{ strtoupper(mb_substr($user->name ?? 'P',0,1)) }}</div></div>
+<main class="req-layout"><div class="req-wrap">
+<div class="req-hero"><div><div class="req-eyebrow">SIBERAD {{ strtoupper($satuan->kode ?? 'PIMPINAN') }}</div><h1>Permintaan Laporan</h1><p>Kelola permintaan pelaporan dan deadline untuk satuan pengirim. Halaman ini dipisahkan dari riwayat laporan agar alurnya lebih mudah dipahami.</p></div><button class="req-new" type="button" id="openRequestForm">+ Buat Permintaan</button></div>
+@if(session('status'))<div class="alert">{{ session('status') }}</div>@endif
+<div class="req-grid"><section class="req-card"><div class="req-card-head"><div><h2>Daftar Permintaan</h2><p>Permintaan yang dibuat oleh {{ $satuan->nama ?? 'pimpinan' }}.</p></div><div class="req-count">{{ $permintaanLaporan->count() }} permintaan</div></div>
+@if($permintaanLaporan->isEmpty())<div class="empty">Belum ada permintaan laporan. Klik <strong>+ Buat Permintaan</strong> untuk memberikan tugas pelaporan kepada satuan.</div>@else
+<div class="req-table-wrap"><table class="req-table"><thead><tr><th>Perihal</th><th>Satuan Tujuan</th><th>Deadline</th><th>Prioritas</th><th>Status</th></tr></thead><tbody>
+@foreach($permintaanLaporan as $item)
+@php $late=$item->isTerlambat(); $soon=!$late && !$item->laporan_id && $item->deadline_at && $item->deadline_at->diffInHours(now()) <= 24; @endphp
+<tr><td><div class="subject">{{ $item->perihal }}</div>@if($item->instruksi)<div class="muted">{{ \Illuminate\Support\Str::limit($item->instruksi,90) }}</div>@endif</td><td>{{ $item->tujuanSatuan->nama ?? '-' }}</td><td><div class="deadline {{ $late ? 'late' : ($soon ? 'soon' : '') }}">{{ $item->deadline_at?->format('d M Y, H:i') }}</div>@if($late)<div class="muted">Melewati batas waktu</div>@elseif($soon && !$item->laporan_id)<div class="muted">Deadline mendekat</div>@endif</td><td>{{ $item->prioritas }}</td><td><span class="status {{ $late ? 'bad' : ($item->status === \App\Models\PermintaanLaporan::STATUS_SELESAI ? 'ok' : ($item->status === \App\Models\PermintaanLaporan::STATUS_DIKERJAKAN ? 'work' : 'wait')) }}">{{ $item->statusTampilan() }}</span></td></tr>
+@endforeach</tbody></table></div>@endif
+</section></div></div></main>
+
+<div class="form-modal" id="requestModal"><div class="form-card"><div class="form-head"><h3>Buat Permintaan Laporan</h3><button type="button" class="close" id="closeRequestForm">×</button></div>
+<form method="POST" action="{{ route('permintaan-laporan.store') }}">@csrf<div class="form-grid">
+<div class="field full"><label>Satuan Tujuan</label><div class="check-grid">@foreach($tujuanSatuan as $tujuan)<label class="check"><input type="checkbox" name="tujuan_satuan_ids[]" value="{{ $tujuan->id }}"> <span>{{ $tujuan->nama }}</span></label>@endforeach</div></div>
+<div class="field full"><label for="perihal">Perihal</label><input id="perihal" name="perihal" required maxlength="255" placeholder="Contoh: Laporan Kegiatan Mingguan"></div>
+<div class="field full"><label for="instruksi">Instruksi</label><textarea id="instruksi" name="instruksi" maxlength="5000" placeholder="Jelaskan informasi yang perlu dilaporkan..."></textarea></div>
+<div class="field"><label for="deadline_at">Deadline</label><input id="deadline_at" name="deadline_at" type="datetime-local" required></div>
+<div class="field"><label for="prioritas">Prioritas</label><select id="prioritas" name="prioritas" required><option value="Sedang">Sedang</option><option value="Tinggi">Tinggi</option><option value="Rendah">Rendah</option></select></div>
+</div><div class="form-actions"><button type="button" class="btn-secondary" id="cancelRequestForm">Batal</button><button type="submit" class="btn-primary">Kirim Permintaan</button></div></form></div></div>
+<script>
+const modal=document.getElementById('requestModal');
+function closeRequest(){modal?.classList.remove('open')}
+document.getElementById('openRequestForm')?.addEventListener('click',()=>modal?.classList.add('open'));
+document.getElementById('closeRequestForm')?.addEventListener('click',closeRequest);
+document.getElementById('cancelRequestForm')?.addEventListener('click',closeRequest);
+modal?.addEventListener('click',e=>{if(e.target===modal)closeRequest()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeRequest()});
+</script>
+</body>
+</html>
