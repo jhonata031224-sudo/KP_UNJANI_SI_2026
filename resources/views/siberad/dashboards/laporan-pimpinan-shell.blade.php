@@ -10,3 +10,4 @@
 @include('siberad.dashboards.partials.responsive-content-alignment')
 @include('siberad.dashboards.partials.danpus-permintaan-laporan-menu')
 @include('siberad.dashboards.partials.danpus-permintaan-laporan-navigation')
+@include('siberad.dashboards.partials.danpus-permintaan-laporan-page-mode')
