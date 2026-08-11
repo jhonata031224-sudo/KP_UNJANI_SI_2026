@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Laporan;
+use App\Models\PermintaanLaporan;
 use App\Models\Satuan;
 use App\Models\User;
 use App\Notifications\LaporanBaruDiterima;
@@ -16,6 +17,7 @@ class LaporanController extends Controller
     {
         $validated = $request->validate([
             'tujuan_satuan_id' => ['required', 'integer', 'exists:satuans,id'],
+            'permintaan_laporan_id' => ['nullable', 'integer', 'exists:permintaan_laporans,id'],
             'proyek' => ['nullable', 'string', 'max:255'],
             'perihal' => ['required', 'string', 'max:255'],
             'deskripsi' => ['required', 'string', 'max:10000'],
@@ -40,6 +42,14 @@ class LaporanController extends Controller
             );
         }
 
+        $permintaan = null;
+        if (!empty($validated['permintaan_laporan_id'])) {
+            $permintaan = PermintaanLaporan::findOrFail($validated['permintaan_laporan_id']);
+            abort_unless((int) $permintaan->tujuan_satuan_id === (int) $satuanAsal->id, 403, 'Permintaan laporan bukan untuk satuan Anda.');
+            abort_unless((int) $permintaan->tujuanSatuan->id === (int) $tujuan->id, 422, 'Tujuan laporan tidak sesuai dengan permintaan laporan.');
+            abort_if($permintaan->laporan_id, 422, 'Permintaan laporan tersebut sudah memiliki laporan.');
+        }
+
         $lampiranPath = $request->hasFile('lampiran')
             ? $request->file('lampiran')->store('lampiran-laporan', 'public')
             : null;
@@ -48,6 +58,7 @@ class LaporanController extends Controller
             'satuan_id' => $satuanAsal->id,
             'user_id' => $user->id,
             'tujuan_satuan_id' => $tujuan->id,
+            'permintaan_laporan_id' => $permintaan?->id,
             'proyek' => $validated['proyek'] ?? null,
             'perihal' => $validated['perihal'],
             'deskripsi' => $validated['deskripsi'],
@@ -56,18 +67,23 @@ class LaporanController extends Controller
             'status' => 'Menunggu',
         ]);
 
+        if ($permintaan) {
+            $permintaan->update([
+                'laporan_id' => $laporan->id,
+                'status' => PermintaanLaporan::STATUS_PEMERIKSAAN,
+                'selesai_at' => null,
+            ]);
+        }
+
         foreach (User::where('satuan_id', $tujuan->id)->get() as $penerima) {
             $penerima->notify(new LaporanBaruDiterima($laporan));
         }
 
-        return back()->with('status', 'Laporan berhasil dikirim ke '.$tujuan->nama.'.');
+        return back()->with('status', $permintaan
+            ? 'Laporan berhasil dikirim sesuai permintaan dan deadline yang diberikan.'
+            : 'Laporan berhasil dikirim ke '.$tujuan->nama.'.');
     }
 
-    /**
-     * Setiap satuan penerima dapat menindaklanjuti laporan yang masuk.
-     * DANPUS/WADAN tetap menggunakan label status khusus untuk menjaga
-     * alur koordinasi tingkat pimpinan.
-     */
     public function updateStatus(Request $request, Laporan $laporan): RedirectResponse
     {
         $validated = $request->validate([
@@ -103,6 +119,18 @@ class LaporanController extends Controller
                 ? $validated['catatan']
                 : ($validated['catatan'] ?? null),
         ]);
+
+        if ($laporan->permintaanLaporan) {
+            $permintaan = $laporan->permintaanLaporan;
+            $permintaan->update([
+                'status' => str_contains(strtolower($statusFinal), 'tolak')
+                    ? PermintaanLaporan::STATUS_SELESAI
+                    : (str_contains(strtolower($statusFinal), 'setuj') || str_contains(strtolower($statusFinal), 'diterima')
+                        ? PermintaanLaporan::STATUS_SELESAI
+                        : PermintaanLaporan::STATUS_PEMERIKSAAN),
+                'selesai_at' => str_contains(strtolower($statusFinal), 'tolak') || str_contains(strtolower($statusFinal), 'setuj') || str_contains(strtolower($statusFinal), 'diterima') ? now() : null,
+            ]);
+        }
 
         return back()->with('status', 'Status laporan berhasil diperbarui menjadi '.$laporan->status.'.');
     }
