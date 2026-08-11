@@ -129,7 +129,7 @@
   }
 
   function buildActivityTimeline(){
-    @if(($satuan->kode ?? null) !== 'DANPUS') return; @endif
+    @if(!in_array(strtoupper((string) ($satuan->kode ?? '')), ['DANPUS', 'WADAN'], true)) return; @endif
     document.querySelectorAll('section[id^="satlak-"] .clean-table-wrap').forEach(function(wrapper){
       if(wrapper.dataset.timelineReady==='1')return;
       var table=wrapper.querySelector('table');if(!table)return;
