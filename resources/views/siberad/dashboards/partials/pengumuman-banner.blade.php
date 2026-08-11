@@ -42,26 +42,6 @@
       menuBtn.addEventListener('click', function () { sidebar.classList.toggle('open'); });
     }
 
-    var links = document.querySelectorAll('.side-link[href^="#"]');
-    var panels = document.querySelectorAll('.tab-panel');
-    links.forEach(function (link) {
-      if (link.dataset.tabBound) return;
-      link.dataset.tabBound = '1';
-      link.addEventListener('click', function (e) {
-        var id = link.getAttribute('href').slice(1);
-        var panel = document.getElementById(id);
-        if (!panel) return;
-        e.preventDefault();
-        panels.forEach(function (p) { p.classList.remove('active'); });
-        panel.classList.add('active');
-        links.forEach(function (l) { l.classList.remove('active'); });
-        link.classList.add('active');
-        try { sessionStorage.setItem('siberad-role-active-tab', id); } catch (err) {}
-        if (sidebar && window.innerWidth <= 900) sidebar.classList.remove('open');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-    });
-
     var themeBtn = document.getElementById('themeToggleBtn');
     if (themeBtn && !themeBtn.dataset.uiBound) {
       themeBtn.dataset.uiBound = '1';
@@ -114,18 +94,6 @@
       });
     }
 
-    var savedTab = null;
-    try { savedTab = sessionStorage.getItem('siberad-role-active-tab'); } catch (err) {}
-    if (savedTab) {
-      var savedPanel = document.getElementById(savedTab);
-      var savedLink = document.querySelector('.side-link[href="#' + savedTab + '"]');
-      if (savedPanel && savedLink) {
-        panels.forEach(function (p) { p.classList.remove('active'); });
-        savedPanel.classList.add('active');
-        links.forEach(function (l) { l.classList.remove('active'); });
-        savedLink.classList.add('active');
-      }
-    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initRoleUi);

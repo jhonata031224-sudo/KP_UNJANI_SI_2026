@@ -209,16 +209,24 @@
     // Semua grup di HTML defaultnya class="open" (biar langsung kebuka pas
     // sidebar lebar). Status buka/tutup tiap grup disimpan per-grup ke
     // sessionStorage supaya bertahan lewat refresh -- tanpa ini, refresh
-    // selalu balik ke default HTML (semua grup kebuka).
+    // selalu balik ke default HTML (semua grup kebuka). Dibungkus fungsi
+    // (bukan langsung jalan sekali) supaya bisa dipanggil ulang oleh
+    // siberadInitSidebarCollapse() tiap kali sidebar dilebarkan dari mode
+    // ciutkan -- termasuk setelah refresh saat masih ciutkan, saat status
+    // "grup mana yang tadi kebuka" hanya ada di sessionStorage ini.
     var ADMIN_GROUP_STATE_KEY = 'siberad-admin-group-';
-    groups.forEach(function (g) {
-      var saved = null;
-      try { saved = sessionStorage.getItem(ADMIN_GROUP_STATE_KEY + g.id); } catch (e) {}
-      if (saved === 'closed') g.classList.remove('open');
-      else if (saved === 'open') g.classList.add('open');
-      else if (sidebar && sidebar.classList.contains('collapsed')) g.classList.remove('open');
-    });
-    groups.forEach(positionGroupFlyout);
+    function restoreAdminGroupState() {
+      groups.forEach(function (g) {
+        var saved = null;
+        try { saved = sessionStorage.getItem(ADMIN_GROUP_STATE_KEY + g.id); } catch (e) {}
+        if (saved === 'closed') g.classList.remove('open');
+        else if (saved === 'open') g.classList.add('open');
+        else if (sidebar && sidebar.classList.contains('collapsed')) g.classList.remove('open');
+        positionGroupFlyout(g);
+      });
+    }
+    window.siberadRestoreGroupState = restoreAdminGroupState;
+    restoreAdminGroupState();
 
     groups.forEach(function (g) {
       var btn = g.querySelector('.side-nav-group-title');
@@ -263,6 +271,7 @@
         var group = link.closest('.side-nav-group');
         if (sidebar && sidebar.classList.contains('collapsed') && group) {
           group.classList.remove('open');
+          try { sessionStorage.setItem(ADMIN_GROUP_STATE_KEY + group.id, 'closed'); } catch (e) {}
           positionGroupFlyout(group);
         }
       });
