@@ -159,6 +159,7 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
   // atau memilih salah satu link di dalamnya.
   document.addEventListener('click',e=>{
     if(!sidebar?.classList.contains('collapsed'))return;
+    if(e.target.closest('#sideCollapseBtn'))return;
     document.querySelectorAll('.side-nav-group.open').forEach(g=>{
       if(g.contains(e.target))return;
       g.classList.remove('open');

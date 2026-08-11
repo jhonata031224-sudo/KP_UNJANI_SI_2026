@@ -168,25 +168,54 @@
     panel.querySelectorAll('[data-row-limit]').forEach(terapkanRowLimitWrap);
   }
 
-  // Tab switching sederhana (prototype — belum tersambung ke backend laporan)
+  // Tab switching + persist tab aktif ke sessionStorage supaya tidak balik ke
+  // Dashboard setiap kali halaman di-refresh.
+  const ADMIN_ACTIVE_TAB_KEY = 'siberad-admin-active-tab';
+  const ADMIN_GROUP_STATE_KEY = 'siberad-admin-group-';
   const links = document.querySelectorAll('[data-tab-link]');
   const panels = document.querySelectorAll('[data-tab-panel]');
+
+  function activateAdminTab(target, skipSave) {
+    const targetPanel = document.querySelector(`[data-tab-panel="${target}"]`);
+    if (!targetPanel) return false;
+    links.forEach(l => l.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.side-nav-group').forEach(g => g.classList.remove('has-active-child'));
+    const matchedLinks = document.querySelectorAll(`[data-tab-link="${target}"]`);
+    matchedLinks.forEach(l => {
+      l.classList.add('active');
+      const group = l.closest('.side-nav-group');
+      if (group) {
+        group.classList.add('has-active-child');
+        if (!sidebar || !sidebar.classList.contains('collapsed')) {
+          group.classList.add('open');
+          try { sessionStorage.setItem(ADMIN_GROUP_STATE_KEY + group.id, 'open'); } catch (e) {}
+        }
+      }
+    });
+    targetPanel.classList.add('active');
+    terapkanRowLimit(targetPanel);
+    if (!skipSave) {
+      try { sessionStorage.setItem(ADMIN_ACTIVE_TAB_KEY, target); } catch (e) {}
+    }
+    return true;
+  }
+
   links.forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
       const target = link.getAttribute('data-tab-link');
-      links.forEach(l => l.classList.remove('active'));
-      panels.forEach(p => p.classList.remove('active'));
-      link.classList.add('active');
-      const targetPanel = document.querySelector(`[data-tab-panel="${target}"]`);
-      if (targetPanel) {
-        targetPanel.classList.add('active');
-        terapkanRowLimit(targetPanel);
-      }
+      activateAdminTab(target);
       if (window.innerWidth <= 900 && sidebar) sidebar.classList.remove('open');
       window.scrollTo({top:0, behavior:'smooth'});
     });
   });
+
+  (function () {
+    let savedTab = null;
+    try { savedTab = sessionStorage.getItem(ADMIN_ACTIVE_TAB_KEY); } catch (e) {}
+    if (savedTab) activateAdminTab(savedTab, true);
+  })();
 
   document.querySelectorAll('.tab-panel.active').forEach(terapkanRowLimit);
 

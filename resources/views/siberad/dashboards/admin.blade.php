@@ -207,15 +207,17 @@
     window.addEventListener('resize', function () { window.siberadRepositionSubnavFlyouts(); });
 
     // Semua grup di HTML defaultnya class="open" (biar langsung kebuka pas
-    // sidebar lebar). Tapi kalau sidebar-nya lagi diciutkan (dari
-    // localStorage, mis. abis hard refresh), "open" berarti tampil sebagai
-    // flyout position:fixed -- kalau ketiga grup dibiarkan open sekaligus,
-    // flyout-nya numpuk saling tindih karena belum direposisi. Tutup semua
-    // dulu di sini, biarkan tab aktif (kalau ada) yang buka ulang grupnya
-    // sendiri lewat has-active-child di bawah.
-    if (sidebar && sidebar.classList.contains('collapsed')) {
-      groups.forEach(function (g) { g.classList.remove('open'); });
-    }
+    // sidebar lebar). Status buka/tutup tiap grup disimpan per-grup ke
+    // sessionStorage supaya bertahan lewat refresh -- tanpa ini, refresh
+    // selalu balik ke default HTML (semua grup kebuka).
+    var ADMIN_GROUP_STATE_KEY = 'siberad-admin-group-';
+    groups.forEach(function (g) {
+      var saved = null;
+      try { saved = sessionStorage.getItem(ADMIN_GROUP_STATE_KEY + g.id); } catch (e) {}
+      if (saved === 'closed') g.classList.remove('open');
+      else if (saved === 'open') g.classList.add('open');
+      else if (sidebar && sidebar.classList.contains('collapsed')) g.classList.remove('open');
+    });
     groups.forEach(positionGroupFlyout);
 
     groups.forEach(function (g) {
@@ -227,32 +229,38 @@
           groups.forEach(function (other) {
             if (other === g) return;
             other.classList.remove('open');
+            try { sessionStorage.setItem(ADMIN_GROUP_STATE_KEY + other.id, 'closed'); } catch (e) {}
             positionGroupFlyout(other);
           });
         }
         g.classList.toggle('open');
+        try { sessionStorage.setItem(ADMIN_GROUP_STATE_KEY + g.id, g.classList.contains('open') ? 'open' : 'closed'); } catch (e) {}
         positionGroupFlyout(g);
       });
     });
 
     document.addEventListener('click', function (e) {
       if (!sidebar || !sidebar.classList.contains('collapsed')) return;
+      if (e.target.closest('#sideCollapseBtn')) return;
       groups.forEach(function (g) {
         if (g.contains(e.target)) return;
         g.classList.remove('open');
+        try { sessionStorage.setItem(ADMIN_GROUP_STATE_KEY + g.id, 'closed'); } catch (e) {}
         positionGroupFlyout(g);
       });
     });
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape' || !sidebar || !sidebar.classList.contains('collapsed')) return;
-      groups.forEach(function (g) { g.classList.remove('open'); positionGroupFlyout(g); });
+      groups.forEach(function (g) {
+        g.classList.remove('open');
+        try { sessionStorage.setItem(ADMIN_GROUP_STATE_KEY + g.id, 'closed'); } catch (e) {}
+        positionGroupFlyout(g);
+      });
     });
 
     document.querySelectorAll('[data-tab-link]').forEach(function (link) {
       link.addEventListener('click', function () {
-        groups.forEach(function (g) { g.classList.remove('has-active-child'); });
         var group = link.closest('.side-nav-group');
-        if (group) group.classList.add('has-active-child');
         if (sidebar && sidebar.classList.contains('collapsed') && group) {
           group.classList.remove('open');
           positionGroupFlyout(group);
@@ -1404,13 +1412,13 @@
       <section class="tab-panel" data-tab-panel="rekap-laporan">
         <div class="section-head">
           <h2>Rekap Laporan</h2>
-          <p>Ringkasan jumlah &amp; status laporan tiap Satlak dalam satu tampilan.</p>
+          <p>Ringkasan jumlah &amp; status laporan tiap satuan dalam satu tampilan.</p>
         </div>
 
         <div class="chart-box">
           <div class="chart-mini">
             <div class="chart-mini-head">
-              <h4>Total Laporan per Satlak</h4>
+              <h4>Total Laporan per Satuan</h4>
               <p>Perbandingan volume laporan yang sudah dikirim tiap satuan pelaksana.</p>
             </div>
             <div class="chart-wrap" style="height:260px;">
@@ -1420,10 +1428,10 @@
         </div>
 
         <div class="panel">
-          <div class="panel-head"><div><h3>Detail per Satlak</h3></div></div>
+          <div class="panel-head"><div><h3>Detail per Satuan</h3></div></div>
           <div class="tbl-wrap">
             <table class="dtbl">
-              <thead><tr><th>Satlak</th><th>Total Laporan</th><th>Menunggu</th><th>Disetujui</th><th>Ditolak</th></tr></thead>
+              <thead><tr><th>Satuan</th><th>Total Laporan</th><th>Menunggu</th><th>Disetujui</th><th>Ditolak</th></tr></thead>
               <tbody>
                 @forelse($rekapLaporanSatuan as $s)
                 <tr>

@@ -642,6 +642,27 @@
 
     var pendingApply = 0;
     function apply(collapsed){
+      // Grup submenu (.side-nav-group.open) sengaja "dibekukan" selama mode
+      // ciutkan: kalau class "open" dibiarkan menempel, kombinasi collapsed+open
+      // langsung dianggap CSS sebagai flyout dan muncul sendiri padahal belum
+      // diklik. Jadi sesaat sebelum ciutkan, kita simpan grup mana saja yang
+      // lagi terbuka lalu tutup semua; begitu dilebarkan lagi, dikembalikan
+      // persis seperti kondisi sebelum diciutkan.
+      var groups = document.querySelectorAll('.side-nav-group');
+      if (collapsed) {
+        var openIds = [];
+        groups.forEach(function(g){
+          if (g.classList.contains('open')) { openIds.push(g.id); g.classList.remove('open'); }
+        });
+        sidebar.dataset.reopenGroups = openIds.join(',');
+      } else if (sidebar.dataset.reopenGroups) {
+        sidebar.dataset.reopenGroups.split(',').filter(Boolean).forEach(function(id){
+          var g = document.getElementById(id);
+          if (g) g.classList.add('open');
+        });
+        delete sidebar.dataset.reopenGroups;
+      }
+
       // Sidebar-nya sendiri yang dianimasikan (lebar berubah halus lewat
       // CSS transition). Lebar konten (.content/.pimp-page) sengaja diubah
       // INSTAN, tapi baru DITUNDA sampai animasi sidebar selesai (~260ms),
