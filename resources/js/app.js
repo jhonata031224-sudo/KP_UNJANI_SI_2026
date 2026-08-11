@@ -1,17 +1,11 @@
 import { db } from './firebase.js';
 import './bootstrap';
 
-// Pastikan logo PUSSIBERAD selalu tampil pada loader awal landing page.
-// Jangan mengubah src jika logo sudah ada di markup karena hal itu dapat
-// memicu request/decode ulang tepat setelah DOM siap dan membuat logo
-// terlihat terlambat saat refresh.
 function pastikanLogoLoaderTampil() {
   const loader = document.getElementById('loader');
   if (!loader) return;
-
   const plate = loader.querySelector('.mark-plate');
   if (!plate) return;
-
   let logo = plate.querySelector('img');
   if (!logo) {
     logo = document.createElement('img');
@@ -19,7 +13,6 @@ function pastikanLogoLoaderTampil() {
     logo.alt = 'Lambang Pussiberad';
     plate.appendChild(logo);
   }
-
   logo.loading = 'eager';
   logo.fetchPriority = 'high';
   logo.decoding = 'sync';
@@ -31,26 +24,21 @@ function pastikanLogoLoaderTampil() {
   logo.style.setProperty('object-fit', 'cover', 'important');
   logo.style.setProperty('position', 'relative', 'important');
   logo.style.setProperty('z-index', '2', 'important');
-
   plate.style.setProperty('display', 'flex', 'important');
   plate.style.setProperty('align-items', 'center', 'important');
   plate.style.setProperty('justify-content', 'center', 'important');
 }
 
-// Pada tema light, kartu login harus benar-benar putih seperti form admin.
-// Input tetap abu-abu sangat muda agar bidang input masih terbaca jelas.
 function rapikanLoginLightTheme() {
   const root = document.documentElement;
   const apply = () => {
     const isLight = root.getAttribute('data-theme') === 'light';
     const card = document.querySelector('.login-card');
     const inputs = document.querySelectorAll('.login-input');
-
     if (card) {
       if (isLight) card.style.setProperty('background', '#ffffff', 'important');
       else card.style.removeProperty('background');
     }
-
     inputs.forEach((input) => {
       if (isLight) {
         input.style.setProperty('background', '#f3f4f6', 'important');
@@ -61,17 +49,15 @@ function rapikanLoginLightTheme() {
       }
     });
   };
-
   apply();
-  new MutationObserver(apply).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
-  new MutationObserver(apply).observe(document.body, { childList: true, subtree: true });
+  const themeObserver = new MutationObserver(apply);
+  themeObserver.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  const domObserver = new MutationObserver(apply);
+  domObserver.observe(document.body, { childList: true, subtree: true });
 }
 
-// Samakan dark theme seluruh dashboard role dengan landing page terbaru:
-// obsidian/black sebagai dasar dan warm gold sebagai aksen SIBERAD.
 function terapkanTemaLandingPadaDashboard() {
   if (!document.querySelector('.shell')) return;
-
   const id = 'siberad-landing-theme-dashboard';
   if (document.getElementById(id)) return;
 
@@ -79,27 +65,25 @@ function terapkanTemaLandingPadaDashboard() {
   style.id = id;
   style.textContent = `
     :root:not([data-theme="light"]) {
-      --bg:#080b0f !important;
-      --bg-deep:#030506 !important;
-      --panel:#11161c !important;
-      --panel-2:#171d24 !important;
-      --panel-alt:#0c1117 !important;
-      --border:rgba(217,146,11,.26) !important;
-      --border-soft:rgba(217,146,11,.14) !important;
-      --border-strong:rgba(217,146,11,.48) !important;
+      --bg:#06090c !important;
+      --bg-deep:#030609 !important;
+      --panel:#11181f !important;
+      --panel-2:#151f27 !important;
+      --panel-alt:#0b1218 !important;
+      --border:rgba(217,146,11,.22) !important;
+      --border-soft:rgba(217,146,11,.13) !important;
+      --border-strong:rgba(217,146,11,.42) !important;
       --gold:#d9920b !important;
       --gold-bright:#f2b94b !important;
       --gold-dim:rgba(217,146,11,.14) !important;
       --green:#d9920b !important;
       --green-bright:#f2b94b !important;
-      --green-dim:rgba(217,146,11,.14) !important;
+      --green-dim:rgba(242,185,75,.14) !important;
       --amber:#e6a52b !important;
       --amber-dim:rgba(230,165,43,.15) !important;
-      --red:#d45b52 !important;
-      --red-dim:rgba(212,91,82,.16) !important;
-      --text:#f5f2e9 !important;
-      --text-muted:#aeb3b1 !important;
-      --text-dim:#7d8585 !important;
+      --text:#f5f1e8 !important;
+      --text-muted:#a9a39a !important;
+      --text-dim:#746e65 !important;
       --gold-solid:#d9920b !important;
       --gold-solid-bright:#f2b94b !important;
       --on-gold:#181006 !important;
@@ -109,69 +93,55 @@ function terapkanTemaLandingPadaDashboard() {
     }
 
     :root:not([data-theme="light"]) body {
-      background-color:var(--bg) !important;
-      background-image:
-        radial-gradient(ellipse 70% 45% at 15% -10%, rgba(217,146,11,.09), transparent 60%),
-        radial-gradient(ellipse 50% 35% at 100% 10%, rgba(242,185,75,.055), transparent 60%) !important;
+      background-color:#06090c !important;
+      background-image:radial-gradient(ellipse 70% 45% at 15% -10%,rgba(217,146,11,.09),transparent 60%),radial-gradient(ellipse 50% 35% at 100% 10%,rgba(242,185,75,.055),transparent 60%) !important;
     }
 
     :root:not([data-theme="light"]) body::before {
-      background-image:
-        linear-gradient(rgba(217,146,11,.028) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(217,146,11,.028) 1px, transparent 1px) !important;
+      background-image:linear-gradient(rgba(217,146,11,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(217,146,11,.028) 1px,transparent 1px) !important;
+    }
+
+    /* Paksa seluruh semantic success/green dashboard menjadi gold pada dark theme.
+       Status danger/error tetap merah karena merupakan status fungsional. */
+    :root:not([data-theme="light"]) .green,
+    :root:not([data-theme="light"]) .text-green,
+    :root:not([data-theme="light"]) .bg-green,
+    :root:not([data-theme="light"]) .border-green,
+    :root:not([data-theme="light"]) .success,
+    :root:not([data-theme="light"]) .text-success,
+    :root:not([data-theme="light"]) .bg-success,
+    :root:not([data-theme="light"]) .border-success,
+    :root:not([data-theme="light"]) .btn-success,
+    :root:not([data-theme="light"]) .badge.green,
+    :root:not([data-theme="light"]) [class~="green"],
+    :root:not([data-theme="light"]) [class~="success"] {
+      color:var(--gold-bright) !important;
+      border-color:rgba(217,146,11,.42) !important;
+      background-color:rgba(217,146,11,.14) !important;
+      background-image:none !important;
+      box-shadow:none !important;
+    }
+
+    :root:not([data-theme="light"]) .btn-success,
+    :root:not([data-theme="light"]) button.green,
+    :root:not([data-theme="light"]) a.green {
+      background:#d9920b !important;
+      color:#181006 !important;
+      border-color:#d9920b !important;
+    }
+
+    :root:not([data-theme="light"]) .btn-success:hover,
+    :root:not([data-theme="light"]) button.green:hover,
+    :root:not([data-theme="light"]) a.green:hover {
+      background:#f2b94b !important;
+      color:#181006 !important;
+      border-color:#f2b94b !important;
     }
 
     :root:not([data-theme="light"]) .hud-panel,
     :root:not([data-theme="light"]) .panel,
     :root:not([data-theme="light"]) .stat-card {
-      box-shadow:0 1px 0 rgba(255,255,255,.025) inset, 0 10px 30px rgba(0,0,0,.30);
-    }
-
-    /* Hilangkan seluruh aksen hijau UI lama pada dashboard role. */
-    :root:not([data-theme="light"]) .green,
-    :root:not([data-theme="light"]) .badge.green,
-    :root:not([data-theme="light"]) .status.green,
-    :root:not([data-theme="light"]) [class~="green"] {
-      color:var(--gold-bright) !important;
-      background-color:var(--gold-dim) !important;
-      border-color:var(--border) !important;
-    }
-
-    :root:not([data-theme="light"]) .text-success,
-    :root:not([data-theme="light"]) .text-green,
-    :root:not([data-theme="light"]) .icon-success {
-      color:var(--gold-bright) !important;
-    }
-
-    :root:not([data-theme="light"]) .bg-success,
-    :root:not([data-theme="light"]) .bg-green {
-      background-color:var(--gold) !important;
-      color:var(--on-gold) !important;
-    }
-
-    :root:not([data-theme="light"]) .border-success,
-    :root:not([data-theme="light"]) .border-green {
-      border-color:var(--border-strong) !important;
-    }
-
-    :root:not([data-theme="light"]) .btn-success,
-    :root:not([data-theme="light"]) .btn-green {
-      background:var(--gold) !important;
-      border-color:var(--gold) !important;
-      color:var(--on-gold) !important;
-      box-shadow:0 0 18px rgba(217,146,11,.16) !important;
-    }
-
-    :root:not([data-theme="light"]) .btn-success:hover,
-    :root:not([data-theme="light"]) .btn-green:hover {
-      background:var(--gold-bright) !important;
-      border-color:var(--gold-bright) !important;
-    }
-
-    :root:not([data-theme="light"]) .badge.green {
-      background:var(--gold-dim) !important;
-      color:var(--gold-bright) !important;
-      border-color:var(--border) !important;
+      box-shadow:0 1px 0 rgba(255,255,255,.025) inset,0 10px 30px rgba(0,0,0,.30);
     }
   `;
   document.head.appendChild(style);
