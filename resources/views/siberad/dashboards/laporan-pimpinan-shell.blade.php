@@ -7,3 +7,4 @@
 @include('siberad.dashboards.partials.global-shell-enhancements')
 @include('siberad.dashboards.partials.danpus-monitoring-text-fix')
 @include('siberad.dashboards.partials.profile-description-hide')
+@include('siberad.dashboards.partials.responsive-content-alignment')
