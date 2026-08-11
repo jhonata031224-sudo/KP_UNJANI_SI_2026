@@ -9,9 +9,6 @@ body.permintaan-page-mode .content{padding-bottom:40px!important}
     function initPermintaanPageMode(){
         if(new URLSearchParams(window.location.search).get('section') !== 'permintaan') return;
         document.body.classList.add('permintaan-page-mode');
-
-        // Jika modul permintaan belum dipindahkan oleh partial deadline,
-        // tunggu sebentar lalu terapkan mode kembali tanpa menyentuh fungsi lain.
         var observer=new MutationObserver(function(){
             var section=document.getElementById('permintaan-laporan');
             if(section){
@@ -24,5 +21,19 @@ body.permintaan-page-mode .content{padding-bottom:40px!important}
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initPermintaanPageMode,{once:true});
     else initPermintaanPageMode();
+
+    document.addEventListener('click',function(e){
+        var link=e.target.closest && e.target.closest('.side-link,.side-sub-link');
+        if(!link) return;
+        var text=(link.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
+        if(text==='permintaan laporan') return;
+        document.body.classList.remove('permintaan-page-mode');
+    },true);
+
+    window.addEventListener('popstate',function(){
+        if(new URLSearchParams(window.location.search).get('section')!=='permintaan'){
+            document.body.classList.remove('permintaan-page-mode');
+        }
+    });
 })();
 </script>
