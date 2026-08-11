@@ -1,4 +1,24 @@
 <style>
+/* Admin: sidebar + header memakai warna surface/menu (#11181F), bukan hitam pekat. */
+body:has(.side-nav-group) .sidebar,
+body:has(.side-nav-group) .side-brand,
+body:has(.side-nav-group) .side-foot,
+body:has(.side-nav-group) .topbar,
+body:has(.side-nav-group) header.topbar-simple {
+  background:var(--panel) !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+
+body:has(.side-nav-group) .sidebar {
+  border-right-color:var(--border-soft) !important;
+}
+
+body:has(.side-nav-group) .side-brand,
+body:has(.side-nav-group) .topbar {
+  border-bottom-color:var(--border-soft) !important;
+}
+
 /* Konsistensi layout: area konten mengikuti lebar area utama sampai sisi kanan topbar/profil. */
 .main > .content,
 .main .content {
