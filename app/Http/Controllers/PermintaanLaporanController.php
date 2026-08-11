@@ -23,14 +23,19 @@ class PermintaanLaporanController extends Controller
         return in_array($kode, ['DANPUS', 'WADAN'], true);
     }
 
+    private function isPengirim(Request $request): bool
+    {
+        $kode = strtoupper((string) $request->user()->load('satuan')->satuan?->kode);
+        return in_array($kode, self::PENGIRIM_KODE, true);
+    }
+
     public function index(Request $request): RedirectResponse
     {
-        abort_unless($this->isPimpinan($request), 403);
+        abort_unless($this->isPimpinan($request) || $this->isPengirim($request), 403);
 
-        // Permintaan Laporan tetap berada di dalam menu Pelaporan,
-        // tetapi menggunakan shell dashboard yang sama seperti Laporan Masuk.
-        // Query parameter membuat halaman ini fokus hanya pada modul permintaan.
-        return redirect()->route('dashboard', ['section' => 'permintaan']);
+        // Permintaan Laporan tetap berada di dalam shell dashboard yang sama.
+        // Pimpinan dan satuan pengirim diarahkan ke section yang sesuai.
+        return redirect()->to(route('dashboard').'#permintaan-laporan');
     }
 
     public function store(Request $request): RedirectResponse
