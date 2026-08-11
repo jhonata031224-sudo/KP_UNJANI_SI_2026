@@ -118,6 +118,25 @@
   });
 })();
 
+// ===== TAB "PENGATURAN AKUN": FOTO PROFIL <-> GANTI PASSWORD =====
+(function(){
+  var tabs = document.querySelectorAll('.profile-subtab-btn');
+  if (!tabs.length) return;
+  tabs.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var target = btn.getAttribute('data-subtab-target');
+      document.querySelectorAll('.profile-subtab-btn').forEach(function(b){
+        var active = b === btn;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      document.querySelectorAll('.profile-subtab-panel').forEach(function(p){
+        p.classList.toggle('active', p.id === target);
+      });
+    });
+  });
+})();
+
 // ===== AKSI LAPORAN MASUK DIPINDAHKAN KE DETAIL =====
 (function(){
   function injectStyles(){

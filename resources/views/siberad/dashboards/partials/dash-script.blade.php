@@ -190,10 +190,14 @@
         // Selalu tandai grup ini "open" di sessionStorage, walau sidebar lagi
         // ciutkan -- kalau di-guard cuma untuk mode lebar, niat "buka grup
         // yang berisi tab aktif" hilang begitu nanti sidebar dilebarkan lagi.
-        // Kalau memang lagi ciutkan, siberadInitSidebarCollapse() di
-        // dash-styles.blade.php yang akan menutup visualnya supaya tidak
-        // langsung muncul sebagai flyout.
-        group.classList.add('open');
+        // Tapi class "open" itu sendiri cuma ditambahkan kalau sidebar TIDAK
+        // sedang ciutkan -- soalnya class ini juga yang bikin submenu tampil
+        // sebagai flyout melayang saat ciutkan. Kalau ditambahkan lagi di
+        // sini, flyout yang baru saja ditutup lewat klik link-nya (listener
+        // lain, lihat inline script di bawah <nav>) langsung kebuka lagi.
+        if (!sidebar || !sidebar.classList.contains('collapsed')) {
+          group.classList.add('open');
+        }
         try { sessionStorage.setItem(ADMIN_GROUP_STATE_KEY + group.id, 'open'); } catch (e) {}
       }
     });

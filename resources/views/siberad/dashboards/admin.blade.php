@@ -59,52 +59,70 @@
       <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
     </button>
 
-    {{-- ===== VIEW PROFIL SAYA ===== --}}
-    <div class="profile-dropdown-view" id="profilePhotoView" style="display:none;">
-      <div class="profile-dropdown-head-lg">
-        <div class="profile-dropdown-avatar-lg">
-          <span class="profile-initial" id="profileInitialLarge">{{ strtoupper(mb_substr($user->name ?? 'U', 0, 1)) }}</span>
-          <img class="profile-photo" id="profilePhotoLarge" alt="Foto profil {{ $user->name }}">
-        </div>
-        <div class="profile-dropdown-name">{{ $user->name }}</div>
-        <div class="profile-dropdown-role">{{ $user->jabatan ?? 'Pengguna' }}</div>
-      </div>
-
-      <button type="button" class="profile-dropdown-item" id="gantiFotoBtn" role="menuitem">
-        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1-2h7l1 2h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5Z"></path><circle cx="12" cy="13" r="3.4"></circle></svg>
-        <span id="gantiFotoLabel">Ganti Foto Profil</span>
-      </button>
-      <button type="button" class="profile-dropdown-item" id="hapusFotoBtn" role="menuitem" style="display:none;">
-        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
-        Hapus Foto Profil
-      </button>
-      <input type="file" id="fotoProfilInput" accept="image/png,image/jpeg,image/webp" hidden>
-    </div>
-
-    {{-- ===== VIEW PENGATURAN AKUN ===== --}}
+    {{-- ===== VIEW PENGATURAN AKUN (Foto Profil + Ganti Password, ketuker via tab) ===== --}}
     <div class="profile-dropdown-view" id="profileSettingsView" style="display:none;">
       <div class="profile-modal-title">Pengaturan Akun</div>
 
-      <div class="profile-form-notice">
-        Perubahan kata sandi tidak langsung berlaku. Permintaan akan dikirim ke <b>Admin</b> untuk diverifikasi terlebih dahulu.
+      <div class="profile-subtabs" role="tablist">
+        <button type="button" class="profile-subtab-btn active" data-subtab-target="profilePhotoView" role="tab" aria-selected="true">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1-2h7l1 2h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5Z"></path><circle cx="12" cy="13" r="3.4"></circle></svg>
+          Foto Profil
+        </button>
+        <button type="button" class="profile-subtab-btn" data-subtab-target="profilePasswordView" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2.2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+          Ganti Password
+        </button>
       </div>
 
-      <form class="profile-form" id="formGantiPassword" novalidate>
-        <div class="profile-form-field">
-          <label for="passBaru">Kata Sandi Baru</label>
-          <input type="password" id="passBaru" minlength="8" required placeholder="Minimal 8 karakter">
+      <div class="profile-subtab-panel active" id="profilePhotoView" role="tabpanel">
+        <div class="profile-dropdown-head-lg">
+          <div class="profile-dropdown-avatar-lg">
+            <span class="profile-initial" id="profileInitialLarge">{{ strtoupper(mb_substr($user->name ?? 'U', 0, 1)) }}</span>
+            <img class="profile-photo" id="profilePhotoLarge" alt="Foto profil {{ $user->name }}">
+          </div>
+          <div class="profile-dropdown-name">{{ $user->name }}</div>
+          <div class="profile-dropdown-role">{{ $user->jabatan ?? 'Pengguna' }}</div>
         </div>
-        <div class="profile-form-field">
-          <label for="passKonfirmasi">Konfirmasi Kata Sandi Baru</label>
-          <input type="password" id="passKonfirmasi" minlength="8" required placeholder="Ulangi kata sandi baru">
+
+        <div class="profile-photo-actions">
+          <button type="button" class="profile-btn profile-btn-primary" id="gantiFotoBtn">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1-2h7l1 2h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5Z"></path><circle cx="12" cy="13" r="3.4"></circle></svg>
+            <span id="gantiFotoLabel">Ganti Foto</span>
+          </button>
+          <button type="button" class="profile-btn profile-btn-outline" id="hapusFotoBtn" style="display:none;">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
+            Hapus
+          </button>
         </div>
-        <div class="profile-form-field">
-          <label for="passCatatan">Catatan untuk Admin (opsional)</label>
-          <textarea id="passCatatan" rows="2" placeholder="Contoh: lupa kata sandi lama"></textarea>
+        <p class="profile-photo-hint">Format JPG, PNG, atau WEBP — ukuran maksimal 5 MB.</p>
+        <input type="file" id="fotoProfilInput" accept="image/png,image/jpeg,image/webp" hidden>
+      </div>
+
+      <div class="profile-subtab-panel" id="profilePasswordView" role="tabpanel">
+        <div class="profile-form-notice">
+          Perubahan kata sandi tidak langsung berlaku. Permintaan akan dikirim ke <b>Admin</b> untuk diverifikasi terlebih dahulu.
         </div>
-        <span class="profile-form-error" id="passError"></span>
-        <button type="submit" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">Kirim Permintaan ke Admin</button>
-      </form>
+
+        <form class="profile-form" id="formGantiPassword" novalidate>
+          <div class="profile-form-field">
+            <label for="passBaru">Kata Sandi Baru</label>
+            <input type="password" id="passBaru" minlength="8" required placeholder="Minimal 8 karakter">
+          </div>
+          <div class="profile-form-field">
+            <label for="passKonfirmasi">Konfirmasi Kata Sandi Baru</label>
+            <input type="password" id="passKonfirmasi" minlength="8" required placeholder="Ulangi kata sandi baru">
+          </div>
+          <div class="profile-form-field">
+            <label for="passCatatan">Catatan untuk Admin (opsional)</label>
+            <textarea id="passCatatan" rows="2" placeholder="Contoh: lupa kata sandi lama"></textarea>
+          </div>
+          <span class="profile-form-error" id="passError"></span>
+          <button type="submit" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;"><rect x="5" y="11" width="14" height="9" rx="2.2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+            Kirim Permintaan ke Admin
+          </button>
+        </form>
+      </div>
     </div>
 
     {{-- ===== VIEW BANTUAN & PANDUAN ===== --}}
@@ -331,10 +349,6 @@
               </div>
             </div>
 
-            <button type="button" class="profile-dropdown-item" id="openProfilSayaBtn" role="menuitem">
-              <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"></circle><path d="M5 20c1.2-4 4.2-6 7-6s5.8 2 7 6"></path></svg>
-              Profil Saya
-            </button>
             <button type="button" class="profile-dropdown-item" id="openPengaturanBtn" role="menuitem">
               <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.5-2-3.4-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9-2 3.4 2 1.5a7.6 7.6 0 0 0 0 3l-2 1.5 2 3.4 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.5h4l.5-2.5a7.6 7.6 0 0 0 2.6-1.5l2.3.9 2-3.4Z"></path></svg>
               Pengaturan Akun
@@ -1534,7 +1548,6 @@
         var menuBtn = document.getElementById('profileMenuBtn');
         var dropdown = document.getElementById('profileDropdown');
         var wrapper = document.getElementById('profileMenu');
-        var openProfilBtn = document.getElementById('openProfilSayaBtn');
         var openPengaturanBtn = document.getElementById('openPengaturanBtn');
         var openBantuanBtn = document.getElementById('openBantuanBtn');
         if (!menuBtn || !dropdown || !wrapper) return;
@@ -1572,13 +1585,6 @@
 
         // Item di dropdown kecil membuka popup besar di tengah layar
         // (fungsi openProfileModal didefinisikan di script popup di bawah)
-        if (openProfilBtn) {
-          openProfilBtn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            closeMenu();
-            if (window.openProfileModal) window.openProfileModal('profilePhotoView');
-          });
-        }
         if (openPengaturanBtn) {
           openPengaturanBtn.addEventListener('click', function (e) {
             e.stopPropagation();
