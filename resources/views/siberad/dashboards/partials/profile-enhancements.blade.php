@@ -47,20 +47,29 @@
   var photoDropdown = document.getElementById('profilePhotoDropdown');
   if (!photoDropdown && profileDropdownAvatar) { photoDropdown = makePhoto('profilePhotoDropdown'); profileDropdownAvatar.appendChild(photoDropdown); }
 
+  // Gunakan kontrol yang sudah disediakan oleh halaman. Jangan membuat
+  // tombol "Ganti Foto Profil" kedua karena beberapa halaman (termasuk Admin)
+  // sudah memiliki tombol tersebut di markup modal.
   var controls = document.getElementById('profilePhotoControls');
-  if (!controls) {
-    controls = document.createElement('div');
-    controls.id = 'profilePhotoControls';
-    controls.style.marginTop = '16px';
-    controls.innerHTML = '<button type="button" class="profile-dropdown-item" id="gantiFotoBtn">Ganti Foto Profil</button>' +
-      '<button type="button" class="profile-dropdown-item" id="hapusFotoBtn" style="display:none;color:var(--red);">Hapus Foto Profil</button>' +
-      '<input type="file" id="fotoProfilInput" accept="image/png,image/jpeg,image/webp" hidden>';
-    modalView.appendChild(controls);
-  }
-
   var input = document.getElementById('fotoProfilInput');
   var changeBtn = document.getElementById('gantiFotoBtn');
   var deleteBtn = document.getElementById('hapusFotoBtn');
+
+  // Fallback untuk halaman lama yang belum menyediakan kontrol foto di markup.
+  if (!changeBtn || !input || !deleteBtn) {
+    if (!controls) {
+      controls = document.createElement('div');
+      controls.id = 'profilePhotoControls';
+      controls.style.marginTop = '16px';
+      controls.innerHTML = '<button type="button" class="profile-dropdown-item" id="gantiFotoBtn">Ganti Foto Profil</button>' +
+        '<button type="button" class="profile-dropdown-item" id="hapusFotoBtn" style="display:none;color:var(--red);">Hapus Foto Profil</button>' +
+        '<input type="file" id="fotoProfilInput" accept="image/png,image/jpeg,image/webp" hidden>';
+      modalView.appendChild(controls);
+    }
+    input = document.getElementById('fotoProfilInput');
+    changeBtn = document.getElementById('gantiFotoBtn');
+    deleteBtn = document.getElementById('hapusFotoBtn');
+  }
   if (!input || !changeBtn || !deleteBtn) return;
 
   function setVisible(img, visible){ if (img) img.style.display = visible ? 'block' : 'none'; }
