@@ -29,6 +29,7 @@
 
 @include('siberad.dashboards.partials.profile-enhancements')
 @include('siberad.dashboards.partials.notification-controls')
+@include('siberad.dashboards.partials.admin-ui-consistency')
 
 {{-- Inisialisasi UI dashboard role. Tidak mengubah struktur sidebar. --}}
 <script>
