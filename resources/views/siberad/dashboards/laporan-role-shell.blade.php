@@ -4,4 +4,5 @@
 @include('siberad.dashboards.partials.profile-description-hide')
 @include('siberad.dashboards.partials.responsive-content-alignment')
 @include('siberad.dashboards.partials.permintaan-laporan-deadline')
-@include('siberad.dashboards.partials.permintaan-laporan-navigation-fix')
+@include('siberad.dashboards.partials.permintaan-laporan-tab-fix')
+@include('siberad.dashboards.partials.pelaporan-section-isolation')
