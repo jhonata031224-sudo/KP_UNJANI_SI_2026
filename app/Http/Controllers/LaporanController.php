@@ -47,7 +47,7 @@ class LaporanController extends Controller
             $permintaan = PermintaanLaporan::findOrFail($validated['permintaan_laporan_id']);
             abort_unless((int) $permintaan->tujuan_satuan_id === (int) $satuanAsal->id, 403, 'Permintaan laporan bukan untuk satuan Anda.');
             abort_unless((int) $permintaan->tujuanSatuan->id === (int) $tujuan->id, 422, 'Tujuan laporan tidak sesuai dengan permintaan laporan.');
-            abort_if($permintaan->laporan_id, 422, 'Permintaan laporan tersebut sudah memiliki laporan.');
+            abort_if($permintaan->laporan_id && $permintaan->laporan?->status !== 'Revisi', 422, 'Permintaan laporan tersebut sudah memiliki laporan.');
         }
 
         $lampiranPath = $request->hasFile('lampiran')
@@ -122,13 +122,13 @@ class LaporanController extends Controller
 
         if ($laporan->permintaanLaporan) {
             $permintaan = $laporan->permintaanLaporan;
+            $statusLower = strtolower($statusFinal);
+            $isRevisi = str_contains($statusLower, 'revisi');
+            $isSelesai = str_contains($statusLower, 'tolak') || str_contains($statusLower, 'setuj') || str_contains($statusLower, 'diterima');
             $permintaan->update([
-                'status' => str_contains(strtolower($statusFinal), 'tolak')
-                    ? PermintaanLaporan::STATUS_SELESAI
-                    : (str_contains(strtolower($statusFinal), 'setuj') || str_contains(strtolower($statusFinal), 'diterima')
-                        ? PermintaanLaporan::STATUS_SELESAI
-                        : PermintaanLaporan::STATUS_PEMERIKSAAN),
-                'selesai_at' => str_contains(strtolower($statusFinal), 'tolak') || str_contains(strtolower($statusFinal), 'setuj') || str_contains(strtolower($statusFinal), 'diterima') ? now() : null,
+                'laporan_id' => $isRevisi ? null : $permintaan->laporan_id,
+                'status' => $isRevisi ? PermintaanLaporan::STATUS_DIKERJAKAN : ($isSelesai ? PermintaanLaporan::STATUS_SELESAI : PermintaanLaporan::STATUS_PEMERIKSAAN),
+                'selesai_at' => $isSelesai ? now() : null,
             ]);
         }
 
