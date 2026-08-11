@@ -1873,7 +1873,19 @@
     if (e.key === 'Escape' && overlay.classList.contains('open')) closeConfirm();
   });
   confirmBtn.addEventListener('click', function () {
-    if (pendingForm) pendingForm.submit();
+    if (!pendingForm) return;
+    // Reset HANYA tab menu terakhir supaya login berikutnya selalu mulai dari
+    // Dashboard (selaras dengan initLogoutConfirm() di
+    // partials/global-shell-enhancements.blade.php). Jangan hapus SEMUA key
+    // "siberad-*" -- itu juga menyimpan status buka/tutup tiap dropdown menu,
+    // tema, dan status ciutkan sidebar, yang harus tetap seperti preferensi
+    // terakhir user, bukan ikut ke-reset tiap logout.
+    try {
+      ['siberad-admin-active-tab', 'siberad-pimpinan-active-tab', 'siberad-role-active-tab'].forEach(function (k) {
+        sessionStorage.removeItem(k);
+      });
+    } catch (e) {}
+    pendingForm.submit();
   });
 })();
 </script>

@@ -168,10 +168,14 @@
     });
     confirmBtn?.addEventListener('click', function () {
       if (!pendingForm) return;
-      // Reset menu tab tersimpan supaya login berikutnya selalu mulai dari Dashboard.
+      // Reset HANYA tab menu terakhir supaya login berikutnya selalu mulai
+      // dari Dashboard. Jangan hapus SEMUA key "siberad-*" -- itu juga
+      // menyimpan status buka/tutup tiap dropdown menu, tema, dan status
+      // ciutkan sidebar, yang harus tetap seperti preferensi terakhir user,
+      // bukan ikut ke-reset tiap logout.
       try {
-        Object.keys(sessionStorage).forEach(function (k) {
-          if (k.indexOf('siberad-') === 0) sessionStorage.removeItem(k);
+        ['siberad-admin-active-tab', 'siberad-pimpinan-active-tab', 'siberad-role-active-tab'].forEach(function (k) {
+          sessionStorage.removeItem(k);
         });
       } catch (e) {}
       pendingForm.submit();
