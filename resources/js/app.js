@@ -20,8 +20,6 @@ function pastikanLogoLoaderTampil() {
     plate.appendChild(logo);
   }
 
-  // Pertahankan src dari markup/preload yang sudah dimuat browser.
-  // Atribut ini membuat browser memprioritaskan gambar loader sejak awal.
   logo.loading = 'eager';
   logo.fetchPriority = 'high';
   logo.decoding = 'sync';
@@ -41,8 +39,6 @@ function pastikanLogoLoaderTampil() {
 
 // Pada tema light, kartu login harus benar-benar putih seperti form admin.
 // Input tetap abu-abu sangat muda agar bidang input masih terbaca jelas.
-// Terapkan lewat inline style + observer agar tetap benar walaupun atribut
-// data-theme dipasang setelah module Vite selesai dieksekusi.
 function rapikanLoginLightTheme() {
   const root = document.documentElement;
   const apply = () => {
@@ -51,11 +47,8 @@ function rapikanLoginLightTheme() {
     const inputs = document.querySelectorAll('.login-input');
 
     if (card) {
-      if (isLight) {
-        card.style.setProperty('background', '#ffffff', 'important');
-      } else {
-        card.style.removeProperty('background');
-      }
+      if (isLight) card.style.setProperty('background', '#ffffff', 'important');
+      else card.style.removeProperty('background');
     }
 
     inputs.forEach((input) => {
@@ -69,21 +62,13 @@ function rapikanLoginLightTheme() {
     });
   };
 
-  // Jalankan sekarang, lalu ulangi setelah DOM/theme berubah.
   apply();
-
-  const themeObserver = new MutationObserver(apply);
-  themeObserver.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
-
-  const domObserver = new MutationObserver(apply);
-  domObserver.observe(document.body, { childList: true, subtree: true });
+  new MutationObserver(apply).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  new MutationObserver(apply).observe(document.body, { childList: true, subtree: true });
 }
 
 // Samakan dark theme seluruh dashboard role dengan landing page terbaru:
 // obsidian/black sebagai dasar dan warm gold sebagai aksen SIBERAD.
-// Dibuat sebagai override terpusat supaya semua dashboard yang memakai
-// partial dash-styles mendapat palet yang sama tanpa menyentuh layout/sidebar
-// yang sebelumnya sudah diperbaiki.
 function terapkanTemaLandingPadaDashboard() {
   if (!document.querySelector('.shell')) return;
 
@@ -94,32 +79,32 @@ function terapkanTemaLandingPadaDashboard() {
   style.id = id;
   style.textContent = `
     :root:not([data-theme="light"]) {
-      --bg:#080b0f;
-      --bg-deep:#030506;
-      --panel:#11161c;
-      --panel-2:#171d24;
-      --panel-alt:#0c1117;
-      --border:rgba(217,146,11,.26);
-      --border-soft:rgba(217,146,11,.14);
-      --border-strong:rgba(217,146,11,.48);
-      --gold:#d9920b;
-      --gold-bright:#f2b94b;
-      --gold-dim:rgba(217,146,11,.14);
-      --green:#d9920b;
-      --green-bright:#f2b94b;
-      --green-dim:rgba(217,146,11,.14);
-      --amber:#e6a52b;
-      --amber-dim:rgba(230,165,43,.15);
-      --red:#d45b52;
-      --red-dim:rgba(212,91,82,.16);
-      --text:#f5f2e9;
-      --text-muted:#aeb3b1;
-      --text-dim:#7d8585;
-      --gold-solid:#d9920b;
-      --gold-solid-bright:#f2b94b;
-      --on-gold:#181006;
-      --surface:rgba(5,7,10,.92);
-      --hover-tint:rgba(255,255,255,.045);
+      --bg:#080b0f !important;
+      --bg-deep:#030506 !important;
+      --panel:#11161c !important;
+      --panel-2:#171d24 !important;
+      --panel-alt:#0c1117 !important;
+      --border:rgba(217,146,11,.26) !important;
+      --border-soft:rgba(217,146,11,.14) !important;
+      --border-strong:rgba(217,146,11,.48) !important;
+      --gold:#d9920b !important;
+      --gold-bright:#f2b94b !important;
+      --gold-dim:rgba(217,146,11,.14) !important;
+      --green:#d9920b !important;
+      --green-bright:#f2b94b !important;
+      --green-dim:rgba(217,146,11,.14) !important;
+      --amber:#e6a52b !important;
+      --amber-dim:rgba(230,165,43,.15) !important;
+      --red:#d45b52 !important;
+      --red-dim:rgba(212,91,82,.16) !important;
+      --text:#f5f2e9 !important;
+      --text-muted:#aeb3b1 !important;
+      --text-dim:#7d8585 !important;
+      --gold-solid:#d9920b !important;
+      --gold-solid-bright:#f2b94b !important;
+      --on-gold:#181006 !important;
+      --surface:rgba(5,7,10,.92) !important;
+      --hover-tint:rgba(255,255,255,.045) !important;
       color-scheme:dark;
     }
 
@@ -142,10 +127,51 @@ function terapkanTemaLandingPadaDashboard() {
       box-shadow:0 1px 0 rgba(255,255,255,.025) inset, 0 10px 30px rgba(0,0,0,.30);
     }
 
+    /* Hilangkan seluruh aksen hijau UI lama pada dashboard role. */
+    :root:not([data-theme="light"]) .green,
+    :root:not([data-theme="light"]) .badge.green,
+    :root:not([data-theme="light"]) .status.green,
+    :root:not([data-theme="light"]) [class~="green"] {
+      color:var(--gold-bright) !important;
+      background-color:var(--gold-dim) !important;
+      border-color:var(--border) !important;
+    }
+
+    :root:not([data-theme="light"]) .text-success,
+    :root:not([data-theme="light"]) .text-green,
+    :root:not([data-theme="light"]) .icon-success {
+      color:var(--gold-bright) !important;
+    }
+
+    :root:not([data-theme="light"]) .bg-success,
+    :root:not([data-theme="light"]) .bg-green {
+      background-color:var(--gold) !important;
+      color:var(--on-gold) !important;
+    }
+
+    :root:not([data-theme="light"]) .border-success,
+    :root:not([data-theme="light"]) .border-green {
+      border-color:var(--border-strong) !important;
+    }
+
+    :root:not([data-theme="light"]) .btn-success,
+    :root:not([data-theme="light"]) .btn-green {
+      background:var(--gold) !important;
+      border-color:var(--gold) !important;
+      color:var(--on-gold) !important;
+      box-shadow:0 0 18px rgba(217,146,11,.16) !important;
+    }
+
+    :root:not([data-theme="light"]) .btn-success:hover,
+    :root:not([data-theme="light"]) .btn-green:hover {
+      background:var(--gold-bright) !important;
+      border-color:var(--gold-bright) !important;
+    }
+
     :root:not([data-theme="light"]) .badge.green {
-      background:var(--gold-dim);
-      color:var(--gold-bright);
-      border-color:var(--border);
+      background:var(--gold-dim) !important;
+      color:var(--gold-bright) !important;
+      border-color:var(--border) !important;
     }
   `;
   document.head.appendChild(style);
