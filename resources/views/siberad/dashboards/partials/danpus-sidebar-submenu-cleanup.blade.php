@@ -9,21 +9,26 @@
   .danpus-activity-log{display:flex;flex-direction:column;gap:0;margin-top:4px}
   .danpus-activity-item{position:relative;display:grid;grid-template-columns:22px minmax(0,1fr);column-gap:12px;padding:0 0 16px}
   .danpus-activity-item:last-child{padding-bottom:0}
-  .danpus-activity-line{position:absolute;left:8px;top:18px;bottom:0;width:2px;background:var(--p-border)}
-  .danpus-activity-item.is-done .danpus-activity-line{background:var(--p-accent)}
+  .danpus-activity-line{position:absolute;left:8px;top:18px;bottom:0;width:2px;background:var(--p-border);transition:background .3s ease}
+  .danpus-activity-item.is-done .danpus-activity-line{background:var(--p-green)}
+  .danpus-activity-item.is-rejected .danpus-activity-line{background:var(--p-red)}
   .danpus-activity-item:last-child .danpus-activity-line{display:none}
-  .danpus-activity-dot{position:relative;z-index:2;width:18px;height:18px;margin-top:0;border-radius:50%;background:var(--p-surface);border:2px solid var(--p-border);box-sizing:border-box}
-  .danpus-activity-item.is-done .danpus-activity-dot{background:var(--p-accent);border-color:var(--p-accent)}
-  .danpus-activity-item.is-current .danpus-activity-dot{border-color:var(--p-accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--p-accent) 15%,transparent)}
-  .danpus-activity-card{background:var(--p-surface-2);border:1px solid var(--p-border);border-radius:12px;padding:11px 14px;min-width:0}
-  .danpus-activity-item.is-done .danpus-activity-card{border-color:color-mix(in srgb,var(--p-accent) 35%,var(--p-border))}
+  .danpus-activity-dot{position:relative;z-index:2;width:18px;height:18px;margin-top:0;border-radius:50%;background:var(--p-surface);border:2px solid var(--p-border);box-sizing:border-box;transition:background .3s ease,border-color .3s ease}
+  .danpus-activity-item.is-done .danpus-activity-dot{background:var(--p-green);border-color:var(--p-green)}
+  .danpus-activity-item.is-rejected .danpus-activity-dot{background:var(--p-red);border-color:var(--p-red)}
+  .danpus-activity-item.is-current .danpus-activity-dot{border-color:var(--p-yellow);animation:danpusPulseDot 1.8s ease-in-out infinite}
+  @keyframes danpusPulseDot{0%,100%{box-shadow:0 0 0 4px color-mix(in srgb,var(--p-yellow) 20%,transparent)}50%{box-shadow:0 0 0 8px color-mix(in srgb,var(--p-yellow) 4%,transparent)}}
+  .danpus-activity-card{background:var(--p-surface-2);border:1px solid var(--p-border);border-radius:12px;padding:11px 14px;min-width:0;transition:border-color .3s ease}
+  .danpus-activity-item.is-done .danpus-activity-card{border-color:color-mix(in srgb,var(--p-green) 35%,var(--p-border))}
+  .danpus-activity-item.is-rejected .danpus-activity-card{border-color:color-mix(in srgb,var(--p-red) 35%,var(--p-border))}
   .danpus-activity-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
   .danpus-activity-stage{font-size:12px;font-weight:800;color:var(--p-text);line-height:1.4}
   .danpus-activity-description{margin-top:3px;font-size:10px;line-height:1.45;color:var(--p-muted)}
   .danpus-activity-date{flex:0 0 auto;font-size:9px;color:var(--p-muted);white-space:nowrap}
-  .danpus-activity-state{display:inline-flex;margin-top:7px;padding:3px 7px;border-radius:999px;font-size:9px;font-weight:700;background:var(--p-surface);color:var(--p-muted);border:1px solid var(--p-border)}
-  .danpus-activity-item.is-done .danpus-activity-state{color:var(--p-accent);border-color:color-mix(in srgb,var(--p-accent) 35%,var(--p-border))}
-  .danpus-activity-item.is-current .danpus-activity-state{color:var(--p-accent)}
+  .danpus-activity-state{display:inline-flex;align-items:center;margin-top:7px;padding:3px 8px;border-radius:999px;font-size:9px;font-weight:700;background:var(--p-surface);color:var(--p-muted);border:1px solid var(--p-border);transition:.3s ease}
+  .danpus-activity-item.is-done .danpus-activity-state{color:var(--p-green);background:color-mix(in srgb,var(--p-green) 12%,transparent);border-color:color-mix(in srgb,var(--p-green) 32%,transparent)}
+  .danpus-activity-item.is-rejected .danpus-activity-state{color:var(--p-red);background:color-mix(in srgb,var(--p-red) 12%,transparent);border-color:color-mix(in srgb,var(--p-red) 32%,transparent)}
+  .danpus-activity-item.is-current .danpus-activity-state{color:var(--p-yellow);background:color-mix(in srgb,var(--p-yellow) 12%,transparent);border-color:color-mix(in srgb,var(--p-yellow) 32%,transparent)}
   .danpus-activity-empty{padding:25px 12px;text-align:center;color:var(--p-muted);font-size:12px;border:1px dashed var(--p-border);border-radius:12px}
   @media(max-width:700px){.danpus-activity-head{display:block}.danpus-activity-date{margin-top:5px}}
 </style>
@@ -59,14 +64,14 @@
     var decided=status==='ditolak'||status==='selesai';
 
     var stages=hasPermintaan?[
-      {key:'permintaan_dikirim',title:'Permintaan Dikirim',desc:'Danpus/Pimpinan mengirimkan permintaan laporan kepada satuan.',date:permintaanCreated},
+      {key:'permintaan_dikirim',title:'Permintaan Terkirim',desc:'Danpus/Pimpinan mengirimkan permintaan laporan kepada satuan.',date:permintaanCreated},
       {key:'permintaan_ditinjau',title:'Permintaan Ditinjau',desc:'Satuan telah melihat dan menindaklanjuti permintaan tersebut.',date:permintaanDitinjau||laporanDate},
       {key:'laporan_dibuat',title:'Laporan Dibuat',desc:'Satuan menyiapkan dan menyusun laporan.',date:laporanDate},
-      {key:'laporan_dikirim',title:'Laporan Dikirim',desc:'Laporan dikirim oleh satuan untuk diperiksa Pimpinan/Danpus.',date:laporanDate},
+      {key:'laporan_dikirim',title:'Laporan Terkirim',desc:'Laporan dikirim oleh satuan untuk diperiksa Pimpinan/Danpus.',date:laporanDate},
       {key:'laporan_selesai',title:'Laporan Selesai',desc:'Laporan telah mendapatkan hasil akhir (disetujui/ditolak).',date:decided?laporanDate:''}
     ]:[
       {key:'laporan_dibuat',title:'Laporan Dibuat',desc:'Satuan menyiapkan dan menyusun laporan.',date:laporanDate},
-      {key:'laporan_dikirim',title:'Laporan Dikirim',desc:'Laporan dikirim oleh satuan untuk diperiksa Pimpinan/Danpus.',date:laporanDate},
+      {key:'laporan_dikirim',title:'Laporan Terkirim',desc:'Laporan dikirim oleh satuan untuk diperiksa Pimpinan/Danpus.',date:laporanDate},
       {key:'laporan_selesai',title:'Laporan Selesai',desc:'Laporan telah mendapatkan hasil akhir (disetujui/ditolak).',date:decided?laporanDate:''}
     ];
 
@@ -75,8 +80,10 @@
     var log=document.createElement('div');log.className='danpus-activity-log';
     stages.forEach(function(stage,index){
       var item=document.createElement('article');item.className='danpus-activity-item';
+      var isFinal=index===finalIndex;
       if(index<progress)item.classList.add('is-done');
       if(index===progress)item.classList.add('is-current');
+      if(isFinal&&decided&&status==='ditolak')item.classList.add('is-rejected');
       var dot=document.createElement('div');dot.className='danpus-activity-dot';item.appendChild(dot);
       if(index<stages.length-1){var line=document.createElement('div');line.className='danpus-activity-line';item.appendChild(line)}
       var card=document.createElement('div');card.className='danpus-activity-card';
@@ -86,10 +93,13 @@
       head.appendChild(stageEl);head.appendChild(dateEl);card.appendChild(head);
       var desc=document.createElement('div');desc.className='danpus-activity-description';desc.textContent=stage.desc;card.appendChild(desc);
       var state=document.createElement('span');state.className='danpus-activity-state';
-      if(index<progress) state.textContent='Selesai';
-      else if(index===progress) state.textContent=status==='ditolak'?'Ditolak':'Sedang diproses';
+      if(isFinal){
+        if(status==='selesai') state.textContent='Selesai · Disetujui';
+        else if(status==='ditolak') state.textContent='Selesai · Ditolak';
+        else state.textContent='Sedang diproses';
+      }else if(index<progress) state.textContent='Selesai';
+      else if(index===progress) state.textContent='Sedang diproses';
       else state.textContent='Menunggu';
-      if(stage.key==='laporan_selesai'&&status==='ditolak') state.textContent='Ditolak';
       card.appendChild(state);item.appendChild(card);log.appendChild(item);
     });
     var title=document.createElement('div');title.className='danpus-activity-project';title.textContent=subject;log.prepend(title);
@@ -98,10 +108,10 @@
 
   function buildPendingPermintaanLog(p){
     var stages=[
-      {key:'permintaan_dikirim',title:'Permintaan Dikirim',desc:'Danpus/Pimpinan mengirimkan permintaan laporan kepada satuan.',date:p.created||''},
+      {key:'permintaan_dikirim',title:'Permintaan Terkirim',desc:'Danpus/Pimpinan mengirimkan permintaan laporan kepada satuan.',date:p.created||''},
       {key:'permintaan_ditinjau',title:'Permintaan Ditinjau',desc:'Satuan telah melihat dan menindaklanjuti permintaan tersebut.',date:p.ditinjau||''},
       {key:'laporan_dibuat',title:'Laporan Dibuat',desc:'Satuan menyiapkan dan menyusun laporan.',date:''},
-      {key:'laporan_dikirim',title:'Laporan Dikirim',desc:'Laporan dikirim oleh satuan untuk diperiksa Pimpinan/Danpus.',date:''},
+      {key:'laporan_dikirim',title:'Laporan Terkirim',desc:'Laporan dikirim oleh satuan untuk diperiksa Pimpinan/Danpus.',date:''},
       {key:'laporan_selesai',title:'Laporan Selesai',desc:'Laporan telah mendapatkan hasil akhir (disetujui/ditolak).',date:''}
     ];
     var progress=p.ditinjau?2:1;
