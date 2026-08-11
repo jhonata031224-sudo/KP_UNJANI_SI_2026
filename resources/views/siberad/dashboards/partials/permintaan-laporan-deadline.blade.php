@@ -82,7 +82,7 @@
     </div>
 </section>
 @elseif(in_array($kodeRoleDeadline, $pengirimDeadline, true))
-<section id="permintaan-laporan" class="report-card deadline-sender-section">
+<section id="permintaan-laporan" class="tab-panel report-card deadline-sender-section">
     <div class="deadline-sender-head">
         <div>
             <h3>Permintaan Laporan</h3>
@@ -153,6 +153,30 @@
                 link.href='#permintaan-laporan'; link.className='side-sub-link';
                 link.innerHTML='<span class="sub-dot"></span>Permintaan Laporan';
                 nav.appendChild(link);
+
+                /* Link ini dibuat setelah script utama shell (laporan-role/laporan-pimpinan)
+                   selesai mengikat event klik ke submenu yang ada di HTML awal, jadi perlu
+                   diikat manual di sini agar perilakunya sama seperti submenu lain. */
+                link.addEventListener('click', function(e){
+                    e.preventDefault();
+                    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+                    section.classList.add('active');
+                    document.querySelectorAll('.side-link,.side-sub-link').forEach(function(x){ x.classList.remove('active'); });
+                    link.classList.add('active');
+                    document.querySelectorAll('.side-nav-group').forEach(function(g){ g.classList.remove('has-active-child'); });
+                    var group=link.closest('.side-nav-group');
+                    if(group){
+                        group.classList.add('has-active-child');
+                        var sidebar=document.getElementById('sidebar');
+                        if(sidebar && sidebar.classList.contains('collapsed')){
+                            group.classList.remove('open');
+                            try{sessionStorage.setItem('{{ $isPimpinanDeadline ? 'siberad-pimpinan-group-' : 'siberad-role-group-' }}'+group.id,'closed')}catch(err){}
+                            window.siberadRepositionSubnavFlyouts?.();
+                        }
+                    }
+                    document.getElementById('sidebar')?.classList.remove('open');
+                    try{sessionStorage.setItem('{{ $isPimpinanDeadline ? 'siberad-pimpinan-active-tab' : 'siberad-role-active-tab' }}','permintaan-laporan')}catch(err){}
+                });
             }
         }
 

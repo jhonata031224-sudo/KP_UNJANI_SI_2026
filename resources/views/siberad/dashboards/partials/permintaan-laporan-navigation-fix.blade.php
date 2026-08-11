@@ -1,6 +1,10 @@
 @php
     $kodePermintaanNav = strtoupper((string) ($satuan->kode ?? ''));
-    $permintaanNavRoles = ['DANPUS', 'WADAN', 'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK', 'SATLAKDUKTEK', 'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT'];
+    // Hanya Danpus/Wadan yang memakai struktur .pimp-page yang jadi sasaran perbaikan ini.
+    // Role satuan (Satlak, Bin*, Diklat) memakai shell laporan-role yang sudah punya
+    // switching tab sendiri; ikut memasukkannya di sini malah membuat klik submenu
+    // "Kirim/Riwayat/Laporan Masuk" ter-intercept tanpa ada yang tampil.
+    $permintaanNavRoles = ['DANPUS', 'WADAN'];
 @endphp
 
 @if(in_array($kodePermintaanNav, $permintaanNavRoles, true))

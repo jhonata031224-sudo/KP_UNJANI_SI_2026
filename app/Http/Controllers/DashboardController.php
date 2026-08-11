@@ -115,7 +115,7 @@ class DashboardController
                 'BINMAT', 'BINFUNG', 'BINUM', 'DIKLAT',
             ];
             $satuanPimpinanIds = Satuan::whereIn('kode', $kodeSatuanPimpinan)->pluck('id');
-            $laporanPimpinanSatlak = Laporan::with(['satuan','tujuanSatuan'])
+            $laporanPimpinanSatlak = Laporan::with(['satuan','tujuanSatuan','permintaanLaporan'])
                 ->whereIn('satuan_id', $satuanPimpinanIds)
                 ->latest()
                 ->get();

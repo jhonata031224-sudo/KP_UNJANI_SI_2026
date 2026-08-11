@@ -51,16 +51,27 @@
   function buildProcessLog(row){
     var cells=row.querySelectorAll('td');
     var subject=cells[0]?.querySelector('.subject')?.textContent.trim()||getCellText(cells,0)||'Laporan aktivitas';
-    var date=getCellText(cells,4)||getCellText(cells,3)||'-';
+    var laporanDate=getCellText(cells,4)||getCellText(cells,3)||'-';
     var status=getStatus(cells);
-    var stages=[
-      {key:'dibuat',title:'Laporan dibuat',desc:'Satlak menyiapkan dan membuat laporan aktivitas.'},
-      {key:'dikirim',title:'Laporan dikirim',desc:'Laporan dikirim oleh Satlak untuk diteruskan kepada Danpus.'},
-      {key:'ditinjau',title:'Sedang ditinjau',desc:'Laporan masuk ke proses pemeriksaan oleh Danpus.'},
-      {key:'selesai',title:'Proses selesai',desc:'Laporan telah mendapatkan hasil akhir.'}
+    var permintaanCreated=row.dataset.permintaanCreated||'';
+    var permintaanDitinjau=row.dataset.permintaanDitinjau||'';
+    var hasPermintaan=!!permintaanCreated;
+    var decided=status==='ditolak'||status==='selesai';
+
+    var stages=hasPermintaan?[
+      {key:'permintaan_dikirim',title:'Permintaan Dikirim',desc:'Danpus/Pimpinan mengirimkan permintaan laporan kepada satuan.',date:permintaanCreated},
+      {key:'permintaan_ditinjau',title:'Permintaan Ditinjau',desc:'Satuan telah melihat dan menindaklanjuti permintaan tersebut.',date:permintaanDitinjau||laporanDate},
+      {key:'laporan_dibuat',title:'Laporan Dibuat',desc:'Satuan menyiapkan dan menyusun laporan.',date:laporanDate},
+      {key:'laporan_dikirim',title:'Laporan Dikirim',desc:'Laporan dikirim oleh satuan untuk diperiksa Pimpinan/Danpus.',date:laporanDate},
+      {key:'laporan_selesai',title:'Laporan Selesai',desc:'Laporan telah mendapatkan hasil akhir (disetujui/ditolak).',date:decided?laporanDate:''}
+    ]:[
+      {key:'laporan_dibuat',title:'Laporan Dibuat',desc:'Satuan menyiapkan dan menyusun laporan.',date:laporanDate},
+      {key:'laporan_dikirim',title:'Laporan Dikirim',desc:'Laporan dikirim oleh satuan untuk diperiksa Pimpinan/Danpus.',date:laporanDate},
+      {key:'laporan_selesai',title:'Laporan Selesai',desc:'Laporan telah mendapatkan hasil akhir (disetujui/ditolak).',date:decided?laporanDate:''}
     ];
-    var progress=status==='dikirim'?1:(status==='ditinjau'?2:3);
-    if(status==='ditolak') progress=3;
+
+    var finalIndex=stages.length-1;
+    var progress=decided?stages.length:finalIndex;
     var log=document.createElement('div');log.className='danpus-activity-log';
     stages.forEach(function(stage,index){
       var item=document.createElement('article');item.className='danpus-activity-item';
@@ -71,14 +82,14 @@
       var card=document.createElement('div');card.className='danpus-activity-card';
       var head=document.createElement('div');head.className='danpus-activity-head';
       var stageEl=document.createElement('div');stageEl.className='danpus-activity-stage';stageEl.textContent=stage.title;
-      var dateEl=document.createElement('div');dateEl.className='danpus-activity-date';dateEl.textContent=index<=progress?date:'';
+      var dateEl=document.createElement('div');dateEl.className='danpus-activity-date';dateEl.textContent=stage.date||'';
       head.appendChild(stageEl);head.appendChild(dateEl);card.appendChild(head);
       var desc=document.createElement('div');desc.className='danpus-activity-description';desc.textContent=stage.desc;card.appendChild(desc);
       var state=document.createElement('span');state.className='danpus-activity-state';
       if(index<progress) state.textContent='Selesai';
       else if(index===progress) state.textContent=status==='ditolak'?'Ditolak':'Sedang diproses';
       else state.textContent='Menunggu';
-      if(stage.key==='selesai'&&status==='ditolak') state.textContent='Ditolak';
+      if(stage.key==='laporan_selesai'&&status==='ditolak') state.textContent='Ditolak';
       card.appendChild(state);item.appendChild(card);log.appendChild(item);
     });
     var title=document.createElement('div');title.className='danpus-activity-project';title.textContent=subject;log.prepend(title);
