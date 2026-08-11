@@ -4,40 +4,64 @@
 @endphp
 
 @if(in_array($kodePermintaanNav, $permintaanNavRoles, true))
-<style>
-body.report-tab-mode .pimp-page > * { display:none !important; }
-body.report-tab-mode .pimp-page > #kirim,
-body.report-tab-mode .pimp-page > #riwayat,
-body.report-tab-mode .pimp-page > #permintaan-laporan,
-body.report-tab-mode .pimp-page > #masuk,
-body.report-tab-mode .pimp-page > #monitoring { display:block !important; }
-</style>
 <script>
 (function () {
-    const tabs = ['kirim','riwayat','permintaan-laporan','masuk','monitoring'];
+    const tabs = ['kirim', 'riwayat', 'permintaan-laporan', 'masuk', 'monitoring'];
     const labels = {
-        'permintaan laporan':'permintaan-laporan',
-        'riwayat laporan':'riwayat',
-        'kirim laporan':'kirim',
-        'laporan masuk':'masuk'
+        'permintaan laporan': 'permintaan-laporan',
+        'riwayat laporan': 'riwayat',
+        'kirim laporan': 'kirim',
+        'laporan masuk': 'masuk'
     };
 
-    function text(el){ return (el?.textContent || '').replace(/\s+/g,' ').trim().toLowerCase(); }
-    function links(label){ return [...document.querySelectorAll('.side-sub-link')].filter(el => text(el) === label); }
+    function text(el) {
+        return (el?.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    }
+
+    function links(label) {
+        return [...document.querySelectorAll('.side-sub-link')].filter(el => text(el) === label);
+    }
+
+    function reveal(el) {
+        if (!el) return;
+        el.hidden = false;
+        el.style.removeProperty('display');
+        el.style.removeProperty('visibility');
+        el.style.removeProperty('opacity');
+        el.setAttribute('aria-hidden', 'false');
+    }
+
+    function conceal(el) {
+        if (!el) return;
+        el.hidden = true;
+        el.style.display = 'none';
+        el.setAttribute('aria-hidden', 'true');
+    }
 
     function showTab(tab, updateUrl = true) {
         const target = document.getElementById(tab);
         if (!target) return false;
 
-        document.body.classList.add('report-tab-mode');
-
+        // Jangan lagi menambahkan class/CSS global yang dapat menyembunyikan
+        // seluruh halaman dashboard. Cukup tukar section Pelaporan yang ada.
         tabs.forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
-            const active = id === tab;
-            el.hidden = !active;
-            el.style.display = active ? '' : 'none';
+            if (id === tab) reveal(el);
+            else conceal(el);
         });
+
+        // Beberapa view meletakkan section di dalam wrapper yang ikut diset
+        // hidden oleh navigasi lama. Pastikan ancestor langsung yang memang
+        // berupa container section kembali terlihat, tanpa membuka overlay.
+        let parent = target.parentElement;
+        let depth = 0;
+        while (parent && depth < 4) {
+            if (parent.hidden) parent.hidden = false;
+            if (parent.style.display === 'none') parent.style.removeProperty('display');
+            parent = parent.parentElement;
+            depth++;
+        }
 
         document.querySelectorAll('.side-sub-link').forEach(el => el.classList.remove('active'));
         const label = Object.keys(labels).find(key => labels[key] === tab);
@@ -48,8 +72,15 @@ body.report-tab-mode .pimp-page > #monitoring { display:block !important; }
 
         if (updateUrl) {
             const url = new URL(window.location.href);
-            url.searchParams.set('tab', tab);
-            window.history.pushState({reportTab: tab}, '', url);
+            url.hash = tab;
+            window.history.pushState({ reportTab: tab }, '', url);
+        }
+
+        // Tetap di posisi halaman saat ini; tidak ada reload dan tidak ada
+        // loading. Scroll hanya jika target berada di luar viewport.
+        const rect = target.getBoundingClientRect();
+        if (rect.top < 0 || rect.top > window.innerHeight) {
+            target.scrollIntoView({ behavior: 'auto', block: 'start' });
         }
         return true;
     }
@@ -61,31 +92,47 @@ body.report-tab-mode .pimp-page > #monitoring { display:block !important; }
         Object.entries(labels).forEach(([label, tab]) => {
             const link = links(label)[0];
             if (!link || link.dataset.instantReportTab === tab) return;
+
             link.dataset.instantReportTab = tab;
-            link.href = '?tab=' + encodeURIComponent(tab);
+            link.href = '#' + tab;
             link.addEventListener('click', function (event) {
                 event.preventDefault();
-                event.stopImmediatePropagation();
+                event.stopPropagation();
+                if (event.stopImmediatePropagation) event.stopImmediatePropagation();
                 showTab(tab, true);
             }, true);
         });
 
-        const params = new URLSearchParams(window.location.search);
-        const tab = params.get('tab');
-        if (tab && tabs.includes(tab)) showTab(tab, false);
+        const hash = window.location.hash.replace('#', '');
+        const queryTab = new URLSearchParams(window.location.search).get('tab');
+        const tab = tabs.includes(hash) ? hash : queryTab;
+        if (tab) showTab(tab, false);
     }
 
     window.addEventListener('popstate', function () {
-        const tab = new URLSearchParams(window.location.search).get('tab');
+        const hash = window.location.hash.replace('#', '');
+        const tab = tabs.includes(hash) ? hash : new URLSearchParams(window.location.search).get('tab');
         if (tab && tabs.includes(tab)) showTab(tab, false);
     });
 
-    function init(n=0){
-        if (document.getElementById('kirim') || document.getElementById('riwayat') || document.getElementById('permintaan-laporan')) bind();
-        else if (n < 30) setTimeout(() => init(n+1), 50);
+    window.addEventListener('hashchange', function () {
+        const tab = window.location.hash.replace('#', '');
+        if (tabs.includes(tab)) showTab(tab, false);
+    });
+
+    function init(n = 0) {
+        if (document.getElementById('kirim') || document.getElementById('riwayat') || document.getElementById('permintaan-laporan')) {
+            bind();
+        } else if (n < 30) {
+            setTimeout(() => init(n + 1), 50);
+        }
     }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => init(), {once:true});
-    else init();
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => init(), { once: true });
+    } else {
+        init();
+    }
 })();
 </script>
 @endif
