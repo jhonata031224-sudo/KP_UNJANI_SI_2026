@@ -111,7 +111,7 @@
                             @if($permintaan->status === 'Belum dikerjakan')
                                 <form method="POST" action="{{ route('permintaan-laporan.mulai', $permintaan) }}">@csrf @method('PATCH')<button type="submit" class="deadline-secondary small">Mulai kerjakan</button></form>
                             @endif
-                            <button type="button" class="deadline-primary small use-permintaan" data-request-id="{{ $permintaan->id }}" data-target-id="{{ $permintaan->tujuan_satuan_id }}" data-perihal="{{ e($permintaan->perihal) }}" data-prioritas="{{ e($permintaan->prioritas) }}" data-instruksi="{{ e($permintaan->instruksi ?? '') }}">Buat Laporan</button>
+                            <button type="button" class="deadline-primary small use-permintaan" data-request-id="{{ $permintaan->id }}" data-target-id="{{ $permintaan->pembuat->satuan_id }}" data-perihal="{{ e($permintaan->perihal) }}" data-prioritas="{{ e($permintaan->prioritas) }}" data-instruksi="{{ e($permintaan->instruksi ?? '') }}">Buat Laporan</button>
                         </div>
                     @else
                         <span class="deadline-complete">✓ Laporan sudah dikirim</span>

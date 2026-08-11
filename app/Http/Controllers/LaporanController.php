@@ -46,7 +46,7 @@ class LaporanController extends Controller
         if (!empty($validated['permintaan_laporan_id'])) {
             $permintaan = PermintaanLaporan::findOrFail($validated['permintaan_laporan_id']);
             abort_unless((int) $permintaan->tujuan_satuan_id === (int) $satuanAsal->id, 403, 'Permintaan laporan bukan untuk satuan Anda.');
-            abort_unless((int) $permintaan->tujuanSatuan->id === (int) $tujuan->id, 422, 'Tujuan laporan tidak sesuai dengan permintaan laporan.');
+            abort_unless((int) $permintaan->pembuat->satuan_id === (int) $tujuan->id, 422, 'Tujuan laporan tidak sesuai dengan permintaan laporan.');
             abort_if($permintaan->laporan_id && $permintaan->laporan?->status !== 'Revisi', 422, 'Permintaan laporan tersebut sudah memiliki laporan.');
         }
 

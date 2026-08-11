@@ -96,15 +96,52 @@
     return log;
   }
 
+  function buildPendingPermintaanLog(p){
+    var stages=[
+      {key:'permintaan_dikirim',title:'Permintaan Dikirim',desc:'Danpus/Pimpinan mengirimkan permintaan laporan kepada satuan.',date:p.created||''},
+      {key:'permintaan_ditinjau',title:'Permintaan Ditinjau',desc:'Satuan telah melihat dan menindaklanjuti permintaan tersebut.',date:p.ditinjau||''},
+      {key:'laporan_dibuat',title:'Laporan Dibuat',desc:'Satuan menyiapkan dan menyusun laporan.',date:''},
+      {key:'laporan_dikirim',title:'Laporan Dikirim',desc:'Laporan dikirim oleh satuan untuk diperiksa Pimpinan/Danpus.',date:''},
+      {key:'laporan_selesai',title:'Laporan Selesai',desc:'Laporan telah mendapatkan hasil akhir (disetujui/ditolak).',date:''}
+    ];
+    var progress=p.ditinjau?2:1;
+    var log=document.createElement('div');log.className='danpus-activity-log';
+    stages.forEach(function(stage,index){
+      var item=document.createElement('article');item.className='danpus-activity-item';
+      if(index<progress)item.classList.add('is-done');
+      if(index===progress)item.classList.add('is-current');
+      var dot=document.createElement('div');dot.className='danpus-activity-dot';item.appendChild(dot);
+      if(index<stages.length-1){var line=document.createElement('div');line.className='danpus-activity-line';item.appendChild(line)}
+      var card=document.createElement('div');card.className='danpus-activity-card';
+      var head=document.createElement('div');head.className='danpus-activity-head';
+      var stageEl=document.createElement('div');stageEl.className='danpus-activity-stage';stageEl.textContent=stage.title;
+      var dateEl=document.createElement('div');dateEl.className='danpus-activity-date';dateEl.textContent=stage.date||'';
+      head.appendChild(stageEl);head.appendChild(dateEl);card.appendChild(head);
+      var desc=document.createElement('div');desc.className='danpus-activity-description';desc.textContent=stage.desc;card.appendChild(desc);
+      var state=document.createElement('span');state.className='danpus-activity-state';
+      if(index<progress) state.textContent='Selesai';
+      else if(index===progress) state.textContent='Sedang diproses';
+      else state.textContent='Menunggu';
+      card.appendChild(state);item.appendChild(card);log.appendChild(item);
+    });
+    var title=document.createElement('div');title.className='danpus-activity-project';title.textContent=p.subject||'Permintaan laporan';log.prepend(title);
+    return log;
+  }
+
   function buildActivityTimeline(){
     @if(($satuan->kode ?? null) !== 'DANPUS') return; @endif
     document.querySelectorAll('section[id^="satlak-"] .clean-table-wrap').forEach(function(wrapper){
       if(wrapper.dataset.timelineReady==='1')return;
       var table=wrapper.querySelector('table');if(!table)return;
       var rows=Array.from(table.querySelectorAll('tbody tr')).filter(function(row){return row.querySelectorAll('td').length>1});
+      var pending=[];
+      try{ pending=JSON.parse(wrapper.dataset.pendingPermintaan||'[]'); }catch(e){}
       wrapper.innerHTML='';
-      if(!rows.length){var empty=document.createElement('div');empty.className='danpus-activity-empty';empty.textContent='Belum ada aktivitas dari satuan ini.';wrapper.appendChild(empty)}
-      else rows.forEach(function(row){wrapper.appendChild(buildProcessLog(row))});
+      if(!rows.length&&!pending.length){var empty=document.createElement('div');empty.className='danpus-activity-empty';empty.textContent='Belum ada aktivitas dari satuan ini.';wrapper.appendChild(empty)}
+      else{
+        rows.forEach(function(row){wrapper.appendChild(buildProcessLog(row))});
+        pending.forEach(function(p){wrapper.appendChild(buildPendingPermintaanLog(p))});
+      }
       wrapper.dataset.timelineReady='1';
     });
   }
