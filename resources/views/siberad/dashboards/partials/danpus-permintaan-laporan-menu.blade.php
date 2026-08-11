@@ -17,14 +17,22 @@
 
     const subnav=pelaporan.querySelector('.side-subnav > div')||pelaporan.querySelector('.side-subnav');
     if(!subnav)return;
-    if(subnav.querySelector('.danpus-request-menu'))return;
+
+    // Jangan membuat item kedua. Jika item Permintaan Laporan sudah dibuat
+    // oleh navigation partial, gunakan item tersebut apa adanya.
+    const existing=Array.from(subnav.querySelectorAll('.side-sub-link,.danpus-request-menu'))
+      .find(link=>text(link)==='permintaan laporan');
+    if(existing){
+      if(existing.classList.contains('danpus-request-menu')) existing.href=requestUrl;
+      return;
+    }
 
     const link=document.createElement('a');
     link.className='danpus-request-menu'+(isRequestPage?' active':'');
     link.href=requestUrl;
     link.innerHTML='<span class="request-icon" aria-hidden="true"></span><span class="request-text">Permintaan Laporan</span>';
 
-    // Letakkan sebagai submenu Pelaporan, setelah Riwayat/Laporan yang sudah ada.
+    // Letakkan sebagai submenu Pelaporan setelah item laporan yang sudah ada.
     subnav.appendChild(link);
   }
 
