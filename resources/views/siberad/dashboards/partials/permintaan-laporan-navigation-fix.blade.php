@@ -6,94 +6,140 @@
 @if(in_array($kodePermintaanNav, $permintaanNavRoles, true))
 <script>
 (function () {
-    function initPermintaanNavigation(attempt) {
-        var section = document.getElementById('permintaan-laporan');
-        var group = document.getElementById('{{ in_array($kodePermintaanNav, ['DANPUS', 'WADAN'], true) ? 'reportGroup' : 'laporanGroup' }}');
-        var nav = group ? group.querySelector('.side-subnav > div') : null;
+    /*
+     * Pelaporan memakai satu shell dashboard, tetapi setiap submenu harus
+     * berperilaku seperti halaman tersendiri. Jangan lagi memakai hash untuk
+     * berpindah antar section karena listener lama dapat salah membuka Riwayat.
+     */
+    function textOf(el) {
+        return (el && el.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    }
 
-        // Jangan bergantung pada urutan menu atau listener navigasi lama.
-        // Menu Permintaan Laporan harus selalu punya target #permintaan-laporan.
-        var allLinks = Array.prototype.slice.call(document.querySelectorAll('.side-sub-link'));
-        var link = allLinks.find(function (item) {
-            return (item.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase() === 'permintaan laporan';
+    function findLinks(label) {
+        return Array.prototype.slice.call(document.querySelectorAll('.side-sub-link'))
+            .filter(function (item) { return textOf(item) === label; });
+    }
+
+    function setActive(link) {
+        document.querySelectorAll('.side-sub-link').forEach(function (item) {
+            item.classList.remove('active');
         });
+        if (link) link.classList.add('active');
+    }
 
-        if (!section || !link) {
-            if ((attempt || 0) < 20) {
-                window.setTimeout(function () { initPermintaanNavigation((attempt || 0) + 1); }, 50);
-            }
-            return;
+    function goTab(tab) {
+        var url = new URL('{{ route('dashboard') }}', window.location.origin);
+        url.searchParams.set('tab', tab);
+        window.location.assign(url.toString());
+    }
+
+    function installNavigation() {
+        var requestSection = document.getElementById('permintaan-laporan');
+        var historySection = document.getElementById('riwayat');
+        var sendSection = document.getElementById('kirim');
+        var incomingSection = document.getElementById('masuk');
+
+        var requestLinks = findLinks('permintaan laporan');
+        var historyLinks = findLinks('riwayat laporan');
+        var sendLinks = findLinks('kirim laporan');
+        var incomingLinks = findLinks('laporan masuk');
+
+        /* Hilangkan duplikat Permintaan Laporan yang pernah dibuat oleh
+         * beberapa enhancement lama. Sisakan satu link saja. */
+        if (requestLinks.length > 1) {
+            requestLinks.slice(1).forEach(function (link) { link.remove(); });
+            requestLinks = [requestLinks[0]];
         }
 
-        section.style.scrollMarginTop = '100px';
-        link.setAttribute('href', '#permintaan-laporan');
-        link.dataset.permintaanNavigation = '1';
-
-        function openPermintaan(event) {
-            if (event) {
+        function bind(link, tab, section) {
+            if (!link || link.dataset.reportPageBound === tab) return;
+            link.dataset.reportPageBound = tab;
+            link.href = '{{ route('dashboard') }}?tab=' + encodeURIComponent(tab);
+            link.addEventListener('click', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
-                if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
-            }
-
-            // Pastikan section tidak tertutup oleh wrapper feature.
-            var wrapper = document.getElementById('permintaanLaporanFeature');
-            if (wrapper && wrapper.contains(section)) {
-                var target = document.querySelector('.pimp-page') || document.querySelector('.content');
-                if (target) target.insertBefore(section, target.querySelector('#monitoring, #riwayat') || null);
-                wrapper.remove();
-            }
-
-            section.hidden = false;
-            section.style.display = '';
-            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            document.querySelectorAll('.side-sub-link').forEach(function (item) {
-                item.classList.toggle('active', item === link);
-            });
-            try { history.replaceState(null, '', '#permintaan-laporan'); } catch (e) {}
-        }
-
-        // Listener capture di document dipasang paling awal saat klik terjadi.
-        // Ini mencegah listener navigasi lama mengarahkan Permintaan Laporan
-        // ke #riwayat atau section lain.
-        if (!document.documentElement.dataset.permintaanCaptureBound) {
-            document.documentElement.dataset.permintaanCaptureBound = '1';
-            document.addEventListener('click', function (event) {
-                var target = event.target && event.target.closest ? event.target.closest('a.side-sub-link') : null;
-                if (!target) return;
-                if ((target.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase() !== 'permintaan laporan') return;
-                var currentSection = document.getElementById('permintaan-laporan');
-                if (!currentSection) return;
-                event.preventDefault();
-                event.stopPropagation();
-                if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
-                currentSection.style.scrollMarginTop = '100px';
-                currentSection.hidden = false;
-                currentSection.style.display = '';
-                currentSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                document.querySelectorAll('.side-sub-link').forEach(function (item) {
-                    item.classList.toggle('active', item === target);
-                });
-                try { history.replaceState(null, '', '#permintaan-laporan'); } catch (e) {}
+                if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+                goTab(tab);
             }, true);
         }
 
-        if (link.dataset.permintaanDirectBound !== '1') {
-            link.dataset.permintaanDirectBound = '1';
-            link.addEventListener('click', openPermintaan, true);
+        bind(requestLinks[0], 'permintaan-laporan', requestSection);
+        bind(historyLinks[0], 'riwayat', historySection);
+        bind(sendLinks[0], 'kirim', sendSection);
+        bind(incomingLinks[0], 'masuk', incomingSection);
+
+        /* Capture terakhir untuk memutus listener navigasi lama yang mungkin
+         * masih terpasang dari view/partial sebelumnya. */
+        if (!document.documentElement.dataset.reportPageCaptureBound) {
+            document.documentElement.dataset.reportPageCaptureBound = '1';
+            document.addEventListener('click', function (event) {
+                var link = event.target && event.target.closest ? event.target.closest('.side-sub-link, .side-link') : null;
+                if (!link) return;
+                var label = textOf(link);
+                var tab = null;
+                if (label === 'permintaan laporan') tab = 'permintaan-laporan';
+                else if (label === 'riwayat laporan') tab = 'riwayat';
+                else if (label === 'kirim laporan') tab = 'kirim';
+                else if (label === 'laporan masuk') tab = 'masuk';
+                if (!tab) return;
+
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+                goTab(tab);
+            }, true);
         }
 
-        if (window.location.hash === '#permintaan-laporan') {
-            window.requestAnimationFrame(function () {
-                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
+        applyActiveTab();
+    }
+
+    function applyActiveTab() {
+        var params = new URLSearchParams(window.location.search);
+        var tab = params.get('tab');
+        if (!tab) return;
+
+        var sectionIds = ['kirim', 'riwayat', 'permintaan-laporan', 'masuk', 'monitoring'];
+        var targetId = tab;
+        if (tab === 'permintaan-laporan') targetId = 'permintaan-laporan';
+
+        var target = document.getElementById(targetId);
+        if (!target) return;
+
+        /* Sembunyikan konten pelaporan lain sehingga submenu benar-benar
+         * terasa sebagai halaman terpisah, bukan dua halaman yang tercampur. */
+        sectionIds.forEach(function (id) {
+            var section = document.getElementById(id);
+            if (!section) return;
+            section.hidden = id !== targetId;
+            section.style.display = id === targetId ? '' : 'none';
+        });
+
+        var requestLink = findLinks('permintaan laporan')[0];
+        var historyLink = findLinks('riwayat laporan')[0];
+        var sendLink = findLinks('kirim laporan')[0];
+        var incomingLink = findLinks('laporan masuk')[0];
+        var activeLink = tab === 'permintaan-laporan' ? requestLink
+            : tab === 'riwayat' ? historyLink
+            : tab === 'kirim' ? sendLink
+            : tab === 'masuk' ? incomingLink : null;
+        setActive(activeLink);
+    }
+
+    function init(attempt) {
+        var requestSection = document.getElementById('permintaan-laporan');
+        var historySection = document.getElementById('riwayat');
+        var anySection = requestSection || historySection || document.getElementById('kirim') || document.getElementById('masuk');
+        if (!anySection) {
+            if ((attempt || 0) < 30) window.setTimeout(function () { init((attempt || 0) + 1); }, 50);
+            return;
         }
+        installNavigation();
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { initPermintaanNavigation(0); }, { once: true });
+        document.addEventListener('DOMContentLoaded', function () { init(0); }, { once: true });
     } else {
-        initPermintaanNavigation(0);
+        init(0);
     }
 })();
 </script>
