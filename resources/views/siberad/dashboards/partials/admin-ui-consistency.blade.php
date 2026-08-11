@@ -70,8 +70,11 @@ body:has(.side-nav-group) .topbar {
   min-width:0 !important;
   box-sizing:border-box !important;
 }
-/* Admin juga mengikuti perilaku profil role lain: keterangan tambahan di Profil Saya tidak ditampilkan. */
-.profile-modal-card .profile-help-text,
+/* Admin juga mengikuti perilaku profil role lain: keterangan tambahan di tab
+   Foto Profil tidak ditampilkan. Di-scope ke #profilePhotoView saja (bukan
+   seluruh .profile-modal-card) supaya tidak ikut menyembunyikan isi Bantuan
+   & Panduan, yang juga memakai class .profile-help-text. */
+#profilePhotoView .profile-help-text,
 .profile-modal-card .profile-form-notice { display:none !important; }
 @media (max-width:1200px){
   .main .content [class*="grid"] { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }

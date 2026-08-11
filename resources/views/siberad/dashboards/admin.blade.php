@@ -128,10 +128,44 @@
     {{-- ===== VIEW BANTUAN & PANDUAN ===== --}}
     <div class="profile-dropdown-view" id="profileHelpView" style="display:none;">
       <div class="profile-modal-title">Bantuan &amp; Panduan</div>
-      <p class="profile-help-text">
-        Prototype — pusat bantuan belum tersambung. Kalau butuh bantuan seputar SIBERAD,
-        silakan hubungi Admin Pussiberad melalui jalur koordinasi internal.
-      </p>
+      <p class="help-intro">Ringkasan singkat menu utama di dashboard Admin.</p>
+
+      <div class="help-topics">
+        <div class="help-topic">
+          <div class="help-topic-icon">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <div class="help-topic-body">
+            <div class="help-topic-title">Kelola Pengguna</div>
+            <div class="help-topic-desc">Tambah, ubah, atau nonaktifkan akun; proses permintaan reset password; dan kirim pengumuman ke seluruh pengguna SIBERAD.</div>
+          </div>
+        </div>
+        <div class="help-topic">
+          <div class="help-topic-icon">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          </div>
+          <div class="help-topic-body">
+            <div class="help-topic-title">Monitoring</div>
+            <div class="help-topic-desc">Pantau rekap laporan dari seluruh satuan, dan lihat siapa saja yang sedang aktif login ke sistem lewat Sesi Aktif.</div>
+          </div>
+        </div>
+        <div class="help-topic">
+          <div class="help-topic-icon">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          </div>
+          <div class="help-topic-body">
+            <div class="help-topic-title">Kelola Sistem</div>
+            <div class="help-topic-desc">Atur data satuan, role &amp; hak akses, data master, log aktivitas, backup database, hingga pengaturan umum aplikasi.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-footer">
+        <div class="help-footer-icon">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 6-10 7L2 6"></path></svg>
+        </div>
+        <p>Butuh bantuan lebih lanjut? Hubungi <b>tim IT/Pussiberad</b> melalui jalur koordinasi internal.</p>
+      </div>
     </div>
 
   </div>
