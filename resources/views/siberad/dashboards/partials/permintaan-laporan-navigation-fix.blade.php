@@ -14,49 +14,44 @@
         'laporan masuk': 'masuk'
     };
 
-    function text(el) {
-        return (el?.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const normalize = el => (el?.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const getLinks = label => [...document.querySelectorAll('.side-sub-link')].filter(el => normalize(el) === label);
+
+    function getSection(tab) {
+        return document.getElementById(tab)
+            || document.querySelector('[data-report-section="' + tab + '"]');
     }
 
-    function links(label) {
-        return [...document.querySelectorAll('.side-sub-link')].filter(el => text(el) === label);
-    }
-
-    function reveal(el) {
+    function setVisible(el, visible) {
         if (!el) return;
-        el.hidden = false;
-        el.style.removeProperty('display');
-        el.style.removeProperty('visibility');
-        el.style.removeProperty('opacity');
-        el.setAttribute('aria-hidden', 'false');
+        el.hidden = !visible;
+        if (visible) {
+            el.style.removeProperty('display');
+            el.style.removeProperty('visibility');
+        } else {
+            el.style.display = 'none';
+        }
     }
 
-    function conceal(el) {
-        if (!el) return;
-        el.hidden = true;
-        el.style.display = 'none';
-        el.setAttribute('aria-hidden', 'true');
-    }
-
-    function showTab(tab, updateUrl = true) {
-        const target = document.getElementById(tab);
+    function showTab(tab, push = true) {
+        const target = getSection(tab);
         if (!target) return false;
 
-        // Jangan lagi menambahkan class/CSS global yang dapat menyembunyikan
-        // seluruh halaman dashboard. Cukup tukar section Pelaporan yang ada.
-        tabs.forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            if (id === tab) reveal(el);
-            else conceal(el);
-        });
+        // Sembunyikan dashboard dan hanya tampilkan SATU halaman Pelaporan.
+        const dashboard = document.getElementById('dashboard');
+        if (dashboard && dashboard !== target) setVisible(dashboard, false);
 
-        // Beberapa view meletakkan section di dalam wrapper yang ikut diset
-        // hidden oleh navigasi lama. Pastikan ancestor langsung yang memang
-        // berupa container section kembali terlihat, tanpa membuka overlay.
+        tabs.forEach(id => {
+            const section = getSection(id);
+            if (section && section !== target) setVisible(section, false);
+        });
+        setVisible(target, true);
+
+        // Jika target berada di wrapper yang sebelumnya ikut disembunyikan,
+        // buka hanya ancestor sampai shell utama, bukan seluruh dashboard.
         let parent = target.parentElement;
         let depth = 0;
-        while (parent && depth < 4) {
+        while (parent && depth < 3) {
             if (parent.hidden) parent.hidden = false;
             if (parent.style.display === 'none') parent.style.removeProperty('display');
             parent = parent.parentElement;
@@ -64,68 +59,57 @@
         }
 
         document.querySelectorAll('.side-sub-link').forEach(el => el.classList.remove('active'));
-        const label = Object.keys(labels).find(key => labels[key] === tab);
-        if (label) {
-            const link = links(label)[0];
-            if (link) link.classList.add('active');
+        const activeLabel = Object.keys(labels).find(key => labels[key] === tab);
+        if (activeLabel) {
+            const activeLink = getLinks(activeLabel)[0];
+            if (activeLink) activeLink.classList.add('active');
         }
 
-        if (updateUrl) {
+        if (push) {
             const url = new URL(window.location.href);
             url.hash = tab;
-            window.history.pushState({ reportTab: tab }, '', url);
-        }
-
-        // Tetap di posisi halaman saat ini; tidak ada reload dan tidak ada
-        // loading. Scroll hanya jika target berada di luar viewport.
-        const rect = target.getBoundingClientRect();
-        if (rect.top < 0 || rect.top > window.innerHeight) {
-            target.scrollIntoView({ behavior: 'auto', block: 'start' });
+            history.pushState({ reportTab: tab }, '', url);
         }
         return true;
     }
 
     function bind() {
-        const requestLinks = links('permintaan laporan');
+        const requestLinks = getLinks('permintaan laporan');
         if (requestLinks.length > 1) requestLinks.slice(1).forEach(el => el.remove());
 
         Object.entries(labels).forEach(([label, tab]) => {
-            const link = links(label)[0];
+            const link = getLinks(label)[0];
             if (!link || link.dataset.instantReportTab === tab) return;
-
             link.dataset.instantReportTab = tab;
             link.href = '#' + tab;
             link.addEventListener('click', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
-                if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+                event.stopImmediatePropagation();
                 showTab(tab, true);
             }, true);
         });
 
-        const hash = window.location.hash.replace('#', '');
+        const hash = window.location.hash.substring(1);
         const queryTab = new URLSearchParams(window.location.search).get('tab');
-        const tab = tabs.includes(hash) ? hash : queryTab;
-        if (tab) showTab(tab, false);
+        if (tabs.includes(hash)) showTab(hash, false);
+        else if (tabs.includes(queryTab)) showTab(queryTab, false);
     }
 
-    window.addEventListener('popstate', function () {
-        const hash = window.location.hash.replace('#', '');
-        const tab = tabs.includes(hash) ? hash : new URLSearchParams(window.location.search).get('tab');
-        if (tab && tabs.includes(tab)) showTab(tab, false);
-    });
-
-    window.addEventListener('hashchange', function () {
-        const tab = window.location.hash.replace('#', '');
+    window.addEventListener('popstate', () => {
+        const tab = window.location.hash.substring(1);
         if (tabs.includes(tab)) showTab(tab, false);
     });
 
-    function init(n = 0) {
-        if (document.getElementById('kirim') || document.getElementById('riwayat') || document.getElementById('permintaan-laporan')) {
-            bind();
-        } else if (n < 30) {
-            setTimeout(() => init(n + 1), 50);
-        }
+    window.addEventListener('hashchange', () => {
+        const tab = window.location.hash.substring(1);
+        if (tabs.includes(tab)) showTab(tab, false);
+    });
+
+    function init(attempt = 0) {
+        const ready = tabs.some(tab => getSection(tab));
+        if (ready) bind();
+        else if (attempt < 40) setTimeout(() => init(attempt + 1), 50);
     }
 
     if (document.readyState === 'loading') {
