@@ -39,8 +39,39 @@ function pastikanLogoLoaderTampil() {
   plate.style.setProperty('justify-content', 'center', 'important');
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', pastikanLogoLoaderTampil);
-} else {
+// Pada tema light, kartu login harus benar-benar putih seperti form admin.
+// Input tetap abu-abu sangat muda agar bidang input masih terbaca jelas,
+// tetapi tidak sepekat warna lama yang masih bernuansa cream.
+function rapikanLoginLightTheme() {
+  if (document.getElementById('login-light-theme-fix')) return;
+
+  const style = document.createElement('style');
+  style.id = 'login-light-theme-fix';
+  style.textContent = `
+    html[data-theme="light"] .login-card {
+      background: #ffffff !important;
+    }
+
+    html[data-theme="light"] .login-input {
+      background: #f3f4f6 !important;
+      border-color: #cfd4d9 !important;
+    }
+
+    html[data-theme="light"] .login-input:focus {
+      background: #f5f6f7 !important;
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
+function inisialisasiLandingLightTheme() {
   pastikanLogoLoaderTampil();
+  rapikanLoginLightTheme();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', inisialisasiLandingLightTheme);
+} else {
+  inisialisasiLandingLightTheme();
 }
