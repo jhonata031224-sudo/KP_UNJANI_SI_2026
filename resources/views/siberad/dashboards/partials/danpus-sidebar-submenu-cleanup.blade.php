@@ -16,8 +16,9 @@
   .danpus-activity-dot{position:relative;z-index:2;width:18px;height:18px;margin-top:0;border-radius:50%;background:var(--p-surface);border:2px solid var(--p-border);box-sizing:border-box;transition:background .3s ease,border-color .3s ease}
   .danpus-activity-item.is-done .danpus-activity-dot{background:var(--p-green);border-color:var(--p-green)}
   .danpus-activity-item.is-rejected .danpus-activity-dot{background:var(--p-red);border-color:var(--p-red)}
-  .danpus-activity-item.is-current .danpus-activity-dot{border-color:var(--p-yellow);animation:danpusPulseDot 1.8s ease-in-out infinite}
-  @keyframes danpusPulseDot{0%,100%{box-shadow:0 0 0 4px color-mix(in srgb,var(--p-yellow) 20%,transparent)}50%{box-shadow:0 0 0 8px color-mix(in srgb,var(--p-yellow) 4%,transparent)}}
+  .danpus-activity-item.is-current .danpus-activity-dot{background:var(--p-yellow);border-color:var(--p-yellow)}
+  .danpus-activity-item.is-current .danpus-activity-dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--p-yellow);animation:danpusDotPing 1.8s cubic-bezier(0,0,.2,1) infinite}
+  @keyframes danpusDotPing{0%{transform:scale(1);opacity:.5}100%{transform:scale(2.2);opacity:0}}
   .danpus-activity-card{background:var(--p-surface-2);border:1px solid var(--p-border);border-radius:12px;padding:11px 14px;min-width:0;transition:border-color .3s ease}
   .danpus-activity-item.is-done .danpus-activity-card{border-color:color-mix(in srgb,var(--p-green) 35%,var(--p-border))}
   .danpus-activity-item.is-rejected .danpus-activity-card{border-color:color-mix(in srgb,var(--p-red) 35%,var(--p-border))}
