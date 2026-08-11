@@ -25,6 +25,13 @@
     --green:#D9920B;
     --green-bright:#F2B94B;
     --green-dim:rgba(217,146,11,.14);
+    /* Hijau "asli" khusus notifikasi sukses -- var(--green*) di atas sengaja
+       disamakan dengan gold (aksen hijau dihilangkan dari elemen dashboard
+       lain), tapi notifikasi sukses (toast) harus tetap hijau seperti
+       konvensi umum dan seperti toast logout di landing page. */
+    --success:#2f9e63;
+    --success-bright:#3fc27d;
+    --success-dim:rgba(63,194,125,.14);
     --amber:#e0a83a;
     --amber-dim:rgba(224,168,58,.15);
     --red:#c0564f;
@@ -62,6 +69,9 @@
     --green:#1f7a49;
     --green-bright:#166138;
     --green-dim:rgba(31,122,73,.12);
+    --success:#1f7a48;
+    --success-bright:#166238;
+    --success-dim:rgba(31,122,72,.14);
     --amber:#a4700a;
     --amber-dim:rgba(164,112,10,.14);
     --red:#af372e;
@@ -377,9 +387,9 @@
   .toast-stack{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2000;width:min(400px,86vw);pointer-events:none;height:0;}
   .toast{position:absolute;top:0;left:50%;overflow:hidden;pointer-events:auto;display:flex;align-items:center;gap:11px;padding:13px 18px 15px;border-radius:11px;background:var(--panel);border:1px solid var(--border-soft);box-shadow:0 15px 40px rgba(0,0,0,.35);font-family:var(--body);font-size:13px;color:var(--text);width:100%;box-sizing:border-box;opacity:0;transform:translate(-50%,-26px) scale(.97);transition:top .8s cubic-bezier(.34,1.2,.64,1);animation:toastIn .35s cubic-bezier(.34,1.56,.64,1) forwards;}
   .toast.leaving{animation:toastOut .4s cubic-bezier(.4,0,.2,1) forwards;}
-  .toast.success{border-color:rgba(217,146,11,.4);}
-  .toast.success .toast-icon{background:var(--gold-dim);color:var(--gold-bright);}
-  .toast.success .toast-bar{background:var(--gold-bright);}
+  .toast.success{border-color:rgba(63,194,125,.4);}
+  .toast.success .toast-icon{background:var(--success-dim);color:var(--success-bright);}
+  .toast.success .toast-bar{background:var(--success-bright);}
   .toast.error{border-color:rgba(198,40,40,.35);}
   .toast.error .toast-icon{background:var(--red-dim);color:var(--red);}
   .toast.error .toast-bar{background:var(--red);}
@@ -387,7 +397,7 @@
   .toast-icon svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.4;}
   .toast-body{display:flex;flex-direction:column;gap:2px;min-width:0;}
   .toast-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;}
-  .toast.success .toast-label{color:var(--gold-bright);}
+  .toast.success .toast-label{color:var(--success-bright);}
   .toast.error .toast-label{color:var(--red);}
   .toast-text{font-family:var(--body);font-size:13.5px;font-weight:600;line-height:1.4;color:var(--text);}
   .toast-bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform-origin:left;animation:toastBar 3s linear forwards;}
