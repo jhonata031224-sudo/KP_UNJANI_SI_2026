@@ -26,9 +26,19 @@ class InjectDashboardUi
             return $response;
         }
 
-        // Dashboard utama dari branch main sudah memiliki UI notifikasi sendiri.
-        // Jangan menyuntikkan komponen kedua ke halaman tersebut.
+        $fixedHeaderAsset = asset('js/siberad-fixed-header.js');
+        $fixedHeaderInjection = '<script src="'.e($fixedHeaderAsset).'"></script>';
+
+        // Dashboard yang sudah memiliki komponen notifikasi sendiri tetap
+        // mempertahankan UI tersebut. Kita hanya menyuntikkan behavior header
+        // fixed agar layout sidebar asli tidak disentuh.
         if (str_contains($html, 'id="notifMenu"')) {
+            $pos = strripos($html, '</body>');
+            if ($pos !== false) {
+                $html = substr($html, 0, $pos).$fixedHeaderInjection.substr($html, $pos);
+                $response->setContent($html);
+            }
+
             return $response;
         }
 
@@ -49,7 +59,8 @@ class InjectDashboardUi
 
         $asset = asset('js/siberad-dashboard-ui.js');
         $injection = '<script>window.__SIBERAD_NOTIFICATIONS__ = '.$notificationJson.'; window.__SIBERAD_CSRF__ = '.$csrfJson.';</script>'
-            .'<script src="'.e($asset).'"></script>';
+            .'<script src="'.e($asset).'"></script>'
+            .$fixedHeaderInjection;
 
         $pos = strripos($html, '</body>');
         if ($pos !== false) {
