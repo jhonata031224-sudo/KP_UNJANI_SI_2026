@@ -40,29 +40,43 @@ function pastikanLogoLoaderTampil() {
 }
 
 // Pada tema light, kartu login harus benar-benar putih seperti form admin.
-// Input tetap abu-abu sangat muda agar bidang input masih terbaca jelas,
-// tetapi tidak sepekat warna lama yang masih bernuansa cream.
+// Input tetap abu-abu sangat muda agar bidang input masih terbaca jelas.
+// Terapkan lewat inline style + observer agar tetap benar walaupun atribut
+// data-theme dipasang setelah module Vite selesai dieksekusi.
 function rapikanLoginLightTheme() {
-  if (document.getElementById('login-light-theme-fix')) return;
+  const root = document.documentElement;
+  const apply = () => {
+    const isLight = root.getAttribute('data-theme') === 'light';
+    const card = document.querySelector('.login-card');
+    const inputs = document.querySelectorAll('.login-input');
 
-  const style = document.createElement('style');
-  style.id = 'login-light-theme-fix';
-  style.textContent = `
-    html[data-theme="light"] .login-card {
-      background: #ffffff !important;
+    if (card) {
+      if (isLight) {
+        card.style.setProperty('background', '#ffffff', 'important');
+      } else {
+        card.style.removeProperty('background');
+      }
     }
 
-    html[data-theme="light"] .login-input {
-      background: #f3f4f6 !important;
-      border-color: #cfd4d9 !important;
-    }
+    inputs.forEach((input) => {
+      if (isLight) {
+        input.style.setProperty('background', '#f3f4f6', 'important');
+        input.style.setProperty('border-color', '#cfd4d9', 'important');
+      } else {
+        input.style.removeProperty('background');
+        input.style.removeProperty('border-color');
+      }
+    });
+  };
 
-    html[data-theme="light"] .login-input:focus {
-      background: #f5f6f7 !important;
-    }
-  `;
+  // Jalankan sekarang, lalu ulangi setelah DOM/theme berubah.
+  apply();
 
-  document.head.appendChild(style);
+  const themeObserver = new MutationObserver(apply);
+  themeObserver.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+
+  const domObserver = new MutationObserver(apply);
+  domObserver.observe(document.body, { childList: true, subtree: true });
 }
 
 function inisialisasiLandingLightTheme() {
