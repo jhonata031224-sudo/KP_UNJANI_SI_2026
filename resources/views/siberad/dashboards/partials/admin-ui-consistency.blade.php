@@ -9,6 +9,7 @@
   box-sizing:border-box !important;
   padding-left:32px !important;
   padding-right:32px !important;
+  overflow-x:hidden !important;
 }
 .main .content > .container,
 .main .content > .page,
@@ -19,12 +20,45 @@
   margin-left:0 !important;
   margin-right:0 !important;
   box-sizing:border-box !important;
+  min-width:0 !important;
+}
+/* Grafik Admin mengikuti lebar kartu/kolom yang tersedia. Tidak boleh memaksa
+   halaman melebar dan menimbulkan horizontal scrolling saat sidebar terbuka. */
+.main .content canvas {
+  display:block !important;
+  width:100% !important;
+  max-width:100% !important;
+  height:auto !important;
+  box-sizing:border-box !important;
+}
+.main .content :has(> canvas),
+.main .content :has(> .chart-container),
+.main .content :has(> .chart-wrap) {
+  min-width:0 !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+}
+.main .content [style*="min-width"] {
+  min-width:0 !important;
+}
+/* Grid/flex children tidak boleh mempertahankan lebar intrinsik grafik. */
+.main .content .grid,
+.main .content [class*="grid"],
+.main .content [class*="chart"],
+.main .content [class*="stat"] {
+  min-width:0 !important;
+  box-sizing:border-box !important;
 }
 /* Admin juga mengikuti perilaku profil role lain: keterangan tambahan di Profil Saya tidak ditampilkan. */
 .profile-modal-card .profile-help-text,
 .profile-modal-card .profile-form-notice { display:none !important; }
+@media (max-width:1200px){
+  .main .content [class*="grid"] { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+}
 @media (max-width:900px){
   .main > .content,.main .content{padding-left:20px !important;padding-right:20px !important;}
+  .main .content [class*="grid"] { grid-template-columns:1fr !important; }
 }
 @media (max-width:600px){
   .main > .content,.main .content{padding-left:14px !important;padding-right:14px !important;}
