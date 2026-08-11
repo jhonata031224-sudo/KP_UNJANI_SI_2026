@@ -1,8 +1,3 @@
-@php
-    $kodeSatlakNotifikasi = strtoupper((string) ($satuan?->kode ?? ''));
-@endphp
-
-@if (in_array($kodeSatlakNotifikasi, ['SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK', 'SATLAKDUKTEK'], true))
 <style>
   #notifDropdown .notif-head {
     justify-content: space-between !important;
@@ -24,7 +19,7 @@
 </style>
 <script>
 (function () {
-  function initSatlakNotificationCloseText() {
+  function initNotificationCloseText() {
     var dropdown = document.getElementById('notifDropdown');
     var header = dropdown && (dropdown.querySelector('.notif-head') || dropdown.querySelector('.profile-dropdown-head'));
     if (!dropdown || !header || header.querySelector('.siberad-notif-close-text')) return;
@@ -48,14 +43,14 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSatlakNotificationCloseText);
+    document.addEventListener('DOMContentLoaded', initNotificationCloseText);
   } else {
-    initSatlakNotificationCloseText();
+    initNotificationCloseText();
   }
 
   // Notifikasi dibuat oleh partial lain; cek kembali setelah seluruh shell selesai.
-  setTimeout(initSatlakNotificationCloseText, 100);
-  setTimeout(initSatlakNotificationCloseText, 400);
+  setTimeout(initNotificationCloseText, 100);
+  setTimeout(initNotificationCloseText, 400);
+  setTimeout(initNotificationCloseText, 1000);
 })();
 </script>
-@endif
