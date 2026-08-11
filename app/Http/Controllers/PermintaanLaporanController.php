@@ -9,6 +9,7 @@ use App\Notifications\PermintaanLaporanBaru;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class PermintaanLaporanController extends Controller
 {
@@ -21,6 +22,29 @@ class PermintaanLaporanController extends Controller
     {
         $kode = strtoupper((string) $request->user()->load('satuan')->satuan?->kode);
         return in_array($kode, ['DANPUS', 'WADAN'], true);
+    }
+
+    public function index(Request $request): View
+    {
+        $user = $request->user()->load('satuan');
+        abort_unless($this->isPimpinan($request), 403);
+
+        $satuan = $user->satuan;
+        $tujuanSatuan = Satuan::whereIn('kode', self::PENGIRIM_KODE)
+            ->orderBy('urutan')
+            ->get();
+
+        $permintaanLaporan = PermintaanLaporan::with(['tujuanSatuan', 'laporan'])
+            ->where('pembuat_id', $user->id)
+            ->latest('created_at')
+            ->get();
+
+        return view('siberad.permintaan-laporan.index', compact(
+            'user',
+            'satuan',
+            'tujuanSatuan',
+            'permintaanLaporan'
+        ));
     }
 
     public function store(Request $request): RedirectResponse
@@ -65,7 +89,8 @@ class PermintaanLaporanController extends Controller
             }
         });
 
-        return back()->with('status', 'Permintaan laporan berhasil dikirim kepada '.$created->count().' satuan.');
+        return redirect()->route('permintaan-laporan.index')
+            ->with('status', 'Permintaan laporan berhasil dikirim kepada '.$created->count().' satuan.');
     }
 
     public function mulai(Request $request, PermintaanLaporan $permintaanLaporan): RedirectResponse
