@@ -12,6 +12,26 @@ class InjectDashboardUi
     {
         $response = $next($request);
 
+        // Landing page: pada tema light, panel loader mengikuti putih murni.
+        // Dibuat sebagai style terpisah supaya tidak mengubah background
+        // halaman landing setelah loader selesai dan tidak menyentuh dashboard.
+        if ($request->path() === '/') {
+            $contentType = (string) $response->headers->get('Content-Type');
+            if ($contentType === '' || str_contains($contentType, 'text/html')) {
+                $html = $response->getContent();
+                if (is_string($html) && $html !== '') {
+                    $loaderThemeStyle = '<style id="siberad-loader-light-theme">html[data-theme="light"] #loader .loader-panel{background:#fff !important;}</style>';
+                    $pos = stripos($html, '</head>');
+                    if ($pos !== false) {
+                        $html = substr($html, 0, $pos).$loaderThemeStyle.substr($html, $pos);
+                        $response->setContent($html);
+                    }
+                }
+            }
+
+            return $response;
+        }
+
         if (! $request->routeIs('dashboard') || ! $request->user()) {
             return $response;
         }
