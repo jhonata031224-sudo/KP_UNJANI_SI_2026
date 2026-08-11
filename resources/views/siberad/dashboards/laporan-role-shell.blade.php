@@ -3,3 +3,4 @@
 @include('siberad.dashboards.partials.satlak-notification-close-text')
 @include('siberad.dashboards.partials.profile-description-hide')
 @include('siberad.dashboards.partials.responsive-content-alignment')
+@include('siberad.dashboards.partials.permintaan-laporan-deadline')

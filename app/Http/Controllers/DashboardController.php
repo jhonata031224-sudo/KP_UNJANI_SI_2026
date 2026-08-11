@@ -7,6 +7,7 @@ use App\Models\ActivityLog;
 use App\Models\Laporan;
 use App\Models\Pengaturan;
 use App\Models\Pengumuman;
+use App\Models\PermintaanLaporan;
 use App\Models\Satuan;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -50,8 +51,6 @@ class DashboardController
     {
         abort_unless($satuan, 403, 'Akun belum terhubung ke satuan.');
         $laporanTerkirim = Laporan::with('tujuanSatuan')->where('satuan_id', $satuan->id)->latest()->get();
-        // Laporan yang sudah diterima/disetujui atau ditolak tidak lagi tampil di antrean "Laporan Masuk".
-        // Riwayat tetap menyimpan seluruh laporan karena data tidak dihapus dari database.
         $laporanMasuk = Laporan::with(['satuan','tujuanSatuan'])
             ->where('tujuan_satuan_id', $satuan->id)
             ->where(function ($query) {
@@ -83,6 +82,25 @@ class DashboardController
             'DANPUS' => 'Pusat penerimaan, pemantauan, dan peninjauan laporan dari seluruh satuan.',
             default => 'Pelaporan kegiatan dan koordinasi satuan melalui satu alur yang terukur.',
         };
+
+        $kodePengirimDeadline = [
+            'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK', 'SATLAKDUKTEK',
+            'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT',
+        ];
+        $permintaanLaporan = $modePimpinan
+            ? PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan'])
+                ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS','WADAN']))
+                ->latest('deadline_at')
+                ->get()
+            : PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan'])
+                ->where('tujuan_satuan_id', $satuan->id)
+                ->whereIn('status', [PermintaanLaporan::STATUS_BELUM, PermintaanLaporan::STATUS_DIKERJAKAN, PermintaanLaporan::STATUS_PEMERIKSAAN])
+                ->latest('deadline_at')
+                ->get();
+        $satuanPermintaanLaporan = $modePimpinan
+            ? Satuan::whereIn('kode', $kodePengirimDeadline)->orderBy('urutan')->get()
+            : collect();
+
         $monitoringSatlak = collect(); $laporanSatlak = collect();
         if ($mode === 'duktek') {
             $satlakIds = Satuan::whereIn('kode', ['SATLAKKAL','SATLAKSISOS','SATLAKDAK'])->pluck('id');
@@ -92,9 +110,6 @@ class DashboardController
         $monitoringPimpinanSatlak = collect();
         $laporanPimpinanSatlak = collect();
         if ($modePimpinan) {
-            // Danpus/Wadan memantau aktivitas operasional dan pembinaan dalam satu log terpusat.
-            // Tetap mempertahankan nama variabel lama agar seluruh tampilan pimpinan yang sudah ada
-            // langsung menggunakan data tambahan tanpa mengubah alur/detail laporan.
             $kodeSatuanPimpinan = [
                 'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK', 'SATLAKDUKTEK',
                 'BINMAT', 'BINFUNG', 'BINUM', 'DIKLAT',
@@ -113,8 +128,8 @@ class DashboardController
                 'diterima' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count(),
                 'ditolak' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count(),
             ]);
-            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','laporanMasuk','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description'));
+            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','laporanMasuk','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan'));
         }
-        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanMasuk','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description') + ['defaultTujuanId' => $defaultDanpus?->id, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'menunggu' => $laporanTerkirim->where('status','Menunggu')->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'masuk' => $laporanMasuk->count()]]);
+        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanMasuk','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan') + ['defaultTujuanId' => $defaultDanpus?->id, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'menunggu' => $laporanTerkirim->where('status','Menunggu')->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'masuk' => $laporanMasuk->count()]]);
     }
 }
