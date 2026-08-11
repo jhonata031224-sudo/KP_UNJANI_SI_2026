@@ -14,6 +14,7 @@ class Laporan extends Model
         'satuan_id',
         'user_id',
         'tujuan_satuan_id',
+        'permintaan_laporan_id',
         'proyek',
         'perihal',
         'deskripsi',
@@ -23,27 +24,23 @@ class Laporan extends Model
         'status',
     ];
 
-    /**
-     * Satuan asal pengirim laporan (mis. Satuan Pelaksanaan Dukungan Teknologi).
-     */
     public function satuan(): BelongsTo
     {
         return $this->belongsTo(Satuan::class, 'satuan_id');
     }
 
-    /**
-     * Satuan tujuan laporan (mis. DANPUS).
-     */
     public function tujuanSatuan(): BelongsTo
     {
         return $this->belongsTo(Satuan::class, 'tujuan_satuan_id');
     }
 
-    /**
-     * Pengguna yang mengirim laporan.
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function permintaanLaporan(): BelongsTo
+    {
+        return $this->belongsTo(PermintaanLaporan::class, 'permintaan_laporan_id');
     }
 }
