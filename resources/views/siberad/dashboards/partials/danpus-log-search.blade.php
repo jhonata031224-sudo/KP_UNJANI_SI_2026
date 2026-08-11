@@ -23,12 +23,16 @@
 </style>
 <script>
 (function(){
-  function getItemDate(item){
-    var dated=item.querySelector('[data-tanggal]')?.getAttribute('data-tanggal');
-    if(dated){var d=new Date(dated);if(!isNaN(d.getTime()))return d.getTime();}
-    var time=item.querySelector('time[datetime]')?.getAttribute('datetime');
-    if(time){var t=new Date(time);if(!isNaN(t.getTime()))return t.getTime();}
-    return 0;
+  /*
+   * Data laporan di halaman pimpinan sudah dikirim dari DashboardController
+   * memakai latest(). Setelah timeline/dropdown dibentuk, urutan DOM tersebut
+   * adalah urutan database: index 0 = laporan paling baru. Jadi kita simpan
+   * index awal tiap perihal sebagai acuan sort yang stabil, bukan membaca teks
+   * tanggal yang sudah diformat ke bahasa Indonesia.
+   */
+  function getItemOrder(item){
+    var value=Number(item.dataset.originalLogOrder);
+    return Number.isFinite(value)?value:999999999;
   }
 
   function initDanpusLogSearch(){
@@ -37,6 +41,11 @@
       var list=block.querySelector('.danpus-report-dropdown-list');
       var header=block.querySelector('.section-head-clean');
       if(!list||!header)return;
+
+      /* Simpan urutan awal yang berasal dari latest() di backend. */
+      Array.from(list.querySelectorAll(':scope > .danpus-report-dropdown')).forEach(function(item,index){
+        item.dataset.originalLogOrder=String(index);
+      });
 
       var searchWrap=document.createElement('div');
       searchWrap.className='danpus-log-search';
@@ -58,8 +67,9 @@
       function filterAndSort(){
         var q=(input.value||'').trim().toLowerCase();
         var items=Array.from(list.querySelectorAll(':scope > .danpus-report-dropdown'));
+
         items.sort(function(a,b){
-          var diff=getItemDate(b)-getItemDate(a);
+          var diff=getItemOrder(a)-getItemOrder(b);
           return sortValue==='oldest' ? -diff : diff;
         });
         items.forEach(function(item){list.appendChild(item)});
