@@ -64,6 +64,9 @@ Route::delete('/laporan/{laporan}', [LaporanController::class, 'destroy'])
     ->name('laporan.destroy');
 
 // ===== Permintaan Laporan & Deadline dari DANPUS/WADAN =====
+Route::get('/permintaan-laporan', [PermintaanLaporanController::class, 'index'])
+    ->middleware('auth')
+    ->name('permintaan-laporan.index');
 Route::post('/permintaan-laporan', [PermintaanLaporanController::class, 'store'])
     ->middleware('auth')
     ->name('permintaan-laporan.store');
@@ -165,7 +168,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/satuan/{satuan}/permissions', [PermissionController::class, 'update'])->name('satuan.permissions');
     Route::patch('/pengaturan/landing', [SettingController::class, 'updateLanding'])->name('pengaturan.landing.update');
     Route::post('/backup', [BackupController::class, 'store'])->name('backup.store');
-    Route::get('/backup/{filename}/download', [BackupController::class, 'download'])->name('backup.download');
+    Route::get('/backup/{filename}/download', [BackupController::class, 'download'])->name('admin.backup.download');
     Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/cetak', [ReportController::class, 'printView'])->name('laporan.cetak');
     Route::get('/laporan/export/pengguna', [ReportController::class, 'exportUsersExcel'])->name('laporan.export-pengguna');
