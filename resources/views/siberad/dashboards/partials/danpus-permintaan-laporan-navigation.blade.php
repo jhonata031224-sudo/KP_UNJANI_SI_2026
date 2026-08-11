@@ -1,8 +1,9 @@
 <script>
 (function () {
-    const requestUrl = @json(route('permintaan-laporan.index'));
     const dashboardUrl = @json(route('dashboard'));
-    const isRequestPage = window.location.pathname.replace(/\/+$/, '') === '/permintaan-laporan';
+    const requestUrl = dashboardUrl + '?section=permintaan';
+    const params = new URLSearchParams(window.location.search);
+    const isRequestPage = params.get('section') === 'permintaan';
 
     function cleanText(el) {
         return (el?.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -34,7 +35,7 @@
         }
     }
 
-    function hideRequestSectionOnDashboard() {
+    function hideRequestSectionOnNormalDashboard() {
         if (isRequestPage) return;
         const content = document.querySelector('.content, main');
         if (!content) return;
@@ -50,7 +51,7 @@
 
     function init() {
         fixReportNavigation();
-        hideRequestSectionOnDashboard();
+        hideRequestSectionOnNormalDashboard();
     }
 
     if (document.readyState === 'loading') {
