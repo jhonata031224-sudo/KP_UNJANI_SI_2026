@@ -9,3 +9,4 @@
 @include('siberad.dashboards.partials.profile-description-hide')
 @include('siberad.dashboards.partials.responsive-content-alignment')
 @include('siberad.dashboards.partials.danpus-permintaan-laporan-menu')
+@include('siberad.dashboards.partials.danpus-permintaan-laporan-navigation')
