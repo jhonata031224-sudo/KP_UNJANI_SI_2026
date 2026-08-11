@@ -90,7 +90,7 @@
     document.querySelectorAll('section[id^="satlak-"] .clean-table-wrap').forEach(function(wrapper){
       if(wrapper.dataset.timelineReady==='1')return;
       var table=wrapper.querySelector('table');if(!table)return;
-      var rows=Array.from(table.querySelectorAll('tbody tr')).filter(function(row){return row.querySelector('td')});
+      var rows=Array.from(table.querySelectorAll('tbody tr')).filter(function(row){return row.querySelectorAll('td').length>1});
       wrapper.innerHTML='';
       if(!rows.length){var empty=document.createElement('div');empty.className='danpus-activity-empty';empty.textContent='Belum ada aktivitas dari satuan ini.';wrapper.appendChild(empty)}
       else rows.forEach(function(row){wrapper.appendChild(buildProcessLog(row))});
