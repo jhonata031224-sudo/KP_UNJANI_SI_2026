@@ -9,7 +9,6 @@ use App\Notifications\PermintaanLaporanBaru;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
 
 class PermintaanLaporanController extends Controller
 {
@@ -24,27 +23,14 @@ class PermintaanLaporanController extends Controller
         return in_array($kode, ['DANPUS', 'WADAN'], true);
     }
 
-    public function index(Request $request): View
+    public function index(Request $request): RedirectResponse
     {
-        $user = $request->user()->load('satuan');
         abort_unless($this->isPimpinan($request), 403);
 
-        $satuan = $user->satuan;
-        $tujuanSatuan = Satuan::whereIn('kode', self::PENGIRIM_KODE)
-            ->orderBy('urutan')
-            ->get();
-
-        $permintaanLaporan = PermintaanLaporan::with(['tujuanSatuan', 'laporan'])
-            ->where('pembuat_id', $user->id)
-            ->latest('created_at')
-            ->get();
-
-        return view('siberad.permintaan-laporan.index', compact(
-            'user',
-            'satuan',
-            'tujuanSatuan',
-            'permintaanLaporan'
-        ));
+        // Permintaan Laporan tetap berada di dalam menu Pelaporan,
+        // tetapi menggunakan shell dashboard yang sama seperti Laporan Masuk.
+        // Query parameter membuat halaman ini fokus hanya pada modul permintaan.
+        return redirect()->route('dashboard', ['section' => 'permintaan']);
     }
 
     public function store(Request $request): RedirectResponse
