@@ -21,6 +21,7 @@ use App\Http\Controllers\LaporanPublikasiController;
 use App\Http\Controllers\LogUjiPengembanganController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\PangkatController;
+use App\Http\Controllers\PermintaanLaporanController;
 use App\Http\Controllers\PersonelController;
 use App\Http\Controllers\PersonelDokumenController;
 use App\Http\Controllers\PersonelMutasiController;
@@ -61,6 +62,14 @@ Route::patch('/laporan/{laporan}/status', [LaporanController::class, 'updateStat
 Route::delete('/laporan/{laporan}', [LaporanController::class, 'destroy'])
     ->middleware('auth')
     ->name('laporan.destroy');
+
+// ===== Permintaan Laporan & Deadline dari DANPUS/WADAN =====
+Route::post('/permintaan-laporan', [PermintaanLaporanController::class, 'store'])
+    ->middleware('auth')
+    ->name('permintaan-laporan.store');
+Route::patch('/permintaan-laporan/{permintaanLaporan}/mulai', [PermintaanLaporanController::class, 'mulai'])
+    ->middleware('auth')
+    ->name('permintaan-laporan.mulai');
 
 // ===== Laporan Publikasi ke DANPUS (Satuan Pelaksanaan Siber Sosial) =====
 Route::post('/laporan-publikasi', [LaporanPublikasiController::class, 'store'])
