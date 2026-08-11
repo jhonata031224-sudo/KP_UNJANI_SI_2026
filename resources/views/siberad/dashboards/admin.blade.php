@@ -8,10 +8,22 @@
 @include('siberad.dashboards.partials.dash-styles')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
+  /* Samakan palet mode terang dengan dashboard Pimpinan (abu-abu netral/putih), bukan cream bawaan. */
+  :root[data-theme="light"]{
+    --bg:#f5f7f9;--bg-deep:#ffffff;--panel:#ffffff;--panel-2:#f8fafc;--panel-alt:#f8fafc;
+    --border:#e2e8f0;--border-soft:#e2e8f0;--border-strong:#cbd5e1;
+    --gold:#c97a00;--gold-bright:#c97a00;--gold-dim:rgba(201,122,0,.12);
+    --green:#16834b;--green-bright:#16834b;--green-dim:rgba(22,131,75,.12);
+    --amber:#b77900;--amber-dim:rgba(183,121,0,.14);
+    --red:#c83b3b;--red-dim:rgba(200,59,59,.12);
+    --text:#17212b;--text-muted:#64748b;--text-dim:#64748b;
+    --surface:rgba(255,255,255,.9);--hover-tint:rgba(15,23,42,.035);
+  }
   .chart-box{margin-bottom:26px;}
   .chart-box-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
-  .chart-mini{background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:10px;padding:14px;}
-  .chart-mini-head{margin-bottom:8px;}
+  .chart-mini{background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:12px;padding:16px;transition:border-color .15s ease,box-shadow .15s ease;}
+  .chart-mini:hover{border-color:var(--border-strong);box-shadow:0 6px 16px rgba(0,0,0,.12);}
+  .chart-mini-head{margin-bottom:10px;}
   .chart-mini-head h4{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:.01em;line-height:1.3;}
   .chart-mini-head p{font-size:11px;color:var(--text-muted);margin-top:2px;}
   .chart-mini .chart-wrap{position:relative;height:210px;}
@@ -377,7 +389,7 @@
         <div class="dash-hero">
           <div>
             <div class="dash-hero-eyebrow">SIBERAD // {{ $satuan->kode ?? 'SISTEM' }}</div>
-            <h2>Selamat datang, {{ $satuan->nama ?? $user->name }}</h2>
+            <h2>{{ $satuan->nama ?? $user->name }}</h2>
             <p>{{ now()->translatedFormat('l, d F Y') }}</p>
           </div>
         </div>
@@ -423,21 +435,24 @@
 
             <div class="chart-mini">
               <div class="chart-mini-head">
-                <h4>Pengguna per Kategori Satuan</h4><p>Sebaran akun berdasarkan kategori.</p>
+                <div class="chart-mini-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                <div><h4>Pengguna per Kategori Satuan</h4><p>Sebaran akun berdasarkan kategori.</p></div>
               </div>
               <div class="chart-wrap"><canvas id="chartKategoriSatuan"></canvas></div>
             </div>
 
             <div class="chart-mini">
               <div class="chart-mini-head">
-                <h4>Status Reset Password</h4><p>Proporsi permintaan yang masuk.</p>
+                <div class="chart-mini-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.5-2-3.4-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9-2 3.4 2 1.5a7.6 7.6 0 0 0 0 3l-2 1.5 2 3.4 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.5h4l.5-2.5a7.6 7.6 0 0 0 2.6-1.5l2.3.9 2-3.4Z"/></svg></div>
+                <div><h4>Status Reset Password</h4><p>Proporsi permintaan yang masuk.</p></div>
               </div>
               <div class="chart-wrap"><canvas id="chartStatusReset"></canvas></div>
             </div>
 
             <div class="chart-mini">
               <div class="chart-mini-head">
-                <h4>Kelengkapan Akun Satuan</h4><p>Satuan yang sudah vs belum punya akun.</p>
+                <div class="chart-mini-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                <div><h4>Kelengkapan Akun Satuan</h4><p>Satuan yang sudah vs belum punya akun.</p></div>
               </div>
               <div class="chart-wrap"><canvas id="chartKelengkapanSatuan"></canvas></div>
             </div>
@@ -455,8 +470,11 @@
             <li>
               <span class="activity-dot"></span>
               <div class="activity-body">
-                <div class="activity-text">{{ $log->deskripsi ?: $log->aksi }}</div>
-                <div class="activity-meta">{{ $log->nama_pengguna ?? 'Sistem' }} &middot; {{ $log->created_at?->diffForHumans() }}</div>
+                <div class="activity-main">
+                  <div class="activity-text">{{ $log->deskripsi ?: $log->aksi }}</div>
+                  <div class="activity-meta">{{ $log->nama_pengguna ?? 'Sistem' }}</div>
+                </div>
+                <div class="activity-time">{{ $log->created_at?->diffForHumans() }}</div>
               </div>
             </li>
             @empty
@@ -476,13 +494,23 @@
           }
           .kpi-icon svg{width:17px;height:17px;}
 
+          .chart-mini-head{display:flex;align-items:flex-start;gap:11px;}
+          .chart-mini-icon{width:28px;height:28px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--gold-dim);color:var(--gold-bright);}
+          .chart-mini-icon svg{width:15px;height:15px;}
+          .chart-mini-icon.amber{background:var(--amber-dim);color:var(--amber);}
+          .chart-mini-icon.green{background:var(--green-dim);color:var(--green-bright);}
+
           .activity-panel{margin-top:22px;}
-          .activity-feed{list-style:none;padding:4px 22px 18px;margin:0;}
-          .activity-feed li{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-soft);}
-          .activity-feed li:last-child{border-bottom:none;}
-          .activity-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;}
+          .activity-feed{list-style:none;padding:2px 0 4px;margin:0;}
+          .activity-feed li{display:flex;gap:12px;padding:13px 10px;border-radius:9px;transition:background .15s ease;}
+          .activity-feed li:hover{background:var(--hover-tint);}
+          .activity-feed li + li{border-top:1px solid var(--border-soft);}
+          .activity-dot{width:7px;height:7px;border-radius:50%;background:var(--gold-bright);margin-top:6px;flex-shrink:0;box-shadow:0 0 0 3px var(--gold-dim);}
+          .activity-body{flex:1;min-width:0;display:flex;justify-content:space-between;align-items:flex-start;gap:14px;}
+          .activity-main{min-width:0;}
           .activity-text{font-size:13px;color:var(--text);line-height:1.5;}
           .activity-meta{font-size:11px;color:var(--text-dim);margin-top:3px;}
+          .activity-time{font-size:10.5px;color:var(--text-dim);font-family:var(--mono);white-space:nowrap;flex-shrink:0;padding-top:2px;}
           .activity-empty{padding:20px 0;text-align:center;color:var(--text-dim);font-size:12.5px;}
         </style>
       </section>

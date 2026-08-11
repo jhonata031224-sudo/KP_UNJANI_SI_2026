@@ -149,14 +149,3 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyDanpusSubmenuFix);else applyDanpusSubmenuFix();
 })();
 </script>
-<script>
-(function(){
-  function normalizePimpinanMonitoringText(){
-    var description = document.querySelector('.pimp-hero p');
-    if (description && description.textContent.trim() === 'Pantau aktivitas pelaporan dari seluruh Satlak dan unit terkait secara terpusat. Pimpinan dapat melihat statistik, status, dan detail aktivitas tanpa mengubah data unit.') {
-      description.textContent = 'Pantau aktivitas pelaporan dari 4 Satlak operasional serta Binmat, Binfung, Binum, dan Diklat secara terpusat. Pimpinan dapat melihat statistik, status, dan detail aktivitas tanpa mengubah data unit.';
-    }
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',normalizePimpinanMonitoringText);else normalizePimpinanMonitoringText();
-})();
-</script>
