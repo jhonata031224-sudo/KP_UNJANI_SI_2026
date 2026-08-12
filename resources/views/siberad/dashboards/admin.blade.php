@@ -48,6 +48,13 @@
   .table-empty-row td{text-align:center;color:var(--text-dim);font-size:12.5px;padding:26px 12px !important;}
   @media(max-width:640px){.table-toolbar{flex-direction:column;}.table-filter{width:100%;}}
 
+  /* ===== badge status Rekap Laporan (warna tetap hijau/merah/oren asli,
+     tidak ikut --green yang di-repurpose jadi gold di tempat lain) ===== */
+  .badge-status{display:inline-flex;align-items:center;justify-content:center;min-width:34px;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;padding:7px 14px;border-radius:8px;text-transform:uppercase;border:1px solid transparent;box-sizing:border-box;line-height:1.2;}
+  .badge-status.ok{background:rgba(34,197,94,.14);color:#22c55e;border-color:rgba(34,197,94,.32);}
+  .badge-status.bad{background:rgba(239,68,68,.14);color:#ef4444;border-color:rgba(239,68,68,.32);}
+  .badge-status.wait{background:rgba(245,158,11,.14);color:#f59e0b;border-color:rgba(245,158,11,.32);}
+
   /* ===== modal Tambah Pengguna ===== */
   .user-modal-overlay{
     position:fixed;inset:0;z-index:10030;padding:24px;box-sizing:border-box;
@@ -1606,17 +1613,28 @@
 
         <div class="panel">
           <div class="panel-head"><div><h3>Detail per Satuan</h3></div></div>
+          <div class="table-toolbar">
+            <div class="table-search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+              <input type="text" class="table-search" data-table-search="tblRekapSatuan" placeholder="Cari nama satuan...">
+            </div>
+            <select class="table-filter" data-table-filter="tblRekapSatuan">
+              <option value="">Semua Kategori</option>
+              <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
+              <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
+            </select>
+          </div>
           <div class="tbl-wrap">
-            <table class="dtbl">
-              <thead><tr><th>Satuan</th><th>Total Laporan</th><th>Menunggu</th><th>Disetujui</th><th>Ditolak</th></tr></thead>
+            <table class="dtbl" id="tblRekapSatuan">
+              <thead><tr><th>Satuan</th><th style="text-align:center;">Total Laporan</th><th style="text-align:center;">Disetujui</th><th style="text-align:center;">Ditolak</th><th style="text-align:center;">Menunggu</th></tr></thead>
               <tbody>
                 @forelse($rekapLaporanSatuan as $s)
-                <tr>
+                <tr data-filter-value="{{ $s->kategori }}" data-search-value="{{ $s->nama }}">
                   <td>{{ $s->nama }} <span class="badge">{{ $s->kode }}</span></td>
-                  <td>{{ $s->total_laporan }}</td>
-                  <td><span class="badge amber">{{ $s->laporan_menunggu }}</span></td>
-                  <td><span class="badge green">{{ $s->laporan_disetujui }}</span></td>
-                  <td><span class="badge red">{{ $s->laporan_ditolak }}</span></td>
+                  <td style="text-align:center;">{{ $s->total_laporan }}</td>
+                  <td style="text-align:center;"><span class="badge-status ok">{{ $s->laporan_disetujui }}</span></td>
+                  <td style="text-align:center;"><span class="badge-status bad">{{ $s->laporan_ditolak }}</span></td>
+                  <td style="text-align:center;"><span class="badge-status wait">{{ $s->laporan_menunggu }}</span></td>
                 </tr>
                 @empty
                 <tr class="table-empty-row"><td colspan="5">Belum ada data Satlak.</td></tr>
@@ -2109,6 +2127,10 @@
     var rekapSatuan = @json($rekapLaporanSatuan);
     var elRekap = document.getElementById('chartRekapLaporan');
     if (elRekap) {
+      var rekapCtx = elRekap.getContext('2d');
+      var rekapGradient = rekapCtx.createLinearGradient(0, 0, 0, elRekap.height || 260);
+      rekapGradient.addColorStop(0, '#6366f1');
+      rekapGradient.addColorStop(1, '#3b82f6');
       new Chart(elRekap, {
         type: 'bar',
         data: {
@@ -2116,7 +2138,8 @@
           datasets: [{
             label: 'Total Laporan',
             data: rekapSatuan.map(function (s) { return s.total_laporan; }),
-            backgroundColor: cGold,
+            backgroundColor: rekapGradient,
+            hoverBackgroundColor: '#4f46e5',
             borderRadius: 6,
             maxBarThickness: 46
           }]
@@ -2167,7 +2190,8 @@
       var visibleCount = 0;
 
       rows.forEach(function (row) {
-        var cocokCari = !q || row.textContent.toLowerCase().indexOf(q) !== -1;
+        var teksCari = row.hasAttribute('data-search-value') ? row.getAttribute('data-search-value') : row.textContent;
+        var cocokCari = !q || teksCari.toLowerCase().indexOf(q) !== -1;
         var cocokFilter = !f || row.getAttribute('data-filter-value') === f;
         var tampil = cocokCari && cocokFilter;
         row.style.display = tampil ? '' : 'none';
