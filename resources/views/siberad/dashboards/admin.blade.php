@@ -231,10 +231,6 @@
         <input id="uEmail" name="email" type="email">
       </div>
       <div class="form-field">
-        <label for="uJabatan">Jabatan (opsional)</label>
-        <input id="uJabatan" name="jabatan" type="text">
-      </div>
-      <div class="form-field">
         <label for="uSatuan">Satuan</label>
         <select id="uSatuan" name="satuan_id" required>
           <option value="">— Pilih satuan —</option>
@@ -245,7 +241,7 @@
       </div>
       <div class="form-field">
         <label for="uPassword">Password Awal</label>
-        <input id="uPassword" name="password" type="password" minlength="8" required placeholder="Minimal 8 karakter">
+        <input id="uPassword" name="password" type="text" minlength="8" required placeholder="Minimal 8 karakter">
       </div>
       <div class="user-modal-actions">
         <button class="btn" type="button" id="tambahPenggunaCancel">Batal</button>
@@ -704,7 +700,7 @@
                 <tr data-filter-value="{{ $p->satuan->nama ?? '' }}">
                   <td>{{ $p->name }}</td>
                   <td><span class="badge">{{ $p->username }}</span></td>
-                  <td style="color:var(--text-muted);">{{ $p->email }}</td>
+                  <td style="color:var(--text-muted);">{{ $p->email ?: '-' }}</td>
                   <td>{{ $p->satuan->nama ?? '-' }}</td>
                   <td>
                     <div class="btn-row">
