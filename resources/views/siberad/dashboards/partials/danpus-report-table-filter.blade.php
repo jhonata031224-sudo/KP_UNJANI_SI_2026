@@ -107,7 +107,6 @@
       searchPlaceholder:'Cari pengirim atau perihal...',
       emptyText:'Tidak ada laporan masuk yang sesuai dengan pencarian/filter.',
       filters:[
-        {label:'Filter status',attr:'statusKey',options:[{value:'all',label:'Semua Status'},{value:'wait',label:'Menunggu'},{value:'revisi',label:'Revisi'}]},
         {label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]}
       ]
     });
