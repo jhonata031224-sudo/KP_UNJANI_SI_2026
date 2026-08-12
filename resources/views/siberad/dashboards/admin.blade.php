@@ -659,6 +659,7 @@
 
     <div class="content">
       @include('siberad.dashboards.partials.pengumuman-banner')
+      @include('siberad.dashboards.partials.styled-select')
 
       {{-- ===== DASHBOARD ===== --}}
       <section class="tab-panel active" data-tab-panel="dashboard">
