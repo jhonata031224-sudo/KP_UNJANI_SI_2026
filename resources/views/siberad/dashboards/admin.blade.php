@@ -137,7 +137,7 @@
           </div>
           <div class="help-topic-body">
             <div class="help-topic-title">Kelola Pengguna</div>
-            <div class="help-topic-desc">Tambah, ubah, atau nonaktifkan akun; proses permintaan reset password; dan kirim pengumuman ke seluruh pengguna SIBERAD.</div>
+            <div class="help-topic-desc">Tambah, ubah, atau nonaktifkan akun, serta proses permintaan reset password.</div>
           </div>
         </div>
         <div class="help-topic">
@@ -192,7 +192,6 @@
           <span class="side-subnav-label">Kelola Pengguna</span>
           <a href="#" class="side-sub-link" data-tab-link="pengguna" title="Daftar Pengguna"><span class="sub-dot"></span>Daftar Pengguna</a>
           <a href="#" class="side-sub-link" data-tab-link="reset-password" title="Permintaan Reset Password"><span class="sub-dot"></span>Permintaan Reset Password</a>
-          <a href="#" class="side-sub-link" data-tab-link="pengumuman" title="Pengumuman"><span class="sub-dot"></span>Pengumuman</a>
         </div></div>
       </div>
 
@@ -1395,70 +1394,6 @@
                   </td>
                 </tr>
                 @endforeach
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {{-- ===== PENGUMUMAN ===== --}}
-      <section class="tab-panel" data-tab-panel="pengumuman">
-        <div class="section-head">
-          <h2>Pengumuman</h2>
-          <p>Broadcast pesan ke seluruh satuan — tampil sebagai banner di halaman dashboard mereka.</p>
-        </div>
-
-        @if (session('status'))
-          <div class="notice">{{ session('status') }}</div>
-        @endif
-
-        <div class="panel">
-          <div class="panel-head"><div><h3>Buat Pengumuman Baru</h3></div></div>
-          <form method="POST" action="{{ route('admin.pengumuman.store') }}" class="form-grid" style="padding:22px;">
-            @csrf
-            <div class="form-field full">
-              <label for="pgmJudul">Judul</label>
-              <input id="pgmJudul" name="judul" type="text" maxlength="150" required>
-            </div>
-            <div class="form-field full">
-              <label for="pgmIsi">Isi Pengumuman</label>
-              <textarea id="pgmIsi" name="isi" rows="3" maxlength="2000" required></textarea>
-            </div>
-            <div class="form-field full">
-              <button class="btn btn-primary" type="submit">Publikasikan</button>
-            </div>
-          </form>
-        </div>
-
-        <div class="panel" style="margin-top:22px;">
-          <div class="panel-head"><div><h3>Daftar Pengumuman</h3></div></div>
-          <div class="tbl-wrap" data-row-limit="8">
-            <table class="dtbl">
-              <thead><tr><th>Judul</th><th>Isi</th><th>Dibuat Oleh</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr></thead>
-              <tbody>
-                @forelse($daftarPengumuman as $p)
-                <tr>
-                  <td>{{ $p->judul }}</td>
-                  <td style="color:var(--text-muted);max-width:280px;">{{ \Illuminate\Support\Str::limit($p->isi, 80) }}</td>
-                  <td>{{ $p->pembuat?->name ?? '-' }}</td>
-                  <td>{{ $p->created_at->format('d M Y H:i') }}</td>
-                  <td><span class="badge {{ $p->aktif ? 'green' : '' }}">{{ $p->aktif ? 'Aktif' : 'Nonaktif' }}</span></td>
-                  <td>
-                    <div class="btn-row">
-                      <form method="POST" action="{{ route('admin.pengumuman.toggle', $p) }}">
-                        @csrf @method('PATCH')
-                        <button class="btn btn-ghost btn-sm" type="submit">{{ $p->aktif ? 'Nonaktifkan' : 'Aktifkan' }}</button>
-                      </form>
-                      <form method="POST" action="{{ route('admin.pengumuman.destroy', $p) }}" onsubmit="return confirm('Hapus pengumuman ini?');">
-                        @csrf @method('DELETE')
-                        <button class="btn btn-ghost-red btn-sm" type="submit">Hapus</button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-                @empty
-                <tr class="table-empty-row"><td colspan="6">Belum ada pengumuman.</td></tr>
-                @endforelse
               </tbody>
             </table>
           </div>

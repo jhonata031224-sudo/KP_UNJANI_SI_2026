@@ -6,7 +6,6 @@ use App\Http\Controllers\Admin\BackupController;
 use App\Models\ActivityLog;
 use App\Models\Laporan;
 use App\Models\Pengaturan;
-use App\Models\Pengumuman;
 use App\Models\PermintaanLaporan;
 use App\Models\Satuan;
 use App\Models\User;
@@ -41,14 +40,13 @@ class DashboardController
         $satuanBelumPunyaAkun = $semuaSatuan->where('users_count', 0)->count();
         $logAktivitas = ActivityLog::with('user')->latest('created_at')->limit(200)->get();
         $daftarBackup = app(BackupController::class)->index();
-        $daftarPengumuman = Pengumuman::with('pembuat')->latest()->get();
         $sesiAktif = DB::table('sessions')->leftJoin('users', 'sessions.user_id', '=', 'users.id')->orderByDesc('sessions.last_activity')->get(['sessions.id','sessions.ip_address','sessions.user_agent','sessions.last_activity','users.name as user_name']);
         $kodeSatuanPengirim = [
             'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK', 'SATLAKDUKTEK',
             'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT',
         ];
         $rekapLaporanSatuan = Satuan::whereIn('kode', $kodeSatuanPengirim)->withCount(['laporanTerkirim as total_laporan','laporanTerkirim as laporan_menunggu' => fn ($q) => $q->where('status', 'Menunggu'),'laporanTerkirim as laporan_disetujui' => fn ($q) => $q->where('status', 'Disetujui DANPUS'),'laporanTerkirim as laporan_ditolak' => fn ($q) => $q->where('status', 'Ditolak DANPUS')])->orderBy('urutan')->get();
-        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusResetPassword','logAktivitas','daftarBackup','daftarPengumuman','sesiAktif','rekapLaporanSatuan') + ['kelengkapanAkunSatuan' => ['sudah' => $satuanSudahPunyaAkun, 'belum' => $satuanBelumPunyaAkun], 'pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'reset_password_pending' => collect($permintaanResetPassword)->where('status_class','amber')->count(), 'satuan_tanpa_pengguna' => $semuaSatuan->where('users_count',0)->count()]]);
+        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusResetPassword','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan') + ['kelengkapanAkunSatuan' => ['sudah' => $satuanSudahPunyaAkun, 'belum' => $satuanBelumPunyaAkun], 'pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'reset_password_pending' => collect($permintaanResetPassword)->where('status_class','amber')->count(), 'satuan_tanpa_pengguna' => $semuaSatuan->where('users_count',0)->count()]]);
     }
 
     private function pelaporan($user, $satuan, ?string $kode): View
