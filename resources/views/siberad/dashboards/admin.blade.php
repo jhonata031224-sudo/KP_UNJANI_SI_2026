@@ -48,6 +48,40 @@
   .table-empty-row td{text-align:center;color:var(--text-dim);font-size:12.5px;padding:26px 12px !important;}
   @media(max-width:640px){.table-toolbar{flex-direction:column;}.table-filter{width:100%;}}
 
+  /* ===== modal Tambah Pengguna ===== */
+  .user-modal-overlay{
+    position:fixed;inset:0;z-index:10030;padding:24px;box-sizing:border-box;
+    background:rgba(2,4,6,.6);backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s ease;
+  }
+  .user-modal-overlay.open{opacity:1;visibility:visible;pointer-events:auto;}
+  .user-modal-card{
+    width:440px;max-width:100%;max-height:88vh;overflow-x:hidden;overflow-y:auto;position:relative;box-sizing:border-box;
+    background:var(--panel);border:1px solid var(--border-soft);border-radius:16px;
+    box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 32px 80px rgba(0,0,0,.5);padding:24px;
+    transform:translateY(14px) scale(.97);transition:transform .2s ease;
+  }
+  .user-modal-overlay.open .user-modal-card{transform:translateY(0) scale(1);}
+  .user-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:18px;}
+  .user-modal-head h3{margin:0;font-family:var(--display);font-size:18px;color:var(--text);}
+  .user-modal-head p{margin:5px 0 0;font-size:12px;color:var(--text-muted);}
+  .user-modal-close{
+    flex-shrink:0;width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;
+    transition:border-color .15s ease,color .15s ease;
+  }
+  .user-modal-close:hover{border-color:var(--gold);color:var(--text);}
+  .user-modal-actions{grid-column:1/-1;display:flex;flex-direction:row;align-items:center;justify-content:flex-end;gap:10px;margin-top:4px;}
+  @media(max-width:640px){.user-modal-actions{flex-direction:column-reverse;align-items:stretch;}}
+  @media(max-width:640px){.user-modal-card{padding:20px;}}
+  /* Form di dalam modal dibuat 1 kolom terus (bukan ikut breakpoint global .form-grid),
+     supaya opsi teks panjang di dropdown Satuan tidak memepetkan/merusak layout 2 kolom
+     di lebar modal yang terbatas (560px). */
+  .user-modal-card .form-grid{grid-template-columns:1fr;min-width:0;}
+  .user-modal-card .form-field{min-width:0;}
+  .user-modal-card .form-field select,.user-modal-card .form-field input{min-width:0;width:100%;box-sizing:border-box;}
+
   .side-nav-group{margin:0}.side-nav-group-title{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;margin:2px 0;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--text-muted);font-family:var(--body);font-size:13.5px;font-weight:500;cursor:pointer;text-align:left;box-sizing:border-box;transition:background .15s ease,color .15s ease}.side-nav-group-title:hover{background:var(--hover-tint);color:var(--text)}.side-nav-group.open .side-nav-group-title{color:var(--text)}.side-nav-group-title .side-text{flex:1}.side-nav-group-title .chevron{margin-left:auto;width:15px;height:15px;flex-shrink:0;opacity:.6;transition:transform .25s cubic-bezier(.4,0,.2,1),opacity .2s ease}.side-nav-group.open .chevron{transform:rotate(180deg);opacity:1}.side-subnav{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;overflow:hidden}.side-subnav>div{min-height:0;padding:3px 0;margin-left:18px;border-left:1px solid var(--border-soft)}.side-nav-group.open .side-subnav{grid-template-rows:1fr;opacity:1}.side-sub-link{position:relative;display:flex;align-items:center;gap:10px;padding:9px 12px 9px 17px;border-radius:0 9px 9px 0;color:var(--text-muted);font-family:var(--body);font-size:13px;font-weight:500;text-decoration:none;margin:1px 0;box-sizing:border-box;transition:background .15s ease,color .15s ease}.side-sub-link:hover{background:var(--hover-tint);color:var(--text)}.side-sub-link .sub-dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5;flex:0 0 auto;transition:opacity .15s ease,background .15s ease,box-shadow .15s ease}.side-sub-link.active{background:var(--gold-dim);color:var(--gold-bright);font-weight:600}.side-sub-link.active:before{content:"";position:absolute;left:-1px;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--gold-bright)}.side-sub-link.active .sub-dot{background:var(--gold-bright);opacity:1;box-shadow:0 0 0 3px rgba(201,122,0,.15)}.side-subnav-label{display:none}
   .sidebar.collapsed .side-subnav{display:none}.sidebar.collapsed .side-nav-group.open .side-subnav{display:block;position:fixed;min-width:216px;background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);padding:8px;z-index:100020}.sidebar.collapsed .side-subnav>div{margin-left:0;border-left:none;padding:0}.sidebar.collapsed .side-subnav-label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);padding:4px 10px 8px}.sidebar.collapsed .side-sub-link{padding:9px 10px;border-radius:8px}.sidebar.collapsed .side-nav-group.has-active-child .side-nav-group-title{color:var(--gold-bright);background:var(--gold-dim)}
 </style>
@@ -155,7 +189,7 @@
           </div>
           <div class="help-topic-body">
             <div class="help-topic-title">Kelola Sistem</div>
-            <div class="help-topic-desc">Atur data satuan, role &amp; hak akses, data master, log aktivitas, backup database, hingga pengaturan umum aplikasi.</div>
+            <div class="help-topic-desc">Atur data satuan, role &amp; hak akses, log aktivitas, backup database, hingga pengaturan umum aplikasi.</div>
           </div>
         </div>
       </div>
@@ -168,6 +202,56 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<div class="user-modal-overlay" id="tambahPenggunaModal">
+  <div class="user-modal-card" role="dialog" aria-modal="true" aria-label="Tambah Pengguna">
+    <div class="user-modal-head">
+      <div>
+        <h3>Tambah Pengguna</h3>
+        <p>Buat akun baru untuk satu satuan.</p>
+      </div>
+      <button type="button" class="user-modal-close" id="tambahPenggunaClose" aria-label="Tutup">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    </div>
+    <form class="form-grid" method="POST" action="{{ route('admin.users.store') }}">
+      @csrf
+      <div class="form-field">
+        <label for="uNama">Nama Lengkap</label>
+        <input id="uNama" name="name" type="text" required>
+      </div>
+      <div class="form-field">
+        <label for="uUsername">Username / NRP</label>
+        <input id="uUsername" name="username" type="text" required>
+      </div>
+      <div class="form-field">
+        <label for="uEmail">Email (opsional)</label>
+        <input id="uEmail" name="email" type="email">
+      </div>
+      <div class="form-field">
+        <label for="uJabatan">Jabatan (opsional)</label>
+        <input id="uJabatan" name="jabatan" type="text">
+      </div>
+      <div class="form-field">
+        <label for="uSatuan">Satuan</label>
+        <select id="uSatuan" name="satuan_id" required>
+          <option value="">— Pilih satuan —</option>
+          @foreach($semuaSatuan as $s)
+          <option value="{{ $s->id }}">{{ $s->nama }} ({{ $s->kode }})</option>
+          @endforeach
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="uPassword">Password Awal</label>
+        <input id="uPassword" name="password" type="password" minlength="8" required placeholder="Minimal 8 karakter">
+      </div>
+      <div class="user-modal-actions">
+        <button class="btn" type="button" id="tambahPenggunaCancel">Batal</button>
+        <button class="btn btn-primary" type="submit">Simpan Pengguna</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -218,7 +302,6 @@
           <span class="side-subnav-label">Kelola Sistem</span>
           <a href="#" class="side-sub-link" data-tab-link="satlak" title="Manajemen Satuan"><span class="sub-dot"></span>Manajemen Satuan</a>
           <a href="#" class="side-sub-link" data-tab-link="role-akses" title="Role &amp; Hak Akses"><span class="sub-dot"></span>Role &amp; Hak Akses</a>
-          <a href="#" class="side-sub-link" data-tab-link="data-master" title="Data Master"><span class="sub-dot"></span>Data Master</a>
           <a href="#" class="side-sub-link" data-tab-link="log-aktivitas" title="Log Aktivitas"><span class="sub-dot"></span>Log Aktivitas</a>
           <a href="#" class="side-sub-link" data-tab-link="backup" title="Backup Database"><span class="sub-dot"></span>Backup Database</a>
           <a href="#" class="side-sub-link" data-tab-link="laporan-admin" title="Laporan &amp; Export"><span class="sub-dot"></span>Laporan &amp; Export</a>
@@ -597,46 +680,10 @@
         @endif
 
         <div class="panel">
-          <div class="panel-head"><div><h3>Tambah Pengguna</h3><p>Buat akun baru untuk satu satuan.</p></div></div>
-          <form class="form-grid" method="POST" action="{{ route('admin.users.store') }}" style="padding:22px;">
-            @csrf
-            <div class="form-field">
-              <label for="uNama">Nama Lengkap</label>
-              <input id="uNama" name="name" type="text" required>
-            </div>
-            <div class="form-field">
-              <label for="uUsername">Username / NRP</label>
-              <input id="uUsername" name="username" type="text" required>
-            </div>
-            <div class="form-field">
-              <label for="uEmail">Email (opsional)</label>
-              <input id="uEmail" name="email" type="email">
-            </div>
-            <div class="form-field">
-              <label for="uJabatan">Jabatan (opsional)</label>
-              <input id="uJabatan" name="jabatan" type="text">
-            </div>
-            <div class="form-field">
-              <label for="uSatuan">Satuan</label>
-              <select id="uSatuan" name="satuan_id" required>
-                <option value="">— Pilih satuan —</option>
-                @foreach($semuaSatuan as $s)
-                <option value="{{ $s->id }}">{{ $s->nama }} ({{ $s->kode }})</option>
-                @endforeach
-              </select>
-            </div>
-            <div class="form-field">
-              <label for="uPassword">Password Awal</label>
-              <input id="uPassword" name="password" type="password" minlength="8" required placeholder="Minimal 8 karakter">
-            </div>
-            <div class="form-field full">
-              <button class="btn btn-primary" type="submit">Simpan Pengguna</button>
-            </div>
-          </form>
-        </div>
-
-        <div class="panel">
-          <div class="panel-head"><div><h3>Daftar Pengguna</h3><p>Klik "Ubah" untuk mengedit satuan/jabatan/password.</p></div></div>
+          <div class="panel-head">
+            <div><h3>Daftar Pengguna</h3><p>Klik "Ubah" untuk mengedit satuan/jabatan/password.</p></div>
+            <button class="btn btn-primary btn-sm" type="button" id="tambahPenggunaOpen">+ Tambah Pengguna</button>
+          </div>
           <div class="table-toolbar">
             <div class="table-search-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
@@ -702,11 +749,27 @@
           </div>
         </div>
       </section>
+
       <script>
         function toggleEditPengguna(id) {
           var row = document.getElementById('editRow' + id);
           if (row) row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
         }
+
+        (function () {
+          var modal = document.getElementById('tambahPenggunaModal');
+          var openBtn = document.getElementById('tambahPenggunaOpen');
+          var closeBtn = document.getElementById('tambahPenggunaClose');
+          var cancelBtn = document.getElementById('tambahPenggunaCancel');
+          if (!modal) return;
+          function open() { modal.classList.add('open'); }
+          function close() { modal.classList.remove('open'); }
+          if (openBtn) openBtn.addEventListener('click', open);
+          if (closeBtn) closeBtn.addEventListener('click', close);
+          if (cancelBtn) cancelBtn.addEventListener('click', close);
+          modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+          document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+        })();
       </script>
 
       {{-- ===== MANAJEMEN SATUAN ===== --}}
@@ -829,26 +892,6 @@
           </form>
         </div>
         @endforeach
-      </section>
-
-      {{-- ===== DATA MASTER ===== --}}
-      <section class="tab-panel" data-tab-panel="data-master">
-        <div class="section-head">
-          <h2>Manajemen Data Master</h2>
-          <p>Referensi data pangkat &amp; jabatan yang dipakai seluruh modul Administrasi Personel.</p>
-        </div>
-        <div class="panel">
-          <div style="padding:20px;text-align:center;">
-            <p style="margin:0 0 12px;font-size:12.5px;line-height:1.6;color:var(--text-muted);">
-              Data master Pangkat dan Jabatan dikelola bersama dari dashboard Pembinaan Fungsi supaya satu sumber data untuk seluruh satuan.
-            </p>
-            <span class="badge">{{ \App\Models\Pangkat::count() }} Pangkat</span>
-            &nbsp;
-            <span class="badge">{{ \App\Models\Jabatan::count() }} Jabatan</span>
-            &nbsp;
-            <span class="badge">{{ $semuaSatuan->count() }} Satuan</span>
-          </div>
-        </div>
       </section>
 
       {{-- ===== LOG AKTIVITAS ===== --}}
