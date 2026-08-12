@@ -106,3 +106,72 @@
   }
 })();
 </script>
+
+{{-- Pratinjau landing page Admin: hapus HANYA toolbar Fit/zoom tambahan.
+     Landing page tetap dipertahankan, skala 75% tetap dikendalikan oleh
+     dash-script, dan scrollbar horizontal preview disembunyikan. --}}
+<script>
+(function () {
+  function setupLandingPreview() {
+    document.querySelectorAll('.lp-browser-frame').forEach(function (frame) {
+      frame.style.overflowX = 'hidden';
+      frame.style.overflowY = 'auto';
+
+      var toolbar = frame.querySelector('.lp-zoom-toolbar');
+      if (toolbar) toolbar.remove();
+
+      // Bersihkan toolbar yang mungkin dibuat ulang oleh script preview,
+      // tetapi jangan pernah menghapus browser bar atau isi landing page.
+      if (frame.dataset.previewToolbarGuard === '1') return;
+      frame.dataset.previewToolbarGuard = '1';
+
+      var observer = new MutationObserver(function () {
+        var currentToolbar = frame.querySelector('.lp-zoom-toolbar');
+        if (currentToolbar) currentToolbar.remove();
+        frame.style.overflowX = 'hidden';
+      });
+      observer.observe(frame, { childList: true, subtree: true });
+    });
+  }
+
+  function blockRealLoginInPreview(frame) {
+    if (!frame) return;
+    var iframe = frame.querySelector('#lpLiveLandingFrame');
+    if (!iframe || iframe.dataset.previewLoginGuard === '1') return;
+    iframe.dataset.previewLoginGuard = '1';
+
+    iframe.addEventListener('load', function () {
+      try {
+        var doc = iframe.contentDocument || iframe.contentWindow.document;
+        if (!doc) return;
+
+        doc.querySelectorAll('form').forEach(function (form) {
+          if (form.dataset.previewLoginBlocked === '1') return;
+          form.dataset.previewLoginBlocked = '1';
+          form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }, true);
+        });
+      } catch (error) {
+        // Preview tetap berjalan bila browser membatasi akses dokumen iframe.
+      }
+    });
+  }
+
+  function init() {
+    setupLandingPreview();
+    document.querySelectorAll('.lp-browser-frame').forEach(blockRealLoginInPreview);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  var rootObserver = new MutationObserver(init);
+  rootObserver.observe(document.body, { childList: true, subtree: true });
+  window.setTimeout(function () { rootObserver.disconnect(); }, 5000);
+})();
+</script>
