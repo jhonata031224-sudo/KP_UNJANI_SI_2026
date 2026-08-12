@@ -103,9 +103,8 @@ class Satuan extends Model
 
     /**
      * Alur tujuan laporan resmi (hierarki komando):
-     * - Satlak hanya boleh lapor ke SDIR (koordinasi) atau DANPUS/WADAN (tujuan utama).
+     * - Satlak hanya boleh lapor ke DANPUS/WADAN (tujuan utama).
      *   Satlak tidak boleh saling kirim ke sesama Satlak maupun ke satuan pembinaan.
-     * - SDIR boleh koordinasi ke Satlak dan melapor ke DANPUS.
      * - Satuan pembinaan (Binmat, Binfung, Binum, Diklat) langsung lapor ke DANPUS.
      * - Satuan lain (mis. WADAN) tidak dibatasi di sini (kembalikan null).
      *
@@ -116,11 +115,7 @@ class Satuan extends Model
         $kodeAsal = strtoupper((string) $kodeAsal);
 
         if (in_array($kodeAsal, self::KODE_SATLAK, true)) {
-            return ['SDIR', 'DANPUS', 'WADAN'];
-        }
-
-        if ($kodeAsal === 'SDIR') {
-            return [...self::KODE_SATLAK, 'DANPUS'];
+            return ['DANPUS', 'WADAN'];
         }
 
         if (in_array($kodeAsal, self::KODE_PEMBINAAN, true)) {

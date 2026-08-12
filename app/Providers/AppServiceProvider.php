@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
         // ikut memicu query berulang.
         $viewDashboard = [
             'admin', 'danpus', 'wadan', 'satlakkal', 'satlaksisos', 'satlakdak',
-            'satlakduktek', 'binfung', 'binum', 'diklat', 'binmat', 'sdir', 'generic',
+            'satlakduktek', 'binfung', 'binum', 'diklat', 'binmat', 'generic',
         ];
         View::composer(
             array_map(fn ($nama) => "siberad.dashboards.$nama", $viewDashboard),

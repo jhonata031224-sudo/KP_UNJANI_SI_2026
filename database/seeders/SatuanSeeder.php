@@ -34,8 +34,7 @@ class SatuanSeeder extends Seeder
             ['kode' => 'BINMAT',  'username' => 'binmat', 'nama' => 'Pembinaan Materil',  'kategori' => Satuan::KATEGORI_DIREKTORAT, 'deskripsi' => 'Pengurusan material/perlengkapan satuan.',         'urutan' => 80],
 
             // --- Koordinasi / Pimpinan ---
-            ['kode' => 'SDIR',   'username' => 'sdir',   'nama' => 'Staff Direktur',  'kategori' => Satuan::KATEGORI_PIMPINAN, 'deskripsi' => 'Koordinasi antar Satlak, pelaporan ke DANPUS.', 'urutan' => 90],
-            ['kode' => 'WADAN',  'username' => 'wadan',  'nama' => 'Wakil Komandan',       'kategori' => Satuan::KATEGORI_PIMPINAN, 'deskripsi' => 'Penerima laporan dari SDIR/Satlak.',            'urutan' => 100],
+            ['kode' => 'WADAN',  'username' => 'wadan',  'nama' => 'Wakil Komandan',       'kategori' => Satuan::KATEGORI_PIMPINAN, 'deskripsi' => 'Penerima laporan dari Satlak.',            'urutan' => 100],
             ['kode' => 'DANPUS', 'username' => 'danpus', 'nama' => 'Komandan Pusat', 'kategori' => Satuan::KATEGORI_PIMPINAN, 'deskripsi' => 'Penerima laporan tertinggi dari seluruh satuan.', 'urutan' => 110],
         ];
 

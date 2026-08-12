@@ -213,7 +213,7 @@
 
         <div class="section-head">
           <h2>Ringkasan Koordinasi</h2>
-          <p>Status laporan yang masuk dari SDIR maupun langsung dari Satlak.</p>
+          <p>Status laporan yang masuk dari Satlak.</p>
         </div>
         <div class="stat-grid">
           <div class="stat-card">
@@ -309,7 +309,7 @@
       <section class="tab-panel" data-tab-panel="laporan">
         <div class="section-head">
           <h2>Laporan Masuk</h2>
-          <p>Laporan dari SDIR dan seluruh Satlak yang perlu diverifikasi sebelum diteruskan ke DANPUS.</p>
+          <p>Laporan dari seluruh Satlak yang perlu diverifikasi sebelum diteruskan ke DANPUS.</p>
         </div>
         <div class="panel">
           <div class="tbl-wrap">
@@ -344,7 +344,7 @@
       <section class="tab-panel" data-tab-panel="koordinasi">
         <div class="section-head">
           <h2>Koordinasi dengan Satlak</h2>
-          <p>Permintaan koordinasi antar satuan — misalnya permintaan pengiriman personel dari SDIR ke Satlak.</p>
+          <p>Permintaan koordinasi antar satuan — misalnya permintaan pengiriman personel antar Satlak.</p>
         </div>
         <div class="panel">
           <div class="tbl-wrap">

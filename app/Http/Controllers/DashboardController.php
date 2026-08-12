@@ -81,7 +81,6 @@ class DashboardController
             'BINUM' => 'Pelaporan kegiatan pembinaan dan pengawasan satuan.',
             'DIKLAT' => 'Pelaporan kegiatan pendidikan, pelatihan, dan pengembangan kemampuan.',
             'BINMAT' => 'Pelaporan kondisi dan kebutuhan material/perlengkapan tanpa membangun sistem inventaris penuh.',
-            'SDIR' => 'Pelaporan koordinasi dan perkembangan kegiatan antar satuan.',
             'WADAN' => 'Monitoring dan review laporan antar satuan sebagai bagian dari koordinasi.',
             'DANPUS' => 'Pusat penerimaan, pemantauan, dan peninjauan laporan dari seluruh satuan.',
             default => 'Pelaporan kegiatan dan koordinasi satuan melalui satu alur yang terukur.',
