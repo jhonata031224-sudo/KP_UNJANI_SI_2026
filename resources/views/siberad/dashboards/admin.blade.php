@@ -659,7 +659,6 @@
 
     <div class="content">
       @include('siberad.dashboards.partials.pengumuman-banner')
-      @include('siberad.dashboards.partials.styled-select')
 
       {{-- ===== DASHBOARD ===== --}}
       <section class="tab-panel active" data-tab-panel="dashboard">
@@ -1302,7 +1301,7 @@
               <div class="lp-browser-frame">
                 <div class="lp-browser-bar">
                   <span class="lp-browser-dot"></span><span class="lp-browser-dot"></span><span class="lp-browser-dot"></span>
-                  <span class="lp-browser-url">siberad.mil.id</span>
+                  <span class="lp-browser-url">siberad</span>
                 </div>
                 <div class="lp-preview" id="lpPreview">
                   <div class="lp-hero" id="lpPreviewHero" data-lp-preview-section="beranda"
