@@ -86,9 +86,9 @@ class DashboardController
             default => 'Pelaporan kegiatan dan koordinasi satuan melalui satu alur yang terukur.',
         };
 
-        $kodePengirimDeadline = [
-            'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK', 'SATLAKDUKTEK',
-            'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT',
+        $kodeSatuanPelaksanaUrut = [
+            'SATLAKDAK', 'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDUKTEK',
+            'DIKLAT', 'BINUM', 'BINFUNG', 'BINMAT',
         ];
         $permintaanLaporan = $modePimpinan
             ? PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan'])
@@ -101,7 +101,9 @@ class DashboardController
                 ->latest('deadline_at')
                 ->get();
         $satuanPermintaanLaporan = $modePimpinan
-            ? Satuan::whereIn('kode', $kodePengirimDeadline)->orderBy('urutan')->get()
+            ? Satuan::whereIn('kode', $kodeSatuanPelaksanaUrut)->get()
+                ->sortBy(fn ($s) => array_search($s->kode, $kodeSatuanPelaksanaUrut))
+                ->values()
             : collect();
 
         $monitoringSatlak = collect(); $laporanSatlak = collect();
@@ -113,17 +115,13 @@ class DashboardController
         $monitoringPimpinanSatlak = collect();
         $laporanPimpinanSatlak = collect();
         if ($modePimpinan) {
-            $kodeSatuanPimpinan = [
-                'SATLAKDAK', 'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDUKTEK',
-                'DIKLAT', 'BINUM', 'BINFUNG', 'BINMAT',
-            ];
-            $satuanPimpinanIds = Satuan::whereIn('kode', $kodeSatuanPimpinan)->pluck('id');
+            $satuanPimpinanIds = Satuan::whereIn('kode', $kodeSatuanPelaksanaUrut)->pluck('id');
             $laporanPimpinanSatlak = Laporan::with(['satuan','tujuanSatuan','permintaanLaporan'])
                 ->whereIn('satuan_id', $satuanPimpinanIds)
                 ->latest()
                 ->get();
             $monitoringPimpinanSatlak = Satuan::whereIn('id', $satuanPimpinanIds)->get()
-                ->sortBy(fn ($satuanPimpinan) => array_search($satuanPimpinan->kode, $kodeSatuanPimpinan))
+                ->sortBy(fn ($satuanPimpinan) => array_search($satuanPimpinan->kode, $kodeSatuanPelaksanaUrut))
                 ->values()
                 ->map(fn ($satuanPimpinan) => [
                 'id' => $satuanPimpinan->id,
