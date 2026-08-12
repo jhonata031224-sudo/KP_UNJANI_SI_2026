@@ -2,14 +2,9 @@
   'use strict';
 
   /*
-   * Keep this renderer deliberately simple:
-   *   1. Fit = scale the complete landing surface to the preview width.
-   *   2. Fit never has a horizontal scrollbar.
-   *   3. Zoom is the only way to make the surface larger than the preview.
-   *   4. When zoomed, scrolling is allowed for detail inspection.
-   *
-   * Do not try to rewrite the public landing page into a second responsive
-   * design here. The admin preview is a scaled viewport of the real page.
+   * Admin preview is intentionally LANDING PAGE ONLY.
+   * Authentication/dashboard controls are not part of the preview surface.
+   * Fit scales the complete landing surface; zoom is the only way to enlarge it.
    */
   var DESIGN_WIDTH = 1440;
   var zoom = 1;
@@ -36,9 +31,37 @@
       '#lpPreview.siberad-final-preview { overflow-x:hidden !important; overflow-y:auto !important; }',
       '#lpPreview.siberad-final-preview.lp-preview-zoomed { overflow:auto !important; }',
       '#lpPreview.siberad-final-preview #lpPreviewStage { overflow:visible !important; }',
-      '#lpPreview.siberad-final-preview #lpPreviewCanvas { max-width:none !important; }'
+      '#lpPreview.siberad-final-preview #lpPreviewCanvas { max-width:none !important; }',
+      '#lpPreview.siberad-final-preview [href*="/login"],',
+      '#lpPreview.siberad-final-preview [href*="/masuk"],',
+      '#lpPreview.siberad-final-preview [data-auth],',
+      '#lpPreview.siberad-final-preview [data-login],',
+      '#lpPreview.siberad-final-preview .lpv4-login,',
+      '#lpPreview.siberad-final-preview .login-button,',
+      '#lpPreview.siberad-final-preview .btn-login { display:none !important; }'
     ].join('\n');
     document.head.appendChild(style);
+  }
+
+  /* Remove authentication controls even when the renderer creates them
+     without a stable class/href. Navigation for the public landing remains. */
+  function stripAuthControls() {
+    var n = nodes();
+    if (!n.canvas) return;
+
+    var candidates = n.canvas.querySelectorAll('a,button');
+    for (var i = 0; i < candidates.length; i++) {
+      var el = candidates[i];
+      var text = (el.textContent || '').trim().replace(/\s+/g, ' ').toLowerCase();
+      var href = (el.getAttribute('href') || '').toLowerCase();
+      var auth = /^(login|log in|masuk|sign in|signin)$/.test(text) ||
+                 /\/login(?:[/?#]|$)|\/masuk(?:[/?#]|$)|\/signin(?:[/?#]|$)/.test(href) ||
+                 el.hasAttribute('data-auth') || el.hasAttribute('data-login');
+      if (auth) {
+        el.style.setProperty('display', 'none', 'important');
+        el.setAttribute('aria-hidden', 'true');
+      }
+    }
   }
 
   function render() {
@@ -46,10 +69,11 @@
     if (!n.viewport || !n.stage || !n.canvas) return;
 
     installFinalCss();
+    stripAuthControls();
 
     var viewportWidth = Math.max(n.viewport.clientWidth, 1);
 
-    /* Establish a stable natural surface before calculating the scale. */
+    /* Stable natural surface, matching the public landing page dimensions. */
     n.canvas.style.transform = 'none';
     n.canvas.style.transformOrigin = 'top left';
     n.canvas.style.width = DESIGN_WIDTH + 'px';
@@ -58,6 +82,8 @@
     n.canvas.style.height = 'auto';
     n.canvas.style.margin = '0';
 
+    stripAuthControls();
+
     var naturalHeight = Math.max(
       n.canvas.scrollHeight,
       n.canvas.offsetHeight,
@@ -65,9 +91,6 @@
       1
     );
 
-    /* At Fit, the entire 1440px landing surface becomes exactly the
-       available preview width. This removes the horizontal overflow at the
-       source instead of hiding a clipped right side. */
     var fitScale = viewportWidth / DESIGN_WIDTH;
     var scale = fitScale * zoom;
     scale = Math.max(0.05, Math.min(3, scale));
@@ -88,8 +111,6 @@
     n.viewport.classList.add('siberad-final-preview');
     n.viewport.classList.toggle('lp-preview-zoomed', zoomed);
 
-    /* Old preview CSS contains !important overflow rules, so override them
-       explicitly. Fit has no horizontal scrolling; zoom enables scrolling. */
     if (zoomed) {
       n.viewport.style.setProperty('overflow', 'auto', 'important');
     } else {
@@ -126,10 +147,10 @@
     if (!viewport) return;
 
     installFinalCss();
+    stripAuthControls();
     viewport.addEventListener('click', handleControls, true);
 
-    /* Switching Beranda/Fitur/Tentang/Kontak returns to Fit so every page
-       starts fully visible. */
+    /* Switching Beranda/Fitur/Tentang/Kontak returns to Fit. */
     viewport.addEventListener('click', function (e) {
       var nav = e.target.closest('[data-page], [data-nav]');
       if (nav && !e.target.closest('[data-zoom]')) {
@@ -146,7 +167,10 @@
     }
 
     if (window.MutationObserver) {
-      new MutationObserver(schedule).observe(viewport, {
+      new MutationObserver(function () {
+        stripAuthControls();
+        schedule();
+      }).observe(viewport, {
         subtree: true,
         childList: true,
         attributes: true,
