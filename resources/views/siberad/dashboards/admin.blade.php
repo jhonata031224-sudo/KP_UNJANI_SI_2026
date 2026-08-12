@@ -673,36 +673,24 @@
 
         <div class="kpi-grid">
           <div class="stat-card kpi-card">
-            <div class="kpi-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
             <div class="lbl">Total Pengguna</div>
             <div class="val">{{ $stats['total_pengguna'] }}</div>
             <div class="sub">Akun terdaftar di sistem</div>
           </div>
           <div class="stat-card kpi-card">
-            <div class="kpi-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-            </div>
             <div class="lbl">Total Satuan</div>
             <div class="val">{{ $stats['total_satuan'] }}</div>
             <div class="sub">Termasuk Admin</div>
           </div>
           <div class="stat-card kpi-card">
-            <div class="kpi-icon" style="color:var(--amber);background:var(--amber-dim);">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.5-2-3.4-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9-2 3.4 2 1.5a7.6 7.6 0 0 0 0 3l-2 1.5 2 3.4 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.5h4l.5-2.5a7.6 7.6 0 0 0 2.6-1.5l2.3.9 2-3.4Z"/></svg>
-            </div>
-            <div class="lbl">Reset Password</div>
-            <div class="val" style="color:var(--amber);">{{ $stats['reset_password_pending'] }}</div>
-            <div class="sub">Menunggu diverifikasi</div>
+            <div class="lbl">Total Laporan</div>
+            <div class="val">{{ $stats['total_laporan'] }}</div>
+            <div class="sub">Laporan tercatat di sistem</div>
           </div>
-          <div class="stat-card kpi-card">
-            <div class="kpi-icon" style="color:{{ $stats['satuan_tanpa_pengguna'] > 0 ? 'var(--red)' : 'var(--green)' }};background:{{ $stats['satuan_tanpa_pengguna'] > 0 ? 'var(--red-dim)' : 'var(--green-dim)' }};">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-            </div>
-            <div class="lbl">Satuan Tanpa Pengguna</div>
-            <div class="val" style="color:{{ $stats['satuan_tanpa_pengguna'] > 0 ? 'var(--red)' : 'var(--green)' }};">{{ $stats['satuan_tanpa_pengguna'] }}</div>
-            <div class="sub">Perlu dibuatkan akun</div>
+          <div class="stat-card kpi-card wait">
+            <div class="lbl">Reset Password</div>
+            <div class="val">{{ $stats['reset_password_pending'] }}</div>
+            <div class="sub">Menunggu diverifikasi</div>
           </div>
         </div>
 
@@ -763,13 +751,11 @@
         <style>
           .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
           @media(max-width:980px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
-          .kpi-card{padding-top:52px;}
-          .kpi-icon{
-            position:absolute;top:16px;left:16px;width:34px;height:34px;border-radius:9px;
-            display:flex;align-items:center;justify-content:center;
-            background:var(--gold-dim);color:var(--gold-bright);
-          }
-          .kpi-icon svg{width:17px;height:17px;}
+          .kpi-card .lbl{font-weight:800;}
+          .kpi-card .val{font-family:var(--mono);color:var(--text);}
+          .kpi-card.wait .val{color:#f59e0b;}
+          .kpi-card.ok .val{color:#22c55e;}
+          .kpi-card.bad .val{color:#ef4444;}
 
           .chart-mini-head{display:flex;align-items:flex-start;gap:11px;}
           .chart-mini-icon{width:28px;height:28px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--gold-dim);color:var(--gold-bright);}
