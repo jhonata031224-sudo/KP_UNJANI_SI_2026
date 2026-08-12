@@ -21,20 +21,39 @@
 
     var FIXED_SCALE=0.75;
     var NATURAL_WIDTH=1440;
-    var toolbar=document.querySelector('.lp-zoom-toolbar');
-    if(toolbar)toolbar.remove();
 
-    var legacyButtons=browserFrame.querySelectorAll('button');
-    Array.prototype.forEach.call(legacyButtons,function(btn){
-      var label=(btn.textContent||'').trim().toLowerCase();
-      if(label==='-'||label==='+'||label==='fit'){
-        var parent=btn.parentElement;
-        if(parent){
-          var labels=Array.prototype.map.call(parent.querySelectorAll('button'),function(b){return(b.textContent||'').trim().toLowerCase();});
-          if(labels.indexOf('-')!==-1&&labels.indexOf('+')!==-1&&labels.indexOf('fit')!==-1)parent.remove();
+    // Menghapus HANYA baris toolbar zoom lama ("- Fit Fit +"). Elemen ini
+    // kadang disisipkan belakangan (asinkron) oleh skrip preview lama, jadi
+    // fungsi ini dipanggil berulang lewat MutationObserver di bawah, bukan
+    // cuma sekali saat load. Iframe pratinjau (#lpLiveLandingFrame) dan
+    // elemen lain di dalam browserFrame tidak pernah disentuh.
+    function stripZoomToolbar(){
+      var toolbar=document.querySelector('.lp-zoom-toolbar');
+      if(toolbar)toolbar.remove();
+
+      var zoombars=browserFrame.querySelectorAll('.siberad-preview-zoombar, .lpv4-zoom-controls');
+      Array.prototype.forEach.call(zoombars,function(el){
+        var row=el.classList.contains('siberad-preview-zoombar')?el:el.parentElement;
+        if(row&&row.parentElement)row.remove();
+      });
+
+      var legacyButtons=browserFrame.querySelectorAll('button');
+      Array.prototype.forEach.call(legacyButtons,function(btn){
+        var label=(btn.textContent||'').trim().toLowerCase();
+        if(label==='-'||label==='−'||label==='+'||label==='fit'){
+          var parent=btn.parentElement;
+          if(parent){
+            var labels=Array.prototype.map.call(parent.querySelectorAll('button'),function(b){return(b.textContent||'').trim().toLowerCase();});
+            var hasMinus=labels.indexOf('-')!==-1||labels.indexOf('−')!==-1;
+            var hasPlus=labels.indexOf('+')!==-1;
+            var hasFit=labels.indexOf('fit')!==-1;
+            if(hasMinus&&hasPlus&&hasFit)parent.remove();
+          }
         }
-      }
-    });
+      });
+    }
+
+    stripZoomToolbar();
 
     function applyFixedScale(){
       var naturalHeight=Math.max(700,parseFloat(iframe.style.height)||900);
@@ -47,9 +66,18 @@
 
     applyFixedScale();
     window.addEventListener('resize',applyFixedScale,{passive:true});
-    iframe.addEventListener('load',function(){setTimeout(applyFixedScale,0);setTimeout(function(){
-      var currentToolbar=document.querySelector('.lp-zoom-toolbar');
-      if(currentToolbar)currentToolbar.remove();
-    },50);});
+    iframe.addEventListener('load',function(){setTimeout(applyFixedScale,0);setTimeout(stripZoomToolbar,50);});
+
+    // Skrip preview lama (v4 / fit-fix) dimuat secara asinkron dan bisa
+    // menambahkan kembali toolbar zoom beberapa saat setelah iframe siap.
+    // Observer ini memastikan baris tersebut tetap hilang tanpa mengganggu
+    // iframe pratinjau atau elemen lain di dalam browserFrame.
+    if(window.MutationObserver){
+      var observer=new MutationObserver(stripZoomToolbar);
+      observer.observe(browserFrame,{childList:true,subtree:true});
+      window.setTimeout(function(){observer.disconnect();},10000);
+    } else {
+      [100,300,600,1000,2000,4000,8000].forEach(function(delay){window.setTimeout(stripZoomToolbar,delay);});
+    }
   })();
 </script>

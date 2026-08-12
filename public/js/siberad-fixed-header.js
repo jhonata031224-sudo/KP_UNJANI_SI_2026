@@ -53,10 +53,18 @@
     return true;
   }
 
+  function hasLiveLandingPreview() {
+    // Ketika pratinjau landing page asli (iframe #lpLiveLandingFrame, lihat
+    // dash-script.blade.php) sudah aktif, preview tiruan v4/fit-fix beserta
+    // toolbar zoom-nya ("- Fit Fit +") tidak lagi diperlukan sama sekali.
+    return !!document.getElementById('lpLiveLandingFrame');
+  }
+
   function loadLandingPreviewV4() {
     var form = document.getElementById('landingForm');
     var viewport = document.getElementById('lpPreview');
     if (!form || !viewport) return false;
+    if (hasLiveLandingPreview()) return false;
 
     arrangeLandingCards();
 
@@ -80,6 +88,7 @@
 
   function loadFitFix() {
     if (!document.getElementById('landingForm') || !document.getElementById('lpPreview')) return false;
+    if (hasLiveLandingPreview()) return false;
     if (document.getElementById('siberad-preview-fit-fix-script')) return true;
 
     var script = document.createElement('script');
