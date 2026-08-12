@@ -1372,7 +1372,23 @@
           @keyframes lpPulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
           .lp-preview-body{padding:0 22px 22px;}
 
-          .lp-browser-frame{border-radius:12px;overflow:hidden;border:1px solid var(--border-soft);box-shadow:0 14px 34px -14px rgba(0,0,0,.4);}
+          /* Preview dibuat seperti viewport desktop mini agar landing page utuh
+             terlihat di dalam kartu Admin tanpa memperbesar panel. */
+          .lp-browser-frame{
+            border-radius:12px;overflow:hidden;border:1px solid var(--border-soft);
+            box-shadow:0 14px 34px -14px rgba(0,0,0,.4);
+            background:var(--bg);
+          }
+          .lp-preview{
+            zoom:.72;
+            width:138.8889%;
+          }
+          @media (max-width:1280px){
+            .lp-preview{zoom:.64;width:156.25%;}
+          }
+          @media (max-width:1100px){
+            .lp-preview{zoom:.78;width:128.2051%;}
+          }
           .lp-browser-bar{display:flex;align-items:center;gap:6px;padding:10px 12px;background:var(--panel-alt);border-bottom:1px solid var(--border-soft);}
           .lp-browser-dot{width:8px;height:8px;border-radius:50%;background:var(--border-strong);}
           .lp-browser-url{
