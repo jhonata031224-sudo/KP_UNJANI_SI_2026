@@ -921,12 +921,25 @@
             <div><h3>Daftar Satuan</h3><p>Satuan yang masih punya pengguna tidak bisa dihapus.</p></div>
             <button class="btn btn-primary btn-sm" type="button" id="tambahSatuanOpen">+ Tambah Satuan</button>
           </div>
+          <div class="table-toolbar">
+            <div class="table-search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+              <input type="text" class="table-search" data-table-search="tblSatuan" placeholder="Cari kode atau nama satuan...">
+            </div>
+            <select class="table-filter" data-table-filter="tblSatuan">
+              <option value="">Semua Kategori</option>
+              <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
+              <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
+              <option value="{{ \App\Models\Satuan::KATEGORI_PIMPINAN }}">Pimpinan</option>
+              <option value="{{ \App\Models\Satuan::KATEGORI_ADMIN }}">Admin</option>
+            </select>
+          </div>
           <div class="tbl-wrap" data-row-limit="8">
-            <table class="dtbl">
+            <table class="dtbl" id="tblSatuan">
               <thead><tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Jumlah Pengguna</th><th>Aksi</th></tr></thead>
               <tbody>
                 @forelse($semuaSatuan as $s)
-                <tr>
+                <tr data-filter-value="{{ $s->kategori }}">
                   <td><span class="badge">{{ $s->kode }}</span></td>
                   <td>{{ $s->nama }}</td>
                   <td style="color:var(--text-muted);text-transform:capitalize;">{{ $s->kategori }}</td>
