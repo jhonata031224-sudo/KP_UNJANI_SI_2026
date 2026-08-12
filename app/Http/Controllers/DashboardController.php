@@ -114,15 +114,18 @@ class DashboardController
         $laporanPimpinanSatlak = collect();
         if ($modePimpinan) {
             $kodeSatuanPimpinan = [
-                'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK', 'SATLAKDUKTEK',
-                'BINMAT', 'BINFUNG', 'BINUM', 'DIKLAT',
+                'SATLAKDAK', 'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDUKTEK',
+                'DIKLAT', 'BINUM', 'BINFUNG', 'BINMAT',
             ];
             $satuanPimpinanIds = Satuan::whereIn('kode', $kodeSatuanPimpinan)->pluck('id');
             $laporanPimpinanSatlak = Laporan::with(['satuan','tujuanSatuan','permintaanLaporan'])
                 ->whereIn('satuan_id', $satuanPimpinanIds)
                 ->latest()
                 ->get();
-            $monitoringPimpinanSatlak = Satuan::whereIn('id', $satuanPimpinanIds)->orderBy('urutan')->get()->map(fn ($satuanPimpinan) => [
+            $monitoringPimpinanSatlak = Satuan::whereIn('id', $satuanPimpinanIds)->get()
+                ->sortBy(fn ($satuanPimpinan) => array_search($satuanPimpinan->kode, $kodeSatuanPimpinan))
+                ->values()
+                ->map(fn ($satuanPimpinan) => [
                 'id' => $satuanPimpinan->id,
                 'kode' => $satuanPimpinan->kode,
                 'nama' => $satuanPimpinan->nama,
