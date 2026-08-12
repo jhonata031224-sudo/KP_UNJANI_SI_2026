@@ -30,7 +30,6 @@
       link.style.setProperty('background-image', 'none', 'important');
       var dot = link.querySelector('.dot');
       if (dot) dot.remove();
-      // Hapus marker/span dekoratif pertama pada submenu jika memang bukan teks.
       Array.prototype.slice.call(link.children).forEach(function(child){
         if (child.tagName === 'SPAN' && !child.textContent.trim() && !child.classList.contains('side-link-label')) {
           child.remove();
@@ -69,30 +68,23 @@
       function makeGroup(label, children){
         var group = document.createElement('div');
         group.className = 'side-dropdown';
-
         var toggle = document.createElement('button');
         toggle.type = 'button';
         toggle.className = 'side-link side-dropdown-toggle';
         toggle.innerHTML = '<span class="dot"></span><span class="side-link-label"></span>';
         toggle.querySelector('.side-link-label').textContent = label;
         toggle.appendChild(makeIcon());
-
         var menu = document.createElement('div');
         menu.className = 'side-dropdown-menu';
-
         children.forEach(function(link){
           link.classList.add('side-sublink');
           link.classList.remove('active');
           removeSubmenuBullets(link);
           menu.appendChild(link);
         });
-
         group.appendChild(toggle);
         group.appendChild(menu);
-
-        toggle.addEventListener('click', function(){
-          group.classList.toggle('open');
-        });
+        toggle.addEventListener('click', function(){ group.classList.toggle('open'); });
         return group;
       }
 
@@ -104,8 +96,6 @@
       nav.appendChild(dashboard);
       nav.appendChild(makeGroup('Log Aktivitas', [monitoring, statusSatuan]));
       nav.appendChild(makeGroup('Pelaporan', [laporan, riwayat]));
-
-      // Pastikan submenu tetap bersih walaupun ada script lain yang merender ulang link.
       nav.querySelectorAll('.side-dropdown-menu a, .side-dropdown-menu .side-sublink').forEach(removeSubmenuBullets);
 
       function syncGroupState(){
@@ -116,33 +106,20 @@
       }
       syncGroupState();
 
-      // Pengaman terakhir: jika script/CSS lain menambahkan kembali bullet,
-      // submenu tetap dipaksa polos tanpa mengubah menu utama.
-      function enforcePlainSubmenus(){
-        nav.querySelectorAll('.side-dropdown-menu a').forEach(function(link){
-          removeSubmenuBullets(link);
-        });
-      }
+      function enforcePlainSubmenus(){ nav.querySelectorAll('.side-dropdown-menu a').forEach(removeSubmenuBullets); }
       enforcePlainSubmenus();
       setTimeout(enforcePlainSubmenus, 50);
       setTimeout(enforcePlainSubmenus, 250);
       setTimeout(enforcePlainSubmenus, 1000);
-
       if (window.MutationObserver) {
         var observer = new MutationObserver(function(){ enforcePlainSubmenus(); });
         observer.observe(nav, { childList:true, subtree:true });
       }
     }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initDanpusSidebar);
-    } else {
-      initDanpusSidebar();
-    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initDanpusSidebar);
+    else initDanpusSidebar();
   })();
 
-  // Batasi tinggi tabel supaya hanya menampilkan N baris pertama secara utuh;
-  // sisa datanya bisa di-scroll di dalam card-nya sendiri (bukan scroll halaman).
   function terapkanRowLimitWrap(wrap) {
     if (!wrap) return;
     var limit = parseInt(wrap.getAttribute('data-row-limit'), 10) || 5;
@@ -151,9 +128,7 @@
     wrap.style.maxHeight = '';
     wrap.classList.remove('tbl-scroll');
     var thead = table.querySelector('thead');
-    var rows = Array.prototype.filter.call(table.querySelectorAll('tbody tr'), function (r) {
-      return r.style.display !== 'none';
-    });
+    var rows = Array.prototype.filter.call(table.querySelectorAll('tbody tr'), function (r) { return r.style.display !== 'none'; });
     if (rows.length <= limit) return;
     var height = thead ? thead.offsetHeight : 0;
     for (var i = 0; i < limit; i++) height += rows[i].offsetHeight;
@@ -168,8 +143,6 @@
     panel.querySelectorAll('[data-row-limit]').forEach(terapkanRowLimitWrap);
   }
 
-  // Tab switching + persist tab aktif ke sessionStorage supaya tidak balik ke
-  // Dashboard setiap kali halaman di-refresh.
   const ADMIN_ACTIVE_TAB_KEY = 'siberad-admin-active-tab';
   const ADMIN_GROUP_STATE_KEY = 'siberad-admin-group-';
   const links = document.querySelectorAll('[data-tab-link]');
@@ -187,17 +160,7 @@
       const group = l.closest('.side-nav-group');
       if (group) {
         group.classList.add('has-active-child');
-        // Selalu tandai grup ini "open" di sessionStorage, walau sidebar lagi
-        // ciutkan -- kalau di-guard cuma untuk mode lebar, niat "buka grup
-        // yang berisi tab aktif" hilang begitu nanti sidebar dilebarkan lagi.
-        // Tapi class "open" itu sendiri cuma ditambahkan kalau sidebar TIDAK
-        // sedang ciutkan -- soalnya class ini juga yang bikin submenu tampil
-        // sebagai flyout melayang saat ciutkan. Kalau ditambahkan lagi di
-        // sini, flyout yang baru saja ditutup lewat klik link-nya (listener
-        // lain, lihat inline script di bawah <nav>) langsung kebuka lagi.
-        if (!sidebar || !sidebar.classList.contains('collapsed')) {
-          group.classList.add('open');
-        }
+        if (!sidebar || !sidebar.classList.contains('collapsed')) group.classList.add('open');
         try { sessionStorage.setItem(ADMIN_GROUP_STATE_KEY + group.id, 'open'); } catch (e) {}
       }
     });
@@ -224,13 +187,8 @@
     try { savedTab = sessionStorage.getItem(ADMIN_ACTIVE_TAB_KEY); } catch (e) {}
     if (savedTab) activateAdminTab(savedTab, true);
   })();
-
   document.querySelectorAll('.tab-panel.active').forEach(terapkanRowLimit);
 
-  // Ganti tema (dark / light) — 1 tombol, tersimpan di localStorage, berlaku di semua halaman.
-  // Guard dataset.uiBound: kalau tombol ini sudah dibind duluan oleh script
-  // lain di halaman (mis. inline script Admin atau pengumuman-banner.blade.php),
-  // skip di sini supaya tidak ada dua listener klik yang saling membatalkan.
   (function(){
     var THEME_KEY = 'siberad-theme';
     var btn = document.getElementById('themeToggleBtn');
@@ -268,10 +226,180 @@
         textNode.nodeValue = value.replace(/ {2,}/g, ' ');
       });
     }
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function(){ cleanDecorativeSeparators(document.body); });
-    } else {
-      cleanDecorativeSeparators(document.body);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ cleanDecorativeSeparators(document.body); });
+    else cleanDecorativeSeparators(document.body);
+  })();
+
+  // -------------------------------------------------------------------------
+  // Landing preview: gunakan halaman landing AKTUAL di dalam iframe.
+  // Dengan begitu preview tidak lagi meniru layout secara terpisah: CSS,
+  // responsive layout, header, hero, fitur, tentang, footer, loader, dll.
+  // semuanya berasal dari welcome.blade.php yang dipakai pengunjung.
+  // Guard ini membuat script tidak melakukan apa pun di halaman admin lain.
+  // -------------------------------------------------------------------------
+  (function(){
+    var form = document.getElementById('formPengaturanLanding');
+    var fakePreview = document.getElementById('lpPreview');
+    if (!form || !fakePreview) return;
+
+    var browserFrame = fakePreview.closest('.lp-browser-frame');
+    if (!browserFrame) return;
+
+    var iframe = document.createElement('iframe');
+    iframe.id = 'lpLiveLandingFrame';
+    iframe.title = 'Pratinjau landing page SIBERAD';
+    iframe.src = '/?admin_preview=1';
+    iframe.setAttribute('loading', 'eager');
+    iframe.setAttribute('referrerpolicy', 'same-origin');
+    iframe.style.cssText = 'display:block;width:100%;height:900px;min-height:700px;border:0;background:#151e19;';
+
+    fakePreview.style.display = 'none';
+    browserFrame.appendChild(iframe);
+
+    var frameReady = false;
+    var pendingFileUrl = null;
+
+    function value(name, fallback){
+      var el = form.querySelector('[data-lp="' + name + '"]');
+      return el ? el.value : (fallback || '');
     }
+
+    function text(el, val){ if (el) el.textContent = val || ''; }
+
+    function frameDoc(){
+      try { return iframe.contentDocument || iframe.contentWindow.document; } catch (e) { return null; }
+    }
+
+    function setTheme(doc){
+      if (!doc) return;
+      var theme = document.documentElement.getAttribute('data-theme');
+      if (theme === 'light') doc.documentElement.setAttribute('data-theme','light');
+      else doc.documentElement.removeAttribute('data-theme');
+    }
+
+    function updateLanding(){
+      var doc = frameDoc();
+      if (!doc || !frameReady) return;
+      setTheme(doc);
+
+      var hero = doc.querySelector('.hero');
+      var heroBg = doc.querySelector('.hero-stats-bg');
+      var eyebrow = doc.querySelector('.hero .eyebrow');
+      var h1 = doc.querySelector('.hero h1');
+      var h1Em = h1 ? h1.querySelector('em') : null;
+      var h2 = doc.querySelector('.hero h2');
+      var heroP = doc.querySelector('.hero > .wrap .hero-inner > div:first-child > p');
+      text(eyebrow, value('hero_eyebrow'));
+      if (h1) {
+        var first = value('hero_judul_awal');
+        Array.prototype.slice.call(h1.childNodes).forEach(function(n){ if (n.nodeType === 3) n.nodeValue = ''; });
+        if (h1.firstChild && h1.firstChild.nodeType === 3) h1.firstChild.nodeValue = first;
+        else h1.insertBefore(doc.createTextNode(first), h1Em || null);
+      }
+      text(h1Em, value('hero_judul_aksen'));
+      text(h2, value('hero_subjudul'));
+      text(heroP, value('hero_deskripsi'));
+
+      if (heroBg) {
+        if (pendingFileUrl) {
+          heroBg.style.backgroundImage = "linear-gradient(115deg, var(--hero-ov-1) 0%, var(--hero-ov-2) 32%, var(--hero-ov-3) 58%, var(--hero-ov-4) 100%), linear-gradient(to top, var(--hero-ov-top) 0%, var(--hero-ov-top-fade) 26%), url('" + pendingFileUrl.replace(/'/g, "\\'") + "')";
+        }
+      }
+
+      var featureCards = doc.querySelectorAll('.feature-grid .feature-card');
+      var featureInputs = form.querySelectorAll('[data-lp^="fitur_judul_"]');
+      featureInputs.forEach(function(input){
+        var match = input.getAttribute('data-lp').match(/_(\d+)$/);
+        if (!match) return;
+        var i = parseInt(match[1],10);
+        var card = featureCards[i];
+        if (!card) return;
+        text(card.querySelector('h4'), input.value);
+        var desc = form.querySelector('[data-lp="fitur_deskripsi_' + i + '"]');
+        text(card.querySelector('p'), desc ? desc.value : '');
+      });
+
+      var about = doc.querySelector('#tentang-pussiberad');
+      if (about) {
+        var aboutTextWrap = about.querySelector('.about-top > div:last-child');
+        var aboutParas = aboutTextWrap ? aboutTextWrap.querySelectorAll('p') : [];
+        var aboutValue = value('tentang_deskripsi');
+        var paragraphs = aboutValue.split(/\n\s*\n/).map(function(p){ return p.trim(); }).filter(Boolean);
+        if (aboutTextWrap) {
+          paragraphs.forEach(function(p, i){
+            if (aboutParas[i]) text(aboutParas[i], p);
+            else {
+              var np = doc.createElement('p');
+              np.style.cssText = 'color:var(--text-muted);line-height:1.8;font-size:15px;margin-top:14px;';
+              np.textContent = p;
+              aboutTextWrap.appendChild(np);
+            }
+          });
+          for (var ai = paragraphs.length; ai < aboutParas.length; ai++) aboutParas[ai].textContent = '';
+        }
+        var moto = about.querySelector('.moto-panel');
+        if (moto) {
+          text(moto.querySelector('h3'), value('tentang_moto_judul'));
+          text(moto.querySelector('.moto-desc'), value('tentang_moto_deskripsi'));
+        }
+      }
+
+      var footer = doc.querySelector('footer');
+      if (footer) {
+        var cols = footer.querySelectorAll('.footer-grid > div');
+        var contactCol = cols[3];
+        if (contactCol) {
+          var items = contactCol.querySelectorAll('.footer-links li');
+          var alamat = value('alamat');
+          var telepon = value('telepon_kontak');
+          var website = value('website');
+          if (items[0]) items[0].textContent = alamat;
+          if (items[1]) items[1].textContent = telepon;
+          if (items[2]) {
+            var a = items[2].querySelector('a');
+            if (a) { a.href = website || '#'; a.textContent = website.replace(/^https?:\/\//,'').replace(/\/$/,''); }
+          }
+        }
+      }
+    }
+
+    function syncTheme(){
+      var doc = frameDoc();
+      if (doc) setTheme(doc);
+    }
+
+    iframe.addEventListener('load', function(){
+      frameReady = true;
+      syncTheme();
+      updateLanding();
+    });
+
+    form.querySelectorAll('[data-lp]').forEach(function(el){
+      el.addEventListener('input', updateLanding);
+      el.addEventListener('change', updateLanding);
+    });
+
+    var heroImageInput = form.querySelector('[data-lp-image="hero_image"]');
+    if (heroImageInput) {
+      heroImageInput.addEventListener('change', function(){
+        var file = this.files && this.files[0];
+        if (!file) { pendingFileUrl = null; updateLanding(); return; }
+        var reader = new FileReader();
+        reader.onload = function(e){ pendingFileUrl = e.target.result; updateLanding(); };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    var themeObserver = new MutationObserver(syncTheme);
+    themeObserver.observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+
+    // Ukuran preview mengikuti viewport admin dan tetap menjadi satu halaman
+    // utuh yang bisa di-scroll di dalam frame, tanpa memengaruhi halaman admin.
+    function resizeFrame(){
+      var h = Math.max(700, Math.min(1100, window.innerHeight - 170));
+      iframe.style.height = h + 'px';
+    }
+    resizeFrame();
+    window.addEventListener('resize', resizeFrame, {passive:true});
   })();
 </script>
