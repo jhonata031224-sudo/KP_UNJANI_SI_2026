@@ -112,23 +112,38 @@
      dash-script, dan scrollbar horizontal preview disembunyikan. --}}
 <script>
 (function () {
+  function removeOnlyPreviewToolbar(frame) {
+    if (!frame) return;
+
+    frame.style.overflowX = 'hidden';
+    frame.style.overflowY = 'auto';
+
+    var zoomToolbar = frame.querySelector('.lp-zoom-toolbar');
+    if (zoomToolbar) zoomToolbar.remove();
+
+    Array.prototype.slice.call(frame.children).forEach(function (child) {
+      if (child.classList.contains('lp-browser-bar') || child.classList.contains('lp-preview')) return;
+
+      var text = (child.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+      var buttons = child.querySelectorAll ? child.querySelectorAll('button') : [];
+      var hasOnlyFitButton = buttons.length === 1 &&
+        (buttons[0].textContent || '').trim().toLowerCase() === 'fit';
+
+      // Hapus hanya baris kontrol yang memang berisi Fit.
+      // Jangan pernah menghapus .lp-preview karena itu adalah landing page.
+      if (text === 'fit' || hasOnlyFitButton) child.remove();
+    });
+  }
+
   function setupLandingPreview() {
     document.querySelectorAll('.lp-browser-frame').forEach(function (frame) {
-      frame.style.overflowX = 'hidden';
-      frame.style.overflowY = 'auto';
+      removeOnlyPreviewToolbar(frame);
 
-      var toolbar = frame.querySelector('.lp-zoom-toolbar');
-      if (toolbar) toolbar.remove();
-
-      // Bersihkan toolbar yang mungkin dibuat ulang oleh script preview,
-      // tetapi jangan pernah menghapus browser bar atau isi landing page.
       if (frame.dataset.previewToolbarGuard === '1') return;
       frame.dataset.previewToolbarGuard = '1';
 
       var observer = new MutationObserver(function () {
-        var currentToolbar = frame.querySelector('.lp-zoom-toolbar');
-        if (currentToolbar) currentToolbar.remove();
-        frame.style.overflowX = 'hidden';
+        removeOnlyPreviewToolbar(frame);
       });
       observer.observe(frame, { childList: true, subtree: true });
     });
@@ -154,7 +169,7 @@
           }, true);
         });
       } catch (error) {
-        // Preview tetap berjalan bila browser membatasi akses dokumen iframe.
+        // Abaikan jika browser membatasi akses dokumen iframe.
       }
     });
   }
