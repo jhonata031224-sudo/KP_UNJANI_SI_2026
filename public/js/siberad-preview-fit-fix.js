@@ -1,191 +1,154 @@
 (function () {
   'use strict';
 
-  /*
-   * Admin preview is intentionally LANDING PAGE ONLY.
-   * Authentication/dashboard controls are not part of the preview surface.
-   * Fit scales the complete landing surface; zoom is the only way to enlarge it.
-   */
-  var DESIGN_WIDTH = 1440;
   var zoom = 1;
   var timer = null;
-  var styleInstalled = false;
+  var booted = false;
 
   function byId(id) { return document.getElementById(id); }
 
-  function nodes() {
-    return {
-      viewport: byId('lpPreview'),
-      stage: byId('lpPreviewStage'),
-      canvas: byId('lpPreviewCanvas')
-    };
+  function getNodes() {
+    return { viewport: byId('lpPreview'), canvas: byId('lpPreviewCanvas') };
   }
 
-  function installFinalCss() {
-    if (styleInstalled || document.getElementById('siberad-preview-final-css')) return;
-    styleInstalled = true;
-
-    var style = document.createElement('style');
-    style.id = 'siberad-preview-final-css';
-    style.textContent = [
-      '#lpPreview.siberad-final-preview { overflow-x:hidden !important; overflow-y:auto !important; }',
-      '#lpPreview.siberad-final-preview.lp-preview-zoomed { overflow:auto !important; }',
-      '#lpPreview.siberad-final-preview #lpPreviewStage { overflow:visible !important; }',
-      '#lpPreview.siberad-final-preview #lpPreviewCanvas { max-width:none !important; }',
-      '#lpPreview.siberad-final-preview [href*="/login"],',
-      '#lpPreview.siberad-final-preview [href*="/masuk"],',
-      '#lpPreview.siberad-final-preview [data-auth],',
-      '#lpPreview.siberad-final-preview [data-login],',
-      '#lpPreview.siberad-final-preview .lpv4-login,',
-      '#lpPreview.siberad-final-preview .login-button,',
-      '#lpPreview.siberad-final-preview .btn-login { display:none !important; }'
+  function css() {
+    if (byId('siberad-preview-final-css')) return;
+    var s = document.createElement('style');
+    s.id = 'siberad-preview-final-css';
+    s.textContent = [
+      '#lpPreview.siberad-final-preview{overflow:hidden!important;position:relative!important}',
+      '#lpPreview.siberad-final-preview.lp-preview-zoomed{overflow:auto!important}',
+      '#lpPreview.siberad-final-preview .siberad-fit-stage{position:relative!important;margin:0!important;padding:0!important;overflow:visible!important}',
+      '#lpPreview.siberad-final-preview #lpPreviewCanvas{transform-origin:top left!important;max-width:none!important;margin:0!important}',
+      '.siberad-preview-zoombar{display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;margin:8px 0 10px!important;padding:6px!important;border:1px solid #dbe3ec!important;border-radius:9px!important;background:#fff!important;box-shadow:0 3px 10px rgba(0,0,0,.08)!important;position:relative!important;z-index:9999!important}',
+      '.siberad-preview-zoombar button{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:38px!important;height:32px!important;padding:0!important;border:1px solid #d5dee8!important;border-radius:7px!important;background:#fff!important;cursor:pointer!important;font-weight:700!important}',
+      '.siberad-preview-zoombar button:hover{background:#f5f7f9!important}',
+      '.siberad-preview-zoom-label{display:inline-block!important;min-width:58px!important;text-align:center!important;font-size:12px!important;font-weight:700!important}',
+      '#lpPreview .siberad-preview-auth-hidden{display:none!important}'
     ].join('\n');
-    document.head.appendChild(style);
+    document.head.appendChild(s);
   }
 
-  /* Remove authentication controls even when the renderer creates them
-     without a stable class/href. Navigation for the public landing remains. */
-  function stripAuthControls() {
-    var n = nodes();
-    if (!n.canvas) return;
+  function ensureStage(canvas) {
+    if (canvas.parentElement && canvas.parentElement.classList.contains('siberad-fit-stage')) return canvas.parentElement;
+    var stage = document.createElement('div');
+    stage.className = 'siberad-fit-stage';
+    canvas.parentNode.insertBefore(stage, canvas);
+    stage.appendChild(canvas);
+    return stage;
+  }
 
-    var candidates = n.canvas.querySelectorAll('a,button');
-    for (var i = 0; i < candidates.length; i++) {
-      var el = candidates[i];
-      var text = (el.textContent || '').trim().replace(/\s+/g, ' ').toLowerCase();
-      var href = (el.getAttribute('href') || '').toLowerCase();
-      var auth = /^(login|log in|masuk|sign in|signin)$/.test(text) ||
-                 /\/login(?:[/?#]|$)|\/masuk(?:[/?#]|$)|\/signin(?:[/?#]|$)/.test(href) ||
-                 el.hasAttribute('data-auth') || el.hasAttribute('data-login');
+  function ensureToolbar(viewport) {
+    var parent = viewport.parentElement;
+    if (!parent) return;
+    var bar = parent.querySelector('.siberad-preview-zoombar');
+    if (bar) return;
+    bar = document.createElement('div');
+    bar.className = 'siberad-preview-zoombar';
+    bar.innerHTML = '<button type="button" data-preview-zoom="out" aria-label="Perkecil">−</button>' +
+      '<button type="button" data-preview-zoom="fit" aria-label="Fit">Fit</button>' +
+      '<span class="siberad-preview-zoom-label">Fit</span>' +
+      '<button type="button" data-preview-zoom="in" aria-label="Perbesar">+</button>';
+    parent.insertBefore(bar, viewport);
+  }
+
+  function stripAuth() {
+    var n = getNodes();
+    if (!n.canvas) return;
+    n.canvas.querySelectorAll('a,button,input,form,[role="button"]').forEach(function (node) {
+      var text = (node.textContent || node.value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+      var href = (node.getAttribute('href') || '').toLowerCase();
+      var auth = /^(login|log in|masuk|sign in|signin|masuk aplikasi)$/.test(text) ||
+        /(^|\/)(login|masuk|signin|sign-in|auth)(\/|$|\?|#)/.test(href) ||
+        node.hasAttribute('data-auth') || node.hasAttribute('data-login');
       if (auth) {
-        el.style.setProperty('display', 'none', 'important');
-        el.setAttribute('aria-hidden', 'true');
+        node.classList.add('siberad-preview-auth-hidden');
+        node.setAttribute('aria-hidden', 'true');
+        node.setAttribute('tabindex', '-1');
       }
-    }
+    });
   }
 
   function render() {
-    var n = nodes();
-    if (!n.viewport || !n.stage || !n.canvas) return;
+    var n = getNodes();
+    if (!n.viewport || !n.canvas) return;
+    css();
+    ensureToolbar(n.viewport);
+    stripAuth();
 
-    installFinalCss();
-    stripAuthControls();
-
+    var stage = ensureStage(n.canvas);
     var viewportWidth = Math.max(n.viewport.clientWidth, 1);
 
-    /* Stable natural surface, matching the public landing page dimensions. */
     n.canvas.style.transform = 'none';
     n.canvas.style.transformOrigin = 'top left';
-    n.canvas.style.width = DESIGN_WIDTH + 'px';
-    n.canvas.style.minWidth = DESIGN_WIDTH + 'px';
     n.canvas.style.maxWidth = 'none';
+    n.canvas.style.minWidth = '0';
     n.canvas.style.height = 'auto';
-    n.canvas.style.margin = '0';
 
-    stripAuthControls();
+    var naturalWidth = Math.max(n.canvas.scrollWidth, n.canvas.getBoundingClientRect().width, 1);
+    var naturalHeight = Math.max(n.canvas.scrollHeight, n.canvas.getBoundingClientRect().height, 1);
+    var fit = viewportWidth / naturalWidth;
+    var scale = Math.max(0.05, Math.min(3, fit * zoom));
 
-    var naturalHeight = Math.max(
-      n.canvas.scrollHeight,
-      n.canvas.offsetHeight,
-      n.canvas.getBoundingClientRect().height,
-      1
-    );
-
-    var fitScale = viewportWidth / DESIGN_WIDTH;
-    var scale = fitScale * zoom;
-    scale = Math.max(0.05, Math.min(3, scale));
-
-    var renderedWidth = DESIGN_WIDTH * scale;
-    var renderedHeight = naturalHeight * scale;
-
-    n.stage.style.position = 'relative';
-    n.stage.style.width = Math.ceil(renderedWidth) + 'px';
-    n.stage.style.height = Math.ceil(renderedHeight) + 'px';
-    n.stage.style.maxWidth = 'none';
-    n.stage.style.margin = '0';
-
+    stage.style.width = Math.ceil(naturalWidth * scale) + 'px';
+    stage.style.height = Math.ceil(naturalHeight * scale) + 'px';
+    n.canvas.style.width = naturalWidth + 'px';
     n.canvas.style.height = naturalHeight + 'px';
     n.canvas.style.transform = 'scale(' + scale + ')';
 
-    var zoomed = zoom !== 1;
     n.viewport.classList.add('siberad-final-preview');
-    n.viewport.classList.toggle('lp-preview-zoomed', zoomed);
-
-    if (zoomed) {
-      n.viewport.style.setProperty('overflow', 'auto', 'important');
-    } else {
+    n.viewport.classList.toggle('lp-preview-zoomed', zoom !== 1);
+    if (zoom === 1) {
       n.viewport.style.setProperty('overflow-x', 'hidden', 'important');
-      n.viewport.style.setProperty('overflow-y', 'auto', 'important');
+      n.viewport.style.setProperty('overflow-y', 'hidden', 'important');
+    } else {
+      n.viewport.style.setProperty('overflow', 'auto', 'important');
     }
 
-    var label = byId('lpv4ZoomLabel');
+    var label = n.viewport.parentElement && n.viewport.parentElement.querySelector('.siberad-preview-zoom-label');
     if (label) label.textContent = zoom === 1 ? 'Fit' : Math.round(zoom * 100) + '%';
   }
 
   function schedule() {
     clearTimeout(timer);
-    timer = setTimeout(render, 35);
-  }
-
-  function handleControls(e) {
-    var button = e.target.closest('#lpPreview [data-zoom]');
-    if (!button) return;
-
-    e.preventDefault();
-    e.stopImmediatePropagation();
-
-    var action = button.getAttribute('data-zoom');
-    if (action === 'fit') zoom = 1;
-    if (action === 'in') zoom = Math.min(3, +(zoom + 0.25).toFixed(2));
-    if (action === 'out') zoom = Math.max(0.5, +(zoom - 0.25).toFixed(2));
-
-    schedule();
+    timer = setTimeout(render, 50);
   }
 
   function boot() {
     var viewport = byId('lpPreview');
-    if (!viewport) return;
+    if (!viewport || booted) return;
+    booted = true;
+    css();
+    ensureToolbar(viewport);
 
-    installFinalCss();
-    stripAuthControls();
-    viewport.addEventListener('click', handleControls, true);
-
-    /* Switching Beranda/Fitur/Tentang/Kontak returns to Fit. */
-    viewport.addEventListener('click', function (e) {
-      var nav = e.target.closest('[data-page], [data-nav]');
-      if (nav && !e.target.closest('[data-zoom]')) {
-        zoom = 1;
-        schedule();
-        setTimeout(schedule, 100);
+    document.addEventListener('click', function (e) {
+      var button = e.target.closest('[data-preview-zoom],[data-zoom],[data-zoom-action]');
+      if (button) {
+        var action = button.getAttribute('data-preview-zoom') || button.getAttribute('data-zoom') || button.getAttribute('data-zoom-action');
+        if (/^(fit|in|out)$/.test(action)) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (action === 'fit') zoom = 1;
+          if (action === 'in') zoom = Math.min(3, +(zoom + .25).toFixed(2));
+          if (action === 'out') zoom = Math.max(.5, +(zoom - .25).toFixed(2));
+          schedule();
+          return;
+        }
       }
-    }, false);
+      var auth = e.target.closest('#lpPreview .siberad-preview-auth-hidden');
+      if (auth) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
 
-    if (window.ResizeObserver) {
-      new ResizeObserver(schedule).observe(viewport);
-    } else {
-      window.addEventListener('resize', schedule, { passive: true });
-    }
-
+    window.addEventListener('resize', schedule, { passive: true });
+    if (window.ResizeObserver) new ResizeObserver(schedule).observe(viewport);
     if (window.MutationObserver) {
-      new MutationObserver(function () {
-        stripAuthControls();
-        schedule();
-      }).observe(viewport, {
-        subtree: true,
-        childList: true,
-        attributes: true,
-        attributeFilter: ['class', 'style']
-      });
+      new MutationObserver(function () { stripAuth(); schedule(); }).observe(viewport, { subtree:true, childList:true, attributes:true, attributeFilter:['class','style','href'] });
     }
-
     schedule();
-    setTimeout(schedule, 120);
+    setTimeout(schedule, 150);
     setTimeout(schedule, 500);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();
