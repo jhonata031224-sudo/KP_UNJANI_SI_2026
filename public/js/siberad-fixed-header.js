@@ -42,9 +42,21 @@
     }
   }
 
+  function loadLandingPreviewV4() {
+    if (!document.getElementById('landingForm') || !document.getElementById('lpPreview')) return;
+    if (document.getElementById('siberad-landing-preview-v4-script')) return;
+
+    var script = document.createElement('script');
+    script.id = 'siberad-landing-preview-v4-script';
+    script.src = '/js/siberad-landing-preview-v4.js?v=7070af1b';
+    script.defer = false;
+    document.body.appendChild(script);
+  }
+
   function boot() {
     installFixedHeaderStyles();
     syncHeaderToSidebar();
+    loadLandingPreviewV4();
 
     var sidebar = document.getElementById('sidebar');
     if (!sidebar) return;
