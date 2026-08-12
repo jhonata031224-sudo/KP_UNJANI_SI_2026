@@ -1,0 +1,1 @@
+document.addEventListener('DOMContentLoaded',()=>{const toggle=document.querySelector('.mobile-toggle'),side=document.querySelector('.sidebar');if(toggle&&side)toggle.addEventListener('click',()=>side.classList.toggle('open'));document.querySelectorAll('[data-print]').forEach(b=>b.addEventListener('click',()=>window.print()));});
