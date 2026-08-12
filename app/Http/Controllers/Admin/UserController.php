@@ -84,7 +84,6 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:50', 'unique:users,username'.($user ? ','.$user->id : '')],
             'email' => ['nullable', 'email', 'max:255', 'unique:users,email'.($user ? ','.$user->id : '')],
-            'jabatan' => ['nullable', 'string', 'max:255'],
             'satuan_id' => ['required', 'exists:satuans,id'],
             'password' => [$user ? 'nullable' : 'required', 'string', 'min:8'],
         ]);

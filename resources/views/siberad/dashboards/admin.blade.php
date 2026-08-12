@@ -82,6 +82,18 @@
   .user-modal-card .form-field{min-width:0;}
   .user-modal-card .form-field select,.user-modal-card .form-field input{min-width:0;width:100%;box-sizing:border-box;}
 
+  /* ===== tombol aksi berikon di tabel Daftar Pengguna ===== */
+  .icon-action-btn{
+    display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+    width:32px;height:32px;padding:0;border-radius:8px;
+    border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;
+    transition:border-color .15s ease,color .15s ease,background .15s ease;
+  }
+  .icon-action-btn svg{width:15px;height:15px;}
+  .icon-action-btn:hover{border-color:var(--gold);color:var(--gold-bright);background:var(--panel-alt);}
+  .icon-action-btn.danger{color:var(--red);border-color:rgba(200,59,59,.32);}
+  .icon-action-btn.danger:hover{background:rgba(200,59,59,.1);border-color:var(--red);color:var(--red);}
+
   .side-nav-group{margin:0}.side-nav-group-title{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;margin:2px 0;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--text-muted);font-family:var(--body);font-size:13.5px;font-weight:500;cursor:pointer;text-align:left;box-sizing:border-box;transition:background .15s ease,color .15s ease}.side-nav-group-title:hover{background:var(--hover-tint);color:var(--text)}.side-nav-group.open .side-nav-group-title{color:var(--text)}.side-nav-group-title .side-text{flex:1}.side-nav-group-title .chevron{margin-left:auto;width:15px;height:15px;flex-shrink:0;opacity:.6;transition:transform .25s cubic-bezier(.4,0,.2,1),opacity .2s ease}.side-nav-group.open .chevron{transform:rotate(180deg);opacity:1}.side-subnav{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;overflow:hidden}.side-subnav>div{min-height:0;padding:3px 0;margin-left:18px;border-left:1px solid var(--border-soft)}.side-nav-group.open .side-subnav{grid-template-rows:1fr;opacity:1}.side-sub-link{position:relative;display:flex;align-items:center;gap:10px;padding:9px 12px 9px 17px;border-radius:0 9px 9px 0;color:var(--text-muted);font-family:var(--body);font-size:13px;font-weight:500;text-decoration:none;margin:1px 0;box-sizing:border-box;transition:background .15s ease,color .15s ease}.side-sub-link:hover{background:var(--hover-tint);color:var(--text)}.side-sub-link .sub-dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5;flex:0 0 auto;transition:opacity .15s ease,background .15s ease,box-shadow .15s ease}.side-sub-link.active{background:var(--gold-dim);color:var(--gold-bright);font-weight:600}.side-sub-link.active:before{content:"";position:absolute;left:-1px;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--gold-bright)}.side-sub-link.active .sub-dot{background:var(--gold-bright);opacity:1;box-shadow:0 0 0 3px rgba(201,122,0,.15)}.side-subnav-label{display:none}
   .sidebar.collapsed .side-subnav{display:none}.sidebar.collapsed .side-nav-group.open .side-subnav{display:block;position:fixed;min-width:216px;background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);padding:8px;z-index:100020}.sidebar.collapsed .side-subnav>div{margin-left:0;border-left:none;padding:0}.sidebar.collapsed .side-subnav-label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);padding:4px 10px 8px}.sidebar.collapsed .side-sub-link{padding:9px 10px;border-radius:8px}.sidebar.collapsed .side-nav-group.has-active-child .side-nav-group-title{color:var(--gold-bright);background:var(--gold-dim)}
 </style>
@@ -246,6 +258,121 @@
       <div class="user-modal-actions">
         <button class="btn" type="button" id="tambahPenggunaCancel">Batal</button>
         <button class="btn btn-primary" type="submit">Simpan Pengguna</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="user-modal-overlay" id="ubahPenggunaModal">
+  <div class="user-modal-card" role="dialog" aria-modal="true" aria-label="Ubah Pengguna">
+    <div class="user-modal-head">
+      <div>
+        <h3>Ubah Pengguna</h3>
+        <p>Perbarui data akun pengguna.</p>
+      </div>
+      <button type="button" class="user-modal-close" id="ubahPenggunaClose" aria-label="Tutup">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    </div>
+    <form class="form-grid" method="POST" action="" id="ubahPenggunaForm">
+      @csrf
+      @method('PATCH')
+      <div class="form-field">
+        <label for="upNama">Nama Lengkap</label>
+        <input id="upNama" name="name" type="text" required>
+      </div>
+      <div class="form-field">
+        <label for="upUsername">Username / NRP</label>
+        <input id="upUsername" name="username" type="text" required>
+      </div>
+      <div class="form-field">
+        <label for="upEmail">Email (opsional)</label>
+        <input id="upEmail" name="email" type="email">
+      </div>
+      <div class="form-field">
+        <label for="upSatuan">Satuan</label>
+        <select id="upSatuan" name="satuan_id" required>
+          @foreach($semuaSatuan as $s)
+          <option value="{{ $s->id }}">{{ $s->nama }} ({{ $s->kode }})</option>
+          @endforeach
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="upPassword">Password Baru (opsional)</label>
+        <input id="upPassword" name="password" type="text" minlength="8" placeholder="Kosongkan jika tidak diubah">
+      </div>
+      <div class="user-modal-actions">
+        <button class="btn" type="button" id="ubahPenggunaCancel">Batal</button>
+        <button class="btn btn-primary" type="submit">Simpan Perubahan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="user-modal-overlay" id="tambahSatuanModal">
+  <div class="user-modal-card" role="dialog" aria-modal="true" aria-label="Tambah Satuan">
+    <div class="user-modal-head">
+      <div>
+        <h3>Tambah Satuan</h3>
+        <p>Kode dipakai sebagai identitas login/role.</p>
+      </div>
+      <button type="button" class="user-modal-close" id="tambahSatuanClose" aria-label="Tutup">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    </div>
+    <form class="form-grid" method="POST" action="{{ route('admin.satuan.store') }}">
+      @csrf
+      <div class="form-field"><label for="sKode">Kode</label><input id="sKode" name="kode" type="text" placeholder="Contoh: BINLOG" required style="text-transform:uppercase;"></div>
+      <div class="form-field"><label for="sNama">Nama Satuan</label><input id="sNama" name="nama" type="text" required></div>
+      <div class="form-field">
+        <label for="sKategori">Kategori</label>
+        <select id="sKategori" name="kategori" required>
+          <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_PIMPINAN }}">Pimpinan</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_ADMIN }}">Admin</option>
+        </select>
+      </div>
+      <div class="form-field"><label for="sUrutan">Urutan</label><input id="sUrutan" name="urutan" type="number" min="0" placeholder="0"></div>
+      <div class="form-field full"><label for="sDeskripsi">Deskripsi (opsional)</label><textarea id="sDeskripsi" name="deskripsi" rows="2"></textarea></div>
+      <div class="user-modal-actions">
+        <button class="btn" type="button" id="tambahSatuanCancel">Batal</button>
+        <button class="btn btn-primary" type="submit">Simpan Satuan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="user-modal-overlay" id="ubahSatuanModal">
+  <div class="user-modal-card" role="dialog" aria-modal="true" aria-label="Ubah Satuan">
+    <div class="user-modal-head">
+      <div>
+        <h3>Ubah Satuan</h3>
+        <p>Perbarui data satuan.</p>
+      </div>
+      <button type="button" class="user-modal-close" id="ubahSatuanClose" aria-label="Tutup">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    </div>
+    <form class="form-grid" method="POST" action="" id="ubahSatuanForm">
+      @csrf
+      @method('PATCH')
+      <div class="form-field"><label for="usKode">Kode</label><input id="usKode" name="kode" type="text" required style="text-transform:uppercase;"></div>
+      <div class="form-field"><label for="usNama">Nama Satuan</label><input id="usNama" name="nama" type="text" required></div>
+      <div class="form-field">
+        <label for="usKategori">Kategori</label>
+        <select id="usKategori" name="kategori" required>
+          <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_PIMPINAN }}">Pimpinan</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_ADMIN }}">Admin</option>
+        </select>
+      </div>
+      <div class="form-field"><label for="usUrutan">Urutan</label><input id="usUrutan" name="urutan" type="number" min="0"></div>
+      <div class="form-field full"><label for="usDeskripsi">Deskripsi (opsional)</label><textarea id="usDeskripsi" name="deskripsi" rows="2"></textarea></div>
+      <div class="user-modal-actions">
+        <button class="btn" type="button" id="ubahSatuanCancel">Batal</button>
+        <button class="btn btn-primary" type="submit">Simpan Perubahan</button>
       </div>
     </form>
   </div>
@@ -704,39 +831,30 @@
                   <td>{{ $p->satuan->nama ?? '-' }}</td>
                   <td>
                     <div class="btn-row">
-                      <button class="btn btn-sm" type="button" onclick="toggleEditPengguna({{ $p->id }})">Ubah</button>
                       <form method="POST" action="{{ route('admin.users.reset-password', $p) }}" onsubmit="return confirm('Reset password akun {{ $p->name }}?');" style="display:inline;">
                         @csrf
-                        <button class="btn btn-sm" type="submit">Reset Password</button>
+                        <button class="icon-action-btn" type="submit" title="Reset Password" aria-label="Reset Password {{ $p->name }}">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="3.2"></circle><path d="M10.2 12.8 19 4"></path><path d="M15.5 8.3 18 10.8"></path><path d="M18.3 5.5 20.8 8"></path></svg>
+                        </button>
                       </form>
+                      <button class="icon-action-btn" type="button" onclick="bukaUbahPengguna(this)"
+                        data-action="{{ route('admin.users.update', $p) }}"
+                        data-name="{{ $p->name }}"
+                        data-username="{{ $p->username }}"
+                        data-email="{{ $p->email }}"
+                        data-satuan-id="{{ $p->satuan_id }}"
+                        title="Ubah" aria-label="Ubah {{ $p->name }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                      </button>
                       @if($p->id !== $user->id)
                       <form method="POST" action="{{ route('admin.users.destroy', $p) }}" onsubmit="return confirm('Hapus akun {{ $p->name }}?');" style="display:inline;">
                         @csrf @method('DELETE')
-                        <button class="btn btn-sm btn-ghost-red" type="submit">Hapus</button>
+                        <button class="icon-action-btn danger" type="submit" title="Hapus" aria-label="Hapus {{ $p->name }}">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+                        </button>
                       </form>
                       @endif
                     </div>
-                  </td>
-                </tr>
-                <tr id="editRow{{ $p->id }}" style="display:none;">
-                  <td colspan="5" style="background:var(--panel-alt);">
-                    <form class="form-grid" method="POST" action="{{ route('admin.users.update', $p) }}" style="padding:16px;">
-                      @csrf @method('PATCH')
-                      <div class="form-field"><label>Nama</label><input name="name" type="text" value="{{ $p->name }}" required></div>
-                      <div class="form-field"><label>Username</label><input name="username" type="text" value="{{ $p->username }}" required></div>
-                      <div class="form-field"><label>Email</label><input name="email" type="email" value="{{ $p->email }}"></div>
-                      <div class="form-field"><label>Jabatan</label><input name="jabatan" type="text" value="{{ $p->jabatan }}"></div>
-                      <div class="form-field">
-                        <label>Satuan</label>
-                        <select name="satuan_id" required>
-                          @foreach($semuaSatuan as $s)
-                          <option value="{{ $s->id }}" @selected($p->satuan_id === $s->id)>{{ $s->nama }}</option>
-                          @endforeach
-                        </select>
-                      </div>
-                      <div class="form-field"><label>Password Baru (opsional)</label><input name="password" type="password" minlength="8" placeholder="Kosongkan jika tidak diubah"></div>
-                      <div class="form-field full"><button class="btn btn-primary btn-sm" type="submit">Simpan Perubahan</button></div>
-                    </form>
                   </td>
                 </tr>
                 @endforeach
@@ -747,11 +865,6 @@
       </section>
 
       <script>
-        function toggleEditPengguna(id) {
-          var row = document.getElementById('editRow' + id);
-          if (row) row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
-        }
-
         (function () {
           var modal = document.getElementById('tambahPenggunaModal');
           var openBtn = document.getElementById('tambahPenggunaOpen');
@@ -761,6 +874,27 @@
           function open() { modal.classList.add('open'); }
           function close() { modal.classList.remove('open'); }
           if (openBtn) openBtn.addEventListener('click', open);
+          if (closeBtn) closeBtn.addEventListener('click', close);
+          if (cancelBtn) cancelBtn.addEventListener('click', close);
+          modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+          document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+        })();
+
+        window.bukaUbahPengguna = function (btn) {
+          document.getElementById('ubahPenggunaForm').action = btn.dataset.action;
+          document.getElementById('upNama').value = btn.dataset.name || '';
+          document.getElementById('upUsername').value = btn.dataset.username || '';
+          document.getElementById('upEmail').value = btn.dataset.email || '';
+          document.getElementById('upSatuan').value = btn.dataset.satuanId || '';
+          document.getElementById('upPassword').value = '';
+          document.getElementById('ubahPenggunaModal').classList.add('open');
+        };
+        (function () {
+          var modal = document.getElementById('ubahPenggunaModal');
+          var closeBtn = document.getElementById('ubahPenggunaClose');
+          var cancelBtn = document.getElementById('ubahPenggunaCancel');
+          if (!modal) return;
+          function close() { modal.classList.remove('open'); }
           if (closeBtn) closeBtn.addEventListener('click', close);
           if (cancelBtn) cancelBtn.addEventListener('click', close);
           modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
@@ -783,28 +917,10 @@
         @endif
 
         <div class="panel">
-          <div class="panel-head"><div><h3>Tambah Satuan</h3><p>Kode dipakai sebagai identitas login/role.</p></div></div>
-          <form class="form-grid" method="POST" action="{{ route('admin.satuan.store') }}" style="padding:22px;">
-            @csrf
-            <div class="form-field"><label for="sKode">Kode</label><input id="sKode" name="kode" type="text" placeholder="Contoh: BINLOG" required style="text-transform:uppercase;"></div>
-            <div class="form-field"><label for="sNama">Nama Satuan</label><input id="sNama" name="nama" type="text" required></div>
-            <div class="form-field">
-              <label for="sKategori">Kategori</label>
-              <select id="sKategori" name="kategori" required>
-                <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
-                <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
-                <option value="{{ \App\Models\Satuan::KATEGORI_PIMPINAN }}">Pimpinan</option>
-                <option value="{{ \App\Models\Satuan::KATEGORI_ADMIN }}">Admin</option>
-              </select>
-            </div>
-            <div class="form-field"><label for="sUrutan">Urutan</label><input id="sUrutan" name="urutan" type="number" min="0" placeholder="0"></div>
-            <div class="form-field full"><label for="sDeskripsi">Deskripsi (opsional)</label><textarea id="sDeskripsi" name="deskripsi" rows="2"></textarea></div>
-            <div class="form-field full"><button class="btn btn-primary" type="submit">Simpan Satuan</button></div>
-          </form>
-        </div>
-
-        <div class="panel">
-          <div class="panel-head"><div><h3>Daftar Satuan</h3><p>Satuan yang masih punya pengguna tidak bisa dihapus.</p></div></div>
+          <div class="panel-head">
+            <div><h3>Daftar Satuan</h3><p>Satuan yang masih punya pengguna tidak bisa dihapus.</p></div>
+            <button class="btn btn-primary btn-sm" type="button" id="tambahSatuanOpen">+ Tambah Satuan</button>
+          </div>
           <div class="tbl-wrap" data-row-limit="8">
             <table class="dtbl">
               <thead><tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Jumlah Pengguna</th><th>Aksi</th></tr></thead>
@@ -817,32 +933,18 @@
                   <td>{{ $s->users_count }}</td>
                   <td>
                     <div class="btn-row">
-                      <button class="btn btn-sm" type="button" onclick="toggleEditSatuan({{ $s->id }})">Ubah</button>
+                      <button class="btn btn-sm" type="button" onclick="bukaUbahSatuan(this)"
+                        data-action="{{ route('admin.satuan.update', $s) }}"
+                        data-kode="{{ $s->kode }}"
+                        data-nama="{{ $s->nama }}"
+                        data-kategori="{{ $s->kategori }}"
+                        data-urutan="{{ $s->urutan }}"
+                        data-deskripsi="{{ $s->deskripsi }}">Ubah</button>
                       <form method="POST" action="{{ route('admin.satuan.destroy', $s) }}" onsubmit="return confirm('Hapus satuan {{ $s->nama }}?');" style="display:inline;">
                         @csrf @method('DELETE')
                         <button class="btn btn-sm btn-ghost-red" type="submit">Hapus</button>
                       </form>
                     </div>
-                  </td>
-                </tr>
-                <tr id="editSatuan{{ $s->id }}" style="display:none;">
-                  <td colspan="5" style="background:var(--panel-alt);">
-                    <form class="form-grid" method="POST" action="{{ route('admin.satuan.update', $s) }}" style="padding:16px;">
-                      @csrf @method('PATCH')
-                      <div class="form-field"><label>Kode</label><input name="kode" type="text" value="{{ $s->kode }}" required></div>
-                      <div class="form-field"><label>Nama</label><input name="nama" type="text" value="{{ $s->nama }}" required></div>
-                      <div class="form-field">
-                        <label>Kategori</label>
-                        <select name="kategori" required>
-                          @foreach([\App\Models\Satuan::KATEGORI_SATLAK,\App\Models\Satuan::KATEGORI_DIREKTORAT,\App\Models\Satuan::KATEGORI_PIMPINAN,\App\Models\Satuan::KATEGORI_ADMIN] as $k)
-                          <option value="{{ $k }}" @selected($s->kategori === $k)>{{ ucfirst($k) }}</option>
-                          @endforeach
-                        </select>
-                      </div>
-                      <div class="form-field"><label>Urutan</label><input name="urutan" type="number" min="0" value="{{ $s->urutan }}"></div>
-                      <div class="form-field full"><label>Deskripsi</label><textarea name="deskripsi" rows="2">{{ $s->deskripsi }}</textarea></div>
-                      <div class="form-field full"><button class="btn btn-primary btn-sm" type="submit">Simpan Perubahan</button></div>
-                    </form>
                   </td>
                 </tr>
                 @empty
@@ -854,10 +956,41 @@
         </div>
       </section>
       <script>
-        function toggleEditSatuan(id) {
-          var row = document.getElementById('editSatuan' + id);
-          if (row) row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
-        }
+        (function () {
+          var modal = document.getElementById('tambahSatuanModal');
+          var openBtn = document.getElementById('tambahSatuanOpen');
+          var closeBtn = document.getElementById('tambahSatuanClose');
+          var cancelBtn = document.getElementById('tambahSatuanCancel');
+          if (!modal) return;
+          function open() { modal.classList.add('open'); }
+          function close() { modal.classList.remove('open'); }
+          if (openBtn) openBtn.addEventListener('click', open);
+          if (closeBtn) closeBtn.addEventListener('click', close);
+          if (cancelBtn) cancelBtn.addEventListener('click', close);
+          modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+          document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+        })();
+
+        window.bukaUbahSatuan = function (btn) {
+          document.getElementById('ubahSatuanForm').action = btn.dataset.action;
+          document.getElementById('usKode').value = btn.dataset.kode || '';
+          document.getElementById('usNama').value = btn.dataset.nama || '';
+          document.getElementById('usKategori').value = btn.dataset.kategori || '';
+          document.getElementById('usUrutan').value = btn.dataset.urutan || '';
+          document.getElementById('usDeskripsi').value = btn.dataset.deskripsi || '';
+          document.getElementById('ubahSatuanModal').classList.add('open');
+        };
+        (function () {
+          var modal = document.getElementById('ubahSatuanModal');
+          var closeBtn = document.getElementById('ubahSatuanClose');
+          var cancelBtn = document.getElementById('ubahSatuanCancel');
+          if (!modal) return;
+          function close() { modal.classList.remove('open'); }
+          if (closeBtn) closeBtn.addEventListener('click', close);
+          if (cancelBtn) cancelBtn.addEventListener('click', close);
+          modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+          document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+        })();
       </script>
 
       {{-- ===== ROLE & HAK AKSES ===== --}}
