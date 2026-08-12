@@ -102,19 +102,21 @@ function terapkanTemaLandingPadaDashboard() {
     }
 
     /* Paksa seluruh semantic success/green dashboard menjadi gold pada dark theme.
-       Status danger/error tetap merah karena merupakan status fungsional. */
-    :root:not([data-theme="light"]) .green,
-    :root:not([data-theme="light"]) .text-green,
-    :root:not([data-theme="light"]) .bg-green,
-    :root:not([data-theme="light"]) .border-green,
-    :root:not([data-theme="light"]) .success,
-    :root:not([data-theme="light"]) .text-success,
-    :root:not([data-theme="light"]) .bg-success,
-    :root:not([data-theme="light"]) .border-success,
-    :root:not([data-theme="light"]) .btn-success,
-    :root:not([data-theme="light"]) .badge.green,
-    :root:not([data-theme="light"]) [class~="green"],
-    :root:not([data-theme="light"]) [class~="success"] {
+       Status danger/error tetap merah karena merupakan status fungsional.
+       Pengecualian :not(.toast, .toast *) mencegah toast notifikasi sukses ikut
+       ke-override jadi gold — toast harus selalu hijau di kedua tema. */
+    :root:not([data-theme="light"]) .green:not(.toast, .toast *),
+    :root:not([data-theme="light"]) .text-green:not(.toast, .toast *),
+    :root:not([data-theme="light"]) .bg-green:not(.toast, .toast *),
+    :root:not([data-theme="light"]) .border-green:not(.toast, .toast *),
+    :root:not([data-theme="light"]) .success:not(.toast, .toast *),
+    :root:not([data-theme="light"]) .text-success:not(.toast, .toast *),
+    :root:not([data-theme="light"]) .bg-success:not(.toast, .toast *),
+    :root:not([data-theme="light"]) .border-success:not(.toast, .toast *),
+    :root:not([data-theme="light"]) .btn-success:not(.toast, .toast *),
+    :root:not([data-theme="light"]) .badge.green:not(.toast, .toast *),
+    :root:not([data-theme="light"]) [class~="green"]:not(.toast, .toast *),
+    :root:not([data-theme="light"]) [class~="success"]:not(.toast, .toast *) {
       color:var(--gold-bright) !important;
       border-color:rgba(217,146,11,.42) !important;
       background-color:rgba(217,146,11,.14) !important;
@@ -122,17 +124,17 @@ function terapkanTemaLandingPadaDashboard() {
       box-shadow:none !important;
     }
 
-    :root:not([data-theme="light"]) .btn-success,
-    :root:not([data-theme="light"]) button.green,
-    :root:not([data-theme="light"]) a.green {
+    :root:not([data-theme="light"]) .btn-success:not(.toast, .toast *),
+    :root:not([data-theme="light"]) button.green:not(.toast, .toast *),
+    :root:not([data-theme="light"]) a.green:not(.toast, .toast *) {
       background:#d9920b !important;
       color:#181006 !important;
       border-color:#d9920b !important;
     }
 
-    :root:not([data-theme="light"]) .btn-success:hover,
-    :root:not([data-theme="light"]) button.green:hover,
-    :root:not([data-theme="light"]) a.green:hover {
+    :root:not([data-theme="light"]) .btn-success:hover:not(.toast, .toast *),
+    :root:not([data-theme="light"]) button.green:hover:not(.toast, .toast *),
+    :root:not([data-theme="light"]) a.green:hover:not(.toast, .toast *) {
       background:#f2b94b !important;
       color:#181006 !important;
       border-color:#f2b94b !important;
