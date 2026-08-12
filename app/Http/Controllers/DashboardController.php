@@ -35,9 +35,15 @@ class DashboardController
         ];
         $labelKategori = [Satuan::KATEGORI_SATLAK => 'Satlak', Satuan::KATEGORI_DIREKTORAT => 'Direktorat', Satuan::KATEGORI_PIMPINAN => 'Pimpinan', Satuan::KATEGORI_ADMIN => 'Admin'];
         $distribusiPenggunaKategori = $semuaSatuan->groupBy('kategori')->map(fn ($group, $kategori) => ['kategori' => $labelKategori[$kategori] ?? ucfirst($kategori), 'jumlah' => $group->sum('users_count')])->values();
-        $statusResetPassword = collect($permintaanResetPassword)->groupBy('status')->map(fn ($group, $status) => ['status' => $status, 'jumlah' => $group->count()])->values();
-        $satuanSudahPunyaAkun = $semuaSatuan->where('users_count', '>', 0)->count();
-        $satuanBelumPunyaAkun = $semuaSatuan->where('users_count', 0)->count();
+        $statusLaporanSistem = [
+            'menunggu' => Laporan::where('status', 'Menunggu')->count(),
+            'disetujui' => Laporan::where('status', 'Disetujui DANPUS')->count(),
+            'ditolak' => Laporan::where('status', 'Ditolak DANPUS')->count(),
+        ];
+        $aktivitasTujuhHari = collect(range(6, 0))->map(function ($i) {
+            $tanggal = now()->subDays($i);
+            return ['label' => $tanggal->translatedFormat('d M'), 'jumlah' => ActivityLog::whereDate('created_at', $tanggal->toDateString())->count()];
+        })->values();
         $logAktivitas = ActivityLog::with('user')->latest('created_at')->limit(200)->get();
         $daftarBackup = app(BackupController::class)->index();
         $sesiAktif = DB::table('sessions')->leftJoin('users', 'sessions.user_id', '=', 'users.id')->orderByDesc('sessions.last_activity')->get(['sessions.id','sessions.ip_address','sessions.user_agent','sessions.last_activity','users.name as user_name']);
@@ -46,7 +52,7 @@ class DashboardController
             'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT',
         ];
         $rekapLaporanSatuan = Satuan::whereIn('kode', $kodeSatuanPengirim)->withCount(['laporanTerkirim as total_laporan','laporanTerkirim as laporan_menunggu' => fn ($q) => $q->where('status', 'Menunggu'),'laporanTerkirim as laporan_disetujui' => fn ($q) => $q->where('status', 'Disetujui DANPUS'),'laporanTerkirim as laporan_ditolak' => fn ($q) => $q->where('status', 'Ditolak DANPUS')])->orderBy('urutan')->get();
-        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusResetPassword','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan') + ['kelengkapanAkunSatuan' => ['sudah' => $satuanSudahPunyaAkun, 'belum' => $satuanBelumPunyaAkun], 'pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => Laporan::count(), 'reset_password_pending' => collect($permintaanResetPassword)->where('status_class','amber')->count()]]);
+        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','aktivitasTujuhHari','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => Laporan::count(), 'reset_password_pending' => collect($permintaanResetPassword)->where('status_class','amber')->count()]]);
     }
 
     private function pelaporan($user, $satuan, ?string $kode): View

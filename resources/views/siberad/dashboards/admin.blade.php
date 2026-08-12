@@ -708,18 +708,18 @@
 
             <div class="chart-mini">
               <div class="chart-mini-head">
-                <div class="chart-mini-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.5-2-3.4-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9-2 3.4 2 1.5a7.6 7.6 0 0 0 0 3l-2 1.5 2 3.4 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.5h4l.5-2.5a7.6 7.6 0 0 0 2.6-1.5l2.3.9 2-3.4Z"/></svg></div>
-                <div><h4>Status Reset Password</h4><p>Proporsi permintaan yang masuk.</p></div>
+                <div class="chart-mini-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+                <div><h4>Distribusi Status Laporan</h4><p>Proporsi status seluruh laporan di sistem.</p></div>
               </div>
-              <div class="chart-wrap"><canvas id="chartStatusReset"></canvas></div>
+              <div class="chart-wrap"><canvas id="chartStatusLaporan"></canvas></div>
             </div>
 
             <div class="chart-mini">
               <div class="chart-mini-head">
-                <div class="chart-mini-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-                <div><h4>Kelengkapan Akun Satuan</h4><p>Satuan yang sudah vs belum punya akun.</p></div>
+                <div class="chart-mini-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                <div><h4>Aktivitas 7 Hari Terakhir</h4><p>Jumlah aksi tercatat per hari.</p></div>
               </div>
-              <div class="chart-wrap"><canvas id="chartKelengkapanSatuan"></canvas></div>
+              <div class="chart-wrap"><canvas id="chartAktivitasMingguan"></canvas></div>
             </div>
 
           </div>
@@ -762,6 +762,7 @@
           .chart-mini-icon svg{width:15px;height:15px;}
           .chart-mini-icon.amber{background:var(--amber-dim);color:var(--amber);}
           .chart-mini-icon.green{background:var(--green-dim);color:var(--green-bright);}
+          .chart-mini-icon.blue{background:rgba(99,102,241,.14);color:#6366f1;}
 
           .activity-panel{margin-top:22px;}
           .activity-feed{list-style:none;padding:2px 0 4px;margin:0;}
@@ -2081,33 +2082,64 @@
       });
     }
 
-    // ===== Grafik 1: Pengguna per Kategori Satuan =====
+    // ===== Grafik 1: Pengguna per Kategori Satuan (warna literal — urutan
+    // groupBy() selalu Admin, Satlak, Direktorat, Pimpinan karena mengikuti
+    // urutan kolom "urutan" di $semuaSatuan) =====
     var distribusiKategori = @json($distribusiPenggunaKategori);
     renderDoughnut(
       'chartKategoriSatuan',
       distribusiKategori.map(function (d) { return d.kategori; }),
       distribusiKategori.map(function (d) { return d.jumlah; }),
-      [cGold, cGreen, cAmber, cMuted]
+      [cGold, '#6366f1', '#22c55e', '#f59e0b']
     );
 
-    // ===== Grafik 2: Status Permintaan Reset Password =====
-    var statusReset = @json($statusResetPassword);
-    var warnaStatus = { 'Menunggu': cAmber, 'Selesai': cGreen, 'Ditolak': cRed };
+    // ===== Grafik 2: Distribusi Status Laporan (data asli, warna tetap
+    // hijau/merah/oren — bukan var(--green-bright) yang di-repurpose jadi
+    // gold di dark mode) =====
+    var statusLaporan = @json($statusLaporanSistem);
     renderDoughnut(
-      'chartStatusReset',
-      statusReset.map(function (s) { return s.status; }),
-      statusReset.map(function (s) { return s.jumlah; }),
-      statusReset.map(function (s) { return warnaStatus[s.status] || cMuted; })
+      'chartStatusLaporan',
+      ['Disetujui', 'Ditolak', 'Menunggu'],
+      [statusLaporan.disetujui, statusLaporan.ditolak, statusLaporan.menunggu],
+      ['#22c55e', '#ef4444', '#f59e0b']
     );
 
-    // ===== Grafik 3: Kelengkapan Akun Satuan =====
-    var kelengkapan = @json($kelengkapanAkunSatuan);
-    renderDoughnut(
-      'chartKelengkapanSatuan',
-      ['Sudah Punya Akun', 'Belum Punya Akun'],
-      [kelengkapan.sudah, kelengkapan.belum],
-      [cGreen, cRed]
-    );
+    // ===== Grafik 3: Aktivitas 7 Hari Terakhir =====
+    var aktivitasMingguan = @json($aktivitasTujuhHari);
+    var elAktivitas = document.getElementById('chartAktivitasMingguan');
+    if (elAktivitas) {
+      var aktivitasCtx = elAktivitas.getContext('2d');
+      var aktivitasGradient = aktivitasCtx.createLinearGradient(0, 0, 0, elAktivitas.height || 220);
+      aktivitasGradient.addColorStop(0, 'rgba(99,102,241,.35)');
+      aktivitasGradient.addColorStop(1, 'rgba(99,102,241,0)');
+      new Chart(elAktivitas, {
+        type: 'line',
+        data: {
+          labels: aktivitasMingguan.map(function (a) { return a.label; }),
+          datasets: [{
+            label: 'Aktivitas',
+            data: aktivitasMingguan.map(function (a) { return a.jumlah; }),
+            borderColor: '#6366f1',
+            backgroundColor: aktivitasGradient,
+            fill: true,
+            tension: 0.35,
+            pointBackgroundColor: '#6366f1',
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            borderWidth: 2.5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(255,255,255,.06)' } }
+          }
+        }
+      });
+    }
 
     // ===== Grafik 4: Rekap Total Laporan per Satlak =====
     var rekapSatuan = @json($rekapLaporanSatuan);
