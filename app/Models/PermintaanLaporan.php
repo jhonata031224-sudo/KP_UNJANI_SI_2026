@@ -14,6 +14,7 @@ class PermintaanLaporan extends Model
         'pembuat_id',
         'tujuan_satuan_id',
         'perihal',
+        'kategori',
         'instruksi',
         'deadline_at',
         'prioritas',

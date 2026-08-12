@@ -22,6 +22,7 @@
                 hidden.value=btn.dataset.requestId||'';
                 var tujuan=form.querySelector('[name="tujuan_satuan_id"]'); if(tujuan && btn.dataset.targetId) tujuan.value=btn.dataset.targetId;
                 var perihal=form.querySelector('[name="perihal"]'); if(perihal && btn.dataset.perihal) perihal.value=btn.dataset.perihal;
+                var kategori=form.querySelector('[name="proyek"]'); if(kategori && btn.dataset.kategori) kategori.value=btn.dataset.kategori;
                 var prioritas=form.querySelector('[name="prioritas"]'); if(prioritas && btn.dataset.prioritas) prioritas.value=btn.dataset.prioritas;
                 var deskripsi=form.querySelector('[name="deskripsi"]'); if(deskripsi && btn.dataset.instruksi && !deskripsi.value.trim()) deskripsi.value=btn.dataset.instruksi;
                 modal.classList.add('open');
