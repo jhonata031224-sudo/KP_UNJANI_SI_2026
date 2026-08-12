@@ -695,7 +695,7 @@
         </div>
 
         <div class="panel chart-box">
-          <div class="panel-head"><div><h3>Statistik Sistem</h3><p>Sebaran akun, satuan, dan permintaan reset password.</p></div></div>
+          <div class="panel-head"><div><h3>Statistik Sistem</h3><p>Sebaran akun per kategori, status laporan, dan tren aktivitas 7 hari terakhir.</p></div></div>
           <div class="chart-box-grid">
 
             <div class="chart-mini">
