@@ -10,8 +10,6 @@
       .main{padding-top:82px!important}
       @media(max-width:900px){.main > .topbar{left:0!important}}
 
-      /* Pengaturan Umum: editor dan preview disusun vertikal penuh-lebar.
-         Ini sengaja tidak mengubah layout halaman admin lain. */
       .siberad-landing-stack{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:20px!important;align-items:start!important}
       .siberad-landing-stack>*{width:100%!important;min-width:0!important;box-sizing:border-box!important}
       #lpPreview{width:100%!important;max-width:100%!important;box-sizing:border-box!important}
@@ -63,12 +61,30 @@
     arrangeLandingCards();
 
     var existing = document.getElementById('siberad-landing-preview-v4-script');
-    if (existing) return true;
+    if (existing) {
+      loadFitFix();
+      return true;
+    }
 
     var script = document.createElement('script');
     script.id = 'siberad-landing-preview-v4-script';
-    script.src = '/js/siberad-landing-preview-v4.js?v=20260812-02';
-    script.onload = function () { arrangeLandingCards(); };
+    script.src = '/js/siberad-landing-preview-v4.js?v=20260812-03';
+    script.onload = function () {
+      arrangeLandingCards();
+      loadFitFix();
+    };
+    script.defer = false;
+    document.body.appendChild(script);
+    return true;
+  }
+
+  function loadFitFix() {
+    if (!document.getElementById('landingForm') || !document.getElementById('lpPreview')) return false;
+    if (document.getElementById('siberad-preview-fit-fix-script')) return true;
+
+    var script = document.createElement('script');
+    script.id = 'siberad-preview-fit-fix-script';
+    script.src = '/js/siberad-preview-fit-fix.js?v=20260812-04';
     script.defer = false;
     document.body.appendChild(script);
     return true;
@@ -84,6 +100,7 @@
       tries++;
       arrangeLandingCards();
       loadLandingPreviewV4();
+      loadFitFix();
       if (tries >= 30) clearInterval(timer);
     }, 250);
 
