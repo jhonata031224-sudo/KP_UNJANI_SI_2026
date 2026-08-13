@@ -1,0 +1,39 @@
+name: Apply landing runtime wiring
+on:
+  push:
+    branches: [refactor-fokus-laporan]
+permissions:
+  contents: write
+jobs:
+  wire:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wire landing config endpoint and scripts
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('routes/web.php'); s=p.read_text()
+          marker="Route::get('/login', function () {"
+          route="""Route::get('/landing-config', function () {\n    $p = Pengaturan::current();\n    $config = $p->landingConfig();\n    $config['logo_url'] = $p->logo_path ? asset('storage/'.$p->logo_path) : asset('images/logo-pussiberad.jpg');\n    $config['background_url'] = $p->hero_image_path ? asset('storage/'.$p->hero_image_path) : asset('images/hero-lapangan-mabesad.jpg');\n    return response()->json(['config' => $config]);\n});\n\n"""
+          if "Route::get('/landing-config'" not in s:
+              s=s.replace(marker,route+marker,1); p.write_text(s)
+          p=Path('resources/views/siberad/landing/welcome.blade.php'); s=p.read_text()
+          marker='</body>'
+          inject="""<script src=\"{{ asset('js/landing-content.js') }}\"></script>\n"""
+          if "landing-content.js" not in s:
+              s=s.replace(marker,inject+marker,1); p.write_text(s)
+          p=Path('resources/views/siberad/dashboards/partials/dash-script.blade.php'); s=p.read_text()
+          inject="""\n@if(isset($pengaturan))\n<script src=\"{{ asset('js/admin-landing-editor.js') }}\"></script>\n@endif\n"""
+          if "admin-landing-editor.js" not in s:
+              s += inject; p.write_text(s)
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add routes/web.php resources/views/siberad/landing/welcome.blade.php resources/views/siberad/dashboards/partials/dash-script.blade.php .github/workflows/apply-landing-runtime.yml
+          git commit -m "feat: wire complete landing content management" || true
+          git push
+          git rm .github/workflows/apply-landing-runtime.yml || true
+          git commit -m "chore: remove one-time landing wiring workflow" || true
+          git push
