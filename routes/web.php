@@ -38,6 +38,14 @@ Route::get('/', function () {
     ]);
 });
 
+Route::get('/landing-config', function () {
+    $p = Pengaturan::current();
+    $config = $p->landingConfig();
+    $config['logo_url'] = $p->logo_path ? asset('storage/'.$p->logo_path) : asset('images/logo-pussiberad.jpg');
+    $config['background_url'] = $p->hero_image_path ? asset('storage/'.$p->hero_image_path) : asset('images/hero-lapangan-mabesad.jpg');
+    return response()->json(['config' => $config]);
+});
+
 Route::get('/login', function () {
     return redirect('/');
 });

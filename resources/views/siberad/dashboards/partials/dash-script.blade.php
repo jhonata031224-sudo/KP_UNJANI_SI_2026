@@ -81,3 +81,6 @@
     }
   })();
 </script>
+@if(isset($pengaturan))
+<script src="{{ asset('js/admin-landing-editor.js') }}"></script>
+@endif

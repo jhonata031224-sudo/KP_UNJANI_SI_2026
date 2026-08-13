@@ -1305,5 +1305,6 @@
   toggleBackToTop();
 
 </script>
+<script src="{{ asset('js/landing-content.js') }}"></script>
 </body>
 </html>
