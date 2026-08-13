@@ -7,8 +7,8 @@ use ZipArchive;
 
 /**
  * XLSX writer ringan tanpa dependency tambahan.
- * Tampilan export dibuat bersih seperti spreadsheet laporan manual:
- * header aksen hijau, isi putih, all borders, wrap text, tanpa filter dropdown.
+ * Export dibuat putih polos, bersih, dengan border pada seluruh tabel,
+ * tanpa filter/dropdown dan tanpa pewarnaan area sheet yang kosong.
  */
 class SimpleXlsx
 {
@@ -57,7 +57,7 @@ class SimpleXlsx
         return $out;
     }
 
-    private static function inlineCell(int $column, int $row, mixed $value, int $style = 2): string
+    private static function inlineCell(int $column, int $row, mixed $value, int $style = 1): string
     {
         $ref = self::col($column) . $row;
         $value = self::esc($value === '' ? '-' : $value);
@@ -73,6 +73,7 @@ class SimpleXlsx
             $lines = max(1, (int) ceil(mb_strlen($text) / max(8, $width * 1.25)));
             $maxLines = max($maxLines, min($lines, 6));
         }
+
         return min(108, max(22, 18 * $maxLines));
     }
 
@@ -89,32 +90,34 @@ class SimpleXlsx
         $xml .= '<dimension ref="A1:'.$lastCol.$lastRow.'"/>';
         $xml .= '<sheetViews><sheetView workbookViewId="0" showGridLines="1"><pane ySplit="3" topLeftCell="A4" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A4" sqref="A4"/></sheetView></sheetViews>';
         $xml .= '<sheetFormatPr defaultRowHeight="20"/><cols>';
-        foreach ($widths as $i => $width) {
-            $xml .= '<col min="'.($i + 1).'" max="'.($i + 1).'" width="'.(float) $width.'" customWidth="1"/>';
+
+        for ($i = 0; $i < $count; $i++) {
+            $width = (float) ($widths[$i] ?? 22);
+            $xml .= '<col min="'.($i + 1).'" max="'.($i + 1).'" width="'.$width.'" customWidth="1"/>';
         }
-        for ($i = count($widths) + 1; $i <= $count; $i++) {
-            $xml .= '<col min="'.$i.'" max="'.$i.'" width="22" customWidth="1"/>';
-        }
+
         $xml .= '</cols><sheetData>';
 
-        // Judul dan metadata hanya berada di area laporan dan tidak mewarnai sheet kosong.
-        $xml .= '<row r="1" ht="28" customHeight="1">'.self::inlineCell(1, 1, $title, 1).'</row>';
+        // Informasi laporan di atas tabel: putih polos, tanpa border/fill tambahan.
+        $xml .= '<row r="1" ht="28" customHeight="1">'.self::inlineCell(1, 1, $title, 0).'</row>';
         $xml .= '<row r="2" ht="22" customHeight="1">'.self::inlineCell(1, 2, 'Diekspor otomatis oleh SIBERAD · '.$generated, 4).'</row>';
 
-        // Header hijau sederhana seperti spreadsheet laporan manual. Tanpa autoFilter/dropdown.
+        // Header tabel: putih, tebal, border penuh, tanpa filter/dropdown.
         $xml .= '<row r="3" ht="30" customHeight="1">';
         foreach ($headers as $i => $header) {
-            $xml .= self::inlineCell($i + 1, 3, $header, 3);
+            $xml .= self::inlineCell($i + 1, 3, $header, 2);
         }
         $xml .= '</row>';
 
-        // Isi putih, semua sel memakai border tipis dan wrap text agar tidak terpotong.
+        // Semua baris data memakai style yang sama: putih + all borders + wrap.
+        // Jumlah baris sepenuhnya mengikuti jumlah data; tidak ada pewarnaan
+        // atau format berbeda pada baris setelah batas tertentu.
         foreach ($rows as $rowIndex => $row) {
             $excelRow = $rowIndex + 4;
             $height = self::rowHeightFor($row, $widths);
             $xml .= '<row r="'.$excelRow.'" ht="'.$height.'" customHeight="1">';
             foreach ($headers as $i => $_) {
-                $xml .= self::inlineCell($i + 1, $excelRow, $row[$i] ?? '-', 2);
+                $xml .= self::inlineCell($i + 1, $excelRow, $row[$i] ?? '-', 1);
             }
             $xml .= '</row>';
         }
@@ -124,6 +127,7 @@ class SimpleXlsx
         $xml .= '<pageMargins left="0.25" right="0.25" top="0.5" bottom="0.5" header="0.2" footer="0.2"/>';
         $xml .= '<pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/><pageSetUpPr fitToPage="1"/>';
         $xml .= '</worksheet>';
+
         return $xml;
     }
 
@@ -133,10 +137,10 @@ class SimpleXlsx
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
 <numFmts count="0"/>
 <fonts count="3"><font><sz val="11"/><name val="Aptos"/></font><font><b/><sz val="14"/><name val="Aptos"/></font><font><b/><sz val="11"/><name val="Aptos"/></font></fonts>
-<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF8ED66F"/><bgColor indexed="64"/></patternFill></fill></fills>
+<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>
 <borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFB7B7B7"/></left><right style="thin"><color rgb="FFB7B7B7"/></right><top style="thin"><color rgb="FFB7B7B7"/></top><bottom style="thin"><color rgb="FFB7B7B7"/></bottom><diagonal/></border></borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="5"><xf numFmtId="0" fontId="1" fillId="0" borderId="0" applyAlignment="1"><alignment vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="2" borderId="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="2" borderId="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment vertical="center"/></xf></cellXfs>
+<cellXfs count="5"><xf numFmtId="0" fontId="1" fillId="0" borderId="0" applyAlignment="1"><alignment vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="0" borderId="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="0" borderId="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment vertical="center"/></xf></cellXfs>
 <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>';
     }
