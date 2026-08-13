@@ -11,7 +11,7 @@
    ceklis opsi aktif, dst) sama semua dropdown filter lain di aplikasi,
    bukan widget kustom sendiri lagi. */
 .danpus-log-search .styled-select-wrap{width:auto;min-width:130px;flex-shrink:0}
-.danpus-log-search .search-count{font-size:10px;color:var(--p-muted);white-space:nowrap}
+.danpus-log-search .search-count{font-size:10px;color:var(--p-muted);white-space:nowrap;margin-left:auto}
 .danpus-log-empty{display:none;text-align:center;padding:22px 12px;color:var(--p-muted);font-size:12px;border:1px dashed var(--p-border);border-radius:10px;margin-top:2px}
 @media(max-width:700px){.danpus-log-search{display:flex;flex-wrap:wrap}.danpus-log-search-box{width:100%}.danpus-log-search .styled-select-wrap{flex:0 0 auto}.danpus-log-search .search-count{margin-left:auto;align-self:center}}
 </style>

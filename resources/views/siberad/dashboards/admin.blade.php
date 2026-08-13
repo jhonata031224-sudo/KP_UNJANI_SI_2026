@@ -29,24 +29,28 @@
   .chart-mini .chart-wrap{position:relative;height:210px;}
   @media(max-width:980px){.chart-box-grid{grid-template-columns:1fr;}.chart-mini .chart-wrap{height:230px;}}
 
-  /* ===== toolbar cari & filter tabel ===== */
-  .table-toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
-  .table-search-wrap{position:relative;flex:1;min-width:200px;}
-  .table-search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--text-dim);pointer-events:none;}
+  /* ===== toolbar cari & filter tabel =====
+     Disamakan gayanya dengan .rpt-filter-bar/.danpus-log-search (Pimpinan):
+     tinggi 38px, radius 9px, ikon di posisi yang sama, dan teks jumlah hasil
+     nempel pojok kanan lewat margin-left:auto -- 1 sistem, bukan style sendiri2. */
+  .table-toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+  .table-search-wrap{position:relative;flex:1 1 240px;min-width:200px;max-width:360px;}
+  .table-search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--text-dim);pointer-events:none;}
   .table-search{
-    width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--border);color:var(--text);
-    font-family:var(--body);font-size:13px;border-radius:8px;padding:9px 12px 9px 34px;
+    width:100%;box-sizing:border-box;height:38px;background:var(--panel);border:1px solid var(--border);color:var(--text);
+    font-family:var(--body);font-size:13px;border-radius:9px;padding:8px 12px 8px 34px;
   }
   .table-search::placeholder{color:var(--text-dim);}
   .table-search:focus{outline:none;border-color:var(--gold);}
   .table-filter{
     background:var(--panel);border:1px solid var(--border);color:var(--text);font-family:var(--mono);
-    font-size:11.5px;letter-spacing:.02em;border-radius:8px;padding:0 10px;cursor:pointer;flex-shrink:0;
+    font-size:11.5px;letter-spacing:.02em;border-radius:9px;padding:0 10px;cursor:pointer;flex-shrink:0;
     min-width:170px;height:38px;
   }
   .table-filter:focus{outline:none;border-color:var(--gold);}
+  .table-filter-count{font-size:10px;color:var(--text-dim);white-space:nowrap;margin-left:auto;}
   .table-empty-row td{text-align:center;color:var(--text-dim);font-size:12.5px;padding:26px 12px !important;}
-  @media(max-width:640px){.table-toolbar{flex-direction:column;}.table-filter{width:100%;}}
+  @media(max-width:640px){.table-toolbar{flex-direction:column;align-items:stretch;}.table-search-wrap{max-width:none;}.table-filter{width:100%;}.table-filter-count{width:100%;margin-left:0;}}
 
   /* ===== badge status Rekap Laporan (warna tetap hijau/merah/oren asli,
      tidak ikut --green yang di-repurpose jadi gold di tempat lain) ===== */
@@ -659,6 +663,7 @@
 
     <div class="content">
       @include('siberad.dashboards.partials.pengumuman-banner')
+      @include('siberad.dashboards.partials.styled-select')
 
       {{-- ===== DASHBOARD ===== --}}
       <section class="tab-panel active" data-tab-panel="dashboard">
@@ -812,6 +817,7 @@
               <option value="{{ $s->nama }}">{{ $s->nama }}</option>
               @endforeach
             </select>
+            <span class="table-filter-count" data-table-count="tblPengguna"></span>
           </div>
           <div class="tbl-wrap" data-row-limit="8">
             <table class="dtbl" id="tblPengguna">
@@ -927,6 +933,7 @@
               <option value="{{ \App\Models\Satuan::KATEGORI_PIMPINAN }}">Pimpinan</option>
               <option value="{{ \App\Models\Satuan::KATEGORI_ADMIN }}">Admin</option>
             </select>
+            <span class="table-filter-count" data-table-count="tblSatuan"></span>
           </div>
           <div class="tbl-wrap" data-row-limit="8">
             <table class="dtbl" id="tblSatuan">
@@ -1042,6 +1049,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
               <input type="text" class="table-search" data-table-search="tblLogAktivitas" placeholder="Cari pengguna atau aksi...">
             </div>
+            <span class="table-filter-count" data-table-count="tblLogAktivitas"></span>
           </div>
           <div class="tbl-wrap" data-row-limit="10">
             <table class="dtbl" id="tblLogAktivitas">
@@ -1566,6 +1574,7 @@
               <option value="Selesai">Selesai</option>
               <option value="Ditolak">Ditolak</option>
             </select>
+            <span class="table-filter-count" data-table-count="tblResetPassword"></span>
           </div>
           <div class="tbl-wrap" data-row-limit="5">
             <table class="dtbl" id="tblResetPassword">
@@ -1626,6 +1635,7 @@
               <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
               <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
             </select>
+            <span class="table-filter-count" data-table-count="tblRekapSatuan"></span>
           </div>
           <div class="tbl-wrap">
             <table class="dtbl" id="tblRekapSatuan">
@@ -2242,6 +2252,9 @@
 
       // Hitung ulang batas 5 baris hanya berdasarkan baris yang sedang tampil.
       if (window.terapkanRowLimitWrap) window.terapkanRowLimitWrap(wrap);
+
+      var countEl = document.querySelector('[data-table-count="' + tableId + '"]');
+      if (countEl) countEl.textContent = visibleCount + ' dari ' + rows.length + ' data';
     }
 
     window.terapkanTabelFilter = terapkanTabelFilter;
@@ -2255,6 +2268,10 @@
       select.addEventListener('change', function () {
         terapkanTabelFilter(select.getAttribute('data-table-filter'));
       });
+    });
+    // Isi teks jumlah data begitu halaman dimuat, bukan cuma pas user mulai cari/filter.
+    document.querySelectorAll('[data-table-count]').forEach(function (el) {
+      terapkanTabelFilter(el.getAttribute('data-table-count'));
     });
   })();
   </script>
