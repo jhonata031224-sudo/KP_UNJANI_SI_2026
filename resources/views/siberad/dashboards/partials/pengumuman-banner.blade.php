@@ -1,3 +1,37 @@
+<style>
+/* Refactor tampilan editor Konten Halaman Landing — fokus pada editor yang rapi,
+   tetap mempertahankan pratinjau langsung di bawah editor. */
+.lp-layout{display:flex !important;flex-direction:column !important;gap:22px !important;align-items:stretch !important;}
+.lp-panel,.lp-preview-panel{width:100% !important;min-width:0 !important;}
+.lp-panel{border-radius:16px !important;box-shadow:0 8px 28px rgba(15,23,42,.06) !important;overflow:hidden;}
+.lp-panel > .panel-head{padding:24px 28px 18px !important;border-bottom:0 !important;}
+.lp-panel > .panel-head h3{font-family:var(--display) !important;font-size:21px !important;font-weight:700 !important;letter-spacing:.01em !important;}
+.lp-panel > .panel-head p{margin-top:5px !important;font-size:13px !important;color:var(--text-muted) !important;}
+.lp-panel form{padding:0 28px 24px !important;}
+.lp-tabs{gap:8px !important;margin:0 0 18px !important;padding:0 0 18px !important;border-bottom:1px solid var(--border-soft) !important;}
+.lp-tab{min-height:44px !important;padding:10px 18px !important;border-radius:22px !important;font-size:13px !important;background:var(--panel-alt) !important;border-color:var(--border-soft) !important;}
+.lp-tab.active{background:var(--gold-dim) !important;border-color:var(--gold) !important;color:var(--gold-bright) !important;}
+.lp-tab-panel{padding-top:0 !important;}
+.lp-tab-desc{margin:0 0 20px !important;padding:13px 16px 13px 42px !important;position:relative;border:1px solid rgba(59,130,246,.18) !important;border-radius:10px !important;background:rgba(59,130,246,.07) !important;color:var(--text-muted) !important;line-height:1.5 !important;font-size:12.5px !important;}
+.lp-tab-desc::before{content:'i';position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#3b82f6;color:#fff;font-family:var(--mono);font-size:11px;font-weight:700;}
+.lp-tab-panel .form-grid{gap:18px 20px !important;}
+.lp-tab-panel .form-field{min-width:0;}
+.lp-tab-panel .form-field label{display:block;margin-bottom:8px !important;font-family:var(--body) !important;font-size:12px !important;font-weight:700 !important;letter-spacing:.01em !important;color:var(--text) !important;}
+.lp-tab-panel .form-field input,.lp-tab-panel .form-field select,.lp-tab-panel .form-field textarea{width:100% !important;min-height:48px !important;border-radius:11px !important;padding:12px 14px !important;font-family:var(--body) !important;font-size:14px !important;background:var(--panel) !important;border:1px solid var(--border) !important;box-shadow:none !important;}
+.lp-tab-panel .form-field textarea{min-height:104px !important;resize:vertical;line-height:1.55;}
+.lp-tab-panel .form-field input:focus,.lp-tab-panel .form-field select:focus,.lp-tab-panel .form-field textarea:focus{outline:none !important;border-color:var(--gold) !important;box-shadow:0 0 0 3px var(--gold-dim) !important;}
+.lp-card{border-radius:12px !important;padding:18px !important;margin-bottom:14px !important;background:var(--panel-alt) !important;}
+.lp-card-title{font-family:var(--body) !important;font-size:11px !important;letter-spacing:.08em !important;}
+.lp-current-image{height:72px !important;border-radius:9px !important;}
+.lp-form-actions{margin-top:22px !important;padding-top:20px !important;border-top:1px solid var(--border-soft) !important;display:flex !important;justify-content:flex-start !important;}
+.lp-form-actions .btn{min-height:44px !important;padding:10px 20px !important;border-radius:10px !important;font-size:12px !important;font-weight:700 !important;letter-spacing:.03em !important;}
+.lp-preview-panel{position:relative !important;top:auto !important;}
+.lp-preview-panel > .panel-head{padding:20px 24px 14px !important;}
+.lp-preview-body{padding:0 24px 24px !important;}
+.lp-browser-frame{border-radius:12px !important;}
+@media(max-width:760px){.lp-panel > .panel-head{padding:20px 18px 16px !important;}.lp-panel form{padding:0 18px 20px !important;}.lp-tab{flex:1 1 calc(50% - 8px);justify-content:center;}}
+</style>
+
 @include('siberad.dashboards.partials.profile-enhancements')
 @include('siberad.dashboards.partials.notification-controls')
 @include('siberad.dashboards.partials.admin-ui-consistency')
