@@ -63,15 +63,30 @@ class SimpleXlsx
         return '<c r="'.$ref.'" t="inlineStr" s="'.$style.'"><is><t xml:space="preserve">'.$value.'</t></is></c>';
     }
 
+    private static function rowHeightFor(array $row, array $widths): float
+    {
+        $maxLines = 1;
+        foreach ($row as $i => $value) {
+            $text = (string) ($value ?? '-');
+            $width = max(8, (float) ($widths[$i] ?? 22));
+            $lines = max(1, (int) ceil(mb_strlen($text) / max(8, $width * 1.25)));
+            $maxLines = max($maxLines, min($lines, 6));
+        }
+        return min(96, max(22, 18 * $maxLines));
+    }
+
     private static function sheet(string $title, array $headers, array $rows, array $widths): string
     {
         $count = count($headers);
         $lastCol = self::col($count);
         $title = self::esc($title);
         $generated = self::esc(now()->format('d/m/Y H:i:s'));
+        $lastRow = max(3, count($rows) + 3);
+
         $xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
         $xml .= '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">';
-        $xml .= '<sheetViews><sheetView workbookViewId="0"><pane ySplit="3" topLeftCell="A4" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A4" sqref="A4"/></sheetView></sheetViews>';
+        $xml .= '<dimension ref="A1:'.$lastCol.$lastRow.'"/>';
+        $xml .= '<sheetViews><sheetView workbookViewId="0" showGridLines="1"><pane ySplit="3" topLeftCell="A4" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A4" sqref="A4"/></sheetView></sheetViews>';
         $xml .= '<sheetFormatPr defaultRowHeight="20"/><cols>';
         foreach ($widths as $i => $width) {
             $xml .= '<col min="'.($i + 1).'" max="'.($i + 1).'" width="'.(float) $width.'" customWidth="1"/>';
@@ -80,21 +95,31 @@ class SimpleXlsx
             $xml .= '<col min="'.$i.'" max="'.$i.'" width="22" customWidth="1"/>';
         }
         $xml .= '</cols><sheetData>';
+
+        // Judul dan metadata hanya memakai area tabel, tanpa memberi warna pada sheet kosong.
         $xml .= '<row r="1" ht="28" customHeight="1">'.self::inlineCell(1, 1, $title, 1).'</row>';
         $xml .= '<row r="2" ht="22" customHeight="1">'.self::inlineCell(1, 2, 'Diekspor otomatis oleh SIBERAD · '.$generated, 4).'</row>';
+
+        // Header: warna aksen hanya pada header tabel, tanpa filter/dropdown.
         $xml .= '<row r="3" ht="28" customHeight="1">';
-        foreach ($headers as $i => $header) $xml .= self::inlineCell($i + 1, 3, $header, 3);
+        foreach ($headers as $i => $header) {
+            $xml .= self::inlineCell($i + 1, 3, $header, 3);
+        }
         $xml .= '</row>';
 
+        // Seluruh data diberi all borders + wrap text. Tinggi baris dihitung agar isi panjang tetap terlihat.
         foreach ($rows as $rowIndex => $row) {
             $excelRow = $rowIndex + 4;
-            $xml .= '<row r="'.$excelRow.'" customFormat="1">';
-            foreach ($headers as $i => $_) $xml .= self::inlineCell($i + 1, $excelRow, $row[$i] ?? '-', 2);
+            $height = self::rowHeightFor($row, $widths);
+            $xml .= '<row r="'.$excelRow.'" ht="'.$height.'" customHeight="1">';
+            foreach ($headers as $i => $_) {
+                $xml .= self::inlineCell($i + 1, $excelRow, $row[$i] ?? '-', 2);
+            }
             $xml .= '</row>';
         }
+
         $xml .= '</sheetData>';
-        $lastRow = max(3, count($rows) + 3);
-        $xml .= '<autoFilter ref="A3:'.$lastCol.$lastRow.'"/>';
+        // Sengaja tidak memakai autoFilter agar judul kolom bersih tanpa tombol dropdown.
         $xml .= '<mergeCells count="2"><mergeCell ref="A1:'.$lastCol.'1"/><mergeCell ref="A2:'.$lastCol.'2"/></mergeCells>';
         $xml .= '<pageMargins left="0.25" right="0.25" top="0.5" bottom="0.5" header="0.2" footer="0.2"/>';
         $xml .= '<pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/><pageSetUpPr fitToPage="1"/>';
@@ -107,11 +132,11 @@ class SimpleXlsx
         return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
 <numFmts count="0"/>
-<fonts count="2"><font><sz val="11"/><name val="Aptos"/></font><font><b/><sz val="14"/><name val="Aptos"/></font></fonts>
+<fonts count="3"><font><sz val="11"/><name val="Aptos"/></font><font><b/><sz val="14"/><name val="Aptos"/></font><font><b/><sz val="11"/><name val="Aptos"/></font></fonts>
 <fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF0A51A"/><bgColor indexed="64"/></patternFill></fill></fills>
-<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFD9E0E8"/></left><right style="thin"><color rgb="FFD9E0E8"/></right><top style="thin"><color rgb="FFD9E0E8"/></top><bottom style="thin"><color rgb="FFD9E0E8"/></bottom><diagonal/></border></borders>
+<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFD6DEE8"/></left><right style="thin"><color rgb="FFD6DEE8"/></right><top style="thin"><color rgb="FFD6DEE8"/></top><bottom style="thin"><color rgb="FFD6DEE8"/></bottom><diagonal/></border></borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="5"><xf numFmtId="0" fontId="1" fillId="2" borderId="1" applyAlignment="1"><alignment vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="2" borderId="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment vertical="center"/></xf></cellXfs>
+<cellXfs count="5"><xf numFmtId="0" fontId="1" fillId="0" borderId="0" applyAlignment="1"><alignment vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="2" borderId="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="2" borderId="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment vertical="center"/></xf></cellXfs>
 <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>';
     }
