@@ -72,7 +72,7 @@ class SimpleXlsx
         $xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
         $xml .= '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">';
         $xml .= '<sheetViews><sheetView workbookViewId="0"><pane ySplit="3" topLeftCell="A4" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A4" sqref="A4"/></sheetView></sheetViews>';
-        $xml .= '<sheetFormatPr defaultRowHeight="20"/> <cols>';
+        $xml .= '<sheetFormatPr defaultRowHeight="20"/><cols>';
         foreach ($widths as $i => $width) {
             $xml .= '<col min="'.($i + 1).'" max="'.($i + 1).'" width="'.(float) $width.'" customWidth="1"/>';
         }
@@ -95,8 +95,7 @@ class SimpleXlsx
         $xml .= '</sheetData>';
         $lastRow = max(3, count($rows) + 3);
         $xml .= '<autoFilter ref="A3:'.$lastCol.$lastRow.'"/>';
-        $xml .= '<mergeCells count="1"><mergeCell ref="A1:'.$lastCol.'1"/></mergeCells>';
-        $xml .= '<mergeCells count="1"><mergeCell ref="A2:'.$lastCol.'2"/></mergeCells>';
+        $xml .= '<mergeCells count="2"><mergeCell ref="A1:'.$lastCol.'1"/><mergeCell ref="A2:'.$lastCol.'2"/></mergeCells>';
         $xml .= '<pageMargins left="0.25" right="0.25" top="0.5" bottom="0.5" header="0.2" footer="0.2"/>';
         $xml .= '<pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/><pageSetUpPr fitToPage="1"/>';
         $xml .= '</worksheet>';
