@@ -89,10 +89,9 @@ class SimpleXlsx
         $xml .= '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">';
         $xml .= '<dimension ref="A1:'.$lastCol.$lastRow.'"/>';
 
-        // Freeze seluruh area judul/header (baris 1-3) dan kolom pertama tabel.
-        // Saat pengguna scroll ke bawah, header tetap terlihat; saat scroll horizontal,
-        // kolom identitas pertama (Nama/Waktu) juga tetap terlihat.
-        $xml .= '<sheetViews><sheetView workbookViewId="0" showGridLines="1"><pane xSplit="1" ySplit="3" topLeftCell="B4" activePane="bottomRight" state="frozen"/><selection pane="bottomRight" activeCell="B4" sqref="B4"/></sheetView></sheetViews>';
+        // Tidak menggunakan sheetViews/pane sama sekali.
+        // Dengan demikian tidak ada freeze panes: seluruh baris dan kolom,
+        // termasuk judul dan header, akan ikut bergeser saat pengguna scroll.
         $xml .= '<sheetFormatPr defaultRowHeight="20"/><cols>';
 
         for ($i = 0; $i < $count; $i++) {
