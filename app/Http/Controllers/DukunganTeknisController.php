@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Laporan;
 use App\Models\Satuan;
 use App\Models\User;
@@ -55,6 +56,10 @@ class DukunganTeknisController extends Controller
             $penerima->notify(new LaporanBaruDiterima($laporan));
         }
 
+        ActivityLog::catat('dukungan-teknis.create', "Mengirim dukungan teknis \"{$laporan->perihal}\" ke {$tujuan->nama}.", $user, [
+            'laporan_id' => $laporan->id,
+        ]);
+
         return back()->with('status', 'Laporan dukungan Duktek berhasil dikirim ke '.$tujuan->nama.'.');
     }
 
@@ -68,7 +73,13 @@ class DukunganTeknisController extends Controller
         abort_unless($satuan && (int) $laporan->satuan_id === (int) $satuan->id, 403);
         abort_unless($laporan->proyek === 'Dukungan Teknologi', 404);
 
+        $perihal = $laporan->perihal;
+        $laporanId = $laporan->id;
         $laporan->delete();
+
+        ActivityLog::catat('dukungan-teknis.delete', "Menghapus laporan dukungan teknis \"{$perihal}\".", $user, [
+            'laporan_id' => $laporanId,
+        ]);
 
         return back()->with('status', 'Laporan dukungan Duktek berhasil dihapus.');
     }

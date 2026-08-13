@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\PersonelDokumen;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,7 +25,7 @@ class PersonelDokumenController extends Controller
         $file = $request->file('dokumen');
         $path = $file->store('dokumen-personel', 'public');
 
-        PersonelDokumen::create([
+        $dokumen = PersonelDokumen::create([
             'personel_id' => $validated['personel_id'],
             'jenis_dokumen' => $validated['jenis_dokumen'],
             'nama_file' => $file->getClientOriginalName(),
@@ -32,13 +33,25 @@ class PersonelDokumenController extends Controller
             'diunggah_oleh' => $request->user()->id,
         ]);
 
+        ActivityLog::catat('personel-dokumen.upload', "Mengunggah dokumen \"{$validated['jenis_dokumen']}\" ({$dokumen->nama_file}) untuk personel.", $request->user(), [
+            'personel_id' => $validated['personel_id'],
+            'personel_dokumen_id' => $dokumen->id,
+        ]);
+
         return back()->with('status', 'Dokumen personel berhasil diunggah.');
     }
 
-    public function destroy(PersonelDokumen $dokumen): RedirectResponse
+    public function destroy(Request $request, PersonelDokumen $dokumen): RedirectResponse
     {
+        $namaFile = $dokumen->nama_file;
+        $jenisDokumen = $dokumen->jenis_dokumen;
+        $personelId = $dokumen->personel_id;
         Storage::disk('public')->delete($dokumen->path);
         $dokumen->delete();
+
+        ActivityLog::catat('personel-dokumen.delete', "Menghapus dokumen \"{$jenisDokumen}\" ({$namaFile}) personel.", $request->user(), [
+            'personel_id' => $personelId,
+        ]);
 
         return back()->with('status', 'Dokumen personel berhasil dihapus.');
     }

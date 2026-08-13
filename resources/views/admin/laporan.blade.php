@@ -49,13 +49,19 @@
   </div>
 
   <div class="panel">
-    <h3>Log Aktivitas ({{ $log->count() }})</h3>
+    <h3>
+      Log Aktivitas (<span id="log-count">{{ $log->count() }}</span>)
+      <span id="live-indicator" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;color:#7fd99a;margin-left:10px;vertical-align:middle;">
+        <span style="width:7px;height:7px;border-radius:50%;background:#7fd99a;display:inline-block;animation:pulse-live 1.5s infinite;"></span>
+        LIVE
+      </span>
+    </h3>
     <table>
       <thead><tr><th>Waktu</th><th>Pengguna</th><th>Aksi</th><th>Deskripsi</th><th>IP</th></tr></thead>
-      <tbody>
+      <tbody id="log-tbody">
         @foreach($log as $l)
-        <tr>
-          <td>{{ $l->created_at?->translatedFormat('d M Y H:i') }}</td>
+        <tr data-log-id="{{ $l->id }}">
+          <td>{{ $l->created_at?->translatedFormat('d M Y H:i:s') }}</td>
           <td>{{ $l->nama_pengguna ?? '-' }}</td>
           <td>{{ $l->aksi }}</td>
           <td>{{ $l->deskripsi }}</td>
@@ -65,5 +71,58 @@
       </tbody>
     </table>
   </div>
+
+  <style>
+    @keyframes pulse-live { 0%,100%{opacity:1;} 50%{opacity:.25;} }
+    tr.log-baru { animation: highlight-baru 2.5s ease-out; }
+    @keyframes highlight-baru { 0%{background:#2c4438;} 100%{background:transparent;} }
+  </style>
+  <script>
+    (function () {
+      var tbody = document.getElementById('log-tbody');
+      var countEl = document.getElementById('log-count');
+      var url = @json(route('admin.laporan.aktivitas-terbaru'));
+
+      var ids = Array.from(tbody.querySelectorAll('tr[data-log-id]')).map(function (tr) {
+        return parseInt(tr.getAttribute('data-log-id'), 10);
+      });
+      var lastId = ids.length ? Math.max.apply(null, ids) : 0;
+
+      function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str ?? '-';
+        return div.innerHTML;
+      }
+
+      function ambilAktivitasBaru() {
+        fetch(url + '?after_id=' + lastId, { headers: { 'Accept': 'application/json' } })
+          .then(function (res) { return res.ok ? res.json() : null; })
+          .then(function (data) {
+            if (!data || !data.log || !data.log.length) return;
+
+            // API mengembalikan urutan terbaru dulu; balik supaya yang paling
+            // baru tetap tampil paling atas tabel secara kronologis.
+            data.log.slice().reverse().forEach(function (l) {
+              var tr = document.createElement('tr');
+              tr.setAttribute('data-log-id', l.id);
+              tr.classList.add('log-baru');
+              tr.innerHTML =
+                '<td>' + escapeHtml(l.waktu) + '</td>' +
+                '<td>' + escapeHtml(l.pengguna) + '</td>' +
+                '<td>' + escapeHtml(l.aksi) + '</td>' +
+                '<td>' + escapeHtml(l.deskripsi) + '</td>' +
+                '<td>' + escapeHtml(l.ip) + '</td>';
+              tbody.insertBefore(tr, tbody.firstChild);
+            });
+
+            lastId = data.max_id;
+            countEl.textContent = tbody.querySelectorAll('tr[data-log-id]').length;
+          })
+          .catch(function () { /* diamkan saja kalau sempat gagal sekali poll, coba lagi nanti */ });
+      }
+
+      setInterval(ambilAktivitasBaru, 5000);
+    })();
+  </script>
 </body>
 </html>

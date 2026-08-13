@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Postingan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,7 +52,7 @@ class PostinganController extends Controller
             default => 'Draft',
         };
 
-        Postingan::create([
+        $posting = Postingan::create([
             'akun_medsos_id' => $akun->id,
             'satuan_id' => $satuan->id,
             'user_id' => $request->user()->id,
@@ -71,6 +72,10 @@ class PostinganController extends Controller
             default => 'Postingan berhasil disimpan sebagai draft.',
         };
 
+        ActivityLog::catat('postingan.'.$validated['aksi'], "Membuat postingan \"{$posting->judul}\" ({$status}).", $request->user(), [
+            'postingan_id' => $posting->id,
+        ]);
+
         return back()->with('status', $pesan);
     }
 
@@ -86,6 +91,10 @@ class PostinganController extends Controller
         $posting->update([
             'status' => 'Terbit',
             'published_at' => now(),
+        ]);
+
+        ActivityLog::catat('postingan.terbitkan', "Menerbitkan postingan \"{$posting->judul}\".", $request->user(), [
+            'postingan_id' => $posting->id,
         ]);
 
         return back()->with('status', 'Postingan berhasil diterbitkan.');
@@ -111,6 +120,10 @@ class PostinganController extends Controller
 
         $posting->update($validated);
 
+        ActivityLog::catat('postingan.update-engagement', "Memperbarui data engagement postingan \"{$posting->judul}\".", $request->user(), [
+            'postingan_id' => $posting->id,
+        ]);
+
         return back()->with('status', 'Data engagement berhasil diperbarui.');
     }
 
@@ -126,7 +139,13 @@ class PostinganController extends Controller
             Storage::disk('public')->delete($posting->media_path);
         }
 
+        $judul = $posting->judul;
+        $postinganId = $posting->id;
         $posting->delete();
+
+        ActivityLog::catat('postingan.delete', "Menghapus postingan \"{$judul}\".", $request->user(), [
+            'postingan_id' => $postinganId,
+        ]);
 
         return back()->with('status', 'Postingan berhasil dihapus.');
     }

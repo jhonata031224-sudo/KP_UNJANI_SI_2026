@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\ProyekRiset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,11 @@ class ProyekRisetController extends Controller
 
         $validated['satuan_id'] = $satuan->id;
 
-        ProyekRiset::create($validated);
+        $proyek = ProyekRiset::create($validated);
+
+        ActivityLog::catat('proyek-riset.create', "Menambahkan proyek riset \"{$proyek->nama}\".", $request->user(), [
+            'proyek_riset_id' => $proyek->id,
+        ]);
 
         return back()->with('status', 'Proyek riset berhasil ditambahkan.');
     }
@@ -43,6 +48,10 @@ class ProyekRisetController extends Controller
 
         $proyekRiset->update($validated);
 
+        ActivityLog::catat('proyek-riset.update', "Memperbarui proyek riset \"{$proyekRiset->nama}\".", $request->user(), [
+            'proyek_riset_id' => $proyekRiset->id,
+        ]);
+
         return back()->with('status', 'Proyek riset berhasil diperbarui.');
     }
 
@@ -51,7 +60,13 @@ class ProyekRisetController extends Controller
         $satuan = $request->user()->load('satuan')->satuan;
         abort_unless($satuan && $proyekRiset->satuan_id === $satuan->id, 403);
 
+        $nama = $proyekRiset->nama;
+        $proyekId = $proyekRiset->id;
         $proyekRiset->delete();
+
+        ActivityLog::catat('proyek-riset.delete', "Menghapus proyek riset \"{$nama}\".", $request->user(), [
+            'proyek_riset_id' => $proyekId,
+        ]);
 
         return back()->with('status', 'Proyek riset berhasil dihapus.');
     }

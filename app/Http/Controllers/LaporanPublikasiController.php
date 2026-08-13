@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\LaporanPublikasi;
 use App\Models\LaporanPublikasiDokumen;
 use App\Models\Satuan;
@@ -53,6 +54,13 @@ class LaporanPublikasiController extends Controller
 
         $this->simpanDokumentasi($request, $laporan, $user->id);
 
+        ActivityLog::catat(
+            $dikirim ? 'laporan-publikasi.kirim' : 'laporan-publikasi.draft',
+            ($dikirim ? 'Mengirim' : 'Menyimpan draft')." laporan publikasi \"{$laporan->judul}\".",
+            $user,
+            ['laporan_publikasi_id' => $laporan->id],
+        );
+
         if ($dikirim) {
             $this->notifikasiDanpus($laporan, $danpus);
 
@@ -89,6 +97,10 @@ class LaporanPublikasiController extends Controller
 
         $this->simpanDokumentasi($request, $laporanPublikasi, $request->user()->id);
 
+        ActivityLog::catat('laporan-publikasi.update', "Memperbarui draft laporan publikasi \"{$laporanPublikasi->judul}\".", $request->user(), [
+            'laporan_publikasi_id' => $laporanPublikasi->id,
+        ]);
+
         return back()->with('status', 'Draft laporan publikasi berhasil diperbarui.');
     }
 
@@ -108,6 +120,10 @@ class LaporanPublikasiController extends Controller
         ]);
 
         $this->notifikasiDanpus($laporanPublikasi, $danpus);
+
+        ActivityLog::catat('laporan-publikasi.kirim', "Mengirim draft laporan publikasi \"{$laporanPublikasi->judul}\" ke DANPUS.", $request->user(), [
+            'laporan_publikasi_id' => $laporanPublikasi->id,
+        ]);
 
         return back()->with('status', 'Draft berhasil dikirim ke DANPUS.');
     }
@@ -131,6 +147,10 @@ class LaporanPublikasiController extends Controller
 
         $this->simpanDokumentasi($request, $laporanPublikasi, $user->id);
 
+        ActivityLog::catat('laporan-publikasi.upload-dokumentasi', "Mengunggah dokumentasi pada laporan publikasi \"{$laporanPublikasi->judul}\".", $user, [
+            'laporan_publikasi_id' => $laporanPublikasi->id,
+        ]);
+
         return back()->with('status', 'Dokumentasi berhasil diunggah.');
     }
 
@@ -143,8 +163,13 @@ class LaporanPublikasiController extends Controller
         abort_unless($laporan->user_id === $request->user()->id, 403);
         abort_unless(in_array($laporan->status, ['Draft', 'Menunggu'], true), 403);
 
+        $namaFile = $dokumen->nama_file;
         Storage::disk('public')->delete($dokumen->path);
         $dokumen->delete();
+
+        ActivityLog::catat('laporan-publikasi.hapus-dokumentasi', "Menghapus dokumentasi \"{$namaFile}\" dari laporan publikasi \"{$laporan->judul}\".", $request->user(), [
+            'laporan_publikasi_id' => $laporan->id,
+        ]);
 
         return back()->with('status', 'Dokumentasi berhasil dihapus.');
     }
@@ -161,7 +186,13 @@ class LaporanPublikasiController extends Controller
             Storage::disk('public')->delete($dok->path);
         }
 
+        $judul = $laporanPublikasi->judul;
+        $laporanId = $laporanPublikasi->id;
         $laporanPublikasi->delete();
+
+        ActivityLog::catat('laporan-publikasi.delete', "Menghapus draft laporan publikasi \"{$judul}\".", $request->user(), [
+            'laporan_publikasi_id' => $laporanId,
+        ]);
 
         return back()->with('status', 'Draft laporan publikasi berhasil dihapus.');
     }

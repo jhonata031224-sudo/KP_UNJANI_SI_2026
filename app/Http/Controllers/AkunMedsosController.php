@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\AkunMedsos;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,7 +32,7 @@ class AkunMedsosController extends Controller
             ? $request->file('foto_profil')->store('akun-medsos', 'public')
             : null;
 
-        AkunMedsos::create([
+        $akun = AkunMedsos::create([
             'satuan_id' => $satuan->id,
             'nama_akun' => $validated['nama_akun'],
             'platform' => $validated['platform'],
@@ -39,6 +40,10 @@ class AkunMedsosController extends Controller
             'url_profil' => $validated['url_profil'] ?? null,
             'foto_profil_path' => $fotoPath,
             'status' => 'Aktif',
+        ]);
+
+        ActivityLog::catat('akun-medsos.create', "Menambahkan akun media sosial \"{$akun->nama_akun}\" ({$akun->platform}).", $request->user(), [
+            'akun_medsos_id' => $akun->id,
         ]);
 
         return back()->with('status', 'Akun media sosial berhasil ditambahkan.');
@@ -58,6 +63,10 @@ class AkunMedsosController extends Controller
         ]);
 
         $akunMedsos->update($validated);
+
+        ActivityLog::catat('akun-medsos.update', "Memperbarui status akun media sosial \"{$akunMedsos->nama_akun}\" menjadi {$validated['status']}.", $request->user(), [
+            'akun_medsos_id' => $akunMedsos->id,
+        ]);
 
         return back()->with('status', 'Status akun berhasil diperbarui.');
     }
@@ -81,7 +90,13 @@ class AkunMedsosController extends Controller
             }
         }
 
+        $namaAkun = $akunMedsos->nama_akun;
+        $akunId = $akunMedsos->id;
         $akunMedsos->delete();
+
+        ActivityLog::catat('akun-medsos.delete', "Menghapus akun media sosial \"{$namaAkun}\".", $request->user(), [
+            'akun_medsos_id' => $akunId,
+        ]);
 
         return back()->with('status', 'Akun media sosial berhasil dihapus.');
     }
