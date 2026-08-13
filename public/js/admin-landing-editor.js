@@ -1,68 +1,29 @@
 (function () {
-  const form = document.getElementById('landingForm');
-  if (!form || form.dataset.completeEditorReady === '1') return;
-  form.dataset.completeEditorReady = '1';
-
-  const get = (o, path, fallback = '') => path.split('.').reduce((v, k) => v && v[k] !== undefined ? v[k] : undefined, o) ?? fallback;
-  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-  let config = {};
-
-  function addField(parent, label, path, value, type = 'text') {
-    const wrap = document.createElement('div'); wrap.className = 'form-field full';
-    const id = 'lpComplete_' + path.replace(/[^a-z0-9]/gi, '_');
-    const lab = document.createElement('label'); lab.htmlFor = id; lab.textContent = label;
-    const input = type === 'textarea' ? document.createElement('textarea') : document.createElement('input');
-    input.id = id; input.type = type === 'textarea' ? '' : type; input.rows = 3; input.value = value ?? ''; input.dataset.landingPath = path;
-    wrap.append(lab, input); parent.appendChild(wrap); return input;
-  }
-
-  function buildEditor() {
-    const tabs = form.querySelector('.lp-tabs'); if (!tabs) return;
-    const tab = document.createElement('button'); tab.type = 'button'; tab.className = 'lp-tab'; tab.dataset.lpTab = 'lengkap'; tab.textContent = 'Lengkap';
-    tabs.appendChild(tab);
-    const panel = document.createElement('div'); panel.className = 'lp-tab-panel'; panel.dataset.lpTabPanel = 'lengkap';
-    panel.innerHTML = '<p class="lp-tab-desc">Semua elemen landing page yang sebelumnya masih statis. Perubahan di sini berlaku ke halaman publik setelah disimpan.</p>';
-    const sections = [
-      ['Branding & Identitas', [['brand.name','Nama brand'],['brand.accent','Teks aksen brand'],['brand.tagline','Tagline brand'],['meta.title','Judul browser / SEO'],['meta.description','Deskripsi SEO']]],
-      ['Navigasi', [['nav.0.label','Menu 1'],['nav.0.url','Link menu 1'],['nav.1.label','Menu 2'],['nav.1.url','Link menu 2'],['nav.2.label','Menu 3'],['nav.2.url','Link menu 3'],['nav.3.label','Menu 4'],['nav.3.url','Link menu 4']]],
-      ['Hero & Tombol', [['hero.button_label','Teks tombol hero'],['hero.button_url','Link tombol hero'],['hero.crest_caption','Caption lambang'],['hero.crest_motto','Moto lambang']]],
-      ['Statistik', [['stats.0.number','Statistik 1 angka'],['stats.0.label','Statistik 1 label'],['stats.1.number','Statistik 2 angka'],['stats.1.label','Statistik 2 label'],['stats.2.number','Statistik 3 angka'],['stats.2.label','Statistik 3 label'],['stats.3.number','Statistik 4 angka'],['stats.3.label','Statistik 4 label']]],
-      ['Judul Section', [['features_section.eyebrow','Label section fitur'],['features_section.title','Judul section fitur'],['features_section.description','Deskripsi section fitur'],['about_section.eyebrow','Label section tentang'],['about_section.title','Judul section tentang']]],
-      ['Footer', [['footer.description','Deskripsi footer'],['footer.copyright','Teks copyright / footer bawah']]],
+  const form=document.getElementById('landingForm'); if(!form||form.dataset.completeEditorReady==='1')return; form.dataset.completeEditorReady='1';
+  const get=(o,path,f='')=>path.split('.').reduce((v,k)=>v&&v[k]!==undefined?v[k]:undefined,o)??f;
+  let config={};
+  function addField(parent,label,path,value,type='text'){const w=document.createElement('div');w.className='form-field full';const id='lpComplete_'+path.replace(/[^a-z0-9]/gi,'_');const l=document.createElement('label');l.htmlFor=id;l.textContent=label;const i=type==='textarea'?document.createElement('textarea'):document.createElement('input');i.id=id;if(type!=='textarea')i.type=type;i.rows=3;i.value=value??'';i.dataset.landingPath=path;w.append(l,i);parent.appendChild(w);}
+  function buildEditor(){
+    const tabs=form.querySelector('.lp-tabs');if(!tabs)return;
+    const tab=document.createElement('button');tab.type='button';tab.className='lp-tab';tab.dataset.lpTab='lengkap';tab.textContent='Lengkap';tabs.appendChild(tab);
+    const panel=document.createElement('div');panel.className='lp-tab-panel';panel.dataset.lpTabPanel='lengkap';panel.innerHTML='<p class="lp-tab-desc">Kelola seluruh elemen landing page yang sebelumnya statis: branding, navigasi, tombol, statistik, judul section, footer, dan logo.</p>';
+    const sections=[
+      ['Branding & Identitas',[['brand.name','Nama brand'],['brand.accent','Teks aksen brand'],['brand.tagline','Tagline brand'],['meta.title','Judul browser / SEO'],['meta.description','Deskripsi SEO']]],
+      ['Navigasi',[['nav.0.label','Menu 1'],['nav.0.url','Link menu 1'],['nav.1.label','Menu 2'],['nav.1.url','Link menu 2'],['nav.2.label','Menu 3'],['nav.2.url','Link menu 3'],['nav.3.label','Menu 4'],['nav.3.url','Link menu 4']]],
+      ['Hero & Tombol',[['hero.button_label','Teks tombol hero'],['hero.button_url','Link tombol hero'],['hero.crest_caption','Caption lambang'],['hero.crest_motto','Moto lambang']]],
+      ['Statistik',[['stats.0.number','Statistik 1 angka'],['stats.0.label','Statistik 1 label'],['stats.1.number','Statistik 2 angka'],['stats.1.label','Statistik 2 label'],['stats.2.number','Statistik 3 angka'],['stats.2.label','Statistik 3 label'],['stats.3.number','Statistik 4 angka'],['stats.3.label','Statistik 4 label']]],
+      ['Judul Section',[['features_section.eyebrow','Label section fitur'],['features_section.title','Judul section fitur'],['features_section.description','Deskripsi section fitur'],['about_section.eyebrow','Label section tentang'],['about_section.title','Judul section tentang']]],
+      ['Footer',[['footer.description','Deskripsi footer'],['footer.copyright','Teks copyright / footer bawah']]]
     ];
-    sections.forEach(([title, fields]) => {
-      const card = document.createElement('div'); card.className = 'lp-card';
-      const h = document.createElement('div'); h.className = 'lp-card-title'; h.textContent = title; card.appendChild(h);
-      const grid = document.createElement('div'); grid.className = 'form-grid'; card.appendChild(grid);
-      fields.forEach(([path, label]) => addField(grid, label, path, get(config, path), /description|deskripsi|copyright/i.test(label) ? 'textarea' : 'text'));
-      panel.appendChild(card);
-    });
-    const assets = document.createElement('div'); assets.className = 'lp-card';
-    assets.innerHTML = '<div class="lp-card-title">Branding & Gambar</div><div class="form-grid"><div class="form-field full"><label for="lpCompleteLogo">Logo Landing Page</label><input id="lpCompleteLogo" name="logo_file" type="file" accept="image/png,image/jpeg,image/webp"><small style="display:block;margin-top:6px;color:var(--text-muted);">JPG, PNG, WEBP · maks. 5 MB. Dipakai untuk logo header, hero, loader, favicon, dan bagian Tentang.</small></div></div>';
-    panel.appendChild(assets);
-    form.insertBefore(panel, form.querySelector('.lp-form-actions'));
-
-    tab.addEventListener('click', () => {
-      form.querySelectorAll('[data-lp-tab]').forEach(t => t.classList.toggle('active', t === tab));
-      form.querySelectorAll('[data-lp-tab-panel]').forEach(p => p.classList.toggle('active', p === panel));
-      document.querySelectorAll('[data-lp-preview-section]').forEach(s => s.classList.remove('is-focus'));
-    });
-
-    const hidden = document.createElement('input'); hidden.type = 'hidden'; hidden.name = 'landing_content'; hidden.id = 'landingContentPayload'; form.appendChild(hidden);
-    const sync = () => {
-      const clone = JSON.parse(JSON.stringify(config || {}));
-      form.querySelectorAll('[data-landing-path]').forEach(input => {
-        const parts = input.dataset.landingPath.split('.'); let cur = clone;
-        parts.forEach((p, i) => { if (i === parts.length - 1) cur[p] = input.value; else { if (!cur[p]) cur[p] = /^\d+$/.test(parts[i + 1]) ? [] : {}; cur = cur[p]; } });
-      });
-      hidden.value = JSON.stringify(clone);
-    };
-    form.querySelectorAll('[data-landing-path]').forEach(i => i.addEventListener('input', sync));
-    form.addEventListener('submit', sync);
+    sections.forEach(([title,fields])=>{const card=document.createElement('div');card.className='lp-card';const h=document.createElement('div');h.className='lp-card-title';h.textContent=title;card.appendChild(h);const grid=document.createElement('div');grid.className='form-grid';fields.forEach(([path,label])=>addField(grid,label,path,get(config,path),/description|deskripsi|copyright/i.test(label)?'textarea':'text'));card.appendChild(grid);panel.appendChild(card);});
+    const assets=document.createElement('div');assets.className='lp-card';assets.innerHTML='<div class="lp-card-title">Branding & Gambar</div><div class="form-grid"><div class="form-field full"><label for="lpCompleteLogo">Logo Landing Page</label><input id="lpCompleteLogo" name="logo_file" type="file" accept="image/png,image/jpeg,image/webp"><small style="display:block;margin-top:6px;color:var(--text-muted);">JPG, PNG, WEBP · maksimal 5 MB. Logo dipakai di header, hero, loader, favicon, dan Tentang.</small></div></div>';panel.appendChild(assets);form.insertBefore(panel,form.querySelector('.lp-form-actions'));
+    tab.addEventListener('click',()=>{form.querySelectorAll('[data-lp-tab]').forEach(t=>t.classList.toggle('active',t===tab));form.querySelectorAll('[data-lp-tab-panel]').forEach(p=>p.classList.toggle('active',p===panel));});
+    const hidden=document.createElement('input');hidden.type='hidden';hidden.name='landing_content';hidden.id='landingContentPayload';form.appendChild(hidden);
+    function collect(){const clone=JSON.parse(JSON.stringify(config||{}));form.querySelectorAll('[data-landing-path]').forEach(input=>{const parts=input.dataset.landingPath.split('.');let cur=clone;parts.forEach((p,i)=>{if(i===parts.length-1)cur[p]=input.value;else{if(!cur[p])cur[p]=/^\d+$/.test(parts[i+1])?[]:{};cur=cur[p];}});});hidden.value=JSON.stringify(clone);return clone;}
+    function preview(){const iframe=document.getElementById('lpLiveLandingFrame');if(!iframe||!iframe.contentDocument)return;const d=iframe.contentDocument,c=collect(),brand=c.brand||{},hero=c.hero||{};const set=(s,v)=>{const e=d.querySelector(s);if(e)e.textContent=v||'';};qa(d,'.logo-text b').forEach(e=>{e.innerHTML='';e.append(d.createTextNode(brand.name||'SIBER'));const sp=d.createElement('span');sp.textContent=brand.accent||'AD';e.append(sp);});qa(d,'.logo-text small').forEach(e=>e.textContent=brand.tagline||'Pussiberad · TNI AD');qa(d,'.nav-links a').forEach((e,i)=>{if(c.nav&&c.nav[i]){e.textContent=c.nav[i].label;e.href=c.nav[i].url||'#';}});set('.hero-actions .btn-primary',hero.button_label);const b=d.querySelector('.hero-actions .btn-primary');if(b)b.href=hero.button_url||'#fitur';set('.hero-crest-caption',(hero.crest_caption||'Pusat Siber Angkatan Darat')+' “'+(hero.crest_motto||'Satria Yudha Waskita')+'”');qa(d,'.stats-grid .stat').forEach((e,i)=>{const x=(c.stats||[])[i];if(x){set('.stat-num',x.number);set('.stat-label',x.label);}});set('#fitur .section-head .eyebrow',get(c,'features_section.eyebrow'));set('#fitur .section-head h3',get(c,'features_section.title'));set('#fitur .section-head p',get(c,'features_section.description'));set('#tentang-pussiberad .eyebrow',get(c,'about_section.eyebrow'));set('#tentang-pussiberad .about-top h3',get(c,'about_section.title'));set('footer .footer-desc',get(c,'footer.description'));set('footer .footer-bottom',get(c,'footer.copyright'));}
+    const qa=(d,s)=>Array.from(d.querySelectorAll(s));
+    form.querySelectorAll('[data-landing-path]').forEach(i=>i.addEventListener('input',preview));form.addEventListener('submit',collect);form.querySelector('#lpCompleteLogo').addEventListener('change',()=>{const f=form.querySelector('#lpCompleteLogo').files[0];if(!f)return;const r=new FileReader();r.onload=e=>{const iframe=document.getElementById('lpLiveLandingFrame');if(iframe&&iframe.contentDocument)qa(iframe.contentDocument,'.logo-badge img,.hero-crest .mark-plate img,#loader .mark-plate img,#tentang-pussiberad img').forEach(img=>img.src=e.target.result);};r.readAsDataURL(f);});
+    const wait=setInterval(()=>{const iframe=document.getElementById('lpLiveLandingFrame');if(iframe&&iframe.contentDocument&&iframe.contentDocument.readyState==='complete'){clearInterval(wait);preview();}},250);setTimeout(()=>clearInterval(wait),15000);
   }
-
-  fetch('/landing-config', { headers: { 'Accept': 'application/json' } })
-    .then(r => r.ok ? r.json() : {})
-    .then(data => { config = data.config || {}; buildEditor(); })
-    .catch(() => buildEditor());
+  fetch('/landing-config',{headers:{Accept:'application/json'}}).then(r=>r.ok?r.json():{}).then(d=>{config=d.config||{};buildEditor();}).catch(()=>buildEditor());
 })();
