@@ -324,7 +324,8 @@
   .tbl-wrap.tbl-scroll::-webkit-scrollbar-thumb:hover{background:var(--gold);}
   table.dtbl tr:hover td{background:var(--hover-tint);}
   .status-dot{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:12.5px;}
-  .status-dot::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 8px 1px currentColor;opacity:.9;}
+  .status-dot::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 8px 1px currentColor;animation:statusDotBlink 1.6s ease-in-out infinite;}
+  @keyframes statusDotBlink{0%,100%{opacity:1;}50%{opacity:.35;}}
   .status-dot.ok{color:var(--gold-bright);}
   .status-dot.warn{color:var(--amber);}
   .status-dot.bad{color:var(--red);}
@@ -351,12 +352,12 @@
   .confirm-overlay{position:fixed;inset:0;z-index:80;background:rgba(2,4,6,.6);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s ease;}
   :root[data-theme="light"] .confirm-overlay{background:rgba(60,50,20,.35);}
   .confirm-overlay.open{opacity:1;pointer-events:auto;}
-  .confirm-box{width:100%;max-width:360px;background:var(--panel-2);border:1px solid var(--border);border-radius:14px;padding:28px 26px 24px;text-align:center;transform:translateY(10px) scale(.98);transition:transform .2s ease;box-shadow:0 20px 50px -20px rgba(0,0,0,.5);}
+  .confirm-box{width:100%;max-width:360px;background:var(--p-surface,var(--panel-2));border:1px solid var(--p-border,var(--border));border-radius:14px;padding:28px 26px 24px;text-align:center;transform:translateY(10px) scale(.98);transition:transform .2s ease;box-shadow:0 20px 50px -20px rgba(0,0,0,.5);}
   .confirm-overlay.open .confirm-box{transform:translateY(0) scale(1);}
   .confirm-icon{width:52px;height:52px;margin:0 auto 14px;border-radius:50%;background:var(--red-dim);color:var(--red);display:flex;align-items:center;justify-content:center;}
   .confirm-icon svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.9;}
-  .confirm-box h3{font-family:var(--display);font-size:19px;font-weight:700;margin:0 0 8px;}
-  .confirm-box p{font-size:13px;color:var(--text-muted);line-height:1.6;margin:0;}
+  .confirm-box h3{font-family:var(--display);font-size:19px;font-weight:700;margin:0 0 8px;color:var(--p-text,var(--text));}
+  .confirm-box p{font-size:13px;color:var(--p-muted,var(--text-muted));line-height:1.6;margin:0;}
   .confirm-actions{display:flex;gap:10px;margin-top:22px;}
   .confirm-actions .btn{flex:1;justify-content:center;}
 
@@ -423,10 +424,10 @@
   /* ===== state kosong (tabel/list tanpa data) -- 1 sistem dipakai di semua
      dashboard (Admin, Pimpinan, role Satlak/dst), biar nggak ada lagi teks
      polos "Belum ada..." doang tanpa ikon/hierarki. ===== */
-  .empty-state{padding:32px 16px;text-align:center;border:2px dotted var(--border);border-radius:12px;background:var(--panel-alt);}
+  .empty-state{padding:32px 16px;text-align:center;border:2px dotted var(--p-border,var(--border));border-radius:12px;background:var(--p-surface-2,var(--panel-alt));}
   .empty-state svg{margin:0 auto 12px;display:block;}
-  .empty-state-title{font-size:13px;font-weight:700;color:var(--text);}
-  .empty-state-sub{font-size:11.5px;color:var(--text-muted);margin-top:4px;}
+  .empty-state-title{font-size:13px;font-weight:700;color:var(--p-text,var(--text));}
+  .empty-state-sub{font-size:11.5px;color:var(--p-muted,var(--text-muted));margin-top:4px;}
   td>.empty-state{padding:22px 12px;}
 </style>
 <script>

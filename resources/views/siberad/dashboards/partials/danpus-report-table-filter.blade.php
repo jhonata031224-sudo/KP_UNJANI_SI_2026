@@ -42,6 +42,10 @@
     });
     if(!rows.length){section.dataset.rptFilterReady='1';return;}
 
+    // Simpan urutan awal (backend sudah pakai latest(), jadi index 0 = terbaru)
+    // supaya sort Terbaru/Terlama stabil tanpa perlu parse ulang teks tanggal.
+    rows.forEach(function(row,i){row.dataset.rptOrder=String(i)});
+
     var colCount=table.querySelectorAll('thead th').length||1;
 
     var bar=document.createElement('div');
@@ -60,6 +64,12 @@
       bar.appendChild(select);
       return {el:select,attr:filterDef.attr};
     });
+
+    var sortSelect=null,sortValue='newest';
+    if(cfg.sortable){
+      sortSelect=buildSelect({label:'Urutkan',options:[{value:'newest',label:'Terbaru'},{value:'oldest',label:'Terlama'}]});
+      bar.appendChild(sortSelect);
+    }
 
     var count=document.createElement('span');
     count.className='rpt-filter-count';
@@ -80,6 +90,13 @@
     tbody.appendChild(emptyRow);
 
     function apply(){
+      if(sortSelect){
+        rows.sort(function(a,b){
+          var diff=Number(a.dataset.rptOrder)-Number(b.dataset.rptOrder);
+          return sortValue==='oldest'?-diff:diff;
+        });
+        rows.forEach(function(row){tbody.insertBefore(row,emptyRow)});
+      }
       var q=(input.value||'').trim().toLowerCase();
       var visible=0;
       rows.forEach(function(row){
@@ -97,6 +114,7 @@
 
     input.addEventListener('input',apply);
     selects.forEach(function(s){s.el.addEventListener('change',apply)});
+    if(sortSelect)sortSelect.addEventListener('change',function(){sortValue=sortSelect.value;apply()});
     apply();
     section.dataset.rptFilterReady='1';
   }
@@ -110,7 +128,8 @@
       emptyText:'Tidak ada laporan masuk yang sesuai dengan pencarian/filter.',
       filters:[
         {label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]}
-      ]
+      ],
+      sortable:true
     });
     initReportFilter({
       sectionId:'status',
@@ -120,7 +139,8 @@
       emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',
       filters:[
         {label:'Filter status',attr:'outcome',options:[{value:'all',label:'Semua Status'},{value:'disetujui',label:'Disetujui'},{value:'ditolak',label:'Ditolak'}]}
-      ]
+      ],
+      sortable:true
     });
     initReportFilter({
       sectionId:'permintaan-laporan',
@@ -129,8 +149,8 @@
       searchPlaceholder:'Cari perihal atau satuan tujuan...',
       emptyText:'Tidak ada permintaan laporan yang sesuai dengan pencarian/filter.',
       filters:[
-        {label:'Filter status',attr:'statusTampilan',options:[{value:'all',label:'Semua Status'},{value:'Belum dikerjakan',label:'Belum Dikerjakan'},{value:'Sedang dikerjakan',label:'Sedang Dikerjakan'},{value:'Menunggu pemeriksaan',label:'Menunggu Pemeriksaan'},{value:'Selesai',label:'Selesai'},{value:'Terlambat',label:'Terlambat'}]},
-        {label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]}
+        {label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]},
+        {label:'Filter status',attr:'statusTampilan',options:[{value:'all',label:'Semua Status'},{value:'Belum dikerjakan',label:'Belum Dikerjakan'},{value:'Sedang dikerjakan',label:'Sedang Dikerjakan'},{value:'Menunggu pemeriksaan',label:'Menunggu Pemeriksaan'},{value:'Selesai',label:'Selesai'},{value:'Terlambat',label:'Terlambat'}]}
       ]
     });
 
@@ -146,7 +166,8 @@
       anchorSelector:'.section-head',
       searchPlaceholder:'Cari perihal atau tujuan...',
       emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',
-      filters:filterPrioritas
+      filters:filterPrioritas,
+      sortable:true
     });
     initReportFilter({
       sectionId:'masuk',
@@ -159,7 +180,7 @@
     initReportFilter({
       sectionId:'monitoring',
       tableSelector:'.dtbl',
-      anchorSelector:'.section-head',
+      anchorSelector:'.monitor-grid',
       searchPlaceholder:'Cari satlak atau perihal...',
       emptyText:'Tidak ada laporan dari 3 Satlak yang sesuai dengan pencarian/filter.',
       filters:filterPrioritas

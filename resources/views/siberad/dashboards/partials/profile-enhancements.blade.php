@@ -156,7 +156,7 @@
       #detailActions button,
       #reportDetailModal .modal-actions button { border:1px solid var(--border); background:var(--panel-alt); color:var(--text); border-radius:7px; padding:7px 11px; font-size:11px; cursor:pointer; font-family:var(--body); }
       #detailActions .approve,
-      #reportDetailModal .modal-actions .approve { border-color:var(--green); color:var(--green); }
+      #reportDetailModal .modal-actions .approve { border-color:var(--success); color:var(--success); }
       #detailActions .revise,
       #reportDetailModal .modal-actions .revise { border-color:var(--amber); color:var(--amber); }
       #detailActions .reject,

@@ -79,9 +79,7 @@ class LaporanController extends Controller
             $penerima->notify(new LaporanBaruDiterima($laporan));
         }
 
-        return back()->with('status', $permintaan
-            ? 'Laporan berhasil dikirim sesuai permintaan dan deadline yang diberikan.'
-            : 'Laporan berhasil dikirim ke '.$tujuan->nama.'.');
+        return back()->with('status', 'Laporan berhasil dikirim ke Pimpinan.');
     }
 
     public function updateStatus(Request $request, Laporan $laporan): RedirectResponse

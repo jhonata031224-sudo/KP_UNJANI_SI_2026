@@ -1376,7 +1376,7 @@
 
           .lp-preview-panel{position:sticky;top:16px;}
           .lp-preview-panel .panel-head h3{display:flex;align-items:center;gap:9px;}
-          .lp-live-dot{width:7px;height:7px;border-radius:50%;background:var(--green-bright);box-shadow:0 0 0 3px var(--green-dim);animation:lpPulse 1.8s ease-in-out infinite;}
+          .lp-live-dot{width:7px;height:7px;border-radius:50%;background:var(--success-bright);box-shadow:0 0 0 3px var(--success-dim);animation:lpPulse 1.8s ease-in-out infinite;}
           @keyframes lpPulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
           .lp-preview-body{padding:0 22px 22px;}
 
