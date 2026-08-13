@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\LaporanPenindakan;
 use App\Notifications\LaporanPenindakanStatusDiubah;
 use Illuminate\Http\RedirectResponse;
@@ -32,6 +33,11 @@ class DanpusLaporanPenindakanController extends Controller
         ]);
 
         $laporanPenindakan->user->notify(new LaporanPenindakanStatusDiubah($laporanPenindakan));
+
+        ActivityLog::catat('laporan-penindakan.keputusan', "Memutuskan laporan penanganan insiden \"{$laporanPenindakan->perihal}\" menjadi {$validated['status']}.", $user, [
+            'laporan_penindakan_id' => $laporanPenindakan->id,
+            'status' => $validated['status'],
+        ]);
 
         return back()->with('status', "Laporan penindakan \"{$laporanPenindakan->perihal}\" telah diperbarui menjadi {$validated['status']}.");
     }

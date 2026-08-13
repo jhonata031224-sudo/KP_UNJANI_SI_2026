@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Laporan;
 use App\Models\PermintaanLaporan;
 use App\Models\Satuan;
@@ -79,6 +80,12 @@ class LaporanController extends Controller
             $penerima->notify(new LaporanBaruDiterima($laporan));
         }
 
+        ActivityLog::catat('laporan.create', "Mengirim laporan \"{$laporan->perihal}\" ke {$tujuan->nama}.", $user, [
+            'laporan_id' => $laporan->id,
+            'tujuan_satuan' => $tujuan->nama,
+            'prioritas' => $laporan->prioritas,
+        ]);
+
         return back()->with('status', $permintaan
             ? 'Laporan berhasil dikirim sesuai permintaan dan deadline yang diberikan.'
             : 'Laporan berhasil dikirim ke '.$tujuan->nama.'.');
@@ -132,6 +139,11 @@ class LaporanController extends Controller
             ]);
         }
 
+        ActivityLog::catat('laporan.status', "Memperbarui status laporan \"{$laporan->perihal}\" menjadi {$laporan->status}.", $user, [
+            'laporan_id' => $laporan->id,
+            'status' => $laporan->status,
+        ]);
+
         return back()->with('status', 'Status laporan berhasil diperbarui menjadi '.$laporan->status.'.');
     }
 
@@ -151,7 +163,13 @@ class LaporanController extends Controller
         if ($laporan->lampiran_path) {
             Storage::disk('public')->delete($laporan->lampiran_path);
         }
+        $perihal = $laporan->perihal;
+        $laporanId = $laporan->id;
         $laporan->delete();
+
+        ActivityLog::catat('laporan.delete', "Menghapus laporan \"{$perihal}\" dari riwayat penerimaan.", $user, [
+            'laporan_id' => $laporanId,
+        ]);
 
         return back()->with('status', 'Laporan berhasil dihapus dari riwayat penerimaan.');
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Pangkat;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,11 @@ class PangkatController extends Controller
             'urutan' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        Pangkat::create($validated);
+        $pangkat = Pangkat::create($validated);
+
+        ActivityLog::catat('pangkat.create', "Menambahkan data pangkat \"{$pangkat->nama}\".", $request->user(), [
+            'pangkat_id' => $pangkat->id,
+        ]);
 
         return back()->with('status', 'Data pangkat berhasil ditambahkan.');
     }
@@ -33,16 +38,26 @@ class PangkatController extends Controller
 
         $pangkat->update($validated);
 
+        ActivityLog::catat('pangkat.update', "Memperbarui data pangkat \"{$pangkat->nama}\".", $request->user(), [
+            'pangkat_id' => $pangkat->id,
+        ]);
+
         return back()->with('status', 'Data pangkat berhasil diperbarui.');
     }
 
-    public function destroy(Pangkat $pangkat): RedirectResponse
+    public function destroy(Request $request, Pangkat $pangkat): RedirectResponse
     {
         if ($pangkat->personels()->exists()) {
             return back()->with('error', 'Pangkat masih dipakai oleh data personel dan tidak bisa dihapus.');
         }
 
+        $nama = $pangkat->nama;
+        $pangkatId = $pangkat->id;
         $pangkat->delete();
+
+        ActivityLog::catat('pangkat.delete', "Menghapus data pangkat \"{$nama}\".", $request->user(), [
+            'pangkat_id' => $pangkatId,
+        ]);
 
         return back()->with('status', 'Data pangkat berhasil dihapus.');
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\PermintaanLaporan;
 use App\Models\Satuan;
 use App\Models\User;
@@ -83,6 +84,10 @@ class PermintaanLaporanController extends Controller
             }
         });
 
+        ActivityLog::catat('permintaan-laporan.create', "Mengirim permintaan laporan \"{$validated['perihal']}\" kepada {$created->count()} satuan.", $user, [
+            'permintaan_laporan_ids' => $created->pluck('id')->all(),
+        ]);
+
         return redirect()->route('permintaan-laporan.index')
             ->with('status', 'Permintaan laporan berhasil dikirim kepada '.$created->count().' satuan.');
     }
@@ -98,6 +103,10 @@ class PermintaanLaporanController extends Controller
         $permintaanLaporan->update([
             'status' => PermintaanLaporan::STATUS_DIKERJAKAN,
             'dikerjakan_at' => $permintaanLaporan->dikerjakan_at ?? now(),
+        ]);
+
+        ActivityLog::catat('permintaan-laporan.mulai', "Menandai permintaan laporan \"{$permintaanLaporan->perihal}\" sedang dikerjakan.", $user, [
+            'permintaan_laporan_id' => $permintaanLaporan->id,
         ]);
 
         return back()->with('status', 'Permintaan laporan ditandai sedang dikerjakan.');

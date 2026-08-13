@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\LaporanPenindakan;
 use App\Models\LaporanPenindakanBukti;
 use App\Models\Satuan;
@@ -58,6 +59,13 @@ class LaporanPenindakanController extends Controller
 
         $this->simpanBukti($request, $laporan, $user->id);
 
+        ActivityLog::catat(
+            $dikirim ? 'laporan-penindakan.kirim' : 'laporan-penindakan.draft',
+            ($dikirim ? 'Mengirim' : 'Menyimpan draft')." laporan penanganan insiden \"{$laporan->perihal}\".",
+            $user,
+            ['laporan_penindakan_id' => $laporan->id],
+        );
+
         if ($dikirim) {
             $this->notifikasiDanpus($laporan, $danpus);
 
@@ -98,6 +106,10 @@ class LaporanPenindakanController extends Controller
 
         $this->simpanBukti($request, $laporanPenindakan, $request->user()->id);
 
+        ActivityLog::catat('laporan-penindakan.update', "Memperbarui laporan penanganan insiden \"{$laporanPenindakan->perihal}\".", $request->user(), [
+            'laporan_penindakan_id' => $laporanPenindakan->id,
+        ]);
+
         return back()->with('status', 'Laporan berhasil diperbarui.');
     }
 
@@ -119,6 +131,10 @@ class LaporanPenindakanController extends Controller
         ]);
 
         $this->notifikasiDanpus($laporanPenindakan, $danpus);
+
+        ActivityLog::catat('laporan-penindakan.kirim', "Mengirim ulang laporan penanganan insiden \"{$laporanPenindakan->perihal}\" ke DANPUS.", $request->user(), [
+            'laporan_penindakan_id' => $laporanPenindakan->id,
+        ]);
 
         return back()->with('status', 'Laporan berhasil dikirim ke DANPUS.');
     }
@@ -142,6 +158,10 @@ class LaporanPenindakanController extends Controller
 
         $this->simpanBukti($request, $laporanPenindakan, $user->id);
 
+        ActivityLog::catat('laporan-penindakan.upload-bukti', "Mengunggah bukti digital pada laporan penanganan insiden \"{$laporanPenindakan->perihal}\".", $user, [
+            'laporan_penindakan_id' => $laporanPenindakan->id,
+        ]);
+
         return back()->with('status', 'Bukti digital berhasil diunggah.');
     }
 
@@ -154,8 +174,13 @@ class LaporanPenindakanController extends Controller
         abort_unless($laporan->user_id === $request->user()->id, 403);
         abort_unless(in_array($laporan->status, ['Draft', 'Dikirim', 'Direvisi'], true), 403);
 
+        $namaFile = $bukti->nama_file;
         Storage::disk('public')->delete($bukti->path);
         $bukti->delete();
+
+        ActivityLog::catat('laporan-penindakan.hapus-bukti', "Menghapus bukti digital \"{$namaFile}\" dari laporan penanganan insiden \"{$laporan->perihal}\".", $request->user(), [
+            'laporan_penindakan_id' => $laporan->id,
+        ]);
 
         return back()->with('status', 'Bukti digital berhasil dihapus.');
     }
@@ -173,7 +198,13 @@ class LaporanPenindakanController extends Controller
             Storage::disk('public')->delete($b->path);
         }
 
+        $perihal = $laporanPenindakan->perihal;
+        $laporanId = $laporanPenindakan->id;
         $laporanPenindakan->delete();
+
+        ActivityLog::catat('laporan-penindakan.delete', "Menghapus draft laporan penanganan insiden \"{$perihal}\".", $request->user(), [
+            'laporan_penindakan_id' => $laporanId,
+        ]);
 
         return back()->with('status', 'Draft laporan berhasil dihapus.');
     }

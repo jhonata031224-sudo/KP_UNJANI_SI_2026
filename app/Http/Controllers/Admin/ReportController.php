@@ -71,22 +71,53 @@ class ReportController extends Controller
      */
     public function exportActivityExcel(Request $request)
     {
-        $log = ActivityLog::with('user')->latest('created_at')->limit(2000)->get();
+        $log = ActivityLog::with('user.satuan')->latest('created_at')->limit(2000)->get();
         $rows = $log->map(fn ($l) => [
             $l->created_at?->format('d/m/Y H:i:s') ?: '-',
             $l->nama_pengguna ?: ($l->user?->name ?: '-'),
+            $l->user?->satuan?->nama ?: '-',
             $l->aksi ?: '-',
             $l->deskripsi ?: '-',
+            $l->context ? json_encode($l->context, JSON_UNESCAPED_UNICODE) : '-',
             $l->ip_address ?: '-',
         ])->all();
 
         return SimpleXlsx::download(
             'log-aktivitas-'.now()->format('Ymd_His').'.xlsx',
             'Log Aktivitas',
-            ['Waktu', 'Pengguna', 'Aksi', 'Deskripsi', 'IP Address'],
+            ['Waktu', 'Pengguna', 'Satuan', 'Aksi', 'Deskripsi', 'Detail', 'IP Address'],
             $rows,
-            [23, 32, 28, 76, 22],
+            [23, 32, 26, 30, 70, 46, 22],
         );
+    }
+
+    /**
+     * Endpoint JSON dipoll otomatis oleh halaman Log Aktivitas (lihat script
+     * di admin.laporan) supaya aktivitas baru muncul realtime tanpa reload.
+     * Hanya mengembalikan log dengan id lebih besar dari 'after_id'.
+     */
+    public function aktivitasTerbaru(Request $request)
+    {
+        $afterId = (int) $request->query('after_id', 0);
+
+        $log = ActivityLog::with('user.satuan')
+            ->when($afterId > 0, fn ($q) => $q->where('id', '>', $afterId))
+            ->latest('id')
+            ->limit(50)
+            ->get();
+
+        return response()->json([
+            'log' => $log->map(fn ($l) => [
+                'id' => $l->id,
+                'waktu' => $l->created_at?->translatedFormat('d M Y H:i:s'),
+                'pengguna' => $l->nama_pengguna ?: ($l->user?->name ?: '-'),
+                'satuan' => $l->user?->satuan?->nama ?: '-',
+                'aksi' => $l->aksi,
+                'deskripsi' => $l->deskripsi,
+                'ip' => $l->ip_address,
+            ]),
+            'max_id' => $log->max('id') ?? $afterId,
+        ]);
     }
 
     /**
