@@ -7,7 +7,8 @@ use ZipArchive;
 
 /**
  * XLSX writer ringan tanpa dependency tambahan.
- * Fokus pada export laporan admin yang rapi, mudah dibaca, dan tidak memotong isi.
+ * Tampilan export dibuat bersih seperti spreadsheet laporan manual:
+ * header aksen hijau, isi putih, all borders, wrap text, tanpa filter dropdown.
  */
 class SimpleXlsx
 {
@@ -72,7 +73,7 @@ class SimpleXlsx
             $lines = max(1, (int) ceil(mb_strlen($text) / max(8, $width * 1.25)));
             $maxLines = max($maxLines, min($lines, 6));
         }
-        return min(96, max(22, 18 * $maxLines));
+        return min(108, max(22, 18 * $maxLines));
     }
 
     private static function sheet(string $title, array $headers, array $rows, array $widths): string
@@ -96,18 +97,18 @@ class SimpleXlsx
         }
         $xml .= '</cols><sheetData>';
 
-        // Judul dan metadata hanya memakai area tabel, tanpa memberi warna pada sheet kosong.
+        // Judul dan metadata hanya berada di area laporan dan tidak mewarnai sheet kosong.
         $xml .= '<row r="1" ht="28" customHeight="1">'.self::inlineCell(1, 1, $title, 1).'</row>';
         $xml .= '<row r="2" ht="22" customHeight="1">'.self::inlineCell(1, 2, 'Diekspor otomatis oleh SIBERAD · '.$generated, 4).'</row>';
 
-        // Header: warna aksen hanya pada header tabel, tanpa filter/dropdown.
-        $xml .= '<row r="3" ht="28" customHeight="1">';
+        // Header hijau sederhana seperti spreadsheet laporan manual. Tanpa autoFilter/dropdown.
+        $xml .= '<row r="3" ht="30" customHeight="1">';
         foreach ($headers as $i => $header) {
             $xml .= self::inlineCell($i + 1, 3, $header, 3);
         }
         $xml .= '</row>';
 
-        // Seluruh data diberi all borders + wrap text. Tinggi baris dihitung agar isi panjang tetap terlihat.
+        // Isi putih, semua sel memakai border tipis dan wrap text agar tidak terpotong.
         foreach ($rows as $rowIndex => $row) {
             $excelRow = $rowIndex + 4;
             $height = self::rowHeightFor($row, $widths);
@@ -119,7 +120,6 @@ class SimpleXlsx
         }
 
         $xml .= '</sheetData>';
-        // Sengaja tidak memakai autoFilter agar judul kolom bersih tanpa tombol dropdown.
         $xml .= '<mergeCells count="2"><mergeCell ref="A1:'.$lastCol.'1"/><mergeCell ref="A2:'.$lastCol.'2"/></mergeCells>';
         $xml .= '<pageMargins left="0.25" right="0.25" top="0.5" bottom="0.5" header="0.2" footer="0.2"/>';
         $xml .= '<pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/><pageSetUpPr fitToPage="1"/>';
@@ -133,8 +133,8 @@ class SimpleXlsx
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
 <numFmts count="0"/>
 <fonts count="3"><font><sz val="11"/><name val="Aptos"/></font><font><b/><sz val="14"/><name val="Aptos"/></font><font><b/><sz val="11"/><name val="Aptos"/></font></fonts>
-<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF0A51A"/><bgColor indexed="64"/></patternFill></fill></fills>
-<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFD6DEE8"/></left><right style="thin"><color rgb="FFD6DEE8"/></right><top style="thin"><color rgb="FFD6DEE8"/></top><bottom style="thin"><color rgb="FFD6DEE8"/></bottom><diagonal/></border></borders>
+<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF8ED66F"/><bgColor indexed="64"/></patternFill></fill></fills>
+<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFB7B7B7"/></left><right style="thin"><color rgb="FFB7B7B7"/></right><top style="thin"><color rgb="FFB7B7B7"/></top><bottom style="thin"><color rgb="FFB7B7B7"/></bottom><diagonal/></border></borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
 <cellXfs count="5"><xf numFmtId="0" fontId="1" fillId="0" borderId="0" applyAlignment="1"><alignment vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="2" borderId="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="2" borderId="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment vertical="center"/></xf></cellXfs>
 <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
