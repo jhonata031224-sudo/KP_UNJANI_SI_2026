@@ -419,6 +419,15 @@
   @keyframes toastIn{to{opacity:1;transform:translate(-50%,0) scale(1);}}
   @keyframes toastOut{0%{opacity:1;transform:translate(-50%,0) scale(1);}35%{opacity:1;transform:translate(-50%,-6px) scale(1.05);}100%{opacity:0;transform:translate(-50%,-30px) scale(.9);}}
   @keyframes toastBar{from{transform:scaleX(1);}to{transform:scaleX(0);}}
+
+  /* ===== state kosong (tabel/list tanpa data) -- 1 sistem dipakai di semua
+     dashboard (Admin, Pimpinan, role Satlak/dst), biar nggak ada lagi teks
+     polos "Belum ada..." doang tanpa ikon/hierarki. ===== */
+  .empty-state{padding:32px 16px;text-align:center;border:2px dotted var(--border);border-radius:12px;background:var(--panel-alt);}
+  .empty-state svg{margin:0 auto 12px;display:block;}
+  .empty-state-title{font-size:13px;font-weight:700;color:var(--text);}
+  .empty-state-sub{font-size:11.5px;color:var(--text-muted);margin-top:4px;}
+  td>.empty-state{padding:22px 12px;}
 </style>
 <script>
   var siberadToastQueue = [];

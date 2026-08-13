@@ -962,7 +962,7 @@
                   </td>
                 </tr>
                 @empty
-                <tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:24px;">Belum ada data satuan.</td></tr>
+                <tr><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada data satuan</div></div></td></tr>
                 @endforelse
               </tbody>
             </table>
@@ -1064,7 +1064,7 @@
                   <td style="color:var(--text-dim);">{{ $l->ip_address }}</td>
                 </tr>
                 @empty
-                <tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:24px;">Belum ada aktivitas tercatat.</td></tr>
+                <tr><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada aktivitas tercatat</div></div></td></tr>
                 @endforelse
               </tbody>
             </table>
@@ -1108,7 +1108,7 @@
                   <td><a class="btn btn-sm" href="{{ route('admin.backup.download', $b['nama']) }}">Unduh</a></td>
                 </tr>
                 @empty
-                <tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:24px;">Belum ada backup dibuat.</td></tr>
+                <tr><td colspan="4"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada backup dibuat</div></div></td></tr>
                 @endforelse
               </tbody>
             </table>
@@ -1650,7 +1650,7 @@
                   <td style="text-align:center;"><span class="badge-status wait">{{ $s->laporan_menunggu }}</span></td>
                 </tr>
                 @empty
-                <tr class="table-empty-row"><td colspan="5">Belum ada data Satlak.</td></tr>
+                <tr class="table-empty-row"><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada data Satlak</div></div></td></tr>
                 @endforelse
               </tbody>
             </table>
@@ -1697,7 +1697,7 @@
                   </td>
                 </tr>
                 @empty
-                <tr class="table-empty-row"><td colspan="5">Tidak ada sesi aktif.</td></tr>
+                <tr class="table-empty-row"><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Tidak ada sesi aktif</div></div></td></tr>
                 @endforelse
               </tbody>
             </table>
@@ -2214,7 +2214,7 @@
       tr.className = 'table-empty-row';
       var td = document.createElement('td');
       td.colSpan = colCount;
-      td.textContent = 'Tidak ada data yang cocok.';
+      td.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada data yang cocok</div><div class="empty-state-sub">Coba ubah kata kunci pencarian atau filter-nya.</div></div>';
       tr.appendChild(td);
       return tr;
     }

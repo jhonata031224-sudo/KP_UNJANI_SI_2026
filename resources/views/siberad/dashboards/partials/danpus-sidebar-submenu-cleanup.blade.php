@@ -30,7 +30,7 @@
   .danpus-activity-item.is-done .danpus-activity-state{color:var(--p-green);background:color-mix(in srgb,var(--p-green) 12%,transparent);border-color:color-mix(in srgb,var(--p-green) 32%,transparent)}
   .danpus-activity-item.is-rejected .danpus-activity-state{color:var(--p-red);background:color-mix(in srgb,var(--p-red) 12%,transparent);border-color:color-mix(in srgb,var(--p-red) 32%,transparent)}
   .danpus-activity-item.is-current .danpus-activity-state{color:var(--p-yellow);background:color-mix(in srgb,var(--p-yellow) 12%,transparent);border-color:color-mix(in srgb,var(--p-yellow) 32%,transparent)}
-  .danpus-activity-empty{padding:25px 12px;text-align:center;color:var(--p-muted);font-size:12px;border:1px dashed var(--p-border);border-radius:12px}
+  .danpus-activity-empty{padding:25px 12px;text-align:center;color:var(--p-muted);font-size:12px;border:2px dotted var(--p-border);border-radius:12px}
   @media(max-width:700px){.danpus-activity-head{display:block}.danpus-activity-date{margin-top:5px}}
 </style>
 <script>
@@ -148,7 +148,7 @@
       var pending=[];
       try{ pending=JSON.parse(wrapper.dataset.pendingPermintaan||'[]'); }catch(e){}
       wrapper.innerHTML='';
-      if(!rows.length&&!pending.length){var empty=document.createElement('div');empty.className='danpus-activity-empty';empty.textContent='Belum ada aktivitas dari satuan ini.';wrapper.appendChild(empty)}
+      if(!rows.length&&!pending.length){var empty=document.createElement('div');empty.className='danpus-activity-empty';empty.innerHTML='<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block;"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg>Belum ada aktivitas dari satuan ini.';wrapper.appendChild(empty)}
       else{
         rows.forEach(function(row){wrapper.appendChild(buildProcessLog(row))});
         pending.forEach(function(p){wrapper.appendChild(buildPendingPermintaanLog(p))});

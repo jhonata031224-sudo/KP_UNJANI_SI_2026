@@ -11,7 +11,7 @@
 .rpt-filter-select{height:38px;border:1px solid var(--p-border,var(--border));border-radius:9px;background-color:var(--p-surface-2,var(--panel-alt));color:var(--p-text,var(--text));font:inherit;font-size:11px;padding:0 28px 0 11px;outline:0;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 9px center;background-size:13px}
 .rpt-filter-select:focus{border-color:var(--p-accent,var(--gold-bright));box-shadow:0 0 0 3px rgba(201,122,0,.10)}
 .rpt-filter-count{font-size:10px;color:var(--p-muted,var(--text-muted));white-space:nowrap;margin-left:auto}
-.rpt-filter-empty{padding:24px 12px;text-align:center;color:var(--p-muted,var(--text-muted));font-size:12px;border:1px dashed var(--p-border,var(--border));border-radius:10px}
+.rpt-filter-empty{padding:24px 12px;text-align:center;color:var(--p-muted,var(--text-muted));font-size:12px;border:2px dotted var(--p-border,var(--border));border-radius:10px}
 @media(max-width:700px){.rpt-filter-bar{gap:7px}.rpt-filter-search{flex:1 1 100%;max-width:none}.rpt-filter-count{width:100%;margin-left:0}}
 </style>
 <script>
@@ -74,7 +74,7 @@
     emptyTd.colSpan=colCount;
     var emptyBox=document.createElement('div');
     emptyBox.className='rpt-filter-empty';
-    emptyBox.textContent=cfg.emptyText;
+    emptyBox.innerHTML='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block;opacity:.7"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>'+cfg.emptyText;
     emptyTd.appendChild(emptyBox);
     emptyRow.appendChild(emptyTd);
     tbody.appendChild(emptyRow);
