@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Pengaturan;
 use App\Models\User;
+use App\Support\SimpleXlsx;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Response as ResponseFacade;
 use Illuminate\View\View;
 
 class ReportController extends Controller
@@ -40,48 +40,53 @@ class ReportController extends Controller
     }
 
     /**
-     * Export daftar pengguna ke CSV (dibuka Excel/Sheets tanpa perlu
-     * library tambahan).
+     * Export daftar pengguna sebagai XLSX yang sudah diformat untuk Excel:
+     * kolom diberi lebar, header jelas, filter aktif, dan isi panjang di-wrap.
      */
     public function exportUsersExcel()
     {
         $users = User::with('satuan')->orderBy('name')->get();
+        $rows = $users->map(fn ($u) => [
+            $u->name ?: '-',
+            $u->username ?: '-',
+            $u->email ?: '-',
+            $u->satuan?->nama ?: '-',
+            $u->jabatan ?: '-',
+            $u->created_at?->format('d/m/Y H:i') ?: '-',
+        ])->all();
 
-        $callback = function () use ($users) {
-            $out = fopen('php://output', 'w');
-            fputcsv($out, ['Nama', 'Username', 'Email', 'Satuan', 'Jabatan', 'Dibuat']);
-            foreach ($users as $u) {
-                fputcsv($out, [$u->name, $u->username, $u->email, $u->satuan->nama ?? '-', $u->jabatan, $u->created_at?->format('Y-m-d H:i')]);
-            }
-            fclose($out);
-        };
-
-        return ResponseFacade::stream($callback, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="laporan-pengguna-'.now()->format('Ymd_His').'.csv"',
-        ]);
+        return SimpleXlsx::download(
+            'laporan-pengguna-'.now()->format('Ymd_His').'.xlsx',
+            'Laporan Pengguna',
+            ['Nama', 'Username', 'Email', 'Satuan', 'Jabatan', 'Dibuat'],
+            $rows,
+            [34, 22, 38, 38, 34, 22],
+        );
     }
 
     /**
-     * Export log aktivitas ke CSV.
+     * Export log aktivitas sebagai XLSX yang mudah dibaca tanpa kolom ####
+     * atau teks terpotong: waktu dibuat sebagai teks, deskripsi di-wrap,
+     * dan lebar kolom disesuaikan dengan isi.
      */
     public function exportActivityExcel(Request $request)
     {
         $log = ActivityLog::with('user')->latest('created_at')->limit(2000)->get();
+        $rows = $log->map(fn ($l) => [
+            $l->created_at?->format('d/m/Y H:i:s') ?: '-',
+            $l->nama_pengguna ?: ($l->user?->name ?: '-'),
+            $l->aksi ?: '-',
+            $l->deskripsi ?: '-',
+            $l->ip_address ?: '-',
+        ])->all();
 
-        $callback = function () use ($log) {
-            $out = fopen('php://output', 'w');
-            fputcsv($out, ['Waktu', 'Pengguna', 'Aksi', 'Deskripsi', 'IP Address']);
-            foreach ($log as $l) {
-                fputcsv($out, [$l->created_at?->format('Y-m-d H:i:s'), $l->nama_pengguna, $l->aksi, $l->deskripsi, $l->ip_address]);
-            }
-            fclose($out);
-        };
-
-        return ResponseFacade::stream($callback, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="log-aktivitas-'.now()->format('Ymd_His').'.csv"',
-        ]);
+        return SimpleXlsx::download(
+            'log-aktivitas-'.now()->format('Ymd_His').'.xlsx',
+            'Log Aktivitas',
+            ['Waktu', 'Pengguna', 'Aksi', 'Deskripsi', 'IP Address'],
+            $rows,
+            [23, 32, 28, 76, 22],
+        );
     }
 
     /**
