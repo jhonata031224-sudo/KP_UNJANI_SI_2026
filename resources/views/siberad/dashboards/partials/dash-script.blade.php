@@ -84,3 +84,109 @@
 @if(isset($pengaturan))
 <script src="{{ asset('js/admin-landing-editor.js') }}"></script>
 @endif
+
+{{-- ===== FILE UPLOAD UI SERAGAM UNTUK SEMUA ROLE ===== --}}
+<script>
+(function () {
+  'use strict';
+
+  function injectStyles() {
+    if (document.getElementById('siberad-file-upload-style')) return;
+    var style = document.createElement('style');
+    style.id = 'siberad-file-upload-style';
+    style.textContent = [
+      '.siberad-file-upload{display:flex;align-items:center;gap:14px;width:100%;min-height:54px;padding:5px 12px 5px 5px;box-sizing:border-box;border:1px dashed var(--border-strong);border-radius:10px;background:var(--panel-alt);}',
+      '.siberad-file-upload>input[type=file]{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important;opacity:0!important;}',
+      '.siberad-file-upload-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:0 0 auto;min-width:158px;height:42px;padding:0 18px;border:1px solid var(--border);border-radius:10px;background:var(--panel);color:var(--text);font-family:var(--body);font-size:12px;font-weight:700;letter-spacing:.01em;line-height:1;cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.06);transition:border-color .18s ease,background-color .18s ease,color .18s ease,box-shadow .18s ease,transform .18s ease;}',
+      '.siberad-file-upload-button:hover{border-color:var(--gold);background:var(--bg-deep);color:var(--gold-bright);box-shadow:0 4px 12px rgba(15,23,42,.08);}',
+      '.siberad-file-upload-button:active{transform:translateY(1px);}',
+      '.siberad-file-upload-button svg{width:16px;height:16px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}',
+      '.siberad-file-upload>input[type=file]:focus-visible+.siberad-file-upload-button{outline:2px solid var(--gold);outline-offset:2px;}',
+      '.siberad-file-upload-name{min-width:0;flex:1;font-family:var(--body);font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;}',
+      '.siberad-file-upload-name.has-file{color:var(--text);font-weight:500;}',
+      '.siberad-file-upload.is-disabled{opacity:.6;pointer-events:none;}',
+      '@media(max-width:560px){.siberad-file-upload{align-items:stretch;flex-direction:column;padding:7px;gap:8px}.siberad-file-upload-button{width:100%;}.siberad-file-upload-name{padding:0 5px 3px;text-align:center;}}'
+    ].join('');
+    document.head.appendChild(style);
+  }
+
+  function uploadIcon() {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>';
+  }
+
+  function getFileText(input) {
+    var files = input.files ? Array.prototype.slice.call(input.files) : [];
+    if (!files.length) return { text: 'Belum ada file dipilih', hasFile: false };
+    if (files.length === 1) return { text: files[0].name, hasFile: true };
+    return { text: files.length + ' file dipilih', hasFile: true };
+  }
+
+  function bindFileInput(input) {
+    if (!input || input.dataset.siberadFileUploadBound === '1') return;
+    if (input.hasAttribute('hidden') || input.getAttribute('aria-hidden') === 'true') return;
+    if (input.id === 'fotoProfilInput') return;
+
+    input.dataset.siberadFileUploadBound = '1';
+    var parent = input.parentElement;
+    if (!parent) return;
+    if (parent.classList.contains('siberad-file-upload')) return;
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'siberad-file-upload';
+    parent.insertBefore(wrapper, input);
+    wrapper.appendChild(input);
+
+    if (!input.id) {
+      input.id = 'siberad-file-' + Math.random().toString(36).slice(2, 10);
+    }
+
+    var label = document.createElement('label');
+    label.className = 'siberad-file-upload-button';
+    label.setAttribute('for', input.id);
+    label.innerHTML = uploadIcon() + '<span>PILIH FILE</span>';
+
+    var name = document.createElement('span');
+    name.className = 'siberad-file-upload-name';
+
+    wrapper.appendChild(label);
+    wrapper.appendChild(name);
+
+    function refresh() {
+      var state = getFileText(input);
+      name.textContent = state.text;
+      name.classList.toggle('has-file', state.hasFile);
+      wrapper.classList.toggle('is-disabled', !!input.disabled);
+    }
+
+    input.addEventListener('change', refresh);
+    refresh();
+  }
+
+  function bindAll(root) {
+    var scope = root || document;
+    if (!scope.querySelectorAll) return;
+    scope.querySelectorAll('input[type="file"]').forEach(bindFileInput);
+  }
+
+  function init() {
+    injectStyles();
+    bindAll(document);
+
+    if (window.MutationObserver) {
+      var observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) {
+          Array.prototype.forEach.call(mutation.addedNodes, function (node) {
+            if (node.nodeType !== 1) return;
+            if (node.matches && node.matches('input[type="file"]')) bindFileInput(node);
+            bindAll(node);
+          });
+        });
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
