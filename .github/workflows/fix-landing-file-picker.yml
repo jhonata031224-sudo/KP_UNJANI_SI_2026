@@ -1,0 +1,35 @@
+name: Fix landing file picker alignment
+on:
+  push:
+    branches: [refactor-fokus-laporan]
+permissions:
+  contents: write
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply centered file picker styles
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('public/js/admin-landing-editor.js')
+          s=p.read_text()
+          old=".landing-file-picker{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:0}"
+          new=".landing-file-picker{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:0;min-height:42px}"
+          s=s.replace(old,new)
+          s=s.replace(".landing-file-button{display:inline-flex;align-items:center;gap:8px;", ".landing-file-button{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;")
+          s=s.replace("border-radius:8px;padding:9px 13px;font:600 12px/1", "min-width:128px!important;height:40px!important;box-sizing:border-box!important;margin:0!important;border-radius:9px;padding:0 14px;font:600 12px/40px")
+          s=s.replace(".landing-file-button svg{width:16px;height:16px;flex:none}", ".landing-file-button svg{display:block!important;width:16px!important;height:16px!important;flex:0 0 16px!important;margin:0!important;vertical-align:middle!important}.landing-file-button span{display:block!important;height:16px!important;line-height:16px!important;margin:0!important;padding:0!important;white-space:nowrap!important;vertical-align:middle!important}")
+          s=s.replace(".landing-file-name{color:var(--text-muted,#64748b);font-size:11.5px;min-width:0;max-width:420px;", ".landing-file-name{display:inline-flex!important;align-items:center!important;height:40px!important;min-height:40px!important;margin:0!important;padding:0!important;color:var(--text-muted,#64748b);font-size:11.5px;min-width:0;max-width:420px;")
+          p.write_text(s)
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/js/admin-landing-editor.js
+          git commit -m "fix: align file picker icon and label" || true
+          git push
+          git rm .github/workflows/fix-landing-file-picker.yml || true
+          git commit -m "chore: remove temporary file picker workflow" || true
+          git push
