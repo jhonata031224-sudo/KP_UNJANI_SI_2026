@@ -84,8 +84,9 @@ class PermintaanLaporanController extends Controller
             }
         });
 
-        ActivityLog::catat('permintaan-laporan.create', "Mengirim permintaan laporan \"{$validated['perihal']}\" kepada {$created->count()} satuan.", $user, [
+        ActivityLog::catat('permintaan-laporan.create', "Mengirim permintaan laporan \"{$validated['perihal']}\" kepada ".$tujuan->pluck('nama')->join(', ', ' dan ').".", $user, [
             'permintaan_laporan_ids' => $created->pluck('id')->all(),
+            'satuan_tujuan' => $tujuan->pluck('nama')->all(),
         ]);
 
         return redirect()->route('permintaan-laporan.index')
