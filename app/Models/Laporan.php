@@ -19,10 +19,18 @@ class Laporan extends Model
         'perihal',
         'deskripsi',
         'catatan',
+        'kendala',
+        'progres',
         'prioritas',
         'lampiran_path',
         'status',
     ];
+
+    protected $casts = [
+        'progres' => 'integer',
+    ];
+
+    public const STATUS_PROGRES = 'Progres';
 
     public function satuan(): BelongsTo
     {

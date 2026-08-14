@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Notifications\LaporanBaruDiterima;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class LaporanController extends Controller
@@ -24,6 +25,8 @@ class LaporanController extends Controller
             'deskripsi' => ['required', 'string', 'max:10000'],
             'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
             'lampiran' => ['nullable', 'file', 'mimes:pdf', 'max:20480'],
+            'progres' => ['nullable', 'integer', 'min:0', 'max:100', 'required_with:permintaan_laporan_id'],
+            'kendala' => ['nullable', 'string', 'max:5000'],
         ]);
 
         $user = $request->user()->load('satuan');
@@ -48,33 +51,49 @@ class LaporanController extends Controller
             $permintaan = PermintaanLaporan::findOrFail($validated['permintaan_laporan_id']);
             abort_unless((int) $permintaan->tujuan_satuan_id === (int) $satuanAsal->id, 403, 'Permintaan laporan bukan untuk satuan Anda.');
             abort_unless((int) $permintaan->pembuat->satuan_id === (int) $tujuan->id, 422, 'Tujuan laporan tidak sesuai dengan permintaan laporan.');
-            abort_if($permintaan->laporan_id && $permintaan->laporan?->status !== 'Revisi', 422, 'Permintaan laporan tersebut sudah memiliki laporan.');
         }
 
-        $lampiranPath = $request->hasFile('lampiran')
-            ? $request->file('lampiran')->store('lampiran-laporan', 'public')
-            : null;
+        $progresValue = $permintaan ? (int) $validated['progres'] : 100;
+        $laporan = null;
 
-        $laporan = Laporan::create([
-            'satuan_id' => $satuanAsal->id,
-            'user_id' => $user->id,
-            'tujuan_satuan_id' => $tujuan->id,
-            'permintaan_laporan_id' => $permintaan?->id,
-            'proyek' => $validated['proyek'] ?? null,
-            'perihal' => $validated['perihal'],
-            'deskripsi' => $validated['deskripsi'],
-            'prioritas' => $validated['prioritas'],
-            'lampiran_path' => $lampiranPath,
-            'status' => 'Menunggu',
-        ]);
+        DB::transaction(function () use (&$laporan, &$permintaan, $progresValue, $validated, $satuanAsal, $user, $tujuan, $request) {
+            if ($permintaan) {
+                $permintaan = PermintaanLaporan::whereKey($permintaan->id)->lockForUpdate()->first();
+                abort_if($permintaan->laporan_id, 422, 'Permintaan laporan tersebut sudah memiliki laporan yang menunggu pemeriksaan atau sudah diputuskan.');
+                abort_if($progresValue < $permintaan->progres, 422, 'Persentase progres tidak boleh lebih kecil dari progres terakhir ('.$permintaan->progres.'%).');
+            }
 
-        if ($permintaan) {
-            $permintaan->update([
-                'laporan_id' => $laporan->id,
-                'status' => PermintaanLaporan::STATUS_PEMERIKSAAN,
-                'selesai_at' => null,
+            $lampiranPath = $request->hasFile('lampiran')
+                ? $request->file('lampiran')->store('lampiran-laporan', 'public')
+                : null;
+
+            $statusLaporan = ($permintaan && $progresValue < 100) ? Laporan::STATUS_PROGRES : 'Menunggu';
+
+            $laporan = Laporan::create([
+                'satuan_id' => $satuanAsal->id,
+                'user_id' => $user->id,
+                'tujuan_satuan_id' => $tujuan->id,
+                'permintaan_laporan_id' => $permintaan?->id,
+                'proyek' => $validated['proyek'] ?? null,
+                'perihal' => $validated['perihal'],
+                'deskripsi' => $validated['deskripsi'],
+                'kendala' => $validated['kendala'] ?? null,
+                'progres' => $progresValue,
+                'prioritas' => $validated['prioritas'],
+                'lampiran_path' => $lampiranPath,
+                'status' => $statusLaporan,
             ]);
-        }
+
+            if ($permintaan) {
+                $permintaan->progres = $progresValue;
+                if ($progresValue >= 100) {
+                    $permintaan->laporan_id = $laporan->id;
+                    $permintaan->status = PermintaanLaporan::STATUS_PEMERIKSAAN;
+                    $permintaan->selesai_at = null;
+                }
+                $permintaan->save();
+            }
+        });
 
         foreach (User::where('satuan_id', $tujuan->id)->get() as $penerima) {
             $penerima->notify(new LaporanBaruDiterima($laporan));
@@ -102,6 +121,7 @@ class LaporanController extends Controller
         $satuan = $user->satuan;
         abort_unless($satuan, 403, 'Akun belum terhubung ke satuan.');
         abort_unless((int) $laporan->tujuan_satuan_id === (int) $satuan->id, 403, 'Anda bukan penerima laporan ini.');
+        abort_if($laporan->status === Laporan::STATUS_PROGRES, 422, 'Baris ini adalah catatan progres, bukan laporan final — tidak dapat diputuskan.');
 
         $kode = strtoupper((string) $satuan->kode);
         $aksi = strtolower((string) $validated['status']);
@@ -157,6 +177,7 @@ class LaporanController extends Controller
             && $laporan->satuan->kategori === Satuan::KATEGORI_SATLAK;
 
         abort_unless($isPenerimaLaporan || $isPimpinanRiwayatSatlak, 403);
+        abort_if($laporan->status === Laporan::STATUS_PROGRES, 422, 'Catatan progres tidak dapat dihapus.');
 
         if ($laporan->lampiran_path) {
             Storage::disk('public')->delete($laporan->lampiran_path);

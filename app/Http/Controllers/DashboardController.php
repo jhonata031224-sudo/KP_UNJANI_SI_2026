@@ -95,11 +95,11 @@ class DashboardController
             'DIKLAT', 'BINUM', 'BINFUNG', 'BINMAT',
         ];
         $permintaanLaporan = $modePimpinan
-            ? PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan'])
+            ? PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan','laporans'])
                 ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS','WADAN']))
                 ->latest('deadline_at')
                 ->get()
-            : PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan'])
+            : PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan','laporans'])
                 ->where('tujuan_satuan_id', $satuan->id)
                 ->whereIn('status', [PermintaanLaporan::STATUS_BELUM, PermintaanLaporan::STATUS_DIKERJAKAN, PermintaanLaporan::STATUS_PEMERIKSAAN])
                 ->latest('deadline_at')
