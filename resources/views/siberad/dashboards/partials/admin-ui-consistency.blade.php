@@ -128,9 +128,9 @@ body:has(.side-nav-group) .topbar {
   function initMobileSidebar(){
     var menuBtn=document.getElementById('menuBtn');
     var sidebar=document.getElementById('sidebar');
-    if(!menuBtn||!sidebar||menuBtn.dataset.uiBound==='1') return;
+    if(!menuBtn||!sidebar||menuBtn.dataset.mobileSidebarWideBound==='1') return;
 
-    menuBtn.dataset.uiBound='1';
+    menuBtn.dataset.mobileSidebarWideBound='1';
     var suppressNextClick=false;
     var suppressTimer=0;
 
