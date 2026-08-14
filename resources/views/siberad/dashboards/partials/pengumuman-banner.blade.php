@@ -44,7 +44,7 @@
     var menuBtn = document.getElementById('menuBtn');
     if (menuBtn && sidebar && !menuBtn.dataset.uiBound) {
       menuBtn.dataset.uiBound = '1';
-      menuBtn.addEventListener('click', function () { sidebar.classList.toggle('open'); });
+      menuBtn.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); sidebar.classList.toggle('open'); });
     }
 
     var themeBtn = document.getElementById('themeToggleBtn');
