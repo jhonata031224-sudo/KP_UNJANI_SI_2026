@@ -136,6 +136,7 @@ body:has(.side-nav-group) .topbar {
 
     function openSidebar(e){
       if(e){e.preventDefault();e.stopPropagation();}
+      sidebar.classList.remove('collapsed');
       sidebar.classList.add('open');
     }
 
@@ -171,6 +172,7 @@ body:has(.side-nav-group) .topbar {
          !sidebar.contains(e.target) &&
          e.target!==menuBtn){
         sidebar.classList.remove('open');
+        sidebar.classList.add('collapsed');
       }
     });
   }
