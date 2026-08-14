@@ -61,76 +61,34 @@ Route::get('/dashboard', DashboardController::class)
 Route::post('/laporan', [LaporanController::class, 'store'])
     ->middleware('auth')
     ->name('laporan.store');
-
-Route::patch('/laporan/{laporan}/status', [LaporanController::class, 'updateStatus'])
-    ->middleware('auth')
-    ->name('laporan.status');
-
-Route::patch('/laporan/{laporan}/progres', [LaporanController::class, 'updateProgres'])
-    ->middleware('auth')
-    ->name('laporan.update-progres');
-
-Route::delete('/laporan/{laporan}', [LaporanController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('laporan.destroy');
+Route::patch('/laporan/{laporan}/status', [LaporanController::class, 'updateStatus'])->middleware('auth')->name('laporan.status');
+Route::patch('/laporan/{laporan}/progres', [LaporanController::class, 'updateProgres'])->middleware('auth')->name('laporan.update-progres');
+Route::delete('/laporan/{laporan}', [LaporanController::class, 'destroy'])->middleware('auth')->name('laporan.destroy');
 
 // ===== Permintaan Laporan & Deadline dari DANPUS/WADAN =====
-Route::get('/permintaan-laporan', [PermintaanLaporanController::class, 'index'])
-    ->middleware('auth')
-    ->name('permintaan-laporan.index');
-Route::post('/permintaan-laporan', [PermintaanLaporanController::class, 'store'])
-    ->middleware('auth')
-    ->name('permintaan-laporan.store');
-Route::patch('/permintaan-laporan/{permintaanLaporan}/mulai', [PermintaanLaporanController::class, 'mulai'])
-    ->middleware('auth')
-    ->name('permintaan-laporan.mulai');
+Route::get('/permintaan-laporan', [PermintaanLaporanController::class, 'index'])->middleware('auth')->name('permintaan-laporan.index');
+Route::get('/permintaan-laporan/realtime', [PermintaanLaporanController::class, 'realtime'])->middleware('auth')->name('permintaan-laporan.realtime');
+Route::post('/permintaan-laporan', [PermintaanLaporanController::class, 'store'])->middleware('auth')->name('permintaan-laporan.store');
+Route::patch('/permintaan-laporan/{permintaanLaporan}/mulai', [PermintaanLaporanController::class, 'mulai'])->middleware('auth')->name('permintaan-laporan.mulai');
 
 // ===== Laporan Publikasi ke DANPUS (Satuan Pelaksanaan Siber Sosial) =====
-Route::post('/laporan-publikasi', [LaporanPublikasiController::class, 'store'])
-    ->middleware('auth')
-    ->name('laporan-publikasi.store');
-Route::patch('/laporan-publikasi/{laporanPublikasi}', [LaporanPublikasiController::class, 'update'])
-    ->middleware('auth')
-    ->name('laporan-publikasi.update');
-Route::post('/laporan-publikasi/{laporanPublikasi}/kirim', [LaporanPublikasiController::class, 'kirim'])
-    ->middleware('auth')
-    ->name('laporan-publikasi.kirim');
-Route::post('/laporan-publikasi/{laporanPublikasi}/dokumentasi', [LaporanPublikasiController::class, 'uploadDokumentasi'])
-    ->middleware('auth')
-    ->name('laporan-publikasi.upload-dokumentasi');
-Route::delete('/laporan-publikasi-dokumen/{dokumen}', [LaporanPublikasiController::class, 'destroyDokumentasi'])
-    ->middleware('auth')
-    ->name('laporan-publikasi-dokumen.destroy');
-Route::delete('/laporan-publikasi/{laporanPublikasi}', [LaporanPublikasiController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('laporan-publikasi.destroy');
+Route::post('/laporan-publikasi', [LaporanPublikasiController::class, 'store'])->middleware('auth')->name('laporan-publikasi.store');
+Route::patch('/laporan-publikasi/{laporanPublikasi}', [LaporanPublikasiController::class, 'update'])->middleware('auth')->name('laporan-publikasi.update');
+Route::post('/laporan-publikasi/{laporanPublikasi}/kirim', [LaporanPublikasiController::class, 'kirim'])->middleware('auth')->name('laporan-publikasi.kirim');
+Route::post('/laporan-publikasi/{laporanPublikasi}/dokumentasi', [LaporanPublikasiController::class, 'uploadDokumentasi'])->middleware('auth')->name('laporan-publikasi.upload-dokumentasi');
+Route::delete('/laporan-publikasi-dokumen/{dokumen}', [LaporanPublikasiController::class, 'destroyDokumentasi'])->middleware('auth')->name('laporan-publikasi-dokumen.destroy');
+Route::delete('/laporan-publikasi/{laporanPublikasi}', [LaporanPublikasiController::class, 'destroy'])->middleware('auth')->name('laporan-publikasi.destroy');
 
 // ===== Laporan Monitoring & Recovery ke DANPUS =====
-Route::post('/laporan-monitoring', [LaporanMonitoringController::class, 'store'])
-    ->middleware('auth')
-    ->name('laporan-monitoring.store');
-Route::patch('/laporan-monitoring/{laporanMonitoring}', [LaporanMonitoringController::class, 'update'])
-    ->middleware('auth')
-    ->name('laporan-monitoring.update');
-Route::post('/laporan-monitoring/{laporanMonitoring}/kirim', [LaporanMonitoringController::class, 'kirim'])
-    ->middleware('auth')
-    ->name('laporan-monitoring.kirim');
-Route::post('/laporan-monitoring/{laporanMonitoring}/lampiran', [LaporanMonitoringController::class, 'uploadLampiran'])
-    ->middleware('auth')
-    ->name('laporan-monitoring.upload-lampiran');
-Route::delete('/laporan-monitoring-lampiran/{lampiran}', [LaporanMonitoringController::class, 'destroyLampiran'])
-    ->middleware('auth')
-    ->name('laporan-monitoring-lampiran.destroy');
-Route::delete('/laporan-monitoring/{laporanMonitoring}', [LaporanMonitoringController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('laporan-monitoring.destroy');
-Route::patch('/laporan-monitoring/{laporanMonitoring}/status', [DanpusLaporanMonitoringController::class, 'updateStatus'])
-    ->middleware('auth')
-    ->name('laporan-monitoring.update-status');
+Route::post('/laporan-monitoring', [LaporanMonitoringController::class, 'store'])->middleware('auth')->name('laporan-monitoring.store');
+Route::patch('/laporan-monitoring/{laporanMonitoring}', [LaporanMonitoringController::class, 'update'])->middleware('auth')->name('laporan-monitoring.update');
+Route::post('/laporan-monitoring/{laporanMonitoring}/kirim', [LaporanMonitoringController::class, 'kirim'])->middleware('auth')->name('laporan-monitoring.kirim');
+Route::post('/laporan-monitoring/{laporanMonitoring}/lampiran', [LaporanMonitoringController::class, 'uploadLampiran'])->middleware('auth')->name('laporan-monitoring.upload-lampiran');
+Route::delete('/laporan-monitoring-lampiran/{lampiran}', [LaporanMonitoringController::class, 'destroyLampiran'])->middleware('auth')->name('laporan-monitoring-lampiran.destroy');
+Route::delete('/laporan-monitoring/{laporanMonitoring}', [LaporanMonitoringController::class, 'destroy'])->middleware('auth')->name('laporan-monitoring.destroy');
+Route::patch('/laporan-monitoring/{laporanMonitoring}/status', [DanpusLaporanMonitoringController::class, 'updateStatus'])->middleware('auth')->name('laporan-monitoring.update-status');
 
-Route::post('/notifikasi/baca-semua', [NotifikasiController::class, 'bacaSemua'])
-    ->middleware('auth')
-    ->name('notifikasi.baca-semua');
+Route::post('/notifikasi/baca-semua', [NotifikasiController::class, 'bacaSemua'])->middleware('auth')->name('notifikasi.baca-semua');
 
 // ===== Manajemen Akun Media Sosial =====
 Route::post('/akun-medsos', [AkunMedsosController::class, 'store'])->middleware('auth')->name('akun-medsos.store');
@@ -182,9 +140,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/backup/{filename}/download', [BackupController::class, 'download'])->name('backup.download');
     Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/aktivitas-terbaru', [ReportController::class, 'aktivitasTerbaru'])->name('laporan.aktivitas-terbaru');
-    Route::get('/laporan/cetak/{jenis}', [ReportController::class, 'printView'])
-        ->whereIn('jenis', ['pengguna', 'aktivitas'])
-        ->name('laporan.cetak');
+    Route::get('/laporan/cetak/{jenis}', [ReportController::class, 'printView'])->whereIn('jenis', ['pengguna', 'aktivitas'])->name('laporan.cetak');
     Route::get('/laporan/export/pengguna', [ReportController::class, 'exportUsersExcel'])->name('laporan.export-pengguna');
     Route::get('/laporan/export/aktivitas', [ReportController::class, 'exportActivityExcel'])->name('laporan.export-aktivitas');
     Route::delete('/sessions/{id}', [SessionController::class, 'destroy'])->name('sessions.destroy');
