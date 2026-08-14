@@ -135,7 +135,7 @@
   <main class="main">
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:12px;">
-        <button class="menu-btn" id="menuBtn">☰</button>
+        <button type="button" class="menu-btn" id="menuBtn">☰</button>
       </div>
       <div class="topbar-actions">
         <button type="button" class="btn-icon-toggle" id="themeToggleBtn" aria-pressed="false" aria-label="Ganti tema">

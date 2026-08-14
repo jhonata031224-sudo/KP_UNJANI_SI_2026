@@ -3,7 +3,15 @@
   const menuBtn = document.getElementById('menuBtn');
   const sidebar = document.getElementById('sidebar');
   if (menuBtn && sidebar) {
-    menuBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
+    // stopPropagation supaya event ini tidak langsung "ketangkep" lagi oleh
+    // listener document di bawah (yang tugasnya nutup sidebar kalau tap di luar).
+    // preventDefault dijaga juga untuk menghindari ghost-click/double-tap-zoom
+    // di beberapa browser mobile yang bikin tap pertama seolah tidak kebaca.
+    menuBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      sidebar.classList.toggle('open');
+    });
     document.addEventListener('click', (e) => {
       if (window.innerWidth <= 900 && sidebar.classList.contains('open') &&
           !sidebar.contains(e.target) && e.target !== menuBtn) {
