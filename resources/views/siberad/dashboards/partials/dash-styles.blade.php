@@ -4,6 +4,17 @@
       var t = localStorage.getItem('siberad-theme');
       if (t === 'light') { document.documentElement.setAttribute('data-theme', 'light'); }
     } catch (e) {}
+    try {
+      // Kalau sidebar terakhir kali diciutkan, tandai di <html> SEBELUM
+      // <body>/sidebar sempat di-parse sama sekali -- CSS di bawah (selector
+      // html.siberad-sidebar-collapsing) langsung paksa semua flyout submenu
+      // tersembunyi dari cat pertama, nggak gantung ke urutan/timing script
+      // lain yang baru jalan belakangan pas sidebar & submenu-nya sudah ada
+      // di DOM (itu yang bikin sempat kelihatan sekilas sebelum ditutup lagi).
+      if (localStorage.getItem('siberad-sidebar-collapsed') === '1') {
+        document.documentElement.classList.add('siberad-sidebar-collapsing');
+      }
+    } catch (e) {}
   })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,6 +47,12 @@
     --amber-dim:rgba(224,168,58,.15);
     --red:#c0564f;
     --red-dim:rgba(181,52,47,.16);
+    /* Oranye "sedang diproses/diperbarui" -- sengaja terpisah dari --gold/
+       --amber (yang cenderung kecoklatan) supaya status in-progress
+       kebaca tegas sebagai oranye, bukan gold/brand. */
+    --p-orange:#ea580c;
+    --p-orange-bg:rgba(234,88,12,.12);
+    --p-orange-border:rgba(234,88,12,.32);
     --text:#F5F1E8;
     --text-muted:#A9A39A;
     --text-dim:#77736C;
@@ -76,6 +93,9 @@
     --amber-dim:rgba(164,112,10,.14);
     --red:#af372e;
     --red-dim:rgba(175,55,46,.12);
+    --p-orange:#ea580c;
+    --p-orange-bg:rgba(234,88,12,.12);
+    --p-orange-border:rgba(234,88,12,.32);
     --text:#22281f;
     --text-muted:#5b6a5f;
     --text-dim:#7d8b81;
@@ -85,6 +105,15 @@
 
     color-scheme:light;
   }
+
+  /* Kill-switch murni CSS (bukan gantung ke timing script) buat cegah
+     flyout submenu sidebar sempat kelihatan sekilas pas refresh dengan
+     sidebar ciutkan -- class ini ditaruh di <html> paling awal (lihat
+     script pertama di atas), sebelum sidebar/submenu sempat ke-parse sama
+     sekali, jadi berlaku dari cat pertama. Dilepas lagi oleh
+     siberadInitSidebarCollapse() di bawah begitu status submenu per-role
+     sudah beres diproses. */
+  html.siberad-sidebar-collapsing .side-subnav{display:none!important;}
 
   *{margin:0;padding:0;box-sizing:border-box;}
   html,body{height:100%;}
@@ -488,6 +517,11 @@
     var sidebar = document.getElementById('sidebar');
     var btn = document.getElementById('sideCollapseBtn');
     if(!sidebar || !btn) return;
+    // Kill-switch CSS (html.siberad-sidebar-collapsing) sudah nggak
+    // diperlukan lagi begitu titik ini tercapai -- status open/closed tiap
+    // submenu per-role udah selesai diproses oleh script masing-masing
+    // halaman duluan sebelum DOMContentLoaded ini sempat jalan.
+    document.documentElement.classList.remove('siberad-sidebar-collapsing');
     var KEY = 'siberad-sidebar-collapsed';
     var pendingApply = 0;
     function apply(collapsed){

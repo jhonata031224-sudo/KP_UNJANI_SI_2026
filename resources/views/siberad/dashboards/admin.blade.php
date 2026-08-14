@@ -450,7 +450,7 @@
       </form>
     </div>
   </aside>
-  <script>try{if(localStorage.getItem('siberad-sidebar-collapsed')==='1')document.getElementById('sidebar').classList.add('collapsed');}catch(e){}</script>
+  <script>try{if(localStorage.getItem('siberad-sidebar-collapsed')==='1'){document.getElementById('sidebar').classList.add('collapsed');document.querySelectorAll('.side-nav-group.open').forEach(function(g){g.classList.remove('open')});}}catch(e){}</script>
 
   <script>
   (function () {
@@ -487,9 +487,10 @@
       groups.forEach(function (g) {
         var saved = null;
         try { saved = sessionStorage.getItem(ADMIN_GROUP_STATE_KEY + g.id); } catch (e) {}
-        if (saved === 'closed') g.classList.remove('open');
+        // Sidebar lagi ciutkan menang duluan atas status tersimpan -- lihat
+        // catatan yang sama di laporan-pimpinan.blade.php.
+        if (saved === 'closed' || (sidebar && sidebar.classList.contains('collapsed'))) g.classList.remove('open');
         else if (saved === 'open') g.classList.add('open');
-        else if (sidebar && sidebar.classList.contains('collapsed')) g.classList.remove('open');
         positionGroupFlyout(g);
       });
     }

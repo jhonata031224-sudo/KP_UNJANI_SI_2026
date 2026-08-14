@@ -1,5 +1,5 @@
 <style>
-.deadline-section,.deadline-sender-section{position:relative;overflow:hidden}.deadline-primary,.deadline-secondary{border:1px solid transparent;border-radius:9px;padding:9px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:.15s ease}.deadline-primary{background:var(--p-accent,var(--gold-bright));color:#fff}.deadline-primary:hover{filter:brightness(1.06);transform:translateY(-1px)}.deadline-secondary{background:var(--p-surface-2,var(--panel-alt));border-color:var(--p-border,var(--border));color:var(--p-text,var(--text))}.deadline-secondary:hover{border-color:var(--p-accent,var(--gold-bright));transform:translateY(-1px)}.deadline-primary:active,.deadline-secondary:active{transform:scale(.96)}.deadline-secondary.confirm-btn{background:var(--success,#16834b);border-color:var(--success,#16834b);color:#fff}.deadline-secondary.confirm-btn:hover{filter:brightness(1.1);border-color:var(--success,#16834b)}.deadline-primary.small,.deadline-secondary.small{padding:7px 10px;font-size:10px}.kirim-laporan-btn{letter-spacing:.03em;box-shadow:0 8px 18px -8px rgba(212,175,55,.55)}.kirim-laporan-btn:hover{box-shadow:0 10px 22px -6px rgba(212,175,55,.65)}.deadline-form-wrap{margin:0 0 18px;padding:16px;border:1px solid var(--p-border,var(--border-soft));border-radius:12px;background:var(--p-surface-2,var(--panel-alt))}.deadline-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.deadline-field{display:flex;flex-direction:column;gap:6px}.deadline-field.full{grid-column:1/-1}.deadline-field label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--p-muted,var(--text-muted))}.deadline-field input,.deadline-field select,.deadline-field textarea{width:100%;box-sizing:border-box;border:1px solid var(--p-border,var(--border));border-radius:8px;background:var(--p-surface,var(--panel));color:var(--p-text,var(--text));padding:9px 10px;font:inherit;font-size:12px}.deadline-field textarea{min-height:100px;resize:vertical}.deadline-check-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.deadline-check{display:grid;grid-template-columns:auto 1fr;column-gap:7px;align-items:center;padding:9px;border:1px solid var(--p-border,var(--border));border-radius:9px;background:var(--p-surface,var(--panel));cursor:pointer}.deadline-check input{width:auto}.deadline-check span{font-family:var(--mono);font-size:10px;font-weight:800;color:var(--p-accent,var(--gold-bright))}.deadline-check small{grid-column:2;font-size:9px;color:var(--p-muted,var(--text-muted));line-height:1.35}.deadline-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.deadline-table-wrap{overflow-x:auto}.deadline-table{width:100%;border-collapse:collapse;min-width:720px}.deadline-table th{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--p-muted,var(--text-muted));text-align:left;padding:10px;border-bottom:1px solid var(--p-border,var(--border))}.deadline-table td{padding:11px 10px;border-bottom:1px solid var(--p-border,var(--border));font-size:11px;vertical-align:middle}.deadline-table td strong{display:block}.deadline-table td small{display:block;color:var(--p-muted,var(--text-muted));margin-top:3px;max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.deadline-pill{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:9px;font-weight:800;border:1px solid transparent;white-space:nowrap}.deadline-pill.wait{color:#a36d00;background:rgba(224,168,58,.12);border-color:rgba(224,168,58,.3)}.deadline-pill.ok{color:#16834b;background:rgba(63,194,125,.12);border-color:rgba(63,194,125,.28)}.deadline-pill.bad{color:#c83b3b;background:rgba(181,52,47,.08);border-color:rgba(198,40,40,.28)}.deadline-pill.blue{color:#2476ad;background:rgba(52,152,219,.1);border-color:rgba(52,152,219,.25)}.deadline-progress-badge{font-family:var(--mono);font-size:10px;font-weight:800;color:var(--text-muted);white-space:nowrap}.deadline-empty{text-align:center!important;color:var(--p-muted,var(--text-muted));padding:25px!important}.deadline-empty.sender{padding:38px 20px!important;border:2px dotted var(--border-soft);border-radius:12px;background:var(--panel-alt)}.deadline-sender-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.deadline-sender-head h3{margin:0 0 4px}.deadline-sender-head p{margin:0;font-size:11px;color:var(--text-muted);line-height:1.5}.deadline-count{font-family:var(--mono);font-size:10px;color:var(--gold-bright);white-space:nowrap}.deadline-sender-list{display:grid;gap:10px}.deadline-sender-item{display:flex;justify-content:space-between;gap:16px;padding:13px;border:1px solid var(--border-soft);border-radius:10px;background:var(--panel-alt)}.deadline-sender-item.near{border-color:rgba(224,168,58,.45)}.deadline-sender-item.bad{border-color:rgba(198,40,40,.35)}.deadline-sender-main{min-width:0}.deadline-sender-title{font-size:13px;font-weight:800}.deadline-sender-meta{font-size:10px;color:var(--text-muted);margin-top:4px}.deadline-sender-instruction{font-size:11px;line-height:1.55;color:var(--text-muted);margin-top:8px;white-space:pre-wrap}.deadline-sender-side{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:8px;flex-shrink:0}.deadline-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end}.deadline-complete{font-size:10px;font-weight:700;color:var(--green)}
+.deadline-section,.deadline-sender-section{position:relative;overflow:hidden}.deadline-primary,.deadline-secondary{border:1px solid transparent;border-radius:9px;padding:9px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:.15s ease}.deadline-primary{background:var(--p-accent,var(--gold-bright));color:#fff}.deadline-primary:hover{filter:brightness(1.06);transform:translateY(-1px)}.deadline-secondary{background:var(--p-surface-2,var(--panel-alt));border-color:var(--p-border,var(--border));color:var(--p-text,var(--text))}.deadline-secondary:hover{border-color:var(--p-accent,var(--gold-bright));transform:translateY(-1px)}.deadline-primary:active,.deadline-secondary:active{transform:scale(.96)}.deadline-secondary.confirm-btn{background:var(--success,#16834b);border-color:var(--success,#16834b);color:#fff}.deadline-secondary.confirm-btn:hover{filter:brightness(1.1);border-color:var(--success,#16834b)}.deadline-primary.small,.deadline-secondary.small{padding:7px 10px;font-size:10px}.kirim-laporan-btn{letter-spacing:.03em;box-shadow:0 8px 18px -8px rgba(212,175,55,.55)}.kirim-laporan-btn:hover{box-shadow:0 10px 22px -6px rgba(212,175,55,.65)}.deadline-form-wrap{margin:0 0 18px;padding:16px;border:1px solid var(--p-border,var(--border-soft));border-radius:12px;background:var(--p-surface-2,var(--panel-alt))}.deadline-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.deadline-field{display:flex;flex-direction:column;gap:6px}.deadline-field.full{grid-column:1/-1}.deadline-field label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--p-muted,var(--text-muted))}.deadline-field input,.deadline-field select,.deadline-field textarea{width:100%;box-sizing:border-box;border:1px solid var(--p-border,var(--border));border-radius:8px;background:var(--p-surface,var(--panel));color:var(--p-text,var(--text));padding:9px 10px;font:inherit;font-size:12px}.deadline-field textarea{min-height:100px;resize:vertical}.deadline-check-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.deadline-check{display:grid;grid-template-columns:auto 1fr;column-gap:7px;align-items:center;padding:9px;border:1px solid var(--p-border,var(--border));border-radius:9px;background:var(--p-surface,var(--panel));cursor:pointer}.deadline-check input{width:auto}.deadline-check span{font-family:var(--mono);font-size:10px;font-weight:800;color:var(--p-accent,var(--gold-bright))}.deadline-check small{grid-column:2;font-size:9px;color:var(--p-muted,var(--text-muted));line-height:1.35}.deadline-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.deadline-table-wrap{overflow-x:auto}.deadline-table{width:100%;border-collapse:collapse;min-width:720px}.deadline-table th{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--p-muted,var(--text-muted));text-align:left;padding:10px;border-bottom:1px solid var(--p-border,var(--border))}.deadline-table td{padding:11px 10px;border-bottom:1px solid var(--p-border,var(--border));font-size:11px;vertical-align:middle}.deadline-table td strong{display:block}.deadline-table td small{display:block;color:var(--p-muted,var(--text-muted));margin-top:3px;max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.deadline-pill{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:9px;font-weight:800;border:1px solid transparent;white-space:nowrap}.deadline-pill.wait{color:var(--p-orange);background:var(--p-orange-bg);border-color:var(--p-orange-border)}.deadline-pill.ok{color:#16834b;background:rgba(63,194,125,.12);border-color:rgba(63,194,125,.28)}.deadline-pill.bad{color:#c83b3b;background:rgba(181,52,47,.08);border-color:rgba(198,40,40,.28)}.deadline-pill.blue{color:#2476ad;background:rgba(52,152,219,.1);border-color:rgba(52,152,219,.25)}.deadline-progress-badge{font-family:var(--mono);font-size:10px;font-weight:800;color:var(--text-muted);white-space:nowrap}.deadline-sender-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.deadline-sender-head h3{margin:0 0 4px}.deadline-sender-head p{margin:0;font-size:11px;color:var(--text-muted);line-height:1.5}.deadline-count{font-family:var(--mono);font-size:10px;color:var(--gold-bright);white-space:nowrap}.deadline-sender-list{display:grid;gap:10px}.deadline-sender-item{display:flex;justify-content:space-between;gap:16px;padding:13px;border:1px solid var(--border-soft);border-radius:10px;background:var(--panel-alt)}.deadline-sender-item.near{border-color:rgba(224,168,58,.45)}.deadline-sender-item.bad{border-color:rgba(198,40,40,.35)}.deadline-sender-main{min-width:0}.deadline-sender-title{font-size:13px;font-weight:800}.deadline-sender-meta{font-size:10px;color:var(--text-muted);margin-top:4px}.deadline-sender-instruction{font-size:11px;line-height:1.55;color:var(--text-muted);margin-top:8px;white-space:pre-wrap}.deadline-sender-side{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:8px;flex-shrink:0}.deadline-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end}.deadline-complete{font-size:10px;font-weight:700;color:var(--green)}
 @media(max-width:850px){.deadline-check-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.deadline-form-grid{grid-template-columns:1fr}.deadline-field.full{grid-column:auto}.deadline-sender-item{flex-direction:column}.deadline-sender-side{align-items:flex-start}.deadline-actions{justify-content:flex-start}}@media(max-width:550px){.deadline-check-grid{grid-template-columns:1fr}.deadline-sender-head{display:block}.deadline-count{display:inline-block;margin-top:8px}}
 </style>
 
@@ -9,14 +9,97 @@
     // dari section #permintaan-laporan, bukan tab tersendiri lagi -- jadi
     // tombol "Buat Laporan" di sini tinggal membuka modal itu sambil
     // mengisi form-nya, tidak perlu pindah tab.
+    //
+    // Modal yang sama juga dipakai buat 3 alur berbeda, dibedakan lewat
+    // form.dataset.mode + progres yang akan dikirim (bukan cuma "Kirim
+    // Laporan" generik lagi supaya tidak ambigu):
+    //  - create + progres<100 -> checkpoint progres baru ("Update Progres")
+    //  - create + progres=100 -> laporan final ("Kirim Laporan Final")
+    //  - edit (checkpoint progres lama yang belum final)   ("Edit Update Progres")
+    function computeLaporanTexts(mode,progresVal){
+        var isFinal=progresVal>=100;
+        if(mode==='edit'){
+            return isFinal?{
+                title:'Edit & Finalisasi Laporan',
+                desc:'Perbarui data checkpoint ini sekaligus jadikan sebagai laporan final ke Pimpinan.',
+                submit:'Simpan & Kirim Final',
+                confirmTitle:'Kirim Laporan Final?',
+                confirmBody:'Pastikan data yang kamu isi sudah benar. Laporan final yang sudah terkirim tidak dapat diedit lagi.',
+                confirmYes:'Ya, Kirim'
+            }:{
+                title:'Edit Update Progres',
+                desc:'Perbarui data checkpoint progres yang sudah kamu kirim.',
+                submit:'Simpan Perubahan',
+                confirmTitle:'Simpan Perubahan?',
+                confirmBody:'Pastikan data yang kamu ubah sudah benar. Progres ini masih bisa kamu edit lagi nanti selama belum final.',
+                confirmYes:'Ya, Simpan'
+            };
+        }
+        return isFinal?{
+            title:'Kirim Laporan Final',
+            desc:'Ini akan dikirim sebagai laporan final kepada Pimpinan untuk diperiksa dan tidak bisa diedit lagi setelahnya.',
+            submit:'Kirim Laporan Final',
+            confirmTitle:'Kirim Laporan Final?',
+            confirmBody:'Pastikan data yang kamu isi sudah benar. Laporan final yang sudah terkirim tidak dapat diedit lagi.',
+            confirmYes:'Ya, Kirim'
+        }:{
+            title:'Update Progres',
+            desc:'Kirim update progres untuk permintaan ini.',
+            submit:'Kirim Update Progres',
+            confirmTitle:'Kirim Update Progres?',
+            confirmBody:'Pastikan data yang kamu isi sudah benar. Progres ini masih bisa kamu edit lagi nanti lewat tombol Edit sebelum laporan final dikirim.',
+            confirmYes:'Ya, Kirim'
+        };
+    }
+    function applyLaporanTexts(mode,progresVal){
+        var t=computeLaporanTexts(mode,parseInt(progresVal,10)||0);
+        var title=document.getElementById('kirimLaporanTitle'); if(title) title.textContent=t.title;
+        var desc=document.getElementById('kirimLaporanDesc'); if(desc) desc.textContent=t.desc;
+        var submit=document.getElementById('kirimLaporanSubmitBtn'); if(submit) submit.textContent=t.submit;
+        var ct=document.getElementById('konfirmasiKirimTitle'); if(ct) ct.textContent=t.confirmTitle;
+        var cb=document.getElementById('konfirmasiKirimBody'); if(cb) cb.textContent=t.confirmBody;
+        var cy=document.getElementById('konfirmasiKirimYa'); if(cy) cy.textContent=t.confirmYes;
+    }
+    function setFormMethod(form,method){
+        var m=form.querySelector('input[name="_method"]');
+        if(method){
+            if(!m){m=document.createElement('input');m.type='hidden';m.name='_method';form.appendChild(m)}
+            m.value=method;
+        }else if(m){ m.remove(); }
+    }
+    function bindProgresLiveText(form){
+        var progresInput=form.querySelector('[name="progres"]');
+        if(!progresInput||progresInput.dataset.textBound==='1') return;
+        progresInput.dataset.textBound='1';
+        progresInput.addEventListener('input',function(){
+            applyLaporanTexts(form.dataset.mode||'create',progresInput.value);
+        });
+    }
+    // Edit checkpoint progres cuma boleh ubah deskripsi/kendala/progres/
+    // prioritas/lampiran (lihat LaporanController::updateProgres) -- perihal,
+    // kategori, & tujuan laporan dikunci read-only di mode edit supaya
+    // satuan tidak mengira field itu ikut tersimpan padahal backend
+    // mengabaikannya.
+    function lockIdentityFields(form,locked){
+        ['perihal','proyek'].forEach(function(name){
+            var el=form.querySelector('[name="'+name+'"]');
+            if(el) el.readOnly=locked;
+        });
+        var tujuan=form.querySelector('[name="tujuan_satuan_id"]');
+        if(tujuan) tujuan.disabled=locked;
+    }
     function initUsePermintaanButtons(){
         document.querySelectorAll('.use-permintaan').forEach(function(btn){
             if(btn.dataset.useBound === '1') return;
             btn.dataset.useBound = '1';
             btn.addEventListener('click',function(){
-                var form=document.querySelector('form[action$="/laporan"]');
+                var form=document.getElementById('kirimLaporanForm');
                 var modal=document.getElementById('kirimLaporanModal');
                 if(!form || !modal) return;
+                form.dataset.mode='create';
+                if(form.dataset.storeAction) form.action=form.dataset.storeAction;
+                setFormMethod(form,null);
+                lockIdentityFields(form,false);
                 var hidden=form.querySelector('input[name="permintaan_laporan_id"]');
                 if(!hidden){hidden=document.createElement('input');hidden.type='hidden';hidden.name='permintaan_laporan_id';form.appendChild(hidden)}
                 hidden.value=btn.dataset.requestId||'';
@@ -25,6 +108,8 @@
                 var kategori=form.querySelector('[name="proyek"]'); if(kategori && btn.dataset.kategori) kategori.value=btn.dataset.kategori;
                 var prioritas=form.querySelector('[name="prioritas"]'); if(prioritas && btn.dataset.prioritas) prioritas.value=btn.dataset.prioritas;
                 var deskripsi=form.querySelector('[name="deskripsi"]'); if(deskripsi && btn.dataset.instruksi && !deskripsi.value.trim()) deskripsi.value=btn.dataset.instruksi;
+                var kendala=form.querySelector('[name="kendala"]'); if(kendala) kendala.value='';
+                var lampiran=form.querySelector('[name="lampiran"]'); if(lampiran) lampiran.value='';
                 var progresInput=form.querySelector('[name="progres"]');
                 var progresHint=document.getElementById('progresHint');
                 if(progresInput){
@@ -33,12 +118,54 @@
                     if(!progresInput.value || parseInt(progresInput.value,10) < current) progresInput.value=current;
                     if(progresHint) progresHint.textContent='Progres terakhir: '+current+'%. Isi minimal segitu, atau 100 kalau laporan ini sudah final.';
                 }
+                bindProgresLiveText(form);
+                applyLaporanTexts('create',progresInput?progresInput.value:0);
                 modal.classList.add('open');
                 perihal?.focus();
             });
         });
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initUsePermintaanButtons); else initUsePermintaanButtons();
+
+    // Tombol "Edit" pada checkpoint progres yang masih Laporan::STATUS_PROGRES
+    // (belum final) -- buka modal yang sama tapi dalam mode edit: form
+    // di-prefill dari data checkpoint terpilih, method di-spoof jadi PATCH
+    // ke route laporan.update-progres milik baris itu (UPDATE row yang sama,
+    // bukan bikin checkpoint baru).
+    function initEditProgresButtons(){
+        document.querySelectorAll('.edit-progres-btn').forEach(function(btn){
+            if(btn.dataset.editBound === '1') return;
+            btn.dataset.editBound = '1';
+            btn.addEventListener('click',function(){
+                var form=document.getElementById('kirimLaporanForm');
+                var modal=document.getElementById('kirimLaporanModal');
+                if(!form || !modal || !btn.dataset.updateUrl) return;
+                form.dataset.mode='edit';
+                form.action=btn.dataset.updateUrl;
+                setFormMethod(form,'PATCH');
+                lockIdentityFields(form,true);
+                var tujuan=form.querySelector('[name="tujuan_satuan_id"]'); if(tujuan && btn.dataset.tujuanSatuanId) tujuan.value=btn.dataset.tujuanSatuanId;
+                var perihal=form.querySelector('[name="perihal"]'); if(perihal) perihal.value=btn.dataset.perihal||'';
+                var kategori=form.querySelector('[name="proyek"]'); if(kategori) kategori.value=btn.dataset.proyek||'';
+                var prioritas=form.querySelector('[name="prioritas"]'); if(prioritas) prioritas.value=btn.dataset.prioritas||'';
+                var deskripsi=form.querySelector('[name="deskripsi"]'); if(deskripsi) deskripsi.value=btn.dataset.deskripsi||'';
+                var kendala=form.querySelector('[name="kendala"]'); if(kendala) kendala.value=btn.dataset.kendala||'';
+                var lampiran=form.querySelector('[name="lampiran"]'); if(lampiran) lampiran.value='';
+                var progresInput=form.querySelector('[name="progres"]');
+                var progresHint=document.getElementById('progresHint');
+                if(progresInput){
+                    progresInput.min=0;
+                    progresInput.value=btn.dataset.progres||'0';
+                    if(progresHint) progresHint.textContent='Mengedit checkpoint progres yang sudah dikirim. Perihal, kategori, dan tujuan tidak bisa diubah lewat form ini.';
+                }
+                bindProgresLiveText(form);
+                applyLaporanTexts('edit',progresInput?progresInput.value:0);
+                modal.classList.add('open');
+                perihal?.focus();
+            });
+        });
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initEditProgresButtons); else initEditProgresButtons();
 
     // Pencarian daftar Permintaan Laporan -- reuse gaya .rpt-filter-* yang
     // sama dengan tabel lain (1 sistem), tapi logikanya custom karena isinya

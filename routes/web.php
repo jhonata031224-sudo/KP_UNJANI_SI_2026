@@ -66,6 +66,10 @@ Route::patch('/laporan/{laporan}/status', [LaporanController::class, 'updateStat
     ->middleware('auth')
     ->name('laporan.status');
 
+Route::patch('/laporan/{laporan}/progres', [LaporanController::class, 'updateProgres'])
+    ->middleware('auth')
+    ->name('laporan.update-progres');
+
 Route::delete('/laporan/{laporan}', [LaporanController::class, 'destroy'])
     ->middleware('auth')
     ->name('laporan.destroy');
