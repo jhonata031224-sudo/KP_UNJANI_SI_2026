@@ -24,12 +24,14 @@ class PermintaanLaporan extends Model
         'progres',
         'dikerjakan_at',
         'selesai_at',
+        'dibatalkan_at',
     ];
 
     protected $casts = [
         'deadline_at' => 'datetime',
         'dikerjakan_at' => 'datetime',
         'selesai_at' => 'datetime',
+        'dibatalkan_at' => 'datetime',
         'progres' => 'integer',
     ];
 
@@ -37,6 +39,7 @@ class PermintaanLaporan extends Model
     public const STATUS_DIKERJAKAN = 'Sedang dikerjakan';
     public const STATUS_PEMERIKSAAN = 'Menunggu pemeriksaan';
     public const STATUS_SELESAI = 'Selesai';
+    public const STATUS_DIBATALKAN = 'Dibatalkan';
 
     public function pembuat(): BelongsTo
     {
@@ -66,8 +69,38 @@ class PermintaanLaporan extends Model
     public function isTerlambat(): bool
     {
         return !$this->laporan_id
-            && !in_array($this->status, [self::STATUS_SELESAI, self::STATUS_PEMERIKSAAN], true)
+            && !in_array($this->status, [self::STATUS_SELESAI, self::STATUS_PEMERIKSAAN, self::STATUS_DIBATALKAN], true)
             && $this->deadline_at?->isPast();
+    }
+
+    public function isDapatDibatalkan(): bool
+    {
+        return in_array($this->status, [self::STATUS_BELUM, self::STATUS_DIKERJAKAN], true);
+    }
+
+    /**
+     * Deadline cuma boleh diedit (dibuka lagi kesempatannya buat satuan)
+     * kalau kondisinya "Terlambat", "Dibatalkan", atau laporan finalnya
+     * "Ditolak" -- di luar itu (Disetujui/Menunggu pemeriksaan) dianggap
+     * sudah final, jadi tombol Edit di UI cuma nampilin keterangan.
+     */
+    public function isDapatEditDeadline(): bool
+    {
+        if ($this->isTerlambat() || $this->status === self::STATUS_DIBATALKAN) {
+            return true;
+        }
+
+        return $this->status === self::STATUS_SELESAI
+            && str_contains(strtolower($this->laporan?->status ?? ''), 'tolak');
+    }
+
+    public function alasanTidakBisaEditDeadline(): string
+    {
+        return match (true) {
+            $this->status === self::STATUS_PEMERIKSAAN => 'Laporan untuk permintaan ini sedang menunggu pemeriksaan Anda, deadline baru bisa diubah setelah ada keputusan (disetujui/ditolak).',
+            $this->status === self::STATUS_SELESAI => 'Laporan untuk permintaan ini sudah disetujui, deadline tidak dapat diubah lagi.',
+            default => 'Deadline permintaan ini tidak dapat diubah saat ini.',
+        };
     }
 
     public function statusTampilan(): string

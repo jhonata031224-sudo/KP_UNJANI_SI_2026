@@ -60,6 +60,7 @@ class LaporanController extends Controller
             if ($permintaan) {
                 $permintaan = PermintaanLaporan::whereKey($permintaan->id)->lockForUpdate()->first();
                 abort_if($permintaan->laporan_id, 422, 'Permintaan laporan tersebut sudah memiliki laporan yang menunggu pemeriksaan atau sudah diputuskan.');
+                abort_if($permintaan->status === PermintaanLaporan::STATUS_DIBATALKAN, 422, 'Permintaan laporan ini sudah dibatalkan oleh Pimpinan.');
                 abort_if($progresValue < $permintaan->progres, 422, 'Persentase progres tidak boleh lebih kecil dari progres terakhir ('.$permintaan->progres.'%).');
             }
 
@@ -139,6 +140,7 @@ class LaporanController extends Controller
                 : null;
 
             if ($permintaan) {
+                abort_if($permintaan->status === PermintaanLaporan::STATUS_DIBATALKAN, 422, 'Permintaan laporan ini sudah dibatalkan oleh Pimpinan.');
                 $progresCheckpointSebelumnya = Laporan::where('permintaan_laporan_id', $permintaan->id)
                     ->where('id', '!=', $laporan->id)
                     ->max('progres') ?? 0;

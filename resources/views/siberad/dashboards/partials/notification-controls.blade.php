@@ -2,6 +2,8 @@
 (function () {
   'use strict';
 
+  var POLL_INTERVAL_MS = 3000;
+
   function initNotificationControls() {
     var actions = document.querySelector('.topbar-actions');
     if (!actions) return;
@@ -21,7 +23,7 @@
       button.setAttribute('aria-label', 'Notifikasi');
       button.setAttribute('aria-haspopup', 'menu');
       button.setAttribute('aria-expanded', 'false');
-      button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg><span class="siberad-notif-dot"></span>';
+      button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg><span class="siberad-notif-badge" style="display:none;"></span>';
       dropdown = document.createElement('div');
       dropdown.className = 'profile-dropdown';
       dropdown.id = 'notifDropdown';
@@ -53,28 +55,40 @@
         .notif-menu{position:relative!important;z-index:100002!important;pointer-events:auto!important;}
         .notif-menu>#notifBtn{position:relative!important;z-index:100003!important;display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important;pointer-events:auto!important;}
         .notif-menu>#notifBtn svg{width:19px;height:19px;display:block;pointer-events:none;}
-        .siberad-notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--panel,#0c2417);pointer-events:none;}
-        #notifDropdown{position:absolute!important;z-index:100004!important;min-width:280px;right:0;top:calc(100% + 8px);pointer-events:auto!important;}
-        #notifDropdown .notif-head{display:flex;align-items:center;min-height:22px;}
-        #notifDropdown .siberad-notif-list{display:flex;flex-direction:column;}
-        #notifDropdown .siberad-notif-item{position:relative;padding:11px 38px 11px 12px;border-bottom:1px solid var(--border-soft);}
-        #notifDropdown .siberad-notif-item:last-child{border-bottom:0;}
-        #notifDropdown .siberad-notif-item p{margin:0;font-size:12px;line-height:1.45;color:var(--text);}
-        #notifDropdown .siberad-notif-item small{display:block;margin-top:3px;font-size:10px;color:var(--text-dim);}
-        #notifDropdown .siberad-notif-remove{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:0;border-radius:5px;background:transparent;color:var(--text-dim);cursor:pointer;padding:4px;}
-        #notifDropdown .siberad-notif-empty-runtime{padding:18px 12px;text-align:center;color:var(--text-muted);font-size:12px;line-height:1.5;}
+        .siberad-notif-badge{position:absolute;top:2px;right:2px;min-width:15px;height:15px;padding:0 3px;box-sizing:border-box;border-radius:999px;background:var(--red);color:#fff;font-size:9px;font-weight:800;line-height:15px;text-align:center;box-shadow:0 0 0 2px var(--panel,#0c2417);pointer-events:none;}
+        #notifDropdown{position:absolute!important;z-index:100004!important;min-width:300px;max-width:340px;right:0;top:calc(100% + 8px);pointer-events:auto!important;padding:0!important;overflow:hidden;}
+        #notifDropdown .notif-head{display:flex;align-items:center;min-height:22px;padding:14px 16px 12px!important;margin-bottom:0!important;}
+        /* ~4 item kelihatan sekaligus (tiap item kira-kira 72px), sisanya discroll. */
+        #notifDropdown .siberad-notif-list{display:flex;flex-direction:column;max-height:288px;overflow-y:auto;}
+        #notifDropdown .siberad-notif-item{position:relative;padding:12px 40px 12px 14px;box-sizing:border-box;transition:background .15s ease;}
+        #notifDropdown .siberad-notif-item:not(:last-child){border-bottom:1px solid var(--border-soft);}
+        #notifDropdown .siberad-notif-item:hover{background:var(--hover-tint);}
+        /* max-height di-set INLINE (bukan di sini) pas mulai animasi hapus,
+           persis sesuai tinggi asli item saat itu -- biar transisinya mulus
+           dari ukuran sebenarnya ke 0, bukan dari angka tebakan statis yang
+           bisa beda dikit dari tinggi asli & ganggu tampilan normal. */
+        #notifDropdown .siberad-notif-item.is-removing{overflow:hidden;transition:background .15s ease,max-height .22s ease,padding .22s ease,opacity .18s ease,border-color .22s ease;max-height:0!important;padding-top:0;padding-bottom:0;opacity:0;border-color:transparent;pointer-events:none;}
+        #notifDropdown .siberad-notif-body{min-width:0;}
+        #notifDropdown .siberad-notif-item p{margin:0;font-size:12.5px;font-weight:600;line-height:1.45;color:var(--text);word-break:break-word;}
+        #notifDropdown .siberad-notif-item small{display:block;margin-top:4px;font-size:10.5px;font-weight:500;color:var(--text-dim);}
+        #notifDropdown .siberad-notif-remove{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:0;border-radius:7px;background:transparent;color:var(--text-dim);cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;transition:background .15s ease,color .15s ease;}
+        #notifDropdown .siberad-notif-remove svg{width:100%;height:100%;display:block;}
+        #notifDropdown .siberad-notif-remove:hover{background:rgba(198,40,40,.14);color:var(--red,#c83b3b);}
+        #notifDropdown .siberad-notif-empty-runtime{padding:30px 18px 26px;text-align:center;color:var(--text-muted);}
+        #notifDropdown .siberad-notif-empty-runtime svg{width:32px;height:32px;stroke:var(--text-dim);margin:0 auto 12px;display:block;}
+        #notifDropdown .siberad-notif-empty-runtime p{margin:0;font-size:12px;line-height:1.55;}
       `;
       document.head.appendChild(style);
     }
 
-    var notifications = @json(auth()->user()?->unreadNotifications?->map(function ($n) {
+    var deleteUrlBase = '{{ url('/notifikasi') }}/';
+    var pollUrl = '{{ route('notifikasi.realtime') }}';
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var csrfToken = csrfMeta ? csrfMeta.content : '{{ csrf_token() }}';
+
+    var notifications = @json(auth()->user()?->unreadNotifications?->take(20)?->map(function ($n) {
       return ['id' => $n->id, 'message' => $n->data['pesan'] ?? 'Status laporan diperbarui.', 'time' => optional($n->created_at)->diffForHumans()];
     })->values() ?? []);
-
-    var storageKey = 'siberad-dismissed-notifications-{{ auth()->id() }}';
-    var dismissed = [];
-    try { dismissed = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch (e) {}
-    if (!Array.isArray(dismissed)) dismissed = [];
 
     var list = dropdown.querySelector('.siberad-notif-list');
     if (!list) {
@@ -95,19 +109,75 @@
       return div.innerHTML;
     }
 
+    function updateBadge() {
+      var badge = button.querySelector('.siberad-notif-badge');
+      if (!badge) return;
+      if (notifications.length > 0) {
+        badge.textContent = notifications.length > 99 ? '99+' : String(notifications.length);
+        badge.style.display = 'block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    // Optimistic: badge langsung berkurang & request hapusnya jalan di
+    // background. Item-nya sendiri nggak langsung ilang mendadak -- dikasih
+    // animasi fade+collapse dulu (class .is-removing, lihat transition di
+    // atas), baru re-render beneran setelah animasinya kelar. Kalau request
+    // hapus ternyata gagal, poll berikutnya (tiap 3 detik) otomatis
+    // munculin lagi -- nggak perlu penanganan error khusus.
+    function removeNotification(id, itemEl) {
+      fetch(deleteUrlBase + encodeURIComponent(id), {
+        method: 'DELETE',
+        credentials: 'same-origin',
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': csrfToken
+        }
+      }).catch(function () {});
+      notifications = notifications.filter(function (n) { return String(n.id) !== String(id); });
+      updateBadge();
+      if (itemEl) {
+        var done = false;
+        function finish() {
+          if (done) return;
+          done = true;
+          render();
+        }
+        // Ukur tinggi ASLI item saat ini dulu & pasang sebagai max-height
+        // inline persis segitu (bukan nebak angka statis) -- baru dipaksa
+        // reflow (baca offsetHeight) sebelum nambahin .is-removing, biar
+        // browser sempat "nyimpen" titik awal itu dan transisinya beneran
+        // ke-animate dari tinggi asli turun ke 0, bukan loncat langsung.
+        itemEl.style.maxHeight = itemEl.offsetHeight + 'px';
+        itemEl.style.overflow = 'hidden';
+        itemEl.offsetHeight; // force reflow
+        itemEl.addEventListener('transitionend', function handler(event) {
+          if (event.propertyName !== 'max-height') return;
+          itemEl.removeEventListener('transitionend', handler);
+          finish();
+        });
+        setTimeout(finish, 260); // fallback kalau transitionend nggak sempat kepicu
+        requestAnimationFrame(function () { itemEl.classList.add('is-removing'); });
+      } else {
+        render();
+      }
+    }
+
     function render() {
       list.innerHTML = '';
-      var visible = notifications.filter(function (n) { return dismissed.indexOf(String(n.id)) === -1; });
-      if (!visible.length) {
+      if (!notifications.length) {
         var empty = document.createElement('div');
         empty.className = 'siberad-notif-empty-runtime';
-        empty.textContent = 'Belum ada notifikasi saat ini.';
+        empty.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg><p>Belum ada notifikasi saat ini.</p>';
         list.appendChild(empty);
       } else {
-        visible.forEach(function (notification) {
+        notifications.forEach(function (notification) {
           var item = document.createElement('div');
           item.className = 'siberad-notif-item';
-          item.innerHTML = '<p>' + escapeHtml(notification.message) + '</p><small>' + escapeHtml(notification.time || '') + '</small>';
+          item.innerHTML =
+            '<div class="siberad-notif-body"><p>' + escapeHtml(notification.message) + '</p><small>' + escapeHtml(notification.time || '') + '</small></div>';
           var remove = document.createElement('button');
           remove.type = 'button';
           remove.className = 'siberad-notif-remove';
@@ -115,16 +185,12 @@
           remove.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
           remove.addEventListener('click', function (event) {
             event.preventDefault(); event.stopPropagation();
-            dismissed.push(String(notification.id));
-            dismissed = dismissed.filter(function (id, index, arr) { return arr.indexOf(id) === index; });
-            try { localStorage.setItem(storageKey, JSON.stringify(dismissed)); } catch (e) {}
-            render();
+            removeNotification(notification.id, item);
           });
           item.appendChild(remove); list.appendChild(item);
         });
       }
-      var dot = button.querySelector('.siberad-notif-dot');
-      if (dot) dot.style.display = visible.length ? 'block' : 'none';
+      updateBadge();
     }
 
     function close() {
@@ -175,6 +241,34 @@
     }
 
     render();
+
+    // Realtime: poll berkala buat notifikasi baru & sinkron daftar/badge --
+    // dipasang di sini (bukan cuma di halaman Permintaan Laporan satuan)
+    // biar jalan di navbar SEMUA role. Hasil poll dipakai APA ADANYA buat
+    // nimpa `notifications` (bukan digabung/diff) -- otomatis mencerminkan
+    // notifikasi baru maupun yang sudah dihapus dari device/tab lain.
+    if (!menu.dataset.notifPollBound) {
+      menu.dataset.notifPollBound = '1';
+      var polling = false;
+      function poll() {
+        if (polling) return;
+        polling = true;
+        fetch(pollUrl, {
+          method: 'GET',
+          credentials: 'same-origin',
+          cache: 'no-store',
+          headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function (response) {
+          if (!response.ok) throw new Error('poll failed');
+          return response.json();
+        }).then(function (data) {
+          if (!data || !Array.isArray(data.notifications)) return;
+          notifications = data.notifications;
+          render();
+        }).catch(function () {}).finally(function () { polling = false; });
+      }
+      window.setInterval(poll, POLL_INTERVAL_MS);
+    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initNotificationControls);

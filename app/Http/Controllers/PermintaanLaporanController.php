@@ -60,17 +60,6 @@ class PermintaanLaporanController extends Controller
             ->orderBy('id')
             ->get();
 
-        $notifications = $user->unreadNotifications
-            ->take(20)
-            ->map(function ($notification) {
-                return [
-                    'message' => $notification->data['pesan'] ?? 'Status laporan diperbarui.',
-                    'time' => optional($notification->created_at)->diffForHumans(),
-                    'id' => (string) $notification->id,
-                ];
-            })
-            ->values();
-
         // "Laporan Masuk" pada dashboard penerima harus mencerminkan pekerjaan
         // yang masuk ke satuan ini. Permintaan laporan dibuat sebagai
         // PermintaanLaporan (bukan Laporan), sehingga menghitung tabel Laporan
@@ -97,8 +86,6 @@ class PermintaanLaporanController extends Controller
             'items_html' => view('siberad.dashboards.partials.permintaan-laporan-realtime-items', [
                 'permintaanLaporan' => $items,
             ])->render(),
-            'unread_count' => $user->unreadNotifications()->count(),
-            'notifications' => $notifications,
             'laporan_masuk_count' => $laporanMasukCount,
         ], 200, [
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
@@ -169,6 +156,7 @@ class PermintaanLaporanController extends Controller
         abort_unless((int) $permintaanLaporan->tujuan_satuan_id === (int) $user->satuan->id, 403);
         abort_unless(in_array(strtoupper((string) $user->satuan->kode), self::PENGIRIM_KODE, true), 403);
         abort_if($permintaanLaporan->laporan_id, 422, 'Permintaan ini sudah memiliki laporan.');
+        abort_if($permintaanLaporan->status === PermintaanLaporan::STATUS_DIBATALKAN, 422, 'Permintaan ini sudah dibatalkan oleh Pimpinan.');
 
         $permintaanLaporan->update([
             'status' => PermintaanLaporan::STATUS_DIKERJAKAN,
@@ -180,5 +168,64 @@ class PermintaanLaporanController extends Controller
         ]);
 
         return back()->with('status', 'Permintaan laporan ditandai sedang dikerjakan.');
+    }
+
+    public function batal(Request $request, PermintaanLaporan $permintaanLaporan): RedirectResponse
+    {
+        abort_unless($this->isPimpinan($request), 403);
+        abort_unless($permintaanLaporan->isDapatDibatalkan(), 422, 'Permintaan ini sudah tidak dapat dibatalkan.');
+
+        $permintaanLaporan->update([
+            'status' => PermintaanLaporan::STATUS_DIBATALKAN,
+            'dibatalkan_at' => now(),
+        ]);
+
+        ActivityLog::catat('permintaan-laporan.batal', "Membatalkan permintaan laporan \"{$permintaanLaporan->perihal}\" kepada {$permintaanLaporan->tujuanSatuan->nama}.", $request->user(), [
+            'permintaan_laporan_id' => $permintaanLaporan->id,
+        ]);
+
+        return back()->with('status', 'Permintaan laporan telah dibatalkan.');
+    }
+
+    public function editDeadline(Request $request, PermintaanLaporan $permintaanLaporan): RedirectResponse
+    {
+        abort_unless($this->isPimpinan($request), 403);
+        $permintaanLaporan->loadMissing('laporan');
+        abort_unless($permintaanLaporan->isDapatEditDeadline(), 422, $permintaanLaporan->alasanTidakBisaEditDeadline());
+
+        // Deadline baru cukup wajib di masa depan (> sekarang). Nggak perlu
+        // dibandingkan ke deadline LAMA -- buat kasus Ditolak/Dibatalkan,
+        // deadline lama bisa aja masih di masa depan (mis. laporan ditolak
+        // sebelum deadline-nya lewat), dan nggak ada alasan kuat Pimpinan
+        // wajib kasih waktu LEBIH LAMA dari deadline aslinya buat revisi
+        // yang mungkin cuma butuh sedikit waktu.
+        $validated = $request->validate([
+            'deadline_at' => ['required', 'date', 'after:now'],
+        ], [
+            'deadline_at.after' => 'Deadline baru harus lebih besar dari waktu sekarang.',
+        ]);
+
+        // Ditolak/Dibatalkan -> dibuka lagi: lepas rujukan ke laporan final
+        // yang ditolak (biar satuan bisa kirim laporan baru lewat alur
+        // normal) dan status balik "Sedang dikerjakan". Laporan ditolak
+        // yang lama tetap tersimpan sebagai riwayat, cuma nggak dianggap
+        // keputusan final lagi (lihat gating `decided` di buildProcessLog).
+        $perluDibukaKembali = in_array($permintaanLaporan->status, [
+            PermintaanLaporan::STATUS_SELESAI,
+            PermintaanLaporan::STATUS_DIBATALKAN,
+        ], true);
+
+        $permintaanLaporan->update([
+            'deadline_at' => $validated['deadline_at'],
+            'status' => $perluDibukaKembali ? PermintaanLaporan::STATUS_DIKERJAKAN : $permintaanLaporan->status,
+            'laporan_id' => $perluDibukaKembali ? null : $permintaanLaporan->laporan_id,
+            'dibatalkan_at' => null,
+        ]);
+
+        ActivityLog::catat('permintaan-laporan.edit-deadline', "Memperpanjang deadline permintaan laporan \"{$permintaanLaporan->perihal}\" untuk {$permintaanLaporan->tujuanSatuan->nama}.", $request->user(), [
+            'permintaan_laporan_id' => $permintaanLaporan->id,
+        ]);
+
+        return back()->with('status', 'Deadline permintaan laporan berhasil diperbarui.');
     }
 }

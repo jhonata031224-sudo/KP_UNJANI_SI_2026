@@ -87,6 +87,12 @@ Route::post('/permintaan-laporan', [PermintaanLaporanController::class, 'store']
 Route::patch('/permintaan-laporan/{permintaanLaporan}/mulai', [PermintaanLaporanController::class, 'mulai'])
     ->middleware('auth')
     ->name('permintaan-laporan.mulai');
+Route::patch('/permintaan-laporan/{permintaanLaporan}/batal', [PermintaanLaporanController::class, 'batal'])
+    ->middleware('auth')
+    ->name('permintaan-laporan.batal');
+Route::patch('/permintaan-laporan/{permintaanLaporan}/deadline', [PermintaanLaporanController::class, 'editDeadline'])
+    ->middleware('auth')
+    ->name('permintaan-laporan.edit-deadline');
 
 // ===== Laporan Publikasi ke DANPUS (Satuan Pelaksanaan Siber Sosial) =====
 Route::post('/laporan-publikasi', [LaporanPublikasiController::class, 'store'])
@@ -131,9 +137,12 @@ Route::patch('/laporan-monitoring/{laporanMonitoring}/status', [DanpusLaporanMon
     ->middleware('auth')
     ->name('laporan-monitoring.update-status');
 
-Route::post('/notifikasi/baca-semua', [NotifikasiController::class, 'bacaSemua'])
+Route::get('/notifikasi/realtime', [NotifikasiController::class, 'realtime'])
     ->middleware('auth')
-    ->name('notifikasi.baca-semua');
+    ->name('notifikasi.realtime');
+Route::delete('/notifikasi/{notifikasi}', [NotifikasiController::class, 'hapus'])
+    ->middleware('auth')
+    ->name('notifikasi.hapus');
 
 // ===== Manajemen Akun Media Sosial =====
 Route::post('/akun-medsos', [AkunMedsosController::class, 'store'])->middleware('auth')->name('akun-medsos.store');

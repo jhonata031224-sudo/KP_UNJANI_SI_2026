@@ -145,11 +145,11 @@
     initReportFilter({
       sectionId:'permintaan-laporan',
       tableSelector:'.request-table',
-      anchorSelector:'.request-stats',
+      anchorSelector:'.request-head',
       searchPlaceholder:'Cari perihal atau satuan tujuan...',
       emptyText:'Tidak ada permintaan laporan yang sesuai dengan pencarian/filter.',
       filters:[
-        {label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]}
+        {label:'Filter status',attr:'status',options:[{value:'all',label:'Semua Status'},{value:'Sedang diproses',label:'Sedang diproses'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'}]}
       ],
       sortable:true
     });

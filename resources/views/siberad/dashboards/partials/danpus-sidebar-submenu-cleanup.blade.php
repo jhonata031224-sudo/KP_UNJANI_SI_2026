@@ -146,7 +146,26 @@
     var finalStatus=finalRow?getStatus(finalCells):null;
     var refCells=finalRow?finalCells:cells0;
     var laporanDate=getCellText(refCells,4)||getCellText(refCells,3)||'-';
-    var decided=finalStatus==='ditolak'||finalStatus==='selesai';
+    // Keputusan final HARUS juga dicek ke status PermintaanLaporan-nya
+    // sendiri (bukan cuma teks status laporan) -- soalnya kalau Pimpinan
+    // buka lagi permintaan yang tadinya Ditolak (lewat tombol Edit
+    // deadline), laporan lama yang ditolak itu TETAP ada di riwayat
+    // (progres 100, status text masih "Ditolak ..."), tapi permintaannya
+    // sendiri udah balik "Sedang dikerjakan" -- jadi jangan dianggap
+    // keputusan final lagi. Laporan ad-hoc tanpa permintaan (!hasPermintaan)
+    // gak punya status ini, jadi tetap pakai cara lama.
+    var decided=(finalStatus==='ditolak'||finalStatus==='selesai')&&(!hasPermintaan||rows[0].dataset.permintaanStatus==='Selesai');
+    // Permintaan yang dibatalkan Pimpinan sebelum ada keputusan akhir --
+    // checkpoint yang SUDAH lewat (index<progress) tetap hijau/ceklis apa
+    // adanya, checkpoint yang lagi berjalan & semua checkpoint SESUDAHNYA
+    // dipaksa jadi merah/silang X (bukan cuma checkpoint terakhir).
+    var isDibatalkan=!decided&&rows[0].dataset.permintaanStatus==='Dibatalkan';
+    var dibatalkanAt=rows[0].dataset.permintaanDibatalkan||'';
+    // Checkpoint yang lagi aktif tapi udah lewat deadline_at & belum ada
+    // keputusan/pembatalan -- ganti tampilan spinner oranye "Sedang
+    // diproses" jadi bulat merah+silang X "Terlambat" (cuma checkpoint
+    // yang aktif SEKARANG, checkpoint sebelum/sesudahnya tetap normal).
+    var isTerlambat=!isDibatalkan&&!decided&&rows[0].dataset.permintaanTerlambat==='1';
 
     var stages=hasPermintaan?[
       {key:'permintaan_dikirim',title:'Permintaan Terkirim',desc:'Danpus/Pimpinan mengirimkan permintaan laporan kepada satuan.',date:permintaanCreated},
@@ -170,12 +189,14 @@
       var isFinal=index===finalIndex;
       var isRejectedFinal=isFinal&&decided&&finalStatus==='ditolak';
       var isApprovedFinal=isFinal&&decided&&finalStatus==='selesai';
+      var isCancelledStage=isDibatalkan&&index>=progress;
+      var isLateStage=isTerlambat&&index===progress;
       if(index<progress&&!isFinal)item.classList.add('is-done');
-      if(index===progress)item.classList.add('is-current');
-      if(isRejectedFinal)item.classList.add('is-rejected');
+      if(index===progress&&!isCancelledStage&&!isLateStage)item.classList.add('is-current');
+      if(isRejectedFinal||isCancelledStage||isLateStage)item.classList.add('is-rejected');
       if(isApprovedFinal)item.classList.add('is-approved');
       var dot=document.createElement('div');dot.className='danpus-activity-dot';
-      dot.innerHTML=isRejectedFinal
+      dot.innerHTML=(isRejectedFinal||isCancelledStage||isLateStage)
         ?'<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>'
         :'<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>';
       item.appendChild(dot);
@@ -188,9 +209,9 @@
       // cabang, jadi tanggal di header card "Laporan Dibuat" cuma bikin
       // dobel/membingungkan kalau ada riwayat progres -- disembunyikan
       // khusus buat kasus itu, stage lain tetap tampilkan tanggal seperti biasa.
-      var hideHeaderDate=stage.key==='laporan_dibuat'&&progressRows.length>0;
+      var hideHeaderDate=stage.key==='laporan_dibuat'&&progressRows.length>0&&!isCancelledStage;
       if(!hideHeaderDate){
-        var dateEl=document.createElement('div');dateEl.className='danpus-activity-date';dateEl.textContent=stage.date||'';
+        var dateEl=document.createElement('div');dateEl.className='danpus-activity-date';dateEl.textContent=isCancelledStage?(dibatalkanAt||stage.date||''):(stage.date||'');
         head.appendChild(dateEl);
       }
       card.appendChild(head);
@@ -201,9 +222,13 @@
         if(finalBtn){var wrap=document.createElement('div');wrap.className='danpus-progress-detail-wrap';wrap.appendChild(finalBtn);card.appendChild(wrap)}
       }
       var state=document.createElement('span');state.className='danpus-activity-state';
-      if(isFinal){
-        if(finalStatus==='selesai') state.textContent='Selesai · Disetujui';
-        else if(finalStatus==='ditolak') state.textContent='Selesai · Ditolak';
+      if(isCancelledStage){
+        state.textContent='Dibatalkan';
+      }else if(isLateStage){
+        state.textContent='Terlambat';
+      }else if(isFinal){
+        if(decided&&finalStatus==='selesai') state.textContent='Selesai · Disetujui';
+        else if(decided&&finalStatus==='ditolak') state.textContent='Selesai · Ditolak';
         else if(finalRow) state.textContent='Sedang diproses';
         else state.textContent='Menunggu';
       }else if(index<progress) state.textContent='Selesai';
@@ -225,21 +250,33 @@
       {key:'laporan_selesai',title:'Laporan Selesai',desc:'Laporan telah mendapatkan hasil akhir (disetujui/ditolak).',date:''}
     ];
     var progress=p.ditinjau?2:1;
+    var isDibatalkan=!!p.dibatalkan;
+    var dibatalkanAt=p.dibatalkanAt||'';
+    var isTerlambat=!isDibatalkan&&!!p.terlambat;
     var log=document.createElement('div');log.className='danpus-activity-log';
     stages.forEach(function(stage,index){
       var item=document.createElement('article');item.className='danpus-activity-item';
+      var isCancelledStage=isDibatalkan&&index>=progress;
+      var isLateStage=isTerlambat&&index===progress;
       if(index<progress)item.classList.add('is-done');
-      if(index===progress)item.classList.add('is-current');
-      var dot=document.createElement('div');dot.className='danpus-activity-dot';item.appendChild(dot);
+      if(index===progress&&!isCancelledStage&&!isLateStage)item.classList.add('is-current');
+      if(isCancelledStage||isLateStage)item.classList.add('is-rejected');
+      var dot=document.createElement('div');dot.className='danpus-activity-dot';
+      dot.innerHTML=(isCancelledStage||isLateStage)
+        ?'<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>'
+        :'<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>';
+      item.appendChild(dot);
       if(index<stages.length-1){var line=document.createElement('div');line.className='danpus-activity-line';item.appendChild(line)}
       var card=document.createElement('div');card.className='danpus-activity-card';
       var head=document.createElement('div');head.className='danpus-activity-head';
       var stageEl=document.createElement('div');stageEl.className='danpus-activity-stage';stageEl.textContent=stage.title;
-      var dateEl=document.createElement('div');dateEl.className='danpus-activity-date';dateEl.textContent=stage.date||'';
+      var dateEl=document.createElement('div');dateEl.className='danpus-activity-date';dateEl.textContent=isCancelledStage?(dibatalkanAt||stage.date||''):(stage.date||'');
       head.appendChild(stageEl);head.appendChild(dateEl);card.appendChild(head);
       var desc=document.createElement('div');desc.className='danpus-activity-description';desc.textContent=stage.desc;card.appendChild(desc);
       var state=document.createElement('span');state.className='danpus-activity-state';
-      if(index<progress) state.textContent='Selesai';
+      if(isCancelledStage) state.textContent='Dibatalkan';
+      else if(isLateStage) state.textContent='Terlambat';
+      else if(index<progress) state.textContent='Selesai';
       else if(index===progress) state.textContent='Sedang diproses';
       else state.textContent='Menunggu';
       card.appendChild(state);item.appendChild(card);log.appendChild(item);
