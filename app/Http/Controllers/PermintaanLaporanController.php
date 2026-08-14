@@ -71,12 +71,26 @@ class PermintaanLaporanController extends Controller
             })
             ->values();
 
+        // "Laporan Masuk" pada dashboard penerima harus mencerminkan pekerjaan
+        // yang masuk ke satuan ini. Permintaan laporan dibuat sebagai
+        // PermintaanLaporan (bukan Laporan), sehingga menghitung tabel Laporan
+        // saja membuat kartu tetap 0 walaupun ada permintaan baru.
+        $permintaanMasukCount = PermintaanLaporan::where('tujuan_satuan_id', $satuan->id)
+            ->whereIn('status', [
+                PermintaanLaporan::STATUS_BELUM,
+                PermintaanLaporan::STATUS_DIKERJAKAN,
+                PermintaanLaporan::STATUS_PEMERIKSAAN,
+            ])
+            ->count();
+
         $laporanMasukCount = Laporan::where('tujuan_satuan_id', $satuan->id)
             ->where(function ($query) {
                 $query->where('status', 'Menunggu')
                     ->orWhere('status', 'like', 'Revisi%');
             })
             ->count();
+
+        $laporanMasukCount = max($permintaanMasukCount, $laporanMasukCount);
 
         return response()->json([
             'latest_id' => $latestId,
