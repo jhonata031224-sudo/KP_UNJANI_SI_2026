@@ -42,6 +42,7 @@
 
       var details=document.createElement('details');
       details.className='danpus-report-dropdown';
+      if(log.dataset.permintaanId) details.dataset.permintaanId=log.dataset.permintaanId;
 
       var summary=document.createElement('summary');
       var main=document.createElement('div');main.className='danpus-report-summary-main';

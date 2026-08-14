@@ -47,8 +47,8 @@ class PermintaanLaporanController extends Controller
             'tujuan_satuan_ids' => ['required', 'array', 'min:1'],
             'tujuan_satuan_ids.*' => ['integer', 'distinct', 'exists:satuans,id'],
             'perihal' => ['required', 'string', 'max:255'],
-            'kategori' => ['nullable', 'string', 'max:255'],
-            'instruksi' => ['nullable', 'string', 'max:5000'],
+            'kategori' => ['required', 'string', 'max:255'],
+            'instruksi' => ['required', 'string', 'max:5000'],
             'deadline_at' => ['required', 'date', 'after:now'],
             'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
         ]);
@@ -89,8 +89,12 @@ class PermintaanLaporanController extends Controller
             'satuan_tujuan' => $tujuan->pluck('nama')->all(),
         ]);
 
-        return redirect()->route('permintaan-laporan.index')
-            ->with('status', 'Permintaan laporan berhasil dikirim kepada '.$created->count().' satuan.');
+        // Redirect langsung ke dashboard (bukan lewat route index yang cuma
+        // bakal redirect lagi) -- flash session('status') cuma bertahan SATU
+        // hop redirect, jadi kalau lewat index dulu pesannya keburu hilang
+        // sebelum sempat nyampe ke halaman yang nampilin toast-nya.
+        return redirect()->to(route('dashboard').'?tab=permintaan-laporan')
+            ->with('status', 'Permintaan telah terkirim ke Satuan');
     }
 
     public function mulai(Request $request, PermintaanLaporan $permintaanLaporan): RedirectResponse

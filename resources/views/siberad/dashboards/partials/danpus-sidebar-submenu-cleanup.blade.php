@@ -132,6 +132,7 @@
   // untuk satu permintaan jadi SATU pipeline dengan riwayat bercabang di
   // tahap "Laporan Dibuat", bukan kartu terpisah per baris.
   function buildProcessLog(rows){
+    var permintaanId=rows[0].dataset.permintaanId||'';
     var cells0=rows[0].querySelectorAll('td');
     var subject=cells0[0]?.querySelector('.subject')?.textContent.trim()||getCellText(cells0,0)||'Laporan aktivitas';
     var permintaanCreated=rows[0].dataset.permintaanCreated||'';
@@ -211,6 +212,7 @@
       card.appendChild(state);item.appendChild(card);log.appendChild(item);
     });
     var title=document.createElement('div');title.className='danpus-activity-project';title.textContent=subject;log.prepend(title);
+    log.dataset.permintaanId=permintaanId;
     return log;
   }
 
@@ -243,6 +245,7 @@
       card.appendChild(state);item.appendChild(card);log.appendChild(item);
     });
     var title=document.createElement('div');title.className='danpus-activity-project';title.textContent=p.subject||'Permintaan laporan';log.prepend(title);
+    log.dataset.permintaanId=p.id?String(p.id):'';
     return log;
   }
 

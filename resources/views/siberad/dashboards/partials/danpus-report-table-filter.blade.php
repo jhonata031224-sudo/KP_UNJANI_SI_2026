@@ -149,9 +149,9 @@
       searchPlaceholder:'Cari perihal atau satuan tujuan...',
       emptyText:'Tidak ada permintaan laporan yang sesuai dengan pencarian/filter.',
       filters:[
-        {label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]},
-        {label:'Filter status',attr:'statusTampilan',options:[{value:'all',label:'Semua Status'},{value:'Belum dikerjakan',label:'Belum Dikerjakan'},{value:'Sedang dikerjakan',label:'Sedang Dikerjakan'},{value:'Menunggu pemeriksaan',label:'Menunggu Pemeriksaan'},{value:'Selesai',label:'Selesai'},{value:'Terlambat',label:'Terlambat'}]}
-      ]
+        {label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]}
+      ],
+      sortable:true
     });
 
     // Halaman role (Satlak/Binum/Diklat/Binmat/Binfung) -- section-nya pakai
