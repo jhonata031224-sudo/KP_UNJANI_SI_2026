@@ -183,12 +183,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/pengaturan/landing', [SettingController::class, 'updateLanding'])->name('pengaturan.landing.update');
     Route::post('/backup', [BackupController::class, 'store'])->name('backup.store');
     Route::get('/backup/{filename}/download', [BackupController::class, 'download'])->name('backup.download');
-    Route::get('/laporan', [ReportController::class, 'index'])->name('admin.laporan.index');
-    Route::get('/laporan/aktivitas-terbaru', [ReportController::class, 'aktivitasTerbaru'])->name('admin.laporan.aktivitas-terbaru');
+    Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
+    Route::get('/laporan/aktivitas-terbaru', [ReportController::class, 'aktivitasTerbaru'])->name('laporan.aktivitas-terbaru');
     Route::get('/laporan/cetak/{jenis}', [ReportController::class, 'printView'])
         ->whereIn('jenis', ['pengguna', 'aktivitas'])
-        ->name('admin.laporan.cetak');
-    Route::get('/laporan/export/pengguna', [ReportController::class, 'exportUsersExcel'])->name('admin.laporan.export-pengguna');
-    Route::get('/laporan/export/aktivitas', [ReportController::class, 'exportActivityExcel'])->name('admin.laporan.export-aktivitas');
-    Route::delete('/sessions/{id}', [SessionController::class, 'destroy'])->name('admin.sessions.destroy');
+        ->name('laporan.cetak');
+    Route::get('/laporan/export/pengguna', [ReportController::class, 'exportUsersExcel'])->name('laporan.export-pengguna');
+    Route::get('/laporan/export/aktivitas', [ReportController::class, 'exportActivityExcel'])->name('laporan.export-aktivitas');
+    Route::delete('/sessions/{id}', [SessionController::class, 'destroy'])->name('sessions.destroy');
 });
