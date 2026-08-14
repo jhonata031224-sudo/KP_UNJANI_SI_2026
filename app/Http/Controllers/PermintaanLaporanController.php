@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Laporan;
 use App\Models\PermintaanLaporan;
 use App\Models\Satuan;
 use App\Models\User;
@@ -70,6 +71,13 @@ class PermintaanLaporanController extends Controller
             })
             ->values();
 
+        $laporanMasukCount = Laporan::where('tujuan_satuan_id', $satuan->id)
+            ->where(function ($query) {
+                $query->where('status', 'Menunggu')
+                    ->orWhere('status', 'like', 'Revisi%');
+            })
+            ->count();
+
         return response()->json([
             'latest_id' => $latestId,
             'items_html' => view('siberad.dashboards.partials.permintaan-laporan-realtime-items', [
@@ -77,6 +85,7 @@ class PermintaanLaporanController extends Controller
             ])->render(),
             'unread_count' => $user->unreadNotifications()->count(),
             'notifications' => $notifications,
+            'laporan_masuk_count' => $laporanMasukCount,
         ], 200, [
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
         ]);
