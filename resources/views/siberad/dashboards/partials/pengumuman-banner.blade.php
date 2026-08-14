@@ -1,4 +1,8 @@
 <style>
+@media(max-width:900px){.side-collapse-btn{display:none!important;}}
+</style>
+
+<style>
 /* Refactor tampilan editor Konten Halaman Landing — fokus pada editor yang rapi,
    tetap mempertahankan pratinjau langsung di bawah editor. */
 .lp-layout{display:flex !important;flex-direction:column !important;gap:22px !important;align-items:stretch !important;}
