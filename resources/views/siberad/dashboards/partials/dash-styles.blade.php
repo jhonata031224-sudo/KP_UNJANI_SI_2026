@@ -185,7 +185,7 @@
 
   .main{flex:1;min-width:0;}
   .topbar{background:var(--surface);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-soft);height:82px;padding:0 32px;box-sizing:border-box;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:30;gap:16px;}
-  .menu-btn{display:none;background:transparent;border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;color:var(--text);}
+  .menu-btn{display:none;background:transparent;border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;color:var(--text);position:relative;z-index:41;touch-action:manipulation;-webkit-tap-highlight-color:rgba(212,175,55,.25);}
   .topbar-title{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:.01em;}
   .topbar-sub{font-size:12.5px;color:var(--text-muted);margin-top:3px;}
 
