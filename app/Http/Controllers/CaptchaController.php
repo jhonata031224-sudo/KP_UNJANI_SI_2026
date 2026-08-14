@@ -10,6 +10,10 @@ class CaptchaController extends Controller
      * Buat gambar captcha (angka + huruf kecil + huruf kapital, dengan noise
      * garis/titik) pakai GD bawaan PHP — tanpa font TTF eksternal, supaya
      * tidak butuh file tambahan yang bisa hilang saat deploy.
+     *
+     * Jika GD tidak tersedia pada environment deployment, gunakan SVG sebagai
+     * fallback agar endpoint captcha tetap dapat dirender tanpa mengubah alur
+     * validasi captcha.
      */
     public function image(): Response
     {
@@ -23,6 +27,53 @@ class CaptchaController extends Controller
             $kode .= $karakter[random_int(0, strlen($karakter) - 1)];
         }
         session(['captcha_code' => $kode]);
+
+        // Railway/container tertentu tidak menyediakan ekstensi GD. Jangan
+        // biarkan endpoint captcha menjadi 500; fallback ini hanya dipakai
+        // bila GD memang tidak tersedia, sehingga hasil GD yang lama tetap
+        // digunakan pada environment yang memilikinya.
+        if (! function_exists('imagecreatetruecolor')) {
+            $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="260" height="90" viewBox="0 0 260 90">';
+            $svg .= '<rect width="260" height="90" rx="8" fill="#0a1a12"/>';
+
+            for ($i = 0; $i < 9; $i++) {
+                $x1 = random_int(0, $width);
+                $y1 = random_int(0, $height);
+                $x2 = random_int(0, $width);
+                $y2 = random_int(0, $height);
+                $r = random_int(40, 90);
+                $g = random_int(90, 140);
+                $b = random_int(60, 100);
+                $svg .= '<line x1="'.$x1.'" y1="'.$y1.'" x2="'.$x2.'" y2="'.$y2.'" stroke="rgb('.$r.','.$g.','.$b.')" stroke-width="1"/>';
+            }
+
+            $x = 18;
+            for ($i = 0; $i < strlen($kode); $i++) {
+                $r = random_int(200, 255);
+                $g = random_int(190, 230);
+                $b = random_int(90, 140);
+                $y = random_int(55, 68);
+                $rotate = random_int(-7, 7);
+                $svg .= '<text x="'.$x.'" y="'.$y.'" fill="rgb('.$r.','.$g.','.$b.')" font-family="monospace" font-size="34" font-weight="700" transform="rotate('.$rotate.' '.$x.' '.$y.')">'.$kode[$i].'</text>';
+                $x += random_int(38, 46);
+            }
+
+            for ($i = 0; $i < 260; $i++) {
+                $x = random_int(0, $width - 1);
+                $y = random_int(0, $height - 1);
+                $r = random_int(30, 200);
+                $g = random_int(30, 200);
+                $b = random_int(30, 200);
+                $svg .= '<circle cx="'.$x.'" cy="'.$y.'" r="0.8" fill="rgb('.$r.','.$g.','.$b.')"/>';
+            }
+
+            $svg .= '</svg>';
+
+            return response($svg, 200, [
+                'Content-Type' => 'image/svg+xml',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            ]);
+        }
 
         $image = imagecreatetruecolor($width, $height);
         $bg = imagecolorallocate($image, 10, 26, 18);

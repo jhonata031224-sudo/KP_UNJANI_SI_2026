@@ -105,7 +105,17 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 <script>
 (function(){
   const sidebar=document.getElementById('sidebar');
-  document.getElementById('menuBtn')?.addEventListener('click',()=>sidebar?.classList.toggle('open'));
+  // Sama seperti tema & profil: toggle klik tombol menu (hamburger) untuk
+  // sidebar di mobile sudah ditangani lebih dulu oleh initRoleUi() di
+  // pengumuman-banner.blade.php. Tanpa guard ini, dua listener klik akan
+  // sama-sama memanggil classList.toggle('open') dalam satu tap, sehingga
+  // saling membatalkan dan sidebar terlihat seperti tidak merespons sama
+  // sekali saat tombolnya diklik di HP.
+  const menuBtn=document.getElementById('menuBtn');
+  if (menuBtn && !menuBtn.dataset.uiBound) {
+    menuBtn.dataset.uiBound = '1';
+    menuBtn.addEventListener('click',()=>sidebar?.classList.toggle('open'));
+  }
   // Toggle collapse sidebar (termasuk resize .content/.pimp-page) ditangani
   // bareng oleh script siberadInitSidebarCollapse di dash-styles.blade.php.
 

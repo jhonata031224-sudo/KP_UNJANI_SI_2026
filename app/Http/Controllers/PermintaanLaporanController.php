@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Laporan;
 use App\Models\PermintaanLaporan;
 use App\Models\Satuan;
 use App\Models\User;
 use App\Notifications\PermintaanLaporanBaru;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -34,9 +36,73 @@ class PermintaanLaporanController extends Controller
     {
         abort_unless($this->isPimpinan($request) || $this->isPengirim($request), 403);
 
-        // Tetap memakai shell dashboard dan sidebar Pelaporan yang sama,
-        // tetapi Permintaan Laporan dibuka sebagai halaman/tab mandiri.
         return redirect()->to(route('dashboard').'?tab=permintaan-laporan');
+    }
+
+    public function realtime(Request $request): JsonResponse
+    {
+        $user = $request->user()->load('satuan');
+        $satuan = $user->satuan;
+        $kode = strtoupper((string) $satuan?->kode);
+        abort_unless(in_array($kode, self::PENGIRIM_KODE, true), 403);
+
+        $latestId = (int) (PermintaanLaporan::where('tujuan_satuan_id', $satuan->id)->max('id') ?? 0);
+        $since = max(0, (int) $request->query('since', 0));
+
+        $items = PermintaanLaporan::with(['pembuat.satuan', 'laporans'])
+            ->where('tujuan_satuan_id', $satuan->id)
+            ->whereIn('status', [
+                PermintaanLaporan::STATUS_BELUM,
+                PermintaanLaporan::STATUS_DIKERJAKAN,
+                PermintaanLaporan::STATUS_PEMERIKSAAN,
+            ])
+            ->where('id', '>', $since)
+            ->orderBy('id')
+            ->get();
+
+        $notifications = $user->unreadNotifications
+            ->take(20)
+            ->map(function ($notification) {
+                return [
+                    'message' => $notification->data['pesan'] ?? 'Status laporan diperbarui.',
+                    'time' => optional($notification->created_at)->diffForHumans(),
+                    'id' => (string) $notification->id,
+                ];
+            })
+            ->values();
+
+        // "Laporan Masuk" pada dashboard penerima harus mencerminkan pekerjaan
+        // yang masuk ke satuan ini. Permintaan laporan dibuat sebagai
+        // PermintaanLaporan (bukan Laporan), sehingga menghitung tabel Laporan
+        // saja membuat kartu tetap 0 walaupun ada permintaan baru.
+        $permintaanMasukCount = PermintaanLaporan::where('tujuan_satuan_id', $satuan->id)
+            ->whereIn('status', [
+                PermintaanLaporan::STATUS_BELUM,
+                PermintaanLaporan::STATUS_DIKERJAKAN,
+                PermintaanLaporan::STATUS_PEMERIKSAAN,
+            ])
+            ->count();
+
+        $laporanMasukCount = Laporan::where('tujuan_satuan_id', $satuan->id)
+            ->where(function ($query) {
+                $query->where('status', 'Menunggu')
+                    ->orWhere('status', 'like', 'Revisi%');
+            })
+            ->count();
+
+        $laporanMasukCount = max($permintaanMasukCount, $laporanMasukCount);
+
+        return response()->json([
+            'latest_id' => $latestId,
+            'items_html' => view('siberad.dashboards.partials.permintaan-laporan-realtime-items', [
+                'permintaanLaporan' => $items,
+            ])->render(),
+            'unread_count' => $user->unreadNotifications()->count(),
+            'notifications' => $notifications,
+            'laporan_masuk_count' => $laporanMasukCount,
+        ], 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -77,7 +143,6 @@ class PermintaanLaporanController extends Controller
                 ]);
                 $created->push($permintaan);
 
-                // Setiap pengguna pada satuan tujuan mendapat notifikasi database.
                 foreach (User::where('satuan_id', $satuan->id)->get() as $penerima) {
                     $penerima->notify(new PermintaanLaporanBaru($permintaan));
                 }

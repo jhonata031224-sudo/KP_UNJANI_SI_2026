@@ -78,6 +78,9 @@ Route::delete('/laporan/{laporan}', [LaporanController::class, 'destroy'])
 Route::get('/permintaan-laporan', [PermintaanLaporanController::class, 'index'])
     ->middleware('auth')
     ->name('permintaan-laporan.index');
+Route::get('/permintaan-laporan/realtime', [PermintaanLaporanController::class, 'realtime'])
+    ->middleware('auth')
+    ->name('permintaan-laporan.realtime');
 Route::post('/permintaan-laporan', [PermintaanLaporanController::class, 'store'])
     ->middleware('auth')
     ->name('permintaan-laporan.store');
