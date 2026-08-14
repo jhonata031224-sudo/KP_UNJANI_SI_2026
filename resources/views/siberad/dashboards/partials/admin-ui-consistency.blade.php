@@ -140,6 +140,14 @@ body:has(.side-nav-group) .topbar {
       sidebar.classList.add('open');
     }
 
+    function closeSidebarMobile(){
+      sidebar.classList.remove('open');
+      sidebar.classList.add('collapsed');
+      document.querySelectorAll('.side-dropdown.open, .side-nav-group.open').forEach(function(group){
+        group.classList.remove('open');
+      });
+    }
+
     if(window.PointerEvent){
       menuBtn.addEventListener('pointerup',function(e){
         if(window.innerWidth>900) return;
@@ -171,8 +179,7 @@ body:has(.side-nav-group) .topbar {
          sidebar.classList.contains('open') &&
          !sidebar.contains(e.target) &&
          e.target!==menuBtn){
-        sidebar.classList.remove('open');
-        sidebar.classList.add('collapsed');
+        closeSidebarMobile();
       }
     });
   }
