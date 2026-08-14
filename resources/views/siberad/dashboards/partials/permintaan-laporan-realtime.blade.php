@@ -14,6 +14,18 @@
         return ids.length?Math.max.apply(Math,ids):0;
     }
 
+    function syncIncomingReportCount(data){
+        if(typeof data.laporan_masuk_count==='undefined') return;
+        var value=String(parseInt(data.laporan_masuk_count||0,10));
+        var labels=document.querySelectorAll('.stat-card .lbl');
+        labels.forEach(function(label){
+            if((label.textContent||'').trim().toLowerCase()!=='laporan masuk') return;
+            var card=label.closest('.stat-card');
+            var valueEl=card&&card.querySelector('.val');
+            if(valueEl) valueEl.textContent=value;
+        });
+    }
+
     function syncNotifications(data){
         var button=document.getElementById('notifBtn');
         var dropdown=document.getElementById('notifDropdown');
@@ -34,12 +46,14 @@
 
         var notifications=Array.isArray(data.notifications)?data.notifications:[];
         var head=dropdown.querySelector('.profile-dropdown-head');
-        var bodyItems=dropdown.querySelectorAll('.profile-dropdown-item');
-        var empty=dropdown.querySelector('.siberad-notif-empty');
         if(!head) return;
 
-        var oldBody=dropdown.querySelector('.siberad-realtime-notif-body');
-        if(oldBody) oldBody.remove();
+        // Hapus seluruh isi lama setelah header. Ini penting karena markup awal
+        // server-side bisa berisi "Belum ada notifikasi saat ini." walaupun
+        // polling berikutnya sudah menerima notifikasi baru.
+        while(dropdown.lastElementChild && dropdown.lastElementChild!==head){
+            dropdown.removeChild(dropdown.lastElementChild);
+        }
 
         var body=document.createElement('div');
         body.className='siberad-realtime-notif-body';
@@ -48,8 +62,8 @@
                 var message=String(n.message||'').replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch];});
                 var time=String(n.time||'').replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch];});
                 return '<div class="profile-dropdown-item" style="align-items:flex-start;white-space:normal;cursor:default;">'+
-                    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--gold-bright)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>'+ 
-                    '<div><div style="font-size:12.5px;line-height:1.5;color:var(--text);">'+message+'</div>'+ 
+                    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--gold-bright)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>'+
+                    '<div><div style="font-size:12.5px;line-height:1.5;color:var(--text);">'+message+'</div>'+
                     '<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">'+time+'</div></div></div>';
             }).join('');
         }else{
@@ -96,6 +110,7 @@
             return response.json();
         }).then(function(data){
             if(!data) return;
+            syncIncomingReportCount(data);
             syncNotifications(data);
             var inserted=insertItems(data.items_html);
             if(inserted && window.siberadShowToast){
