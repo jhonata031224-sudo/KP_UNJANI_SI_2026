@@ -4,12 +4,12 @@ nixPkgs = ["php82", "php82Packages.composer", "nodejs_20"]
 [phases.install]
 cmds = [
   "composer install --no-dev --optimize-autoloader",
-  "npm ci"
+  "npm ci --include=dev"
 ]
 
 [phases.build]
 cmds = [
-  "npm run build"
+  "node node_modules/vite/bin/vite.js build"
 ]
 
 [start]
