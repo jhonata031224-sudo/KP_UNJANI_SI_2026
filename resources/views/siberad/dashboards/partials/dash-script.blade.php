@@ -1,12 +1,41 @@
 <script>
   const menuBtn=document.getElementById('menuBtn');const sidebar=document.getElementById('sidebar');
-  // Guard dataset.uiBound: file ini kadang dimuat bareng partials/pengumuman-banner.blade.php
-  // (initRoleUi), yang juga mem-bind klik menuBtn. Tanpa guard ini, dua listener akan
-  // sama-sama memanggil classList.toggle('open') dalam satu tap sehingga saling
-  // membatalkan -- sidebar jadi terlihat tidak merespons sama sekali saat menuBtn diklik di HP.
+  // Mobile-safe menu binding. Beberapa browser/embedded webview di HP dapat
+  // menghasilkan urutan pointer/touch + click yang membuat toggle berjalan dua
+  // kali. Gunakan pointerup sebagai event utama, lalu biarkan click hanya untuk
+  // interaksi keyboard (detail === 0). Dataset guard tetap dipakai karena file
+  // ini bisa dimuat bersama partials/pengumuman-banner.blade.php yang juga
+  // menginisialisasi menuBtn.
   if(menuBtn&&sidebar&&!menuBtn.dataset.uiBound){
     menuBtn.dataset.uiBound='1';
-    menuBtn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();sidebar.classList.toggle('open');});
+    let suppressNextClick=false;
+    let suppressTimer=0;
+    function toggleMobileSidebar(e){
+      e.preventDefault();
+      e.stopPropagation();
+      sidebar.classList.toggle('open');
+    }
+    if(window.PointerEvent){
+      menuBtn.addEventListener('pointerup',function(e){
+        suppressNextClick=true;
+        window.clearTimeout(suppressTimer);
+        suppressTimer=window.setTimeout(function(){suppressNextClick=false;},500);
+        toggleMobileSidebar(e);
+      },{passive:false});
+      menuBtn.addEventListener('click',function(e){
+        if(suppressNextClick){
+          suppressNextClick=false;
+          window.clearTimeout(suppressTimer);
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        // Tetap dukung aktivasi tombol via keyboard/assistive technology.
+        if(e.detail===0)toggleMobileSidebar(e);
+      });
+    }else{
+      menuBtn.addEventListener('click',toggleMobileSidebar);
+    }
   }
   if(sidebar){document.addEventListener('click',e=>{if(window.innerWidth<=900&&sidebar.classList.contains('open')&&!sidebar.contains(e.target)&&e.target!==menuBtn)sidebar.classList.remove('open');});}
   (function(){var style=document.createElement('style');style.setAttribute('data-danpus-submenu-fix','true');style.textContent='.side-dropdown-menu,.side-dropdown-menu ul,.side-dropdown-menu ol,.side-dropdown-menu li{list-style:none!important;list-style-type:none!important}.side-dropdown-menu li::marker{content:""!important;display:none!important}.side-dropdown-menu a::before,.side-dropdown-menu a::after,.side-dropdown-menu .side-sublink::before,.side-dropdown-menu .side-sublink::after{content:none!important;display:none!important}.side-dropdown-menu .dot,.side-dropdown-menu .side-sublink .dot{display:none!important;width:0!important;min-width:0!important;margin:0!important;padding:0!important}.side-dropdown-menu .side-sublink{padding-left:32px!important;padding-right:12px!important;gap:0!important;list-style:none!important;background-image:none!important;}';document.head.appendChild(style);})();
