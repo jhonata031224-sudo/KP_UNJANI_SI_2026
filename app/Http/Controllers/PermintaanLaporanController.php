@@ -48,25 +48,35 @@ class PermintaanLaporanController extends Controller
         $latestId = (int) (PermintaanLaporan::where('tujuan_satuan_id', $satuan->id)->max('id') ?? 0);
         $since = max(0, (int) $request->query('since', 0));
 
-        $items = collect();
-        if ($since > 0) {
-            $items = PermintaanLaporan::with(['pembuat.satuan', 'laporans'])
-                ->where('tujuan_satuan_id', $satuan->id)
-                ->whereIn('status', [
-                    PermintaanLaporan::STATUS_BELUM,
-                    PermintaanLaporan::STATUS_DIKERJAKAN,
-                    PermintaanLaporan::STATUS_PEMERIKSAAN,
-                ])
-                ->where('id', '>', $since)
-                ->orderBy('id')
-                ->get();
-        }
+        $items = PermintaanLaporan::with(['pembuat.satuan', 'laporans'])
+            ->where('tujuan_satuan_id', $satuan->id)
+            ->whereIn('status', [
+                PermintaanLaporan::STATUS_BELUM,
+                PermintaanLaporan::STATUS_DIKERJAKAN,
+                PermintaanLaporan::STATUS_PEMERIKSAAN,
+            ])
+            ->where('id', '>', $since)
+            ->orderBy('id')
+            ->get();
+
+        $notifications = $user->unreadNotifications
+            ->take(20)
+            ->map(function ($notification) {
+                return [
+                    'message' => $notification->data['pesan'] ?? 'Status laporan diperbarui.',
+                    'time' => optional($notification->created_at)->diffForHumans(),
+                    'id' => (string) $notification->id,
+                ];
+            })
+            ->values();
 
         return response()->json([
             'latest_id' => $latestId,
             'items_html' => view('siberad.dashboards.partials.permintaan-laporan-realtime-items', [
                 'permintaanLaporan' => $items,
             ])->render(),
+            'unread_count' => $user->unreadNotifications()->count(),
+            'notifications' => $notifications,
         ], 200, [
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
         ]);
