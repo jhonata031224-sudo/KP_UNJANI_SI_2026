@@ -19,6 +19,15 @@
   th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #202f27;}
   th{color:#9fb0a6;font-weight:600;text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;}
   .panel{background:#111a17;border:1px solid #202f27;border-radius:10px;padding:18px;margin-bottom:24px;}
+
+  /* Dropdown pilihan jenis (Daftar Pengguna / Log Aktivitas) untuk tombol
+     Export & Cetak, supaya 1 tombol tapi hasilnya tetap dokumen terpisah. */
+  .dropdown{position:relative;display:inline-block;}
+  .dropdown-menu{display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:200px;background:#111a17;border:1px solid #2c4438;border-radius:8px;padding:6px;box-shadow:0 12px 28px -10px rgba(0,0,0,.55);z-index:20;}
+  .dropdown.open .dropdown-menu{display:block;}
+  .dropdown-menu a{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;color:#e7efe9;text-decoration:none;font-size:12.5px;}
+  .dropdown-menu a:hover{background:#1c2c25;}
+  .dropdown-menu .dropdown-label{padding:6px 10px 2px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#9fb0a6;}
 </style>
 </head>
 <body>
@@ -26,9 +35,22 @@
   <p class="sub">{{ $pengaturan->nama_instansi }} — SIBERAD</p>
 
   <div class="toolbar">
-    <a class="btn primary" href="{{ route('admin.laporan.export-pengguna') }}">Export Pengguna (Excel/CSV)</a>
-    <a class="btn primary" href="{{ route('admin.laporan.export-aktivitas') }}">Export Aktivitas (Excel/CSV)</a>
-    <a class="btn" href="{{ route('admin.laporan.cetak') }}" target="_blank">Cetak / Simpan PDF</a>
+    <div class="dropdown" data-dropdown>
+      <button type="button" class="btn primary" data-dropdown-toggle>Export Excel ▾</button>
+      <div class="dropdown-menu">
+        <div class="dropdown-label">Pilih data</div>
+        <a href="{{ route('admin.laporan.export-pengguna') }}">👤 Daftar Pengguna</a>
+        <a href="{{ route('admin.laporan.export-aktivitas') }}">📋 Log Aktivitas</a>
+      </div>
+    </div>
+    <div class="dropdown" data-dropdown>
+      <button type="button" class="btn" data-dropdown-toggle>Cetak / Simpan PDF ▾</button>
+      <div class="dropdown-menu">
+        <div class="dropdown-label">Pilih data</div>
+        <a href="{{ route('admin.laporan.cetak', 'pengguna') }}" target="_blank">👤 Daftar Pengguna</a>
+        <a href="{{ route('admin.laporan.cetak', 'aktivitas') }}" target="_blank">📋 Log Aktivitas</a>
+      </div>
+    </div>
     <form method="GET" action="{{ route('admin.laporan.index') }}">
       <div class="field"><label>Dari</label><input type="date" name="dari" value="{{ $dari }}"></div>
       <div class="field"><label>Sampai</label><input type="date" name="sampai" value="{{ $sampai }}"></div>
@@ -77,6 +99,23 @@
     tr.log-baru { animation: highlight-baru 2.5s ease-out; }
     @keyframes highlight-baru { 0%{background:#2c4438;} 100%{background:transparent;} }
   </style>
+  <script>
+    (function () {
+      // Dropdown pilihan jenis data untuk tombol Export & Cetak.
+      document.querySelectorAll('[data-dropdown]').forEach(function (dd) {
+        var toggle = dd.querySelector('[data-dropdown-toggle]');
+        toggle.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var sudahTerbuka = dd.classList.contains('open');
+          document.querySelectorAll('[data-dropdown].open').forEach(function (o) { o.classList.remove('open'); });
+          if (!sudahTerbuka) dd.classList.add('open');
+        });
+      });
+      document.addEventListener('click', function () {
+        document.querySelectorAll('[data-dropdown].open').forEach(function (o) { o.classList.remove('open'); });
+      });
+    })();
+  </script>
   <script>
     (function () {
       var tbody = document.getElementById('log-tbody');

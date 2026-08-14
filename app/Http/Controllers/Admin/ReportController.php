@@ -121,15 +121,21 @@ class ReportController extends Controller
     }
 
     /**
-     * Versi cetak (untuk disimpan sebagai PDF lewat dialog "Print" browser)
-     * dari laporan pengguna & aktivitas — tanpa perlu library PDF tambahan.
+     * Versi cetak (untuk disimpan sebagai PDF lewat dialog "Print" browser),
+     * dipisah per jenis ('pengguna' atau 'aktivitas') supaya masing-masing
+     * jadi dokumen sendiri yang fokus, bukan digabung dalam satu halaman.
      */
-    public function printView(Request $request): View
+    public function printView(Request $request, string $jenis): View
     {
         return view('admin.laporan-cetak', [
+            'jenis' => $jenis,
             'pengaturan' => Pengaturan::current(),
-            'semuaPengguna' => User::with('satuan')->orderBy('name')->get(),
-            'log' => ActivityLog::with('user')->latest('created_at')->limit(200)->get(),
+            'semuaPengguna' => $jenis === 'pengguna'
+                ? User::with('satuan')->orderBy('name')->get()
+                : collect(),
+            'log' => $jenis === 'aktivitas'
+                ? ActivityLog::with('user.satuan')->latest('created_at')->limit(500)->get()
+                : collect(),
             'dicetakOleh' => $request->user(),
             'dicetakPada' => now(),
         ]);
