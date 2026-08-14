@@ -182,7 +182,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/backup/{filename}/download', [BackupController::class, 'download'])->name('backup.download');
     Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/aktivitas-terbaru', [ReportController::class, 'aktivitasTerbaru'])->name('laporan.aktivitas-terbaru');
-    Route::get('/laporan/cetak', [ReportController::class, 'printView'])->name('laporan.cetak');
+    Route::get('/laporan/cetak/{jenis}', [ReportController::class, 'printView'])
+        ->whereIn('jenis', ['pengguna', 'aktivitas'])
+        ->name('laporan.cetak');
     Route::get('/laporan/export/pengguna', [ReportController::class, 'exportUsersExcel'])->name('laporan.export-pengguna');
     Route::get('/laporan/export/aktivitas', [ReportController::class, 'exportActivityExcel'])->name('laporan.export-aktivitas');
     Route::delete('/sessions/{id}', [SessionController::class, 'destroy'])->name('sessions.destroy');

@@ -1128,7 +1128,8 @@
           <div class="btn-row" style="padding:18px 22px;flex-wrap:wrap;">
             <a class="btn btn-primary btn-sm" href="{{ route('admin.laporan.export-pengguna') }}">Export Pengguna (Excel/CSV)</a>
             <a class="btn btn-primary btn-sm" href="{{ route('admin.laporan.export-aktivitas') }}">Export Aktivitas (Excel/CSV)</a>
-            <a class="btn btn-sm" href="{{ route('admin.laporan.cetak') }}" target="_blank">Cetak / Simpan sebagai PDF</a>
+            <a class="btn btn-sm" href="{{ route('admin.laporan.cetak', 'pengguna') }}" target="_blank">Cetak Pengguna (PDF)</a>
+            <a class="btn btn-sm" href="{{ route('admin.laporan.cetak', 'aktivitas') }}" target="_blank">Cetak Aktivitas (PDF)</a>
             <a class="btn btn-sm" href="{{ route('admin.laporan.index') }}" target="_blank">Buka Halaman Laporan Lengkap</a>
           </div>
         </div>

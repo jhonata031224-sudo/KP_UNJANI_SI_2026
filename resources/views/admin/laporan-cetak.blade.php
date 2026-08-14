@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Cetak Laporan — {{ $pengaturan->singkatan ?? 'SIBERAD' }}</title>
+<title>{{ $jenis === 'pengguna' ? 'Cetak Laporan Pengguna' : 'Cetak Log Aktivitas' }} — {{ $pengaturan->singkatan ?? 'SIBERAD' }}</title>
 <style>
   body{font-family:Georgia,'Times New Roman',serif;color:#111;margin:36px;}
   header{display:flex;align-items:center;gap:14px;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:18px;}
@@ -25,10 +25,11 @@
     @endif
     <div>
       <h1>{{ $pengaturan->nama_instansi }}</h1>
-      <p>Laporan Pengguna &amp; Aktivitas Sistem SIBERAD</p>
+      <p>{{ $jenis === 'pengguna' ? 'Laporan Daftar Pengguna Sistem SIBERAD' : 'Laporan Log Aktivitas Sistem SIBERAD' }}</p>
     </div>
   </header>
 
+  @if($jenis === 'pengguna')
   <h2>Daftar Pengguna ({{ $semuaPengguna->count() }})</h2>
   <table>
     <thead><tr><th>#</th><th>Nama</th><th>Username</th><th>Satuan</th><th>Jabatan</th></tr></thead>
@@ -38,16 +39,17 @@
       @endforeach
     </tbody>
   </table>
-
-  <h2>Log Aktivitas Terbaru ({{ $log->count() }})</h2>
+  @else
+  <h2>Log Aktivitas ({{ $log->count() }})</h2>
   <table>
-    <thead><tr><th>Waktu</th><th>Pengguna</th><th>Aksi</th><th>Deskripsi</th></tr></thead>
+    <thead><tr><th>Waktu</th><th>Pengguna</th><th>Satuan</th><th>Aksi</th><th>Deskripsi</th></tr></thead>
     <tbody>
       @foreach($log as $l)
-      <tr><td>{{ $l->created_at?->format('d/m/Y H:i') }}</td><td>{{ $l->nama_pengguna ?? '-' }}</td><td>{{ $l->aksi }}</td><td>{{ $l->deskripsi }}</td></tr>
+      <tr><td>{{ $l->created_at?->format('d/m/Y H:i') }}</td><td>{{ $l->nama_pengguna ?? '-' }}</td><td>{{ $l->user?->satuan?->nama ?? '-' }}</td><td>{{ $l->aksi }}</td><td>{{ $l->deskripsi }}</td></tr>
       @endforeach
     </tbody>
   </table>
+  @endif
 
   <footer>Dicetak oleh {{ $dicetakOleh->name }} pada {{ $dicetakPada->translatedFormat('d M Y H:i') }} WIB.</footer>
 </body>
