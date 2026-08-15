@@ -1,4 +1,4 @@
-name: Scoped Role Access Refactor v2
+name: Scoped Role Access Refactor
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Refactor only Role & Hak Akses section
+      - name: Rapikan tabel Role & Hak Akses
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -26,6 +26,7 @@ jobs:
           end = text.find(end_marker, start)
           if start < 0 or end < 0:
               raise SystemExit('Role & Hak Akses markers not found')
+
           replacement = '''        {{-- ===== ROLE & HAK AKSES ===== }}
       <section class="tab-panel" data-tab-panel="role-akses">
         <div class="section-head panel">
@@ -80,11 +81,11 @@ jobs:
           .role-akses-table-panel{overflow:hidden}
           .role-akses-table-wrap{overflow-x:hidden;width:100%}
           .role-akses-table{width:100%;min-width:0;table-layout:fixed}
-          .role-akses-table .role-col{width:20%}
-          .role-akses-table .desc-col{width:27%}
-          .role-akses-table .access-col{width:41%}
-          .role-akses-table .action-col{width:12%}
-          .role-akses-table th,.role-akses-table td{box-sizing:border-box}
+          .role-akses-table .role-col{width:22%}
+          .role-akses-table .desc-col{width:25%}
+          .role-akses-table .access-col{width:33%}
+          .role-akses-table .action-col{width:20%}
+          .role-akses-table th,.role-akses-table td{box-sizing:border-box;padding:12px 18px}
           .role-akses-table th{white-space:nowrap}
           .role-akses-name{font-weight:700;color:var(--text);margin-bottom:7px;line-height:1.3;overflow-wrap:anywhere}
           .role-akses-code{font-size:9.5px;padding:5px 9px}
@@ -94,15 +95,17 @@ jobs:
           .role-akses-check input{margin:2px 0 0;flex:0 0 auto;accent-color:var(--gold-bright)}
           .role-akses-check span{overflow-wrap:anywhere}
           .role-akses-check:hover{color:var(--text)}
-          .role-akses-action-head,.role-akses-action{text-align:center!important;vertical-align:middle}
+          .role-akses-action-head{text-align:left!important;padding-left:18px!important}
+          .role-akses-action{text-align:left!important;vertical-align:middle;padding-left:18px!important}
           .role-akses-save{white-space:nowrap;padding-left:9px;padding-right:9px}
           @media(max-width:760px){
             .role-akses-table{font-size:11px}
-            .role-akses-table .role-col{width:21%}
-            .role-akses-table .desc-col{width:25%}
-            .role-akses-table .access-col{width:42%}
-            .role-akses-table .action-col{width:12%}
-            .role-akses-table th,.role-akses-table td{padding:9px 7px}
+            .role-akses-table .role-col{width:22%}
+            .role-akses-table .desc-col{width:24%}
+            .role-akses-table .access-col{width:34%}
+            .role-akses-table .action-col{width:20%}
+            .role-akses-table th,.role-akses-table td{padding:9px 10px}
+            .role-akses-action,.role-akses-action-head{padding-left:10px!important}
             .role-akses-save{font-size:10px;padding-left:7px;padding-right:7px}
           }
         </style>
@@ -110,20 +113,16 @@ jobs:
 
 '''
           path.write_text(text[:start] + replacement + text[end:], encoding='utf-8')
-          print('Role & Hak Akses section refactored.')
           PY
 
-      - name: Verify Blade markers and remove helper files
+      - name: Verify and remove helper workflows
         run: |
-          grep -q 'role-akses-table{width:100%;min-width:0;table-layout:fixed}' resources/views/siberad/dashboards/admin.blade.php
-          grep -q 'role-akses-checks{display:flex;flex-direction:column' resources/views/siberad/dashboards/admin.blade.php
-          rm -f .github/workflows/role-akses-refactor-v2.yml .github/workflows/role-akses-layout-fix.yml
-
-      - name: Commit scoped change
-        run: |
+          grep -q '.role-akses-table .role-col{width:22%}' resources/views/siberad/dashboards/admin.blade.php
+          grep -q '.role-akses-table .action-col{width:20%}' resources/views/siberad/dashboards/admin.blade.php
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add resources/views/siberad/dashboards/admin.blade.php .github/workflows/role-akses-refactor-v2.yml .github/workflows/role-akses-layout-fix.yml
+          git rm -f .github/workflows/role-akses-refactor-v2.yml .github/workflows/role-akses-layout-fix.yml .github/workflows/role-akses-quick-fix.yml || true
+          git add resources/views/siberad/dashboards/admin.blade.php
           git diff --cached --check
-          git commit -m "fix: rapikan tabel role dan hak akses tanpa scroll horizontal"
+          git commit -m "fix: rapikan posisi kolom role dan hak akses"
           git push
