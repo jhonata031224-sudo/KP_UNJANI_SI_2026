@@ -18,26 +18,84 @@
       '[data-tab-panel="role-akses"] .role-access-role{font-weight:700;color:var(--text);font-size:13px;line-height:1.45}',
       '[data-tab-panel="role-akses"] .role-access-code{display:inline-flex;margin-top:6px;padding:4px 8px;border:1px solid var(--border-soft);border-radius:7px;background:var(--panel-alt);color:var(--gold-bright);font-family:var(--mono);font-size:9px;letter-spacing:.07em}',
       '[data-tab-panel="role-akses"] .role-access-desc{margin:0;color:var(--text-muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}',
-      '[data-tab-panel="role-akses"] .role-access-form{padding:0!important;width:auto!important;max-width:max-content;min-width:0}',
+      '[data-tab-panel="role-akses"] .role-access-form{padding:0!important;width:auto!important;max-width:max-content;min-width:0;display:contents}',
       '[data-tab-panel="role-akses"] .role-access-access-layout{display:flex;align-items:flex-start;justify-content:flex-start;gap:14px;min-width:0}',
       '[data-tab-panel="role-akses"] .role-access-permissions{display:flex;flex:0 1 auto;flex-direction:column;align-items:flex-start;gap:9px;margin:0;min-width:0;width:max-content;max-width:100%}',
       '[data-tab-panel="role-akses"] .role-access-permission{display:flex;align-items:flex-start;gap:7px;min-width:0;color:var(--text-muted);font-size:11.5px;line-height:1.4;cursor:pointer;white-space:normal;overflow-wrap:anywhere}',
       '[data-tab-panel="role-akses"] .role-access-permission input{margin:2px 0 0;flex:0 0 auto;accent-color:var(--gold-bright)}',
       '[data-tab-panel="role-akses"] .role-access-save{width:auto;max-width:220px;min-width:178px;flex:0 0 auto;box-sizing:border-box;text-align:center;justify-content:center;line-height:1.35;white-space:normal;word-break:normal;align-self:start}',
       '@media(max-width:1000px){[data-tab-panel="role-akses"] .role-access-table-wrap{max-width:100%}[data-tab-panel="role-akses"] .role-access-access-layout{gap:12px}[data-tab-panel="role-akses"] .role-access-save{min-width:170px;max-width:200px}}',
-      '@media(max-width:760px){[data-tab-panel="role-akses"] .role-access-table th,[data-tab-panel="role-akses"] .role-access-table td{padding:11px 10px}[data-tab-panel="role-akses"] .role-access-table th:nth-child(1),[data-tab-panel="role-akses"] .role-access-table td:nth-child(1){width:28%;padding-left:12px;padding-right:9px}[data-tab-panel="role-akses"] .role-access-table th:nth-child(2),[data-tab-panel="role-akses"] .role-access-table td:nth-child(2){width:28%;padding-left:9px;padding-right:9px}[data-tab-panel="role-akses"] .role-access-table th:nth-child(3),[data-tab-panel="role-akses"] .role-access-table td:nth-child(3){width:44%;padding-left:9px;padding-right:12px}[data-tab-panel="role-akses"] .role-access-access-layout{flex-direction:column;gap:12px}[data-tab-panel="role-akses"] .role-access-form{width:100%!important;max-width:none}[data-tab-panel="role-akses"] .role-access-permissions{width:100%;max-width:none}[data-tab-panel="role-akses"] .role-access-save{width:100%;max-width:none;min-width:0}}'
+      '@media(max-width:760px){[data-tab-panel="role-akses"] .role-access-table th,[data-tab-panel="role-akses"] .role-access-table td{padding:11px 10px}[data-tab-panel="role-akses"] .role-access-table th:nth-child(1),[data-tab-panel="role-akses"] .role-access-table td:nth-child(1){width:28%;padding-left:12px;padding-right:9px}[data-tab-panel="role-akses"] .role-access-table th:nth-child(2),[data-tab-panel="role-akses"] .role-access-table td:nth-child(2){width:28%;padding-left:9px;padding-right:9px}[data-tab-panel="role-akses"] .role-access-table th:nth-child(3),[data-tab-panel="role-akses"] .role-access-table td:nth-child(3){width:44%;padding-left:9px;padding-right:12px}[data-tab-panel="role-akses"] .role-access-access-layout{flex-direction:column;gap:12px}[data-tab-panel="role-akses"] .role-access-permissions{width:100%;max-width:none}[data-tab-panel="role-akses"] .role-access-save{width:100%;max-width:none;min-width:0}}'
     ].join('');
     document.head.appendChild(style);
   }
 
-  function initRoleAccessTable() {
-    var section = document.querySelector('[data-tab-panel="role-akses"]');
-    if (!section || section.dataset.roleAccessTableReady === '1') return;
+  function moveExistingLegacyTable(section) {
+    var legacy = section.querySelector('.role-akses-table, table.role-access-legacy-table');
+    if (!legacy) return false;
+    var headers = Array.prototype.map.call(legacy.querySelectorAll('thead th'), function (th) { return th.textContent.trim().toLowerCase(); });
+    if (headers.length < 4) return false;
 
+    var roleIdx = headers.findIndex(function (h) { return h.indexOf('role') !== -1 || h.indexOf('satuan') !== -1; });
+    var descIdx = headers.findIndex(function (h) { return h.indexOf('deskripsi') !== -1; });
+    var permIdx = headers.findIndex(function (h) { return h.indexOf('hak akses') !== -1 || h.indexOf('akses modul') !== -1; });
+    var actionIdx = headers.findIndex(function (h) { return h.indexOf('aksi') !== -1; });
+    if (roleIdx < 0 || descIdx < 0 || permIdx < 0 || actionIdx < 0) return false;
+
+    var rows = Array.prototype.slice.call(legacy.querySelectorAll('tbody tr'));
+    if (!rows.length) return false;
+
+    rows.forEach(function (tr) {
+      var cells = tr.children;
+      var roleCell = cells[roleIdx];
+      var descCell = cells[descIdx];
+      var permCell = cells[permIdx];
+      var actionCell = cells[actionIdx];
+      if (!roleCell || !descCell || !permCell || !actionCell) return;
+
+      var accessLayout = document.createElement('div');
+      accessLayout.className = 'role-access-access-layout';
+
+      var form = permCell.querySelector('form.role-access-form, form');
+      var button = actionCell.querySelector('.role-access-save, button[type="submit"]');
+
+      if (form) accessLayout.appendChild(form);
+      if (button) {
+        if (form && form.id) button.setAttribute('form', form.id);
+        accessLayout.appendChild(button);
+      }
+
+      permCell.textContent = '';
+      permCell.appendChild(accessLayout);
+      actionCell.remove();
+
+      roleCell.classList.add('role-access-role-cell');
+      descCell.classList.add('role-access-desc-cell');
+    });
+
+    if (legacy.tHead && legacy.tHead.rows[0]) {
+      var ths = legacy.tHead.rows[0].children;
+      var roleTh = ths[roleIdx];
+      var descTh = ths[descIdx];
+      var permTh = ths[permIdx];
+      var actionTh = ths[actionIdx];
+      if (roleTh) roleTh.classList.add('role-access-role-head');
+      if (descTh) descTh.classList.add('role-access-desc-head');
+      if (permTh) { permTh.textContent = 'Hak Akses Modul & Aksi'; permTh.classList.add('role-access-access-head'); }
+      if (actionTh) actionTh.remove();
+    }
+
+    legacy.classList.remove('role-akses-table');
+    legacy.classList.add('role-access-table');
+    legacy.removeAttribute('style');
+    return true;
+  }
+
+  function buildFreshTable(section) {
     var panels = Array.prototype.filter.call(section.children, function (el) {
       return el.classList && el.classList.contains('panel');
     });
-    if (!panels.length) return;
+    if (!panels.length) return false;
 
     var rows = [];
     panels.forEach(function (panel) {
@@ -69,7 +127,7 @@
       rows.push({ panel: panel, form: form, roleName: roleName, code: code, description: description ? description.textContent.trim() : 'Tidak ada deskripsi.', save: save });
     });
 
-    if (!rows.length) return;
+    if (!rows.length) return false;
 
     var wrap = document.createElement('div');
     wrap.className = 'role-access-table-wrap';
@@ -81,7 +139,6 @@
 
     rows.forEach(function (item, index) {
       var tr = document.createElement('tr');
-
       var roleCell = document.createElement('td');
       roleCell.innerHTML = '<div class="role-access-role"></div>' + (item.code ? '<span class="role-access-code"></span>' : '');
       roleCell.querySelector('.role-access-role').textContent = item.roleName;
@@ -96,7 +153,6 @@
       var accessCell = document.createElement('td');
       var formId = 'role-access-form-' + index;
       item.form.id = formId;
-
       var accessLayout = document.createElement('div');
       accessLayout.className = 'role-access-access-layout';
       accessLayout.appendChild(item.form);
@@ -116,8 +172,28 @@
     wrap.appendChild(table);
     rows.forEach(function (item) { item.panel.remove(); });
     section.appendChild(wrap);
-    section.dataset.roleAccessTableReady = '1';
+    return true;
+  }
+
+  function initRoleAccessTable() {
+    var section = document.querySelector('[data-tab-panel="role-akses"]');
+    if (!section) return;
     installStyles();
+
+    if (section.dataset.roleAccessTableReady === '1') return;
+
+    var legacyFixed = moveExistingLegacyTable(section);
+    if (legacyFixed) {
+      section.dataset.roleAccessTableReady = '1';
+      return;
+    }
+
+    if (section.querySelector('.role-access-table')) {
+      section.dataset.roleAccessTableReady = '1';
+      return;
+    }
+
+    if (buildFreshTable(section)) section.dataset.roleAccessTableReady = '1';
   }
 
   function initActiveSessionsRealtime() {
@@ -152,12 +228,8 @@
         if (!remoteTbody || !currentTbody) return;
 
         var nextHtml = remoteTbody.innerHTML;
-        if (nextHtml !== currentTbody.innerHTML) {
-          currentTbody.innerHTML = nextHtml;
-        }
-      }).catch(function () {
-        // Kegagalan satu polling tidak mengganggu halaman Admin.
-      });
+        if (nextHtml !== currentTbody.innerHTML) currentTbody.innerHTML = nextHtml;
+      }).catch(function () {});
     }
 
     refreshSessions();
