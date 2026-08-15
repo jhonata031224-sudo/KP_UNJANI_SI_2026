@@ -1,3 +1,11 @@
+<style>
+#permintaanLaporanDetailView{display:none;opacity:0;transform:translateY(8px);transition:opacity .22s ease,transform .22s ease;}
+#permintaanLaporanDetailView.is-visible{opacity:1;transform:translateY(0);}
+#permintaan-laporan .report-card.is-detail-leaving{opacity:0;transform:translateY(-6px);transition:opacity .18s ease,transform .18s ease;}
+@media (prefers-reduced-motion: reduce){
+    #permintaanLaporanDetailView,#permintaanLaporanDetailView.is-visible,#permintaan-laporan .report-card.is-detail-leaving{transition:none!important;transform:none!important;}
+}
+</style>
 <script>
 (function(){
     var listSelector='#permintaan-laporan .deadline-sender-list';
@@ -57,10 +65,6 @@
         return inserted;
     }
 
-    function escapeHtml(value){
-        return String(value||'').replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch];});
-    }
-
     function ensureDetailView(){
         var existing=document.getElementById(detailViewId);
         if(existing)return existing;
@@ -71,31 +75,46 @@
         view.style.display='none';
         view.innerHTML='<div class="report-card" style="max-width:900px;margin:0 auto;">'+
             '<div class="panel-head" style="display:flex;align-items:center;gap:10px;justify-content:space-between;">'+
-                '<div><h2 style="margin:0;">Detail Permintaan Laporan</h2><p style="margin:4px 0 0;color:var(--text-muted);">Detail permintaan laporan dari Danpus/Wadan sebelum konfirmasi.</p></div>'+
-                '<button type="button" class="detail-btn" id="permintaanDetailBack">Kembali</button>'+
-            '</div>'+
+                '<div><h2 style="margin:0;">Detail Permintaan Laporan</h2><p style="margin:4px 0 0;color:var(--text-muted);">Detail permintaan laporan dari Danpus/Wadan sebelum konfirmasi.</p></div>'+ 
+                '<button type="button" class="detail-btn" id="permintaanDetailBack">Kembali</button>'+ 
+            '</div>'+ 
             '<div class="detail-grid" style="margin-top:18px;">'+
-                '<div class="detail-item"><div class="detail-label">Pengirim</div><div class="detail-value" id="permintaanDetailPengirim">-</div></div>'+
-                '<div class="detail-item"><div class="detail-label">Deadline</div><div class="detail-value" id="permintaanDetailDeadline">-</div></div>'+
-                '<div class="detail-item"><div class="detail-label">Perihal</div><div class="detail-value" id="permintaanDetailPerihal">-</div></div>'+
-                '<div class="detail-item"><div class="detail-label">Kategori</div><div class="detail-value" id="permintaanDetailKategori">-</div></div>'+
-                '<div class="detail-item"><div class="detail-label">Prioritas</div><div class="detail-value" id="permintaanDetailPrioritas">-</div></div>'+
-                '<div class="detail-item"><div class="detail-label">Status</div><div class="detail-value" id="permintaanDetailStatus">-</div></div>'+
-                '<div class="detail-item full"><div class="detail-label">Instruksi Danpus/Wadan</div><div class="detail-value" id="permintaanDetailInstruksi">-</div></div>'+
-            '</div>'+
-            '<div class="modal-actions" style="justify-content:flex-end;"><form method="POST" id="permintaanDetailConfirmForm"><input type="hidden" name="_token" value="{{ csrf_token() }}"><input type="hidden" name="_method" value="PATCH"><button type="submit" class="deadline-primary small" id="permintaanDetailConfirmBtn">Konfirmasi</button></form></div>'+
+                '<div class="detail-item"><div class="detail-label">Pengirim</div><div class="detail-value" id="permintaanDetailPengirim">-</div></div>'+ 
+                '<div class="detail-item"><div class="detail-label">Deadline</div><div class="detail-value" id="permintaanDetailDeadline">-</div></div>'+ 
+                '<div class="detail-item"><div class="detail-label">Perihal</div><div class="detail-value" id="permintaanDetailPerihal">-</div></div>'+ 
+                '<div class="detail-item"><div class="detail-label">Kategori</div><div class="detail-value" id="permintaanDetailKategori">-</div></div>'+ 
+                '<div class="detail-item"><div class="detail-label">Prioritas</div><div class="detail-value" id="permintaanDetailPrioritas">-</div></div>'+ 
+                '<div class="detail-item"><div class="detail-label">Status</div><div class="detail-value" id="permintaanDetailStatus">-</div></div>'+ 
+                '<div class="detail-item full"><div class="detail-label">Instruksi Danpus/Wadan</div><div class="detail-value" id="permintaanDetailInstruksi">-</div></div>'+ 
+            '</div>'+ 
+            '<div class="modal-actions" style="justify-content:flex-end;"><form method="POST" id="permintaanDetailConfirmForm"><input type="hidden" name="_token" value="{{ csrf_token() }}"><input type="hidden" name="_method" value="PATCH"><button type="submit" class="deadline-primary small" id="permintaanDetailConfirmBtn">Konfirmasi</button></form></div>'+ 
         '</div>';
         section.appendChild(view);
-        view.querySelector('#permintaanDetailBack').addEventListener('click',function(){showList();});
+        view.querySelector('#permintaanDetailBack').addEventListener('click',function(){showList(true);});
         return view;
     }
 
-    function showList(){
+    function showList(animate){
         var section=document.getElementById('permintaan-laporan');
         var view=document.getElementById(detailViewId);
         var list=section&&section.querySelector('.report-card');
-        if(view)view.style.display='none';
-        if(list)list.style.display='';
+        if(!section)return;
+        if(view){
+            view.classList.remove('is-visible');
+            window.setTimeout(function(){view.style.display='none';},220);
+        }
+        if(list){
+            list.style.display='';
+            if(animate){
+                list.style.opacity='0';
+                list.style.transform='translateY(8px)';
+                window.requestAnimationFrame(function(){
+                    list.style.transition='opacity .22s ease, transform .22s ease';
+                    list.style.opacity='1';
+                    list.style.transform='translateY(0)';
+                });
+            }
+        }
     }
 
     function openDetail(item){
@@ -129,11 +148,16 @@
         view.querySelector('#permintaanDetailInstruksi').textContent=instr||'-';
         var confirmForm=view.querySelector('#permintaanDetailConfirmForm');
         confirmForm.setAttribute('action',formAction);
-        var confirmBtn=view.querySelector('#permintaanDetailConfirmBtn');
-        confirmBtn.disabled=!formAction;
+        view.querySelector('#permintaanDetailConfirmBtn').disabled=!formAction;
         var card=section.querySelector('.report-card');
-        if(card)card.style.display='none';
+        if(card){
+            card.style.transition='opacity .18s ease, transform .18s ease';
+            card.style.opacity='0';
+            card.style.transform='translateY(-6px)';
+            window.setTimeout(function(){card.style.display='none';},180);
+        }
         view.style.display='block';
+        window.requestAnimationFrame(function(){view.classList.add('is-visible');});
         window.scrollTo({top:0,behavior:'smooth'});
     }
 
