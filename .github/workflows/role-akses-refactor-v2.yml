@@ -41,12 +41,18 @@ jobs:
           <div class="panel-head">
             <div>
               <h3>Daftar Role &amp; Hak Akses</h3>
-              <p>Semua role ditampilkan dalam satu tabel agar lebih ringkas, dengan deskripsi dan pengaturan akses tetap terpisah untuk tiap satuan.</p>
+              <p>Semua role ditampilkan dalam satu tabel agar ringkas dan tetap mudah dibaca.</p>
             </div>
           </div>
           <div class="tbl-wrap role-akses-table-wrap">
             <table class="dtbl role-akses-table">
-              <thead><tr><th style="min-width:190px;">Role / Satuan</th><th style="min-width:230px;">Deskripsi</th><th style="min-width:420px;">Hak Akses</th><th style="width:120px;text-align:center;">Aksi</th></tr></thead>
+              <colgroup>
+                <col class="role-col">
+                <col class="desc-col">
+                <col class="access-col">
+                <col class="action-col">
+              </colgroup>
+              <thead><tr><th>Role / Satuan</th><th>Deskripsi</th><th>Hak Akses Modul</th><th class="role-akses-action-head">Aksi</th></tr></thead>
               <tbody>
                 @foreach($semuaSatuan as $s)
                 @php($permissionFormId = 'permissionForm' . $s->id)
@@ -63,7 +69,7 @@ jobs:
                       </div>
                     </form>
                   </td>
-                  <td style="text-align:center;"><button class="btn btn-primary btn-sm role-akses-save" type="submit" form="{{ $permissionFormId }}">Simpan</button></td>
+                  <td class="role-akses-action"><button class="btn btn-primary btn-sm role-akses-save" type="submit" form="{{ $permissionFormId }}">Simpan</button></td>
                 </tr>
                 @endforeach
               </tbody>
@@ -71,7 +77,34 @@ jobs:
           </div>
         </div>
         <style>
-          .role-akses-table-panel{overflow:hidden}.role-akses-table-wrap{overflow-x:auto}.role-akses-table{min-width:980px}.role-akses-table th{white-space:nowrap}.role-akses-name{font-weight:700;color:var(--text);margin-bottom:7px;line-height:1.3}.role-akses-code{font-size:9.5px;padding:5px 9px}.role-akses-description{color:var(--text-muted);line-height:1.55;max-width:280px}.role-akses-checks{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}.role-akses-check{display:inline-flex;align-items:center;gap:7px;color:var(--text-muted);font-size:12px;line-height:1.4;cursor:pointer;white-space:nowrap}.role-akses-check input{margin:0;accent-color:var(--gold-bright)}.role-akses-check:hover{color:var(--text)}.role-akses-save{white-space:nowrap}@media(max-width:980px){.role-akses-table{min-width:900px}.role-akses-checks{max-width:470px}}
+          .role-akses-table-panel{overflow:hidden}
+          .role-akses-table-wrap{overflow-x:hidden;width:100%}
+          .role-akses-table{width:100%;min-width:0;table-layout:fixed}
+          .role-akses-table .role-col{width:20%}
+          .role-akses-table .desc-col{width:27%}
+          .role-akses-table .access-col{width:41%}
+          .role-akses-table .action-col{width:12%}
+          .role-akses-table th,.role-akses-table td{box-sizing:border-box}
+          .role-akses-table th{white-space:nowrap}
+          .role-akses-name{font-weight:700;color:var(--text);margin-bottom:7px;line-height:1.3;overflow-wrap:anywhere}
+          .role-akses-code{font-size:9.5px;padding:5px 9px}
+          .role-akses-description{color:var(--text-muted);line-height:1.55;overflow-wrap:anywhere}
+          .role-akses-checks{display:flex;flex-direction:column;align-items:flex-start;gap:9px}
+          .role-akses-check{display:flex;align-items:flex-start;gap:7px;width:100%;color:var(--text-muted);font-size:12px;line-height:1.4;cursor:pointer;white-space:normal}
+          .role-akses-check input{margin:2px 0 0;flex:0 0 auto;accent-color:var(--gold-bright)}
+          .role-akses-check span{overflow-wrap:anywhere}
+          .role-akses-check:hover{color:var(--text)}
+          .role-akses-action-head,.role-akses-action{text-align:center!important;vertical-align:middle}
+          .role-akses-save{white-space:nowrap;padding-left:9px;padding-right:9px}
+          @media(max-width:760px){
+            .role-akses-table{font-size:11px}
+            .role-akses-table .role-col{width:21%}
+            .role-akses-table .desc-col{width:25%}
+            .role-akses-table .access-col{width:42%}
+            .role-akses-table .action-col{width:12%}
+            .role-akses-table th,.role-akses-table td{padding:9px 7px}
+            .role-akses-save{font-size:10px;padding-left:7px;padding-right:7px}
+          }
         </style>
       </section>
 
@@ -82,15 +115,15 @@ jobs:
 
       - name: Verify Blade markers and remove helper files
         run: |
-          grep -q 'role-akses-table' resources/views/siberad/dashboards/admin.blade.php
-          grep -q 'data-tab-panel="role-akses"' resources/views/siberad/dashboards/admin.blade.php
-          rm -f .github/workflows/role-akses-refactor-v2.yml .github/role-akses-refactor-trigger.txt
+          grep -q 'role-akses-table{width:100%;min-width:0;table-layout:fixed}' resources/views/siberad/dashboards/admin.blade.php
+          grep -q 'role-akses-checks{display:flex;flex-direction:column' resources/views/siberad/dashboards/admin.blade.php
+          rm -f .github/workflows/role-akses-refactor-v2.yml .github/workflows/role-akses-layout-fix.yml
 
       - name: Commit scoped change
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add resources/views/siberad/dashboards/admin.blade.php .github/workflows/role-akses-refactor-v2.yml .github/role-akses-refactor-trigger.txt
+          git add resources/views/siberad/dashboards/admin.blade.php .github/workflows/role-akses-refactor-v2.yml .github/workflows/role-akses-layout-fix.yml
           git diff --cached --check
-          git commit -m "refactor: rapikan role dan hak akses menjadi tabel terpadu"
+          git commit -m "fix: rapikan tabel role dan hak akses tanpa scroll horizontal"
           git push
