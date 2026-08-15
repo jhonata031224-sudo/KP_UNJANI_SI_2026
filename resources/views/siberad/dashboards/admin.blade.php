@@ -844,10 +844,11 @@
               <input type="text" class="table-search" data-table-search="tblPengguna" placeholder="Cari nama atau satuan...">
             </div>
             <select class="table-filter" data-table-filter="tblPengguna">
-              <option value="">Semua Satuan</option>
-              @foreach($semuaSatuan as $s)
-              <option value="{{ $s->nama }}">{{ $s->nama }}</option>
-              @endforeach
+              <option value="">Semua Kategori</option>
+              <option value="Admin">Admin</option>
+              <option value="Pimpinan">Pimpinan</option>
+              <option value="Direktorat">Direktorat</option>
+              <option value="Satuan">Satuan</option>
             </select>
             <span class="table-filter-count" data-table-count="tblPengguna"></span>
           </div>
@@ -856,7 +857,15 @@
               <thead><tr><th>Nama</th><th>Username</th><th>Email</th><th>Satuan</th><th>Aksi</th></tr></thead>
               <tbody>
                 @foreach($semuaPengguna as $p)
-                <tr data-filter-value="{{ $p->satuan->nama ?? '' }}" data-search-value="{{ strtolower($p->name.' '.($p->satuan->nama ?? '').' '.($p->satuan->kode ?? '')) }}">
+                @php
+                  $kategoriLabel = match ($p->satuan->kategori ?? null) {
+                    \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
+                    \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
+                    \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+                    default => 'Satuan',
+                  };
+                @endphp
+                <tr data-filter-value="{{ $kategoriLabel }}" data-search-value="{{ strtolower($p->name.' '.($p->satuan->nama ?? '').' '.($p->satuan->kode ?? '')) }}">
                   <td>{{ $p->name }}</td>
                   <td><span class="badge badge-plain">{{ $p->username }}</span></td>
                   <td style="color:var(--text-muted);">{{ $p->email ?: '-' }}</td>
@@ -1060,10 +1069,10 @@
             </div>
             <select class="table-filter" data-table-filter="tblSatuan">
               <option value="">Semua Kategori</option>
-              <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
-              <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
-              <option value="{{ \App\Models\Satuan::KATEGORI_PIMPINAN }}">Pimpinan</option>
-              <option value="{{ \App\Models\Satuan::KATEGORI_ADMIN }}">Admin</option>
+              <option value="Admin">Admin</option>
+              <option value="Pimpinan">Pimpinan</option>
+              <option value="Direktorat">Direktorat</option>
+              <option value="Satuan">Satuan</option>
             </select>
             <span class="table-filter-count" data-table-count="tblSatuan"></span>
           </div>
@@ -1072,7 +1081,15 @@
               <thead><tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Jumlah Pengguna</th><th>Aksi</th></tr></thead>
               <tbody>
                 @forelse($semuaSatuan as $s)
-                <tr data-filter-value="{{ $s->kategori }}">
+                @php
+                  $kategoriFilterLabel = match ($s->kategori) {
+                    \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
+                    \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
+                    \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+                    default => 'Satuan',
+                  };
+                @endphp
+                <tr data-filter-value="{{ $kategoriFilterLabel }}">
                   <td><span class="badge">{{ $s->kode }}</span></td>
                   <td>{{ $s->nama }}</td>
                   <td style="color:var(--text-muted);text-transform:capitalize;">{{ $s->kategori }}</td>

@@ -27,8 +27,29 @@ class DashboardController
 
     private function admin($user, $satuan): View
     {
-        $semuaPengguna = User::with('satuan')->orderBy('name')->get();
-        $semuaSatuan = Satuan::withCount('users')->orderBy('urutan')->get();
+        // Urutan tampil: Admin -> Pimpinan -> Direktorat -> Satuan (bukan
+        // urutan alfabet/urutan input), sesuai jenjang role di organisasi.
+        $prioritasKategori = [
+            Satuan::KATEGORI_ADMIN => 1,
+            Satuan::KATEGORI_PIMPINAN => 2,
+            Satuan::KATEGORI_DIREKTORAT => 3,
+            Satuan::KATEGORI_SATLAK => 4,
+        ];
+        $semuaPengguna = User::with('satuan')->get()
+            ->sortBy(fn ($p) => sprintf('%d-%s', $prioritasKategori[$p->satuan->kategori ?? ''] ?? 9, $p->name))
+            ->values();
+        // Di dalam kategori yang sama, satuan yang paling baru ditambahkan
+        // tampil paling atas (id dipakai sebagai penentu akhir kalau
+        // created_at-nya kebetulan sama persis, misal data hasil seeding).
+        $semuaSatuan = Satuan::withCount('users')->get()
+            ->sort(function ($a, $b) use ($prioritasKategori) {
+                $prioA = $prioritasKategori[$a->kategori] ?? 9;
+                $prioB = $prioritasKategori[$b->kategori] ?? 9;
+                if ($prioA !== $prioB) return $prioA <=> $prioB;
+                if ($a->created_at != $b->created_at) return $b->created_at <=> $a->created_at;
+                return $b->id <=> $a->id;
+            })
+            ->values();
         $permintaanResetPassword = PermintaanResetPassword::with(['user.satuan', 'diprosesOleh'])->latest()->get();
         $labelKategori = [Satuan::KATEGORI_SATLAK => 'Satlak', Satuan::KATEGORI_DIREKTORAT => 'Direktorat', Satuan::KATEGORI_PIMPINAN => 'Pimpinan', Satuan::KATEGORI_ADMIN => 'Admin'];
         $distribusiPenggunaKategori = $semuaSatuan->groupBy('kategori')->map(fn ($group, $kategori) => ['kategori' => $labelKategori[$kategori] ?? ucfirst($kategori), 'jumlah' => $group->sum('users_count')])->values();
