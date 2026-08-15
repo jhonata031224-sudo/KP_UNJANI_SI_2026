@@ -62,9 +62,11 @@ class InjectDashboardUi
 
             $landingPreviewAsset = asset('js/siberad-landing-preview.js');
             $landingPreviewInjection = '<script src="'.e($landingPreviewAsset).'"></script><script>(function(){function syncPreviewOverflow(){var p=document.getElementById("lpPreview");if(!p)return;var z=p.querySelector(".lp-preview-zoom");if(!z)return;var label=z.querySelector("[data-zoom-label]");var isFit=!label||label.textContent.trim()==="Fit";p.classList.toggle("lp-preview-zoomed",!isFit);}document.addEventListener("click",function(e){if(e.target.closest("[data-zoom-action]")){setTimeout(syncPreviewOverflow,0);}},true);setTimeout(syncPreviewOverflow,200);})();</script>';
+            $roleAccessAsset = asset('js/role-access-layout.js');
+            $roleAccessInjection = '<script src="'.e($roleAccessAsset).'"></script>';
             $pos = strripos($html, '</body>');
             if ($pos !== false) {
-                $html = substr($html, 0, $pos).$landingPreviewInjection.$fixedHeaderInjection.substr($html, $pos);
+                $html = substr($html, 0, $pos).$landingPreviewInjection.$roleAccessInjection.$fixedHeaderInjection.substr($html, $pos);
                 $response->setContent($html);
             }
 
