@@ -31,10 +31,6 @@ class AuthenticatedSessionController extends Controller
         $captchaBenar = hash_equals((string) $request->session()->get('captcha_code'), $credentials['captcha']);
         $request->session()->forget('captcha_code');
 
-        // Kredensial dicek pakai validate() (bukan attempt()) supaya tidak
-        // langsung login kalau ternyata captcha-nya salah. Dua-duanya dicek
-        // independen supaya kalau kredensial DAN captcha sama-sama salah,
-        // pesan errornya muncul untuk keduanya — bukan cuma yang tercek duluan.
         $kredensialBenar = Auth::validate([
             'username' => $credentials['username'],
             'password' => $credentials['password'],
@@ -52,9 +48,6 @@ class AuthenticatedSessionController extends Controller
         }
 
         // Admin hanya boleh memiliki satu sesi aktif pada satu waktu.
-        // Sesi yang sudah melewati lifetime Laravel tidak dianggap aktif,
-        // sehingga login tidak terblokir hanya karena record sesi lama belum
-        // sempat dibersihkan oleh garbage collection.
         $user = User::with('satuan')->where('username', $credentials['username'])->first();
         $isAdmin = strtoupper(trim((string) ($user?->satuan?->kode))) === 'ADMIN';
 
@@ -68,7 +61,7 @@ class AuthenticatedSessionController extends Controller
 
             if ($sudahLoginDiPerangkatLain) {
                 throw ValidationException::withMessages([
-                    'username' => 'Akun Admin sedang aktif di perangkat atau browser lain. Silakan logout dari perangkat tersebut terlebih dahulu sebelum login di perangkat ini.',
+                    'username' => 'Akun Admin sedang aktif di perangkat lain. Silakan logout terlebih dahulu.',
                 ]);
             }
         }
