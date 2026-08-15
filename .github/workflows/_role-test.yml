@@ -1,0 +1,10 @@
+name: Role Refactor Test
+on:
+  push:
+    branches:
+      - refactor-fokus-laporan
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "temporary workflow ok"
