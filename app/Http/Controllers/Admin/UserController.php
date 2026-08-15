@@ -8,7 +8,6 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -62,20 +61,6 @@ class UserController extends Controller
         ActivityLog::catat('user.delete', "Menghapus akun pengguna \"{$nama}\".");
 
         return back()->with('status', "Akun \"{$nama}\" berhasil dihapus.");
-    }
-
-    /**
-     * Reset password pengguna ke kata sandi acak, ditampilkan sekali ke
-     * Admin untuk diteruskan ke pemilik akun.
-     */
-    public function resetPassword(Request $request, User $user): RedirectResponse
-    {
-        $baru = Str::password(10, symbols: false);
-        $user->update(['password' => Hash::make($baru)]);
-
-        ActivityLog::catat('user.reset-password', "Reset password akun \"{$user->name}\" ({$user->username}).");
-
-        return back()->with('status', "Password \"{$user->name}\" berhasil direset. Password baru: {$baru}");
     }
 
     private function validated(Request $request, ?User $user = null): array

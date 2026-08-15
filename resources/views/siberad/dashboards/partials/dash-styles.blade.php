@@ -336,6 +336,7 @@
   .panel::before{content:"";position:absolute;top:0;left:14px;right:14px;height:1px;background:linear-gradient(90deg, transparent, var(--border-strong), transparent);}
   .panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap;}
   .panel-head h3{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:.01em;}
+  .panel-head h2{font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:.01em;}
   .panel-head p{font-size:12px;color:var(--text-muted);margin-top:2px;}
 
   .tbl-wrap{overflow-x:auto;}

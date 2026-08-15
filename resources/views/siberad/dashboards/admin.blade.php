@@ -93,17 +93,23 @@
   .user-modal-card .form-field{min-width:0;}
   .user-modal-card .form-field select,.user-modal-card .form-field input{min-width:0;width:100%;box-sizing:border-box;}
 
-  /* ===== tombol aksi berikon di tabel Daftar Pengguna ===== */
-  .icon-action-btn{
-    display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
-    width:32px;height:32px;padding:0;border-radius:8px;
-    border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;
-    transition:border-color .15s ease,color .15s ease,background .15s ease;
+  /* ===== tombol aksi tabel Daftar Pengguna & Daftar Satuan (gaya sama
+     seperti tombol Edit/Batal di Permintaan Laporan Pimpinan) ===== */
+  .table-action-btn{
+    border:1px solid var(--border-soft);background:var(--panel);color:var(--text);
+    border-radius:8px;padding:7px 10px;font-family:var(--body);font-size:10px;font-weight:700;
+    text-transform:none;letter-spacing:normal;cursor:pointer;
+    transition:border-color .15s ease,background .15s ease,color .15s ease,filter .15s ease,transform .15s ease;
   }
-  .icon-action-btn svg{width:15px;height:15px;}
-  .icon-action-btn:hover{border-color:var(--gold);color:var(--gold-bright);background:var(--panel-alt);}
-  .icon-action-btn.danger{color:var(--red);border-color:rgba(200,59,59,.32);}
-  .icon-action-btn.danger:hover{background:rgba(200,59,59,.1);border-color:var(--red);color:var(--red);}
+  .table-action-btn:hover{border-color:var(--gold-bright);background:var(--panel-alt);}
+  .table-action-btn:active{transform:scale(.96);}
+  .table-action-btn.edit{background:color-mix(in srgb, var(--success-bright) 10%, transparent);border-color:color-mix(in srgb, var(--success-bright) 35%, transparent);color:var(--success-bright);}
+  .table-action-btn.edit:hover{background:var(--success-bright);color:#fff;border-color:var(--success-bright);filter:brightness(1.08);}
+  .table-action-btn.danger{background:color-mix(in srgb, var(--red) 10%, transparent);border-color:color-mix(in srgb, var(--red) 35%, transparent);color:var(--red);}
+  .table-action-btn.danger:hover{background:var(--red);color:#fff;border-color:var(--red);filter:brightness(1.08);}
+  #tblPengguna th:last-child,#tblPengguna td:last-child,
+  #tblSatuan th:last-child,#tblSatuan td:last-child{text-align:center;}
+  #tblPengguna .btn-row,#tblSatuan .btn-row{justify-content:center;}
 
   .side-nav-group{margin:0}.side-nav-group-title{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;margin:2px 0;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--text-muted);font-family:var(--body);font-size:13.5px;font-weight:500;cursor:pointer;text-align:left;box-sizing:border-box;transition:background .15s ease,color .15s ease}.side-nav-group-title:hover{background:var(--hover-tint);color:var(--text)}.side-nav-group.open .side-nav-group-title{color:var(--text)}.side-nav-group-title .side-text{flex:1}.side-nav-group-title .chevron{margin-left:auto;width:15px;height:15px;flex-shrink:0;opacity:.6;transition:transform .25s cubic-bezier(.4,0,.2,1),opacity .2s ease}.side-nav-group.open .chevron{transform:rotate(180deg);opacity:1}.side-subnav{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;overflow:hidden}.side-subnav>div{min-height:0;padding:3px 0;margin-left:18px;border-left:1px solid var(--border-soft)}.side-nav-group.open .side-subnav{grid-template-rows:1fr;opacity:1}.side-sub-link{position:relative;display:flex;align-items:center;gap:10px;padding:9px 12px 9px 17px;border-radius:0 9px 9px 0;color:var(--text-muted);font-family:var(--body);font-size:13px;font-weight:500;text-decoration:none;margin:1px 0;box-sizing:border-box;transition:background .15s ease,color .15s ease}.side-sub-link:hover{background:var(--hover-tint);color:var(--text)}.side-sub-link .sub-dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5;flex:0 0 auto;transition:opacity .15s ease,background .15s ease,box-shadow .15s ease}.side-sub-link.active{background:var(--gold-dim);color:var(--gold-bright);font-weight:600}.side-sub-link.active:before{content:"";position:absolute;left:-1px;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--gold-bright)}.side-sub-link.active .sub-dot{background:var(--gold-bright);opacity:1;box-shadow:0 0 0 3px rgba(201,122,0,.15)}.side-subnav-label{display:none}
   .sidebar.collapsed .side-subnav{display:none}.sidebar.collapsed .side-nav-group.open .side-subnav{display:block;position:fixed;min-width:216px;background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);padding:8px;z-index:100020}.sidebar.collapsed .side-subnav>div{margin-left:0;border-left:none;padding:0}.sidebar.collapsed .side-subnav-label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);padding:4px 10px 8px}.sidebar.collapsed .side-sub-link{padding:9px 10px;border-radius:8px}.sidebar.collapsed .side-nav-group.has-active-child .side-nav-group-title{color:var(--gold-bright);background:var(--gold-dim)}
@@ -787,11 +793,6 @@
 
       {{-- ===== KELOLA PENGGUNA ===== --}}
       <section class="tab-panel" data-tab-panel="pengguna">
-        <div class="section-head">
-          <h2>Kelola Pengguna</h2>
-          <p>Seluruh akun yang terdaftar, satu akun per satuan.</p>
-        </div>
-
         @if (session('status'))
           <div class="notice">{{ session('status') }}</div>
         @endif
@@ -804,7 +805,7 @@
 
         <div class="panel">
           <div class="panel-head">
-            <div><h3>Daftar Pengguna</h3><p>Klik "Ubah" untuk mengedit satuan/jabatan/password.</p></div>
+            <div><h2>Kelola Pengguna</h2><p>Seluruh akun yang terdaftar, satu akun per satuan. Klik "Ubah" untuk mengedit satuan/jabatan/password.</p></div>
             <button class="btn btn-primary btn-sm" type="button" id="tambahPenggunaOpen">+ Tambah Pengguna</button>
           </div>
           <div class="table-toolbar">
@@ -832,27 +833,16 @@
                   <td>{{ $p->satuan->nama ?? '-' }}</td>
                   <td>
                     <div class="btn-row">
-                      <form method="POST" action="{{ route('admin.users.reset-password', $p) }}" onsubmit="return confirm('Reset password akun {{ $p->name }}?');" style="display:inline;">
-                        @csrf
-                        <button class="icon-action-btn" type="submit" title="Reset Password" aria-label="Reset Password {{ $p->name }}">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="3.2"></circle><path d="M10.2 12.8 19 4"></path><path d="M15.5 8.3 18 10.8"></path><path d="M18.3 5.5 20.8 8"></path></svg>
-                        </button>
-                      </form>
-                      <button class="icon-action-btn" type="button" onclick="bukaUbahPengguna(this)"
+                      <button class="table-action-btn edit" type="button" onclick="bukaUbahPengguna(this)"
                         data-action="{{ route('admin.users.update', $p) }}"
                         data-name="{{ $p->name }}"
                         data-username="{{ $p->username }}"
                         data-email="{{ $p->email }}"
-                        data-satuan-id="{{ $p->satuan_id }}"
-                        title="Ubah" aria-label="Ubah {{ $p->name }}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-                      </button>
+                        data-satuan-id="{{ $p->satuan_id }}">Ubah</button>
                       @if($p->id !== $user->id)
                       <form method="POST" action="{{ route('admin.users.destroy', $p) }}" onsubmit="return confirm('Hapus akun {{ $p->name }}?');" style="display:inline;">
                         @csrf @method('DELETE')
-                        <button class="icon-action-btn danger" type="submit" title="Hapus" aria-label="Hapus {{ $p->name }}">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
-                        </button>
+                        <button class="table-action-btn danger" type="submit">Hapus</button>
                       </form>
                       @endif
                     </div>
@@ -905,11 +895,6 @@
 
       {{-- ===== MANAJEMEN SATUAN ===== --}}
       <section class="tab-panel" data-tab-panel="satlak">
-        <div class="section-head">
-          <h2>Manajemen Satuan</h2>
-          <p>Kelola daftar satuan/Satlak yang terdaftar di SIBERAD.</p>
-        </div>
-
         @if (session('status'))
           <div class="notice">{{ session('status') }}</div>
         @endif
@@ -919,7 +904,7 @@
 
         <div class="panel">
           <div class="panel-head">
-            <div><h3>Daftar Satuan</h3><p>Satuan yang masih punya pengguna tidak bisa dihapus.</p></div>
+            <div><h2>Manajemen Satuan</h2><p>Kelola daftar satuan/Satlak yang terdaftar di SIBERAD. Satuan yang masih punya pengguna tidak bisa dihapus.</p></div>
             <button class="btn btn-primary btn-sm" type="button" id="tambahSatuanOpen">+ Tambah Satuan</button>
           </div>
           <div class="table-toolbar">
@@ -948,7 +933,7 @@
                   <td>{{ $s->users_count }}</td>
                   <td>
                     <div class="btn-row">
-                      <button class="btn btn-sm" type="button" onclick="bukaUbahSatuan(this)"
+                      <button class="table-action-btn edit" type="button" onclick="bukaUbahSatuan(this)"
                         data-action="{{ route('admin.satuan.update', $s) }}"
                         data-kode="{{ $s->kode }}"
                         data-nama="{{ $s->nama }}"
@@ -957,7 +942,7 @@
                         data-deskripsi="{{ $s->deskripsi }}">Ubah</button>
                       <form method="POST" action="{{ route('admin.satuan.destroy', $s) }}" onsubmit="return confirm('Hapus satuan {{ $s->nama }}?');" style="display:inline;">
                         @csrf @method('DELETE')
-                        <button class="btn btn-sm btn-ghost-red" type="submit">Hapus</button>
+                        <button class="table-action-btn danger" type="submit">Hapus</button>
                       </form>
                     </div>
                   </td>
@@ -1010,7 +995,7 @@
 
       {{-- ===== ROLE & HAK AKSES ===== --}}
       <section class="tab-panel" data-tab-panel="role-akses">
-        <div class="section-head">
+        <div class="section-head panel">
           <h2>Role &amp; Hak Akses</h2>
           <p>Setiap satuan berperan sebagai role login. Atur modul apa saja yang boleh diakses tiap satuan.</p>
         </div>
@@ -1040,11 +1025,8 @@
 
       {{-- ===== LOG AKTIVITAS ===== --}}
       <section class="tab-panel" data-tab-panel="log-aktivitas">
-        <div class="section-head">
-          <h2>Monitoring Aktivitas Sistem</h2>
-          <p>Rekam jejak login, logout, dan seluruh aksi kelola sistem oleh Admin.</p>
-        </div>
         <div class="panel">
+          <div class="panel-head"><div><h2>Monitoring Aktivitas Sistem</h2><p>Rekam jejak login, logout, dan seluruh aksi kelola sistem oleh Admin.</p></div></div>
           <div class="table-toolbar">
             <div class="table-search-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
@@ -1075,7 +1057,7 @@
 
       {{-- ===== BACKUP DATABASE ===== --}}
       <section class="tab-panel" data-tab-panel="backup">
-        <div class="section-head">
+        <div class="section-head panel">
           <h2>Backup Database</h2>
           <p>Buat salinan database sewaktu-waktu dan unduh untuk disimpan di luar server.</p>
         </div>
@@ -1119,12 +1101,8 @@
 
       {{-- ===== LAPORAN & EXPORT ===== --}}
       <section class="tab-panel" data-tab-panel="laporan-admin">
-        <div class="section-head">
-          <h2>Laporan Pengguna &amp; Aktivitas</h2>
-          <p>Rekap data pengguna dan aktivitas sistem, siap diekspor.</p>
-        </div>
         <div class="panel">
-          <div class="panel-head"><div><h3>Export</h3><p>Unduh dalam format CSV (bisa dibuka Excel) atau cetak sebagai PDF.</p></div></div>
+          <div class="panel-head"><div><h2>Laporan Pengguna &amp; Aktivitas</h2><p>Rekap data pengguna dan aktivitas sistem, siap diekspor. Unduh dalam format CSV (bisa dibuka Excel) atau cetak sebagai PDF.</p></div></div>
           <div class="btn-row" style="padding:18px 22px;flex-wrap:wrap;">
             <a class="btn btn-primary btn-sm" href="{{ route('admin.laporan.export-pengguna') }}">Export Pengguna (Excel/CSV)</a>
             <a class="btn btn-primary btn-sm" href="{{ route('admin.laporan.export-aktivitas') }}">Export Aktivitas (Excel/CSV)</a>
@@ -1137,7 +1115,7 @@
 
       {{-- ===== PENGATURAN UMUM ===== --}}
       <section class="tab-panel" data-tab-panel="pengaturan-umum">
-        <div class="section-head">
+        <div class="section-head panel">
           <h2>Pengaturan Umum</h2>
           <p>Konfigurasi umum aplikasi SIBERAD.</p>
         </div>
@@ -1560,11 +1538,8 @@
 
       {{-- ===== PERMINTAAN RESET PASSWORD ===== --}}
       <section class="tab-panel" data-tab-panel="reset-password">
-        <div class="section-head">
-          <h2>Permintaan Reset Password</h2>
-          <p>Permintaan ganti kata sandi yang dikirim pengguna lewat menu "Pengaturan Akun".</p>
-        </div>
         <div class="panel">
+          <div class="panel-head"><div><h2>Permintaan Reset Password</h2><p>Permintaan ganti kata sandi yang dikirim pengguna lewat menu "Pengaturan Akun".</p></div></div>
           <div class="table-toolbar">
             <div class="table-search-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
@@ -1608,7 +1583,7 @@
 
       {{-- ===== REKAP LAPORAN LINTAS SATLAK ===== --}}
       <section class="tab-panel" data-tab-panel="rekap-laporan">
-        <div class="section-head">
+        <div class="section-head panel">
           <h2>Rekap Laporan</h2>
           <p>Ringkasan jumlah &amp; status laporan tiap satuan dalam satu tampilan.</p>
         </div>
@@ -1662,16 +1637,12 @@
 
       {{-- ===== SESI LOGIN AKTIF ===== --}}
       <section class="tab-panel" data-tab-panel="sesi-aktif">
-        <div class="section-head">
-          <h2>Sesi Login Aktif</h2>
-          <p>Pantau perangkat/browser yang sedang login, dan paksa logout kalau perlu.</p>
-        </div>
-
         @if (session('status'))
           <div class="notice">{{ session('status') }}</div>
         @endif
 
         <div class="panel">
+          <div class="panel-head"><div><h2>Sesi Login Aktif</h2><p>Pantau perangkat/browser yang sedang login, dan paksa logout kalau perlu.</p></div></div>
           <div class="tbl-wrap">
             <table class="dtbl">
               <thead><tr><th>Pengguna</th><th>IP Address</th><th>Perangkat / Browser</th><th>Terakhir Aktif</th><th>Aksi</th></tr></thead>
