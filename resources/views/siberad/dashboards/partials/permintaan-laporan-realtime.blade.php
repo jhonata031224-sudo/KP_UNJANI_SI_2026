@@ -1,7 +1,7 @@
 <style>
 #permintaanLaporanDetailView{display:none;position:fixed;inset:0;z-index:1200;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;background:rgba(15,23,42,.28);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;transition:opacity .22s ease;}
 #permintaanLaporanDetailView.is-visible{opacity:1;}
-#permintaanLaporanDetailView .permintaan-detail-dialog{width:min(900px,100%);max-height:min(86vh,760px);overflow:auto;background:var(--card-bg,#fff);border:1px solid rgba(148,163,184,.22);border-radius:18px;box-shadow:0 24px 70px rgba(15,23,42,.24);transform:translateY(10px) scale(.985);transition:transform .22s ease;}
+#permintaanLaporanDetailView .permintaan-detail-dialog{width:min(760px,100%);max-height:min(86vh,760px);overflow:auto;background:var(--card-bg,#fff);border:1px solid rgba(148,163,184,.22);border-radius:18px;box-shadow:0 24px 70px rgba(15,23,42,.24);transform:translateY(10px) scale(.985);transition:transform .22s ease;}
 #permintaanLaporanDetailView.is-visible .permintaan-detail-dialog{transform:translateY(0) scale(1);}
 #permintaan-laporan .report-card.is-detail-leaving{opacity:0;transform:translateY(-6px);transition:opacity .18s ease,transform .18s ease;}
 @media (max-width:700px){#permintaanLaporanDetailView{padding:14px;}#permintaanLaporanDetailView .permintaan-detail-dialog{max-height:90vh;border-radius:16px;}}
