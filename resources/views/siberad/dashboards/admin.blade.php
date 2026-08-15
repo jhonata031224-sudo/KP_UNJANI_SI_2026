@@ -78,11 +78,11 @@
   .user-modal-head h3{margin:0;font-family:var(--display);font-size:18px;color:var(--text);}
   .user-modal-head p{margin:5px 0 0;font-size:12px;color:var(--text-muted);}
   .user-modal-close{
-    flex-shrink:0;width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;
     border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;
-    transition:border-color .15s ease,color .15s ease;
+    transition:border-color .2s ease,color .2s ease,transform .2s ease;
   }
-  .user-modal-close:hover{border-color:var(--gold);color:var(--text);}
+  .user-modal-close:hover{border-color:var(--red);color:var(--red);transform:rotate(90deg);}
   .user-modal-actions{grid-column:1/-1;display:flex;flex-direction:row;align-items:center;justify-content:flex-end;gap:10px;margin-top:4px;}
   @media(max-width:640px){.user-modal-actions{flex-direction:column-reverse;align-items:stretch;}}
   @media(max-width:640px){.user-modal-card{padding:20px;}}

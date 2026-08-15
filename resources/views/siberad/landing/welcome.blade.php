@@ -319,11 +319,13 @@
   }
   .login-overlay.open .login-card{transform:translateY(0) scale(1);}
   .login-close{
-    position:absolute;top:14px;right:16px;
-    background:none;border:none;font-size:22px;line-height:1;
-    color:var(--text-muted);cursor:pointer;
+    position:absolute;top:14px;right:16px;flex-shrink:0;
+    width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;
+    transition:border-color .2s ease,color .2s ease,transform .2s ease;
   }
-  .login-close:hover{color:var(--gold-bright);}
+  .login-close:hover{border-color:var(--red);color:var(--red);transform:rotate(90deg);}
+  .login-close svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;}
   .login-crest{width:84px;height:84px;border-radius:50%;overflow:hidden;border:1px solid var(--border-strong);margin:0 auto 16px;}
   .login-crest img{width:100%;height:100%;object-fit:cover;}
   .login-title{font-family:var(--display);font-size:26px;font-weight:700;margin-top:6px;letter-spacing:.01em;}
@@ -770,7 +772,7 @@
   <!-- ================= LOGIN MODAL ================= -->
   <div class="login-overlay" id="loginOverlay">
     <div class="login-card hud-panel" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
-      <button class="login-close" id="loginClose" type="button" aria-label="Tutup">&times;</button>
+      <button class="login-close" id="loginClose" type="button" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
       <div class="login-crest"><img src="{{ asset('images/logo-pussiberad.jpg') }}" alt="Lambang Pussiberad"></div>
       <h3 id="loginTitle" class="login-title">Login Sistem</h3>
       <p class="login-sub">Masuk menggunakan akun personel yang terdaftar.</p>
