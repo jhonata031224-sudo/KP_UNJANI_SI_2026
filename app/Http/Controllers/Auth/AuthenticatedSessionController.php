@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Satuan;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
@@ -47,6 +49,25 @@ class AuthenticatedSessionController extends Controller
         }
         if ($errors) {
             throw ValidationException::withMessages($errors);
+        }
+
+        // Satu akun cuma boleh dipakai di satu device dalam satu waktu.
+        // Baris sesi lama (driver database) baru dihapus otomatis kalau
+        // sudah lewat SESSION_LIFETIME (bukan seketika pas browser
+        // ditutup/logout lupa diklik), jadi itu juga yang jadi patokan
+        // "masih aktif" di sini — biar konsisten sama apa yang ditampilkan
+        // di tabel Sesi Login Aktif punya Admin.
+        $user = User::where('username', $credentials['username'])->first();
+        $batasAktif = now()->subMinutes((int) config('session.lifetime'))->timestamp;
+        $sesiMasihAktif = DB::table('sessions')
+            ->where('user_id', $user->id)
+            ->where('last_activity', '>=', $batasAktif)
+            ->exists();
+
+        if ($sesiMasihAktif) {
+            throw ValidationException::withMessages([
+                'username' => 'Akun ini sedang digunakan di perangkat lain. Logout dari perangkat itu dulu, atau hubungi Admin untuk paksa logout.',
+            ]);
         }
 
         Auth::attempt([
