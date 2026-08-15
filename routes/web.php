@@ -30,13 +30,10 @@ use App\Http\Controllers\PostinganController;
 use App\Http\Controllers\ProfilFotoController;
 use App\Http\Controllers\ProyekRisetController;
 use App\Models\Pengaturan;
-use App\Models\Satuan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    $satuans = Satuan::orderBy('urutan')->get()->groupBy('kategori');
     return view('siberad.landing.welcome', [
-        'satuans' => $satuans,
         'pengaturan' => Pengaturan::current(),
     ]);
 });

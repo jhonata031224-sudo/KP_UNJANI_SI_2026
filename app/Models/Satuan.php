@@ -16,7 +16,6 @@ class Satuan extends Model
         'kategori',
         'deskripsi',
         'permissions',
-        'urutan',
     ];
 
     protected $casts = [
@@ -43,6 +42,22 @@ class Satuan extends Model
     public const KATEGORI_DIREKTORAT = 'direktorat';
     public const KATEGORI_PIMPINAN = 'pimpinan';
     public const KATEGORI_ADMIN = 'admin';
+
+    /**
+     * Urutan tampil kategori secara umum (Admin -> Pimpinan -> Direktorat ->
+     * Satlak), dipakai di seluruh tempat yang menampilkan daftar satuan
+     * gabungan lintas kategori -- menggantikan field "urutan" manual yang
+     * sudah dihapus.
+     */
+    public static function prioritasKategori(): array
+    {
+        return [
+            self::KATEGORI_ADMIN => 1,
+            self::KATEGORI_PIMPINAN => 2,
+            self::KATEGORI_DIREKTORAT => 3,
+            self::KATEGORI_SATLAK => 4,
+        ];
+    }
 
     public function users(): HasMany
     {

@@ -29,12 +29,7 @@ class DashboardController
     {
         // Urutan tampil: Admin -> Pimpinan -> Direktorat -> Satuan (bukan
         // urutan alfabet/urutan input), sesuai jenjang role di organisasi.
-        $prioritasKategori = [
-            Satuan::KATEGORI_ADMIN => 1,
-            Satuan::KATEGORI_PIMPINAN => 2,
-            Satuan::KATEGORI_DIREKTORAT => 3,
-            Satuan::KATEGORI_SATLAK => 4,
-        ];
+        $prioritasKategori = Satuan::prioritasKategori();
         $semuaPengguna = User::with('satuan')->get()
             ->sortBy(fn ($p) => sprintf('%d-%s', $prioritasKategori[$p->satuan->kategori ?? ''] ?? 9, $p->name))
             ->values();
@@ -52,7 +47,15 @@ class DashboardController
             ->values();
         $permintaanResetPassword = PermintaanResetPassword::with(['user.satuan', 'diprosesOleh'])->latest()->get();
         $labelKategori = [Satuan::KATEGORI_SATLAK => 'Satlak', Satuan::KATEGORI_DIREKTORAT => 'Direktorat', Satuan::KATEGORI_PIMPINAN => 'Pimpinan', Satuan::KATEGORI_ADMIN => 'Admin'];
-        $distribusiPenggunaKategori = $semuaSatuan->groupBy('kategori')->map(fn ($group, $kategori) => ['kategori' => $labelKategori[$kategori] ?? ucfirst($kategori), 'jumlah' => $group->sum('users_count')])->values();
+        // Urutan grup di sini SENGAJA dipastikan lewat prioritasKategori
+        // (bukan ikut urutan asli $semuaSatuan begitu saja), soalnya grafik
+        // "Pengguna per Kategori Satuan" pasangin warna berdasarkan posisi --
+        // kalau urutannya berubah-ubah, warnanya ikut kacau kepasang ke
+        // kategori yang salah.
+        $distribusiPenggunaKategori = $semuaSatuan->groupBy('kategori')
+            ->sortBy(fn ($group, $kategori) => $prioritasKategori[$kategori] ?? 9)
+            ->map(fn ($group, $kategori) => ['kategori' => $labelKategori[$kategori] ?? ucfirst($kategori), 'jumlah' => $group->sum('users_count')])
+            ->values();
         $statusLaporanSistem = [
             'menunggu' => Laporan::where('status', 'Menunggu')->count(),
             'disetujui' => Laporan::where('status', 'Disetujui DANPUS')->count(),
@@ -69,7 +72,9 @@ class DashboardController
             'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK', 'SATLAKDUKTEK',
             'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT',
         ];
-        $rekapLaporanSatuan = Satuan::whereIn('kode', $kodeSatuanPengirim)->withCount(['laporanTerkirim as total_laporan','laporanTerkirim as laporan_menunggu' => fn ($q) => $q->where('status', 'Menunggu'),'laporanTerkirim as laporan_disetujui' => fn ($q) => $q->where('status', 'Disetujui DANPUS'),'laporanTerkirim as laporan_ditolak' => fn ($q) => $q->where('status', 'Ditolak DANPUS')])->orderBy('urutan')->get();
+        $rekapLaporanSatuan = Satuan::whereIn('kode', $kodeSatuanPengirim)->withCount(['laporanTerkirim as total_laporan','laporanTerkirim as laporan_menunggu' => fn ($q) => $q->where('status', 'Menunggu'),'laporanTerkirim as laporan_disetujui' => fn ($q) => $q->where('status', 'Disetujui DANPUS'),'laporanTerkirim as laporan_ditolak' => fn ($q) => $q->where('status', 'Ditolak DANPUS')])->get()
+            ->sortBy(fn ($s) => sprintf('%d-%s', $prioritasKategori[$s->kategori] ?? 9, $s->nama))
+            ->values();
         return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','aktivitasTujuhHari','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => Laporan::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
     }
 
@@ -89,10 +94,14 @@ class DashboardController
             })
             ->latest()
             ->get();
+        // Urutan tampil: Admin -> Pimpinan -> Direktorat -> Satuan, lalu
+        // abjad nama di dalam kategori yang sama.
+        $prioritasKategori = Satuan::prioritasKategori();
+        $urutkanSatuan = fn ($s) => sprintf('%d-%s', $prioritasKategori[$s->kategori] ?? 9, $s->nama);
         $kodeTujuanDiizinkan = Satuan::kodeTujuanUntuk($kode);
         $tujuan = $kodeTujuanDiizinkan !== null
-            ? Satuan::whereIn('kode', $kodeTujuanDiizinkan)->orderBy('urutan')->get()
-            : Satuan::where('kode', '!=', 'ADMIN')->where('id', '!=', $satuan->id)->orderBy('urutan')->get();
+            ? Satuan::whereIn('kode', $kodeTujuanDiizinkan)->get()->sortBy($urutkanSatuan)->values()
+            : Satuan::where('kode', '!=', 'ADMIN')->where('id', '!=', $satuan->id)->get()->sortBy($urutkanSatuan)->values();
         $defaultDanpus = $tujuan->firstWhere('kode', 'DANPUS');
         $mode = $kode === 'SATLAKDUKTEK' ? 'duktek' : 'standar';
         $modePimpinan = in_array($kode, ['DANPUS', 'WADAN'], true);
@@ -136,7 +145,7 @@ class DashboardController
         if ($mode === 'duktek') {
             $satlakIds = Satuan::whereIn('kode', ['SATLAKKAL','SATLAKSISOS','SATLAKDAK'])->pluck('id');
             $laporanSatlak = Laporan::with(['satuan','tujuanSatuan'])->whereIn('satuan_id', $satlakIds)->latest()->get();
-            $monitoringSatlak = Satuan::whereIn('kode', ['SATLAKKAL','SATLAKSISOS','SATLAKDAK'])->orderBy('urutan')->get()->map(fn ($satlak) => ['nama' => $satlak->nama, 'total' => $laporanSatlak->where('satuan_id',$satlak->id)->count()]);
+            $monitoringSatlak = Satuan::whereIn('kode', ['SATLAKKAL','SATLAKSISOS','SATLAKDAK'])->get()->sortBy($urutkanSatuan)->values()->map(fn ($satlak) => ['nama' => $satlak->nama, 'total' => $laporanSatlak->where('satuan_id',$satlak->id)->count()]);
         }
         $monitoringPimpinanSatlak = collect();
         $laporanPimpinanSatlak = collect();

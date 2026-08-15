@@ -55,6 +55,12 @@ class SatuanController extends Controller
 
     private function validated(Request $request, ?Satuan $satuan = null): array
     {
+        // Kode selalu dipaksa kapital di server, soalnya input di form cuma
+        // ter-uppercase secara visual (CSS text-transform), bukan nilai
+        // aslinya -- kalau tidak dipaksa di sini, kode bisa kesimpan
+        // campuran huruf besar/kecil walau kelihatan kapital pas diketik.
+        $request->merge(['kode' => strtoupper(trim((string) $request->input('kode')))]);
+
         return $request->validate([
             'kode' => ['required', 'string', 'max:50', 'unique:satuans,kode'.($satuan ? ','.$satuan->id : '')],
             'nama' => ['required', 'string', 'max:255'],
@@ -65,7 +71,6 @@ class SatuanController extends Controller
                 Satuan::KATEGORI_ADMIN,
             ])],
             'deskripsi' => ['nullable', 'string'],
-            'urutan' => ['nullable', 'integer', 'min:0'],
         ]);
     }
 }

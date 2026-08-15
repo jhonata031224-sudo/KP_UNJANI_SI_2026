@@ -453,7 +453,7 @@
   .form-field select{cursor:pointer;}
   .form-field select option{background:var(--panel-2);color:var(--text);padding:10px 14px;margin:2px 0;}
   .form-field input:focus,.form-field select:focus,.form-field textarea:focus{outline:none;border-color:var(--gold);}
-  .form-field input::placeholder,.form-field textarea::placeholder{color:var(--text-dim);}
+  .form-field input::placeholder,.form-field textarea::placeholder{color:var(--text-dim);text-transform:none;}
   /* Validasi wajib-diisi custom (senada sama form Ganti Password/Foto Profil
      & form login) -- ganti tooltip bawaan browser jadi pesan Bahasa
      Indonesia + border merah, pakai ulang .profile-field-error yang sama. */

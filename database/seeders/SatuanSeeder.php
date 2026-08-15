@@ -19,23 +19,23 @@ class SatuanSeeder extends Seeder
     {
         $satuans = [
             // --- ADMIN (Pengelola sistem, bukan satuan operasional) ---
-            ['kode' => 'ADMIN', 'username' => 'admin', 'nama' => 'Administrator Sistem', 'kategori' => Satuan::KATEGORI_ADMIN, 'deskripsi' => 'Kelola akun pengguna, satuan, dan permintaan reset password.', 'urutan' => 0],
+            ['kode' => 'ADMIN', 'username' => 'admin', 'nama' => 'Administrator Sistem', 'kategori' => Satuan::KATEGORI_ADMIN, 'deskripsi' => 'Kelola akun pengguna, satuan, dan permintaan reset password.'],
 
             // --- SATLAK (Satuan Pelaksana) ---
-            ['kode' => 'SATLAKKAL',      'username' => 'satlakkal',   'nama' => 'Satuan Pelaksanaan Penangkalan',        'kategori' => Satuan::KATEGORI_SATLAK,      'deskripsi' => 'Pemantauan & pemulihan (mis. website yang diserang).',   'urutan' => 10],
-            ['kode' => 'SATLAKSISOS',    'username' => 'satlaksisos', 'nama' => 'Satuan Pelaksanaan Siber Sosial',   'kategori' => Satuan::KATEGORI_SATLAK,      'deskripsi' => 'Pengelolaan media sosial di daerah.',                    'urutan' => 20],
-            ['kode' => 'SATLAKDAK',      'username' => 'satlakdak',   'nama' => 'Satuan Pelaksanaan Penindakan',         'kategori' => Satuan::KATEGORI_SATLAK,      'deskripsi' => 'Penanganan aksi cyber: malware, ransomware, serangan.', 'urutan' => 30],
-            ['kode' => 'SATLAKDUKTEK',  'username' => 'satlakduktek', 'nama' => 'Satuan Pelaksanaan Dukungan Teknologi', 'kategori' => Satuan::KATEGORI_SATLAK,      'deskripsi' => 'Riset & pengembangan teknologi terkini (AI, drone, dll).', 'urutan' => 40],
+            ['kode' => 'SATLAKKAL',      'username' => 'satlakkal',   'nama' => 'Satuan Pelaksanaan Penangkalan',        'kategori' => Satuan::KATEGORI_SATLAK,      'deskripsi' => 'Pemantauan & pemulihan (mis. website yang diserang).'],
+            ['kode' => 'SATLAKSISOS',    'username' => 'satlaksisos', 'nama' => 'Satuan Pelaksanaan Siber Sosial',   'kategori' => Satuan::KATEGORI_SATLAK,      'deskripsi' => 'Pengelolaan media sosial di daerah.'],
+            ['kode' => 'SATLAKDAK',      'username' => 'satlakdak',   'nama' => 'Satuan Pelaksanaan Penindakan',         'kategori' => Satuan::KATEGORI_SATLAK,      'deskripsi' => 'Penanganan aksi cyber: malware, ransomware, serangan.'],
+            ['kode' => 'SATLAKDUKTEK',  'username' => 'satlakduktek', 'nama' => 'Satuan Pelaksanaan Dukungan Teknologi', 'kategori' => Satuan::KATEGORI_SATLAK,      'deskripsi' => 'Riset & pengembangan teknologi terkini (AI, drone, dll).'],
 
             // --- DIR (Direktorat) ---
-            ['kode' => 'BINFUNG', 'username' => 'binfung', 'nama' => 'Pembinaan Fungsi',    'kategori' => Satuan::KATEGORI_DIREKTORAT, 'deskripsi' => 'Penempatan personel yang masuk.',                  'urutan' => 50],
-            ['kode' => 'BINUM',  'username' => 'binum',  'nama' => 'Pembinaan Umum',      'kategori' => Satuan::KATEGORI_DIREKTORAT, 'deskripsi' => 'Pengawasan satuan, lomba internal, personel baru.', 'urutan' => 60],
-            ['kode' => 'DIKLAT',  'username' => 'diklat', 'nama' => 'Pendidikan dan Latihan', 'kategori' => Satuan::KATEGORI_DIREKTORAT, 'deskripsi' => 'Pendidikan dan latihan satuan.',                   'urutan' => 70],
-            ['kode' => 'BINMAT',  'username' => 'binmat', 'nama' => 'Pembinaan Materil',  'kategori' => Satuan::KATEGORI_DIREKTORAT, 'deskripsi' => 'Pengurusan material/perlengkapan satuan.',         'urutan' => 80],
+            ['kode' => 'BINFUNG', 'username' => 'binfung', 'nama' => 'Pembinaan Fungsi',    'kategori' => Satuan::KATEGORI_DIREKTORAT, 'deskripsi' => 'Penempatan personel yang masuk.'],
+            ['kode' => 'BINUM',  'username' => 'binum',  'nama' => 'Pembinaan Umum',      'kategori' => Satuan::KATEGORI_DIREKTORAT, 'deskripsi' => 'Pengawasan satuan, lomba internal, personel baru.'],
+            ['kode' => 'DIKLAT',  'username' => 'diklat', 'nama' => 'Pendidikan dan Latihan', 'kategori' => Satuan::KATEGORI_DIREKTORAT, 'deskripsi' => 'Pendidikan dan latihan satuan.'],
+            ['kode' => 'BINMAT',  'username' => 'binmat', 'nama' => 'Pembinaan Materil',  'kategori' => Satuan::KATEGORI_DIREKTORAT, 'deskripsi' => 'Pengurusan material/perlengkapan satuan.'],
 
             // --- Koordinasi / Pimpinan ---
-            ['kode' => 'WADAN',  'username' => 'wadan',  'nama' => 'Wakil Komandan',       'kategori' => Satuan::KATEGORI_PIMPINAN, 'deskripsi' => 'Penerima laporan dari Satlak.',            'urutan' => 100],
-            ['kode' => 'DANPUS', 'username' => 'danpus', 'nama' => 'Komandan Pusat', 'kategori' => Satuan::KATEGORI_PIMPINAN, 'deskripsi' => 'Penerima laporan tertinggi dari seluruh satuan.', 'urutan' => 110],
+            ['kode' => 'WADAN',  'username' => 'wadan',  'nama' => 'Wakil Komandan',       'kategori' => Satuan::KATEGORI_PIMPINAN, 'deskripsi' => 'Penerima laporan dari Satlak.'],
+            ['kode' => 'DANPUS', 'username' => 'danpus', 'nama' => 'Komandan Pusat', 'kategori' => Satuan::KATEGORI_PIMPINAN, 'deskripsi' => 'Penerima laporan tertinggi dari seluruh satuan.'],
         ];
 
         foreach ($satuans as $data) {

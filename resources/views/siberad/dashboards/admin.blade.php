@@ -110,6 +110,7 @@
   #tblPengguna th:last-child,#tblPengguna td:last-child,
   #tblSatuan th:last-child,#tblSatuan td:last-child{text-align:center;}
   #tblPengguna .btn-row,#tblSatuan .btn-row{justify-content:center;}
+  #tblSatuan th:nth-child(4),#tblSatuan td:nth-child(4){text-align:center;}
   #tblResetPassword .subject{margin-bottom:6px;}
   #tblResetPassword th:nth-child(1),#tblResetPassword td:nth-child(1){text-align:left;}
   #tblResetPassword th:nth-child(2),#tblResetPassword td:nth-child(2){text-align:left;}
@@ -194,7 +195,7 @@
           </div>
           <div class="help-topic-body">
             <div class="help-topic-title">Monitoring</div>
-            <div class="help-topic-desc">Pantau rekap laporan dari seluruh satuan, dan lihat siapa saja yang sedang aktif login ke sistem lewat Sesi Aktif.</div>
+            <div class="help-topic-desc">Pantau rekap &amp; ekspor laporan dari seluruh satuan, lihat siapa saja yang sedang aktif login lewat Sesi Aktif, serta telusuri log aktivitas sistem.</div>
           </div>
         </div>
         <div class="help-topic">
@@ -203,7 +204,7 @@
           </div>
           <div class="help-topic-body">
             <div class="help-topic-title">Kelola Sistem</div>
-            <div class="help-topic-desc">Atur data satuan, role &amp; hak akses, log aktivitas, backup database, hingga pengaturan umum aplikasi.</div>
+            <div class="help-topic-desc">Atur data satuan, role &amp; hak akses, backup database, hingga pengaturan umum aplikasi.</div>
           </div>
         </div>
       </div>
@@ -247,7 +248,7 @@
       <div class="form-field">
         <label for="uSatuan">Satuan</label>
         <select id="uSatuan" name="satuan_id" required>
-          <option value="">— Pilih satuan —</option>
+          <option value="">— Pilih Satuan —</option>
           @foreach($semuaSatuan as $s)
           <option value="{{ $s->id }}">{{ $s->nama }} ({{ $s->kode }})</option>
           @endforeach
@@ -367,26 +368,40 @@
         <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M6 6l12 12M18 6L6 18"></path></svg>
       </button>
     </div>
-    <form class="form-grid" method="POST" action="{{ route('admin.satuan.store') }}">
+    <form class="form-grid" method="POST" action="{{ route('admin.satuan.store') }}" autocomplete="off">
       @csrf
-      <div class="form-field"><label for="sKode">Kode</label><input id="sKode" name="kode" type="text" placeholder="Contoh: BINLOG" required style="text-transform:uppercase;"></div>
-      <div class="form-field"><label for="sNama">Nama Satuan</label><input id="sNama" name="nama" type="text" required></div>
+      <div class="form-field"><label for="sKode">Kode</label><input id="sKode" name="kode" type="text" autocomplete="off" placeholder="Contoh: BINLOG" required style="text-transform:uppercase;"></div>
+      <div class="form-field"><label for="sNama">Nama Satuan</label><input id="sNama" name="nama" type="text" autocomplete="off" placeholder="Contoh: Pembinaan Logistik" required></div>
       <div class="form-field">
         <label for="sKategori">Kategori</label>
         <select id="sKategori" name="kategori" required>
-          <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
-          <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
-          <option value="{{ \App\Models\Satuan::KATEGORI_PIMPINAN }}">Pimpinan</option>
+          <option value="">— Pilih Kategori —</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_ADMIN }}">Admin</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_PIMPINAN }}">Pimpinan</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
         </select>
       </div>
-      <div class="form-field"><label for="sUrutan">Urutan</label><input id="sUrutan" name="urutan" type="number" min="0" placeholder="0"></div>
-      <div class="form-field full"><label for="sDeskripsi">Deskripsi (opsional)</label><textarea id="sDeskripsi" name="deskripsi" rows="2"></textarea></div>
+      <div class="form-field full"><label for="sDeskripsi">Deskripsi (opsional)</label><textarea id="sDeskripsi" name="deskripsi" rows="2" autocomplete="off" placeholder="Contoh: Pengelolaan logistik dan perbekalan satuan."></textarea></div>
       <div class="user-modal-actions">
         <button class="btn" type="button" id="tambahSatuanCancel">Batal</button>
         <button class="btn btn-primary" type="submit">Simpan Satuan</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="tambahSatuanKonfirmasiOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="tambahSatuanKonfirmasiTitle">
+    <div class="confirm-icon" style="background:var(--gold-dim);color:var(--gold-bright)">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><circle cx="12" cy="12" r="9"></circle><path d="M9 12l2 2 4-4"></path></svg>
+    </div>
+    <h3 id="tambahSatuanKonfirmasiTitle">Tambah Satuan Ini?</h3>
+    <p>Satuan baru akan langsung aktif dan bisa dipakai.</p>
+    <div class="confirm-actions">
+      <button type="button" class="btn" id="tambahSatuanKonfirmasiBatal">Batal</button>
+      <button type="button" class="btn btn-primary" id="tambahSatuanKonfirmasiYa">Ya, Tambah</button>
+    </div>
   </div>
 </div>
 
@@ -401,27 +416,40 @@
         <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M6 6l12 12M18 6L6 18"></path></svg>
       </button>
     </div>
-    <form class="form-grid" method="POST" action="" id="ubahSatuanForm">
+    <form class="form-grid" method="POST" action="" id="ubahSatuanForm" autocomplete="off">
       @csrf
       @method('PATCH')
-      <div class="form-field"><label for="usKode">Kode</label><input id="usKode" name="kode" type="text" required style="text-transform:uppercase;"></div>
-      <div class="form-field"><label for="usNama">Nama Satuan</label><input id="usNama" name="nama" type="text" required></div>
+      <div class="form-field"><label for="usKode">Kode</label><input id="usKode" name="kode" type="text" autocomplete="off" placeholder="Contoh: BINLOG" required style="text-transform:uppercase;"></div>
+      <div class="form-field"><label for="usNama">Nama Satuan</label><input id="usNama" name="nama" type="text" autocomplete="off" placeholder="Contoh: Pembinaan Logistik" required></div>
       <div class="form-field">
         <label for="usKategori">Kategori</label>
         <select id="usKategori" name="kategori" required>
-          <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
-          <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
-          <option value="{{ \App\Models\Satuan::KATEGORI_PIMPINAN }}">Pimpinan</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_ADMIN }}">Admin</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_PIMPINAN }}">Pimpinan</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
         </select>
       </div>
-      <div class="form-field"><label for="usUrutan">Urutan</label><input id="usUrutan" name="urutan" type="number" min="0"></div>
-      <div class="form-field full"><label for="usDeskripsi">Deskripsi (opsional)</label><textarea id="usDeskripsi" name="deskripsi" rows="2"></textarea></div>
+      <div class="form-field full"><label for="usDeskripsi">Deskripsi (opsional)</label><textarea id="usDeskripsi" name="deskripsi" rows="2" autocomplete="off" placeholder="Contoh: Pengelolaan logistik dan perbekalan satuan."></textarea></div>
       <div class="user-modal-actions">
         <button class="btn" type="button" id="ubahSatuanCancel">Batal</button>
         <button class="btn btn-primary" type="submit">Simpan Perubahan</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="ubahSatuanKonfirmasiOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="ubahSatuanKonfirmasiTitle">
+    <div class="confirm-icon" style="background:var(--gold-dim);color:var(--gold-bright)">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><circle cx="12" cy="12" r="9"></circle><path d="M9 12l2 2 4-4"></path></svg>
+    </div>
+    <h3 id="ubahSatuanKonfirmasiTitle">Simpan Perubahan Satuan Ini?</h3>
+    <p>Perubahan data satuan akan langsung berlaku.</p>
+    <div class="confirm-actions">
+      <button type="button" class="btn" id="ubahSatuanKonfirmasiBatal">Batal</button>
+      <button type="button" class="btn btn-primary" id="ubahSatuanKonfirmasiYa">Ya, Simpan</button>
+    </div>
   </div>
 </div>
 
@@ -475,7 +503,9 @@
         <div class="side-subnav"><div>
           <span class="side-subnav-label">Monitoring</span>
           <a href="#" class="side-sub-link" data-tab-link="rekap-laporan" title="Rekap Laporan"><span class="sub-dot"></span>Rekap Laporan</a>
+          <a href="#" class="side-sub-link" data-tab-link="laporan-admin" title="Laporan &amp; Export"><span class="sub-dot"></span>Laporan &amp; Export</a>
           <a href="#" class="side-sub-link" data-tab-link="sesi-aktif" title="Sesi Aktif"><span class="sub-dot"></span>Sesi Aktif</a>
+          <a href="#" class="side-sub-link" data-tab-link="log-aktivitas" title="Log Aktivitas"><span class="sub-dot"></span>Log Aktivitas</a>
         </div></div>
       </div>
 
@@ -489,9 +519,7 @@
           <span class="side-subnav-label">Kelola Sistem</span>
           <a href="#" class="side-sub-link" data-tab-link="satlak" title="Manajemen Satuan"><span class="sub-dot"></span>Manajemen Satuan</a>
           <a href="#" class="side-sub-link" data-tab-link="role-akses" title="Role &amp; Hak Akses"><span class="sub-dot"></span>Role &amp; Hak Akses</a>
-          <a href="#" class="side-sub-link" data-tab-link="log-aktivitas" title="Log Aktivitas"><span class="sub-dot"></span>Log Aktivitas</a>
           <a href="#" class="side-sub-link" data-tab-link="backup" title="Backup Database"><span class="sub-dot"></span>Backup Database</a>
-          <a href="#" class="side-sub-link" data-tab-link="laporan-admin" title="Laporan &amp; Export"><span class="sub-dot"></span>Laporan &amp; Export</a>
           <a href="#" class="side-sub-link" data-tab-link="pengaturan-umum" title="Pengaturan Umum"><span class="sub-dot"></span>Pengaturan Umum</a>
         </div></div>
       </div>
@@ -861,7 +889,7 @@
               <option value="Admin">Admin</option>
               <option value="Pimpinan">Pimpinan</option>
               <option value="Direktorat">Direktorat</option>
-              <option value="Satuan">Satuan</option>
+              <option value="Satlak">Satlak</option>
             </select>
             <span class="table-filter-count" data-table-count="tblPengguna"></span>
           </div>
@@ -875,7 +903,7 @@
                     \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
                     \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
                     \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
-                    default => 'Satuan',
+                    default => 'Satlak',
                   };
                 @endphp
                 <tr data-filter-value="{{ $kategoriLabel }}" data-search-value="{{ strtolower($p->name.' '.($p->satuan->nama ?? '').' '.($p->satuan->kode ?? '')) }}">
@@ -1085,12 +1113,13 @@
               <option value="Admin">Admin</option>
               <option value="Pimpinan">Pimpinan</option>
               <option value="Direktorat">Direktorat</option>
-              <option value="Satuan">Satuan</option>
+              <option value="Satlak">Satlak</option>
             </select>
             <span class="table-filter-count" data-table-count="tblSatuan"></span>
           </div>
           <div class="tbl-wrap" data-row-limit="8">
             <table class="dtbl" id="tblSatuan">
+              <colgroup><col style="width:14%"><col style="width:28%"><col style="width:16%"><col style="width:16%"><col style="width:26%"></colgroup>
               <thead><tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Jumlah Pengguna</th><th>Aksi</th></tr></thead>
               <tbody>
                 @forelse($semuaSatuan as $s)
@@ -1099,7 +1128,7 @@
                     \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
                     \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
                     \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
-                    default => 'Satuan',
+                    default => 'Satlak',
                   };
                 @endphp
                 <tr data-filter-value="{{ $kategoriFilterLabel }}">
@@ -1114,7 +1143,6 @@
                         data-kode="{{ $s->kode }}"
                         data-nama="{{ $s->nama }}"
                         data-kategori="{{ $s->kategori }}"
-                        data-urutan="{{ $s->urutan }}"
                         data-deskripsi="{{ $s->deskripsi }}">Ubah</button>
                       <button class="table-action-btn danger" type="button" onclick="bukaHapusSatuan(this)"
                         data-action="{{ route('admin.satuan.destroy', $s) }}"
@@ -1143,6 +1171,61 @@
           if (closeBtn) closeBtn.addEventListener('click', close);
           if (cancelBtn) cancelBtn.addEventListener('click', close);
           document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+
+          // Validasi wajib-diisi custom (senada sama modal Tambah Pengguna):
+          // ganti tooltip bawaan browser jadi pesan Bahasa Indonesia + border
+          // merah di bawah field.
+          var form = modal.querySelector('form');
+          var requiredMessages = {
+            sKode: 'Kode wajib diisi.',
+            sNama: 'Nama satuan wajib diisi.',
+            sKategori: 'Kategori wajib dipilih.'
+          };
+          if (form) {
+            form.querySelectorAll('input[required], select[required]').forEach(function (field) {
+              var msg = field.nextElementSibling;
+              if (!msg || !msg.classList.contains('profile-field-error')) {
+                msg = document.createElement('span');
+                msg.className = 'profile-field-error';
+                msg.style.display = 'none';
+                field.insertAdjacentElement('afterend', msg);
+              }
+              field.addEventListener('invalid', function (e) {
+                e.preventDefault();
+                field.classList.add('field-invalid');
+                msg.textContent = requiredMessages[field.id] || 'Kolom ini wajib diisi.';
+                msg.style.display = 'flex';
+              });
+              field.addEventListener('input', function () {
+                field.classList.remove('field-invalid');
+                msg.style.display = 'none';
+              });
+              field.addEventListener('change', function () {
+                field.classList.remove('field-invalid');
+                msg.style.display = 'none';
+              });
+            });
+          }
+
+          // Konfirmasi dulu sebelum beneran kirim (senada sama modal Tambah
+          // Pengguna): validasi wajib-diisi bawaan browser tetap jalan
+          // duluan, baru munculin konfirmasi kalau semua sudah valid.
+          var konfirmOverlay = document.getElementById('tambahSatuanKonfirmasiOverlay');
+          if (form && konfirmOverlay) {
+            function closeKonfirm() { konfirmOverlay.classList.remove('open'); }
+            form.addEventListener('submit', function (e) {
+              if (form.dataset.confirmed === '1') { form.dataset.confirmed = ''; return; }
+              e.preventDefault();
+              konfirmOverlay.classList.add('open');
+            });
+            document.getElementById('tambahSatuanKonfirmasiYa')?.addEventListener('click', function () {
+              closeKonfirm();
+              form.dataset.confirmed = '1';
+              form.requestSubmit ? form.requestSubmit() : form.submit();
+            });
+            document.getElementById('tambahSatuanKonfirmasiBatal')?.addEventListener('click', closeKonfirm);
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && konfirmOverlay.classList.contains('open')) closeKonfirm(); });
+          }
         })();
 
         window.bukaUbahSatuan = function (btn) {
@@ -1150,7 +1233,6 @@
           document.getElementById('usKode').value = btn.dataset.kode || '';
           document.getElementById('usNama').value = btn.dataset.nama || '';
           document.getElementById('usKategori').value = btn.dataset.kategori || '';
-          document.getElementById('usUrutan').value = btn.dataset.urutan || '';
           document.getElementById('usDeskripsi').value = btn.dataset.deskripsi || '';
           document.getElementById('ubahSatuanModal').classList.add('open');
         };
@@ -1171,6 +1253,58 @@
           if (closeBtn) closeBtn.addEventListener('click', close);
           if (cancelBtn) cancelBtn.addEventListener('click', close);
           document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+
+          // Validasi wajib-diisi custom (senada sama modal Tambah Satuan).
+          var form = modal.querySelector('form');
+          var requiredMessages = {
+            usKode: 'Kode wajib diisi.',
+            usNama: 'Nama satuan wajib diisi.',
+            usKategori: 'Kategori wajib dipilih.'
+          };
+          if (form) {
+            form.querySelectorAll('input[required], select[required]').forEach(function (field) {
+              var msg = field.nextElementSibling;
+              if (!msg || !msg.classList.contains('profile-field-error')) {
+                msg = document.createElement('span');
+                msg.className = 'profile-field-error';
+                msg.style.display = 'none';
+                field.insertAdjacentElement('afterend', msg);
+              }
+              field.addEventListener('invalid', function (e) {
+                e.preventDefault();
+                field.classList.add('field-invalid');
+                msg.textContent = requiredMessages[field.id] || 'Kolom ini wajib diisi.';
+                msg.style.display = 'flex';
+              });
+              field.addEventListener('input', function () {
+                field.classList.remove('field-invalid');
+                msg.style.display = 'none';
+              });
+              field.addEventListener('change', function () {
+                field.classList.remove('field-invalid');
+                msg.style.display = 'none';
+              });
+            });
+          }
+
+          // Konfirmasi dulu sebelum beneran kirim (senada sama modal Tambah
+          // Satuan).
+          var konfirmOverlay = document.getElementById('ubahSatuanKonfirmasiOverlay');
+          if (form && konfirmOverlay) {
+            function closeKonfirm() { konfirmOverlay.classList.remove('open'); }
+            form.addEventListener('submit', function (e) {
+              if (form.dataset.confirmed === '1') { form.dataset.confirmed = ''; return; }
+              e.preventDefault();
+              konfirmOverlay.classList.add('open');
+            });
+            document.getElementById('ubahSatuanKonfirmasiYa')?.addEventListener('click', function () {
+              closeKonfirm();
+              form.dataset.confirmed = '1';
+              form.requestSubmit ? form.requestSubmit() : form.submit();
+            });
+            document.getElementById('ubahSatuanKonfirmasiBatal')?.addEventListener('click', closeKonfirm);
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && konfirmOverlay.classList.contains('open')) closeKonfirm(); });
+          }
         })();
       </script>
 
@@ -2250,8 +2384,9 @@
     }
 
     // ===== Grafik 1: Pengguna per Kategori Satuan (warna literal — urutan
-    // groupBy() selalu Admin, Satlak, Direktorat, Pimpinan karena mengikuti
-    // urutan kolom "urutan" di $semuaSatuan) =====
+    // grup dari backend dijamin selalu Admin, Pimpinan, Direktorat, Satlak
+    // lewat Satuan::prioritasKategori(), bukan ikut urutan $semuaSatuan
+    // begitu saja) =====
     var distribusiKategori = @json($distribusiPenggunaKategori);
     renderDoughnut(
       'chartKategoriSatuan',
