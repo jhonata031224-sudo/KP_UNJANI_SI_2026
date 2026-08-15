@@ -120,8 +120,53 @@
     installStyles();
   }
 
+  function initActiveSessionsRealtime() {
+    var section = document.querySelector('[data-tab-panel="sesi-aktif"]');
+    if (!section || section.dataset.sessionRealtimeReady === '1') return;
+
+    var tableWrap = section.querySelector('.tbl-wrap');
+    var table = tableWrap && tableWrap.querySelector('table');
+    if (!table) return;
+
+    section.dataset.sessionRealtimeReady = '1';
+
+    function refreshSessions() {
+      if (document.hidden) return;
+
+      fetch(window.location.href, {
+        method: 'GET',
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: {
+          'Accept': 'text/html',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      }).then(function (response) {
+        if (!response.ok) throw new Error('Gagal mengambil sesi aktif.');
+        return response.text();
+      }).then(function (html) {
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(html, 'text/html');
+        var remoteTbody = doc.querySelector('[data-tab-panel="sesi-aktif"] .tbl-wrap table tbody');
+        var currentTbody = table.querySelector('tbody');
+        if (!remoteTbody || !currentTbody) return;
+
+        var nextHtml = remoteTbody.innerHTML;
+        if (nextHtml !== currentTbody.innerHTML) {
+          currentTbody.innerHTML = nextHtml;
+        }
+      }).catch(function () {
+        // Kegagalan satu polling tidak mengganggu halaman Admin.
+      });
+    }
+
+    refreshSessions();
+    window.setInterval(refreshSessions, 3000);
+  }
+
   function run() {
     initRoleAccessTable();
+    initActiveSessionsRealtime();
     document.addEventListener('click', function (e) {
       var link = e.target.closest && e.target.closest('[data-tab-link="role-akses"]');
       if (link) window.setTimeout(initRoleAccessTable, 0);
