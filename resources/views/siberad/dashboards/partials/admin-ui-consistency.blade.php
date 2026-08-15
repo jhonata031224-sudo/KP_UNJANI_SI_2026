@@ -86,6 +86,21 @@ body:has(.side-nav-group) .topbar {
 @media (max-width:600px){
   .main > .content,.main .content{padding-left:14px !important;padding-right:14px !important;}
 }
+
+/* Role & Hak Akses: setiap pilihan modul ditampilkan satu baris ke bawah.
+   Hanya berlaku pada form permission, tidak mengubah tabel/fitur admin lain. */
+.main .content [data-tab-panel="role-akses"] form > div:first-of-type {
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:flex-start !important;
+  gap:10px !important;
+  margin-bottom:14px !important;
+}
+.main .content [data-tab-panel="role-akses"] form > div:first-of-type > label {
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+
 /* Tombol Tutup pada header notifikasi. */
 #notifDropdown .notif-head{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:12px !important;}
 #notifDropdown .siberad-notif-close-text{border:0;background:transparent;color:var(--text-muted);font:500 12px var(--body);padding:4px 0;cursor:pointer;white-space:nowrap;}
