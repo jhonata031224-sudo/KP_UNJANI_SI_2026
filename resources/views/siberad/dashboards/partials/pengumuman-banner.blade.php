@@ -228,3 +228,121 @@
   window.setTimeout(function () { rootObserver.disconnect(); }, 5000);
 })();
 </script>
+
+{{-- ===== ROLE & HAK AKSES: satukan seluruh role ke satu tabel, tanpa mengubah
+     form/action hak akses yang sudah ada. Panel penjelasan di atas tetap utuh. --}}
+<style>
+  .role-access-table-wrap{width:100%;overflow-x:auto;border:1px solid var(--border-soft);border-radius:14px;background:var(--panel);box-shadow:0 8px 28px rgba(15,23,42,.06);}
+  .role-access-table{width:100%;border-collapse:separate;border-spacing:0;min-width:900px;table-layout:fixed;}
+  .role-access-table th{padding:13px 16px;text-align:left;background:var(--panel-alt);border-bottom:1px solid var(--border-soft);color:var(--text-muted);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;}
+  .role-access-table td{padding:16px;border-bottom:1px solid var(--border-soft);vertical-align:top;background:var(--panel);}
+  .role-access-table tbody tr:last-child td{border-bottom:0;}
+  .role-access-table tbody tr:hover td{background:var(--hover-tint);}
+  .role-access-table th:nth-child(1),.role-access-table td:nth-child(1){width:20%;}
+  .role-access-table th:nth-child(2),.role-access-table td:nth-child(2){width:23%;}
+  .role-access-table th:nth-child(3),.role-access-table td:nth-child(3){width:42%;}
+  .role-access-table th:nth-child(4),.role-access-table td:nth-child(4){width:15%;}
+  .role-access-role{font-weight:700;color:var(--text);font-size:13px;line-height:1.4;}
+  .role-access-code{display:inline-flex;margin-top:6px;padding:4px 8px;border:1px solid var(--border-soft);border-radius:7px;background:var(--panel-alt);color:var(--gold-bright);font-family:var(--mono);font-size:9px;letter-spacing:.07em;}
+  .role-access-desc{margin:0;color:var(--text-muted);font-size:12px;line-height:1.55;}
+  .role-access-form{padding:0!important;}
+  .role-access-permissions{display:flex;flex-wrap:wrap;gap:8px 14px;margin:0 0 12px;}
+  .role-access-permission{display:inline-flex;align-items:center;gap:6px;color:var(--text-muted);font-size:11.5px;line-height:1.35;cursor:pointer;}
+  .role-access-permission input{margin:0;accent-color:var(--gold);}
+  .role-access-save{white-space:nowrap;}
+  .role-access-save .btn{margin:0;}
+  @media(max-width:900px){
+    .role-access-table-wrap{border-radius:12px;}
+    .role-access-table{min-width:820px;}
+  }
+</style>
+<script>
+(function(){
+  function initRoleAccessTable(){
+    var section=document.querySelector('[data-tab-panel="role-akses"]');
+    if(!section||section.dataset.roleAccessTableReady==='1')return;
+
+    var panels=Array.prototype.filter.call(section.children,function(el){
+      return el.classList&&el.classList.contains('panel');
+    });
+    if(!panels.length)return;
+
+    var rows=[];
+    panels.forEach(function(panel){
+      var head=panel.querySelector('.panel-head');
+      var form=panel.querySelector('form');
+      if(!head||!form)return;
+
+      var title=head.querySelector('h3');
+      var description=head.querySelector('p');
+      var titleText=title?title.childNodes[0].textContent.trim():'';
+      var badge=title?title.querySelector('.badge'):null;
+      var code=badge?badge.textContent.trim():'';
+
+      var permissionLabels=Array.prototype.map.call(form.querySelectorAll('label'),function(label){
+        return label;
+      });
+      var permissionWrap=form.querySelector('div[style*="flex-wrap"]');
+      if(permissionWrap){
+        permissionWrap.classList.add('role-access-permissions');
+        permissionWrap.style.cssText='';
+      }
+      permissionLabels.forEach(function(label){label.classList.add('role-access-permission');label.removeAttribute('style');});
+      form.classList.add('role-access-form');
+
+      var save=form.querySelector('button[type="submit"]');
+      if(save){save.classList.add('role-access-save');}
+
+      rows.push({panel:panel,title:titleText,code:code,description:description?description.textContent.trim():'Tidak ada deskripsi.',form:form,permissionWrap:permissionWrap,save:save});
+    });
+
+    if(!rows.length)return;
+
+    var wrap=document.createElement('div');
+    wrap.className='role-access-table-wrap';
+    var table=document.createElement('table');
+    table.className='role-access-table';
+    table.setAttribute('aria-label','Role dan hak akses');
+    table.innerHTML='<thead><tr><th>Role / Satuan</th><th>Deskripsi</th><th>Hak Akses Modul</th><th>Aksi</th></tr></thead>';
+    var tbody=document.createElement('tbody');
+
+    rows.forEach(function(item){
+      var tr=document.createElement('tr');
+      var roleCell=document.createElement('td');
+      roleCell.innerHTML='<div class="role-access-role"></div>'+(item.code?'<span class="role-access-code"></span>':'');
+      roleCell.querySelector('.role-access-role').textContent=item.title;
+      if(item.code)roleCell.querySelector('.role-access-code').textContent=item.code;
+
+      var descCell=document.createElement('td');
+      var desc=document.createElement('p');
+      desc.className='role-access-desc';
+      desc.textContent=item.description;
+      descCell.appendChild(desc);
+
+      var accessCell=document.createElement('td');
+      if(item.permissionWrap)accessCell.appendChild(item.permissionWrap);
+
+      var actionCell=document.createElement('td');
+      if(item.save)actionCell.appendChild(item.save);
+
+      tr.appendChild(roleCell);tr.appendChild(descCell);tr.appendChild(accessCell);tr.appendChild(actionCell);
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);wrap.appendChild(table);
+    rows.forEach(function(item){item.panel.remove();});
+    section.appendChild(wrap);
+    section.dataset.roleAccessTableReady='1';
+  }
+
+  function run(){
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initRoleAccessTable,{once:true});
+    else initRoleAccessTable();
+  }
+  run();
+  document.addEventListener('click',function(e){
+    var link=e.target.closest&&e.target.closest('[data-tab-link="role-akses"]');
+    if(link)window.setTimeout(initRoleAccessTable,0);
+  });
+})();
+</script>
