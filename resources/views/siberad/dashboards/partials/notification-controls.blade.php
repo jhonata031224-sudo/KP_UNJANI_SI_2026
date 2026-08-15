@@ -85,6 +85,41 @@
     var pollUrl = '{{ route('notifikasi.realtime') }}';
     var csrfMeta = document.querySelector('meta[name="csrf-token"]');
     var csrfToken = csrfMeta ? csrfMeta.content : '{{ csrf_token() }}';
+    var pollTimer = null;
+
+    // Sesi habis (baik dipaksa logout oleh Admin, atau expired alami --
+    // dua-duanya kelihatan sama persis di sisi klien, 401 Unauthorized, jadi
+    // teksnya sengaja netral): begitu ke-detect lewat poll notifikasi (tiap
+    // 3 detik), langsung munculin modal blocking, TANPA bisa ditutup lewat
+    // klik backdrop atau ngapa-ngapain lagi -- cuma tombol OK / Escape yang
+    // sama-sama langsung redirect ke landing page.
+    function ensureSesiBerakhirOverlay() {
+      var overlay = document.getElementById('sesiBerakhirOverlay');
+      if (overlay) return overlay;
+      overlay = document.createElement('div');
+      overlay.className = 'confirm-overlay';
+      overlay.id = 'sesiBerakhirOverlay';
+      overlay.innerHTML = '<div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="sesiBerakhirTitle">' +
+        '<div class="confirm-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></svg></div>' +
+        '<h3 id="sesiBerakhirTitle">Sesi Anda Telah Berakhir</h3>' +
+        '<p>Sesi Anda telah berakhir. Silakan login kembali.</p>' +
+        '<div class="confirm-actions"><button type="button" class="btn btn-primary" id="sesiBerakhirOk">OK</button></div>' +
+        '</div>';
+      document.body.appendChild(overlay);
+      function keLanding() { window.location.href = '{{ url('/') }}'; }
+      overlay.querySelector('#sesiBerakhirOk').addEventListener('click', keLanding);
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) keLanding();
+      });
+      return overlay;
+    }
+    function tampilkanSesiBerakhir() {
+      if (window.__siberadSesiBerakhirShown) return;
+      window.__siberadSesiBerakhirShown = true;
+      if (pollTimer) window.clearInterval(pollTimer);
+      ensureSesiBerakhirOverlay().classList.add('open');
+    }
+    window.siberadTampilkanSesiBerakhir = tampilkanSesiBerakhir;
 
     var notifications = @json(auth()->user()?->unreadNotifications?->take(20)?->map(function ($n) {
       return ['id' => $n->id, 'message' => $n->data['pesan'] ?? 'Status laporan diperbarui.', 'time' => optional($n->created_at)->diffForHumans()];
@@ -135,6 +170,8 @@
           'X-Requested-With': 'XMLHttpRequest',
           'X-CSRF-TOKEN': csrfToken
         }
+      }).then(function (response) {
+        if (response.status === 401) tampilkanSesiBerakhir();
       }).catch(function () {});
       notifications = notifications.filter(function (n) { return String(n.id) !== String(id); });
       updateBadge();
@@ -259,6 +296,7 @@
           cache: 'no-store',
           headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
         }).then(function (response) {
+          if (response.status === 401) { tampilkanSesiBerakhir(); throw new Error('unauthenticated'); }
           if (!response.ok) throw new Error('poll failed');
           return response.json();
         }).then(function (data) {
@@ -267,7 +305,7 @@
           render();
         }).catch(function () {}).finally(function () { polling = false; });
       }
-      window.setInterval(poll, POLL_INTERVAL_MS);
+      pollTimer = window.setInterval(poll, POLL_INTERVAL_MS);
     }
   }
 

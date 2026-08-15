@@ -70,7 +70,7 @@ class UserController extends Controller
             'username' => ['required', 'string', 'max:50', 'unique:users,username'.($user ? ','.$user->id : '')],
             'email' => ['nullable', 'email', 'max:255', 'unique:users,email'.($user ? ','.$user->id : '')],
             'satuan_id' => ['required', 'exists:satuans,id'],
-            'password' => [$user ? 'nullable' : 'required', 'string', 'min:8'],
+            'password' => [$user ? 'nullable' : 'required', 'string'],
         ]);
 
         return $data;

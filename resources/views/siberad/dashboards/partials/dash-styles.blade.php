@@ -191,6 +191,9 @@
 
   .badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;background:var(--gold-dim);color:var(--gold-bright);padding:7px 14px;border-radius:8px;text-transform:uppercase;border:1px solid var(--border);box-sizing:border-box;line-height:1.2;}
   .badge.green{background:var(--gold-dim);color:var(--gold-bright);border-color:var(--border);}
+  /* Username tampil apa adanya sesuai database (bukan kode/singkatan satuan
+     yang memang sengaja kapital semua), jadi text-transform-nya di-reset. */
+  .badge.badge-plain{text-transform:none;letter-spacing:normal;}
   .badge.amber{background:var(--amber-dim);color:var(--amber);border-color:rgba(224,168,58,.3);}
   .badge.red{background:var(--red-dim);color:var(--red);border-color:rgba(198,40,40,.3);}
 
@@ -421,7 +424,7 @@
   .period-toggle{display:flex;gap:8px;flex-wrap:wrap;}
   .period-toggle .btn{text-transform:none;}
 
-  .confirm-overlay{position:fixed;inset:0;z-index:80;background:rgba(2,4,6,.6);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s ease;}
+  .confirm-overlay{position:fixed;inset:0;z-index:100200;background:rgba(2,4,6,.6);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s ease;}
   :root[data-theme="light"] .confirm-overlay{background:rgba(60,50,20,.35);}
   .confirm-overlay.open{opacity:1;pointer-events:auto;}
   .confirm-box{width:100%;max-width:360px;background:var(--p-surface,var(--panel-2));border:1px solid var(--p-border,var(--border));border-radius:14px;padding:28px 26px 24px;text-align:center;transform:translateY(10px) scale(.98);transition:transform .2s ease;box-shadow:0 20px 50px -20px rgba(0,0,0,.5);}
@@ -451,6 +454,10 @@
   .form-field select option{background:var(--panel-2);color:var(--text);padding:10px 14px;margin:2px 0;}
   .form-field input:focus,.form-field select:focus,.form-field textarea:focus{outline:none;border-color:var(--gold);}
   .form-field input::placeholder,.form-field textarea::placeholder{color:var(--text-dim);}
+  /* Validasi wajib-diisi custom (senada sama form Ganti Password/Foto Profil
+     & form login) -- ganti tooltip bawaan browser jadi pesan Bahasa
+     Indonesia + border merah, pakai ulang .profile-field-error yang sama. */
+  .form-field input.field-invalid,.form-field select.field-invalid{border-color:var(--red)!important;box-shadow:0 0 0 3px color-mix(in srgb, var(--red) 15%, transparent);}
   .form-hint{font-size:11px;color:var(--text-dim);}
   @media(max-width:640px){.form-grid{grid-template-columns:1fr;}}
 
@@ -604,5 +611,29 @@
     document.addEventListener('DOMContentLoaded', siberadInitSidebarCollapse);
   } else {
     siberadInitSidebarCollapse();
+  }
+
+  // Modal/overlay (.confirm-overlay, .crop-modal, .user-modal-overlay) yang
+  // markup-nya kejebak di DALAM .shell/.content -- yang punya sendiri
+  // position:relative + z-index, jadi bikin "stacking context" baru --
+  // z-index tinggi-nya (misalnya 100095 punya .crop-modal) cuma menang
+  // SESAMA isi .shell, nggak akan pernah bisa di atas overlay lain yang
+  // memang sudah jadi anak langsung <body> (misalnya #profileModalOverlay,
+  // z-index cuma 100, tapi menang karena .shell sendiri di root cuma
+  // "bernilai" z-index:1). Ini murni soal urutan tumpukan CSS, bukan besar
+  // kecilnya angka z-index. Perbaikannya: pindahin SEMUA overlay begini ke
+  // jadi anak langsung <body>, biar z-index-nya beneran dibanding di level
+  // teratas -- bukan cuma di dalam .shell doang.
+  function siberadBebaskanOverlayDariShell() {
+    document.querySelectorAll('.confirm-overlay, .crop-modal, .user-modal-overlay').forEach(function (el) {
+      if (el.parentElement && el.parentElement !== document.body) {
+        document.body.appendChild(el);
+      }
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', siberadBebaskanOverlayDariShell);
+  } else {
+    siberadBebaskanOverlayDariShell();
   }
 </script>

@@ -217,19 +217,19 @@
         <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M6 6l12 12M18 6L6 18"></path></svg>
       </button>
     </div>
-    <form class="form-grid" method="POST" action="{{ route('admin.users.store') }}">
+    <form class="form-grid" method="POST" action="{{ route('admin.users.store') }}" autocomplete="off">
       @csrf
       <div class="form-field">
         <label for="uNama">Nama Lengkap</label>
-        <input id="uNama" name="name" type="text" required>
+        <input id="uNama" name="name" type="text" autocomplete="off" placeholder="Contoh: Budi Santoso" required>
       </div>
       <div class="form-field">
         <label for="uUsername">Username / NRP</label>
-        <input id="uUsername" name="username" type="text" required>
+        <input id="uUsername" name="username" type="text" autocomplete="off" placeholder="Contoh: budisantoso" required>
       </div>
       <div class="form-field">
         <label for="uEmail">Email (opsional)</label>
-        <input id="uEmail" name="email" type="email">
+        <input id="uEmail" name="email" type="email" autocomplete="off" placeholder="Contoh: nama@email.com">
       </div>
       <div class="form-field">
         <label for="uSatuan">Satuan</label>
@@ -242,13 +242,27 @@
       </div>
       <div class="form-field">
         <label for="uPassword">Password Awal</label>
-        <input id="uPassword" name="password" type="text" minlength="8" required placeholder="Minimal 8 karakter">
+        <input id="uPassword" name="password" type="text" autocomplete="off" required placeholder="Password awal">
       </div>
       <div class="user-modal-actions">
         <button class="btn" type="button" id="tambahPenggunaCancel">Batal</button>
         <button class="btn btn-primary" type="submit">Simpan Pengguna</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="tambahPenggunaKonfirmasiOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="tambahPenggunaKonfirmasiTitle">
+    <div class="confirm-icon" style="background:var(--gold-dim);color:var(--gold-bright)">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><circle cx="12" cy="12" r="9"></circle><path d="M9 12l2 2 4-4"></path></svg>
+    </div>
+    <h3 id="tambahPenggunaKonfirmasiTitle">Tambah Pengguna Ini?</h3>
+    <p>Akun baru akan langsung aktif dan bisa dipakai untuk login.</p>
+    <div class="confirm-actions">
+      <button type="button" class="btn" id="tambahPenggunaKonfirmasiBatal">Batal</button>
+      <button type="button" class="btn btn-primary" id="tambahPenggunaKonfirmasiYa">Ya, Tambah</button>
+    </div>
   </div>
 </div>
 
@@ -263,20 +277,20 @@
         <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M6 6l12 12M18 6L6 18"></path></svg>
       </button>
     </div>
-    <form class="form-grid" method="POST" action="" id="ubahPenggunaForm">
+    <form class="form-grid" method="POST" action="" id="ubahPenggunaForm" autocomplete="off">
       @csrf
       @method('PATCH')
       <div class="form-field">
         <label for="upNama">Nama Lengkap</label>
-        <input id="upNama" name="name" type="text" required>
+        <input id="upNama" name="name" type="text" autocomplete="off" placeholder="Contoh: Budi Santoso" required>
       </div>
       <div class="form-field">
         <label for="upUsername">Username / NRP</label>
-        <input id="upUsername" name="username" type="text" required>
+        <input id="upUsername" name="username" type="text" autocomplete="off" placeholder="Contoh: budisantoso" required>
       </div>
       <div class="form-field">
         <label for="upEmail">Email (opsional)</label>
-        <input id="upEmail" name="email" type="email">
+        <input id="upEmail" name="email" type="email" autocomplete="off" placeholder="Contoh: nama@email.com">
       </div>
       <div class="form-field">
         <label for="upSatuan">Satuan</label>
@@ -288,11 +302,42 @@
       </div>
       <div class="form-field">
         <label for="upPassword">Password Baru (opsional)</label>
-        <input id="upPassword" name="password" type="text" minlength="8" placeholder="Kosongkan jika tidak diubah">
+        <input id="upPassword" name="password" type="text" autocomplete="off" placeholder="Kosongkan jika tidak diubah">
       </div>
       <div class="user-modal-actions">
         <button class="btn" type="button" id="ubahPenggunaCancel">Batal</button>
         <button class="btn btn-primary" type="submit">Simpan Perubahan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="ubahPenggunaKonfirmasiOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="ubahPenggunaKonfirmasiTitle">
+    <div class="confirm-icon" style="background:var(--gold-dim);color:var(--gold-bright)">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><circle cx="12" cy="12" r="9"></circle><path d="M9 12l2 2 4-4"></path></svg>
+    </div>
+    <h3 id="ubahPenggunaKonfirmasiTitle">Simpan Perubahan Pengguna Ini?</h3>
+    <p>Perubahan data akun akan langsung berlaku.</p>
+    <div class="confirm-actions">
+      <button type="button" class="btn" id="ubahPenggunaKonfirmasiBatal">Batal</button>
+      <button type="button" class="btn btn-primary" id="ubahPenggunaKonfirmasiYa">Ya, Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="hapusPenggunaOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="hapusPenggunaTitle">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
+    </div>
+    <h3 id="hapusPenggunaTitle">Hapus Akun Pengguna?</h3>
+    <p>Akun <strong id="hapusPenggunaNama">ini</strong> akan dihapus permanen dan tidak bisa login lagi.</p>
+    <form id="formHapusPengguna" method="POST" action="">
+      @csrf @method('DELETE')
+      <div class="confirm-actions">
+        <button type="button" class="btn" id="hapusPenggunaBatal">Batal</button>
+        <button type="submit" class="btn btn-ghost-red">Ya, Hapus</button>
       </div>
     </form>
   </div>
@@ -362,6 +407,23 @@
       <div class="user-modal-actions">
         <button class="btn" type="button" id="ubahSatuanCancel">Batal</button>
         <button class="btn btn-primary" type="submit">Simpan Perubahan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="hapusSatuanOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="hapusSatuanTitle">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
+    </div>
+    <h3 id="hapusSatuanTitle">Hapus Satuan Ini?</h3>
+    <p>Satuan <strong id="hapusSatuanNama">ini</strong> akan dihapus permanen dari daftar.</p>
+    <form id="formHapusSatuan" method="POST" action="">
+      @csrf @method('DELETE')
+      <div class="confirm-actions">
+        <button type="button" class="btn" id="hapusSatuanBatal">Batal</button>
+        <button type="submit" class="btn btn-ghost-red">Ya, Hapus</button>
       </div>
     </form>
   </div>
@@ -774,12 +836,12 @@
         <div class="panel">
           <div class="panel-head">
             <div><h2>Kelola Pengguna</h2><p>Seluruh akun yang terdaftar, satu akun per satuan. Klik "Ubah" untuk mengedit satuan/jabatan/password.</p></div>
-            <button class="btn btn-primary btn-sm" type="button" id="tambahPenggunaOpen">+ Tambah Pengguna</button>
+            <button class="btn btn-primary" type="button" id="tambahPenggunaOpen">Tambah Pengguna</button>
           </div>
           <div class="table-toolbar">
             <div class="table-search-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
-              <input type="text" class="table-search" data-table-search="tblPengguna" placeholder="Cari nama, username, atau email...">
+              <input type="text" class="table-search" data-table-search="tblPengguna" placeholder="Cari nama atau satuan...">
             </div>
             <select class="table-filter" data-table-filter="tblPengguna">
               <option value="">Semua Satuan</option>
@@ -794,9 +856,9 @@
               <thead><tr><th>Nama</th><th>Username</th><th>Email</th><th>Satuan</th><th>Aksi</th></tr></thead>
               <tbody>
                 @foreach($semuaPengguna as $p)
-                <tr data-filter-value="{{ $p->satuan->nama ?? '' }}">
+                <tr data-filter-value="{{ $p->satuan->nama ?? '' }}" data-search-value="{{ strtolower($p->name.' '.($p->satuan->nama ?? '').' '.($p->satuan->kode ?? '')) }}">
                   <td>{{ $p->name }}</td>
-                  <td><span class="badge">{{ $p->username }}</span></td>
+                  <td><span class="badge badge-plain">{{ $p->username }}</span></td>
                   <td style="color:var(--text-muted);">{{ $p->email ?: '-' }}</td>
                   <td>{{ $p->satuan->nama ?? '-' }}</td>
                   <td>
@@ -808,10 +870,9 @@
                         data-email="{{ $p->email }}"
                         data-satuan-id="{{ $p->satuan_id }}">Ubah</button>
                       @if($p->id !== $user->id)
-                      <form method="POST" action="{{ route('admin.users.destroy', $p) }}" onsubmit="return confirm('Hapus akun {{ $p->name }}?');" style="display:inline;">
-                        @csrf @method('DELETE')
-                        <button class="table-action-btn danger" type="submit">Hapus</button>
-                      </form>
+                      <button class="table-action-btn danger" type="button" onclick="bukaHapusPengguna(this)"
+                        data-action="{{ route('admin.users.destroy', $p) }}"
+                        data-nama="{{ $p->name }}">Hapus</button>
                       @endif
                     </div>
                   </td>
@@ -836,6 +897,66 @@
           if (closeBtn) closeBtn.addEventListener('click', close);
           if (cancelBtn) cancelBtn.addEventListener('click', close);
           document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+
+          // Validasi wajib-diisi custom (senada sama form login & Ganti
+          // Password/Foto Profil): ganti tooltip bawaan browser jadi pesan
+          // Bahasa Indonesia + border merah di bawah field.
+          var form = modal.querySelector('form');
+          var requiredMessages = {
+            uNama: 'Nama lengkap wajib diisi.',
+            uUsername: 'Username / NRP wajib diisi.',
+            uSatuan: 'Satuan wajib dipilih.',
+            uPassword: 'Password awal wajib diisi.'
+          };
+          if (form) {
+            form.querySelectorAll('input[required], select[required], input[type="email"]').forEach(function (field) {
+              var msg = field.nextElementSibling;
+              if (!msg || !msg.classList.contains('profile-field-error')) {
+                msg = document.createElement('span');
+                msg.className = 'profile-field-error';
+                msg.style.display = 'none';
+                field.insertAdjacentElement('afterend', msg);
+              }
+              field.addEventListener('invalid', function (e) {
+                e.preventDefault();
+                field.classList.add('field-invalid');
+                msg.textContent = field.validity.typeMismatch
+                  ? 'Format email tidak valid.'
+                  : (requiredMessages[field.id] || 'Kolom ini wajib diisi.');
+                msg.style.display = 'flex';
+              });
+              field.addEventListener('input', function () {
+                field.classList.remove('field-invalid');
+                msg.style.display = 'none';
+              });
+              field.addEventListener('change', function () {
+                field.classList.remove('field-invalid');
+                msg.style.display = 'none';
+              });
+            });
+          }
+
+          // Konfirmasi dulu sebelum beneran kirim (senada sama konfirmasi
+          // Kirim Permintaan ke Admin di form Ganti Password): validasi
+          // wajib-diisi bawaan browser tetap jalan duluan (form nggak akan
+          // sampai event 'submit' kalau ada field invalid), baru munculin
+          // konfirmasi kalau semua sudah valid.
+          var konfirmOverlay = document.getElementById('tambahPenggunaKonfirmasiOverlay');
+          if (form && konfirmOverlay) {
+            function closeKonfirm() { konfirmOverlay.classList.remove('open'); }
+            form.addEventListener('submit', function (e) {
+              if (form.dataset.confirmed === '1') { form.dataset.confirmed = ''; return; }
+              e.preventDefault();
+              konfirmOverlay.classList.add('open');
+            });
+            document.getElementById('tambahPenggunaKonfirmasiYa')?.addEventListener('click', function () {
+              closeKonfirm();
+              form.dataset.confirmed = '1';
+              form.requestSubmit ? form.requestSubmit() : form.submit();
+            });
+            document.getElementById('tambahPenggunaKonfirmasiBatal')?.addEventListener('click', closeKonfirm);
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && konfirmOverlay.classList.contains('open')) closeKonfirm(); });
+          }
         })();
 
         window.bukaUbahPengguna = function (btn) {
@@ -847,6 +968,14 @@
           document.getElementById('upPassword').value = '';
           document.getElementById('ubahPenggunaModal').classList.add('open');
         };
+
+        window.bukaHapusPengguna = function (btn) {
+          document.getElementById('formHapusPengguna').action = btn.dataset.action;
+          document.getElementById('hapusPenggunaNama').textContent = btn.dataset.nama || 'ini';
+          document.getElementById('hapusPenggunaOverlay')?.classList.add('open');
+        };
+        document.getElementById('hapusPenggunaBatal')?.addEventListener('click', () => document.getElementById('hapusPenggunaOverlay')?.classList.remove('open'));
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusPenggunaOverlay')?.classList.remove('open'); });
         (function () {
           var modal = document.getElementById('ubahPenggunaModal');
           var closeBtn = document.getElementById('ubahPenggunaClose');
@@ -856,6 +985,63 @@
           if (closeBtn) closeBtn.addEventListener('click', close);
           if (cancelBtn) cancelBtn.addEventListener('click', close);
           document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+
+          // Validasi wajib-diisi custom (senada sama modal Tambah Pengguna):
+          // ganti tooltip bawaan browser jadi pesan Bahasa Indonesia + border
+          // merah di bawah field.
+          var form = modal.querySelector('form');
+          var requiredMessages = {
+            upNama: 'Nama lengkap wajib diisi.',
+            upUsername: 'Username / NRP wajib diisi.',
+            upSatuan: 'Satuan wajib dipilih.'
+          };
+          if (form) {
+            form.querySelectorAll('input[required], select[required], input[type="email"]').forEach(function (field) {
+              var msg = field.nextElementSibling;
+              if (!msg || !msg.classList.contains('profile-field-error')) {
+                msg = document.createElement('span');
+                msg.className = 'profile-field-error';
+                msg.style.display = 'none';
+                field.insertAdjacentElement('afterend', msg);
+              }
+              field.addEventListener('invalid', function (e) {
+                e.preventDefault();
+                field.classList.add('field-invalid');
+                msg.textContent = field.validity.typeMismatch
+                  ? 'Format email tidak valid.'
+                  : (requiredMessages[field.id] || 'Kolom ini wajib diisi.');
+                msg.style.display = 'flex';
+              });
+              field.addEventListener('input', function () {
+                field.classList.remove('field-invalid');
+                msg.style.display = 'none';
+              });
+              field.addEventListener('change', function () {
+                field.classList.remove('field-invalid');
+                msg.style.display = 'none';
+              });
+            });
+          }
+
+          // Konfirmasi dulu sebelum beneran kirim (senada sama modal Tambah
+          // Pengguna): validasi wajib-diisi bawaan browser tetap jalan
+          // duluan, baru munculin konfirmasi kalau semua sudah valid.
+          var konfirmOverlay = document.getElementById('ubahPenggunaKonfirmasiOverlay');
+          if (form && konfirmOverlay) {
+            function closeKonfirm() { konfirmOverlay.classList.remove('open'); }
+            form.addEventListener('submit', function (e) {
+              if (form.dataset.confirmed === '1') { form.dataset.confirmed = ''; return; }
+              e.preventDefault();
+              konfirmOverlay.classList.add('open');
+            });
+            document.getElementById('ubahPenggunaKonfirmasiYa')?.addEventListener('click', function () {
+              closeKonfirm();
+              form.dataset.confirmed = '1';
+              form.requestSubmit ? form.requestSubmit() : form.submit();
+            });
+            document.getElementById('ubahPenggunaKonfirmasiBatal')?.addEventListener('click', closeKonfirm);
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && konfirmOverlay.classList.contains('open')) closeKonfirm(); });
+          }
         })();
       </script>
 
@@ -865,7 +1051,7 @@
         <div class="panel">
           <div class="panel-head">
             <div><h2>Manajemen Satuan</h2><p>Kelola daftar satuan/Satlak yang terdaftar di SIBERAD. Satuan yang masih punya pengguna tidak bisa dihapus.</p></div>
-            <button class="btn btn-primary btn-sm" type="button" id="tambahSatuanOpen">+ Tambah Satuan</button>
+            <button class="btn btn-primary" type="button" id="tambahSatuanOpen">Tambah Satuan</button>
           </div>
           <div class="table-toolbar">
             <div class="table-search-wrap">
@@ -900,10 +1086,9 @@
                         data-kategori="{{ $s->kategori }}"
                         data-urutan="{{ $s->urutan }}"
                         data-deskripsi="{{ $s->deskripsi }}">Ubah</button>
-                      <form method="POST" action="{{ route('admin.satuan.destroy', $s) }}" onsubmit="return confirm('Hapus satuan {{ $s->nama }}?');" style="display:inline;">
-                        @csrf @method('DELETE')
-                        <button class="table-action-btn danger" type="submit">Hapus</button>
-                      </form>
+                      <button class="table-action-btn danger" type="button" onclick="bukaHapusSatuan(this)"
+                        data-action="{{ route('admin.satuan.destroy', $s) }}"
+                        data-nama="{{ $s->nama }}">Hapus</button>
                     </div>
                   </td>
                 </tr>
@@ -939,6 +1124,14 @@
           document.getElementById('usDeskripsi').value = btn.dataset.deskripsi || '';
           document.getElementById('ubahSatuanModal').classList.add('open');
         };
+
+        window.bukaHapusSatuan = function (btn) {
+          document.getElementById('formHapusSatuan').action = btn.dataset.action;
+          document.getElementById('hapusSatuanNama').textContent = btn.dataset.nama || 'ini';
+          document.getElementById('hapusSatuanOverlay')?.classList.add('open');
+        };
+        document.getElementById('hapusSatuanBatal')?.addEventListener('click', () => document.getElementById('hapusSatuanOverlay')?.classList.remove('open'));
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusSatuanOverlay')?.classList.remove('open'); });
         (function () {
           var modal = document.getElementById('ubahSatuanModal');
           var closeBtn = document.getElementById('ubahSatuanClose');
@@ -1604,10 +1797,9 @@
                   <td>{{ \Carbon\Carbon::createFromTimestamp($s->last_activity)->diffForHumans() }}</td>
                   <td>
                     @if($s->id !== $sesiSayaId)
-                    <form method="POST" action="{{ route('admin.sessions.destroy', $s->id) }}" onsubmit="return confirm('Paksa logout sesi ini?');">
-                      @csrf @method('DELETE')
-                      <button class="btn btn-ghost-red btn-sm" type="submit">Paksa Logout</button>
-                    </form>
+                    <button class="btn btn-ghost-red btn-sm" type="button" onclick="bukaPaksaLogout(this)"
+                      data-action="{{ route('admin.sessions.destroy', $s->id) }}"
+                      data-nama="{{ $s->user_name ?? 'Tamu (belum login)' }}">Paksa Logout</button>
                     @else
                       <span style="font-size:11.5px;color:var(--text-dim);">—</span>
                     @endif
@@ -1621,6 +1813,32 @@
           </div>
         </div>
       </section>
+
+      <div class="confirm-overlay" id="paksaLogoutOverlay">
+        <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="paksaLogoutTitle">
+          <div class="confirm-icon">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></svg>
+          </div>
+          <h3 id="paksaLogoutTitle">Paksa Logout Sesi Ini?</h3>
+          <p>Sesi milik <strong id="paksaLogoutNama">ini</strong> akan langsung diakhiri dan perlu login ulang.</p>
+          <form id="formPaksaLogout" method="POST" action="">
+            @csrf @method('DELETE')
+            <div class="confirm-actions">
+              <button type="button" class="btn" id="paksaLogoutBatal">Batal</button>
+              <button type="submit" class="btn btn-ghost-red">Ya, Logout Paksa</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <script>
+        window.bukaPaksaLogout = function (btn) {
+          document.getElementById('formPaksaLogout').action = btn.dataset.action;
+          document.getElementById('paksaLogoutNama').textContent = btn.dataset.nama || 'ini';
+          document.getElementById('paksaLogoutOverlay')?.classList.add('open');
+        };
+        document.getElementById('paksaLogoutBatal')?.addEventListener('click', () => document.getElementById('paksaLogoutOverlay')?.classList.remove('open'));
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('paksaLogoutOverlay')?.classList.remove('open'); });
+      </script>
 
     </div>
 
@@ -1713,8 +1931,11 @@
         }
         document.getElementById('setujuiResetPasswordBatal')?.addEventListener('click', () => document.getElementById('setujuiResetPasswordOverlay')?.classList.remove('open'));
         document.getElementById('tolakResetPasswordBatal')?.addEventListener('click', () => document.getElementById('tolakResetPasswordOverlay')?.classList.remove('open'));
-        document.getElementById('setujuiResetPasswordOverlay')?.addEventListener('click', e => { if (e.target.id === 'setujuiResetPasswordOverlay') e.currentTarget.classList.remove('open'); });
-        document.getElementById('tolakResetPasswordOverlay')?.addEventListener('click', e => { if (e.target.id === 'tolakResetPasswordOverlay') e.currentTarget.classList.remove('open'); });
+        document.addEventListener('keydown', e => {
+          if (e.key !== 'Escape') return;
+          document.getElementById('setujuiResetPasswordOverlay')?.classList.remove('open');
+          document.getElementById('tolakResetPasswordOverlay')?.classList.remove('open');
+        });
 
         document.getElementById('tblResetPasswordSort')?.addEventListener('change', function () {
           var table = document.getElementById('tblResetPassword');
