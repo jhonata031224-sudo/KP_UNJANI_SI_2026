@@ -117,7 +117,16 @@
       if (window.__siberadSesiBerakhirShown) return;
       window.__siberadSesiBerakhirShown = true;
       if (pollTimer) window.clearInterval(pollTimer);
-      ensureSesiBerakhirOverlay().classList.add('open');
+      var overlay = ensureSesiBerakhirOverlay();
+      // Overlay ini baru dibuat lewat document.createElement() detik itu
+      // juga (bukan markup statis yang sudah ke-render dari awal load
+      // halaman kayak modal lain) -- kalau class "open" langsung ditambah
+      // di baris yang sama, browser belum sempat "commit" kondisi awalnya
+      // (opacity:0) sebelum transisinya jalan, jadi animasinya kepotong
+      // dan kelihatan kaku/langsung muncul. Baca offsetHeight dulu buat
+      // paksa reflow, biar transisinya beneran ke-animate.
+      overlay.offsetHeight;
+      overlay.classList.add('open');
     }
     window.siberadTampilkanSesiBerakhir = tampilkanSesiBerakhir;
 

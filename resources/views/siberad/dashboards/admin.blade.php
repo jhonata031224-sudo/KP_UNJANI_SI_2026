@@ -1825,7 +1825,7 @@
             @csrf @method('DELETE')
             <div class="confirm-actions">
               <button type="button" class="btn" id="paksaLogoutBatal">Batal</button>
-              <button type="submit" class="btn btn-ghost-red">Ya, Logout Paksa</button>
+              <button type="submit" class="btn btn-ghost-red">Ya</button>
             </div>
           </form>
         </div>
