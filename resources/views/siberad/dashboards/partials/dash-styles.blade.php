@@ -274,6 +274,46 @@
   .profile-form-field input:focus,.profile-form-field textarea:focus{outline:none;border-color:var(--gold);}
   .profile-form-field input::placeholder,.profile-form-field textarea::placeholder{color:var(--text-dim);}
   .profile-form-error{font-size:11.5px;color:var(--red);display:none;line-height:1.5;}
+  /* Validasi wajib-diisi custom (senada sama form login & Buat Permintaan
+     Laporan) -- ganti tooltip bawaan browser jadi pesan Bahasa Indonesia +
+     border merah, reset otomatis begitu field-nya diisi ulang. */
+  .profile-form-field input.field-invalid{border-color:var(--red)!important;box-shadow:0 0 0 3px color-mix(in srgb, var(--red) 15%, transparent);}
+  .profile-field-error{display:flex;align-items:center;gap:6px;margin-top:5px;font-size:10.5px;color:var(--red);animation:profileErrorIn .2s ease;}
+  .profile-field-error::before{content:"";width:13px;height:13px;flex-shrink:0;border-radius:50%;background:var(--red);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='8' x2='12' y2='13'/%3E%3Ccircle cx='12' cy='16.5' r='.6' fill='%23000' stroke='none'/%3E%3Ccircle cx='12' cy='12' r='9.3'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='8' x2='12' y2='13'/%3E%3Ccircle cx='12' cy='16.5' r='.6' fill='%23000' stroke='none'/%3E%3Ccircle cx='12' cy='12' r='9.3'/%3E%3C/svg%3E") center/contain no-repeat;}
+  @keyframes profileErrorIn{from{opacity:0;transform:translateY(-3px);}to{opacity:1;transform:translateY(0);}}
+  .profile-pending-state{text-align:center;padding:26px 12px 10px;}
+  .profile-pending-state svg{width:34px;height:34px;stroke:var(--gold-bright);margin:0 auto 12px;display:block;}
+  .profile-pending-state h4{margin:0 0 7px;font-family:var(--display);font-size:15px;color:var(--text);}
+  .profile-pending-state p{margin:0;font-size:12px;color:var(--text-muted);line-height:1.65;}
+  /* Atur Foto Profil: modal geser+zoom sebelum foto beneran diupload,
+     crop-nya lingkaran (sama kayak bentuk avatar-nya). */
+  .crop-modal{position:fixed;inset:0;z-index:100095;background:rgba(2,4,6,.68);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s ease;}
+  :root[data-theme="light"] .crop-modal{background:rgba(40,32,14,.42);}
+  .crop-modal.open{opacity:1;visibility:visible;pointer-events:auto;}
+  .crop-modal-card{width:min(360px,100%);background:var(--panel);border:1px solid var(--border-soft);border-radius:20px;padding:24px;box-sizing:border-box;box-shadow:0 1px 0 rgba(255,255,255,.02) inset,0 32px 80px rgba(0,0,0,.5);transform:translateY(14px) scale(.97);transition:transform .2s ease;}
+  .crop-modal.open .crop-modal-card{transform:translateY(0) scale(1);}
+  .crop-modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+  .crop-modal-head h3{margin:0;font-family:var(--display);font-size:17px;color:var(--text);}
+  .crop-modal-close{flex-shrink:0;width:32px;height:32px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .2s ease,color .2s ease,transform .2s ease;}
+  .crop-modal-close:hover{border-color:var(--red);color:var(--red);transform:rotate(90deg);}
+  .crop-modal-close svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;}
+  .crop-stage{position:relative;width:270px;height:270px;max-width:100%;margin:0 auto;border-radius:12px;overflow:hidden;background:#000;cursor:grab;touch-action:none;}
+  .crop-stage.is-dragging{cursor:grabbing;}
+  .crop-stage img{position:absolute;top:0;left:0;max-width:none;transform-origin:0 0;user-select:none;-webkit-user-drag:none;pointer-events:none;}
+  .crop-mask{position:absolute;inset:0;pointer-events:none;border-radius:50%;box-shadow:0 0 0 9999px rgba(2,4,6,.62);}
+  .crop-zoom-row{display:flex;align-items:center;gap:10px;margin-top:18px;}
+  .crop-zoom-row svg{width:16px;height:16px;stroke:var(--text-dim);flex-shrink:0;}
+  .crop-zoom-row input[type="range"]{flex:1;accent-color:var(--gold-bright);cursor:pointer;}
+  .crop-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+  .crop-modal-hint{margin:10px 0 0;font-size:10.5px;color:var(--text-dim);text-align:center;}
+  .profile-field-toggle-wrap{position:relative;}
+  .profile-field-toggle-wrap input{padding-right:42px;width:100%;box-sizing:border-box;}
+  .field-toggle{position:absolute;top:0;bottom:0;right:2px;margin:auto 0;height:36px;width:36px;padding:0;line-height:0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:var(--text-dim);transition:color .2s ease;}
+  .field-toggle:hover{color:var(--gold-bright);}
+  .field-toggle svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .field-toggle .icon-eye-off{display:none;}
+  .field-toggle.is-visible .icon-eye{display:none;}
+  .field-toggle.is-visible .icon-eye-off{display:block;}
   .profile-subtabs{display:flex;border-bottom:1px solid var(--border-soft);margin:0 2px 22px;}
   .profile-subtab-btn{position:relative;flex:1;display:flex;align-items:center;justify-content:center;gap:7px;box-sizing:border-box;border:0;background:transparent;color:var(--text-dim);font-family:var(--body);font-size:12.5px;font-weight:600;padding:0 6px 13px;cursor:pointer;transition:color .15s ease;}
   .profile-subtab-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0;opacity:.65;transition:opacity .15s ease;}
@@ -287,6 +327,8 @@
   .profile-subtab-panel.active{display:block;animation:profileTabFade .2s ease;}
   @keyframes profileTabFade{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:translateY(0);}}
   .profile-photo-actions{display:flex;gap:10px;margin-top:8px;}
+  .profile-photo-actions form{flex:1;display:flex;}
+  .profile-form button[type="submit"]{justify-content:center;}
   .profile-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;box-sizing:border-box;border-radius:10px;padding:10px 12px;font-family:var(--body);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s ease,border-color .15s ease,color .15s ease;}
   .profile-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0;}
   .profile-btn-primary{border:1px solid var(--gold);background:var(--gold-dim);color:var(--gold-bright);}

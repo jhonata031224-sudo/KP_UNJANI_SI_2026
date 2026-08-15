@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\BackupController;
+use App\Http\Controllers\Admin\PermintaanResetPasswordController as AdminPermintaanResetPasswordController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SatuanController;
@@ -21,10 +22,12 @@ use App\Http\Controllers\LogUjiPengembanganController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\PangkatController;
 use App\Http\Controllers\PermintaanLaporanController;
+use App\Http\Controllers\PermintaanResetPasswordController;
 use App\Http\Controllers\PersonelController;
 use App\Http\Controllers\PersonelDokumenController;
 use App\Http\Controllers\PersonelMutasiController;
 use App\Http\Controllers\PostinganController;
+use App\Http\Controllers\ProfilFotoController;
 use App\Http\Controllers\ProyekRisetController;
 use App\Models\Pengaturan;
 use App\Models\Satuan;
@@ -137,6 +140,19 @@ Route::patch('/laporan-monitoring/{laporanMonitoring}/status', [DanpusLaporanMon
     ->middleware('auth')
     ->name('laporan-monitoring.update-status');
 
+// ===== Foto Profil (semua role) =====
+Route::post('/profil/foto', [ProfilFotoController::class, 'update'])
+    ->middleware('auth')
+    ->name('profil-foto.update');
+Route::delete('/profil/foto', [ProfilFotoController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('profil-foto.destroy');
+
+// ===== Permintaan Ganti Password (Pimpinan/Satuan -> Admin) =====
+Route::post('/permintaan-reset-password', [PermintaanResetPasswordController::class, 'store'])
+    ->middleware('auth')
+    ->name('permintaan-reset-password.store');
+
 Route::get('/notifikasi/realtime', [NotifikasiController::class, 'realtime'])
     ->middleware('auth')
     ->name('notifikasi.realtime');
@@ -199,4 +215,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/laporan/export/pengguna', [ReportController::class, 'exportUsersExcel'])->name('laporan.export-pengguna');
     Route::get('/laporan/export/aktivitas', [ReportController::class, 'exportActivityExcel'])->name('laporan.export-aktivitas');
     Route::delete('/sessions/{id}', [SessionController::class, 'destroy'])->name('sessions.destroy');
+    Route::patch('/permintaan-reset-password/{permintaanResetPassword}/setujui', [AdminPermintaanResetPasswordController::class, 'setujui'])->name('permintaan-reset-password.setujui');
+    Route::patch('/permintaan-reset-password/{permintaanResetPassword}/tolak', [AdminPermintaanResetPasswordController::class, 'tolak'])->name('permintaan-reset-password.tolak');
 });

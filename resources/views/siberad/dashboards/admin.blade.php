@@ -110,6 +110,13 @@
   #tblPengguna th:last-child,#tblPengguna td:last-child,
   #tblSatuan th:last-child,#tblSatuan td:last-child{text-align:center;}
   #tblPengguna .btn-row,#tblSatuan .btn-row{justify-content:center;}
+  #tblResetPassword .subject{margin-bottom:6px;}
+  #tblResetPassword th:nth-child(1),#tblResetPassword td:nth-child(1){text-align:left;}
+  #tblResetPassword th:nth-child(2),#tblResetPassword td:nth-child(2){text-align:left;}
+  #tblResetPassword th:nth-child(n+3),#tblResetPassword td:nth-child(n+3){text-align:center;}
+  #tblResetPassword .btn-row{justify-content:center;}
+  .request-deadline{display:inline-flex;align-items:center;gap:5px;font-weight:700;}
+  .request-deadline svg{width:13px;height:13px;flex-shrink:0;opacity:.75;}
 
   .side-nav-group{margin:0}.side-nav-group-title{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;margin:2px 0;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--text-muted);font-family:var(--body);font-size:13.5px;font-weight:500;cursor:pointer;text-align:left;box-sizing:border-box;transition:background .15s ease,color .15s ease}.side-nav-group-title:hover{background:var(--hover-tint);color:var(--text)}.side-nav-group.open .side-nav-group-title{color:var(--text)}.side-nav-group-title .side-text{flex:1}.side-nav-group-title .chevron{margin-left:auto;width:15px;height:15px;flex-shrink:0;opacity:.6;transition:transform .25s cubic-bezier(.4,0,.2,1),opacity .2s ease}.side-nav-group.open .chevron{transform:rotate(180deg);opacity:1}.side-subnav{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;overflow:hidden}.side-subnav>div{min-height:0;padding:3px 0;margin-left:18px;border-left:1px solid var(--border-soft)}.side-nav-group.open .side-subnav{grid-template-rows:1fr;opacity:1}.side-sub-link{position:relative;display:flex;align-items:center;gap:10px;padding:9px 12px 9px 17px;border-radius:0 9px 9px 0;color:var(--text-muted);font-family:var(--body);font-size:13px;font-weight:500;text-decoration:none;margin:1px 0;box-sizing:border-box;transition:background .15s ease,color .15s ease}.side-sub-link:hover{background:var(--hover-tint);color:var(--text)}.side-sub-link .sub-dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5;flex:0 0 auto;transition:opacity .15s ease,background .15s ease,box-shadow .15s ease}.side-sub-link.active{background:var(--gold-dim);color:var(--gold-bright);font-weight:600}.side-sub-link.active:before{content:"";position:absolute;left:-1px;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--gold-bright)}.side-sub-link.active .sub-dot{background:var(--gold-bright);opacity:1;box-shadow:0 0 0 3px rgba(201,122,0,.15)}.side-subnav-label{display:none}
   .sidebar.collapsed .side-subnav{display:none}.sidebar.collapsed .side-nav-group.open .side-subnav{display:block;position:fixed;min-width:216px;background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);padding:8px;z-index:100020}.sidebar.collapsed .side-subnav>div{margin-left:0;border-left:none;padding:0}.sidebar.collapsed .side-subnav-label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);padding:4px 10px 8px}.sidebar.collapsed .side-sub-link{padding:9px 10px;border-radius:8px}.sidebar.collapsed .side-nav-group.has-active-child .side-nav-group-title{color:var(--gold-bright);background:var(--gold-dim)}
@@ -122,70 +129,35 @@
       <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
     </button>
 
-    {{-- ===== VIEW PENGATURAN AKUN (Foto Profil + Ganti Password, ketuker via tab) ===== --}}
+    {{-- ===== VIEW PENGATURAN AKUN (cuma Foto Profil -- Admin tidak lewat
+         alur permintaan ganti password, karena Admin sendiri yang menyetujui
+         permintaan itu) ===== --}}
     <div class="profile-dropdown-view" id="profileSettingsView" style="display:none;">
       <div class="profile-modal-title">Pengaturan Akun</div>
 
-      <div class="profile-subtabs" role="tablist">
-        <button type="button" class="profile-subtab-btn active" data-subtab-target="profilePhotoView" role="tab" aria-selected="true">
-          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1-2h7l1 2h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5Z"></path><circle cx="12" cy="13" r="3.4"></circle></svg>
-          Foto Profil
-        </button>
-        <button type="button" class="profile-subtab-btn" data-subtab-target="profilePasswordView" role="tab" aria-selected="false">
-          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2.2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
-          Ganti Password
-        </button>
+      <div class="profile-dropdown-head-lg">
+        <div class="profile-dropdown-avatar-lg">
+          <span class="profile-initial" id="profileInitialLarge" style="display:{{ $user->foto_path ? 'none' : '' }};">{{ strtoupper(mb_substr($user->name ?? 'U', 0, 1)) }}</span>
+          <img class="profile-photo" id="profilePhotoLarge" alt="Foto profil {{ $user->name }}" @if($user->foto_path) src="{{ asset('storage/'.$user->foto_path) }}" style="display:block;" @endif>
+        </div>
+        <div class="profile-dropdown-name">{{ $user->name }}</div>
+        <div class="profile-dropdown-role">{{ $user->jabatan ?? 'Pengguna' }}</div>
       </div>
 
-      <div class="profile-subtab-panel active" id="profilePhotoView" role="tabpanel">
-        <div class="profile-dropdown-head-lg">
-          <div class="profile-dropdown-avatar-lg">
-            <span class="profile-initial" id="profileInitialLarge">{{ strtoupper(mb_substr($user->name ?? 'U', 0, 1)) }}</span>
-            <img class="profile-photo" id="profilePhotoLarge" alt="Foto profil {{ $user->name }}">
-          </div>
-          <div class="profile-dropdown-name">{{ $user->name }}</div>
-          <div class="profile-dropdown-role">{{ $user->jabatan ?? 'Pengguna' }}</div>
-        </div>
-
-        <div class="profile-photo-actions">
+      <div class="profile-photo-actions">
+        <form method="POST" action="{{ route('profil-foto.update') }}" enctype="multipart/form-data" id="formGantiFoto">
+          @csrf
           <button type="button" class="profile-btn profile-btn-primary" id="gantiFotoBtn">
-            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1-2h7l1 2h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5Z"></path><circle cx="12" cy="13" r="3.4"></circle></svg>
             <span id="gantiFotoLabel">Ganti Foto</span>
           </button>
-          <button type="button" class="profile-btn profile-btn-outline" id="hapusFotoBtn" style="display:none;">
-            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
-            Hapus
-          </button>
-        </div>
-        <p class="profile-photo-hint">Format JPG, PNG, atau WEBP — ukuran maksimal 5 MB.</p>
-        <input type="file" id="fotoProfilInput" accept="image/png,image/jpeg,image/webp" hidden>
-      </div>
-
-      <div class="profile-subtab-panel" id="profilePasswordView" role="tabpanel">
-        <div class="profile-form-notice">
-          Perubahan kata sandi tidak langsung berlaku. Permintaan akan dikirim ke <b>Admin</b> untuk diverifikasi terlebih dahulu.
-        </div>
-
-        <form class="profile-form" id="formGantiPassword" novalidate>
-          <div class="profile-form-field">
-            <label for="passBaru">Kata Sandi Baru</label>
-            <input type="password" id="passBaru" minlength="8" required placeholder="Minimal 8 karakter">
-          </div>
-          <div class="profile-form-field">
-            <label for="passKonfirmasi">Konfirmasi Kata Sandi Baru</label>
-            <input type="password" id="passKonfirmasi" minlength="8" required placeholder="Ulangi kata sandi baru">
-          </div>
-          <div class="profile-form-field">
-            <label for="passCatatan">Catatan untuk Admin (opsional)</label>
-            <textarea id="passCatatan" rows="2" placeholder="Contoh: lupa kata sandi lama"></textarea>
-          </div>
-          <span class="profile-form-error" id="passError"></span>
-          <button type="submit" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">
-            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;"><rect x="5" y="11" width="14" height="9" rx="2.2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
-            Kirim Permintaan ke Admin
-          </button>
+          <input type="file" name="foto" id="fotoProfilInput" accept="image/png,image/jpeg,image/webp" hidden>
         </form>
+        <button type="button" class="profile-btn profile-btn-outline" id="hapusFotoBtn" style="display:{{ $user->foto_path ? '' : 'none' }};">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
+          Hapus
+        </button>
       </div>
+      <p class="profile-photo-hint">Format JPG, PNG, atau WEBP — ukuran maksimal 10 MB.</p>
     </div>
 
     {{-- ===== VIEW BANTUAN & PANDUAN ===== --}}
@@ -571,7 +543,7 @@
               <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" style="fill:var(--gold-dim) !important;stroke:var(--gold-bright) !important;"></path>
               <path d="M13.73 21a2 2 0 0 1-3.46 0" style="fill:none !important;stroke:var(--gold-bright) !important;"></path>
             </svg>
-            <span class="siberad-notif-dot" style="position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--panel,#0c2417);{{ auth()->user()?->unreadNotifications->count() ? '' : 'display:none;' }}"></span>
+            <span class="siberad-notif-badge" style="{{ auth()->user()?->unreadNotifications->count() ? '' : 'display:none;' }}">{{ auth()->user()?->unreadNotifications->count() > 99 ? '99+' : auth()->user()?->unreadNotifications->count() }}</span>
           </button>
 
           <div class="profile-dropdown" id="notifDropdown" role="menu" aria-label="Notifikasi">
@@ -589,16 +561,16 @@
         </div>
         <div class="profile-menu" id="profileMenu">
           <button type="button" class="profile-menu-btn" id="profileMenuBtn" aria-haspopup="menu" aria-expanded="false" aria-label="Menu profil">
-            <span class="profile-initial" id="profileInitial">{{ strtoupper(mb_substr($user->name ?? 'U', 0, 1)) }}</span>
-            <img class="profile-photo" id="profilePhotoBtn" alt="Foto profil {{ $user->name }}">
+            <span class="profile-initial" id="profileInitial" style="display:{{ $user->foto_path ? 'none' : '' }};">{{ strtoupper(mb_substr($user->name ?? 'U', 0, 1)) }}</span>
+            <img class="profile-photo" id="profilePhotoBtn" alt="Foto profil {{ $user->name }}" @if($user->foto_path) src="{{ asset('storage/'.$user->foto_path) }}" style="display:block;" @endif>
           </button>
 
           <div class="profile-dropdown" id="profileDropdown" role="menu" aria-label="Menu profil">
 
             <div class="profile-dropdown-head">
               <div class="profile-dropdown-avatar">
-                <span class="profile-initial" id="profileInitialDropdown">{{ strtoupper(mb_substr($user->name ?? 'U', 0, 1)) }}</span>
-                <img class="profile-photo" id="profilePhotoDropdown" alt="Foto profil {{ $user->name }}">
+                <span class="profile-initial" id="profileInitialDropdown" style="display:{{ $user->foto_path ? 'none' : '' }};">{{ strtoupper(mb_substr($user->name ?? 'U', 0, 1)) }}</span>
+                <img class="profile-photo" id="profilePhotoDropdown" alt="Foto profil {{ $user->name }}" @if($user->foto_path) src="{{ asset('storage/'.$user->foto_path) }}" style="display:block;" @endif>
               </div>
               <div>
                 <div class="profile-dropdown-name">{{ $user->name }}</div>
@@ -671,6 +643,8 @@
     <div class="content">
       @include('siberad.dashboards.partials.pengumuman-banner')
       @include('siberad.dashboards.partials.styled-select')
+      @if(session('status'))<script>document.addEventListener('DOMContentLoaded',function(){window.siberadShowToast?window.siberadShowToast('success',{!! json_encode(session('status')) !!}):null});</script>@endif
+      @if(session('error'))<script>document.addEventListener('DOMContentLoaded',function(){window.siberadShowToast?window.siberadShowToast('error',{!! json_encode(session('error')) !!}):null});</script>@endif
 
       {{-- ===== DASHBOARD ===== --}}
       <section class="tab-panel active" data-tab-panel="dashboard">
@@ -793,12 +767,6 @@
 
       {{-- ===== KELOLA PENGGUNA ===== --}}
       <section class="tab-panel" data-tab-panel="pengguna">
-        @if (session('status'))
-          <div class="notice">{{ session('status') }}</div>
-        @endif
-        @if (session('error'))
-          <div class="notice" style="border-color:var(--red);">{{ session('error') }}</div>
-        @endif
         @if ($errors->any())
           <div class="notice" style="border-color:var(--red);">{{ $errors->first() }}</div>
         @endif
@@ -867,7 +835,6 @@
           if (openBtn) openBtn.addEventListener('click', open);
           if (closeBtn) closeBtn.addEventListener('click', close);
           if (cancelBtn) cancelBtn.addEventListener('click', close);
-          modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
           document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
         })();
 
@@ -888,19 +855,12 @@
           function close() { modal.classList.remove('open'); }
           if (closeBtn) closeBtn.addEventListener('click', close);
           if (cancelBtn) cancelBtn.addEventListener('click', close);
-          modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
           document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
         })();
       </script>
 
       {{-- ===== MANAJEMEN SATUAN ===== --}}
       <section class="tab-panel" data-tab-panel="satlak">
-        @if (session('status'))
-          <div class="notice">{{ session('status') }}</div>
-        @endif
-        @if (session('error'))
-          <div class="notice" style="border-color:var(--red);">{{ session('error') }}</div>
-        @endif
 
         <div class="panel">
           <div class="panel-head">
@@ -967,7 +927,6 @@
           if (openBtn) openBtn.addEventListener('click', open);
           if (closeBtn) closeBtn.addEventListener('click', close);
           if (cancelBtn) cancelBtn.addEventListener('click', close);
-          modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
           document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
         })();
 
@@ -988,7 +947,6 @@
           function close() { modal.classList.remove('open'); }
           if (closeBtn) closeBtn.addEventListener('click', close);
           if (cancelBtn) cancelBtn.addEventListener('click', close);
-          modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
           document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
         })();
       </script>
@@ -1000,9 +958,6 @@
           <p>Setiap satuan berperan sebagai role login. Atur modul apa saja yang boleh diakses tiap satuan.</p>
         </div>
 
-        @if (session('status'))
-          <div class="notice">{{ session('status') }}</div>
-        @endif
 
         @foreach($semuaSatuan as $s)
         <div class="panel">
@@ -1062,12 +1017,6 @@
           <p>Buat salinan database sewaktu-waktu dan unduh untuk disimpan di luar server.</p>
         </div>
 
-        @if (session('status'))
-          <div class="notice">{{ session('status') }}</div>
-        @endif
-        @if (session('error'))
-          <div class="notice" style="border-color:var(--red);">{{ session('error') }}</div>
-        @endif
 
         <div class="panel">
           <div class="panel-head"><div><h3>Buat Backup Baru</h3><p>Untuk koneksi SQLite: salin file database. Untuk MySQL: jalankan mysqldump.</p></div></div>
@@ -1120,9 +1069,6 @@
           <p>Konfigurasi umum aplikasi SIBERAD.</p>
         </div>
 
-        @if (session('status'))
-          <div class="notice">{{ session('status') }}</div>
-        @endif
 
         {{-- ===== KONTEN HALAMAN LANDING ===== --}}
         <div class="lp-layout">
@@ -1543,38 +1489,39 @@
           <div class="table-toolbar">
             <div class="table-search-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
-              <input type="text" class="table-search" data-table-search="tblResetPassword" placeholder="Cari satuan atau catatan...">
+              <input type="text" class="table-search" data-table-search="tblResetPassword" placeholder="Cari nama atau satuan...">
             </div>
-            <select class="table-filter" data-table-filter="tblResetPassword">
-              <option value="">Semua Status</option>
-              <option value="Menunggu">Menunggu</option>
-              <option value="Selesai">Selesai</option>
-              <option value="Ditolak">Ditolak</option>
+            <select class="table-filter" id="tblResetPasswordSort" data-table-sort="tblResetPassword">
+              <option value="terbaru">Terbaru</option>
+              <option value="terlama">Terlama</option>
             </select>
             <span class="table-filter-count" data-table-count="tblResetPassword"></span>
           </div>
           <div class="tbl-wrap" data-row-limit="5">
             <table class="dtbl" id="tblResetPassword">
-              <thead><tr><th>Satuan</th><th>Catatan</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr></thead>
+              <colgroup><col style="width:26%"><col style="width:34%"><col style="width:20%"><col style="width:20%"></colgroup>
+              <thead><tr><th>Pengaju</th><th>Catatan</th><th>Tanggal</th><th>Aksi</th></tr></thead>
               <tbody>
-                @foreach($permintaanResetPassword as $i => $r)
-                <tr id="rowReset{{ $i }}" data-filter-value="{{ $r['status'] }}">
-                  <td>{{ $r['satuan'] }}</td>
-                  <td style="color:var(--text-muted);">{{ $r['catatan'] }}</td>
-                  <td>{{ $r['tanggal'] }}</td>
-                  <td id="statusReset{{ $i }}"><span class="badge {{ $r['status_class'] }}">{{ $r['status'] }}</span></td>
+                @forelse($permintaanResetPassword as $r)
+                <tr data-created="{{ $r->created_at->timestamp }}" data-search-value="{{ strtolower(($r->user->name ?? '').' '.($r->user->satuan->nama ?? '').' '.($r->user->satuan->kode ?? '')) }}">
+                  <td><div class="subject">{{ $r->user->name ?? '-' }}</div><span class="badge">{{ $r->user->satuan->kode ?? '-' }}</span></td>
+                  <td style="color:var(--text-muted);">{{ trim((string) $r->catatan) !== '' ? $r->catatan : '-' }}</td>
+                  <td><div class="request-deadline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>{{ $r->created_at->translatedFormat('d M Y H:i') }}</div></td>
                   <td>
-                    @if($r['status_class'] === 'amber')
+                    @if($r->status === \App\Models\PermintaanResetPassword::STATUS_MENUNGGU)
                     <div class="btn-row">
-                      <button class="btn btn-primary btn-sm" type="button" onclick="setujuiResetPassword({{ $i }})">Setujui</button>
-                      <button class="btn btn-ghost-red btn-sm" type="button" onclick="tolakResetPassword({{ $i }})">Tolak</button>
+                      <button class="table-action-btn edit" type="button" onclick="bukaSetujuiResetPassword(this)" data-id="{{ $r->id }}" data-nama="{{ e($r->user->name ?? '-') }}">Setujui</button>
+                      <button class="table-action-btn danger" type="button" onclick="bukaTolakResetPassword(this)" data-id="{{ $r->id }}" data-nama="{{ e($r->user->name ?? '-') }}">Tolak</button>
                     </div>
                     @else
-                      <span style="font-size:11.5px;color:var(--text-dim);">Sudah diproses</span>
+                      <span style="font-size:11.5px;font-weight:700;color:{{ $r->status === \App\Models\PermintaanResetPassword::STATUS_DISETUJUI ? 'var(--success-bright)' : 'var(--red)' }};">{{ $r->status }}</span>
+                      <div style="font-size:10.5px;color:var(--text-dim);margin-top:2px;">oleh {{ $r->diprosesOleh->name ?? '-' }}</div>
                     @endif
                   </td>
                 </tr>
-                @endforeach
+                @empty
+                <tr><td colspan="4"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada permintaan ganti password</div></div></td></tr>
+                @endforelse
               </tbody>
             </table>
           </div>
@@ -1637,9 +1584,6 @@
 
       {{-- ===== SESI LOGIN AKTIF ===== --}}
       <section class="tab-panel" data-tab-panel="sesi-aktif">
-        @if (session('status'))
-          <div class="notice">{{ session('status') }}</div>
-        @endif
 
         <div class="panel">
           <div class="panel-head"><div><h2>Sesi Login Aktif</h2><p>Pantau perangkat/browser yang sedang login, dan paksa logout kalau perlu.</p></div></div>
@@ -1680,25 +1624,111 @@
 
     </div>
 
+      {{-- ===== ATUR FOTO PROFIL (geser + zoom sebelum upload) ===== --}}
+      <div class="crop-modal" id="aturFotoOverlay">
+        <div class="crop-modal-card">
+          <div class="crop-modal-head">
+            <h3>Atur Foto Profil</h3>
+          </div>
+          <div class="crop-stage" id="cropStage">
+            <img id="cropImage" alt="Pratinjau foto profil" draggable="false">
+            <div class="crop-mask"></div>
+          </div>
+          <div class="crop-zoom-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6"></circle><path d="m21 21-4.35-4.35"></path></svg>
+            <input type="range" id="cropZoomRange" min="100" max="300" value="100" step="1" aria-label="Perbesar foto">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path><path d="M11 8v6"></path><path d="M8 11h6"></path></svg>
+          </div>
+          <p class="crop-modal-hint">Geser foto buat atur posisi, geser slider buat zoom.</p>
+          <div class="crop-modal-actions">
+            <button type="button" class="btn" id="aturFotoBatal">Batal</button>
+            <button type="button" class="btn btn-primary" id="aturFotoSimpan">Ganti Foto</button>
+          </div>
+        </div>
+      </div>
+
+      {{-- ===== KONFIRMASI HAPUS FOTO PROFIL ===== --}}
+      <div class="confirm-overlay" id="hapusFotoOverlay">
+        <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="hapusFotoTitle">
+          <div class="confirm-icon">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
+          </div>
+          <h3 id="hapusFotoTitle">Hapus Foto Profil?</h3>
+          <p>Foto profil kamu akan dihapus dan kembali menampilkan inisial nama.</p>
+          <form id="formHapusFoto" method="POST" action="{{ route('profil-foto.destroy') }}">
+            @csrf @method('DELETE')
+            <div class="confirm-actions">
+              <button type="button" class="btn" id="hapusFotoBatal">Batal</button>
+              <button type="submit" class="btn btn-ghost-red">Ya, Hapus</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {{-- ===== KONFIRMASI SETUJUI/TOLAK PERMINTAAN GANTI PASSWORD ===== --}}
+      <div class="confirm-overlay" id="setujuiResetPasswordOverlay">
+        <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="setujuiResetPasswordTitle">
+          <div class="confirm-icon" style="background:var(--gold-dim);color:var(--gold-bright)">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><circle cx="12" cy="12" r="9"></circle><path d="M9 12l2 2 4-4"></path></svg>
+          </div>
+          <h3 id="setujuiResetPasswordTitle">Setujui Permintaan Ganti Password?</h3>
+          <p>Password baru untuk <strong id="setujuiResetPasswordNama">akun ini</strong> akan langsung aktif setelah disetujui.</p>
+          <form id="formSetujuiResetPassword" method="POST" action="">
+            @csrf @method('PATCH')
+            <div class="confirm-actions">
+              <button type="button" class="btn" id="setujuiResetPasswordBatal">Batal</button>
+              <button type="submit" class="btn btn-primary">Ya, Setujui</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="confirm-overlay" id="tolakResetPasswordOverlay">
+        <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="tolakResetPasswordTitle">
+          <div class="confirm-icon">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><circle cx="12" cy="12" r="9"></circle><path d="M15 9l-6 6"></path><path d="M9 9l6 6"></path></svg>
+          </div>
+          <h3 id="tolakResetPasswordTitle">Tolak Permintaan Ganti Password?</h3>
+          <p>Password akun <strong id="tolakResetPasswordNama">ini</strong> tidak akan berubah, dan pengaju akan diberi tahu.</p>
+          <form id="formTolakResetPassword" method="POST" action="">
+            @csrf @method('PATCH')
+            <div class="confirm-actions">
+              <button type="button" class="btn" id="tolakResetPasswordBatal">Batal</button>
+              <button type="submit" class="btn btn-ghost-red">Ya, Tolak</button>
+            </div>
+          </form>
+        </div>
+      </div>
       <script>
-        function setujuiResetPassword(i) {
-          document.getElementById('statusReset' + i).innerHTML = '<span class="badge green">Selesai</span>';
-          var row = document.getElementById('rowReset' + i);
-          if (row) {
-            row.children[4].innerHTML = '<span style="font-size:11.5px;color:var(--text-dim);">Sudah diproses</span>';
-            row.setAttribute('data-filter-value', 'Selesai');
-            if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblResetPassword');
-          }
+        function bukaSetujuiResetPassword(button) {
+          var id = button.dataset.id, nama = button.dataset.nama;
+          document.getElementById('formSetujuiResetPassword').action = '{{ url('/admin/permintaan-reset-password') }}/' + id + '/setujui';
+          document.getElementById('setujuiResetPasswordNama').textContent = nama;
+          document.getElementById('setujuiResetPasswordOverlay')?.classList.add('open');
         }
-        function tolakResetPassword(i) {
-          document.getElementById('statusReset' + i).innerHTML = '<span class="badge red">Ditolak</span>';
-          var row = document.getElementById('rowReset' + i);
-          if (row) {
-            row.children[4].innerHTML = '<span style="font-size:11.5px;color:var(--text-dim);">Sudah diproses</span>';
-            row.setAttribute('data-filter-value', 'Ditolak');
-            if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblResetPassword');
-          }
+        function bukaTolakResetPassword(button) {
+          var id = button.dataset.id, nama = button.dataset.nama;
+          document.getElementById('formTolakResetPassword').action = '{{ url('/admin/permintaan-reset-password') }}/' + id + '/tolak';
+          document.getElementById('tolakResetPasswordNama').textContent = nama;
+          document.getElementById('tolakResetPasswordOverlay')?.classList.add('open');
         }
+        document.getElementById('setujuiResetPasswordBatal')?.addEventListener('click', () => document.getElementById('setujuiResetPasswordOverlay')?.classList.remove('open'));
+        document.getElementById('tolakResetPasswordBatal')?.addEventListener('click', () => document.getElementById('tolakResetPasswordOverlay')?.classList.remove('open'));
+        document.getElementById('setujuiResetPasswordOverlay')?.addEventListener('click', e => { if (e.target.id === 'setujuiResetPasswordOverlay') e.currentTarget.classList.remove('open'); });
+        document.getElementById('tolakResetPasswordOverlay')?.addEventListener('click', e => { if (e.target.id === 'tolakResetPasswordOverlay') e.currentTarget.classList.remove('open'); });
+
+        document.getElementById('tblResetPasswordSort')?.addEventListener('change', function () {
+          var table = document.getElementById('tblResetPassword');
+          var tbody = table?.querySelector('tbody');
+          if (!tbody) return;
+          var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr[data-created]'));
+          var terlama = this.value === 'terlama';
+          rows.sort(function (a, b) {
+            var diff = (+a.dataset.created) - (+b.dataset.created);
+            return terlama ? diff : -diff;
+          });
+          rows.forEach(function (row) { tbody.appendChild(row); });
+          if (window.terapkanRowLimitWrap) window.terapkanRowLimitWrap(table.closest('.tbl-wrap'));
+        });
       </script>
 
       <script>
@@ -1800,11 +1830,6 @@
           });
         }
 
-        // Klik di backdrop (di luar kartu popup) menutup popup
-        overlay.addEventListener('click', function (e) {
-          if (e.target === overlay) closeModal();
-        });
-
         // Klik di dalam kartu popup tidak boleh menutupnya
         card.addEventListener('click', function (e) {
           e.stopPropagation();
@@ -1812,111 +1837,6 @@
 
         document.addEventListener('keydown', function (e) {
           if (e.key === 'Escape' && overlay.classList.contains('open')) closeModal();
-        });
-      })();
-      </script>
-
-      <script>
-      (function () {
-        var MAX_PHOTO_MB = 5;
-        var MAX_PHOTO_BYTES = MAX_PHOTO_MB * 1024 * 1024;
-        var ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-        var STORAGE_KEY = 'siberad-profile-photo-{{ $user->id ?? "default" }}';
-
-        var fileInput = document.getElementById('fotoProfilInput');
-        var gantiBtn = document.getElementById('gantiFotoBtn');
-        var gantiLabel = document.getElementById('gantiFotoLabel');
-        var hapusBtn = document.getElementById('hapusFotoBtn');
-
-        var photoBtn = document.getElementById('profilePhotoBtn');
-        var photoDropdown = document.getElementById('profilePhotoDropdown');
-        var photoLarge = document.getElementById('profilePhotoLarge');
-        var initialBtn = document.getElementById('profileInitial');
-        var initialDropdown = document.getElementById('profileInitialDropdown');
-        var initialLarge = document.getElementById('profileInitialLarge');
-
-        if (!fileInput || !gantiBtn || !hapusBtn) return;
-
-        function showPhoto(dataUrl) {
-          photoBtn.src = dataUrl;
-          photoDropdown.src = dataUrl;
-          photoLarge.src = dataUrl;
-          photoBtn.classList.add('visible');
-          photoDropdown.classList.add('visible');
-          photoLarge.classList.add('visible');
-          initialBtn.classList.add('hidden');
-          initialDropdown.classList.add('hidden');
-          initialLarge.classList.add('hidden');
-          hapusBtn.style.display = 'flex';
-        }
-
-        function clearPhoto() {
-          photoBtn.classList.remove('visible');
-          photoDropdown.classList.remove('visible');
-          photoLarge.classList.remove('visible');
-          photoBtn.removeAttribute('src');
-          photoDropdown.removeAttribute('src');
-          photoLarge.removeAttribute('src');
-          initialBtn.classList.remove('hidden');
-          initialDropdown.classList.remove('hidden');
-          initialLarge.classList.remove('hidden');
-          hapusBtn.style.display = 'none';
-        }
-
-        // Muat foto tersimpan (jika ada) saat halaman dibuka
-        try {
-          var saved = localStorage.getItem(STORAGE_KEY);
-          if (saved) showPhoto(saved);
-        } catch (e) {}
-
-        gantiBtn.addEventListener('click', function () {
-          fileInput.click();
-        });
-
-        hapusBtn.addEventListener('click', function () {
-          clearPhoto();
-          try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-        });
-
-        fileInput.addEventListener('change', function () {
-          var file = fileInput.files && fileInput.files[0];
-          if (!file) return;
-
-          if (ALLOWED_TYPES.indexOf(file.type) === -1) {
-            alert('File "' + file.name + '" ditolak: hanya format JPG, PNG, atau WEBP yang diperbolehkan.');
-            fileInput.value = '';
-            return;
-          }
-
-          if (file.size > MAX_PHOTO_BYTES) {
-            alert('File "' + file.name + '" (' + (file.size / (1024 * 1024)).toFixed(2) + ' MB) melebihi batas maksimal ' + MAX_PHOTO_MB + ' MB.');
-            fileInput.value = '';
-            return;
-          }
-
-          gantiLabel.textContent = 'Memproses...';
-          gantiBtn.setAttribute('disabled', 'disabled');
-
-          var reader = new FileReader();
-          reader.onload = function (e) {
-            var dataUrl = e.target.result;
-            showPhoto(dataUrl);
-            try {
-              localStorage.setItem(STORAGE_KEY, dataUrl);
-            } catch (err) {
-              alert('Foto berhasil ditampilkan, tetapi gagal disimpan secara lokal (kemungkinan ukuran terlalu besar untuk penyimpanan browser).');
-            }
-            gantiLabel.textContent = 'Ganti Foto Profil';
-            gantiBtn.removeAttribute('disabled');
-            fileInput.value = '';
-          };
-          reader.onerror = function () {
-            alert('Gagal membaca file gambar. Silakan coba file lain.');
-            gantiLabel.textContent = 'Ganti Foto Profil';
-            gantiBtn.removeAttribute('disabled');
-            fileInput.value = '';
-          };
-          reader.readAsDataURL(file);
         });
       })();
       </script>
@@ -2024,9 +1944,6 @@
   });
 
   cancelBtn.addEventListener('click', closeConfirm);
-  overlay.addEventListener('click', function (e) {
-    if (e.target === overlay) closeConfirm();
-  });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && overlay.classList.contains('open')) closeConfirm();
   });

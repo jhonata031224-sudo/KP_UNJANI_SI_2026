@@ -50,9 +50,6 @@
     });
 
     cancel?.addEventListener('click', closeConfirm);
-    overlay.addEventListener('click', function (e) {
-      if (e.target === overlay) closeConfirm();
-    });
     confirmBtn?.addEventListener('click', function () {
       if (!pendingForm) return;
       // Reset HANYA tab menu terakhir supaya login berikutnya selalu mulai
@@ -130,7 +127,6 @@
         '<div class="reject-actions"><button type="button" id="cancelReportReject">Batal</button><button type="submit" class="confirm-reject">Tolak Laporan</button></div>' +
         '</form></div>';
       document.body.appendChild(overlay);
-      overlay.addEventListener('click', function(e){ if(e.target === overlay) closeRejectModal(); });
       document.getElementById('cancelReportReject')?.addEventListener('click', closeRejectModal);
       document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.classList.contains('open')) closeRejectModal(); });
       return overlay;

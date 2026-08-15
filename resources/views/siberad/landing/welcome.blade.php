@@ -1065,7 +1065,6 @@
 
   loginTriggers.forEach(t => t.addEventListener('click', openLogin));
   loginClose.addEventListener('click', closeLogin);
-  loginOverlay.addEventListener('click', (e)=>{ if(e.target === loginOverlay) closeLogin(); });
   document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeLogin(); });
 
   // ---------- submit login via AJAX (biar gagal login tidak refresh halaman) ----------

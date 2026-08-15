@@ -7,6 +7,7 @@ use App\Models\ActivityLog;
 use App\Models\Laporan;
 use App\Models\Pengaturan;
 use App\Models\PermintaanLaporan;
+use App\Models\PermintaanResetPassword;
 use App\Models\Satuan;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -28,11 +29,7 @@ class DashboardController
     {
         $semuaPengguna = User::with('satuan')->orderBy('name')->get();
         $semuaSatuan = Satuan::withCount('users')->orderBy('urutan')->get();
-        $permintaanResetPassword = [
-            ['satuan' => 'Satuan Pelaksanaan Siber Sosial', 'catatan' => 'Lupa kata sandi lama', 'tanggal' => '02 Agu 2026', 'status' => 'Menunggu', 'status_class' => 'amber'],
-            ['satuan' => 'Pembinaan Materil', 'catatan' => 'Akun terkunci setelah beberapa kali salah input', 'tanggal' => '01 Agu 2026', 'status' => 'Menunggu', 'status_class' => 'amber'],
-            ['satuan' => 'Pendidikan dan Latihan', 'catatan' => 'Pergantian operator baru', 'tanggal' => '29 Jul 2026', 'status' => 'Selesai', 'status_class' => 'green'],
-        ];
+        $permintaanResetPassword = PermintaanResetPassword::with(['user.satuan', 'diprosesOleh'])->latest()->get();
         $labelKategori = [Satuan::KATEGORI_SATLAK => 'Satlak', Satuan::KATEGORI_DIREKTORAT => 'Direktorat', Satuan::KATEGORI_PIMPINAN => 'Pimpinan', Satuan::KATEGORI_ADMIN => 'Admin'];
         $distribusiPenggunaKategori = $semuaSatuan->groupBy('kategori')->map(fn ($group, $kategori) => ['kategori' => $labelKategori[$kategori] ?? ucfirst($kategori), 'jumlah' => $group->sum('users_count')])->values();
         $statusLaporanSistem = [
@@ -52,12 +49,16 @@ class DashboardController
             'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT',
         ];
         $rekapLaporanSatuan = Satuan::whereIn('kode', $kodeSatuanPengirim)->withCount(['laporanTerkirim as total_laporan','laporanTerkirim as laporan_menunggu' => fn ($q) => $q->where('status', 'Menunggu'),'laporanTerkirim as laporan_disetujui' => fn ($q) => $q->where('status', 'Disetujui DANPUS'),'laporanTerkirim as laporan_ditolak' => fn ($q) => $q->where('status', 'Ditolak DANPUS')])->orderBy('urutan')->get();
-        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','aktivitasTujuhHari','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => Laporan::count(), 'reset_password_pending' => collect($permintaanResetPassword)->where('status_class','amber')->count()]]);
+        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','aktivitasTujuhHari','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => Laporan::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
     }
 
     private function pelaporan($user, $satuan, ?string $kode): View
     {
         abort_unless($satuan, 403, 'Akun belum terhubung ke satuan.');
+        $permintaanGantiPasswordPending = PermintaanResetPassword::where('user_id', $user->id)
+            ->where('status', PermintaanResetPassword::STATUS_MENUNGGU)
+            ->latest()
+            ->first();
         $laporanTerkirim = Laporan::with('tujuanSatuan')->where('satuan_id', $satuan->id)->latest()->get();
         $laporanMasuk = Laporan::with(['satuan','tujuanSatuan'])
             ->where('tujuan_satuan_id', $satuan->id)
@@ -136,8 +137,8 @@ class DashboardController
                 'diterima' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count(),
                 'ditolak' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count(),
             ]);
-            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','laporanMasuk','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan'));
+            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','laporanMasuk','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending'));
         }
-        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanMasuk','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan') + ['defaultTujuanId' => $defaultDanpus?->id, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'menunggu' => $laporanTerkirim->where('status','Menunggu')->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'masuk' => $laporanMasuk->count()]]);
+        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanMasuk','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending') + ['defaultTujuanId' => $defaultDanpus?->id, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'menunggu' => $laporanTerkirim->where('status','Menunggu')->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'masuk' => $laporanMasuk->count()]]);
     }
 }
