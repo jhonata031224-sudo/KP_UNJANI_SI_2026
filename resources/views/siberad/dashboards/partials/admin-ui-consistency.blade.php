@@ -1,0 +1,148 @@
+<style>
+/* Admin: sidebar + header memakai warna surface/menu (#11181F), bukan hitam pekat. */
+body:has(.side-nav-group) .sidebar,
+body:has(.side-nav-group) .side-brand,
+body:has(.side-nav-group) .side-foot,
+body:has(.side-nav-group) .topbar,
+body:has(.side-nav-group) header.topbar-simple {
+  background:var(--panel) !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+
+body:has(.side-nav-group) .sidebar { border-right-color:var(--border-soft) !important; }
+body:has(.side-nav-group) .side-brand,
+body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !important; }
+.main > .content,
+.main .content { width:100% !important;max-width:none !important;margin-left:0 !important;margin-right:0 !important;box-sizing:border-box !important;padding-left:32px !important;padding-right:32px !important;overflow-x:hidden !important; }
+.main .content > .container,
+.main .content > .page,
+.main .content > .pimp-page,
+.main .content > .report-page { width:100% !important;max-width:none !important;margin-left:0 !important;margin-right:0 !important;box-sizing:border-box !important;min-width:0 !important; }
+.main .content canvas { display:block !important;width:100% !important;max-width:100% !important;height:auto !important;box-sizing:border-box !important; }
+.main .content :has(> canvas),
+.main .content :has(> .chart-container),
+.main .content :has(> .chart-wrap) { min-width:0 !important;max-width:100% !important;box-sizing:border-box !important;overflow:hidden !important; }
+.main .content [style*="min-width"] { min-width:0 !important; }
+.main .content .grid,
+.main .content [class*="grid"],
+.main .content [class*="chart"],
+.main .content [class*="stat"] { min-width:0 !important;box-sizing:border-box !important; }
+#profilePhotoView .profile-help-text,
+.profile-modal-card .profile-form-notice { display:none !important; }
+@media (max-width:1200px){ .main .content [class*="grid"] { grid-template-columns:repeat(2,minmax(0,1fr)) !important; } }
+@media (max-width:900px){ .main > .content,.main .content{padding-left:20px !important;padding-right:20px !important;} .main .content [class*="grid"] { grid-template-columns:1fr !important; } }
+@media (max-width:600px){ .main > .content,.main .content{padding-left:14px !important;padding-right:14px !important;} }
+#notifDropdown .notif-head{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:12px !important;}
+#notifDropdown .siberad-notif-close-text{border:0;background:transparent;color:var(--text-muted);font:500 12px var(--body);padding:4px 0;cursor:pointer;white-space:nowrap;}
+#notifDropdown .siberad-notif-close-text:hover{color:var(--gold-bright);}
+
+/* ===== Role & Hak Akses: satu tabel, tetap mempertahankan form per role ===== */
+.role-access-table-wrap{width:100%;overflow-x:auto;border:1px solid var(--border-soft);border-radius:14px;background:var(--panel);box-shadow:0 8px 28px rgba(15,23,42,.06);}
+.role-access-table{width:100%;border-collapse:separate;border-spacing:0;min-width:900px;table-layout:fixed;}
+.role-access-table th{padding:13px 16px;text-align:left;background:var(--panel-alt);border-bottom:1px solid var(--border-soft);color:var(--text-muted);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;}
+.role-access-table td{padding:16px;border-bottom:1px solid var(--border-soft);vertical-align:top;background:var(--panel);}
+.role-access-table tbody tr:last-child td{border-bottom:0;}
+.role-access-table tbody tr:hover td{background:var(--hover-tint);}
+.role-access-table th:nth-child(1),.role-access-table td:nth-child(1){width:20%;}
+.role-access-table th:nth-child(2),.role-access-table td:nth-child(2){width:23%;}
+.role-access-table th:nth-child(3),.role-access-table td:nth-child(3){width:42%;}
+.role-access-table th:nth-child(4),.role-access-table td:nth-child(4){width:15%;}
+.role-access-role{font-weight:700;color:var(--text);font-size:13px;line-height:1.4;}
+.role-access-code{display:inline-flex;margin-top:6px;padding:4px 8px;border:1px solid var(--border-soft);border-radius:7px;background:var(--panel-alt);color:var(--gold-bright);font-family:var(--mono);font-size:9px;letter-spacing:.07em;}
+.role-access-desc{margin:0;color:var(--text-muted);font-size:12px;line-height:1.55;}
+.role-access-form{padding:0 !important;}
+.role-access-permissions{display:flex;flex-wrap:wrap;gap:8px 14px;margin:0 0 12px;}
+.role-access-permission{display:inline-flex;align-items:center;gap:6px;color:var(--text-muted);font-size:11.5px;line-height:1.35;cursor:pointer;}
+.role-access-permission input{margin:0;accent-color:var(--gold);}
+.role-access-save{white-space:nowrap;}
+@media(max-width:900px){.role-access-table-wrap{border-radius:12px;}.role-access-table{min-width:820px;}}
+</style>
+
+<script>
+(function(){
+  function addNotificationCloseText(){
+    var dropdown=document.getElementById('notifDropdown');
+    if(!dropdown) return;
+    var header=dropdown.querySelector('.notif-head') || dropdown.querySelector('.profile-dropdown-head');
+    if(!header || header.querySelector('.siberad-notif-close-text')) return;
+    var close=document.createElement('button');
+    close.type='button';close.className='siberad-notif-close-text';close.textContent='Tutup';close.setAttribute('aria-label','Tutup notifikasi');
+    close.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();dropdown.classList.remove('open');var btn=document.getElementById('notifBtn');if(btn){btn.classList.remove('open');btn.setAttribute('aria-expanded','false');}});
+    header.appendChild(close);
+  }
+  function init(){addNotificationCloseText();var observer=new MutationObserver(addNotificationCloseText);observer.observe(document.body,{childList:true,subtree:true});window.setTimeout(function(){observer.disconnect();addNotificationCloseText();},3000);}
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+
+<script>
+(function(){
+  function initMobileSidebar(){
+    var menuBtn=document.getElementById('menuBtn');var sidebar=document.getElementById('sidebar');
+    if(!menuBtn||!sidebar||menuBtn.dataset.mobileSidebarWideBound==='1') return;
+    menuBtn.dataset.mobileSidebarWideBound='1';var suppressNextClick=false,suppressTimer=0;
+    function openSidebar(e){if(e){e.preventDefault();e.stopPropagation();}sidebar.classList.remove('collapsed');sidebar.classList.add('open');}
+    function closeSidebarMobile(){sidebar.classList.remove('open');sidebar.classList.add('collapsed');document.querySelectorAll('.side-dropdown.open, .side-nav-group.open').forEach(function(group){group.classList.remove('open');});}
+    if(window.PointerEvent){
+      menuBtn.addEventListener('pointerup',function(e){if(window.innerWidth>900)return;suppressNextClick=true;window.clearTimeout(suppressTimer);suppressTimer=window.setTimeout(function(){suppressNextClick=false;},500);openSidebar(e);},{passive:false});
+      menuBtn.addEventListener('click',function(e){if(window.innerWidth>900)return;if(suppressNextClick){suppressNextClick=false;window.clearTimeout(suppressTimer);e.preventDefault();e.stopPropagation();return;}if(e.detail===0)openSidebar(e);});
+    }else menuBtn.addEventListener('click',function(e){if(window.innerWidth<=900)openSidebar(e);});
+    document.addEventListener('click',function(e){if(window.innerWidth<=900&&sidebar.classList.contains('open')&&!sidebar.contains(e.target)&&e.target!==menuBtn)closeSidebarMobile();});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initMobileSidebar); else initMobileSidebar();
+})();
+</script>
+
+<script>
+(function(){
+  /* This handler is intentionally registered before the legacy role-table
+     script in pengumuman-banner.blade.php. It sets the ready guard after
+     creating the table, so the legacy handler becomes a no-op. */
+  function initRoleAccessTable(){
+    var section=document.querySelector('[data-tab-panel="role-akses"]');
+    if(!section||section.dataset.roleAccessTableReady==='1')return;
+    var panels=Array.prototype.filter.call(section.children,function(el){return el.classList&&el.classList.contains('panel');});
+    if(!panels.length)return;
+
+    var rows=[];
+    panels.forEach(function(panel){
+      var head=panel.querySelector('.panel-head');var form=panel.querySelector('form');
+      if(!head||!form)return;
+      var title=head.querySelector('h3');var description=head.querySelector('p');var badge=title&&title.querySelector('.badge');
+      var roleName=title?Array.prototype.filter.call(title.childNodes,function(n){return n.nodeType===3;}).map(function(n){return n.textContent;}).join(' ').trim():'';
+      var code=badge?badge.textContent.trim():'';
+      var permissionWrap=form.querySelector('div[style*="flex-wrap"]');
+      if(permissionWrap){permissionWrap.classList.add('role-access-permissions');permissionWrap.removeAttribute('style');}
+      form.classList.add('role-access-form');
+      Array.prototype.forEach.call(form.querySelectorAll('label'),function(label){label.classList.add('role-access-permission');label.removeAttribute('style');});
+      var save=form.querySelector('button[type="submit"]');if(save)save.classList.add('role-access-save');
+      rows.push({panel:panel,form:form,roleName:roleName,code:code,description:description?description.textContent.trim():'Tidak ada deskripsi.',permissionWrap:permissionWrap,save:save});
+    });
+    if(!rows.length)return;
+
+    var wrap=document.createElement('div');wrap.className='role-access-table-wrap';
+    var table=document.createElement('table');table.className='role-access-table';table.setAttribute('aria-label','Role dan hak akses');
+    table.innerHTML='<thead><tr><th>Role / Satuan</th><th>Deskripsi</th><th>Hak Akses Modul</th><th>Aksi</th></tr></thead>';
+    var tbody=document.createElement('tbody');
+
+    rows.forEach(function(item,index){
+      var tr=document.createElement('tr');
+      var roleCell=document.createElement('td');roleCell.innerHTML='<div class="role-access-role"></div>'+(item.code?'<span class="role-access-code"></span>':'');
+      roleCell.querySelector('.role-access-role').textContent=item.roleName;if(item.code)roleCell.querySelector('.role-access-code').textContent=item.code;
+      var descCell=document.createElement('td');var desc=document.createElement('p');desc.className='role-access-desc';desc.textContent=item.description;descCell.appendChild(desc);
+      var accessCell=document.createElement('td');var formId='role-access-form-'+index;item.form.id=formId;accessCell.appendChild(item.form);
+      if(item.permissionWrap)accessCell.appendChild(item.permissionWrap);
+      var actionCell=document.createElement('td');
+      if(item.save){item.save.setAttribute('form',formId);actionCell.appendChild(item.save);}
+      tr.appendChild(roleCell);tr.appendChild(descCell);tr.appendChild(accessCell);tr.appendChild(actionCell);tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);wrap.appendChild(table);
+    rows.forEach(function(item){item.panel.remove();});
+    section.appendChild(wrap);section.dataset.roleAccessTableReady='1';
+  }
+  function run(){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initRoleAccessTable,{once:true});else initRoleAccessTable();}
+  run();
+  document.addEventListener('click',function(e){var link=e.target.closest&&e.target.closest('[data-tab-link="role-akses"]');if(link)window.setTimeout(initRoleAccessTable,0);});
+})();
+</script>
