@@ -6,27 +6,26 @@
     var style = document.createElement('style');
     style.id = 'role-access-layout-style';
     style.textContent = [
-      '[data-tab-panel="role-akses"] .role-access-table-wrap{width:100%;max-width:100%;overflow-x:hidden;box-sizing:border-box;border:1px solid var(--border-soft);border-radius:14px;background:var(--panel);box-shadow:0 8px 28px rgba(15,23,42,.06)}',
+      '[data-tab-panel="role-akses"] .role-access-table-wrap{width:100%;max-width:1280px;margin:0 auto;overflow:hidden;box-sizing:border-box;border:1px solid var(--border-soft);border-radius:14px;background:var(--panel);box-shadow:0 8px 28px rgba(15,23,42,.06)}',
       '[data-tab-panel="role-akses"] .role-access-table{width:100%;max-width:100%;min-width:0;table-layout:fixed;border-collapse:separate;border-spacing:0}',
-      '[data-tab-panel="role-akses"] .role-access-table th{padding:13px 18px;text-align:left;background:var(--panel-alt);border-bottom:1px solid var(--border-soft);color:var(--text-muted);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;box-sizing:border-box}',
-      '[data-tab-panel="role-akses"] .role-access-table td{padding:14px 18px;border-bottom:1px solid var(--border-soft);vertical-align:top;background:var(--panel);box-sizing:border-box;min-width:0}',
+      '[data-tab-panel="role-akses"] .role-access-table th{padding:13px 16px;text-align:left;background:var(--panel-alt);border-bottom:1px solid var(--border-soft);color:var(--text-muted);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;box-sizing:border-box}',
+      '[data-tab-panel="role-akses"] .role-access-table td{padding:16px;border-bottom:1px solid var(--border-soft);vertical-align:top;background:var(--panel);box-sizing:border-box;min-width:0}',
       '[data-tab-panel="role-akses"] .role-access-table tbody tr:last-child td{border-bottom:0}',
       '[data-tab-panel="role-akses"] .role-access-table tbody tr:hover td{background:var(--hover-tint)}',
-      '[data-tab-panel="role-akses"] .role-access-table th:nth-child(1),[data-tab-panel="role-akses"] .role-access-table td:nth-child(1){width:22%;padding-left:26px;padding-right:12px}',
-      '[data-tab-panel="role-akses"] .role-access-table th:nth-child(2),[data-tab-panel="role-akses"] .role-access-table td:nth-child(2){width:22%;padding-left:10px;padding-right:12px}',
-      '[data-tab-panel="role-akses"] .role-access-table th:nth-child(3),[data-tab-panel="role-akses"] .role-access-table td:nth-child(3){width:40%;padding-left:10px;padding-right:10px}',
-      '[data-tab-panel="role-akses"] .role-access-table th:nth-child(4),[data-tab-panel="role-akses"] .role-access-table td:nth-child(4){width:16%;padding-left:10px;padding-right:18px}',
-      '[data-tab-panel="role-akses"] .role-access-role{font-weight:700;color:var(--text);font-size:13px;line-height:1.4}',
+      '[data-tab-panel="role-akses"] .role-access-table th:nth-child(1),[data-tab-panel="role-akses"] .role-access-table td:nth-child(1){width:23%;padding-left:22px;padding-right:14px}',
+      '[data-tab-panel="role-akses"] .role-access-table th:nth-child(2),[data-tab-panel="role-akses"] .role-access-table td:nth-child(2){width:27%;padding-left:14px;padding-right:14px}',
+      '[data-tab-panel="role-akses"] .role-access-table th:nth-child(3),[data-tab-panel="role-akses"] .role-access-table td:nth-child(3){width:50%;padding-left:14px;padding-right:22px}',
+      '[data-tab-panel="role-akses"] .role-access-role{font-weight:700;color:var(--text);font-size:13px;line-height:1.45}',
       '[data-tab-panel="role-akses"] .role-access-code{display:inline-flex;margin-top:6px;padding:4px 8px;border:1px solid var(--border-soft);border-radius:7px;background:var(--panel-alt);color:var(--gold-bright);font-family:var(--mono);font-size:9px;letter-spacing:.07em}',
-      '[data-tab-panel="role-akses"] .role-access-desc{margin:0;color:var(--text-muted);font-size:12px;line-height:1.55;overflow-wrap:anywhere}',
-      '[data-tab-panel="role-akses"] .role-access-form{padding:0!important}',
-      '[data-tab-panel="role-akses"] .role-access-permissions{display:flex;flex-direction:column;align-items:flex-start;gap:9px;margin:0;width:100%}',
-      '[data-tab-panel="role-akses"] .role-access-permission{display:flex;align-items:flex-start;width:100%;max-width:100%;box-sizing:border-box;gap:7px;color:var(--text-muted);font-size:11.5px;line-height:1.4;cursor:pointer;white-space:normal;overflow-wrap:anywhere}',
+      '[data-tab-panel="role-akses"] .role-access-desc{margin:0;color:var(--text-muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}',
+      '[data-tab-panel="role-akses"] .role-access-form{padding:0!important;width:100%}',
+      '[data-tab-panel="role-akses"] .role-access-access-layout{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:start}',
+      '[data-tab-panel="role-akses"] .role-access-permissions{display:flex;flex-direction:column;align-items:flex-start;gap:9px;margin:0;min-width:0}',
+      '[data-tab-panel="role-akses"] .role-access-permission{display:flex;align-items:flex-start;gap:7px;min-width:0;color:var(--text-muted);font-size:11.5px;line-height:1.4;cursor:pointer;white-space:normal;overflow-wrap:anywhere}',
       '[data-tab-panel="role-akses"] .role-access-permission input{margin:2px 0 0;flex:0 0 auto;accent-color:var(--gold-bright)}',
-      '[data-tab-panel="role-akses"] .role-access-save{white-space:normal;width:100%;max-width:100%;box-sizing:border-box;text-align:center;justify-content:center;line-height:1.4;word-break:break-word}',
-      '[data-tab-panel="role-akses"] .role-access-action{text-align:left!important;vertical-align:middle!important;overflow-wrap:anywhere}',
-      '[data-tab-panel="role-akses"] .role-access-table th:nth-child(4){text-align:left}',
-      '@media(max-width:760px){[data-tab-panel="role-akses"] .role-access-table th,[data-tab-panel="role-akses"] .role-access-table td{padding:9px 10px}[data-tab-panel="role-akses"] .role-access-table th:nth-child(1),[data-tab-panel="role-akses"] .role-access-table td:nth-child(1){padding-left:12px}[data-tab-panel="role-akses"] .role-access-table th:nth-child(4),[data-tab-panel="role-akses"] .role-access-table td:nth-child(4){padding-left:7px}}'
+      '[data-tab-panel="role-akses"] .role-access-save{width:auto;max-width:220px;min-width:178px;box-sizing:border-box;text-align:center;justify-content:center;line-height:1.35;white-space:normal;word-break:normal;align-self:start}',
+      '@media(max-width:1000px){[data-tab-panel="role-akses"] .role-access-table-wrap{max-width:100%}[data-tab-panel="role-akses"] .role-access-access-layout{grid-template-columns:minmax(0,1fr) 190px;gap:14px}}',
+      '@media(max-width:760px){[data-tab-panel="role-akses"] .role-access-table th,[data-tab-panel="role-akses"] .role-access-table td{padding:11px 10px}[data-tab-panel="role-akses"] .role-access-table th:nth-child(1),[data-tab-panel="role-akses"] .role-access-table td:nth-child(1){width:28%;padding-left:12px;padding-right:9px}[data-tab-panel="role-akses"] .role-access-table th:nth-child(2),[data-tab-panel="role-akses"] .role-access-table td:nth-child(2){width:28%;padding-left:9px;padding-right:9px}[data-tab-panel="role-akses"] .role-access-table th:nth-child(3),[data-tab-panel="role-akses"] .role-access-table td:nth-child(3){width:44%;padding-left:9px;padding-right:12px}[data-tab-panel="role-akses"] .role-access-access-layout{grid-template-columns:1fr;gap:12px}[data-tab-panel="role-akses"] .role-access-save{width:100%;max-width:none;min-width:0}}'
     ].join('');
     document.head.appendChild(style);
   }
@@ -77,11 +76,12 @@
     var table = document.createElement('table');
     table.className = 'role-access-table';
     table.setAttribute('aria-label', 'Role dan hak akses');
-    table.innerHTML = '<thead><tr><th>Role / Satuan</th><th>Deskripsi</th><th>Hak Akses Modul</th><th>Aksi</th></tr></thead>';
+    table.innerHTML = '<thead><tr><th>Role / Satuan</th><th>Deskripsi</th><th>Hak Akses Modul &amp; Aksi</th></tr></thead>';
     var tbody = document.createElement('tbody');
 
     rows.forEach(function (item, index) {
       var tr = document.createElement('tr');
+
       var roleCell = document.createElement('td');
       roleCell.innerHTML = '<div class="role-access-role"></div>' + (item.code ? '<span class="role-access-code"></span>' : '');
       roleCell.querySelector('.role-access-role').textContent = item.roleName;
@@ -96,19 +96,19 @@
       var accessCell = document.createElement('td');
       var formId = 'role-access-form-' + index;
       item.form.id = formId;
-      accessCell.appendChild(item.form);
 
-      var actionCell = document.createElement('td');
-      actionCell.className = 'role-access-action';
+      var accessLayout = document.createElement('div');
+      accessLayout.className = 'role-access-access-layout';
+      accessLayout.appendChild(item.form);
       if (item.save) {
         item.save.setAttribute('form', formId);
-        actionCell.appendChild(item.save);
+        accessLayout.appendChild(item.save);
       }
+      accessCell.appendChild(accessLayout);
 
       tr.appendChild(roleCell);
       tr.appendChild(descCell);
       tr.appendChild(accessCell);
-      tr.appendChild(actionCell);
       tbody.appendChild(tr);
     });
 
