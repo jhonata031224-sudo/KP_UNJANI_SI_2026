@@ -47,14 +47,8 @@ class AuthenticatedSessionController extends Controller
             throw ValidationException::withMessages($errors);
         }
 
-        // Satu akun (role apa pun -- bukan cuma Admin) cuma boleh dipakai di
-        // satu device dalam satu waktu. Baris sesi lama (driver database)
-        // baru dihapus otomatis kalau sudah lewat SESSION_LIFETIME (bukan
-        // seketika pas browser ditutup/logout lupa diklik), jadi itu juga
-        // yang jadi patokan "masih aktif" di sini -- biar konsisten sama apa
-        // yang ditampilkan di tabel Sesi Login Aktif punya Admin. Dijaga
-        // dengan cek driver supaya tidak query tabel `sessions` kalau
-        // SESSION_DRIVER bukan database (mis. file/redis).
+        // Satu akun hanya boleh dipakai di satu device dalam satu waktu.
+        // Sesi milik request/browser saat ini tidak dihitung sebagai device lain.
         $user = User::where('username', $credentials['username'])->first();
 
         if (config('session.driver') === 'database') {
@@ -62,6 +56,7 @@ class AuthenticatedSessionController extends Controller
 
             $sesiMasihAktif = DB::table('sessions')
                 ->where('user_id', $user->id)
+                ->where('id', '!=', $request->session()->getId())
                 ->where('last_activity', '>=', $batasAktif)
                 ->exists();
 
