@@ -31,10 +31,6 @@ class AuthenticatedSessionController extends Controller
         $captchaBenar = hash_equals((string) $request->session()->get('captcha_code'), $credentials['captcha']);
         $request->session()->forget('captcha_code');
 
-        // Kredensial dicek pakai validate() (bukan attempt()) supaya tidak
-        // langsung login kalau ternyata captcha-nya salah. Dua-duanya dicek
-        // independen supaya kalau kredensial DAN captcha sama-sama salah,
-        // pesan errornya muncul untuk keduanya — bukan cuma yang tercek duluan.
         $kredensialBenar = Auth::validate([
             'username' => $credentials['username'],
             'password' => $credentials['password'],
