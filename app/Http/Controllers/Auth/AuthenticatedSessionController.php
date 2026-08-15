@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Satuan;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
@@ -47,6 +49,28 @@ class AuthenticatedSessionController extends Controller
         }
         if ($errors) {
             throw ValidationException::withMessages($errors);
+        }
+
+        // Admin hanya boleh memiliki satu sesi aktif pada satu waktu.
+        // Sesi yang sudah melewati lifetime Laravel tidak dianggap aktif,
+        // sehingga login tidak terblokir hanya karena record sesi lama belum
+        // sempat dibersihkan oleh garbage collection.
+        $user = User::with('satuan')->where('username', $credentials['username'])->first();
+        $isAdmin = strtoupper(trim((string) ($user?->satuan?->kode))) === 'ADMIN';
+
+        if ($isAdmin && config('session.driver') === 'database') {
+            $batasAktif = now()->subMinutes((int) config('session.lifetime', 120))->timestamp;
+
+            $sudahLoginDiPerangkatLain = DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->where('last_activity', '>=', $batasAktif)
+                ->exists();
+
+            if ($sudahLoginDiPerangkatLain) {
+                throw ValidationException::withMessages([
+                    'username' => 'Akun Admin sedang aktif di perangkat atau browser lain. Silakan logout dari perangkat tersebut terlebih dahulu sebelum login di perangkat ini.',
+                ]);
+            }
         }
 
         Auth::attempt([
