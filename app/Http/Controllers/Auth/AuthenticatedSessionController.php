@@ -51,23 +51,29 @@ class AuthenticatedSessionController extends Controller
             throw ValidationException::withMessages($errors);
         }
 
-        // Satu akun cuma boleh dipakai di satu device dalam satu waktu.
-        // Baris sesi lama (driver database) baru dihapus otomatis kalau
-        // sudah lewat SESSION_LIFETIME (bukan seketika pas browser
-        // ditutup/logout lupa diklik), jadi itu juga yang jadi patokan
-        // "masih aktif" di sini — biar konsisten sama apa yang ditampilkan
-        // di tabel Sesi Login Aktif punya Admin.
+        // Satu akun (role apa pun -- bukan cuma Admin) cuma boleh dipakai di
+        // satu device dalam satu waktu. Baris sesi lama (driver database)
+        // baru dihapus otomatis kalau sudah lewat SESSION_LIFETIME (bukan
+        // seketika pas browser ditutup/logout lupa diklik), jadi itu juga
+        // yang jadi patokan "masih aktif" di sini -- biar konsisten sama apa
+        // yang ditampilkan di tabel Sesi Login Aktif punya Admin. Dijaga
+        // dengan cek driver supaya tidak query tabel `sessions` kalau
+        // SESSION_DRIVER bukan database (mis. file/redis).
         $user = User::where('username', $credentials['username'])->first();
-        $batasAktif = now()->subMinutes((int) config('session.lifetime'))->timestamp;
-        $sesiMasihAktif = DB::table('sessions')
-            ->where('user_id', $user->id)
-            ->where('last_activity', '>=', $batasAktif)
-            ->exists();
 
-        if ($sesiMasihAktif) {
-            throw ValidationException::withMessages([
-                'username' => 'Akun ini sedang digunakan di perangkat lain. Logout dari perangkat itu dulu, atau hubungi Admin untuk paksa logout.',
-            ]);
+        if (config('session.driver') === 'database') {
+            $batasAktif = now()->subMinutes((int) config('session.lifetime', 120))->timestamp;
+
+            $sesiMasihAktif = DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->where('last_activity', '>=', $batasAktif)
+                ->exists();
+
+            if ($sesiMasihAktif) {
+                throw ValidationException::withMessages([
+                    'username' => 'Akun ini sedang digunakan di perangkat lain. Logout dari perangkat itu dulu, atau hubungi Admin untuk paksa logout.',
+                ]);
+            }
         }
 
         Auth::attempt([
