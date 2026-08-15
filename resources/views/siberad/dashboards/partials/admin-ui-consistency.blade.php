@@ -107,6 +107,84 @@ body:has(.side-nav-group) .topbar {
 #notifDropdown .siberad-notif-close-text:hover{color:var(--gold-bright);}
 </style>
 
+<style>
+/* Role & Hak Akses: proporsi kolom dibuat lebih seimbang agar tabel pas di viewport.
+   Kolom aksi tidak lagi menyisakan ruang kosong besar di sisi kanan, sementara
+   kolom role/satuan diberi ruang napas dari tepi tabel. */
+.main .content [data-tab-panel="role-akses"] .role-akses-table-panel{
+  overflow:hidden !important;
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+.main .content [data-tab-panel="role-akses"] .role-akses-table-wrap{
+  overflow-x:hidden !important;
+  width:100% !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+}
+.main .content [data-tab-panel="role-akses"] .role-akses-table{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  table-layout:fixed !important;
+  box-sizing:border-box !important;
+}
+.main .content [data-tab-panel="role-akses"] .role-akses-table th,
+.main .content [data-tab-panel="role-akses"] .role-akses-table td{
+  min-width:0 !important;
+  box-sizing:border-box !important;
+}
+.main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(1),
+.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(1){
+  width:23% !important;
+  padding-left:16px !important;
+  padding-right:12px !important;
+}
+.main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(2),
+.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(2){
+  width:25% !important;
+  padding-left:12px !important;
+  padding-right:12px !important;
+}
+.main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(3),
+.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(3){
+  width:37% !important;
+  padding-left:12px !important;
+  padding-right:10px !important;
+}
+.main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(4),
+.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(4){
+  width:15% !important;
+  padding-left:8px !important;
+  padding-right:12px !important;
+}
+.main .content [data-tab-panel="role-akses"] .role-akses-table .role-akses-checks{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:flex-start !important;
+  gap:9px !important;
+  width:100% !important;
+}
+.main .content [data-tab-panel="role-akses"] .role-akses-table .role-akses-check{
+  display:flex !important;
+  width:100% !important;
+  max-width:100% !important;
+  white-space:normal !important;
+  min-width:0 !important;
+}
+.main .content [data-tab-panel="role-akses"] .role-akses-action-head,
+.main .content [data-tab-panel="role-akses"] .role-akses-action{
+  text-align:center !important;
+  vertical-align:middle !important;
+}
+.main .content [data-tab-panel="role-akses"] .role-akses-action button,
+.main .content [data-tab-panel="role-akses"] .role-akses-action .btn{
+  max-width:100% !important;
+  box-sizing:border-box !important;
+  white-space:normal !important;
+}
+</style>
+
 <script>
 (function(){
   function addNotificationCloseText(){
