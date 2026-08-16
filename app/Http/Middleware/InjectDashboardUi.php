@@ -81,7 +81,7 @@ class InjectDashboardUi
     if (badge) candidates.push(norm(badge.textContent));
     var first = row.cells && row.cells[0];
     if (first) candidates.push(norm(first.textContent));
-    var button = row.querySelector('button[type="submit"]);
+    var button = row.querySelector('button[type="submit"]');
     if (button) candidates.push(norm(button.textContent));
     var form = row.querySelector('form');
     if (form) candidates.push(norm(form.getAttribute('action')));
