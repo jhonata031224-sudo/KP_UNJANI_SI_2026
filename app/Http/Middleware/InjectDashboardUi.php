@@ -46,11 +46,86 @@ class InjectDashboardUi
 
             $landingPreviewAsset = asset('js/siberad-landing-preview.js');
             $landingPreviewInjection = '<script src="' . e($landingPreviewAsset) . '"></script>';
-            $roleAccessAsset = asset('js/role-access-layout.js') . '?v=20260816-6';
+            $roleAccessAsset = asset('js/role-access-layout.js') . '?v=20260816-7';
             $roleAccessInjection = '<script src="' . e($roleAccessAsset) . '"></script>';
+
+            $roleAccessPolicyInjection = <<<'HTML'
+<script>
+(function () {
+  'use strict';
+  var ALLOWED = {
+    ADMIN: ['laporan', 'medsos', 'personel', 'monitoring', 'notifikasi'],
+    DANPUS: ['laporan', 'medsos', 'monitoring', 'notifikasi'],
+    WADAN: ['laporan', 'monitoring', 'notifikasi'],
+    SDIR: ['laporan', 'monitoring', 'notifikasi'],
+    SATLAKKAL: ['laporan', 'monitoring', 'notifikasi'],
+    SATLAKSISOS: ['laporan', 'medsos', 'notifikasi'],
+    SATLAKDAK: ['laporan', 'monitoring', 'notifikasi'],
+    SATLAKDUKTEK: ['laporan', 'monitoring', 'notifikasi'],
+    BINFUNG: ['laporan', 'personel', 'notifikasi'],
+    BINUM: ['laporan', 'monitoring', 'notifikasi'],
+    DIKLAT: ['laporan', 'notifikasi'],
+    BINMAT: ['laporan', 'notifikasi']
+  };
+  var LABELS = {
+    'Kirim & Kelola Laporan': 'laporan',
+    'Pelaporan Publikasi': 'medsos',
+    'Pelaporan Administrasi Personel': 'personel',
+    'Monitoring Laporan & Aktivitas': 'monitoring',
+    'Notifikasi': 'notifikasi'
+  };
+  function norm(v) { return String(v || '').replace(/\s+/g, ' ').trim(); }
+  function roleFromRow(row) {
+    var candidates = [];
+    var badge = row.querySelector('.role-access-code, .badge');
+    if (badge) candidates.push(norm(badge.textContent));
+    var first = row.cells && row.cells[0];
+    if (first) candidates.push(norm(first.textContent));
+    var button = row.querySelector('button[type="submit"]');
+    if (button) candidates.push(norm(button.textContent));
+    var form = row.querySelector('form');
+    if (form) candidates.push(norm(form.getAttribute('action')));
+    var codes = Object.keys(ALLOWED).sort(function (a, b) { return b.length - a.length; });
+    for (var i = 0; i < candidates.length; i++) {
+      var text = candidates[i].toUpperCase();
+      for (var j = 0; j < codes.length; j++) {
+        if (text.indexOf(codes[j]) !== -1) return codes[j];
+      }
+    }
+    return '';
+  }
+  function apply() {
+    var section = document.querySelector('[data-tab-panel="role-akses"]');
+    if (!section) return;
+    section.querySelectorAll('table tbody tr').forEach(function (row) {
+      var code = roleFromRow(row);
+      var allowed = ALLOWED[code];
+      if (!allowed) return;
+      row.querySelectorAll('label').forEach(function (label) {
+        var key = LABELS[norm(label.textContent)];
+        if (!key) return;
+        var visible = allowed.indexOf(key) !== -1;
+        label.hidden = !visible;
+        label.classList.toggle('role-access-unavailable', !visible);
+        var input = label.querySelector('input[name="permissions[]"]');
+        if (input) input.disabled = !visible;
+      });
+    });
+  }
+  function schedule() { window.setTimeout(apply, 40); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', schedule, { once: true });
+  else schedule();
+  document.addEventListener('click', function (e) {
+    if (e.target.closest && e.target.closest('[data-tab-link="role-akses"]')) schedule();
+  });
+  window.setTimeout(apply, 300);
+})();
+</script>
+HTML;
+
             $pos = strripos($html, '</body>');
             if ($pos !== false) {
-                $html = substr($html, 0, $pos).$landingPreviewInjection.$roleAccessInjection.$fixedHeaderInjection.substr($html, $pos);
+                $html = substr($html, 0, $pos).$landingPreviewInjection.$roleAccessInjection.$roleAccessPolicyInjection.$fixedHeaderInjection.substr($html, $pos);
                 $response->setContent($html);
             }
             return $response;
