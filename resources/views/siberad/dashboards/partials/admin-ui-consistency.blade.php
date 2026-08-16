@@ -220,10 +220,10 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
    tabel riwayat konsisten dengan tabel manajemen satuan. */
 .main .content [data-tab-panel="backup"] .backup-history-head .backup-upload-trigger{display:none !important;}
 .main .content [data-tab-panel="backup"] .dtbl{width:100% !important;table-layout:fixed !important;}
-.main .content [data-tab-panel="backup"] .dtbl th:nth-child(1),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(1){width:36% !important;text-align:left !important;padding-left:16px !important;}
-.main .content [data-tab-panel="backup"] .dtbl th:nth-child(2),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(2){width:15% !important;}
-.main .content [data-tab-panel="backup"] .dtbl th:nth-child(3),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(3){width:17% !important;}
-.main .content [data-tab-panel="backup"] .dtbl th:nth-child(4),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(4){width:14% !important;}
+.main .content [data-tab-panel="backup"] .dtbl th:nth-child(1),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(1){width:22% !important;text-align:left !important;padding-left:16px !important;}
+.main .content [data-tab-panel="backup"] .dtbl th:nth-child(2),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(2){width:20% !important;}
+.main .content [data-tab-panel="backup"] .dtbl th:nth-child(3),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(3){width:22% !important;}
+.main .content [data-tab-panel="backup"] .dtbl th:nth-child(4),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(4){width:18% !important;}
 .main .content [data-tab-panel="backup"] .dtbl th:nth-child(5),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(5){width:18% !important;text-align:center !important;}
 .main .content [data-tab-panel="backup"] .dtbl th:nth-child(2),.main .content [data-tab-panel="backup"] .dtbl th:nth-child(3),.main .content [data-tab-panel="backup"] .dtbl th:nth-child(4){text-align:center !important;}
 .main .content [data-tab-panel="backup"] .dtbl td:nth-child(2),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(3),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(4){text-align:center !important;}
