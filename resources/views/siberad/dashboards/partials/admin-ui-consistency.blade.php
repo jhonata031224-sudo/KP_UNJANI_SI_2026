@@ -44,20 +44,27 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
 .main .content [data-tab-panel="role-akses"] .role-akses-action-head,.main .content [data-tab-panel="role-akses"] .role-akses-action{text-align:center !important;vertical-align:middle !important;}
 .main .content [data-tab-panel="role-akses"] .role-akses-action button,.main .content [data-tab-panel="role-akses"] .role-akses-action .btn{max-width:100% !important;box-sizing:border-box !important;white-space:normal !important;}
 
-/* Backup Database: judul kolom Aksi dan rangkaian tombol dimulai pada garis yang sama. */
+/* Backup Database */
 .main .content [data-tab-panel="backup"] .dtbl th:last-child,
-.main .content [data-tab-panel="backup"] .dtbl td:last-child{ text-align:left !important; vertical-align:middle !important; }
-.main .content [data-tab-panel="backup"] .dtbl th:last-child{ padding-left:14px !important; padding-right:14px !important; }
-.main .content [data-tab-panel="backup"] .dtbl td:last-child{ padding-left:14px !important; padding-right:14px !important; }
+.main .content [data-tab-panel="backup"] .dtbl td:last-child{ text-align:left !important;vertical-align:middle !important; }
+.main .content [data-tab-panel="backup"] .dtbl th:last-child,
+.main .content [data-tab-panel="backup"] .dtbl td:last-child{ padding-left:14px !important;padding-right:14px !important; }
 .main .content [data-tab-panel="backup"] .backup-extra-actions{ display:flex !important;align-items:center !important;justify-content:flex-start !important;gap:8px !important;flex-wrap:wrap !important;width:100% !important;margin:0 !important; }
 .main .content [data-tab-panel="backup"] .backup-extra-actions > a,
 .main .content [data-tab-panel="backup"] .backup-extra-actions > form{ margin:0 !important; }
 .main .content [data-tab-panel="backup"] .backup-extra-actions > a,
 .main .content [data-tab-panel="backup"] .backup-extra-actions > form > button{ min-width:74px !important;box-sizing:border-box !important;text-align:center !important; }
-@media (max-width:700px){
-  .main .content [data-tab-panel="backup"] .backup-extra-actions{ gap:6px !important; }
+.main .content [data-tab-panel="backup"] .backup-upload-panel{margin-top:16px !important;}
+.main .content [data-tab-panel="backup"] .backup-upload-row{display:flex !important;align-items:center !important;gap:10px !important;flex-wrap:wrap !important;padding:18px 22px !important;}
+.main .content [data-tab-panel="backup"] .backup-upload-row input[type="file"]{flex:1 1 280px;min-width:220px;height:38px;padding:7px 10px;border:1px solid var(--border-soft);border-radius:9px;background:var(--panel);color:var(--text);box-sizing:border-box;}
+.main .content [data-tab-panel="backup"] .backup-upload-hint{font-size:11.5px;color:var(--text-muted);padding:0 22px 18px;}
+@media(max-width:640px){
+  .main .content [data-tab-panel="backup"] .backup-extra-actions{gap:6px !important;}
   .main .content [data-tab-panel="backup"] .backup-extra-actions > a,
-  .main .content [data-tab-panel="backup"] .backup-extra-actions > form > button{ min-width:68px !important; }
+  .main .content [data-tab-panel="backup"] .backup-extra-actions > form > button{min-width:68px !important;}
+  .main .content [data-tab-panel="backup"] .backup-upload-row{align-items:stretch !important;}
+  .main .content [data-tab-panel="backup"] .backup-upload-row input[type="file"],
+  .main .content [data-tab-panel="backup"] .backup-upload-row .btn{width:100%;max-width:none;}
 }
 </style>
 
@@ -93,25 +100,59 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
 
 <script>
 (function(){
-  function initBackupActions(){
-    var panel=document.querySelector('[data-tab-panel="backup"]');if(!panel||panel.dataset.backupRestoreUiBound==='1')return;panel.dataset.backupRestoreUiBound='1';
-    var tokenInput=document.querySelector('input[name="_token"]');var token=tokenInput?tokenInput.value:'';
+  function csrfToken(){
+    var input=document.querySelector('input[name="_token"]');
+    return input ? input.value : '';
+  }
+
+  function addUploadPanel(panel){
+    if(panel.querySelector('.backup-upload-panel')) return;
+    var createForm=panel.querySelector('form[action$="/admin/backup"]');
+    var createPanel=createForm ? createForm.closest('.panel') : panel.querySelector('.panel');
+    if(!createPanel) return;
+
+    var action=createForm && createForm.action ? createForm.action.replace(/\/backup(?:\?.*)?$/,'/backup/upload') : (window.location.origin + '/admin/backup/upload');
+    var wrapper=document.createElement('div');wrapper.className='panel backup-upload-panel';
+    var head=document.createElement('div');head.className='panel-head';
+    head.innerHTML='<div><h3>Upload Backup</h3><p>Unggah file backup .sql atau .sqlite untuk disimpan ke riwayat backup.</p></div>';
+    wrapper.appendChild(head);
+
+    var form=document.createElement('form');form.method='POST';form.enctype='multipart/form-data';form.action=action;form.className='backup-upload-row';
+    var token=document.createElement('input');token.type='hidden';token.name='_token';token.value=csrfToken();form.appendChild(token);
+    var file=document.createElement('input');file.type='file';file.name='backup_file';file.accept='.sql,.sqlite';file.required=true;form.appendChild(file);
+    var button=document.createElement('button');button.className='btn btn-primary';button.type='submit';button.textContent='Upload Backup';form.appendChild(button);
+    wrapper.appendChild(form);
+
+    var hint=document.createElement('div');hint.className='backup-upload-hint';hint.textContent='Format: .sql atau .sqlite • Maksimal 50 MB.';wrapper.appendChild(hint);
+    createPanel.insertAdjacentElement('afterend',wrapper);
+  }
+
+  function rebuildBackupActions(panel){
+    var token=csrfToken();
     var links=panel.querySelectorAll('table tbody tr a[href*="/admin/backup/"][href$="/download"]');
     links.forEach(function(downloadLink){
-      var cell=downloadLink.closest('td');if(!cell||cell.querySelector('.backup-extra-actions'))return;
-      var downloadHref=downloadLink.href;var viewHref=downloadHref.replace(/\/download(?:\?.*)?$/,'/view');var restoreHref=downloadHref.replace(/\/download(?:\?.*)?$/,'/restore');
-      var fileName=(downloadHref.match(/\/backup\/([^/]+)\/download/)||[])[1]||'backup ini';try{fileName=decodeURIComponent(fileName);}catch(e){}
-      var wrap=document.createElement('div');wrap.className='btn-row backup-extra-actions';wrap.style.flexWrap='wrap';wrap.style.justifyContent='center';wrap.style.gap='6px';
-      downloadLink.style.margin='0';downloadLink.textContent='Unduh';wrap.appendChild(downloadLink);
-      var view=document.createElement('a');view.className='btn btn-sm';view.href=viewHref;view.target='_blank';view.rel='noopener';view.textContent='Lihat';wrap.appendChild(view);
-      var form=document.createElement('form');form.method='POST';form.action=restoreHref;form.style.margin='0';form.addEventListener('submit',function(e){var ok=window.confirm('Restore backup ini akan mengganti data database saat ini. Sistem akan membuat safety backup otomatis sebelum proses. Lanjutkan?');if(!ok){e.preventDefault();return false;}return true;});
-      if(token){var csrf=document.createElement('input');csrf.type='hidden';csrf.name='_token';csrf.value=token;form.appendChild(csrf);}
-      var restore=document.createElement('button');restore.type='submit';restore.className='btn btn-sm btn-ghost-red';restore.textContent='Restore';form.appendChild(restore);wrap.appendChild(form);
+      var cell=downloadLink.closest('td');if(!cell)return;
+      var old=cell.querySelector('.backup-extra-actions');if(old)old.remove();
+      var downloadHref=downloadLink.href;
+      var deleteHref=downloadHref.replace(/\/download(?:\?.*)?$/,'');
+      var wrap=document.createElement('div');wrap.className='backup-extra-actions';
+      downloadLink.className='btn btn-sm';downloadLink.textContent='Unduh';downloadLink.style.margin='0';wrap.appendChild(downloadLink);
+
+      var form=document.createElement('form');form.method='POST';form.action=deleteHref;form.style.margin='0';
+      form.addEventListener('submit',function(e){if(!window.confirm('Hapus file backup ini secara permanen?'))e.preventDefault();});
+      var csrf=document.createElement('input');csrf.type='hidden';csrf.name='_token';csrf.value=token;form.appendChild(csrf);
+      var method=document.createElement('input');method.type='hidden';method.name='_method';method.value='DELETE';form.appendChild(method);
+      var del=document.createElement('button');del.type='submit';del.className='btn btn-sm btn-ghost-red';del.textContent='Hapus';form.appendChild(del);wrap.appendChild(form);
+
       cell.innerHTML='';cell.appendChild(wrap);
     });
   }
-  function boot(){initBackupActions();}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-  document.addEventListener('click',function(e){if(e.target.closest('[data-tab-link="backup"]'))window.setTimeout(initBackupActions,50);});
+
+  function init(){
+    var panel=document.querySelector('[data-tab-panel="backup"]');if(!panel)return;
+    addUploadPanel(panel);rebuildBackupActions(panel);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+  document.addEventListener('click',function(e){if(e.target.closest('[data-tab-link="backup"]'))window.setTimeout(init,50);});
 })();
 </script>
