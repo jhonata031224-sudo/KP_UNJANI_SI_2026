@@ -139,6 +139,7 @@ class BackupController extends Controller
 
         try {
             fwrite($handle, "-- SIBERAD MySQL backup\n");
+            fwrite($handle, "-- Database: ".$database."\n");
             fwrite($handle, "-- Generated: ".now()->toDateTimeString()."\n\n");
             fwrite($handle, "SET NAMES utf8mb4;\nSET FOREIGN_KEY_CHECKS=0;\nSET SQL_MODE='NO_AUTO_VALUE_ON_ZERO';\n\n");
 
@@ -224,15 +225,44 @@ class BackupController extends Controller
 
     /**
      * Unduh salah satu file backup.
+     *
+     * Pakai response download berbasis path fisik supaya tidak tergantung pada
+     * driver Flysystem yang mungkin berbeda di environment production.
      */
     public function download(string $filename): Response
     {
-        $path = self::FOLDER.'/'.basename($filename);
+        $safeFilename = basename($filename);
+        $extension = strtolower(pathinfo($safeFilename, PATHINFO_EXTENSION));
 
-        abort_unless(Storage::disk(self::DISK)->exists($path), 404);
+        abort_unless(in_array($extension, ['sql', 'sqlite'], true), 404);
 
-        ActivityLog::catat('backup.download', "Mengunduh backup database \"{$filename}\".");
+        $path = self::FOLDER.'/'.$safeFilename;
+        $disk = Storage::disk(self::DISK);
 
-        return Storage::disk(self::DISK)->download($path);
+        abort_unless($disk->exists($path), 404);
+
+        $fullPath = $disk->path($path);
+        abort_unless(is_file($fullPath) && is_readable($fullPath), 404);
+
+        // Logging tidak boleh menyebabkan proses download gagal jika pencatatan
+        // aktivitas sedang bermasalah.
+        try {
+            ActivityLog::catat('backup.download', "Mengunduh backup database \"{$safeFilename}\".");
+        } catch (\Throwable $e) {
+            Log::warning('Gagal mencatat aktivitas unduh backup.', [
+                'filename' => $safeFilename,
+                'exception' => $e,
+            ]);
+        }
+
+        $mime = $extension === 'sqlite'
+            ? 'application/vnd.sqlite3'
+            : 'application/sql';
+
+        return response()->download($fullPath, $safeFilename, [
+            'Content-Type' => $mime,
+            'Content-Length' => (string) filesize($fullPath),
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 }
