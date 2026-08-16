@@ -48,11 +48,12 @@ class BackupController extends Controller
     public function store(): RedirectResponse
     {
         $connection = (string) Config::get('database.default');
-        $timestamp = now()->format('Y-m-d_His');
-        $filename = self::FOLDER."/backup_{$timestamp}.".($connection === 'sqlite' ? 'sqlite' : 'sql');
+        $extension = $connection === 'sqlite' ? 'sqlite' : 'sql';
 
         try {
             Storage::disk(self::DISK)->makeDirectory(self::FOLDER);
+
+            $filename = self::FOLDER.'/'.$this->nextBackupFilename($extension);
 
             if ($connection === 'sqlite') {
                 $this->backupSqlite($filename);
@@ -73,6 +74,34 @@ class BackupController extends Controller
 
             return back()->with('error', 'Gagal membuat backup database. Periksa koneksi database dan log server.');
         }
+    }
+
+    /**
+     * Nama file backup memakai pola "siberad.ext", "siberad-1.ext",
+     * "siberad-2.ext", dst. -- tanpa tanggal di nama file karena tanggal
+     * sudah ditampilkan di kolom terpisah pada riwayat backup. Setiap
+     * backup baru tetap dapat nama file unik supaya riwayat sebelumnya
+     * tidak tertimpa.
+     */
+    private function nextBackupFilename(string $extension): string
+    {
+        $pattern = '/^siberad(?:-(\d+))?\.'.preg_quote($extension, '/').'$/i';
+
+        $maxSuffix = collect(Storage::disk(self::DISK)->files(self::FOLDER))
+            ->map(fn ($f) => basename($f))
+            ->filter(fn ($name) => preg_match($pattern, $name) === 1)
+            ->map(function ($name) use ($pattern) {
+                preg_match($pattern, $name, $m);
+
+                return isset($m[1]) && $m[1] !== '' ? (int) $m[1] : 0;
+            })
+            ->max();
+
+        if ($maxSuffix === null) {
+            return "siberad.{$extension}";
+        }
+
+        return 'siberad-'.($maxSuffix + 1).".{$extension}";
     }
 
     /**
