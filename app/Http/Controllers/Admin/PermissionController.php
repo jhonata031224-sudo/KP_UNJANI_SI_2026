@@ -11,9 +11,9 @@ use Illuminate\Http\Request;
 class PermissionController extends Controller
 {
     /**
-     * Simpan hak akses modul untuk satu satuan (role) — fitur "Manajemen
-     * Role & Hak Akses". Checkbox yang tidak dicentang tidak dikirim
-     * browser, jadi modul yang tidak ada di request dianggap nonaktif.
+     * Simpan hak akses modul untuk satu satuan (role). Modul yang tidak
+     * tersedia untuk role tersebut selalu dibuang dari request, sehingga
+     * konfigurasi permission tidak dapat melampaui matriks akses role.
      */
     public function update(Request $request, Satuan $satuan): RedirectResponse
     {
@@ -22,7 +22,10 @@ class PermissionController extends Controller
             'permissions.*' => ['string', 'in:'.implode(',', array_keys(Satuan::MODUL_HAK_AKSES))],
         ]);
 
-        $satuan->update(['permissions' => $validated['permissions'] ?? []]);
+        $allowed = Satuan::modulHakAksesKeysUntukRole($satuan->kode);
+        $permissions = array_values(array_intersect($validated['permissions'] ?? [], $allowed));
+
+        $satuan->update(['permissions' => $permissions]);
 
         ActivityLog::catat('role.update', "Memperbarui hak akses modul untuk satuan \"{$satuan->nama}\".");
 
