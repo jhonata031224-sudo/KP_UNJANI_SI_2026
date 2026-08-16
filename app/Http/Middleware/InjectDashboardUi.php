@@ -25,7 +25,6 @@ class InjectDashboardUi
                     }
                 }
             }
-
             return $response;
         }
 
@@ -46,10 +45,9 @@ class InjectDashboardUi
             if ($pos !== false) $html = substr($html, 0, $pos).$adminPreviewFix.substr($html, $pos);
 
             $landingPreviewAsset = asset('js/siberad-landing-preview.js');
-            $landingPreviewInjection = '<script src="'.e($landingPreviewAsset).'"></script>';
-            $roleAccessAsset = asset('js/role-access-layout.js').'?v=20260816-1';
-            $roleAccessVisibilityAsset = asset('js/role-permission-visibility.js').'?v=20260816-1';
-            $roleAccessInjection = '<script src="'.e($roleAccessAsset).'"></script><script src="'.e($roleAccessVisibilityAsset).'"></script>';
+            $landingPreviewInjection = '<script src="'.e($landingPreviewAsset).'\"></script>';
+            $roleAccessAsset = asset('js/role-access-layout.js').'?v=20260816-3';
+            $roleAccessInjection = '<script src="'.e($roleAccessAsset).'\"></script>';
             $pos = strripos($html, '</body>');
             if ($pos !== false) {
                 $html = substr($html, 0, $pos).$landingPreviewInjection.$roleAccessInjection.$fixedHeaderInjection.substr($html, $pos);
