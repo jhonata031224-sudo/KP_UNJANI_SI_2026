@@ -158,8 +158,9 @@
     // bisa dilihat utuh melalui scrollbar horizontal di dalam preview.
     if (isMobile) {
       var mobileWidth = Math.round(760 * zoomMultiplier);
-      canvas.style.width = mobileWidth + 'px';
-      canvas.style.minWidth = mobileWidth + 'px';
+      canvas.style.setProperty('width', mobileWidth + 'px', 'important');
+      canvas.style.setProperty('min-width', mobileWidth + 'px', 'important');
+      canvas.style.setProperty('max-width', 'none', 'important');
       preview.style.setProperty('overflow-x', 'auto', 'important');
       preview.style.setProperty('overflow-y', 'auto', 'important');
       preview.style.setProperty('-webkit-overflow-scrolling', 'touch');
@@ -174,8 +175,9 @@
     }
 
     // Desktop: pertahankan perilaku fit yang sudah aman dan tidak diubah.
-    canvas.style.width = '100%';
-    canvas.style.minWidth = '0';
+    canvas.style.removeProperty('width');
+    canvas.style.removeProperty('min-width');
+    canvas.style.removeProperty('max-width');
 
     var naturalWidth = Math.max(canvas.scrollWidth, 1);
     var naturalHeight = Math.max(canvas.scrollHeight, 1);
