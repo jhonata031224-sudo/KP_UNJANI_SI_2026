@@ -191,7 +191,9 @@ Route::post('/personel-mutasi', [PersonelMutasiController::class, 'store'])->mid
 Route::patch('/personel-mutasi/{mutasi}', [PersonelMutasiController::class, 'update'])->middleware('auth')->name('personel-mutasi.update');
 Route::delete('/personel-mutasi/{mutasi}', [PersonelMutasiController::class, 'destroy'])->middleware('auth')->name('personel-mutasi.destroy');
 Route::post('/personel-dokumen', [PersonelDokumenController::class, 'store'])->middleware('auth')->name('personel-dokumen.store');
-Route::delete('/personel-dokumen/{dokumen}', [PersonelDokumenController::class, 'destroy'])->middleware('auth')->name('personel-dokumen.destroy');
+Route::delete('/personel-dokumen/{dokumen}', [PersonelDokumenController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('personel-dokumen.destroy');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
@@ -204,6 +206,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/pengaturan/landing', [SettingController::class, 'updateLanding'])->name('pengaturan.landing.update');
     Route::post('/backup', [BackupController::class, 'store'])->name('backup.store');
     Route::get('/backup/{filename}/download', [BackupController::class, 'download'])->name('backup.download');
+    Route::get('/backup/{filename}/view', [BackupController::class, 'view'])->name('backup.view');
+    Route::post('/backup/{filename}/restore', [BackupController::class, 'restore'])->name('backup.restore');
     Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/aktivitas-terbaru', [ReportController::class, 'aktivitasTerbaru'])->name('laporan.aktivitas-terbaru');
     Route::get('/laporan/cetak/{jenis}', [ReportController::class, 'printView'])
@@ -212,6 +216,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/laporan/export/pengguna', [ReportController::class, 'exportUsersExcel'])->name('laporan.export-pengguna');
     Route::get('/laporan/export/aktivitas', [ReportController::class, 'exportActivityExcel'])->name('laporan.export-aktivitas');
     Route::delete('/sessions/{id}', [SessionController::class, 'destroy'])->name('sessions.destroy');
-    Route::patch('/permintaan-reset-password/{permintaanResetPassword}/setujui', [AdminPermintaanResetPasswordController::class, 'setujui'])->name('permintaan-reset-password.setujui');
-    Route::patch('/permintaan-reset-password/{permintaanResetPassword}/tolak', [AdminPermintaanResetPasswordController::class, 'tolak'])->name('permintaan-reset-password.tolak');
+    Route::patch('/permintaan-reset-password/{permintaanResetPassword}/setujui', [AdminPermintaanResetPasswordController::class, 'setujui'])->name('admin.permintaan-reset-password.setujui');
+    Route::patch('/permintaan-reset-password/{permintaanResetPassword}/tolak', [AdminPermintaanResetPasswordController::class, 'tolak'])->name('admin.permintaan-reset-password.tolak');
 });
