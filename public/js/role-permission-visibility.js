@@ -54,7 +54,9 @@
       var button = row.querySelector('td:nth-child(4) button[type="submit"], td:nth-child(4) .role-access-save');
       if (!button) return;
       button.classList.add('role-access-save');
-      button.textContent = 'Simpan';
+      if (button.textContent.trim() !== 'Simpan') {
+        button.textContent = 'Simpan';
+      }
       button.setAttribute('aria-label', 'Simpan hak akses');
     });
   }
