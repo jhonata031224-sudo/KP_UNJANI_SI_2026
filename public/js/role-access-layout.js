@@ -9,10 +9,10 @@
     SATLAKSISOS: ['laporan', 'medsos', 'notifikasi'],
     SATLAKDAK: ['laporan', 'monitoring', 'notifikasi'],
     SATLAKDUKTEK: ['laporan', 'monitoring', 'notifikasi'],
-    BINFUNG: ['laporan', 'personel', 'notifikasi'],
+    BINFUNG: ['laporan', 'personel', 'monitoring', 'notifikasi'],
     BINUM: ['laporan', 'monitoring', 'notifikasi'],
-    DIKLAT: ['laporan', 'notifikasi'],
-    BINMAT: ['laporan', 'notifikasi']
+    DIKLAT: ['laporan', 'monitoring', 'notifikasi'],
+    BINMAT: ['laporan', 'monitoring', 'notifikasi']
   };
 
   var MODULE_LABEL_TO_KEY = {
