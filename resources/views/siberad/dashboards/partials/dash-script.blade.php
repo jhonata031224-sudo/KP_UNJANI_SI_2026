@@ -56,3 +56,32 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initBackupUpload);else initBackupUpload();
 })();
 </script>
+
+<style>
+/* Role & Hak Akses: judul kolom Aksi benar-benar di tengah dan tombol simpan dibuat lebih ringkas. */
+.main .content [data-tab-panel="role-akses"] .role-akses-action-head,
+.main .content [data-tab-panel="role-akses"] .role-akses-action {
+  text-align:center !important;
+  vertical-align:middle !important;
+}
+.main .content [data-tab-panel="role-akses"] .role-akses-action button,
+.main .content [data-tab-panel="role-akses"] .role-akses-action .btn {
+  width:220px !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  margin-left:auto !important;
+  margin-right:auto !important;
+  justify-content:center !important;
+  padding:8px 12px !important;
+  font-size:10.5px !important;
+  white-space:nowrap !important;
+  box-sizing:border-box !important;
+}
+@media(max-width:640px){
+  .main .content [data-tab-panel="role-akses"] .role-akses-action button,
+  .main .content [data-tab-panel="role-akses"] .role-akses-action .btn {
+    width:100% !important;
+    max-width:220px !important;
+  }
+}
+</style>
