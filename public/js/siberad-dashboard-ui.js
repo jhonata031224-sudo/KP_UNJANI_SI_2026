@@ -45,6 +45,85 @@
     document.head.appendChild(style);
   }
 
+  function installLandingPageEditorStyles() {
+    if (document.getElementById('siberad-landing-tabs-style')) return;
+    var style = document.createElement('style');
+    style.id = 'siberad-landing-tabs-style';
+    style.textContent = `
+      /* Pengaturan Umum > Konten Halaman Landing: tab berbentuk kotak, bukan pill. */
+      #landingForm .lp-tabs{
+        display:grid!important;
+        grid-template-columns:repeat(4,minmax(0,1fr))!important;
+        gap:10px!important;
+        align-items:stretch!important;
+        margin:0 0 6px!important;
+        padding:0 0 16px!important;
+        border-bottom:1px solid var(--border-soft)!important;
+      }
+      #landingForm .lp-tab{
+        width:100%!important;
+        min-width:0!important;
+        min-height:52px!important;
+        height:52px!important;
+        box-sizing:border-box!important;
+        display:flex!important;
+        align-items:center!important;
+        justify-content:center!important;
+        gap:8px!important;
+        margin:0!important;
+        padding:0 14px!important;
+        border:1px solid var(--border-soft)!important;
+        border-radius:12px!important;
+        background:var(--panel-alt)!important;
+        color:var(--text-muted)!important;
+        font-family:inherit!important;
+        font-size:12.5px!important;
+        font-weight:600!important;
+        letter-spacing:.02em!important;
+        line-height:1!important;
+        text-align:center!important;
+        white-space:nowrap!important;
+        cursor:pointer!important;
+        appearance:none!important;
+        -webkit-appearance:none!important;
+        transition:background .15s ease,color .15s ease,border-color .15s ease,box-shadow .15s ease,transform .15s ease!important;
+      }
+      #landingForm .lp-tab svg{
+        width:16px!important;
+        height:16px!important;
+        flex:0 0 16px!important;
+        margin:0!important;
+      }
+      #landingForm .lp-tab:hover{
+        color:var(--text)!important;
+        background:var(--panel)!important;
+        border-color:var(--border-strong,var(--border))!important;
+      }
+      #landingForm .lp-tab:focus-visible{
+        outline:2px solid var(--gold)!important;
+        outline-offset:2px!important;
+      }
+      #landingForm .lp-tab:active{transform:translateY(1px)!important;}
+      #landingForm .lp-tab.active{
+        background:var(--gold-dim)!important;
+        border-color:var(--gold)!important;
+        color:var(--gold-bright)!important;
+        box-shadow:0 2px 8px rgba(201,122,0,.08)!important;
+      }
+      @media(max-width:640px){
+        #landingForm .lp-tabs{
+          grid-template-columns:repeat(2,minmax(0,1fr))!important;
+          gap:8px!important;
+        }
+        #landingForm .lp-tab{min-height:48px!important;height:48px!important;padding:0 10px!important;}
+      }
+      @media(max-width:380px){
+        #landingForm .lp-tabs{grid-template-columns:1fr!important;}
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function installRoleAccessStyles() {
     if (document.getElementById('siberad-role-access-final-style')) return;
     var style = document.createElement('style');
@@ -268,6 +347,7 @@
 
   function boot() {
     addStyles();
+    installLandingPageEditorStyles();
     initRoleAccessDeferred();
     initNotifications();
     initLogoutConfirmation();
