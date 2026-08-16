@@ -30,20 +30,32 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
 </style>
 
 <style>
-/* Role & Hak Akses: final layout. */
+/* Role & Hak Akses: layout tabel final dan konsisten. */
 .main .content [data-tab-panel="role-akses"] .role-akses-table-panel{overflow:hidden!important;width:100%!important;box-sizing:border-box!important}
-.main .content [data-tab-panel="role-akses"] .role-akses-table-wrap{overflow-x:hidden!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important}
-.main .content [data-tab-panel="role-akses"] .role-akses-table{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important;box-sizing:border-box!important}
-.main .content [data-tab-panel="role-akses"] .role-akses-table th,.main .content [data-tab-panel="role-akses"] .role-akses-table td{min-width:0!important;box-sizing:border-box!important}
-.main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(1),.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(1){width:20%!important;padding-left:16px!important;padding-right:12px!important}
-.main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(2),.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(2){width:25%!important;padding-left:12px!important;padding-right:12px!important}
-.main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(3),.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(3){width:37%!important;padding-left:12px!important;padding-right:10px!important}
-.main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(4),.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(4){width:18%!important;padding-left:8px!important;padding-right:12px!important}
-.main .content [data-tab-panel="role-akses"] .role-akses-table .role-akses-checks{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:9px!important;width:100%!important}
-.main .content [data-tab-panel="role-akses"] .role-akses-table .role-akses-check{display:flex!important;width:100%!important;max-width:100%!important;white-space:normal!important;min-width:0!important}
+.main .content [data-tab-panel="role-akses"] .role-akses-table-wrap{overflow:hidden!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important}
+.main .content [data-tab-panel="role-akses"] .role-akses-table{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important;border-collapse:collapse!important;box-sizing:border-box!important}
+.main .content [data-tab-panel="role-akses"] .role-akses-table th,.main .content [data-tab-panel="role-akses"] .role-akses-table td{min-width:0!important;box-sizing:border-box!important;padding:14px 16px!important;}
+.main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(1),.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(1){width:24%!important}
+.main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(2),.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(2){width:26%!important}
+.main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(3),.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(3){width:34%!important}
+.main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(4),.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(4){width:16%!important}
+.main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(4){text-align:center!important;vertical-align:middle!important;padding-left:8px!important;padding-right:8px!important}
+.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(4){text-align:center!important;vertical-align:middle!important;padding-left:8px!important;padding-right:8px!important}
+.main .content [data-tab-panel="role-akses"] .role-akses-table .role-akses-checks{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:7px!important;width:100%!important;margin:0!important;padding:0!important}
+.main .content [data-tab-panel="role-akses"] .role-akses-table .role-akses-check{display:flex!important;align-items:center!important;width:100%!important;max-width:100%!important;white-space:normal!important;min-width:0!important;margin:0!important;padding:0!important;line-height:1.35!important}
 .main .content [data-tab-panel="role-akses"] .role-akses-action-head,.main .content [data-tab-panel="role-akses"] .role-akses-action{text-align:center!important;vertical-align:middle!important}
-.main .content [data-tab-panel="role-akses"] .role-akses-action button,.main .content [data-tab-panel="role-akses"] .role-akses-action .btn{width:220px!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important;padding:7px 10px!important;font-size:10px!important;letter-spacing:.035em!important}
-@media(max-width:760px){.main .content [data-tab-panel="role-akses"] .role-akses-table th,.main .content [data-tab-panel="role-akses"] .role-akses-table td{padding:9px 7px!important}.main .content [data-tab-panel="role-akses"] .role-akses-action button,.main .content [data-tab-panel="role-akses"] .role-akses-action .btn{width:170px!important;font-size:9.5px!important;padding:7px 8px!important}}
+.main .content [data-tab-panel="role-akses"] .role-akses-action button,.main .content [data-tab-panel="role-akses"] .role-akses-action .btn{width:76px!important;max-width:76px!important;min-width:76px!important;height:34px!important;min-height:34px!important;box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important;overflow:hidden!important;padding:6px 10px!important;margin:0 auto!important;font-size:0!important;line-height:1!important;letter-spacing:0!important;text-align:center!important}
+.main .content [data-tab-panel="role-akses"] .role-akses-action button::after,.main .content [data-tab-panel="role-akses"] .role-akses-action .btn::after{content:"Simpan";display:block;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.045em;line-height:1;text-transform:none;}
+.main .content [data-tab-panel="role-akses"] .role-akses-action button:focus-visible,.main .content [data-tab-panel="role-akses"] .role-akses-action .btn:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px}
+@media(max-width:760px){
+  .main .content [data-tab-panel="role-akses"] .role-akses-table th,.main .content [data-tab-panel="role-akses"] .role-akses-table td{padding:12px 10px!important}
+  .main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(1),.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(1){width:24%!important}
+  .main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(2),.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(2){width:26%!important}
+  .main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(3),.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(3){width:34%!important}
+  .main .content [data-tab-panel="role-akses"] .role-akses-table th:nth-child(4),.main .content [data-tab-panel="role-akses"] .role-akses-table td:nth-child(4){width:16%!important;padding-left:6px!important;padding-right:6px!important}
+  .main .content [data-tab-panel="role-akses"] .role-akses-action button,.main .content [data-tab-panel="role-akses"] .role-akses-action .btn{width:70px!important;max-width:70px!important;min-width:70px!important;height:32px!important;min-height:32px!important;padding:5px 8px!important}
+  .main .content [data-tab-panel="role-akses"] .role-akses-action button::after,.main .content [data-tab-panel="role-akses"] .role-akses-action .btn::after{font-size:9.5px}
+}
 
 /* Backup Database */
 .main .content [data-tab-panel="backup"] .dtbl th:last-child,
