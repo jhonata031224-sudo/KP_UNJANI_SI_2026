@@ -67,7 +67,13 @@ class DashboardController
         })->values();
         $logAktivitas = ActivityLog::with('user')->latest('created_at')->limit(200)->get();
         $daftarBackup = app(BackupController::class)->index();
-        $sesiAktif = DB::table('sessions')->leftJoin('users', 'sessions.user_id', '=', 'users.id')->orderByDesc('sessions.last_activity')->get(['sessions.id','sessions.ip_address','sessions.user_agent','sessions.last_activity','users.name as user_name']);
+        // Hanya sesi yang benar-benar terautentikasi yang ditampilkan.
+        // Baris guest dengan user_id NULL tidak termasuk sesi login aktif.
+        $sesiAktif = DB::table('sessions')
+            ->whereNotNull('sessions.user_id')
+            ->leftJoin('users', 'sessions.user_id', '=', 'users.id')
+            ->orderByDesc('sessions.last_activity')
+            ->get(['sessions.id','sessions.ip_address','sessions.user_agent','sessions.last_activity','users.name as user_name']);
         $kodeSatuanPengirim = [
             'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK', 'SATLAKDUKTEK',
             'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT',
