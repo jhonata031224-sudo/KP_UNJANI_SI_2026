@@ -36,6 +36,39 @@ class Satuan extends Model
     ];
 
     /**
+     * Matriks modul yang relevan dengan tanggung jawab tiap role/satuan.
+     * Ini dipakai Admin saat mengatur Role & Hak Akses agar pilihan modul
+     * tidak lagi sama untuk seluruh role.
+     */
+    public const MODUL_HAK_AKSES_PER_ROLE = [
+        'ADMIN' => ['laporan', 'medsos', 'personel', 'monitoring', 'notifikasi'],
+        'DANPUS' => ['laporan', 'medsos', 'monitoring', 'notifikasi'],
+        'WADAN' => ['laporan', 'monitoring', 'notifikasi'],
+        'SDIR' => ['laporan', 'monitoring', 'notifikasi'],
+        'SATLAKKAL' => ['laporan', 'monitoring', 'notifikasi'],
+        'SATLAKSISOS' => ['laporan', 'medsos', 'notifikasi'],
+        'SATLAKDAK' => ['laporan', 'monitoring', 'notifikasi'],
+        'SATLAKDUKTEK' => ['laporan', 'monitoring', 'notifikasi'],
+        'BINFUNG' => ['laporan', 'personel', 'notifikasi'],
+        'BINUM' => ['laporan', 'monitoring', 'notifikasi'],
+        'DIKLAT' => ['laporan', 'notifikasi'],
+        'BINMAT' => ['laporan', 'notifikasi'],
+    ];
+
+    public static function modulHakAksesUntukRole(?string $kode): array
+    {
+        $kode = strtoupper(trim((string) $kode));
+        $keys = self::MODUL_HAK_AKSES_PER_ROLE[$kode] ?? array_keys(self::MODUL_HAK_AKSES);
+
+        return array_intersect_key(self::MODUL_HAK_AKSES, array_flip($keys));
+    }
+
+    public static function modulHakAksesKeysUntukRole(?string $kode): array
+    {
+        return array_keys(self::modulHakAksesUntukRole($kode));
+    }
+
+    /**
      * Kategori satuan yang tersedia, dipakai untuk pengelompokan di dropdown login.
      */
     public const KATEGORI_SATLAK = 'satlak';
