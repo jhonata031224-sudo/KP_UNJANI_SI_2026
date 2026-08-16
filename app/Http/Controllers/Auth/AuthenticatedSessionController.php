@@ -62,7 +62,7 @@ class AuthenticatedSessionController extends Controller
 
             if ($sesiMasihAktif) {
                 throw ValidationException::withMessages([
-                    'username' => 'Akun ini sedang digunakan di perangkat lain. Logout dari perangkat itu dulu, atau hubungi Admin untuk paksa logout.',
+                    'username' => 'Akun sedang digunakan di perangkat lain.',
                 ]);
             }
         }
