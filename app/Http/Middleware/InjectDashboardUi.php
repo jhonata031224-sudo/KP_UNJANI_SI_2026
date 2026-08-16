@@ -44,7 +44,7 @@ class InjectDashboardUi
             $pos = strripos($html, '</head>');
             if ($pos !== false) $html = substr($html, 0, $pos).$adminPreviewFix.substr($html, $pos);
 
-            $landingPreviewAsset = asset('js/siberad-landing-preview.js');
+            $landingPreviewAsset = asset('js/siberad-landing-preview.js') . '?v=20260816-3';
             $landingPreviewInjection = '<script src="' . e($landingPreviewAsset) . '"></script>';
             $roleAccessAsset = asset('js/role-access-layout.js') . '?v=20260816-7';
             $roleAccessInjection = '<script src="' . e($roleAccessAsset) . '"></script>';
