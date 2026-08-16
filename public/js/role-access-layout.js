@@ -54,8 +54,7 @@
       '[data-tab-panel="role-akses"] .role-access-table td:nth-child(4){text-align:center!important;vertical-align:middle}',
       '[data-tab-panel="role-akses"] .role-access-table tbody tr:last-child td{border-bottom:0}',
       '[data-tab-panel="role-akses"] .role-access-table tbody tr:hover td{background:var(--hover-tint)}',
-      '[data-tab-panel="role-akses"] .role-access-role{font-weight:700;color:var(--text);font-size:13px;line-height:1.45}',
-      '[data-tab-panel="role-akses"] .role-access-code{display:inline-flex;margin-top:6px;padding:4px 8px;border:1px solid var(--border-soft);border-radius:7px;background:var(--panel-alt);color:var(--gold-bright);font-family:var(--mono);font-size:9px;letter-spacing:.07em}',
+      '[data-tab-panel="role-akses"] .role-access-code{display:inline-flex;padding:6px 12px;border:1px solid var(--border-soft);border-radius:7px;background:var(--panel-alt);color:var(--gold-bright);font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.07em}',
       '[data-tab-panel="role-akses"] .role-access-desc{margin:0;color:var(--text-muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}',
       '[data-tab-panel="role-akses"] .role-access-access-layout{display:contents}',
       '[data-tab-panel="role-akses"] .role-access-form{display:contents!important}',
@@ -145,9 +144,8 @@
     rows.forEach(function (item) {
       var tr = document.createElement('tr');
       var roleCell = document.createElement('td');
-      roleCell.innerHTML = '<div class="role-access-role"></div>' + (item.code ? '<span class="role-access-code"></span>' : '');
-      roleCell.querySelector('.role-access-role').textContent = item.roleName;
-      if (item.code) roleCell.querySelector('.role-access-code').textContent = item.code;
+      roleCell.innerHTML = '<span class="role-access-code"></span>';
+      roleCell.querySelector('.role-access-code').textContent = item.code || item.roleName;
       var descCell = document.createElement('td');
       var desc = document.createElement('p');
       desc.className = 'role-access-desc';
