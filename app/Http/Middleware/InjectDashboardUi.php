@@ -12,10 +12,6 @@ class InjectDashboardUi
     {
         $response = $next($request);
 
-        // Landing page: panel loader tetap putih, sementara background halaman
-        // dibuat putih-keabuan lembut agar card/section putih tetap terlihat.
-        // Overlay hero juga disesuaikan agar gradasi gambar tidak lagi bernuansa cream.
-        // Pada tema dark, landing memakai palet Obsidian + Gold tanpa hijau/cyan.
         if ($request->path() === '/') {
             $contentType = (string) $response->headers->get('Content-Type');
             if ($contentType === '' || str_contains($contentType, 'text/html')) {
@@ -33,72 +29,48 @@ class InjectDashboardUi
             return $response;
         }
 
-        if (! $request->routeIs('dashboard') || ! $request->user()) {
-            return $response;
-        }
+        if (! $request->routeIs('dashboard') || ! $request->user()) return $response;
 
         $contentType = (string) $response->headers->get('Content-Type');
-        if ($contentType !== '' && ! str_contains($contentType, 'text/html')) {
-            return $response;
-        }
+        if ($contentType !== '' && ! str_contains($contentType, 'text/html')) return $response;
 
         $html = $response->getContent();
-        if (! is_string($html) || $html === '') {
-            return $response;
-        }
+        if (! is_string($html) || $html === '') return $response;
 
         $fixedHeaderAsset = asset('js/siberad-fixed-header.js');
         $fixedHeaderInjection = '<script src="'.e($fixedHeaderAsset).'"></script>';
 
-        // Dashboard yang sudah memiliki komponen notifikasi sendiri tetap
-        // mempertahankan UI tersebut. Kita hanya menyuntikkan behavior header
-        // fixed agar layout sidebar asli tidak disentuh.
         if (str_contains($html, 'id="notifMenu"')) {
             $adminPreviewFix = '<style id="siberad-admin-preview-fix">.lp-layout{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) !important;width:100%;min-width:0;}.lp-panel,.lp-preview-panel{min-width:0;max-width:100%;box-sizing:border-box;}.lp-preview-panel{overflow:hidden;}.lp-preview-body{min-width:0;overflow:hidden;}.lp-browser-frame{width:100%;max-width:100%;min-width:0;box-sizing:border-box;}#lpPreview{width:100%;max-width:100%;min-width:0;overflow:hidden !important;overflow-x:hidden !important;overflow-y:hidden !important;}.lp-preview.lp-preview-zoomed{overflow:auto !important;overflow-x:auto !important;overflow-y:auto !important;}.lp-features{grid-template-columns:repeat(2,minmax(0,1fr));}.lp-feature-card,.lp-p,.lp-h1,.lp-h2,.lp-eyebrow{min-width:0;overflow-wrap:anywhere;word-break:break-word;}.lp-h1,.lp-h2{display:block !important;visibility:visible !important;color:var(--text) !important;}@media(max-width:1100px){.lp-layout{grid-template-columns:minmax(0,1fr) !important;}.lp-preview-panel{position:relative;top:auto;}}</style>';
             $pos = strripos($html, '</head>');
-            if ($pos !== false) {
-                $html = substr($html, 0, $pos).$adminPreviewFix.substr($html, $pos);
-            }
+            if ($pos !== false) $html = substr($html, 0, $pos).$adminPreviewFix.substr($html, $pos);
 
             $landingPreviewAsset = asset('js/siberad-landing-preview.js');
-            $landingPreviewInjection = '<script src="'.e($landingPreviewAsset).'"></script><script>(function(){function syncPreviewOverflow(){var p=document.getElementById("lpPreview");if(!p)return;var z=p.querySelector(".lp-preview-zoom");if(!z)return;var label=z.querySelector("[data-zoom-label]");var isFit=!label||label.textContent.trim()==="Fit";p.classList.toggle("lp-preview-zoomed",!isFit);}document.addEventListener("click",function(e){if(e.target.closest("[data-zoom-action]")){setTimeout(syncPreviewOverflow,0);}},true);setTimeout(syncPreviewOverflow,200);})();</script>';
+            $landingPreviewInjection = '<script src="'.e($landingPreviewAsset).'"></script>';
             $roleAccessAsset = asset('js/role-access-layout.js').'?v=20260816-1';
-            $roleAccessInjection = '<script src="'.e($roleAccessAsset).'"></script>';
+            $roleAccessVisibilityAsset = asset('js/role-permission-visibility.js').'?v=20260816-1';
+            $roleAccessInjection = '<script src="'.e($roleAccessAsset).'"></script><script src="'.e($roleAccessVisibilityAsset).'"></script>';
             $pos = strripos($html, '</body>');
             if ($pos !== false) {
                 $html = substr($html, 0, $pos).$landingPreviewInjection.$roleAccessInjection.$fixedHeaderInjection.substr($html, $pos);
                 $response->setContent($html);
             }
-
             return $response;
         }
 
         $notifications = $request->user()->unreadNotifications->take(20)->map(function ($notification) {
             $data = is_array($notification->data) ? $notification->data : [];
-
-            return [
-                'message' => $data['pesan'] ?? $data['message'] ?? 'Laporan baru masuk.',
-                'time' => $notification->created_at?->diffForHumans() ?? '',
-            ];
+            return ['message' => $data['pesan'] ?? $data['message'] ?? 'Laporan baru masuk.','time' => $notification->created_at?->diffForHumans() ?? ''];
         })->values()->all();
-
-        $notificationJson = json_encode(
-            $notifications,
-            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE
-        );
+        $notificationJson = json_encode($notifications, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
         $csrfJson = json_encode(csrf_token(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
-
         $asset = asset('js/siberad-dashboard-ui.js');
-        $injection = '<script>window.__SIBERAD_NOTIFICATIONS__ = '.$notificationJson.'; window.__SIBERAD_CSRF__ = '.$csrfJson.';</script>'
-            .'<script src="'.e($asset).'"> </script>'
-            .$fixedHeaderInjection;
-
+        $injection = '<script>window.__SIBERAD_NOTIFICATIONS__ = '.$notificationJson.'; window.__SIBERAD_CSRF__ = '.$csrfJson.';</script><script src="'.e($asset).'"> </script>'.$fixedHeaderInjection;
         $pos = strripos($html, '</body>');
         if ($pos !== false) {
             $html = substr($html, 0, $pos).$injection.substr($html, $pos);
             $response->setContent($html);
         }
-
         return $response;
     }
 }
