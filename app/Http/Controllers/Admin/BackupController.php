@@ -75,6 +75,75 @@ class BackupController extends Controller
         }
     }
 
+    /**
+     * Tampilkan isi SQL secara aman di browser. Hanya preview teks,
+     * tidak pernah mengeksekusi SQL.
+     */
+    public function view(string $filename): Response
+    {
+        $path = $this->validatedBackupPath($filename, ['sql', 'sqlite']);
+        $disk = Storage::disk(self::DISK);
+        $fullPath = $disk->path($path);
+
+        abort_unless(is_file($fullPath) && is_readable($fullPath), 404);
+
+        $maxBytes = 2 * 1024 * 1024;
+        $content = file_get_contents($fullPath, false, null, 0, $maxBytes);
+        $content = $content === false ? '' : $content;
+
+        if ((int) filesize($fullPath) > $maxBytes) {
+            $content .= "\n\n-- [Preview dibatasi 2 MB. Unduh file untuk melihat isi lengkap.] --\n";
+        }
+
+        return response($content, 200, [
+            'Content-Type' => $pathinfo = (pathinfo($fullPath, PATHINFO_EXTENSION) === 'sqlite'
+                ? 'application/vnd.sqlite3'
+                : 'text/plain; charset=UTF-8'),
+            'Content-Disposition' => 'inline; filename="'.basename($safeFilename = $filename).'"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    /**
+     * Restore backup SQL ke database aktif.
+     * Sebelum restore dibuat safety backup otomatis agar keadaan sebelum restore
+     * masih dapat dipulihkan.
+     */
+    public function restore(string $filename): RedirectResponse
+    {
+        $connection = (string) Config::get('database.default');
+
+        if ($connection !== 'mysql') {
+            return back()->with('error', 'Restore saat ini hanya tersedia untuk database MySQL.');
+        }
+
+        try {
+            $path = $this->validatedBackupPath($filename, ['sql']);
+            $disk = Storage::disk(self::DISK);
+            $fullPath = $disk->path($path);
+
+            abort_unless(is_file($fullPath) && is_readable($fullPath), 404);
+
+            Storage::disk(self::DISK)->makeDirectory(self::FOLDER);
+            $safetyFilename = self::FOLDER.'/pre_restore_'.now()->format('Y-m-d_His').'.sql';
+            $this->backupMysql($safetyFilename);
+
+            $this->restoreMysql($fullPath);
+
+            ActivityLog::catat('backup.restore', "Restore database dari backup \"{$filename}\". Safety backup: ".basename($safetyFilename).'.');
+
+            return back()->with('status', 'Restore berhasil. Safety backup sebelum restore: '.basename($safetyFilename).'.');
+        } catch (\Throwable $e) {
+            Log::error('Gagal restore backup database.', [
+                'filename' => $filename,
+                'connection' => $connection,
+                'exception' => $e,
+            ]);
+
+            return back()->with('error', 'Restore gagal. Database tidak diubah jika proses gagal pada tahap validasi; periksa log server.');
+        }
+    }
+
     private function backupSqlite(string $filename): void
     {
         $dbPath = (string) Config::get('database.connections.sqlite.database');
@@ -210,6 +279,194 @@ class BackupController extends Controller
         }
     }
 
+    private function restoreMysql(string $fullPath): void
+    {
+        $cfg = Config::get('database.connections.mysql');
+        $sql = file_get_contents($fullPath);
+
+        if ($sql === false || trim($sql) === '') {
+            throw new \RuntimeException('File backup SQL kosong atau tidak bisa dibaca.');
+        }
+
+        if ($this->commandExists('mysql')) {
+            $process = new Process([
+                'mysql',
+                '-h', (string) $cfg['host'],
+                '-P', (string) ($cfg['port'] ?? 3306),
+                '-u', (string) $cfg['username'],
+                '--password='.(string) ($cfg['password'] ?? ''),
+                (string) $cfg['database'],
+            ]);
+            $process->setInput($sql);
+            $process->setTimeout(900);
+            $process->run();
+
+            if (! $process->isSuccessful()) {
+                throw new \RuntimeException('mysql client gagal menjalankan restore: '.trim($process->getErrorOutput()));
+            }
+            return;
+        }
+
+        // Fallback native hanya untuk format backup SIBERAD yang kita hasilkan,
+        // sehingga dump eksternal yang memakai DELIMITER/routine kompleks tidak
+        // dipaksa dieksekusi parser sederhana ini.
+        if (! str_starts_with(ltrim($sql), '-- SIBERAD MySQL backup')) {
+            throw new \RuntimeException('Server tidak memiliki mysql client. Restore fallback hanya mendukung backup SIBERAD.');
+        }
+
+        $pdo = DB::connection('mysql')->getPdo();
+        $statements = $this->splitSqlStatements($sql);
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+
+        try {
+            foreach ($statements as $statement) {
+                $statement = trim($statement);
+                if ($statement === '' || str_starts_with($statement, '--')) {
+                    continue;
+                }
+                $pdo->exec($statement);
+            }
+        } finally {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        }
+    }
+
+    private function splitSqlStatements(string $sql): array
+    {
+        $statements = [];
+        $buffer = '';
+        $length = strlen($sql);
+        $single = false;
+        $double = false;
+        $backtick = false;
+        $lineComment = false;
+        $blockComment = false;
+
+        for ($i = 0; $i < $length; $i++) {
+            $char = $sql[$i];
+            $next = $i + 1 < $length ? $sql[$i + 1] : '';
+
+            if ($lineComment) {
+                if ($char === "\n") {
+                    $lineComment = false;
+                    $buffer .= $char;
+                }
+                continue;
+            }
+
+            if ($blockComment) {
+                if ($char === '*' && $next === '/') {
+                    $blockComment = false;
+                    $i++;
+                }
+                continue;
+            }
+
+            if (! $single && ! $double && ! $backtick) {
+                if ($char === '#' || ($char === '-' && $next === '-' && ($i + 2 >= $length || ctype_space($sql[$i + 2])))) {
+                    $lineComment = true;
+                    if ($char === '-' && $next === '-') {
+                        $i++;
+                    }
+                    continue;
+                }
+                if ($char === '/' && $next === '*') {
+                    $blockComment = true;
+                    $i++;
+                    continue;
+                }
+            }
+
+            if ($char === "\\" && ($single || $double) && $i + 1 < $length) {
+                $buffer .= $char.$sql[++$i];
+                continue;
+            }
+
+            if ($char === "'" && ! $double && ! $backtick) {
+                $single = ! $single;
+                $buffer .= $char;
+                continue;
+            }
+
+            if ($char === '"' && ! $single && ! $backtick) {
+                $double = ! $double;
+                $buffer .= $char;
+                continue;
+            }
+
+            if ($char === '`' && ! $single && ! $double) {
+                $backtick = ! $backtick;
+                $buffer .= $char;
+                continue;
+            }
+
+            if ($char === ';' && ! $single && ! $double && ! $backtick) {
+                $statement = trim($buffer);
+                if ($statement !== '') {
+                    $statements[] = $statement;
+                }
+                $buffer = '';
+                continue;
+            }
+
+            $buffer .= $char;
+        }
+
+        $tail = trim($buffer);
+        if ($tail !== '') {
+            $statements[] = $tail;
+        }
+
+        return $statements;
+    }
+
+    private function validatedBackupPath(string $filename, array $allowedExtensions): string
+    {
+        $safeFilename = basename($filename);
+        $extension = strtolower(pathinfo($safeFilename, PATHINFO_EXTENSION));
+
+        abort_unless(in_array($extension, $allowedExtensions, true), 404);
+
+        $path = self::FOLDER.'/'.$safeFilename;
+        abort_unless(Storage::disk(self::DISK)->exists($path), 404);
+
+        return $path;
+    }
+
+    /**
+     * Unduh salah satu file backup.
+     */
+    public function download(string $filename): Response
+    {
+        $path = $this->validatedBackupPath($filename, ['sql', 'sqlite']);
+        $disk = Storage::disk(self::DISK);
+        $fullPath = $disk->path($path);
+
+        abort_unless(is_file($fullPath) && is_readable($fullPath), 404);
+
+        // Logging tidak boleh menyebabkan proses download gagal jika pencatatan
+        // aktivitas sedang bermasalah.
+        try {
+            ActivityLog::catat('backup.download', 'Mengunduh backup database "'.basename($path).'".');
+        } catch (\Throwable $e) {
+            Log::warning('Gagal mencatat aktivitas unduh backup.', [
+                'filename' => basename($path),
+                'exception' => $e,
+            ]);
+        }
+
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $mime = $extension === 'sqlite'
+            ? 'application/vnd.sqlite3'
+            : 'application/sql';
+
+        return response()->download($fullPath, basename($path), [
+            'Content-Type' => $mime,
+            'Content-Length' => (string) filesize($fullPath),
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
     private function commandExists(string $command): bool
     {
         try {
@@ -221,48 +478,5 @@ class BackupController extends Controller
         } catch (\Throwable) {
             return false;
         }
-    }
-
-    /**
-     * Unduh salah satu file backup.
-     *
-     * Pakai response download berbasis path fisik supaya tidak tergantung pada
-     * driver Flysystem yang mungkin berbeda di environment production.
-     */
-    public function download(string $filename): Response
-    {
-        $safeFilename = basename($filename);
-        $extension = strtolower(pathinfo($safeFilename, PATHINFO_EXTENSION));
-
-        abort_unless(in_array($extension, ['sql', 'sqlite'], true), 404);
-
-        $path = self::FOLDER.'/'.$safeFilename;
-        $disk = Storage::disk(self::DISK);
-
-        abort_unless($disk->exists($path), 404);
-
-        $fullPath = $disk->path($path);
-        abort_unless(is_file($fullPath) && is_readable($fullPath), 404);
-
-        // Logging tidak boleh menyebabkan proses download gagal jika pencatatan
-        // aktivitas sedang bermasalah.
-        try {
-            ActivityLog::catat('backup.download', "Mengunduh backup database \"{$safeFilename}\".");
-        } catch (\Throwable $e) {
-            Log::warning('Gagal mencatat aktivitas unduh backup.', [
-                'filename' => $safeFilename,
-                'exception' => $e,
-            ]);
-        }
-
-        $mime = $extension === 'sqlite'
-            ? 'application/vnd.sqlite3'
-            : 'application/sql';
-
-        return response()->download($fullPath, $safeFilename, [
-            'Content-Type' => $mime,
-            'Content-Length' => (string) filesize($fullPath),
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
     }
 }
