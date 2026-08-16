@@ -1,6 +1,58 @@
 (function () {
   'use strict';
 
+  var ROLE_MODULES = {
+    ADMIN: ['laporan', 'medsos', 'personel', 'monitoring', 'notifikasi'],
+    DANPUS: ['laporan', 'medsos', 'monitoring', 'notifikasi'],
+    WADAN: ['laporan', 'monitoring', 'notifikasi'],
+    SDIR: ['laporan', 'monitoring', 'notifikasi'],
+    SATLAKKAL: ['laporan', 'monitoring', 'notifikasi'],
+    SATLAKSISOS: ['laporan', 'medsos', 'notifikasi'],
+    SATLAKDAK: ['laporan', 'monitoring', 'notifikasi'],
+    SATLAKDUKTEK: ['laporan', 'monitoring', 'notifikasi'],
+    BINFUNG: ['laporan', 'personel', 'notifikasi'],
+    BINUM: ['laporan', 'monitoring', 'notifikasi'],
+    DIKLAT: ['laporan', 'notifikasi'],
+    BINMAT: ['laporan', 'notifikasi']
+  };
+
+  var MODULE_LABEL_TO_KEY = {
+    'Kirim & Kelola Laporan': 'laporan',
+    'Pelaporan Publikasi': 'medsos',
+    'Pelaporan Administrasi Personel': 'personel',
+    'Monitoring Laporan & Aktivitas': 'monitoring',
+    'Notifikasi': 'notifikasi'
+  };
+
+  function normalizeText(value) {
+    return String(value || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function allowedModules(roleCode) {
+    var code = normalizeText(roleCode).toUpperCase();
+    return ROLE_MODULES[code] || Object.keys(MODULE_LABEL_TO_KEY).map(function (label) {
+      return MODULE_LABEL_TO_KEY[label];
+    });
+  }
+
+  function applyRoleModulePolicy(form, roleCode) {
+    if (!form) return;
+    var allowed = allowedModules(roleCode);
+
+    Array.prototype.forEach.call(form.querySelectorAll('label'), function (label) {
+      var labelText = normalizeText(label.textContent);
+      var key = MODULE_LABEL_TO_KEY[labelText];
+      if (!key) return;
+
+      var input = label.querySelector('input');
+      var isAllowed = allowed.indexOf(key) !== -1;
+      label.classList.toggle('role-access-unavailable', !isAllowed);
+      label.classList.add('role-access-permission');
+      label.removeAttribute('style');
+      if (input) input.disabled = !isAllowed;
+    });
+  }
+
   function installStyles() {
     if (document.getElementById('role-access-layout-style')) return;
     var style = document.createElement('style');
@@ -24,6 +76,7 @@
       '[data-tab-panel="role-akses"] .role-access-permission{display:flex;align-items:flex-start;gap:7px;min-width:0;color:var(--text-muted);font-size:11.5px;line-height:1.4;cursor:pointer;white-space:normal;overflow-wrap:anywhere}',
       '[data-tab-panel="role-akses"] .role-access-permission input{margin:2px 0 0;flex:0 0 auto;accent-color:var(--gold-bright)}',
       '[data-tab-panel="role-akses"] .role-access-save{width:auto;max-width:220px;min-width:178px;flex:0 0 auto;box-sizing:border-box;text-align:center;justify-content:center;line-height:1.35;white-space:normal;word-break:normal;align-self:start}',
+      '[data-tab-panel="role-akses"] .role-access-unavailable{display:none!important}',
       '@media(max-width:1000px){[data-tab-panel="role-akses"] .role-access-table-wrap{max-width:100%}[data-tab-panel="role-akses"] .role-access-access-layout{gap:12px}[data-tab-panel="role-akses"] .role-access-save{min-width:170px;max-width:200px}}',
       '@media(max-width:760px){[data-tab-panel="role-akses"] .role-access-table th,[data-tab-panel="role-akses"] .role-access-table td{padding:11px 10px}[data-tab-panel="role-akses"] .role-access-table th:nth-child(1),[data-tab-panel="role-akses"] .role-access-table td:nth-child(1){width:28%;padding-left:12px;padding-right:9px}[data-tab-panel="role-akses"] .role-access-table th:nth-child(2),[data-tab-panel="role-akses"] .role-access-table td:nth-child(2){width:28%;padding-left:9px;padding-right:9px}[data-tab-panel="role-akses"] .role-access-table th:nth-child(3),[data-tab-panel="role-akses"] .role-access-table td:nth-child(3){width:44%;padding-left:9px;padding-right:12px}[data-tab-panel="role-akses"] .role-access-access-layout{flex-direction:column;gap:12px}[data-tab-panel="role-akses"] .role-access-permissions{width:100%;max-width:none}[data-tab-panel="role-akses"] .role-access-save{width:100%;max-width:none;min-width:0}}'
     ].join('');
@@ -58,10 +111,17 @@
 
       var form = permCell.querySelector('form.role-access-form, form');
       var button = actionCell.querySelector('.role-access-save, button[type="submit"]');
+      var codeNode = roleCell.querySelector('.role-access-code,.badge');
+      var roleCode = codeNode ? normalizeText(codeNode.textContent).toUpperCase() : '';
 
-      if (form) accessLayout.appendChild(form);
+      if (form) {
+        form.classList.add('role-access-form');
+        applyRoleModulePolicy(form, roleCode);
+        accessLayout.appendChild(form);
+      }
       if (button) {
         if (form && form.id) button.setAttribute('form', form.id);
+        button.classList.add('role-access-save');
         accessLayout.appendChild(button);
       }
 
@@ -75,12 +135,8 @@
 
     if (legacy.tHead && legacy.tHead.rows[0]) {
       var ths = legacy.tHead.rows[0].children;
-      var roleTh = ths[roleIdx];
-      var descTh = ths[descIdx];
       var permTh = ths[permIdx];
       var actionTh = ths[actionIdx];
-      if (roleTh) roleTh.classList.add('role-access-role-head');
-      if (descTh) descTh.classList.add('role-access-desc-head');
       if (permTh) { permTh.textContent = 'Hak Akses Modul & Aksi'; permTh.classList.add('role-access-access-head'); }
       if (actionTh) actionTh.remove();
     }
@@ -117,10 +173,8 @@
         permissionWrap.removeAttribute('style');
       }
       form.classList.add('role-access-form');
-      Array.prototype.forEach.call(form.querySelectorAll('label'), function (label) {
-        label.classList.add('role-access-permission');
-        label.removeAttribute('style');
-      });
+      applyRoleModulePolicy(form, code);
+
       var save = form.querySelector('button[type="submit"]');
       if (save) save.classList.add('role-access-save');
 
@@ -179,7 +233,6 @@
     var section = document.querySelector('[data-tab-panel="role-akses"]');
     if (!section) return;
     installStyles();
-
     if (section.dataset.roleAccessTableReady === '1') return;
 
     var legacyFixed = moveExistingLegacyTable(section);
@@ -208,15 +261,11 @@
 
     function refreshSessions() {
       if (document.hidden) return;
-
       fetch(window.location.href, {
         method: 'GET',
         credentials: 'same-origin',
         cache: 'no-store',
-        headers: {
-          'Accept': 'text/html',
-          'X-Requested-With': 'XMLHttpRequest'
-        }
+        headers: { 'Accept': 'text/html', 'X-Requested-With': 'XMLHttpRequest' }
       }).then(function (response) {
         if (!response.ok) throw new Error('Gagal mengambil sesi aktif.');
         return response.text();
@@ -226,7 +275,6 @@
         var remoteTbody = doc.querySelector('[data-tab-panel="sesi-aktif"] .tbl-wrap table tbody');
         var currentTbody = table.querySelector('tbody');
         if (!remoteTbody || !currentTbody) return;
-
         var nextHtml = remoteTbody.innerHTML;
         if (nextHtml !== currentTbody.innerHTML) currentTbody.innerHTML = nextHtml;
       }).catch(function () {});
