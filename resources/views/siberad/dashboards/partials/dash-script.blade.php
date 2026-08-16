@@ -22,7 +22,7 @@
 .backup-upload-btn{white-space:nowrap}
 .backup-upload-trigger{display:none !important;}
 .backup-date-filter{display:flex;align-items:center;margin-left:44px;}
-.backup-date-filter-input{height:auto;min-height:0;box-sizing:border-box;cursor:pointer;}
+.backup-date-filter-input{box-sizing:border-box;cursor:pointer;padding-top:0;padding-bottom:0;display:inline-flex;align-items:center;}
 .backup-date-filter-input::-webkit-calendar-picker-indicator{cursor:pointer;}
 @media(max-width:760px){.backup-date-filter{margin-left:18px;}}
 @media(max-width:520px){.backup-action-row{align-items:stretch}.backup-action-row .backup-create-form,.backup-action-row .backup-upload-form{width:100%}.backup-action-row .btn{width:100%;justify-content:center}.backup-date-filter{width:100%;margin-left:0;}.backup-date-filter-input{width:100%;}}
@@ -67,6 +67,9 @@
     filterInput.setAttribute('aria-label','Filter Tanggal');
     filterWrap.appendChild(filterInput);
     row.appendChild(filterWrap);
+
+    var refHeight=button.getBoundingClientRect().height;
+    if(refHeight)filterInput.style.height=refHeight+'px';
 
     function applyDateFilter(){
       var table=section.querySelector('.tbl-wrap table');
