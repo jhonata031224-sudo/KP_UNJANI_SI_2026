@@ -226,7 +226,7 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
 .main .content [data-tab-panel="backup"] .dtbl th:nth-child(4),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(4){width:14% !important;}
 .main .content [data-tab-panel="backup"] .dtbl th:nth-child(5),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(5){width:18% !important;text-align:center !important;}
 .main .content [data-tab-panel="backup"] .dtbl th:nth-child(2),.main .content [data-tab-panel="backup"] .dtbl th:nth-child(3),.main .content [data-tab-panel="backup"] .dtbl th:nth-child(4){text-align:center !important;}
-.main .content [data-tab-panel="backup"] .dtbl td:nth-child(2),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(3),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(4){text-align:left !important;}
+.main .content [data-tab-panel="backup"] .dtbl td:nth-child(2),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(3),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(4){text-align:center !important;}
 .main .content [data-tab-panel="backup"] .backup-extra-actions{justify-content:center !important;}
 </style>
 
