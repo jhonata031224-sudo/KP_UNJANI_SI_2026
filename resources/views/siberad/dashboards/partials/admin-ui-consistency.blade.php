@@ -253,3 +253,17 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
   document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('[data-tab-link="backup"]'))window.setTimeout(moveUploadButton,160);});
 })();
 </script>
+
+
+<style>
+/* Backup Database: samakan tinggi dan beri jarak antar tombol aksi backup. */
+.main .content [data-tab-panel="backup"] form[action$="/admin/backup"]{display:flex!important;align-items:center!important;gap:10px!important;flex-wrap:wrap!important;}
+.main .content [data-tab-panel="backup"] form[action$="/admin/backup"] .btn,
+.main .content [data-tab-panel="backup"] .backup-upload-trigger{height:44px!important;min-height:44px!important;box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;margin:0!important;line-height:1!important;}
+.main .content [data-tab-panel="backup"] .backup-upload-trigger{padding:0 18px!important;}
+@media(max-width:640px){
+  .main .content [data-tab-panel="backup"] form[action$="/admin/backup"]{gap:10px!important;}
+  .main .content [data-tab-panel="backup"] form[action$="/admin/backup"] .btn,
+  .main .content [data-tab-panel="backup"] .backup-upload-trigger{height:42px!important;min-height:42px!important;}
+}
+</style>
