@@ -1,0 +1,44 @@
+name: Normalize backup button layout
+
+on:
+  push:
+    branches:
+      - refactor-fokus-laporan
+
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[skip backup-layout]') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: refactor-fokus-laporan
+          fetch-depth: 0
+
+      - name: Apply backup button layout override
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('resources/views/siberad/dashboards/partials/admin-ui-consistency.blade.php')
+          text = p.read_text(encoding='utf-8')
+          marker = '/* Backup Database: samakan tinggi dan beri jarak antar tombol aksi backup. */'
+          if marker not in text:
+              text += '''\n\n<style>\n/* Backup Database: samakan tinggi dan beri jarak antar tombol aksi backup. */\n.main .content [data-tab-panel="backup"] form[action$="/admin/backup"]{display:flex!important;align-items:center!important;gap:10px!important;flex-wrap:wrap!important;}\n.main .content [data-tab-panel="backup"] form[action$="/admin/backup"] .btn,\n.main .content [data-tab-panel="backup"] .backup-upload-trigger{height:44px!important;min-height:44px!important;box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;margin:0!important;line-height:1!important;}\n.main .content [data-tab-panel="backup"] .backup-upload-trigger{padding:0 18px!important;}\n@media(max-width:640px){\n  .main .content [data-tab-panel="backup"] form[action$="/admin/backup"]{gap:10px!important;}\n  .main .content [data-tab-panel="backup"] form[action$="/admin/backup"] .btn,\n  .main .content [data-tab-panel="backup"] .backup-upload-trigger{height:42px!important;min-height:42px!important;}\n}\n</style>\n'''
+              p.write_text(text, encoding='utf-8')
+          else:
+              print('Backup button layout override already present; no change needed.')
+
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add resources/views/siberad/dashboards/partials/admin-ui-consistency.blade.php
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "fix(admin): align backup action buttons [skip backup-layout]"
+          git push origin HEAD:refactor-fokus-laporan
