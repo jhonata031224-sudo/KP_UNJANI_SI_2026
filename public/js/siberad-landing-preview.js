@@ -54,8 +54,6 @@
     var preview = document.getElementById('lpPreview');
     if (!preview) return;
 
-    // Bersihkan shell buatan versi sebelumnya sekali saja. Semua konten landing
-    // dibangun ulang di sini agar preview tidak bergantung pada style dashboard.
     if (preview.dataset.fullLandingShell !== '1') {
       preview.dataset.fullLandingShell = '1';
       preview.innerHTML = '';
@@ -151,17 +149,39 @@
     var canvas = document.getElementById('lpPreviewCanvas');
     if (!preview || !canvas) return;
 
-    // Ukuran natural canvas setelah semua section selesai dirender.
+    var isMobile = window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
+
     canvas.style.transform = 'none';
-    canvas.style.width = '100%';
     canvas.style.height = 'auto';
+
+    // Mobile: pertahankan canvas lebih lebar dari viewport supaya landing page
+    // bisa dilihat utuh melalui scrollbar horizontal di dalam preview.
+    if (isMobile) {
+      var mobileWidth = Math.round(760 * zoomMultiplier);
+      canvas.style.width = mobileWidth + 'px';
+      canvas.style.minWidth = mobileWidth + 'px';
+      preview.style.setProperty('overflow-x', 'auto', 'important');
+      preview.style.setProperty('overflow-y', 'auto', 'important');
+      preview.style.setProperty('-webkit-overflow-scrolling', 'touch');
+
+      var mobileNaturalHeight = Math.max(canvas.scrollHeight, 1);
+      preview.style.setProperty('--lp-scale-width', mobileWidth + 'px');
+      preview.style.setProperty('--lp-scale-height', mobileNaturalHeight + 'px');
+
+      var mobileLabel = preview.querySelector('[data-zoom-label]');
+      if (mobileLabel) mobileLabel.textContent = zoomMultiplier === 1 ? 'Fit' : Math.round(zoomMultiplier * 100) + '%';
+      return;
+    }
+
+    // Desktop: pertahankan perilaku fit yang sudah aman dan tidak diubah.
+    canvas.style.width = '100%';
+    canvas.style.minWidth = '0';
 
     var naturalWidth = Math.max(canvas.scrollWidth, 1);
     var naturalHeight = Math.max(canvas.scrollHeight, 1);
     var availableWidth = Math.max(preview.clientWidth - 8, 1);
     var availableHeight = Math.max(preview.clientHeight - 8, 1);
 
-    // Default selalu fit: seluruh landing page harus terlihat sekaligus.
     fitScale = Math.min(availableWidth / naturalWidth, availableHeight / naturalHeight, 1);
     if (!isFinite(fitScale) || fitScale <= 0) fitScale = 1;
 
@@ -174,14 +194,13 @@
     canvas.style.transform = 'scale(' + scale + ')';
     canvas.style.transformOrigin = 'top left';
 
-    // Wrapper virtual agar scrollbar mengikuti ukuran hasil transform.
     preview.style.setProperty('--lp-scale-width', scaledWidth + 'px');
     preview.style.setProperty('--lp-scale-height', scaledHeight + 'px');
+    preview.style.removeProperty('overflow-x');
+    preview.style.removeProperty('overflow-y');
 
     var label = preview.querySelector('[data-zoom-label]');
-    if (label) {
-      label.textContent = zoomMultiplier === 1 ? 'Fit' : Math.round(zoomMultiplier * 100) + '%';
-    }
+    if (label) label.textContent = zoomMultiplier === 1 ? 'Fit' : Math.round(zoomMultiplier * 100) + '%';
   }
 
   function render() {
