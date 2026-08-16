@@ -16,9 +16,10 @@
 @endif
 
 <style>
-.backup-action-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:18px 22px}
+.backup-action-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:18px 22px}
 .backup-action-row .backup-create-form,.backup-action-row .backup-upload-form{margin:0;padding:0;display:flex;align-items:center}
 .backup-upload-btn{white-space:nowrap}
+.backup-upload-trigger{display:none !important;}
 @media(max-width:520px){.backup-action-row{align-items:stretch}.backup-action-row .backup-create-form,.backup-action-row .backup-upload-form{width:100%}.backup-action-row .btn{width:100%;justify-content:center}}
 </style>
 <script>
