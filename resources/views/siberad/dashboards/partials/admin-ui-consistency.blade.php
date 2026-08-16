@@ -201,3 +201,55 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
   document.addEventListener('click',function(e){if(e.target.closest('[data-tab-link="backup"]'))window.setTimeout(initBackupUploadModal,100);});
 })();
 </script>
+
+<style>
+/* Final backup UI override: upload selalu di samping tombol buat backup,
+   tabel riwayat konsisten dengan tabel manajemen satuan. */
+.main .content [data-tab-panel="backup"] .backup-history-head .backup-upload-trigger{display:none !important;}
+.main .content [data-tab-panel="backup"] .dtbl{width:100% !important;table-layout:fixed !important;}
+.main .content [data-tab-panel="backup"] .dtbl th:nth-child(1),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(1){width:42% !important;text-align:left !important;padding-left:16px !important;}
+.main .content [data-tab-panel="backup"] .dtbl th:nth-child(2),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(2){width:18% !important;text-align:left !important;}
+.main .content [data-tab-panel="backup"] .dtbl th:nth-child(3),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(3){width:20% !important;text-align:left !important;}
+.main .content [data-tab-panel="backup"] .dtbl th:nth-child(4),.main .content [data-tab-panel="backup"] .dtbl td:nth-child(4){width:20% !important;text-align:center !important;}
+.main .content [data-tab-panel="backup"] .backup-extra-actions{justify-content:center !important;}
+</style>
+
+<script>
+(function(){
+  function moveUploadButton(){
+    var panel=document.querySelector('[data-tab-panel="backup"]');
+    if(!panel)return;
+    var createForm=panel.querySelector('form[action$="/admin/backup"]');
+    var oldTrigger=panel.querySelector('.backup-history-head .backup-upload-trigger');
+    var modal=document.querySelector('.siberad-backup-upload-modal');
+    if(!createForm||!modal)return;
+
+    /* Hilangkan trigger lama di header riwayat yang dibuat script sebelumnya. */
+    if(oldTrigger)oldTrigger.remove();
+
+    var createButton=createForm.querySelector('button[type="submit"]');
+    if(!createButton)return;
+    var actions=createForm.querySelector('.backup-create-actions');
+    if(!actions){
+      actions=document.createElement('div');
+      actions.className='backup-create-actions';
+      createButton.parentNode.insertBefore(actions,createButton);
+      actions.appendChild(createButton);
+    }
+    if(!actions.querySelector('.backup-upload-trigger')){
+      var trigger=document.createElement('button');
+      trigger.type='button';
+      trigger.className='btn btn-sm backup-upload-trigger';
+      trigger.textContent='Upload Backup';
+      actions.appendChild(trigger);
+      trigger.addEventListener('click',function(){
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden','false');
+      });
+    }
+  }
+  function boot(){window.setTimeout(moveUploadButton,120);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('[data-tab-link="backup"]'))window.setTimeout(moveUploadButton,160);});
+})();
+</script>
