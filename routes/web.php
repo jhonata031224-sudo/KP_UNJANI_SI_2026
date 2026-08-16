@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\BackupController;
+use App\Http\Controllers\Admin\BackupFileController;
 use App\Http\Controllers\Admin\PermintaanResetPasswordController as AdminPermintaanResetPasswordController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ReportController;
@@ -203,9 +204,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/satuan/{satuan}/permissions', [PermissionController::class, 'update'])->name('satuan.permissions');
     Route::patch('/pengaturan/landing', [SettingController::class, 'updateLanding'])->name('pengaturan.landing.update');
     Route::post('/backup', [BackupController::class, 'store'])->name('backup.store');
+    Route::post('/backup/upload', [BackupFileController::class, 'store'])->name('backup.upload');
     Route::get('/backup/{filename}/download', [BackupController::class, 'download'])->name('backup.download');
-    Route::get('/backup/{filename}/view', [BackupController::class, 'view'])->name('backup.view');
-    Route::post('/backup/{filename}/restore', [BackupController::class, 'restore'])->name('backup.restore');
+    Route::delete('/backup/{filename}', [BackupFileController::class, 'destroy'])->name('backup.destroy');
     Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/aktivitas-terbaru', [ReportController::class, 'aktivitasTerbaru'])->name('laporan.aktivitas-terbaru');
     Route::get('/laporan/cetak/{jenis}', [ReportController::class, 'printView'])
