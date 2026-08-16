@@ -35,6 +35,7 @@ class BackupController extends Controller
                     'ukuran' => round(Storage::disk(self::DISK)->size($f) / 1024, 1).' KB',
                     'timestamp' => Storage::disk(self::DISK)->lastModified($f),
                     'tanggal' => $waktu->translatedFormat('d M Y'),
+                    'tanggal_iso' => $waktu->format('Y-m-d'),
                     'jam' => $waktu->translatedFormat('H:i'),
                 ];
             })

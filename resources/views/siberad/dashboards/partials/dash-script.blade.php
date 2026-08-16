@@ -21,7 +21,13 @@
 .backup-action-row .backup-create-form,.backup-action-row .backup-upload-form{margin:0;padding:0;display:flex;align-items:center}
 .backup-upload-btn{white-space:nowrap}
 .backup-upload-trigger{display:none !important;}
-@media(max-width:520px){.backup-action-row{align-items:stretch}.backup-action-row .backup-create-form,.backup-action-row .backup-upload-form{width:100%}.backup-action-row .btn{width:100%;justify-content:center}}
+.backup-date-filter{display:flex;align-items:center;gap:8px;margin-left:44px;padding-left:18px;border-left:1px solid var(--border-soft);}
+.backup-date-filter label{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted);white-space:nowrap;}
+.backup-date-filter-input{height:38px;border:1px solid var(--border-soft);border-radius:8px;padding:0 10px;font:500 12.5px var(--body);background:var(--panel-alt);color:var(--text);box-sizing:border-box;}
+.backup-date-filter-input:focus{outline:2px solid var(--gold-bright);outline-offset:1px;}
+.backup-date-filter-clear{height:38px;padding:0 12px;box-sizing:border-box;}
+@media(max-width:760px){.backup-date-filter{margin-left:0;padding-left:0;border-left:0;width:100%;}}
+@media(max-width:520px){.backup-action-row{align-items:stretch}.backup-action-row .backup-create-form,.backup-action-row .backup-upload-form{width:100%}.backup-action-row .btn{width:100%;justify-content:center}.backup-date-filter{flex-wrap:wrap}.backup-date-filter-input{flex:1 1 auto}}
 </style>
 <script>
 (function(){
@@ -53,6 +59,40 @@
     button.addEventListener('click',function(){input.click()});
     input.addEventListener('change',function(){if(!input.files||!input.files.length)return;button.disabled=true;button.textContent='MENGUNGGAH...';uploadForm.submit()});
     uploadForm.appendChild(csrf);uploadForm.appendChild(input);uploadForm.appendChild(button);row.appendChild(uploadForm);
+
+    var filterWrap=document.createElement('div');
+    filterWrap.className='backup-date-filter';
+    var filterLabel=document.createElement('label');
+    filterLabel.textContent='Filter Tanggal';
+    filterLabel.setAttribute('for','backupDateFilter');
+    var filterInput=document.createElement('input');
+    filterInput.type='date';
+    filterInput.id='backupDateFilter';
+    filterInput.className='backup-date-filter-input';
+    var clearBtn=document.createElement('button');
+    clearBtn.type='button';
+    clearBtn.className='btn btn-sm backup-date-filter-clear';
+    clearBtn.textContent='Reset';
+    clearBtn.hidden=true;
+    filterWrap.appendChild(filterLabel);
+    filterWrap.appendChild(filterInput);
+    filterWrap.appendChild(clearBtn);
+    row.appendChild(filterWrap);
+
+    function applyDateFilter(){
+      var table=section.querySelector('.tbl-wrap table');
+      if(!table)return;
+      var val=filterInput.value;
+      var rows=table.querySelectorAll('tbody tr[data-tanggal]');
+      rows.forEach(function(tr){
+        tr.style.display=(!val||tr.getAttribute('data-tanggal')===val)?'':'none';
+      });
+      clearBtn.hidden=!val;
+      var wrap=table.closest('[data-row-limit]');
+      if(wrap&&window.terapkanRowLimitWrap)window.terapkanRowLimitWrap(wrap);
+    }
+    filterInput.addEventListener('change',applyDateFilter);
+    clearBtn.addEventListener('click',function(){filterInput.value='';applyDateFilter();});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initBackupUpload);else initBackupUpload();
 })();

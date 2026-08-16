@@ -1390,7 +1390,7 @@
               <thead><tr><th>Nama File</th><th>Ukuran</th><th>Tanggal</th><th>Jam</th><th>Aksi</th></tr></thead>
               <tbody>
                 @forelse($daftarBackup as $b)
-                <tr>
+                <tr data-tanggal="{{ $b['tanggal_iso'] }}">
                   <td>{{ $b['nama'] }}</td>
                   <td>{{ $b['ukuran'] }}</td>
                   <td>{{ $b['tanggal'] }}</td>
