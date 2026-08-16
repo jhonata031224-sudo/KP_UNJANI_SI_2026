@@ -35,11 +35,11 @@
   }
 
   function installStyles() {
-    if (document.getElementById('role-access-layout-style-v10')) return;
+    if (document.getElementById('role-access-layout-style-v11')) return;
     var style = document.createElement('style');
-    style.id = 'role-access-layout-style-v10';
+    style.id = 'role-access-layout-style-v11';
     style.textContent = [
-      '[data-tab-panel="role-akses"] .role-access-table-wrap{width:100%;max-width:1120px;margin:0 auto;overflow:hidden;box-sizing:border-box;border:1px solid var(--border-soft);border-radius:14px;background:var(--panel);box-shadow:0 8px 28px rgba(15,23,42,.06)}',
+      '[data-tab-panel="role-akses"] .role-access-table-wrap{width:100%;max-width:100%;margin:0;overflow:hidden;box-sizing:border-box;border:1px solid var(--border-soft);border-radius:14px;background:var(--panel);box-shadow:0 8px 28px rgba(15,23,42,.06)}',
       '[data-tab-panel="role-akses"] .role-access-table{width:100%;max-width:100%;min-width:0;table-layout:fixed;border-collapse:separate;border-spacing:0}',
       '[data-tab-panel="role-akses"] .role-access-table th{padding:13px 18px;background:var(--panel-alt);border-bottom:1px solid var(--border-soft);color:var(--text-muted);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;text-align:left;box-sizing:border-box}',
       '[data-tab-panel="role-akses"] .role-access-table td{padding:16px 18px;vertical-align:top;border-bottom:1px solid var(--border-soft);background:var(--panel);box-sizing:border-box;min-width:0}',
