@@ -5,7 +5,6 @@
     ADMIN: ['laporan', 'medsos', 'personel', 'monitoring', 'notifikasi'],
     DANPUS: ['laporan', 'medsos', 'monitoring', 'notifikasi'],
     WADAN: ['laporan', 'medsos', 'monitoring', 'notifikasi'],
-    SDIR: ['laporan', 'monitoring', 'notifikasi'],
     SATLAKKAL: ['laporan', 'monitoring', 'notifikasi'],
     SATLAKSISOS: ['laporan', 'medsos', 'notifikasi'],
     SATLAKDAK: ['laporan', 'monitoring', 'notifikasi'],
