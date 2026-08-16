@@ -1322,7 +1322,7 @@
           <form method="POST" action="{{ route('admin.satuan.permissions', $s) }}" style="padding:18px 22px;">
             @csrf @method('PATCH')
             <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px;">
-              @foreach($modulHakAkses as $key => $label)
+              @foreach(\App\Models\Satuan::modulHakAksesUntukRole($s->kode) as $key => $label)
               <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-muted);">
                 <input type="checkbox" name="permissions[]" value="{{ $key }}" @checked(in_array($key, $s->permissions ?? []))>
                 {{ $label }}

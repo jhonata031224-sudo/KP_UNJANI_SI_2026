@@ -13,6 +13,7 @@
 </script>
 @if(isset($pengaturan))
 <script src="{{ asset('js/admin-landing-editor.js') }}"></script>
+<script src="{{ asset('js/role-access-layout.js') }}"></script>
 @endif
 
 <style>
