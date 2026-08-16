@@ -26,13 +26,18 @@ class BackupController extends Controller
     {
         return collect(Storage::disk(self::DISK)->files(self::FOLDER))
             ->filter(fn ($f) => str_ends_with(strtolower($f), '.sqlite') || str_ends_with(strtolower($f), '.sql'))
-            ->map(fn ($f) => [
-                'nama' => basename($f),
-                'path' => $f,
-                'ukuran' => round(Storage::disk(self::DISK)->size($f) / 1024, 1).' KB',
-                'timestamp' => Storage::disk(self::DISK)->lastModified($f),
-                'tanggal' => \Illuminate\Support\Carbon::createFromTimestamp(Storage::disk(self::DISK)->lastModified($f))->translatedFormat('d M Y H:i'),
-            ])
+            ->map(function ($f) {
+                $waktu = \Illuminate\Support\Carbon::createFromTimestamp(Storage::disk(self::DISK)->lastModified($f));
+
+                return [
+                    'nama' => basename($f),
+                    'path' => $f,
+                    'ukuran' => round(Storage::disk(self::DISK)->size($f) / 1024, 1).' KB',
+                    'timestamp' => Storage::disk(self::DISK)->lastModified($f),
+                    'tanggal' => $waktu->translatedFormat('d M Y'),
+                    'jam' => $waktu->translatedFormat('H:i'),
+                ];
+            })
             ->sortByDesc('timestamp')
             ->values();
     }

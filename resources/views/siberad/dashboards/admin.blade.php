@@ -1387,17 +1387,18 @@
           <div class="panel-head"><div><h3>Riwayat Backup</h3></div></div>
           <div class="tbl-wrap" data-row-limit="8">
             <table class="dtbl">
-              <thead><tr><th>Nama File</th><th>Ukuran</th><th>Tanggal</th><th>Aksi</th></tr></thead>
+              <thead><tr><th>Nama File</th><th>Ukuran</th><th>Tanggal</th><th>Jam</th><th>Aksi</th></tr></thead>
               <tbody>
                 @forelse($daftarBackup as $b)
                 <tr>
                   <td>{{ $b['nama'] }}</td>
                   <td>{{ $b['ukuran'] }}</td>
                   <td>{{ $b['tanggal'] }}</td>
+                  <td>{{ $b['jam'] }}</td>
                   <td><a class="btn btn-sm" href="{{ route('admin.backup.download', $b['nama']) }}">Unduh</a></td>
                 </tr>
                 @empty
-                <tr><td colspan="4"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada backup dibuat</div></div></td></tr>
+                <tr><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada backup dibuat</div></div></td></tr>
                 @endforelse
               </tbody>
             </table>
