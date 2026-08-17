@@ -1548,8 +1548,23 @@
 
         <div class="panel">
           <div class="panel-head"><div><h3>Riwayat Backup</h3></div></div>
+
+          <div class="log-filter-row" id="backupFilterRow">
+            <div class="log-filter-field">
+              <label for="backupDariInput">Dari</label>
+              <input type="date" id="backupDariInput" class="table-filter" max="{{ now()->format('Y-m-d') }}">
+            </div>
+            <div class="log-filter-field">
+              <label for="backupSampaiInput">Sampai</label>
+              <input type="date" id="backupSampaiInput" class="table-filter" max="{{ now()->format('Y-m-d') }}">
+            </div>
+            <button type="button" id="backupFilterReset" class="log-filter-reset" title="Reset filter">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+            </button>
+          </div>
+
           <div class="tbl-wrap" data-row-limit="8">
-            <table class="dtbl">
+            <table class="dtbl" id="tblRiwayatBackup">
               <thead><tr><th>Nama File</th><th>Ukuran</th><th>Tanggal</th><th>Jam</th><th>Aksi</th></tr></thead>
               <tbody>
                 @forelse($daftarBackup as $b)
@@ -1566,6 +1581,45 @@
               </tbody>
             </table>
           </div>
+
+          <script>
+          (function () {
+            var dariInput = document.getElementById('backupDariInput');
+            var sampaiInput = document.getElementById('backupSampaiInput');
+            var table = document.getElementById('tblRiwayatBackup');
+            if (!dariInput || !sampaiInput || !table) return;
+
+            function terapkanFilterBackup() {
+              var dari = dariInput.value;
+              var sampai = sampaiInput.value;
+              var rows = table.querySelectorAll('tbody tr[data-tanggal]');
+              rows.forEach(function (tr) {
+                var tgl = tr.getAttribute('data-tanggal');
+                var cocokDari = !dari || tgl >= dari;
+                var cocokSampai = !sampai || tgl <= sampai;
+                tr.style.display = (cocokDari && cocokSampai) ? '' : 'none';
+              });
+              var wrap = table.closest('[data-row-limit]');
+              if (wrap && window.terapkanRowLimitWrap) window.terapkanRowLimitWrap(wrap);
+            }
+
+            [dariInput, sampaiInput].forEach(function (el) {
+              el.addEventListener('change', terapkanFilterBackup);
+            });
+
+            var resetBtn = document.getElementById('backupFilterReset');
+            if (resetBtn) {
+              resetBtn.addEventListener('click', function () {
+                dariInput.value = '';
+                sampaiInput.value = '';
+                terapkanFilterBackup();
+                resetBtn.classList.remove('spinning');
+                void resetBtn.offsetWidth;
+                resetBtn.classList.add('spinning');
+              });
+            }
+          })();
+          </script>
         </div>
       </section>
 
