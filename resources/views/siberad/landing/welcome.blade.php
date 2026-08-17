@@ -382,13 +382,15 @@
   .captcha-img{height:56px;border-radius:8px;border:1px solid var(--border);flex-shrink:0;}
   .captcha-row .captcha-input{width:auto;flex:1;min-width:0;margin-bottom:0;padding:9px 10px;font-size:12px;}
   .captcha-refresh{
-    width:36px;height:36px;flex-shrink:0;border-radius:8px;cursor:pointer;
+    box-sizing:border-box;width:36px;height:36px;flex-shrink:0;border-radius:8px;cursor:pointer;
     background:var(--bg-deep);border:1px solid var(--border);color:var(--text-muted);
     display:flex;align-items:center;justify-content:center;
-    transition:border-color .2s ease,color .2s ease,transform .2s ease;
+    transition:background .15s ease,color .15s ease,border-color .15s ease;
   }
   .captcha-refresh svg{width:15px;height:15px;}
-  .captcha-refresh:hover{border-color:var(--gold);color:var(--gold-bright);transform:rotate(90deg);}
+  .captcha-refresh:hover{background:var(--gold-dim);border-color:var(--gold);color:var(--gold-bright);}
+  .captcha-refresh.spinning svg{animation:captchaRefreshSpin .5s ease;}
+  @keyframes captchaRefreshSpin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
   .login-foot{
     margin-top:20px;padding-top:16px;border-top:1px solid var(--border-soft);
     font-family:var(--mono);font-size:10.5px;color:var(--text-dim);
@@ -1160,6 +1162,9 @@
   if (captchaRefresh && captchaImg) {
     captchaRefresh.addEventListener('click', () => {
       captchaImg.src = '{{ route('captcha.image') }}?t=' + Date.now();
+      captchaRefresh.classList.remove('spinning');
+      void captchaRefresh.offsetWidth;
+      captchaRefresh.classList.add('spinning');
     });
   }
 
