@@ -59,9 +59,10 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
 
 /* Backup Database */
 .main .content [data-tab-panel="backup"] .dtbl th:last-child,
-.main .content [data-tab-panel="backup"] .dtbl td:last-child{ text-align:left !important;vertical-align:middle !important; }
+.main .content [data-tab-panel="backup"] .dtbl td:last-child{ text-align:center !important;vertical-align:middle !important; }
 .main .content [data-tab-panel="backup"] .dtbl th:last-child,
 .main .content [data-tab-panel="backup"] .dtbl td:last-child{ padding-left:14px !important;padding-right:14px !important; }
+.main .content [data-tab-panel="backup"] .dtbl td:last-child .btn-row{ justify-content:center !important; }
 .main .content [data-tab-panel="backup"] .backup-extra-actions{ display:flex !important;align-items:center !important;justify-content:flex-start !important;gap:8px !important;flex-wrap:wrap !important;width:100% !important;margin:0 !important; }
 .main .content [data-tab-panel="backup"] .backup-extra-actions > a,
 .main .content [data-tab-panel="backup"] .backup-extra-actions > form{ margin:0 !important; }
