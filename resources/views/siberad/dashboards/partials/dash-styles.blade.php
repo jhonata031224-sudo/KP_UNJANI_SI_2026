@@ -509,21 +509,49 @@
   .empty-state-sub{font-size:11.5px;color:var(--p-muted,var(--text-muted));margin-top:4px;}
   td>.empty-state{padding:22px 12px;}
 
-  /* ===== Tombol "Pilih File" bericon -- dipakai di Upload Backup (admin)
-     dan Lampiran Update Progres (satlak/satuan direktorat) supaya tombol
-     pilih file punya tampilan konsisten & tidak polos bawaan browser. ===== */
-  .siberad-file-input::file-selector-button,
-  .siberad-file-input::-webkit-file-upload-button{
-    font-family:var(--mono);font-weight:600;font-size:11px;letter-spacing:.03em;
-    text-transform:uppercase;padding:8px 14px 8px 30px;margin-right:10px;
-    border-radius:8px;border:1px solid var(--border);background-color:var(--panel-alt);
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23808a99' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpolyline points='14 2 14 8 20 8'/%3E%3Cline x1='12' y1='18' x2='12' y2='12'/%3E%3Cpolyline points='9 15 12 12 15 15'/%3E%3C/svg%3E");
-    background-repeat:no-repeat;background-position:8px center;background-size:14px 14px;
-    color:var(--text);cursor:pointer;transition:border-color .15s ease,background-color .15s ease;
-  }
-  .siberad-file-input::file-selector-button:hover,
-  .siberad-file-input::-webkit-file-upload-button:hover{border-color:var(--gold-bright);background-color:var(--panel);}
+  /* ===== Tombol file custom "Pilih File" -- ganti widget bawaan browser
+     (yang teksnya ikut bahasa browser/OS, mis. "Choose File") dengan tombol
+     buatan sendiri supaya teksnya SELALU "Pilih File" di semua role: admin
+     (Upload Backup, Gambar Latar Beranda) dan satlak/satuan direktorat
+     (Lampiran Update Progres). Lihat script siberadEnhanceFileInputs di
+     bawah -- input asli disembunyikan visual tapi tetap berfungsi. ===== */
+  .siberad-file-wrap{display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:100%;}
+  .siberad-file-wrap input[type="file"]{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  .siberad-file-trigger{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-weight:600;font-size:11px;letter-spacing:.03em;text-transform:uppercase;padding:9px 15px;border-radius:8px;border:1px solid var(--border);background:var(--panel-alt);color:var(--text);cursor:pointer;transition:border-color .15s ease,background-color .15s ease;flex-shrink:0;}
+  .siberad-file-trigger svg{width:14px;height:14px;stroke:currentColor;flex-shrink:0;}
+  .siberad-file-trigger:hover{border-color:var(--gold-bright);background:var(--panel);}
+  .siberad-file-trigger:active{transform:scale(.97);}
+  .siberad-file-name{font-family:var(--body);font-size:11.5px;color:var(--text-muted);word-break:break-all;}
 </style>
+<script>
+  function siberadEnhanceFileInputs(root){
+    (root||document).querySelectorAll('input[type="file"]:not([hidden])').forEach(function(input){
+      if(input.dataset.siberadEnhanced==='1')return;
+      input.dataset.siberadEnhanced='1';
+      var wrap=document.createElement('div');
+      wrap.className='siberad-file-wrap';
+      input.parentNode.insertBefore(wrap,input);
+      wrap.appendChild(input);
+      var trigger=document.createElement('button');
+      trigger.type='button';
+      trigger.className='siberad-file-trigger';
+      trigger.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 12 15 15"></polyline></svg><span>Pilih File</span>';
+      trigger.addEventListener('click',function(){input.click();});
+      wrap.appendChild(trigger);
+      var nameEl=document.createElement('span');
+      nameEl.className='siberad-file-name';
+      nameEl.textContent='Tidak ada file yang dipilih';
+      wrap.appendChild(nameEl);
+      input.addEventListener('change',function(){
+        if(input.files && input.files.length===1){nameEl.textContent=input.files[0].name;}
+        else if(input.files && input.files.length>1){nameEl.textContent=input.files.length+' file dipilih';}
+        else{nameEl.textContent='Tidak ada file yang dipilih';}
+      });
+    });
+  }
+  window.siberadEnhanceFileInputs=siberadEnhanceFileInputs;
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){siberadEnhanceFileInputs();});}else{siberadEnhanceFileInputs();}
+</script>
 <script>
   var siberadToastQueue = [];
   function siberadShowToast(type, message){
