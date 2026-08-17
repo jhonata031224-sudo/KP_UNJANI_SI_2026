@@ -1571,6 +1571,14 @@
           </form>
         </div>
 
+        <div class="backup-upload-panel" style="display:none">
+          <form method="POST" action="{{ route('admin.backup.upload') }}" enctype="multipart/form-data">
+            @csrf
+            <input type="file" name="backup_file" accept=".sql,.sqlite" required>
+            <button class="btn btn-primary" type="submit">Upload</button>
+          </form>
+        </div>
+
         <div class="panel">
           <div class="panel-head"><div><h3>Riwayat Backup</h3></div></div>
 
