@@ -508,6 +508,21 @@
   .empty-state-title{font-size:13px;font-weight:700;color:var(--p-text,var(--text));}
   .empty-state-sub{font-size:11.5px;color:var(--p-muted,var(--text-muted));margin-top:4px;}
   td>.empty-state{padding:22px 12px;}
+
+  /* ===== Tombol "Pilih File" bericon -- dipakai di Upload Backup (admin)
+     dan Lampiran Update Progres (satlak/satuan direktorat) supaya tombol
+     pilih file punya tampilan konsisten & tidak polos bawaan browser. ===== */
+  .siberad-file-input::file-selector-button,
+  .siberad-file-input::-webkit-file-upload-button{
+    font-family:var(--mono);font-weight:600;font-size:11px;letter-spacing:.03em;
+    text-transform:uppercase;padding:8px 14px 8px 30px;margin-right:10px;
+    border-radius:8px;border:1px solid var(--border);background-color:var(--panel-alt);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23808a99' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpolyline points='14 2 14 8 20 8'/%3E%3Cline x1='12' y1='18' x2='12' y2='12'/%3E%3Cpolyline points='9 15 12 12 15 15'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:8px center;background-size:14px 14px;
+    color:var(--text);cursor:pointer;transition:border-color .15s ease,background-color .15s ease;
+  }
+  .siberad-file-input::file-selector-button:hover,
+  .siberad-file-input::-webkit-file-upload-button:hover{border-color:var(--gold-bright);background-color:var(--panel);}
 </style>
 <script>
   var siberadToastQueue = [];
