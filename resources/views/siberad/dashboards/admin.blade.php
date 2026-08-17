@@ -49,6 +49,16 @@
   }
   .table-filter:focus{outline:none;border-color:var(--gold);}
   .table-filter-count{font-size:10px;color:var(--text-dim);white-space:nowrap;margin-left:auto;}
+  .log-filter-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin:2px 0 16px;}
+  .log-filter-field{display:flex;flex-direction:column;gap:4px;}
+  .log-filter-field label{font-size:10px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;}
+  .log-filter-field .table-filter{min-width:150px;}
+  .log-filter-reset{width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--border);border-radius:9px;color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease;}
+  .log-filter-reset svg{width:16px;height:16px;}
+  .log-filter-reset:hover{background:var(--hover-tint);color:var(--gold-bright);border-color:var(--gold);}
+  .log-filter-reset.spinning svg{animation:logFilterResetSpin .5s ease;}
+  @keyframes logFilterResetSpin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+  @media(max-width:640px){.log-filter-row{flex-direction:column;align-items:stretch;}.log-filter-row .table-filter{width:100%;}.log-filter-reset{width:100%;}}
   .table-empty-row td{text-align:center;color:var(--text-dim);font-size:12.5px;padding:26px 12px !important;}
   @media(max-width:640px){.table-toolbar{flex-direction:column;align-items:stretch;}.table-search-wrap{max-width:none;}.table-filter{width:100%;}.table-filter-count{width:100%;margin-left:0;}}
 
@@ -1389,6 +1399,21 @@
       <section class="tab-panel" data-tab-panel="log-aktivitas">
         <div class="panel">
           <div class="panel-head"><div><h2>Monitoring Aktivitas Sistem</h2><p>Rekam jejak login, logout, dan seluruh aksi kelola sistem oleh Admin.</p></div></div>
+
+          <form method="GET" action="{{ route('dashboard') }}" class="log-filter-row" id="logFilterForm">
+            <div class="log-filter-field">
+              <label for="logDariInput">Dari</label>
+              <input type="date" id="logDariInput" class="table-filter" name="log_dari" value="{{ $logDari->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}">
+            </div>
+            <div class="log-filter-field">
+              <label for="logSampaiInput">Sampai</label>
+              <input type="date" id="logSampaiInput" class="table-filter" name="log_sampai" value="{{ $logSampai->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}">
+            </div>
+            <button type="button" id="logFilterReset" class="log-filter-reset" title="Reset ke rentang default">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+            </button>
+          </form>
+
           <div class="table-toolbar">
             <div class="table-search-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
@@ -1414,6 +1439,94 @@
               </tbody>
             </table>
           </div>
+
+          <script>
+          (function () {
+            var dariInput = document.getElementById('logDariInput');
+            var sampaiInput = document.getElementById('logSampaiInput');
+            var tbody = document.querySelector('#tblLogAktivitas tbody');
+            var endpoint = '{{ route('admin.log-aktivitas.rentang') }}';
+            if (!dariInput || !sampaiInput || !tbody) return;
+
+            function escapeHtml(s) {
+              return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+              });
+            }
+
+            function muatUlangViaReload() {
+              var url = new URL(window.location.href);
+              url.searchParams.set('log_dari', dariInput.value);
+              url.searchParams.set('log_sampai', sampaiInput.value);
+              window.location.href = url.toString();
+            }
+
+            function muatUlang() {
+              var wrap = tbody.closest('.tbl-wrap');
+              if (wrap) wrap.style.opacity = '.5';
+              var params = new URLSearchParams({ log_dari: dariInput.value, log_sampai: sampaiInput.value });
+              fetch(endpoint + '?' + params.toString(), { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+                .then(function (r) {
+                  if (!r.ok) throw new Error('HTTP ' + r.status);
+                  return r.json();
+                })
+                .then(function (data) {
+                  if (wrap) wrap.style.opacity = '';
+                  if (!data || !Array.isArray(data.log)) throw new Error('Respons tidak sesuai format yang diharapkan.');
+                  tbody.innerHTML = data.log.length ? data.log.map(function (l) {
+                    return '<tr>'
+                      + '<td style="white-space:nowrap;">' + escapeHtml(l.waktu) + '</td>'
+                      + '<td>' + escapeHtml(l.pengguna) + '</td>'
+                      + '<td><span class="badge">' + escapeHtml(l.aksi) + '</span></td>'
+                      + '<td style="color:var(--text-muted);">' + escapeHtml(l.deskripsi) + '</td>'
+                      + '<td style="color:var(--text-dim);">' + escapeHtml(l.ip) + '</td>'
+                      + '</tr>';
+                  }).join('') : '<tr class="table-empty-row"><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada aktivitas tercatat</div></div></td></tr>';
+                  if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblLogAktivitas');
+                  try {
+                    var url = new URL(window.location.href);
+                    url.searchParams.set('log_dari', dariInput.value);
+                    url.searchParams.set('log_sampai', sampaiInput.value);
+                    history.replaceState(null, '', url);
+                  } catch (e) {}
+                })
+                .catch(function (err) {
+                  if (wrap) wrap.style.opacity = '';
+                  console.error('Gagal memuat log aktivitas via AJAX, fallback ke reload halaman:', err);
+                  muatUlangViaReload();
+                });
+            }
+
+            var debounceTimer = null;
+            function muatUlangDebounced() {
+              if (!dariInput.value || !sampaiInput.value) return;
+              clearTimeout(debounceTimer);
+              debounceTimer = setTimeout(muatUlang, 250);
+            }
+            [dariInput, sampaiInput].forEach(function (el) {
+              el.addEventListener('change', muatUlang);
+              el.addEventListener('input', muatUlangDebounced);
+            });
+
+            var resetBtn = document.getElementById('logFilterReset');
+            if (resetBtn) {
+              resetBtn.addEventListener('click', function () {
+                function formatDateLocal(d) {
+                  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                }
+                var hariIni = new Date();
+                var kemarin = new Date();
+                kemarin.setDate(hariIni.getDate() - 1);
+                dariInput.value = formatDateLocal(kemarin);
+                sampaiInput.value = formatDateLocal(hariIni);
+                muatUlang();
+                resetBtn.classList.remove('spinning');
+                void resetBtn.offsetWidth;
+                resetBtn.classList.add('spinning');
+              });
+            }
+          })();
+          </script>
         </div>
       </section>
 
@@ -2535,6 +2648,16 @@
       return Array.prototype.slice.call(table.querySelectorAll('tbody tr:not(.table-empty-row)'));
     }
 
+    // Beberapa nilai "Aksi" di Log Aktivitas ditulis dengan format kode
+    // (mis. "satuan.create", "permintaan-reset-password.setujui") -- titik
+    // & strip di situ bukan hal yang wajar buat diketik pengguna awam saat
+    // mencari. Titik/strip di sini disamakan jadi spasi (di query maupun
+    // teks yang dicocokkan) supaya "satuan create" tetap ketemu
+    // "satuan.create" tanpa pengguna perlu tahu format aslinya.
+    function normalisasiTeksCari(s) {
+      return String(s || '').toLowerCase().replace(/[.\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
     function buatBarisKosong(table) {
       var colCount = table.querySelectorAll('thead th').length || 1;
       var tr = document.createElement('tr');
@@ -2555,14 +2678,14 @@
       var wrap = table.closest('.tbl-wrap');
       var searchInput = document.querySelector('[data-table-search="' + tableId + '"]');
       var filterSelect = document.querySelector('[data-table-filter="' + tableId + '"]');
-      var q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      var q = searchInput ? normalisasiTeksCari(searchInput.value) : '';
       var f = filterSelect ? filterSelect.value : '';
       var rows = collectRows(table);
       var visibleCount = 0;
 
       rows.forEach(function (row) {
         var teksCari = row.hasAttribute('data-search-value') ? row.getAttribute('data-search-value') : row.textContent;
-        var cocokCari = !q || teksCari.toLowerCase().indexOf(q) !== -1;
+        var cocokCari = !q || normalisasiTeksCari(teksCari).indexOf(q) !== -1;
         var cocokFilter = !f || row.getAttribute('data-filter-value') === f;
         var tampil = cocokCari && cocokFilter;
         row.style.display = tampil ? '' : 'none';

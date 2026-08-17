@@ -121,6 +121,39 @@ class ReportController extends Controller
     }
 
     /**
+     * Endpoint JSON untuk filter tanggal di tab "Log Aktivitas" dashboard
+     * admin (lihat siberad.dashboards.admin). Dipanggil lewat fetch() setiap
+     * input tanggal "Dari"/"Sampai" berubah, supaya tabelnya kefilter tanpa
+     * reload halaman.
+     */
+    public function logAktivitasRentang(Request $request)
+    {
+        $sampai = $request->filled('log_sampai')
+            ? \Carbon\Carbon::parse($request->query('log_sampai'))->endOfDay()
+            : now()->endOfDay();
+        $dari = $request->filled('log_dari')
+            ? \Carbon\Carbon::parse($request->query('log_dari'))->startOfDay()
+            : now()->subDays(1)->startOfDay();
+
+        $log = ActivityLog::with('user')
+            ->whereBetween('created_at', [$dari, $sampai])
+            ->latest('created_at')
+            ->get();
+
+        return response()->json([
+            'log' => $log->map(fn ($l) => [
+                'waktu' => $l->created_at?->translatedFormat('d M Y H:i'),
+                'pengguna' => $l->nama_pengguna ?? '-',
+                'aksi' => $l->aksi,
+                'deskripsi' => $l->deskripsi,
+                'ip' => $l->ip_address,
+            ]),
+            'total_rentang' => $log->count(),
+            'total_keseluruhan' => ActivityLog::count(),
+        ]);
+    }
+
+    /**
      * Versi cetak (untuk disimpan sebagai PDF lewat dialog "Print" browser),
      * dipisah per jenis ('pengguna' atau 'aktivitas') supaya masing-masing
      * jadi dokumen sendiri yang fokus, bukan digabung dalam satu halaman.

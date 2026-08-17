@@ -21,11 +21,11 @@ class DashboardController
         $user = $request->user()->load('satuan');
         $satuan = $user->satuan;
         $kode = $satuan?->kode ? strtoupper(trim($satuan->kode)) : null;
-        if ($kode === 'ADMIN') return $this->admin($user, $satuan);
+        if ($kode === 'ADMIN') return $this->admin($request, $user, $satuan);
         return $this->pelaporan($user, $satuan, $kode);
     }
 
-    private function admin($user, $satuan): View
+    private function admin(Request $request, $user, $satuan): View
     {
         // Urutan tampil: Admin -> Pimpinan -> Direktorat -> Satuan (bukan
         // urutan alfabet/urutan input), sesuai jenjang role di organisasi.
@@ -65,7 +65,27 @@ class DashboardController
             $tanggal = now()->subDays($i);
             return ['label' => $tanggal->translatedFormat('d M'), 'jumlah' => ActivityLog::whereDate('created_at', $tanggal->toDateString())->count()];
         })->values();
-        $logAktivitas = ActivityLog::with('user')->latest('created_at')->limit(200)->get();
+        // Log aktivitas defaultnya cuma nampilin kemarin-hari ini (1 hari
+        // terakhir) -- total baris di tabel activity_logs bakal terus
+        // bertambah seiring waktu, jadi kalau ditarik semua sekaligus (atau
+        // di-cap angka tetap kayak limit(200) sebelumnya) baik render-nya
+        // berat maupun cacah "X dari Y data" di UI jadi nyesatin (nampilin
+        // seolah itu semua data, padahal cuma potongan terbaru). Dihitung
+        // dari now() setiap request, jadi default-nya otomatis geser
+        // mengikuti tanggal berjalan tanpa perlu diubah manual. Filter
+        // tanggal ini query langsung dari database sesuai rentang yang
+        // diminta, sehingga hitungannya selalu akurat terhadap apa yang
+        // sedang ditampilkan.
+        $logSampai = $request->filled('log_sampai')
+            ? \Carbon\Carbon::parse($request->query('log_sampai'))->endOfDay()
+            : now()->endOfDay();
+        $logDari = $request->filled('log_dari')
+            ? \Carbon\Carbon::parse($request->query('log_dari'))->startOfDay()
+            : now()->subDays(1)->startOfDay();
+        $logAktivitas = ActivityLog::with('user')
+            ->whereBetween('created_at', [$logDari, $logSampai])
+            ->latest('created_at')
+            ->get();
         $daftarBackup = app(BackupController::class)->index();
         // Hanya sesi yang benar-benar terautentikasi yang ditampilkan.
         // Baris guest dengan user_id NULL tidak termasuk sesi login aktif.
@@ -81,7 +101,7 @@ class DashboardController
         $rekapLaporanSatuan = Satuan::whereIn('kode', $kodeSatuanPengirim)->withCount(['laporanTerkirim as total_laporan','laporanTerkirim as laporan_menunggu' => fn ($q) => $q->where('status', 'Menunggu'),'laporanTerkirim as laporan_disetujui' => fn ($q) => $q->where('status', 'Disetujui DANPUS'),'laporanTerkirim as laporan_ditolak' => fn ($q) => $q->where('status', 'Ditolak DANPUS')])->get()
             ->sortBy(fn ($s) => sprintf('%d-%s', $prioritasKategori[$s->kategori] ?? 9, $s->nama))
             ->values();
-        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','aktivitasTujuhHari','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => Laporan::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
+        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','aktivitasTujuhHari','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan','logDari','logSampai') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => Laporan::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
     }
 
     private function pelaporan($user, $satuan, ?string $kode): View

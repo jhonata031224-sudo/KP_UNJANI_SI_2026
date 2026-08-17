@@ -209,6 +209,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/backup/{filename}', [BackupFileController::class, 'destroy'])->name('backup.destroy');
     Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/aktivitas-terbaru', [ReportController::class, 'aktivitasTerbaru'])->name('laporan.aktivitas-terbaru');
+    Route::get('/log-aktivitas/rentang', [ReportController::class, 'logAktivitasRentang'])->name('log-aktivitas.rentang');
     Route::get('/laporan/cetak/{jenis}', [ReportController::class, 'printView'])
         ->whereIn('jenis', ['pengguna', 'aktivitas'])
         ->name('laporan.cetak');
