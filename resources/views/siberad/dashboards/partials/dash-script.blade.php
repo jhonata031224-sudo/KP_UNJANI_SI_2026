@@ -21,11 +21,10 @@
 .backup-action-row .backup-create-form,.backup-action-row .backup-upload-form{margin:0;padding:0;display:flex;align-items:center}
 .backup-upload-btn{white-space:nowrap}
 .backup-upload-trigger{display:none !important;}
-.backup-date-filter{position:relative;display:inline-flex;align-items:center;margin-left:44px;}
-.backup-date-filter-box{white-space:nowrap;pointer-events:none;}
-.backup-date-filter-native{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;background:transparent;opacity:0;cursor:pointer;}
+.backup-date-filter{display:flex;align-items:center;margin-left:44px;}
+.backup-date-filter-input{cursor:pointer;}
 @media(max-width:760px){.backup-date-filter{margin-left:18px;}}
-@media(max-width:520px){.backup-action-row{align-items:stretch}.backup-action-row .backup-create-form,.backup-action-row .backup-upload-form{width:100%}.backup-action-row .btn{width:100%;justify-content:center}.backup-date-filter{width:100%;margin-left:0;}.backup-date-filter-box{width:100%;justify-content:center;}}
+@media(max-width:520px){.backup-action-row{align-items:stretch}.backup-action-row .backup-create-form,.backup-action-row .backup-upload-form{width:100%}.backup-action-row .btn{width:100%;justify-content:center}.backup-date-filter{width:100%;margin-left:0;}.backup-date-filter-input{width:100%;}}
 </style>
 <script>
 (function(){
@@ -60,31 +59,27 @@
 
     var filterWrap=document.createElement('div');
     filterWrap.className='backup-date-filter';
-    var filterBox=document.createElement('span');
-    filterBox.className='btn backup-date-filter-box';
-    filterBox.textContent='FILTER TANGGAL';
     var filterInput=document.createElement('input');
     filterInput.type='date';
     filterInput.id='backupDateFilter';
-    filterInput.className='backup-date-filter-native';
+    filterInput.className='btn backup-date-filter-input';
     filterInput.setAttribute('aria-label','Filter Tanggal');
-    filterWrap.appendChild(filterBox);
     filterWrap.appendChild(filterInput);
     row.appendChild(filterWrap);
 
-    function formatTanggalLabel(iso){
-      var parts=iso.split('-');
-      if(parts.length!==3)return iso;
-      var bulan=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-      var idx=parseInt(parts[1],10)-1;
-      return parts[2]+' '+(bulan[idx]||parts[1])+' '+parts[0];
+    function matchHeightToButton(){
+      var h=button.getBoundingClientRect().height;
+      if(h)filterInput.style.setProperty('height',h+'px','important');
+    }
+    matchHeightToButton();
+    if(window.ResizeObserver){
+      new ResizeObserver(matchHeightToButton).observe(button);
     }
 
     function applyDateFilter(){
       var table=section.querySelector('.tbl-wrap table');
       if(!table)return;
       var val=filterInput.value;
-      filterBox.textContent=val?formatTanggalLabel(val).toUpperCase():'FILTER TANGGAL';
       var rows=table.querySelectorAll('tbody tr[data-tanggal]');
       rows.forEach(function(tr){
         tr.style.display=(!val||tr.getAttribute('data-tanggal')===val)?'':'none';
