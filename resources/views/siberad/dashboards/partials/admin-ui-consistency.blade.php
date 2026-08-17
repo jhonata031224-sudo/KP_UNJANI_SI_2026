@@ -66,7 +66,7 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
 .main .content [data-tab-panel="backup"] .backup-extra-actions > a,
 .main .content [data-tab-panel="backup"] .backup-extra-actions > form{ margin:0 !important; }
 .main .content [data-tab-panel="backup"] .backup-extra-actions > a,
-.main .content [data-tab-panel="backup"] .backup-extra-actions > form > button{ min-width:74px !important;box-sizing:border-box !important;text-align:center !important; }
+.main .content [data-tab-panel="backup"] .backup-extra-actions > form > button{ min-width:74px !important;box-sizing:border-box !important;text-align:center !important;justify-content:center !important; }
 .main .content [data-tab-panel="backup"] .backup-upload-panel{display:none !important;}
 .main .content [data-tab-panel="backup"] .backup-history-head{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:14px !important;}
 .main .content [data-tab-panel="backup"] .backup-upload-trigger{flex-shrink:0;}
