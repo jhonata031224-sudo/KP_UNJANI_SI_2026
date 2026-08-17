@@ -19,6 +19,7 @@
 <style>
 .backup-action-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:18px 22px}
 .backup-action-row .backup-create-form,.backup-action-row .backup-upload-form{margin:0;padding:0;display:flex;align-items:center}
+.backup-action-row .btn{height:44px;min-height:44px;box-sizing:border-box;display:inline-flex;align-items:center;}
 .backup-upload-btn{white-space:nowrap}
 .backup-upload-trigger{display:none !important;}
 .backup-date-filter{display:flex;align-items:center;margin-left:44px;}
@@ -66,15 +67,6 @@
     filterInput.setAttribute('aria-label','Filter Tanggal');
     filterWrap.appendChild(filterInput);
     row.appendChild(filterWrap);
-
-    function matchHeightToButton(){
-      var h=button.getBoundingClientRect().height;
-      if(h)filterInput.style.setProperty('height',h+'px','important');
-    }
-    matchHeightToButton();
-    if(window.ResizeObserver){
-      new ResizeObserver(matchHeightToButton).observe(button);
-    }
 
     function applyDateFilter(){
       var table=section.querySelector('.tbl-wrap table');
