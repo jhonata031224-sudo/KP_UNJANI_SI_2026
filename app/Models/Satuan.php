@@ -105,6 +105,14 @@ class Satuan extends Model
     }
 
     /**
+     * Permintaan laporan yang ditujukan ke satuan ini (dari Danpus/Wadan).
+     */
+    public function permintaanLaporanMasuk(): HasMany
+    {
+        return $this->hasMany(PermintaanLaporan::class, 'tujuan_satuan_id');
+    }
+
+    /**
      * Laporan yang ditujukan ke satuan ini (mis. laporan masuk ke DANPUS).
      */
     public function laporanDiterima(): HasMany

@@ -21,7 +21,7 @@
   }
   .chart-box{margin-bottom:26px;}
   .chart-box-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
-  .chart-mini{background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:12px;padding:16px;transition:border-color .15s ease,box-shadow .15s ease;}
+  .chart-mini{background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:12px;padding:16px;transition:border-color .15s ease,box-shadow .15s ease,background-color .15s ease;}
   .chart-mini:hover{border-color:var(--border-strong);box-shadow:0 6px 16px rgba(0,0,0,.12);}
   .chart-mini-head{margin-bottom:10px;}
   .chart-mini-head h4{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:.01em;line-height:1.3;}
@@ -68,6 +68,8 @@
   .badge-status.ok{background:rgba(34,197,94,.14);color:#22c55e;border-color:rgba(34,197,94,.32);}
   .badge-status.bad{background:rgba(239,68,68,.14);color:#ef4444;border-color:rgba(239,68,68,.32);}
   .badge-status.wait{background:rgba(245,158,11,.14);color:#f59e0b;border-color:rgba(245,158,11,.32);}
+  .badge-status.late{background:rgba(255,107,107,.15);color:#ff6b6b;border-color:rgba(255,107,107,.32);}
+  .badge-status.cancelled{background:rgba(193,18,31,.16);color:#c1121f;border-color:rgba(193,18,31,.34);}
 
   /* ===== modal Tambah Pengguna ===== */
   .user-modal-overlay{
@@ -2084,7 +2086,8 @@
           </div>
           <div class="tbl-wrap">
             <table class="dtbl" id="tblRekapSatuan">
-              <thead><tr><th>Satuan</th><th style="text-align:center;">Total Laporan</th><th style="text-align:center;">Disetujui</th><th style="text-align:center;">Ditolak</th><th style="text-align:center;">Menunggu</th></tr></thead>
+              <colgroup><col style="width:30%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"></colgroup>
+              <thead><tr><th>Satuan</th><th style="text-align:center;">Total Laporan</th><th style="text-align:center;">Disetujui</th><th style="text-align:center;">Ditolak</th><th style="text-align:center;">Terlambat</th><th style="text-align:center;">Dibatalkan</th></tr></thead>
               <tbody>
                 @forelse($rekapLaporanSatuan as $s)
                 <tr data-filter-value="{{ $s->kategori }}" data-search-value="{{ strtolower($s->nama.' '.$s->kode) }}">
@@ -2092,10 +2095,11 @@
                   <td style="text-align:center;">{{ $s->total_laporan }}</td>
                   <td style="text-align:center;"><span class="badge-status ok">{{ $s->laporan_disetujui }}</span></td>
                   <td style="text-align:center;"><span class="badge-status bad">{{ $s->laporan_ditolak }}</span></td>
-                  <td style="text-align:center;"><span class="badge-status wait">{{ $s->laporan_menunggu }}</span></td>
+                  <td style="text-align:center;"><span class="badge-status late">{{ $s->laporan_terlambat }}</span></td>
+                  <td style="text-align:center;"><span class="badge-status cancelled">{{ $s->laporan_dibatalkan }}</span></td>
                 </tr>
                 @empty
-                <tr class="table-empty-row"><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada data Satlak</div></div></td></tr>
+                <tr class="table-empty-row"><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada data Satlak</div></div></td></tr>
                 @endforelse
               </tbody>
             </table>
@@ -2565,9 +2569,9 @@
     var statusLaporan = @json($statusLaporanSistem);
     renderDoughnut(
       'chartStatusLaporan',
-      ['Disetujui', 'Ditolak', 'Menunggu'],
-      [statusLaporan.disetujui, statusLaporan.ditolak, statusLaporan.menunggu],
-      ['#22c55e', '#ef4444', '#f59e0b']
+      ['Disetujui', 'Ditolak', 'Terlambat', 'Dibatalkan'],
+      [statusLaporan.disetujui, statusLaporan.ditolak, statusLaporan.terlambat, statusLaporan.dibatalkan],
+      ['#22c55e', '#ef4444', '#ff6b6b', '#c1121f']
     );
 
     // ===== Grafik 3: Aktivitas 7 Hari Terakhir =====
