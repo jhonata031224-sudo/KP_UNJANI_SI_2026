@@ -43,7 +43,7 @@
   .table-search::placeholder{color:var(--text-dim);}
   .table-search:focus{outline:none;border-color:var(--gold);}
   .table-filter{
-    background:var(--panel);border:1px solid var(--border);color:var(--text);font-family:var(--mono);
+    box-sizing:border-box;background:var(--panel);border:1px solid var(--border);color:var(--text);font-family:var(--mono);
     font-size:11.5px;letter-spacing:.02em;border-radius:9px;padding:0 10px;cursor:pointer;flex-shrink:0;
     min-width:170px;height:38px;
   }
@@ -53,14 +53,14 @@
   .log-filter-field{display:flex;flex-direction:column;gap:4px;}
   .log-filter-field label{font-size:10px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;}
   .log-filter-field .table-filter{min-width:150px;}
-  .log-filter-reset{width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--border);border-radius:9px;color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease;}
+  .log-filter-reset{box-sizing:border-box;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--border);border-radius:9px;color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease;}
   .log-filter-reset svg{width:16px;height:16px;}
   .log-filter-reset:hover{background:var(--hover-tint);color:var(--gold-bright);border-color:var(--gold);}
   .log-filter-reset.spinning svg{animation:logFilterResetSpin .5s ease;}
   @keyframes logFilterResetSpin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
   @media(max-width:640px){.log-filter-row{flex-direction:column;align-items:stretch;}.log-filter-row .table-filter{width:100%;}.log-filter-reset{width:100%;}}
   .table-empty-row td{text-align:center;color:var(--text-dim);font-size:12.5px;padding:26px 12px !important;}
-  @media(max-width:640px){.table-toolbar{flex-direction:column;align-items:stretch;}.table-search-wrap{max-width:none;}.table-filter{width:100%;}.table-filter-count{width:100%;margin-left:0;}}
+  @media(max-width:640px){.table-toolbar{flex-direction:column;align-items:stretch;}.table-search-wrap{flex:none;max-width:none;}.table-filter{width:100%;}.table-filter-count{width:100%;margin-left:0;}}
 
   /* ===== badge status Rekap Laporan (warna tetap hijau/merah/oren asli,
      tidak ikut --green yang di-repurpose jadi gold di tempat lain) ===== */
