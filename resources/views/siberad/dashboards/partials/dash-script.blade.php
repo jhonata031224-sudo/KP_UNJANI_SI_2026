@@ -22,10 +22,7 @@
 .backup-action-row .btn{height:44px;min-height:44px;box-sizing:border-box;display:inline-flex;align-items:center;}
 .backup-upload-btn{white-space:nowrap}
 .backup-upload-trigger{display:none !important;}
-.backup-date-filter{display:flex;align-items:center;margin-left:44px;}
-.backup-date-filter-input{cursor:pointer;}
-@media(max-width:760px){.backup-date-filter{margin-left:18px;}}
-@media(max-width:520px){.backup-action-row{align-items:stretch}.backup-action-row .backup-create-form,.backup-action-row .backup-upload-form{width:100%}.backup-action-row .btn{width:100%;justify-content:center}.backup-date-filter{width:100%;margin-left:0;}.backup-date-filter-input{width:100%;}}
+@media(max-width:520px){.backup-action-row{align-items:stretch}.backup-action-row .backup-create-form,.backup-action-row .backup-upload-form{width:100%}.backup-action-row .btn{width:100%;justify-content:center}}
 </style>
 <script>
 (function(){
@@ -57,29 +54,6 @@
     button.addEventListener('click',function(){input.click()});
     input.addEventListener('change',function(){if(!input.files||!input.files.length)return;button.disabled=true;button.textContent='MENGUNGGAH...';uploadForm.submit()});
     uploadForm.appendChild(csrf);uploadForm.appendChild(input);uploadForm.appendChild(button);row.appendChild(uploadForm);
-
-    var filterWrap=document.createElement('div');
-    filterWrap.className='backup-date-filter';
-    var filterInput=document.createElement('input');
-    filterInput.type='date';
-    filterInput.id='backupDateFilter';
-    filterInput.className='btn backup-date-filter-input';
-    filterInput.setAttribute('aria-label','Filter Tanggal');
-    filterWrap.appendChild(filterInput);
-    row.appendChild(filterWrap);
-
-    function applyDateFilter(){
-      var table=section.querySelector('.tbl-wrap table');
-      if(!table)return;
-      var val=filterInput.value;
-      var rows=table.querySelectorAll('tbody tr[data-tanggal]');
-      rows.forEach(function(tr){
-        tr.style.display=(!val||tr.getAttribute('data-tanggal')===val)?'':'none';
-      });
-      var wrap=table.closest('[data-row-limit]');
-      if(wrap&&window.terapkanRowLimitWrap)window.terapkanRowLimitWrap(wrap);
-    }
-    filterInput.addEventListener('change',applyDateFilter);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initBackupUpload);else initBackupUpload();
 })();

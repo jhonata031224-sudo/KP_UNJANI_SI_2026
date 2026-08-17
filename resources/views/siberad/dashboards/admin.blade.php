@@ -369,6 +369,23 @@
   </div>
 </div>
 
+<div class="confirm-overlay" id="hapusBackupOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="hapusBackupTitle">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
+    </div>
+    <h3 id="hapusBackupTitle">Hapus File Backup?</h3>
+    <p>File backup <strong id="hapusBackupNama">ini</strong> akan dihapus permanen dari server dan tidak bisa dikembalikan.</p>
+    <form id="formHapusBackup" method="POST" action="">
+      @csrf @method('DELETE')
+      <div class="confirm-actions">
+        <button type="button" class="btn" id="hapusBackupBatal">Batal</button>
+        <button type="submit" class="btn btn-ghost-red">Ya, Hapus</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="user-modal-overlay" id="tambahSatuanModal">
   <div class="user-modal-card" role="dialog" aria-modal="true" aria-label="Tambah Satuan">
     <div class="user-modal-head">
@@ -1088,6 +1105,14 @@
         };
         document.getElementById('hapusPenggunaBatal')?.addEventListener('click', () => document.getElementById('hapusPenggunaOverlay')?.classList.remove('open'));
         document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusPenggunaOverlay')?.classList.remove('open'); });
+
+        window.bukaHapusBackup = function (btn) {
+          document.getElementById('formHapusBackup').action = btn.dataset.action;
+          document.getElementById('hapusBackupNama').textContent = btn.dataset.nama || 'ini';
+          document.getElementById('hapusBackupOverlay')?.classList.add('open');
+        };
+        document.getElementById('hapusBackupBatal')?.addEventListener('click', () => document.getElementById('hapusBackupOverlay')?.classList.remove('open'));
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusBackupOverlay')?.classList.remove('open'); });
         (function () {
           var modal = document.getElementById('ubahPenggunaModal');
           var closeBtn = document.getElementById('ubahPenggunaClose');
@@ -1548,10 +1573,33 @@
           </form>
         </div>
 
+        <div class="backup-upload-panel" style="display:none">
+          <form method="POST" action="{{ route('admin.backup.upload') }}" enctype="multipart/form-data">
+            @csrf
+            <input type="file" name="backup_file" accept=".sql,.sqlite" required>
+            <button class="btn btn-primary" type="submit">Upload</button>
+          </form>
+        </div>
+
         <div class="panel">
           <div class="panel-head"><div><h3>Riwayat Backup</h3></div></div>
+
+          <div class="log-filter-row" id="backupFilterRow">
+            <div class="log-filter-field">
+              <label for="backupDariInput">Dari</label>
+              <input type="date" id="backupDariInput" class="table-filter" max="{{ now()->format('Y-m-d') }}">
+            </div>
+            <div class="log-filter-field">
+              <label for="backupSampaiInput">Sampai</label>
+              <input type="date" id="backupSampaiInput" class="table-filter" max="{{ now()->format('Y-m-d') }}">
+            </div>
+            <button type="button" id="backupFilterReset" class="log-filter-reset" title="Reset filter">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+            </button>
+          </div>
+
           <div class="tbl-wrap" data-row-limit="8">
-            <table class="dtbl">
+            <table class="dtbl" id="tblRiwayatBackup">
               <thead><tr><th>Nama File</th><th>Ukuran</th><th>Tanggal</th><th>Jam</th><th>Aksi</th></tr></thead>
               <tbody>
                 @forelse($daftarBackup as $b)
@@ -1560,7 +1608,14 @@
                   <td>{{ $b['ukuran'] }}</td>
                   <td>{{ $b['tanggal'] }}</td>
                   <td>{{ $b['jam'] }}</td>
-                  <td><a class="btn btn-sm" href="{{ route('admin.backup.download', $b['nama']) }}">Unduh</a></td>
+                  <td>
+                    <div class="btn-row">
+                      <a class="btn btn-sm" href="{{ route('admin.backup.download', $b['nama']) }}">Unduh</a>
+                      <button class="table-action-btn danger" type="button" onclick="bukaHapusBackup(this)"
+                        data-action="{{ route('admin.backup.destroy', $b['nama']) }}"
+                        data-nama="{{ $b['nama'] }}">Hapus</button>
+                    </div>
+                  </td>
                 </tr>
                 @empty
                 <tr><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada backup dibuat</div></div></td></tr>
@@ -1568,6 +1623,45 @@
               </tbody>
             </table>
           </div>
+
+          <script>
+          (function () {
+            var dariInput = document.getElementById('backupDariInput');
+            var sampaiInput = document.getElementById('backupSampaiInput');
+            var table = document.getElementById('tblRiwayatBackup');
+            if (!dariInput || !sampaiInput || !table) return;
+
+            function terapkanFilterBackup() {
+              var dari = dariInput.value;
+              var sampai = sampaiInput.value;
+              var rows = table.querySelectorAll('tbody tr[data-tanggal]');
+              rows.forEach(function (tr) {
+                var tgl = tr.getAttribute('data-tanggal');
+                var cocokDari = !dari || tgl >= dari;
+                var cocokSampai = !sampai || tgl <= sampai;
+                tr.style.display = (cocokDari && cocokSampai) ? '' : 'none';
+              });
+              var wrap = table.closest('[data-row-limit]');
+              if (wrap && window.terapkanRowLimitWrap) window.terapkanRowLimitWrap(wrap);
+            }
+
+            [dariInput, sampaiInput].forEach(function (el) {
+              el.addEventListener('change', terapkanFilterBackup);
+            });
+
+            var resetBtn = document.getElementById('backupFilterReset');
+            if (resetBtn) {
+              resetBtn.addEventListener('click', function () {
+                dariInput.value = '';
+                sampaiInput.value = '';
+                terapkanFilterBackup();
+                resetBtn.classList.remove('spinning');
+                void resetBtn.offsetWidth;
+                resetBtn.classList.add('spinning');
+              });
+            }
+          })();
+          </script>
         </div>
       </section>
 
