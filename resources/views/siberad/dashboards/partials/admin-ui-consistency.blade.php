@@ -187,6 +187,7 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
       '<div class="siberad-backup-upload-drop"><input type="file" class="siberad-file-input" name="backup_file" accept=".sql,.sqlite" required><div class="siberad-backup-upload-meta">Format: .sql atau .sqlite • Maksimal 50 MB.</div></div>'+ 
       '<div class="siberad-backup-upload-actions"><button type="button" class="btn btn-ghost backup-upload-cancel">Batal</button><button type="submit" class="btn btn-primary">Upload</button></div></form></div>';
     document.body.appendChild(modal);
+    if(typeof window.siberadEnhanceFileInputs==='function')window.siberadEnhanceFileInputs(modal);
 
     var form=modal.querySelector('.siberad-backup-upload-form');form.action=oldForm.action;
     var tokenInput=oldForm.querySelector('input[name="_token"]')||document.querySelector('input[name="_token"]');
