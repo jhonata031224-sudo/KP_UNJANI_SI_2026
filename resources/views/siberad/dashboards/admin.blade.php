@@ -2077,8 +2077,8 @@
             </div>
             <select class="table-filter" data-table-filter="tblRekapSatuan">
               <option value="">Semua Kategori</option>
-              <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
               <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
+              <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
             </select>
             <span class="table-filter-count" data-table-count="tblRekapSatuan"></span>
           </div>
@@ -2087,7 +2087,7 @@
               <thead><tr><th>Satuan</th><th style="text-align:center;">Total Laporan</th><th style="text-align:center;">Disetujui</th><th style="text-align:center;">Ditolak</th><th style="text-align:center;">Menunggu</th></tr></thead>
               <tbody>
                 @forelse($rekapLaporanSatuan as $s)
-                <tr data-filter-value="{{ $s->kategori }}" data-search-value="{{ $s->nama }}">
+                <tr data-filter-value="{{ $s->kategori }}" data-search-value="{{ strtolower($s->nama.' '.$s->kode) }}">
                   <td>{{ $s->nama }} <span class="badge">{{ $s->kode }}</span></td>
                   <td style="text-align:center;">{{ $s->total_laporan }}</td>
                   <td style="text-align:center;"><span class="badge-status ok">{{ $s->laporan_disetujui }}</span></td>
