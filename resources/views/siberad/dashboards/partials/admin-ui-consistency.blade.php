@@ -184,7 +184,7 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
     modal.innerHTML='<div class="siberad-backup-upload-card" role="dialog" aria-modal="true" aria-labelledby="siberadBackupUploadTitle">'+
       '<div class="siberad-backup-upload-head"><div><h3 id="siberadBackupUploadTitle">Upload Backup</h3><p>Pilih file backup yang ingin ditambahkan ke riwayat backup.</p></div><button type="button" class="siberad-backup-upload-close" aria-label="Tutup">×</button></div>'+ 
       '<form class="siberad-backup-upload-form" method="POST" enctype="multipart/form-data">'+
-      '<div class="siberad-backup-upload-drop"><input type="file" name="backup_file" accept=".sql,.sqlite" required><div class="siberad-backup-upload-meta">Format: .sql atau .sqlite • Maksimal 50 MB.</div></div>'+ 
+      '<div class="siberad-backup-upload-drop"><input type="file" class="siberad-file-input" name="backup_file" accept=".sql,.sqlite" required><div class="siberad-backup-upload-meta">Format: .sql atau .sqlite • Maksimal 50 MB.</div></div>'+ 
       '<div class="siberad-backup-upload-actions"><button type="button" class="btn btn-ghost backup-upload-cancel">Batal</button><button type="submit" class="btn btn-primary">Upload</button></div></form></div>';
     document.body.appendChild(modal);
 
