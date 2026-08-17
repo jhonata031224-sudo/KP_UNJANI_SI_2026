@@ -291,7 +291,8 @@ $alasanTidakBisaEdit=$bisaEditDeadline?'':$item->alasanTidakBisaEditDeadline();
     document.querySelectorAll('.side-sub-link,.side-link').forEach(a=>a.classList.remove('active'));
     if(link)link.classList.add('active');
     document.querySelectorAll('.side-nav-group').forEach(g=>g.classList.remove('has-active-child'));
-    link?.closest('.side-nav-group')?.classList.add('has-active-child');
+    const activeGroup=link?.closest('.side-nav-group');
+    if(activeGroup){activeGroup.classList.add('has-active-child');if(activeGroup.id)try{sessionStorage.setItem(GROUP_STATE_KEY+activeGroup.id,'open')}catch(e){}}
     sidebar?.classList.remove('open');
     window.scrollTo({top:0,behavior:'smooth'});
     if(!skipSave){try{sessionStorage.setItem(ACTIVE_TAB_KEY,id)}catch(e){}}

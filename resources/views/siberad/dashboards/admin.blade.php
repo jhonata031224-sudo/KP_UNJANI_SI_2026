@@ -576,6 +576,10 @@
       });
     }
     window.siberadRestoreGroupState = restoreAdminGroupState;
+    window.siberadMarkAdminGroupOpen = function (g) {
+      if (!g || !g.id) return;
+      try { sessionStorage.setItem(ADMIN_GROUP_STATE_KEY + g.id, 'open'); } catch (e) {}
+    };
     restoreAdminGroupState();
 
     groups.forEach(function (g) {
@@ -787,7 +791,7 @@
           <div class="panel-head"><div><h3>Statistik Sistem</h3><p>Sebaran akun per kategori, status laporan, dan tren aktivitas 7 hari terakhir.</p></div></div>
           <div class="chart-box-grid">
 
-            <div class="chart-mini">
+            <div class="chart-mini chart-mini-link" data-tab-link="pengguna" role="button" tabindex="0" title="Lihat Daftar Pengguna">
               <div class="chart-mini-head">
                 <div class="chart-mini-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
                 <div><h4>Pengguna per Kategori Satuan</h4><p>Sebaran akun berdasarkan kategori.</p></div>
@@ -795,7 +799,7 @@
               <div class="chart-wrap"><canvas id="chartKategoriSatuan"></canvas></div>
             </div>
 
-            <div class="chart-mini">
+            <div class="chart-mini chart-mini-link" data-tab-link="rekap-laporan" role="button" tabindex="0" title="Lihat Rekap Laporan">
               <div class="chart-mini-head">
                 <div class="chart-mini-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
                 <div><h4>Distribusi Status Laporan</h4><p>Proporsi status seluruh laporan di sistem.</p></div>
@@ -803,7 +807,7 @@
               <div class="chart-wrap"><canvas id="chartStatusLaporan"></canvas></div>
             </div>
 
-            <div class="chart-mini">
+            <div class="chart-mini chart-mini-link" data-tab-link="log-aktivitas" role="button" tabindex="0" title="Lihat Log Aktivitas">
               <div class="chart-mini-head">
                 <div class="chart-mini-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
                 <div><h4>Aktivitas 7 Hari Terakhir</h4><p>Jumlah aksi tercatat per hari.</p></div>
@@ -814,27 +818,67 @@
           </div>
         </div>
 
-        <div class="panel activity-panel">
-          <div class="panel-head">
-            <div><h3>Aktivitas Terbaru</h3><p>5 aksi terakhir tercatat.</p></div>
-            <a href="#" class="btn btn-ghost btn-sm" data-tab-link="log-aktivitas">Lihat Semua</a>
-          </div>
-          <ul class="activity-feed">
-            @forelse($logAktivitas->take(5) as $log)
-            <li>
-              <span class="activity-dot"></span>
-              <div class="activity-body">
-                <div class="activity-main">
-                  <div class="activity-text">{{ $log->deskripsi ?: $log->aksi }}</div>
-                  <div class="activity-meta">{{ $log->nama_pengguna ?? 'Sistem' }}</div>
+        <script>
+          document.querySelectorAll('.chart-mini-link').forEach(function (el) {
+            el.addEventListener('keydown', function (e) {
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); }
+            });
+          });
+        </script>
+
+        <div class="dash-two-col">
+          <div class="panel activity-panel">
+            <div class="panel-head">
+              <div><h3>Permintaan Reset Password</h3><p>5 permintaan terbaru.</p></div>
+              <a href="#" class="btn btn-ghost btn-sm" data-tab-link="reset-password">Lihat Semua</a>
+            </div>
+            <ul class="activity-feed">
+              @forelse($permintaanResetPassword->take(5) as $r)
+              @php
+                [$statusWarna, $statusDim] = match ($r->status) {
+                  \App\Models\PermintaanResetPassword::STATUS_DISETUJUI => ['var(--success-bright)', 'var(--success-dim)'],
+                  \App\Models\PermintaanResetPassword::STATUS_DITOLAK => ['var(--red)', 'var(--red-dim)'],
+                  default => ['var(--amber)', 'var(--amber-dim)'],
+                };
+              @endphp
+              <li>
+                <span class="activity-dot" style="background:{{ $statusWarna }};box-shadow:0 0 0 3px {{ $statusDim }};"></span>
+                <div class="activity-body">
+                  <div class="activity-main">
+                    <div class="activity-text">{{ $r->user->name ?? '-' }}</div>
+                    <div class="activity-meta">{{ $r->user->satuan->kode ?? 'Sistem' }} &middot; <span style="color:{{ $statusWarna }};font-weight:700;">{{ $r->status }}</span></div>
+                  </div>
+                  <div class="activity-time">{{ $r->created_at?->diffForHumans() }}</div>
                 </div>
-                <div class="activity-time">{{ $log->created_at?->diffForHumans() }}</div>
-              </div>
-            </li>
-            @empty
-            <li class="activity-empty">Belum ada aktivitas tercatat.</li>
-            @endforelse
-          </ul>
+              </li>
+              @empty
+              <li class="activity-empty">Belum ada permintaan reset password.</li>
+              @endforelse
+            </ul>
+          </div>
+
+          <div class="panel activity-panel">
+            <div class="panel-head">
+              <div><h3>Aktivitas Terbaru</h3><p>5 aksi terakhir tercatat.</p></div>
+              <a href="#" class="btn btn-ghost btn-sm" data-tab-link="log-aktivitas">Lihat Semua</a>
+            </div>
+            <ul class="activity-feed">
+              @forelse($logAktivitas->take(5) as $log)
+              <li>
+                <span class="activity-dot"></span>
+                <div class="activity-body">
+                  <div class="activity-main">
+                    <div class="activity-text">{{ $log->deskripsi ?: $log->aksi }}</div>
+                    <div class="activity-meta">{{ $log->nama_pengguna ?? 'Sistem' }}</div>
+                  </div>
+                  <div class="activity-time">{{ $log->created_at?->diffForHumans() }}</div>
+                </div>
+              </li>
+              @empty
+              <li class="activity-empty">Belum ada aktivitas tercatat.</li>
+              @endforelse
+            </ul>
+          </div>
         </div>
 
         <style>
@@ -846,6 +890,9 @@
           .kpi-card.ok .val{color:#22c55e;}
           .kpi-card.bad .val{color:#ef4444;}
 
+          .chart-mini-link{cursor:pointer;}
+          .chart-mini-link:hover,.chart-mini-link:focus-visible{border-color:var(--gold-bright);box-shadow:0 6px 18px rgba(0,0,0,.18);}
+          .chart-mini-link:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px;}
           .chart-mini-head{display:flex;align-items:flex-start;gap:11px;}
           .chart-mini-icon{width:28px;height:28px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--gold-dim);color:var(--gold-bright);}
           .chart-mini-icon svg{width:15px;height:15px;}
@@ -853,8 +900,11 @@
           .chart-mini-icon.green{background:var(--green-dim);color:var(--green-bright);}
           .chart-mini-icon.blue{background:rgba(99,102,241,.14);color:#6366f1;}
 
-          .activity-panel{margin-top:22px;}
+          .dash-two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px;}
+          @media(max-width:980px){.dash-two-col{grid-template-columns:1fr;}}
+          .dash-two-col .activity-panel{margin-top:0;height:100%;display:flex;flex-direction:column;}
           .activity-feed{list-style:none;padding:2px 0 4px;margin:0;}
+          .dash-two-col .activity-feed{flex:1;display:flex;flex-direction:column;justify-content:center;}
           .activity-feed li{display:flex;gap:12px;padding:13px 10px;border-radius:9px;transition:background .15s ease;}
           .activity-feed li:hover{background:var(--hover-tint);}
           .activity-feed li + li{border-top:1px solid var(--border-soft);}
