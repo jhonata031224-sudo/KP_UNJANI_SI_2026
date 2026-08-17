@@ -367,6 +367,23 @@
   </div>
 </div>
 
+<div class="confirm-overlay" id="hapusBackupOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="hapusBackupTitle">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
+    </div>
+    <h3 id="hapusBackupTitle">Hapus File Backup?</h3>
+    <p>File backup <strong id="hapusBackupNama">ini</strong> akan dihapus permanen dari server dan tidak bisa dikembalikan.</p>
+    <form id="formHapusBackup" method="POST" action="">
+      @csrf @method('DELETE')
+      <div class="confirm-actions">
+        <button type="button" class="btn" id="hapusBackupBatal">Batal</button>
+        <button type="submit" class="btn btn-ghost-red">Ya, Hapus</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="user-modal-overlay" id="tambahSatuanModal">
   <div class="user-modal-card" role="dialog" aria-modal="true" aria-label="Tambah Satuan">
     <div class="user-modal-head">
@@ -1086,6 +1103,14 @@
         };
         document.getElementById('hapusPenggunaBatal')?.addEventListener('click', () => document.getElementById('hapusPenggunaOverlay')?.classList.remove('open'));
         document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusPenggunaOverlay')?.classList.remove('open'); });
+
+        window.bukaHapusBackup = function (btn) {
+          document.getElementById('formHapusBackup').action = btn.dataset.action;
+          document.getElementById('hapusBackupNama').textContent = btn.dataset.nama || 'ini';
+          document.getElementById('hapusBackupOverlay')?.classList.add('open');
+        };
+        document.getElementById('hapusBackupBatal')?.addEventListener('click', () => document.getElementById('hapusBackupOverlay')?.classList.remove('open'));
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusBackupOverlay')?.classList.remove('open'); });
         (function () {
           var modal = document.getElementById('ubahPenggunaModal');
           var closeBtn = document.getElementById('ubahPenggunaClose');
@@ -1573,7 +1598,14 @@
                   <td>{{ $b['ukuran'] }}</td>
                   <td>{{ $b['tanggal'] }}</td>
                   <td>{{ $b['jam'] }}</td>
-                  <td><a class="btn btn-sm" href="{{ route('admin.backup.download', $b['nama']) }}">Unduh</a></td>
+                  <td>
+                    <div class="btn-row">
+                      <a class="btn btn-sm" href="{{ route('admin.backup.download', $b['nama']) }}">Unduh</a>
+                      <button class="table-action-btn danger" type="button" onclick="bukaHapusBackup(this)"
+                        data-action="{{ route('admin.backup.destroy', $b['nama']) }}"
+                        data-nama="{{ $b['nama'] }}">Hapus</button>
+                    </div>
+                  </td>
                 </tr>
                 @empty
                 <tr><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada backup dibuat</div></div></td></tr>
