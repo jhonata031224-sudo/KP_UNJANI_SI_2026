@@ -27,7 +27,7 @@ class BackupController extends Controller
         return collect(Storage::disk(self::DISK)->files(self::FOLDER))
             ->filter(fn ($f) => str_ends_with(strtolower($f), '.sqlite') || str_ends_with(strtolower($f), '.sql'))
             ->map(function ($f) {
-                $waktu = \Illuminate\Support\Carbon::createFromTimestamp(Storage::disk(self::DISK)->lastModified($f));
+                $waktu = \Illuminate\Support\Carbon::createFromTimestamp(Storage::disk(self::DISK)->lastModified($f), config('app.timezone'));
 
                 return [
                     'nama' => basename($f),
