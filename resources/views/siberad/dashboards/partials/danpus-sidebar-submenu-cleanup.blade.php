@@ -127,6 +127,7 @@
       var progres=row.dataset.progres||'0';
       var date=row.dataset.updated||getCellText(cells,4)||getCellText(cells,3)||'-';
       var node=document.createElement('div');node.className='danpus-progress-node';
+      if(row.dataset.laporanId) node.dataset.laporanId=row.dataset.laporanId;
       // 100% = kontribusi satuan udah kelar (submit-nya selesai, tinggal
       // nunggu keputusan Pimpinan) -- jadi SELALU ijo/done, biarpun dia
       // node paling kanan/terbaru. "is-current" (oranye) cuma buat
