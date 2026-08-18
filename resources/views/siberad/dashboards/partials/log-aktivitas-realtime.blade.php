@@ -2,7 +2,6 @@
 (function () {
     var endpoint = '{{ route('laporan.log-aktivitas.realtime') }}';
     var polling = false;
-    var initialRenderComplete = false;
     var pollTimer = null;
 
     function setText(id, value) {
@@ -29,8 +28,7 @@
     function makeHistory(values) {
         var history = document.createElement('div');
         history.className = 'danpus-progress-history';
-        var clean = uniqueProgress(values);
-        clean.forEach(function (value, index) {
+        uniqueProgress(values).forEach(function (value, index, clean) {
             var chip = document.createElement('span');
             chip.className = 'danpus-progress-chip' + (index === clean.length - 1 ? ' latest' : '');
             chip.textContent = value + '%';
@@ -41,10 +39,40 @@
 
     function setHistory(details, values) {
         if (!details) return;
-        var old = details.querySelector('.danpus-progress-history');
         var history = makeHistory(values);
+        var old = details.querySelector(':scope > summary .danpus-progress-history');
         if (old) old.replaceWith(history);
-        else details.querySelector('summary')?.appendChild(history);
+        else details.querySelector(':scope > summary')?.appendChild(history);
+    }
+
+    // Update persentase yang tampil DI DALAM alur/detail laporan juga,
+    // bukan hanya chip progres pada judul dropdown.
+    function updateProgressInsideRow(row) {
+        if (!row) return;
+        var progress = row.getAttribute('data-progres');
+        if (progress === null || progress === '') return;
+
+        row.querySelectorAll('[data-progres]').forEach(function (el) {
+            if (el === row) return;
+            el.setAttribute('data-progres', progress);
+            if (el.matches('.status-pill') || el.classList.contains('status-pill')) {
+                var status = row.getAttribute('data-laporan-status') || '';
+                if (status.toLowerCase().indexOf('progres') !== -1) {
+                    el.textContent = 'Progres · ' + progress + '%';
+                }
+            }
+        });
+
+        var pill = row.querySelector('.status-pill');
+        if (pill) {
+            var statusText = row.getAttribute('data-laporan-status') || '';
+            if (statusText.toLowerCase().indexOf('progres') !== -1) {
+                pill.textContent = 'Progres · ' + progress + '%';
+            }
+        }
+
+        var detailButton = row.querySelector('.detail-btn');
+        if (detailButton) detailButton.setAttribute('data-progres', progress);
     }
 
     function findCurrentDetails(section, permintaanId, laporanId) {
@@ -108,6 +136,7 @@
         details.dataset.laporanId = row.getAttribute('data-laporan-id') || details.dataset.laporanId || '';
         var subject = details.querySelector('.danpus-report-subject');
         if (subject) subject.textContent = row.getAttribute('data-perihal') || row.querySelector('.subject')?.textContent.trim() || subject.textContent;
+        updateProgressInsideRow(row);
         highlightRow(row);
     }
 
@@ -123,6 +152,9 @@
         });
         return Object.keys(groups).map(function (key) {
             var group = groups[key];
+            group.sort(function (a, b) {
+                return (Number(a.getAttribute('data-laporan-id')) || 0) - (Number(b.getAttribute('data-laporan-id')) || 0);
+            });
             var latest = group[group.length - 1];
             var values = uniqueProgress(group.map(function (row) { return row.getAttribute('data-progres'); }));
             return { key: key, latest: latest, progress: values };
@@ -154,6 +186,7 @@
                         tbody.closest('table')?.replaceWith(wrapper);
                         cleanWrap.dataset.dropdownReady = '1';
                     }
+                    updateProgressInsideRow(row);
                     return;
                 }
 
@@ -162,8 +195,15 @@
                 var oldUpdated = current ? current.getAttribute('data-updated') : null;
                 var changed = !current || oldProgress !== row.getAttribute('data-progres') || oldUpdated !== row.getAttribute('data-updated') || current.getAttribute('data-laporan-id') !== laporanId;
 
+                // Dua target realtime sekaligus:
+                // 1) chip progres di header/perihal
+                // 2) persentase progres di dalam alur/detail laporan dibuat.
                 setHistory(details, item.progress);
-                if (changed) replaceCurrentRow(details, row);
+                if (changed) {
+                    replaceCurrentRow(details, row);
+                } else {
+                    updateProgressInsideRow(current);
+                }
             });
         });
     }
@@ -202,7 +242,6 @@
             setText('kpiDisetujuiLaporan', data.total_disetujui);
             setText('kpiDitolakLaporan', data.total_ditolak);
             upsertRows(data.rows || {});
-            initialRenderComplete = true;
         })
         .catch(function () {})
         .finally(function () { polling = false; });
