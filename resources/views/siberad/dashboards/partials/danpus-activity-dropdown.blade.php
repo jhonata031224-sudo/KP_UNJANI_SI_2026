@@ -26,7 +26,7 @@
   .danpus-inline-progress-count{font-weight:700;opacity:.72}
 
   /* Zig-zag: 7 item per baris, lalu turun dan kembali dari arah berlawanan. */
-  .danpus-inline-progress-list{display:flex;flex-direction:column;gap:12px;overflow:visible;padding:0 2px}
+  .danpus-inline-progress-list{display:flex;flex-direction:column;gap:0;overflow:visible;padding:0 2px}
   .danpus-inline-progress-row{display:flex;align-items:center;gap:10px;width:100%;min-width:0}
   .danpus-inline-progress-row.reverse{flex-direction:row-reverse}
   .danpus-inline-progress-item{
@@ -48,15 +48,19 @@
   .danpus-inline-progress-connector{position:relative;flex:0 0 18px;height:2px;background:color-mix(in srgb,var(--p-green) 45%,var(--p-border));border-radius:999px}
   .danpus-inline-progress-connector::after{content:"";position:absolute;right:-1px;top:50%;width:5px;height:5px;border-top:1.5px solid var(--p-green);border-right:1.5px solid var(--p-green);transform:translateY(-50%) rotate(45deg)}
   .danpus-inline-progress-row.reverse .danpus-inline-progress-connector::after{left:-1px;right:auto;transform:translateY(-50%) rotate(-135deg)}
-  .danpus-inline-progress-turn{height:12px;position:relative;margin:0 4px}
-  .danpus-inline-progress-turn::after{content:"";position:absolute;top:0;width:22px;height:12px;border-bottom:2px solid color-mix(in srgb,var(--p-green) 45%,var(--p-border));border-radius:0 0 12px 12px}
-  .danpus-inline-progress-turn.left::after{left:0;border-left:2px solid color-mix(in srgb,var(--p-green) 45%,var(--p-border))}
-  .danpus-inline-progress-turn.right::after{right:0;border-right:2px solid color-mix(in srgb,var(--p-green) 45%,var(--p-border))}
-  .danpus-inline-progress-item.is-progress-added{animation:danpusProgressAdded .65s cubic-bezier(.2,.8,.2,1)}
-  .danpus-inline-progress-history.realtime-history{animation:danpusHistoryRefresh .65s ease}
-  @keyframes danpusProgressAdded{0%{transform:translateY(12px) scale(.86);opacity:0}65%{transform:translateY(-2px) scale(1.03);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
-  @keyframes danpusHistoryRefresh{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--p-accent) 20%,transparent)}100%{box-shadow:0 0 0 12px transparent}}
-  @media(prefers-reduced-motion:reduce){.danpus-inline-progress-item.is-progress-added,.danpus-inline-progress-history.realtime-history{animation:none}}
+
+  /* Penghubung antarbariѕ hanya muncul ketika baris berikutnya benar-benar ada.
+     Garis dibuat lurus dari tengah bawah kartu ujung ke tengah atas kartu ujung. */
+  .danpus-inline-progress-turn{height:14px;position:relative;margin:0;pointer-events:none}
+  .danpus-inline-progress-turn::after{content:"";position:absolute;top:0;width:2px;height:14px;background:color-mix(in srgb,var(--p-green) 45%,var(--p-border));border-radius:999px}
+  .danpus-inline-progress-turn.left::after{left:calc(100% - 9px)}
+  .danpus-inline-progress-turn.right::after{right:calc(100% - 9px)}
+
+  /* Hindari efek kuning/gelombang menyebar pada riwayat progres. */
+  .danpus-inline-progress-item.is-progress-added{animation:danpusProgressAdded .55s cubic-bezier(.2,.8,.2,1)}
+  .danpus-inline-progress-history.realtime-history{animation:none!important}
+  @keyframes danpusProgressAdded{0%{transform:translateY(10px) scale(.92);opacity:0}70%{transform:translateY(-1px) scale(1.01);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
+  @media(prefers-reduced-motion:reduce){.danpus-inline-progress-item.is-progress-added{animation:none}}
   @media(max-width:900px){.danpus-inline-progress-row{gap:6px}.danpus-inline-progress-item{min-height:68px;padding:8px 5px}.danpus-inline-progress-connector{flex-basis:10px}.danpus-inline-progress-detail{padding:4px 7px}}
   @media(max-width:640px){.danpus-inline-progress-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.danpus-inline-progress-row.reverse{direction:rtl}.danpus-inline-progress-row.reverse .danpus-inline-progress-item{direction:ltr}.danpus-inline-progress-connector{display:none}.danpus-inline-progress-turn{display:none}}
 </style>
