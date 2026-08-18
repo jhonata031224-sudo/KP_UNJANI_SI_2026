@@ -1,297 +1,250 @@
 <script>
 (function () {
-    var endpoint = '{{ route('laporan.log-aktivitas.realtime') }}';
-    var polling = false;
-    var pollTimer = null;
+    const endpoint = '{{ route('laporan.log-aktivitas.realtime') }}';
+    let busy = false;
+    let timer = null;
 
-    function setText(id, value) {
-        var el = document.getElementById(id);
+    const text = (id, value) => {
+        const el = document.getElementById(id);
         if (el) el.textContent = value;
-    }
+    };
 
-    function highlightRow(row) {
-        if (!row) return;
-        row.classList.remove('is-realtime-updated', 'is-realtime-new');
-        void row.offsetWidth;
-        row.classList.add('is-realtime-updated');
-        window.setTimeout(function () { row.classList.remove('is-realtime-updated'); }, 1800);
-    }
-
-    function uniqueProgress(values) {
-        var seen = {};
-        return (values || []).map(function (v) { return v == null ? '' : String(v); }).filter(function (v) {
-            if (v === '' || seen[v]) return false;
-            seen[v] = true;
+    const progressList = values => {
+        const seen = new Set();
+        return (values || []).map(v => String(v ?? '').trim()).filter(v => {
+            if (!v || seen.has(v)) return false;
+            seen.add(v);
             return true;
+        });
+    };
+
+    function allRows(html) {
+        const tbody = document.createElement('tbody');
+        tbody.innerHTML = html || '';
+        return [...tbody.children].filter(el => el.matches('tr[data-permintaan-id], tr[data-laporan-id]'));
+    }
+
+    function groups(html) {
+        const map = new Map();
+        allRows(html).forEach(row => {
+            const requestId = row.dataset.permintaanId;
+            const key = requestId ? `request:${requestId}` : `laporan:${row.dataset.laporanId}`;
+            if (!map.has(key)) map.set(key, []);
+            map.get(key).push(row);
+        });
+        return [...map.values()].map(rows => {
+            rows.sort((a, b) => Number(a.dataset.laporanId || 0) - Number(b.dataset.laporanId || 0));
+            return {
+                rows,
+                latest: rows[rows.length - 1],
+                requestId: rows[0].dataset.permintaanId || '',
+                values: progressList(rows.map(r => r.dataset.progres))
+            };
         });
     }
 
-    // History progres hanya ditampilkan DI DALAM section "Laporan dibuat".
-    // Nilai yang sudah tampil di DOM dipertahankan lalu digabung dengan nilai
-    // terbaru dari server. Ini penting karena tombol "Update Progres" dapat
-    // memperbarui row laporan yang sama (mis. 86% menjadi 87%), sementara
-    // DANPUS tetap harus menampilkan 86% -> 87% sebagai riwayat.
-    function makeInlineHistory(values, previousValues) {
-        var oldValues = uniqueProgress(previousValues || []);
-        var clean = uniqueProgress(oldValues.concat(values || []));
-        var oldLast = oldValues.length ? oldValues[oldValues.length - 1] : null;
-        var history = document.createElement('div');
-        history.className = 'danpus-inline-progress-history';
-        history.setAttribute('data-danpus-inline-progress-history', '1');
+    // Jangan bergantung pada data-permintaan-id di <details> karena dropdown
+    // dapat dibuat oleh renderer lain. Cari row di dalam dropdown yang sama.
+    function findDetails(requestId, laporanId, subject) {
+        const dropdowns = [...document.querySelectorAll('.danpus-report-dropdown')];
+        let found = dropdowns.find(d => requestId && d.querySelector(`tr[data-permintaan-id="${requestId}"]`));
+        if (found) return found;
+        found = dropdowns.find(d => laporanId && d.querySelector(`tr[data-laporan-id="${laporanId}"]`));
+        if (found) return found;
+        if (subject) {
+            const wanted = subject.trim();
+            found = dropdowns.find(d => {
+                const s = d.querySelector('.danpus-report-subject, summary');
+                return s && s.textContent.trim().includes(wanted);
+            });
+        }
+        return found || null;
+    }
 
-        var label = document.createElement('div');
+    function findHistory(details) {
+        return details?.querySelector('.danpus-inline-progress-history') || null;
+    }
+
+    function renderHistory(details, incomingValues) {
+        if (!details) return;
+        const existing = findHistory(details);
+        const old = existing
+            ? [...existing.querySelectorAll('[data-progress]')].map(x => x.dataset.progress)
+            : [];
+        const values = progressList(old.concat(incomingValues || []));
+        if (!values.length) return;
+
+        const history = document.createElement('div');
+        history.className = 'danpus-inline-progress-history realtime-history';
+        history.dataset.danpusInlineProgressHistory = '1';
+
+        const label = document.createElement('div');
         label.className = 'danpus-inline-progress-label';
-        var title = document.createElement('span');
-        title.textContent = 'Riwayat progres';
-        var count = document.createElement('span');
-        count.className = 'danpus-inline-progress-count';
-        count.textContent = '(' + clean.length + ')';
-        label.appendChild(title);
-        label.appendChild(count);
+        label.innerHTML = `<span>Riwayat progres</span><span class="danpus-inline-progress-count">(${values.length})</span>`;
         history.appendChild(label);
 
-        var list = document.createElement('div');
+        const list = document.createElement('div');
         list.className = 'danpus-inline-progress-list';
-        clean.forEach(function (value, index) {
-            var item = document.createElement('span');
-            item.className = 'danpus-inline-progress-item' + (index === clean.length - 1 ? ' latest' : '');
-            item.setAttribute('data-progress', value);
-            item.textContent = 'Progres · ' + value + '%';
-            if (oldLast !== null && String(value) !== String(oldLast) && index === clean.length - 1) {
-                item.classList.add('is-progress-added');
-            }
+        values.forEach((value, i) => {
+            const item = document.createElement('span');
+            item.className = 'danpus-inline-progress-item' + (i === values.length - 1 ? ' latest' : '');
+            item.dataset.progress = value;
+            item.textContent = `Progres · ${value}%`;
+            if (!old.includes(value)) item.classList.add('is-progress-added');
             list.appendChild(item);
-            if (index < clean.length - 1) {
-                var arrow = document.createElement('span');
+            if (i < values.length - 1) {
+                const arrow = document.createElement('span');
                 arrow.className = 'danpus-inline-progress-arrow';
                 arrow.textContent = '→';
                 list.appendChild(arrow);
             }
         });
         history.appendChild(list);
-        return history;
-    }
 
-    function setHistory(details, values) {
-        if (!details) return;
-        var content = details.querySelector(':scope > .danpus-report-content');
-        if (!content) return;
-        var oldHistory = content.querySelector(':scope > .danpus-inline-progress-history');
-        var oldValues = oldHistory
-            ? Array.prototype.slice.call(oldHistory.querySelectorAll('[data-progress]')).map(function (el) { return el.getAttribute('data-progress'); })
-            : [];
-        var history = makeInlineHistory(values, oldValues);
-        if (oldHistory) oldHistory.replaceWith(history);
-        else content.insertBefore(history, content.firstChild);
-    }
-
-    function updateProgressInsideRow(row) {
-        if (!row) return;
-        var progress = row.getAttribute('data-progres');
-        if (progress === null || progress === '') return;
-
-        row.querySelectorAll('[data-progres]').forEach(function (el) {
-            if (el === row) return;
-            el.setAttribute('data-progres', progress);
-            if (el.matches('.status-pill') || el.classList.contains('status-pill')) {
-                var status = row.getAttribute('data-laporan-status') || '';
-                if (status.toLowerCase().indexOf('progres') !== -1) el.textContent = 'Progres · ' + progress + '%';
-            }
-        });
-
-        var pill = row.querySelector('.status-pill');
-        if (pill) {
-            var statusText = row.getAttribute('data-laporan-status') || '';
-            if (statusText.toLowerCase().indexOf('progres') !== -1) pill.textContent = 'Progres · ' + progress + '%';
+        if (existing) existing.replaceWith(history);
+        else {
+            const content = details.querySelector('.danpus-report-content');
+            if (content) content.prepend(history);
         }
-
-        var detailButton = row.querySelector('.detail-btn');
-        if (detailButton) detailButton.setAttribute('data-progres', progress);
     }
 
-    function findCurrentDetails(section, permintaanId, laporanId) {
-        if (!section) return null;
-        if (permintaanId) {
-            var byRequest = section.querySelector('.danpus-report-dropdown[data-permintaan-id="' + permintaanId + '"]');
-            if (byRequest) return byRequest;
+    function replaceLatestRow(details, row) {
+        const oldRows = details.querySelectorAll('tr[data-laporan-id]');
+        const oldLatest = oldRows[oldRows.length - 1];
+        if (oldLatest) oldLatest.replaceWith(row);
+        else details.querySelector('.danpus-report-content')?.appendChild(row);
+        row.classList.add('is-realtime-updated');
+        setTimeout(() => row.classList.remove('is-realtime-updated'), 1800);
+    }
+
+    function updateCurrentProgress(details, row) {
+        if (!details || !row) return;
+        const progress = row.dataset.progres;
+        const pill = row.querySelector('.status-pill');
+        if (pill && String(row.dataset.laporanStatus || '').toLowerCase().includes('progres')) {
+            pill.textContent = `Progres · ${progress}%`;
         }
-        if (laporanId) {
-            var byReport = section.querySelector('.danpus-report-dropdown[data-laporan-id="' + laporanId + '"]');
-            if (byReport) return byReport;
-        }
-        return null;
+        const detail = row.querySelector('.detail-btn');
+        if (detail) detail.dataset.progres = progress;
     }
 
-    function findCurrentRow(details, permintaanId, laporanId) {
-        if (details) return details.querySelector('tr[data-laporan-id]');
-        if (!permintaanId && !laporanId) return null;
-        var selector = permintaanId ? 'tr[data-permintaan-id="' + permintaanId + '"]' : 'tr[data-laporan-id="' + laporanId + '"]';
-        return document.querySelector(selector);
-    }
-
-    function createDropdownForRow(row, progressValues) {
-        var details = document.createElement('details');
+    function createDropdown(row, values) {
+        const details = document.createElement('details');
         details.className = 'danpus-report-dropdown is-realtime-new';
-        if (row.getAttribute('data-permintaan-id')) details.dataset.permintaanId = row.getAttribute('data-permintaan-id');
-        if (row.getAttribute('data-laporan-id')) details.dataset.laporanId = row.getAttribute('data-laporan-id');
-
-        var summary = document.createElement('summary');
-        var main = document.createElement('div');
-        main.className = 'danpus-report-summary-main';
-        var chevron = document.createElement('span');
-        chevron.className = 'danpus-report-chevron';
-        var subject = document.createElement('span');
-        subject.className = 'danpus-report-subject';
-        subject.textContent = row.getAttribute('data-perihal') || row.querySelector('.subject')?.textContent.trim() || 'Laporan tanpa perihal';
-        main.appendChild(chevron);
-        main.appendChild(subject);
-        summary.appendChild(main);
-        details.appendChild(summary);
-
-        var content = document.createElement('div');
+        details.dataset.permintaanId = row.dataset.permintaanId || '';
+        details.dataset.laporanId = row.dataset.laporanId || '';
+        const summary = document.createElement('summary');
+        summary.innerHTML = `<div class="danpus-report-summary-main"><span class="danpus-report-chevron"></span><span class="danpus-report-subject"></span></div>`;
+        summary.querySelector('.danpus-report-subject').textContent = row.dataset.perihal || 'Laporan';
+        const content = document.createElement('div');
         content.className = 'danpus-report-content';
-        content.appendChild(makeInlineHistory(progressValues));
-        content.appendChild(row);
-        details.appendChild(content);
+        details.append(summary, content);
+        content.append(renderHistoryFragment(values), row);
         return details;
     }
 
-    function replaceCurrentRow(details, row) {
-        if (!details) return;
-        var oldRow = details.querySelector('tr[data-laporan-id]');
-        if (oldRow) oldRow.replaceWith(row);
-        else details.querySelector('.danpus-report-content')?.appendChild(row);
-        details.dataset.laporanId = row.getAttribute('data-laporan-id') || details.dataset.laporanId || '';
-        var subject = details.querySelector('.danpus-report-subject');
-        if (subject) subject.textContent = row.getAttribute('data-perihal') || row.querySelector('.subject')?.textContent.trim() || subject.textContent;
-        updateProgressInsideRow(row);
-        highlightRow(row);
+    function renderHistoryFragment(values) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'danpus-inline-progress-history';
+        const label = document.createElement('div');
+        label.className = 'danpus-inline-progress-label';
+        label.innerHTML = `<span>Riwayat progres</span><span class="danpus-inline-progress-count">(${values.length})</span>`;
+        wrapper.appendChild(label);
+        const list = document.createElement('div');
+        list.className = 'danpus-inline-progress-list';
+        values.forEach((v, i) => {
+            const item = document.createElement('span');
+            item.className = 'danpus-inline-progress-item' + (i === values.length - 1 ? ' latest' : '');
+            item.dataset.progress = v;
+            item.textContent = `Progres · ${v}%`;
+            list.appendChild(item);
+            if (i < values.length - 1) {
+                const arrow = document.createElement('span');
+                arrow.className = 'danpus-inline-progress-arrow';
+                arrow.textContent = '→';
+                list.appendChild(arrow);
+            }
+        });
+        wrapper.appendChild(list);
+        return wrapper;
     }
 
-    function groupRows(html) {
-        var temp = document.createElement('tbody');
-        temp.innerHTML = html || '';
-        var rows = Array.prototype.slice.call(temp.children).filter(function (el) { return el.matches('tr'); });
-        var groups = {};
-        rows.forEach(function (row) {
-            var key = row.getAttribute('data-permintaan-id') || ('laporan-' + row.getAttribute('data-laporan-id'));
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(row);
-        });
-        return Object.keys(groups).map(function (key) {
-            var group = groups[key];
-            group.sort(function (a, b) { return (Number(a.getAttribute('data-laporan-id')) || 0) - (Number(b.getAttribute('data-laporan-id')) || 0); });
-            var latest = group[group.length - 1];
-            var values = uniqueProgress(group.map(function (row) { return row.getAttribute('data-progres'); }));
-            return { key: key, latest: latest, progress: values };
-        });
+    function applyGroup(group, section) {
+        const latest = group.latest;
+        const details = findDetails(group.requestId, latest.dataset.laporanId, latest.dataset.perihal);
+        if (details) {
+            // INI titik penting: setiap polling selalu memasukkan checkpoint baru
+            // ke history yang sudah ada di Laporan Dibuat. Tidak menunggu F5.
+            renderHistory(details, group.values);
+            const current = details.querySelector('tr[data-laporan-id]');
+            if (!current || current.dataset.laporanId !== latest.dataset.laporanId || current.dataset.progres !== latest.dataset.progres || current.dataset.updated !== latest.dataset.updated) {
+                replaceLatestRow(details, latest);
+            } else {
+                updateCurrentProgress(details, current);
+            }
+            return;
+        }
+
+        // Hanya buat dropdown baru jika benar-benar belum ada perihalnya.
+        const cleanWrap = section?.querySelector('.clean-table-wrap');
+        const list = cleanWrap?.querySelector('.danpus-report-dropdown-list');
+        if (list) list.prepend(createDropdown(latest, group.values));
     }
 
-    function upsertRows(rowsBySatuan) {
-        Object.keys(rowsBySatuan || {}).forEach(function (satuanId) {
-            var section = document.getElementById('satlak-' + satuanId);
-            if (!section) return;
-            var cleanWrap = section.querySelector('.clean-table-wrap');
-            if (!cleanWrap) return;
-
-            groupRows(rowsBySatuan[satuanId]).forEach(function (item) {
-                var row = item.latest;
-                var permintaanId = row.getAttribute('data-permintaan-id');
-                var laporanId = row.getAttribute('data-laporan-id');
-                var details = findCurrentDetails(section, permintaanId, laporanId);
-
-                if (!details) {
-                    var list = cleanWrap.querySelector('.danpus-report-dropdown-list');
-                    var tbody = cleanWrap.querySelector('tbody');
-                    var newDetails = createDropdownForRow(row, item.progress);
-                    if (list) list.insertBefore(newDetails, list.firstChild);
-                    else if (tbody) {
-                        var wrapper = document.createElement('div');
-                        wrapper.className = 'danpus-report-dropdown-list';
-                        wrapper.appendChild(newDetails);
-                        tbody.closest('table')?.replaceWith(wrapper);
-                        cleanWrap.dataset.dropdownReady = '1';
-                    }
-                    updateProgressInsideRow(row);
-                    return;
-                }
-
-                var current = findCurrentRow(details, permintaanId, laporanId);
-                var oldProgress = current ? current.getAttribute('data-progres') : null;
-                var oldUpdated = current ? current.getAttribute('data-updated') : null;
-                var changed = !current || oldProgress !== row.getAttribute('data-progres') || oldUpdated !== row.getAttribute('data-updated') || current.getAttribute('data-laporan-id') !== laporanId;
-
-                // Satu perihal tetap satu dropdown. Riwayat persen hanya
-                // bertambah di dalam section "Laporan dibuat".
-                setHistory(details, item.progress);
-                if (changed) replaceCurrentRow(details, row);
-                else updateProgressInsideRow(current);
-            });
+    function upsert(rowsBySatuan) {
+        Object.entries(rowsBySatuan || {}).forEach(([satuanId, html]) => {
+            const section = document.getElementById(`satlak-${satuanId}`);
+            groups(html).forEach(group => applyGroup(group, section));
         });
     }
 
     function updateStats(stats) {
-        Object.keys(stats || {}).forEach(function (satuanId) {
-            var s = stats[satuanId];
-            if (!s) return;
-            setText('satlakTotalOverview-' + satuanId, s.total);
-            setText('satlakTotalMonitoring-' + satuanId, s.total);
-            setText('satlakDiterima-' + satuanId, s.diterima);
-            setText('satlakDitolak-' + satuanId, s.ditolak);
-            setText('satlakMenunggu-' + satuanId, s.menunggu);
+        Object.entries(stats || {}).forEach(([id, s]) => {
+            text(`satlakTotalOverview-${id}`, s.total);
+            text(`satlakTotalMonitoring-${id}`, s.total);
+            text(`satlakDiterima-${id}`, s.diterima);
+            text(`satlakDitolak-${id}`, s.ditolak);
+            text(`satlakMenunggu-${id}`, s.menunggu);
         });
     }
 
     function poll() {
-        if (polling) return;
-        polling = true;
+        if (busy) return;
+        busy = true;
         fetch(endpoint + '?since=0&realtime=1&_=' + Date.now(), {
-            method: 'GET', credentials: 'same-origin', cache: 'no-store',
-            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'Cache-Control': 'no-cache' }
+            credentials: 'same-origin', cache: 'no-store',
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'Cache-Control': 'no-cache' }
         })
-        .then(function (response) {
-            if (response.status === 401) {
-                if (window.siberadTampilkanSesiBerakhir) window.siberadTampilkanSesiBerakhir();
-                return null;
-            }
-            if (response.status === 419 || !response.ok) return null;
-            return response.json();
-        })
-        .then(function (data) {
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
             if (!data) return;
             updateStats(data.stats);
-            setText('kpiTotalLaporan', data.total_laporan);
-            setText('kpiDisetujuiLaporan', data.total_disetujui);
-            setText('kpiDitolakLaporan', data.total_ditolak);
-            upsertRows(data.rows || {});
+            text('kpiTotalLaporan', data.total_laporan);
+            text('kpiDisetujuiLaporan', data.total_disetujui);
+            text('kpiDitolakLaporan', data.total_ditolak);
+            upsert(data.rows || {});
         })
-        .catch(function () {})
-        .finally(function () { polling = false; });
+        .catch(() => {})
+        .finally(() => { busy = false; });
     }
 
-    function scheduleNextPoll() {
-        if (pollTimer) window.clearTimeout(pollTimer);
-        pollTimer = window.setTimeout(function () { poll(); scheduleNextPoll(); }, 2000);
+    function schedule() {
+        clearTimeout(timer);
+        timer = setTimeout(() => { poll(); schedule(); }, 2000);
     }
 
     function start() {
-        setTimeout(function () {
-            if (window.siberadRefreshDanpusActivityDropdown) window.siberadRefreshDanpusActivityDropdown();
-            poll();
-            scheduleNextPoll();
-        }, 120);
-        document.addEventListener('visibilitychange', function () { if (!document.hidden) { poll(); scheduleNextPoll(); } });
-        window.addEventListener('focus', function () { poll(); scheduleNextPoll(); });
+        setTimeout(() => { poll(); schedule(); }, 150);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) { poll(); schedule(); } });
+        window.addEventListener('focus', () => { poll(); schedule(); });
     }
-
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
     else start();
 })();
 </script>
 <style>
-#monitoring tr.is-realtime-updated,
-[id^="satlak-"] tr.is-realtime-updated { animation: satlakRowRealtimeUpdated 1.8s ease; }
-[id^="satlak-"] .danpus-report-dropdown.is-realtime-new { animation: satlakDropdownRealtimeNew 1.8s ease; }
-@keyframes satlakRowRealtimeUpdated { 0% { background: rgba(245, 158, 11, .22); } 100% { background: transparent; } }
-@keyframes satlakDropdownRealtimeNew { 0% { box-shadow: 0 0 0 2px rgba(59, 130, 246, .28); } 100% { box-shadow: none; } }
+[id^="satlak-"] tr.is-realtime-updated { animation: danpusRealtimeProgress 1.5s ease; }
+[id^="satlak-"] .is-progress-added { animation: danpusProgressAdded 1.5s ease; }
+@keyframes danpusRealtimeProgress { 0% { background: rgba(245,158,11,.24); } 100% { background: transparent; } }
+@keyframes danpusProgressAdded { 0% { transform: scale(1.08); opacity: .35; } 100% { transform: scale(1); opacity: 1; } }
 </style>
