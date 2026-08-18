@@ -26,12 +26,14 @@
         });
     }
 
-    // Satu-satunya tempat history progres ditampilkan adalah DI DALAM
-    // section "Laporan dibuat". Tidak ada lagi progress bar/chip di summary
-    // atau di atas section.
+    // History progres hanya ditampilkan DI DALAM section "Laporan dibuat".
+    // Nilai yang sudah tampil di DOM dipertahankan lalu digabung dengan nilai
+    // terbaru dari server. Ini penting karena tombol "Update Progres" dapat
+    // memperbarui row laporan yang sama (mis. 86% menjadi 87%), sementara
+    // DANPUS tetap harus menampilkan 86% -> 87% sebagai riwayat.
     function makeInlineHistory(values, previousValues) {
-        var clean = uniqueProgress(values);
         var oldValues = uniqueProgress(previousValues || []);
+        var clean = uniqueProgress(oldValues.concat(values || []));
         var oldLast = oldValues.length ? oldValues[oldValues.length - 1] : null;
         var history = document.createElement('div');
         history.className = 'danpus-inline-progress-history';
