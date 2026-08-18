@@ -12,7 +12,6 @@
   .danpus-report-content .danpus-activity-log{margin-top:12px}
   .danpus-report-content .danpus-activity-project{display:none}
 
-  /* Progress hanya berada di dalam Laporan Dibuat. Tidak ada scrollbar horizontal. */
   .danpus-report-content .danpus-inline-progress-history{
     position:relative;margin:14px 0 4px;padding:14px 14px 16px;
     border:1px solid color-mix(in srgb,var(--p-accent) 18%,var(--p-border));
@@ -25,9 +24,8 @@
   .danpus-inline-progress-label span:first-child::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--p-green);box-shadow:0 0 0 4px color-mix(in srgb,var(--p-green) 12%,transparent)}
   .danpus-inline-progress-count{font-weight:700;opacity:.72}
 
-  /* Zig-zag: 7 item per baris, lalu turun dan kembali dari arah berlawanan. */
   .danpus-inline-progress-list{display:flex;flex-direction:column;gap:0;overflow:visible;padding:0 2px}
-  .danpus-inline-progress-row{display:flex;align-items:center;gap:10px;width:100%;min-width:0}
+  .danpus-inline-progress-row{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-width:0}
   .danpus-inline-progress-row.reverse{flex-direction:row-reverse}
   .danpus-inline-progress-item{
     position:relative;z-index:2;box-sizing:border-box;flex:1 1 0;min-width:0;min-height:74px;
@@ -49,16 +47,15 @@
   .danpus-inline-progress-connector::after{content:"";position:absolute;right:-1px;top:50%;width:5px;height:5px;border-top:1.5px solid var(--p-green);border-right:1.5px solid var(--p-green);transform:translateY(-50%) rotate(45deg)}
   .danpus-inline-progress-row.reverse .danpus-inline-progress-connector::after{left:-1px;right:auto;transform:translateY(-50%) rotate(-135deg)}
 
-  /* Penghubung antarbariѕ hanya muncul ketika baris berikutnya benar-benar ada.
-     Garis dibuat lurus dari tengah bawah kartu ujung ke tengah atas kartu ujung. */
-  .danpus-inline-progress-turn{height:14px;position:relative;margin:0;pointer-events:none}
-  .danpus-inline-progress-turn::after{content:"";position:absolute;top:0;width:2px;height:14px;background:color-mix(in srgb,var(--p-green) 45%,var(--p-border));border-radius:999px}
-  .danpus-inline-progress-turn.left::after{left:calc(100% - 9px)}
-  .danpus-inline-progress-turn.right::after{right:calc(100% - 9px)}
+  /* Hanya ujung baris yang memiliki baris lanjutan yang mendapat garis turun.
+     Garis dimulai tepat dari tengah bawah card ujung dan berhenti di atas card berikutnya. */
+  .danpus-inline-progress-turn{position:absolute;top:100%;width:2px;height:14px;margin:0;padding:0;background:color-mix(in srgb,var(--p-green) 45%,var(--p-border));border:0;border-radius:999px;pointer-events:none;z-index:1}
+  .danpus-inline-progress-turn.left{left:50%;transform:translateX(-50%)}
+  .danpus-inline-progress-turn.right{right:50%;transform:translateX(50%)}
 
-  /* Hindari efek kuning/gelombang menyebar pada riwayat progres. */
+  /* Tidak ada animasi kuning/gelombang pada container riwayat. */
   .danpus-inline-progress-item.is-progress-added{animation:danpusProgressAdded .55s cubic-bezier(.2,.8,.2,1)}
-  .danpus-inline-progress-history.realtime-history{animation:none!important}
+  .danpus-inline-progress-history.realtime-history{animation:none!important;box-shadow:none!important}
   @keyframes danpusProgressAdded{0%{transform:translateY(10px) scale(.92);opacity:0}70%{transform:translateY(-1px) scale(1.01);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
   @media(prefers-reduced-motion:reduce){.danpus-inline-progress-item.is-progress-added{animation:none}}
   @media(max-width:900px){.danpus-inline-progress-row{gap:6px}.danpus-inline-progress-item{min-height:68px;padding:8px 5px}.danpus-inline-progress-connector{flex-basis:10px}.danpus-inline-progress-detail{padding:4px 7px}}
@@ -71,61 +68,66 @@
   function addProgressDetails(history, logs){
     var items=Array.from(history.querySelectorAll('.danpus-inline-progress-item'));
     if(!items.length)return;
-    items.forEach(function(item,index){
+    items.forEach(function(item){
       var value=item.dataset.progres || item.getAttribute('data-progres') || '';
-      if(!value){
-        var text=item.textContent.match(/(\d{1,3})\s*%/); if(text)value=text[1];
-      }
+      if(!value){var text=item.textContent.match(/(\d{1,3})\s*%/);if(text)value=text[1];}
       var source=null;
-      if(logs&&logs.length){
-        source=sortedLogs(logs).find(function(log){return String(log.dataset.progres||'')===String(value)}) || null;
-      }
+      if(logs&&logs.length){source=sortedLogs(logs).find(function(log){return String(log.dataset.progres||'')===String(value)})||null;}
       item.dataset.progres=value;
-      if(source){
-        item.dataset.laporanId=source.dataset.laporanId||'';
-        item.dataset.permintaanId=source.dataset.permintaanId||'';
-      }
+      if(source){item.dataset.laporanId=source.dataset.laporanId||'';item.dataset.permintaanId=source.dataset.permintaanId||'';}
       if(item.querySelector('.danpus-inline-progress-detail'))return;
       var btn=document.createElement('button');btn.type='button';btn.className='danpus-inline-progress-detail';btn.textContent='Detail';
       btn.addEventListener('click',function(e){
         e.preventDefault();e.stopPropagation();
         var targetId=item.dataset.laporanId||'';
         var candidates=Array.from(document.querySelectorAll('.danpus-report-content .danpus-activity-log[data-laporan-id], tr[data-laporan-id]'));
-        var target=candidates.find(function(log){return String(log.dataset.laporanId||'')===String(targetId)}) || source;
+        var target=candidates.find(function(log){return String(log.dataset.laporanId||'')===String(targetId)})||source;
         var detail=target&&target.querySelector('.detail-btn');
-        if(detail&&typeof window.openReportDetail==='function'){
-          window.openReportDetail(detail);
-          return;
-        }
+        if(detail&&typeof window.openReportDetail==='function'){window.openReportDetail(detail);return;}
         if(detail)detail.click();
       });
       item.appendChild(btn);
     });
   }
-  function arrangeProgressHistory(history, logs){
-    if(!history||history.dataset.layoutReady==='1'){if(history)addProgressDetails(history,logs);return;}
+  function arrangeProgressHistory(history,logs){
+    if(!history)return;
     var original=Array.from(history.querySelectorAll('.danpus-inline-progress-item'));
     if(!original.length)return;
     var list=history.querySelector('.danpus-inline-progress-list');
     if(!list)return;
+    var previousLayout=history.dataset.layoutReady==='1';
     list.innerHTML='';
     original.forEach(function(item){
       item.classList.remove('latest');
       item.querySelectorAll('.danpus-inline-progress-detail').forEach(function(b){b.remove()});
     });
+    var rows=[];
     original.forEach(function(item,index){
       var rowIndex=Math.floor(index/7),position=index%7;
-      if(position===0){
-        if(rowIndex>0){var turn=document.createElement('div');turn.className='danpus-inline-progress-turn '+(rowIndex%2===0?'left':'right');list.appendChild(turn)}
-        var row=document.createElement('div');row.className='danpus-inline-progress-row'+(rowIndex%2?' reverse':'');row.dataset.progressRow=rowIndex;list.appendChild(row);
+      if(!rows[rowIndex]){
+        var row=document.createElement('div');
+        row.className='danpus-inline-progress-row'+(rowIndex%2?' reverse':'');
+        row.dataset.progressRow=rowIndex;
+        rows[rowIndex]=row;
+        list.appendChild(row);
       }
-      var row=list.querySelector('[data-progress-row="'+rowIndex+'"]');
-      if(position>0){var connector=document.createElement('span');connector.className='danpus-inline-progress-connector';row.appendChild(connector)}
+      var row=rows[rowIndex];
+      if(position>0){var connector=document.createElement('span');connector.className='danpus-inline-progress-connector';row.appendChild(connector);}
       row.appendChild(item);
+    });
+    rows.forEach(function(row,rowIndex){
+      if(rowIndex>=rows.length-1)return;
+      var edgeItems=Array.from(row.querySelectorAll('.danpus-inline-progress-item'));
+      if(!edgeItems.length)return;
+      var edgeItem=rowIndex%2===0?edgeItems[edgeItems.length-1]:edgeItems[0];
+      var turn=document.createElement('span');
+      turn.className='danpus-inline-progress-turn '+(rowIndex%2===0?'left':'right');
+      edgeItem.appendChild(turn);
     });
     var last=original[original.length-1];if(last)last.classList.add('latest');
     history.dataset.layoutReady='1';
     addProgressDetails(history,logs);
+    if(previousLayout)history.classList.remove('realtime-history');
   }
   function enhanceHistories(root){
     (root||document).querySelectorAll('.danpus-inline-progress-history').forEach(function(history){
