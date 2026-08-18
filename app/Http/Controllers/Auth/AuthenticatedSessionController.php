@@ -50,32 +50,19 @@ class AuthenticatedSessionController extends Controller
         $user = User::where('username', $credentials['username'])->first();
 
         if (config('session.driver') === 'database') {
-            $currentSessionId = $request->session()->getId();
-
-            // Session database yang sudah tidak aktif jangan sampai mengunci
-            // akun hanya karena browser sebelumnya ditutup/crash tanpa logout.
-            // 10 menit cukup untuk membedakan session aktif dengan session basi,
-            // sementara request halaman/AJAX yang berjalan terus memperbarui
-            // last_activity.
-            $batasSessionAktif = now()->subMinutes(10)->timestamp;
-
+            /*
+             * Jangan blokir login karena session lama/orphan masih tersimpan.
+             * Ini terutama terjadi ketika browser ditutup paksa, komputer mati,
+             * deployment/restart terjadi, atau logout sebelumnya tidak sempat
+             * menyelesaikan request.
+             *
+             * Setelah username + password benar, login baru mengambil alih akun.
+             * Session lain milik user dihapus sehingga tidak ada lagi kondisi
+             * palsu "Akun sedang digunakan di perangkat lain".
+             */
             DB::table('sessions')
                 ->where('user_id', $user->id)
-                ->where('id', '!=', $currentSessionId)
-                ->where('last_activity', '<', $batasSessionAktif)
                 ->delete();
-
-            $sesiMasihAktif = DB::table('sessions')
-                ->where('user_id', $user->id)
-                ->where('id', '!=', $currentSessionId)
-                ->where('last_activity', '>=', $batasSessionAktif)
-                ->exists();
-
-            if ($sesiMasihAktif) {
-                throw ValidationException::withMessages([
-                    'username' => 'Akun sedang digunakan di perangkat lain.',
-                ]);
-            }
         }
 
         Auth::attempt([
