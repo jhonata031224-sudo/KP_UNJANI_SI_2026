@@ -17,12 +17,6 @@
             tanggal: row.querySelector('.detail-btn')?.dataset.tanggal || ''
         };
     }
-    // Satu perihal hanya menampilkan SATU checkpoint untuk setiap nilai
-    // progres. Jika backend/realtime mengirim dua checkpoint dengan persen
-    // yang sama (contoh 100% lama + 100% terbaru), yang dipakai adalah
-    // checkpoint dengan ID laporan paling baru. Ini mencegah satu progres
-    // tampil dua kali di Riwayat progres tanpa menghilangkan checkpoint
-    // dengan persentase berbeda.
     function dedupeProgressEntries(entries) {
         const byProgress = new Map();
         (entries || []).forEach(entry => {
@@ -30,9 +24,7 @@
             const progress = String(entry.progres ?? '').trim();
             const key = progress === '' ? `laporan:${entry.laporanId}` : `progres:${progress}`;
             const current = byProgress.get(key);
-            if (!current || Number(entry.laporanId) > Number(current.laporanId)) {
-                byProgress.set(key, entry);
-            }
+            if (!current || Number(entry.laporanId) > Number(current.laporanId)) byProgress.set(key, entry);
         });
         return [...byProgress.values()].sort((a, b) => Number(a.laporanId) - Number(b.laporanId));
     }
@@ -76,11 +68,25 @@
         return history ? dedupeProgressEntries([...history.querySelectorAll('[data-laporan-id]')].map(el=>({laporanId:el.dataset.laporanId,progres:el.dataset.progres,tanggal:el.dataset.tanggal||''}))) : [];
     }
     function openProgressDetail(details, laporanId) {
-        if (!details) return;
-        const nodes = [...details.querySelectorAll('.danpus-progress-node, .danpus-snake-progress-item')];
-        const node = nodes.reverse().find(n => n.dataset.laporanId && n.dataset.laporanId===String(laporanId));
-        const button = node?.querySelector('.detail-btn, .danpus-snake-detail');
-        if (button) button.click();
+        if (!details || !laporanId) return;
+        const id = String(laporanId);
+        // Jangan mencari tombol Detail di card riwayat itu sendiri karena akan
+        // memicu click handler yang sama berulang-ulang. Cari tombol Detail
+        // asli pada baris laporan sumber yang memiliki ID checkpoint tersebut.
+        const rows = [...details.querySelectorAll('tr[data-laporan-id]')];
+        const row = rows.reverse().find(r => String(r.dataset.laporanId || '') === id);
+        const button = row?.querySelector('.detail-btn') || null;
+        if (button) {
+            button.click();
+            return;
+        }
+        // Fallback untuk markup detail lama yang tidak membungkus tombol di TR.
+        const candidates = [...details.querySelectorAll('[data-laporan-id]')]
+            .filter(el => !el.closest('.danpus-snake-progress-item') && String(el.dataset.laporanId || '') === id);
+        for (const candidate of candidates) {
+            const fallback = candidate.querySelector('.detail-btn');
+            if (fallback) { fallback.click(); return; }
+        }
     }
     function createProgressItem(entry, latestEntry, oldIds, details) {
         const item=document.createElement('div');
@@ -112,8 +118,6 @@
         const old=readExistingHistory(card);
         const merged=new Map();
         old.concat(incomingEntries||[]).forEach(e=>{ if(e.laporanId) merged.set(e.laporanId,e); });
-        // Dedupe juga setelah merge. Ini penting saat endpoint realtime
-        // mengirim ulang checkpoint lama bersamaan dengan checkpoint baru.
         const entries=dedupeProgressEntries([...merged.values()]);
         if(!entries.length) return;
         const oldIds=new Set(old.map(e=>e.laporanId)); const latestEntry=entries[entries.length-1];
@@ -167,7 +171,8 @@
 .danpus-snake-detail{display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:28px;padding:0 11px;border:1px solid var(--p-border);border-radius:9px;background:var(--p-surface);color:var(--p-text);font:700 11px/1 var(--font-sans,system-ui,sans-serif);cursor:pointer;transition:background .18s ease,border-color .18s ease,transform .18s ease}.danpus-snake-detail:hover{background:var(--p-surface-2);border-color:var(--p-accent);transform:translateY(-1px)}
 .danpus-snake-turn{height:22px;width:22px;box-sizing:border-box;z-index:1;border-bottom:2px dotted color-mix(in srgb,var(--p-green) 45%,var(--p-border));margin-top:-2px;margin-bottom:-2px}.danpus-snake-turn.turn-right{align-self:flex-end;border-right:2px dotted color-mix(in srgb,var(--p-green) 45%,var(--p-border));border-radius:0 0 11px 0}.danpus-snake-turn.turn-left{align-self:flex-start;border-left:2px dotted color-mix(in srgb,var(--p-green) 45%,var(--p-border));border-radius:0 0 0 11px}
 .danpus-snake-progress-item.is-progress-added{opacity:0;transform:translateY(13px) scale(.78)}.danpus-snake-progress-item.is-progress-added.is-progress-visible{animation:danpusSnakeAdd .65s cubic-bezier(.2,.85,.2,1) forwards}.danpus-inline-progress-history.realtime-history{animation:danpusHistoryFlash .65s ease}
-@keyframes danpusSnakeAdd{0%{opacity:0;transform:translateY(13px) scale(.78);filter:blur(2px)}55%{opacity:1;transform:translateY(-2px) scale(1.04);filter:blur(0)}100%{opacity:1;transform:translateY(0) scale(1)}}@keyframes danpusHistoryFlash{0%{box-shadow:0 0 0 0 rgba(59,130,246,.16)}100%{box-shadow:0 0 0 14px transparent}}
+@keyframes danpusSnakeAdd{0%{opacity:0;transform:translateY(13px) scale(.78);filter:blur(2px)}55%{opacity:1;transform:translateY(-2px) scale(1.04);filter:blur(0)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes danpusHistoryFlash{0%{box-shadow:0 0 0 0 rgba(59,130,246,.16)}100%{box-shadow:0 0 0 14px transparent}}
 @media(max-width:1000px){.danpus-snake-row{grid-template-columns:repeat(5,minmax(0,1fr))}}@media(max-width:700px){.danpus-snake-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.danpus-snake-progress-item{min-height:94px;padding:10px 5px;border-radius:12px}}@media(max-width:430px){.danpus-snake-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){.danpus-snake-progress-item.is-progress-added.is-progress-visible,.danpus-inline-progress-history.realtime-history{animation:none!important}}
 </style>
