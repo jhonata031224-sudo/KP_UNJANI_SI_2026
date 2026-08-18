@@ -149,7 +149,7 @@
       searchPlaceholder:'Cari perihal atau satuan tujuan...',
       emptyText:'Tidak ada permintaan laporan yang sesuai dengan pencarian/filter.',
       filters:[
-        {label:'Filter status',attr:'status',options:[{value:'all',label:'Semua Status'},{value:'Sedang diproses',label:'Sedang diproses'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'}]}
+        {label:'Filter status',attr:'status',options:[{value:'all',label:'Semua Status'},{value:'Sedang diproses',label:'Sedang diproses'},{value:'Menunggu',label:'Menunggu'},{value:'Revisi',label:'Revisi'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'}]}
       ],
       sortable:true
     });

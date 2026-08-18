@@ -10,7 +10,7 @@
         @if($permintaan->instruksi)<div class="deadline-sender-instruction">{{ $permintaan->instruksi }}</div>@endif
     </div>
     <div class="deadline-sender-side">
-        <span class="deadline-pill {{ $statusTampilan === 'Terlambat' ? 'bad' : ($statusTampilan === 'Menunggu pemeriksaan' ? 'blue' : ($statusTampilan === 'Selesai' ? 'ok' : 'wait')) }}">{{ $statusTampilan }}</span>
+        <span class="deadline-pill {{ $statusTampilan === 'Terlambat' ? 'bad' : ($statusTampilan === 'Revisi' ? 'revisi' : ($statusTampilan === 'Menunggu pemeriksaan' ? 'blue' : ($statusTampilan === 'Selesai' ? 'ok' : 'wait'))) }}">{{ $statusTampilan }}</span>
         <span class="deadline-progress-badge">{{ $permintaan->progres }}%</span>
         @if(!$permintaan->laporan_id)
             <div class="deadline-actions">

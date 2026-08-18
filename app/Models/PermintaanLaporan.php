@@ -103,8 +103,42 @@ class PermintaanLaporan extends Model
         };
     }
 
+    /**
+     * Laporan TERAKHIR yang pernah dikirim untuk permintaan ini (progress-log
+     * maupun final) -- dipakai buat deteksi "sedang direvisi" di bawah,
+     * karena status Revisi cuma nempel di baris Laporan-nya, bukan di
+     * PermintaanLaporan (yang balik ke STATUS_DIKERJAKAN biasa).
+     */
+    public function laporanTerakhir(): ?Laporan
+    {
+        return $this->laporans->sortByDesc('id')->first();
+    }
+
+    /**
+     * Sedang dikerjakan KARENA baru dibalikin Pimpinan buat direvisi
+     * (beda dari "Sedang dikerjakan" biasa yang belum pernah dikirim sama
+     * sekali) -- dipakai buat nyeragamin tampilan status/aksi di semua
+     * role, bukan cuma di dashboard Pimpinan.
+     */
+    public function isSedangRevisi(): bool
+    {
+        $terakhir = $this->laporanTerakhir();
+
+        return $this->status === self::STATUS_DIKERJAKAN
+            && $terakhir
+            && str_contains(strtolower($terakhir->status), 'revisi');
+    }
+
     public function statusTampilan(): string
     {
-        return $this->isTerlambat() ? 'Terlambat' : $this->status;
+        if ($this->isTerlambat()) {
+            return 'Terlambat';
+        }
+
+        if ($this->isSedangRevisi()) {
+            return 'Revisi';
+        }
+
+        return $this->status;
     }
 }

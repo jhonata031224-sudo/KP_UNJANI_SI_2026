@@ -37,6 +37,20 @@
   .danpus-activity-state::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
   .danpus-activity-item.is-done .danpus-activity-state,.danpus-activity-item.is-approved .danpus-activity-state{color:var(--p-green);background:color-mix(in srgb,var(--p-green) 10%,transparent);border-color:color-mix(in srgb,var(--p-green) 28%,transparent)}
   .danpus-activity-item.is-current .danpus-activity-state{color:var(--p-orange);background:var(--p-orange-bg);border-color:var(--p-orange-border)}
+  /* Checkpoint yang lagi nunggu satuan kirim ulang setelah di-Revisi --
+     gold, sama persis kayak status-pill/tombol Revisi di tab Permintaan
+     Laporan (--gold-solid), BUKAN oranye "Sedang diproses" biasa. */
+  .danpus-activity-item.is-revisi .danpus-activity-dot{border-color:var(--gold-solid);box-shadow:0 0 0 4px rgba(217,146,11,.14)}
+  .danpus-activity-item.is-revisi .danpus-activity-dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(217,146,11,.14);border-top-color:var(--gold-solid);border-right-color:var(--gold-solid);animation:danpusDotSpin .8s linear infinite}
+  .danpus-activity-item.is-revisi .danpus-activity-card{border-color:color-mix(in srgb,var(--gold-solid) 40%,var(--p-border));box-shadow:0 4px 14px -6px color-mix(in srgb,var(--gold-solid) 30%,transparent)}
+  .danpus-activity-item.is-revisi .danpus-activity-state{color:var(--gold-solid);background:rgba(217,146,11,.14);border-color:rgba(217,146,11,.4)}
+  /* Checkpoint yang lagi nunggu diperiksa Pimpinan -- biru, sama persis
+     kayak pill "Menunggu pemeriksaan" (.deadline-pill.blue) di dashboard
+     satuan, BUKAN oranye "Sedang diproses" biasa. */
+  .danpus-activity-item.is-menunggu .danpus-activity-dot{border-color:#2476ad;box-shadow:0 0 0 4px rgba(52,152,219,.1)}
+  .danpus-activity-item.is-menunggu .danpus-activity-dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(52,152,219,.1);border-top-color:#2476ad;border-right-color:#2476ad;animation:danpusDotSpin .8s linear infinite}
+  .danpus-activity-item.is-menunggu .danpus-activity-card{border-color:color-mix(in srgb,#2476ad 40%,var(--p-border));box-shadow:0 4px 14px -6px color-mix(in srgb,#2476ad 30%,transparent)}
+  .danpus-activity-item.is-menunggu .danpus-activity-state{color:#2476ad;background:rgba(52,152,219,.1);border-color:rgba(52,152,219,.25)}
   .danpus-activity-item.is-rejected .danpus-activity-state{color:var(--p-red);background:color-mix(in srgb,var(--p-red) 10%,transparent);border-color:color-mix(in srgb,var(--p-red) 28%,transparent)}
   /* Riwayat progres di tahap "Laporan Dibuat" -- percabangan visual
      (bukan dropdown collapse/expand): tiap entry progres jadi satu titik
@@ -84,8 +98,10 @@
   function getStatus(cells){
     var text=Array.from(cells).map(function(c){return c.textContent.trim().toLowerCase()}).join(' ');
     if(text.includes('progres')) return 'progres';
+    if(text.includes('revisi')) return 'revisi';
     if(text.includes('ditolak')) return 'ditolak';
     if(text.includes('diterima')||text.includes('disetujui')||text.includes('selesai')) return 'selesai';
+    if(text.includes('menunggu')) return 'menunggu';
     if(text.includes('ditinjau')||text.includes('proses')||text.includes('diproses')) return 'ditinjau';
     return 'dikirim';
   }
@@ -111,7 +127,11 @@
       var progres=row.dataset.progres||'0';
       var date=row.dataset.updated||getCellText(cells,4)||getCellText(cells,3)||'-';
       var node=document.createElement('div');node.className='danpus-progress-node';
-      node.classList.add(i===ordered.length-1?'is-current':'is-done');
+      // 100% = kontribusi satuan udah kelar (submit-nya selesai, tinggal
+      // nunggu keputusan Pimpinan) -- jadi SELALU ijo/done, biarpun dia
+      // node paling kanan/terbaru. "is-current" (oranye) cuma buat
+      // checkpoint yang beneran masih di bawah 100% (masih aktif dikerjain).
+      node.classList.add((i===ordered.length-1&&progres!=='100')?'is-current':'is-done');
       var dot=document.createElement('span');dot.className='danpus-progress-node-dot';
       var info=document.createElement('div');info.className='danpus-progress-node-info';
       var pct=document.createElement('span');pct.className='danpus-progress-node-percent';pct.textContent=progres+'%';
@@ -140,7 +160,6 @@
     var hasPermintaan=!!permintaanCreated;
 
     var finalRows=rows.filter(function(r){return (r.dataset.progres||'100')==='100'});
-    var progressRows=rows.filter(function(r){return (r.dataset.progres||'100')!=='100'}).concat(finalRows.slice(1));
     var finalRow=finalRows[0]||null;
     var finalCells=finalRow?finalRow.querySelectorAll('td'):null;
     var finalStatus=finalRow?getStatus(finalCells):null;
@@ -166,23 +185,49 @@
     // diproses" jadi bulat merah+silang X "Terlambat" (cuma checkpoint
     // yang aktif SEKARANG, checkpoint sebelum/sesudahnya tetap normal).
     var isTerlambat=!isDibatalkan&&!decided&&rows[0].dataset.permintaanTerlambat==='1';
+    // Checkpoint 100% yang baru DIBALIKIN Revisi (belum dikirim ulang sama
+    // satuan) sengaja TETAP nempel jadi node terakhir di percabangan
+    // "Laporan Dibuat" -- tapi begitu satuan udah kirim ulang (statusnya
+    // balik "Menunggu", nunggu diperiksa Pimpinan lagi), itu laporan BARU
+    // dianggap benar-benar "terkirim", jadi lanjut ke kartu "Laporan
+    // Terkirim" sendiri (BUKAN nempel lagi di Laporan Dibuat).
+    var isPendingRevisi=finalRow&&!decided&&finalStatus==='revisi';
+    // Checkpoint 100% yang udah DIGANTIKAN oleh kiriman ulang yang lebih
+    // baru (baris lama status Revisi, tapi finalRow sekarang nunjuk ke
+    // baris LAIN yang lebih baru) dianggap "sudah kepakai"/usang -- gak
+    // usah nongol lagi di riwayat progres, biar gak numpuk 2x checkpoint
+    // 100% (yang lama & yang baru) padahal yang lama udah gak relevan.
+    // Filter LANGSUNG dari `rows` (bukan filter-lalu-concat dua sub-array
+    // terpisah) supaya urutan terbaru-dulu aslinya tetap terjaga -- kalau
+    // digabung manual, dua sub-array yang sama-sama "terbaru dulu" jadi
+    // nyampur dan checkpoint 100% malah nongol di kiri (paling lama)
+    // alih-alih di kanan (checkpoint aktif sekarang).
+    // Checkpoint 100% (siapapun statusnya -- Menunggu/Revisi/udah
+    // diputuskan) SELALU tetap jadi node terakhir di percabangan "Laporan
+    // Dibuat", termasuk tombol Detail-nya (lewat penempatan otomatis per
+    // node di buildProgressBranch). "Laporan Terkirim"/"Laporan Selesai"
+    // di bawah cuma status doang, gak pernah pegang tombol Detail lagi --
+    // biar konsisten satu tempat aja sepanjang siklus hidup laporan.
+    var progressRows=rows.filter(function(r){
+      if((r.dataset.progres||'100')!=='100') return true;
+      return r===finalRow;
+    });
 
     var stages=hasPermintaan?[
       {key:'permintaan_dikirim',title:'Permintaan Terkirim',desc:'Danpus/Pimpinan mengirimkan permintaan laporan kepada satuan.',date:permintaanCreated},
       {key:'permintaan_ditinjau',title:'Permintaan Ditinjau',desc:'Satuan telah melihat dan menindaklanjuti permintaan tersebut.',date:permintaanDitinjau||laporanDate},
       {key:'laporan_dibuat',title:'Laporan Dibuat',desc:'Satuan menyusun laporan, termasuk update progres berkala sebelum laporan final dikirim.',date:laporanDate},
-      {key:'laporan_dikirim',title:'Laporan Terkirim',desc:'Laporan final dikirim oleh satuan untuk diperiksa Pimpinan/Danpus.',date:finalRow?laporanDate:''},
+      {key:'laporan_dikirim',title:'Laporan Terkirim',desc:'Laporan final dikirim oleh satuan untuk diperiksa Pimpinan/Danpus.',date:(finalRow&&!isPendingRevisi)?laporanDate:''},
       {key:'laporan_selesai',title:'Laporan Selesai',desc:'Laporan telah mendapatkan hasil akhir (disetujui/ditolak).',date:decided?laporanDate:''}
     ]:[
       {key:'laporan_dibuat',title:'Laporan Dibuat',desc:'Satuan menyusun laporan, termasuk update progres berkala sebelum laporan final dikirim.',date:laporanDate},
-      {key:'laporan_dikirim',title:'Laporan Terkirim',desc:'Laporan final dikirim oleh satuan untuk diperiksa Pimpinan/Danpus.',date:finalRow?laporanDate:''},
+      {key:'laporan_dikirim',title:'Laporan Terkirim',desc:'Laporan final dikirim oleh satuan untuk diperiksa Pimpinan/Danpus.',date:(finalRow&&!isPendingRevisi)?laporanDate:''},
       {key:'laporan_selesai',title:'Laporan Selesai',desc:'Laporan telah mendapatkan hasil akhir (disetujui/ditolak).',date:decided?laporanDate:''}
     ];
 
     var finalIndex=stages.length-1;
     var dibuatIndex=finalIndex-2;
-    var terkirimIndex=finalIndex-1;
-    var progress=!finalRow?dibuatIndex:(decided?stages.length:terkirimIndex);
+    var progress=!finalRow?dibuatIndex:(decided?stages.length:(isPendingRevisi?dibuatIndex:dibuatIndex+1));
     var log=document.createElement('div');log.className='danpus-activity-log';
     stages.forEach(function(stage,index){
       var item=document.createElement('article');item.className='danpus-activity-item';
@@ -191,8 +236,12 @@
       var isApprovedFinal=isFinal&&decided&&finalStatus==='selesai';
       var isCancelledStage=isDibatalkan&&index>=progress;
       var isLateStage=isTerlambat&&index===progress;
+      var isRevisiStage=index===progress&&isPendingRevisi&&!isCancelledStage&&!isLateStage;
+      var isMenungguStage=index===progress&&finalRow&&!decided&&!isPendingRevisi&&!isCancelledStage&&!isLateStage;
       if(index<progress&&!isFinal)item.classList.add('is-done');
       if(index===progress&&!isCancelledStage&&!isLateStage)item.classList.add('is-current');
+      if(isRevisiStage)item.classList.add('is-revisi');
+      if(isMenungguStage)item.classList.add('is-menunggu');
       if(isRejectedFinal||isCancelledStage||isLateStage)item.classList.add('is-rejected');
       if(isApprovedFinal)item.classList.add('is-approved');
       var dot=document.createElement('div');dot.className='danpus-activity-dot';
@@ -217,10 +266,6 @@
       card.appendChild(head);
       var desc=document.createElement('div');desc.className='danpus-activity-description';desc.textContent=stage.desc;card.appendChild(desc);
       if(stage.key==='laporan_dibuat'&&progressRows.length) card.appendChild(buildProgressBranch(progressRows));
-      if(finalRow&&stage.key===(decided?'laporan_selesai':'laporan_dikirim')){
-        var finalBtn=finalRow.querySelector('.detail-btn');
-        if(finalBtn){var wrap=document.createElement('div');wrap.className='danpus-progress-detail-wrap';wrap.appendChild(finalBtn);card.appendChild(wrap)}
-      }
       var state=document.createElement('span');state.className='danpus-activity-state';
       if(isCancelledStage){
         state.textContent='Dibatalkan';
@@ -229,8 +274,9 @@
       }else if(isFinal){
         if(decided&&finalStatus==='selesai') state.textContent='Selesai · Disetujui';
         else if(decided&&finalStatus==='ditolak') state.textContent='Selesai · Ditolak';
-        else if(finalRow) state.textContent='Sedang diproses';
         else state.textContent='Menunggu';
+      }else if(index===progress&&finalRow&&!decided){
+        state.textContent=isPendingRevisi?'Revisi':'Menunggu';
       }else if(index<progress) state.textContent='Selesai';
       else if(index===progress) state.textContent='Sedang diproses';
       else state.textContent='Menunggu';
