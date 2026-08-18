@@ -12,94 +12,159 @@
   .danpus-report-content .danpus-activity-log{margin-top:12px}
   .danpus-report-content .danpus-activity-project{display:none}
 
-  /* Riwayat progres hanya ditampilkan di dalam Laporan Dibuat. */
+  /* Progress hanya berada di dalam Laporan Dibuat. Tidak ada scrollbar horizontal. */
   .danpus-report-content .danpus-inline-progress-history{
-    position:relative;
-    margin:14px 0 4px;
-    padding:14px 14px 15px;
+    position:relative;margin:14px 0 4px;padding:14px 14px 16px;
     border:1px solid color-mix(in srgb,var(--p-accent) 18%,var(--p-border));
     border-radius:14px;
-    background:linear-gradient(135deg,color-mix(in srgb,var(--p-surface) 96%,var(--p-accent)),var(--p-surface-2));
-    overflow:hidden;
+    background:linear-gradient(135deg,color-mix(in srgb,var(--p-surface) 97%,var(--p-accent)),var(--p-surface-2));
+    overflow:visible;
   }
-  .danpus-report-content .danpus-inline-progress-history::before{
-    content:"";
-    position:absolute;
-    left:-30%;
-    top:0;
-    width:30%;
-    height:2px;
-    background:linear-gradient(90deg,transparent,var(--p-accent),transparent);
-    opacity:.75;
-    animation:danpusProgressFlow 3.2s linear infinite;
-  }
-  .danpus-inline-progress-label{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px;font-size:11px;font-weight:800;color:var(--p-muted);letter-spacing:.02em}
+  .danpus-inline-progress-label{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;font-size:11px;font-weight:800;color:var(--p-muted);letter-spacing:.02em}
   .danpus-inline-progress-label span:first-child{display:flex;align-items:center;gap:7px}
-  .danpus-inline-progress-label span:first-child::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--p-green);box-shadow:0 0 0 4px color-mix(in srgb,var(--p-green) 12%,transparent);animation:danpusLivePulse 1.8s ease-in-out infinite}
+  .danpus-inline-progress-label span:first-child::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--p-green);box-shadow:0 0 0 4px color-mix(in srgb,var(--p-green) 12%,transparent)}
   .danpus-inline-progress-count{font-weight:700;opacity:.72}
-  .danpus-inline-progress-list{display:flex;align-items:center;gap:0;overflow-x:auto;padding:4px 2px 6px;scrollbar-width:thin}
-  .danpus-inline-progress-item{position:relative;z-index:2;display:inline-flex;align-items:center;justify-content:center;min-width:58px;padding:7px 11px;border-radius:999px;font-size:11px;font-weight:800;border:1px solid color-mix(in srgb,var(--p-muted) 18%,var(--p-border));background:var(--p-surface);color:var(--p-text);white-space:nowrap;box-shadow:0 2px 8px rgba(15,23,42,.05);transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
-  .danpus-inline-progress-item.latest{border-color:color-mix(in srgb,var(--p-green) 55%,var(--p-border));box-shadow:0 0 0 3px color-mix(in srgb,var(--p-green) 9%,transparent),0 5px 15px color-mix(in srgb,var(--p-green) 12%,transparent)}
-  .danpus-inline-progress-item.latest::after{content:"";position:absolute;inset:-4px;border-radius:999px;border:1px solid color-mix(in srgb,var(--p-green) 30%,transparent);opacity:0;animation:danpusLatestRing 2s ease-out infinite}
-  .danpus-inline-progress-arrow{position:relative;flex:1 0 24px;min-width:24px;height:2px;margin:0 2px;background:color-mix(in srgb,var(--p-muted) 24%,transparent);font-size:0;overflow:hidden}
-  .danpus-inline-progress-arrow::after{content:"";position:absolute;left:-45%;top:0;width:45%;height:100%;background:linear-gradient(90deg,transparent,var(--p-accent),transparent);animation:danpusArrowFlow 2.4s linear infinite}
-  .danpus-inline-progress-item.is-progress-added{animation:danpusProgressAdded .8s cubic-bezier(.2,.8,.2,1)}
-  .danpus-inline-progress-history.realtime-history{animation:danpusHistoryRefresh .9s ease}
-  @keyframes danpusProgressFlow{0%{transform:translateX(0)}100%{transform:translateX(440%)} }
-  @keyframes danpusLivePulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.25);opacity:1}}
-  @keyframes danpusLatestRing{0%{transform:scale(.92);opacity:.65}100%{transform:scale(1.15);opacity:0}}
-  @keyframes danpusArrowFlow{0%{transform:translateX(0)}100%{transform:translateX(330%)} }
-  @keyframes danpusProgressAdded{0%{transform:translateX(18px) scale(.72);opacity:0;filter:blur(2px)}55%{transform:translateX(0) scale(1.08);opacity:1;filter:blur(0)}100%{transform:translateX(0) scale(1);opacity:1}}
-  @keyframes danpusHistoryRefresh{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--p-accent) 18%,transparent)}100%{box-shadow:0 0 0 10px transparent}}
-  @media(prefers-reduced-motion:reduce){.danpus-report-content .danpus-inline-progress-history::before,.danpus-inline-progress-label span:first-child::before,.danpus-inline-progress-arrow::after,.danpus-inline-progress-item.latest::after{animation:none}.danpus-inline-progress-item.is-progress-added,.danpus-inline-progress-history.realtime-history{animation:none}}
-  @media(max-width:700px){.danpus-report-dropdown summary{align-items:flex-start}.danpus-report-summary-main{flex-wrap:wrap}.danpus-inline-progress-list{padding-bottom:10px}}
+
+  /* Zig-zag: 7 item per baris, lalu turun dan kembali dari arah berlawanan. */
+  .danpus-inline-progress-list{display:flex;flex-direction:column;gap:12px;overflow:visible;padding:0 2px}
+  .danpus-inline-progress-row{display:flex;align-items:center;gap:10px;width:100%;min-width:0}
+  .danpus-inline-progress-row.reverse{flex-direction:row-reverse}
+  .danpus-inline-progress-item{
+    position:relative;z-index:2;box-sizing:border-box;flex:1 1 0;min-width:0;min-height:74px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3px;
+    padding:10px 8px;border-radius:16px;font-size:11px;font-weight:800;
+    border:1px solid color-mix(in srgb,var(--p-muted) 18%,var(--p-border));
+    background:var(--p-surface);color:var(--p-text);white-space:normal;
+    box-shadow:0 4px 14px rgba(15,23,42,.06);transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+  }
+  .danpus-inline-progress-item::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--p-green);box-shadow:0 0 0 4px color-mix(in srgb,var(--p-green) 11%,transparent);flex:0 0 auto}
+  .danpus-inline-progress-value{font-size:13px;font-weight:900;line-height:1.1}
+  .danpus-inline-progress-meta{font-size:9px;font-weight:600;color:var(--p-muted);line-height:1.2}
+  .danpus-inline-progress-detail{margin-top:5px;border:1px solid var(--p-border);background:var(--p-surface-2);color:var(--p-text);border-radius:7px;padding:4px 9px;font-size:9px;font-weight:800;line-height:1;cursor:pointer;transition:background .15s ease,border-color .15s ease,color .15s ease,transform .15s ease}
+  .danpus-inline-progress-detail:hover{border-color:var(--p-accent);background:var(--p-surface);color:var(--p-accent);transform:translateY(-1px)}
+  .danpus-inline-progress-detail:active{transform:scale(.96)}
+  .danpus-inline-progress-item.latest{border-color:color-mix(in srgb,var(--p-green) 55%,var(--p-border));box-shadow:0 0 0 3px color-mix(in srgb,var(--p-green) 9%,transparent),0 6px 18px color-mix(in srgb,var(--p-green) 12%,transparent)}
+  .danpus-inline-progress-item.latest::after{content:"TERBARU";position:absolute;top:6px;right:7px;font-size:7px;letter-spacing:.05em;color:var(--p-green);font-weight:900}
+  .danpus-inline-progress-connector{position:relative;flex:0 0 18px;height:2px;background:color-mix(in srgb,var(--p-green) 45%,var(--p-border));border-radius:999px}
+  .danpus-inline-progress-connector::after{content:"";position:absolute;right:-1px;top:50%;width:5px;height:5px;border-top:1.5px solid var(--p-green);border-right:1.5px solid var(--p-green);transform:translateY(-50%) rotate(45deg)}
+  .danpus-inline-progress-row.reverse .danpus-inline-progress-connector::after{left:-1px;right:auto;transform:translateY(-50%) rotate(-135deg)}
+  .danpus-inline-progress-turn{height:12px;position:relative;margin:0 4px}
+  .danpus-inline-progress-turn::after{content:"";position:absolute;top:0;width:22px;height:12px;border-bottom:2px solid color-mix(in srgb,var(--p-green) 45%,var(--p-border));border-radius:0 0 12px 12px}
+  .danpus-inline-progress-turn.left::after{left:0;border-left:2px solid color-mix(in srgb,var(--p-green) 45%,var(--p-border))}
+  .danpus-inline-progress-turn.right::after{right:0;border-right:2px solid color-mix(in srgb,var(--p-green) 45%,var(--p-border))}
+  .danpus-inline-progress-item.is-progress-added{animation:danpusProgressAdded .65s cubic-bezier(.2,.8,.2,1)}
+  .danpus-inline-progress-history.realtime-history{animation:danpusHistoryRefresh .65s ease}
+  @keyframes danpusProgressAdded{0%{transform:translateY(12px) scale(.86);opacity:0}65%{transform:translateY(-2px) scale(1.03);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
+  @keyframes danpusHistoryRefresh{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--p-accent) 20%,transparent)}100%{box-shadow:0 0 0 12px transparent}}
+  @media(prefers-reduced-motion:reduce){.danpus-inline-progress-item.is-progress-added,.danpus-inline-progress-history.realtime-history{animation:none}}
+  @media(max-width:900px){.danpus-inline-progress-row{gap:6px}.danpus-inline-progress-item{min-height:68px;padding:8px 5px}.danpus-inline-progress-connector{flex-basis:10px}.danpus-inline-progress-detail{padding:4px 7px}}
+  @media(max-width:640px){.danpus-inline-progress-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.danpus-inline-progress-row.reverse{direction:rtl}.danpus-inline-progress-row.reverse .danpus-inline-progress-item{direction:ltr}.danpus-inline-progress-connector{display:none}.danpus-inline-progress-turn{display:none}}
 </style>
 <script>
 (function(){
   function logId(log){return Number(log.dataset.laporanId || log.dataset.id || 0) || 0;}
   function sortedLogs(logs){return logs.slice().sort(function(a,b){return logId(a)-logId(b);});}
-  function progressValues(logs){
-    var seen={};
-    return sortedLogs(logs).map(function(log){return log.dataset.progres || log.querySelector('[data-progres]')?.dataset.progres || null;}).filter(function(value){
-      if(value===null||value==='') return false;
-      var key=String(value); if(seen[key]) return false; seen[key]=true; return true;
+  function addProgressDetails(history, logs){
+    var items=Array.from(history.querySelectorAll('.danpus-inline-progress-item'));
+    if(!items.length)return;
+    items.forEach(function(item,index){
+      var value=item.dataset.progres || item.getAttribute('data-progres') || '';
+      if(!value){
+        var text=item.textContent.match(/(\d{1,3})\s*%/); if(text)value=text[1];
+      }
+      var source=null;
+      if(logs&&logs.length){
+        source=sortedLogs(logs).find(function(log){return String(log.dataset.progres||'')===String(value)}) || null;
+      }
+      item.dataset.progres=value;
+      if(source){
+        item.dataset.laporanId=source.dataset.laporanId||'';
+        item.dataset.permintaanId=source.dataset.permintaanId||'';
+      }
+      if(item.querySelector('.danpus-inline-progress-detail'))return;
+      var btn=document.createElement('button');btn.type='button';btn.className='danpus-inline-progress-detail';btn.textContent='Detail';
+      btn.addEventListener('click',function(e){
+        e.preventDefault();e.stopPropagation();
+        var targetId=item.dataset.laporanId||'';
+        var candidates=Array.from(document.querySelectorAll('.danpus-report-content .danpus-activity-log[data-laporan-id], tr[data-laporan-id]'));
+        var target=candidates.find(function(log){return String(log.dataset.laporanId||'')===String(targetId)}) || source;
+        var detail=target&&target.querySelector('.detail-btn');
+        if(detail&&typeof window.openReportDetail==='function'){
+          window.openReportDetail(detail);
+          return;
+        }
+        if(detail)detail.click();
+      });
+      item.appendChild(btn);
+    });
+  }
+  function arrangeProgressHistory(history, logs){
+    if(!history||history.dataset.layoutReady==='1'){if(history)addProgressDetails(history,logs);return;}
+    var original=Array.from(history.querySelectorAll('.danpus-inline-progress-item'));
+    if(!original.length)return;
+    var list=history.querySelector('.danpus-inline-progress-list');
+    if(!list)return;
+    list.innerHTML='';
+    original.forEach(function(item){
+      item.classList.remove('latest');
+      item.querySelectorAll('.danpus-inline-progress-detail').forEach(function(b){b.remove()});
+    });
+    original.forEach(function(item,index){
+      var rowIndex=Math.floor(index/7),position=index%7;
+      if(position===0){
+        if(rowIndex>0){var turn=document.createElement('div');turn.className='danpus-inline-progress-turn '+(rowIndex%2===0?'left':'right');list.appendChild(turn)}
+        var row=document.createElement('div');row.className='danpus-inline-progress-row'+(rowIndex%2?' reverse':'');row.dataset.progressRow=rowIndex;list.appendChild(row);
+      }
+      var row=list.querySelector('[data-progress-row="'+rowIndex+'"]');
+      if(position>0){var connector=document.createElement('span');connector.className='danpus-inline-progress-connector';row.appendChild(connector)}
+      row.appendChild(item);
+    });
+    var last=original[original.length-1];if(last)last.classList.add('latest');
+    history.dataset.layoutReady='1';
+    addProgressDetails(history,logs);
+  }
+  function enhanceHistories(root){
+    (root||document).querySelectorAll('.danpus-inline-progress-history').forEach(function(history){
+      var details=history.closest('.danpus-report-dropdown');
+      var logs=details?Array.from(details.querySelectorAll('.danpus-activity-log[data-history-source="1"]')):[];
+      arrangeProgressHistory(history,logs);
     });
   }
   function wrapLogsInDropdown(wrapper){
-    if(wrapper.dataset.dropdownReady==='1') return;
+    if(wrapper.dataset.dropdownReady==='1')return;
     var logs=Array.from(wrapper.querySelectorAll(':scope > .danpus-activity-log'));
-    if(!logs.length) return;
-    var groups=[];var byRequest={};
+    if(!logs.length)return;
+    var groups=[],byRequest={};
     logs.forEach(function(log){
-      var key=log.dataset.permintaanId || ('laporan-'+(log.dataset.laporanId||Math.random()));
+      var key=log.dataset.permintaanId||('laporan-'+(log.dataset.laporanId||Math.random()));
       if(!byRequest[key]){byRequest[key]=[];groups.push(byRequest[key]);}
       byRequest[key].push(log);
     });
     var list=document.createElement('div');list.className='danpus-report-dropdown-list';
     groups.forEach(function(group){
-      var ordered=sortedLogs(group);var latest=ordered[ordered.length-1];
-      var subjectText=latest.querySelector('.danpus-activity-project')?.textContent.trim() || 'Laporan tanpa perihal';
+      var ordered=sortedLogs(group),latest=ordered[ordered.length-1];
+      var subjectText=latest.querySelector('.danpus-activity-project')?.textContent.trim()||'Laporan tanpa perihal';
       var details=document.createElement('details');details.className='danpus-report-dropdown';
-      if(latest.dataset.permintaanId) details.dataset.permintaanId=latest.dataset.permintaanId;
-      if(latest.dataset.laporanId) details.dataset.laporanId=latest.dataset.laporanId;
-      var summary=document.createElement('summary');
-      var main=document.createElement('div');main.className='danpus-report-summary-main';
+      if(latest.dataset.permintaanId)details.dataset.permintaanId=latest.dataset.permintaanId;
+      if(latest.dataset.laporanId)details.dataset.laporanId=latest.dataset.laporanId;
+      var summary=document.createElement('summary');var main=document.createElement('div');main.className='danpus-report-summary-main';
       var chevron=document.createElement('span');chevron.className='danpus-report-chevron';
       var subject=document.createElement('span');subject.className='danpus-report-subject';subject.textContent=subjectText;
       main.appendChild(chevron);main.appendChild(subject);summary.appendChild(main);details.appendChild(summary);
       var content=document.createElement('div');content.className='danpus-report-content';
-      /* Jangan buat history kedua di atas. History milik Laporan Dibuat ada di row/timeline. */
-      content.appendChild(latest);
+      ordered.forEach(function(log){log.dataset.historySource='1';log.hidden=log!==latest;content.appendChild(log)});
       details.appendChild(content);list.appendChild(details);
     });
     wrapper.innerHTML='';wrapper.appendChild(list);wrapper.dataset.dropdownReady='1';
+    setTimeout(function(){enhanceHistories(wrapper)},0);
   }
   function applyDanpusActivityDropdown(){
     if(!document.body)return;
     document.querySelectorAll('section[id^="satlak-"] .clean-table-wrap').forEach(wrapLogsInDropdown);
+    enhanceHistories(document);
   }
   window.siberadRefreshDanpusActivityDropdown=applyDanpusActivityDropdown;
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){setTimeout(applyDanpusActivityDropdown,0)});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(applyDanpusActivityDropdown,0)});
   else setTimeout(applyDanpusActivityDropdown,0);
 })();
 </script>
