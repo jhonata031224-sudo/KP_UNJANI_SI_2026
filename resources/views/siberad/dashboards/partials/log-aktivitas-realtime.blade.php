@@ -16,9 +16,25 @@
         window.setTimeout(function () { row.classList.remove(className); }, 1800);
     }
 
-    function findCurrentRow(section, laporanId) {
-        if (!section) return null;
-        return section.querySelector('tr[data-laporan-id="' + laporanId + '"]');
+    // Satu item Log Aktivitas = satu permintaan/perihal.
+    // Checkpoint progres berikutnya (laporan_id baru) TIDAK membuat item baru.
+    function findCurrentRow(section, row) {
+        if (!section || !row) return null;
+        var permintaanId = row.getAttribute('data-permintaan-id');
+        if (permintaanId) {
+            return section.querySelector('tr[data-permintaan-id="' + permintaanId + '"]');
+        }
+        return section.querySelector('tr[data-laporan-id="' + row.getAttribute('data-laporan-id') + '"]');
+    }
+
+    function findCurrentDetails(section, row) {
+        if (!section || !row) return null;
+        var permintaanId = row.getAttribute('data-permintaan-id');
+        if (permintaanId) {
+            return section.querySelector('.danpus-report-dropdown[data-permintaan-id="' + permintaanId + '"]');
+        }
+        var currentRow = findCurrentRow(section, row);
+        return currentRow ? currentRow.closest('.danpus-report-dropdown') : null;
     }
 
     function createDropdownForRow(row) {
@@ -47,13 +63,17 @@
         return details;
     }
 
-    function replaceInsideDropdown(oldRow, newRow) {
-        var details = oldRow.closest('.danpus-report-dropdown');
-        if (!details) return false;
-        newRow.classList.add('is-realtime-updated');
-        oldRow.replaceWith(newRow);
-        var subject = details.querySelector('.danpus-report-subject');
-        if (subject) subject.textContent = newRow.getAttribute('data-perihal') || newRow.querySelector('.subject')?.textContent.trim() || 'Laporan tanpa perihal';
+    function replaceProgressInExistingItem(existingRow, newRow) {
+        var details = existingRow.closest('.danpus-report-dropdown');
+        if (details) {
+            newRow.classList.add('is-realtime-updated');
+            existingRow.replaceWith(newRow);
+            var subject = details.querySelector('.danpus-report-subject');
+            if (subject) subject.textContent = existingRow.getAttribute('data-perihal') || newRow.getAttribute('data-perihal') || 'Laporan tanpa perihal';
+            highlightRow(newRow, 'is-realtime-updated');
+            return true;
+        }
+        existingRow.replaceWith(newRow);
         highlightRow(newRow, 'is-realtime-updated');
         return true;
     }
@@ -70,7 +90,6 @@
 
             var cleanWrap = section.querySelector('.clean-table-wrap');
             var hasDropdown = !!cleanWrap?.querySelector('.danpus-report-dropdown');
-
             var temp = document.createElement('tbody');
             temp.innerHTML = rowsBySatuan[satuanId] || '';
             var rows = Array.prototype.slice.call(temp.children);
@@ -79,7 +98,10 @@
                 var laporanId = row.getAttribute('data-laporan-id');
                 if (!laporanId) return;
 
-                var existing = findCurrentRow(section, laporanId);
+                // PENTING: cari berdasarkan permintaan/perihal, BUKAN laporan_id.
+                // Karena setiap kiriman progres dapat membuat laporan_id baru,
+                // tetapi di DANPUS harus tetap menjadi satu item Log Aktivitas.
+                var existing = findCurrentRow(section, row);
                 var meta = changedMeta[String(laporanId)] || {};
                 var oldProgress = existing ? existing.getAttribute('data-progres') : null;
                 var newProgress = row.getAttribute('data-progres');
@@ -89,13 +111,6 @@
                 var newUpdated = row.getAttribute('data-updated');
                 var oldKendala = existing ? existing.getAttribute('data-kendala') : null;
                 var newKendala = row.getAttribute('data-kendala');
-
-                var changed = !!existing && (
-                    oldUpdated !== newUpdated ||
-                    String(oldProgress) !== String(newProgress) ||
-                    oldStatus !== newStatus ||
-                    oldKendala !== newKendala
-                );
 
                 if (!existing && !initialRenderComplete) return;
 
@@ -115,14 +130,15 @@
                     return;
                 }
 
+                var changed = oldUpdated !== newUpdated ||
+                    String(oldProgress) !== String(newProgress) ||
+                    oldStatus !== newStatus ||
+                    oldKendala !== newKendala;
                 if (!changed) return;
 
-                if (replaceInsideDropdown(existing, row)) {
-                    // dropdown version handled above
-                } else {
-                    existing.replaceWith(row);
-                    highlightRow(row, 'is-realtime-updated');
-                }
+                // Replace isi row yang sama: perihal tetap SATU.
+                // Yang berubah realtime hanya checkpoint/progres terbaru.
+                replaceProgressInExistingItem(existing, row);
 
                 if (initialRenderComplete && String(oldProgress) !== String(newProgress) && meta.is_progres) {
                     var sender = row.getAttribute('data-satuan-nama') || 'Satuan';
@@ -153,9 +169,7 @@
         if (polling) return;
         polling = true;
         fetch(endpoint + '?since=0&realtime=1&_=' + Date.now(), {
-            method: 'GET',
-            credentials: 'same-origin',
-            cache: 'no-store',
+            method: 'GET', credentials: 'same-origin', cache: 'no-store',
             headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'Cache-Control': 'no-cache' }
         })
         .then(function (response) {
@@ -172,7 +186,7 @@
             setText('kpiTotalLaporan', data.total_laporan);
             setText('kpiDisetujuiLaporan', data.total_disetujui);
             setText('kpiDitolakLaporan', data.total_ditolak);
-            upsertRows(data.rows || {}, data.items || []);
+            upsertRows(data.rows || {}, data.items || {});
             initialRenderComplete = true;
         })
         .catch(function () {})
@@ -185,11 +199,8 @@
     }
 
     function start() {
-        poll();
-        scheduleNextPoll();
-        document.addEventListener('visibilitychange', function () {
-            if (!document.hidden) { poll(); scheduleNextPoll(); }
-        });
+        poll(); scheduleNextPoll();
+        document.addEventListener('visibilitychange', function () { if (!document.hidden) { poll(); scheduleNextPoll(); } });
         window.addEventListener('focus', function () { poll(); scheduleNextPoll(); });
     }
 
