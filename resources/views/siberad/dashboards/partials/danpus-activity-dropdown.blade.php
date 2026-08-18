@@ -18,9 +18,11 @@
 </style>
 <script>
 (function(){
+  function logId(log){return Number(log.dataset.laporanId || log.dataset.id || 0) || 0;}
+  function sortedLogs(logs){return logs.slice().sort(function(a,b){return logId(a)-logId(b);});}
   function progressValues(logs){
     var seen={};
-    return logs.map(function(log){
+    return sortedLogs(logs).map(function(log){
       return log.dataset.progres || log.querySelector('[data-progres]')?.dataset.progres || null;
     }).filter(function(value){
       if(value===null||value==='') return false;
@@ -30,11 +32,11 @@
       return true;
     });
   }
-
   function makeHistory(logs){
     var history=document.createElement('div');
     history.className='danpus-progress-history';
-    progressValues(logs).forEach(function(value,index,values){
+    var values=progressValues(logs);
+    values.forEach(function(value,index){
       var chip=document.createElement('span');
       chip.className='danpus-progress-chip'+(index===values.length-1?' latest':'');
       chip.textContent=String(value)+'%';
@@ -42,56 +44,37 @@
     });
     return history;
   }
-
   function wrapLogsInDropdown(wrapper){
     if(wrapper.dataset.dropdownReady==='1') return;
     var logs=Array.from(wrapper.querySelectorAll(':scope > .danpus-activity-log'));
     if(!logs.length) return;
-
-    var groups=[];
-    var byRequest={};
+    var groups=[];var byRequest={};
     logs.forEach(function(log){
       var key=log.dataset.permintaanId || ('laporan-'+(log.dataset.laporanId||Math.random()));
       if(!byRequest[key]){byRequest[key]=[];groups.push(byRequest[key]);}
       byRequest[key].push(log);
     });
-
-    var list=document.createElement('div');
-    list.className='danpus-report-dropdown-list';
-
+    var list=document.createElement('div');list.className='danpus-report-dropdown-list';
     groups.forEach(function(group){
-      var latest=group[group.length-1];
+      var ordered=sortedLogs(group);
+      var latest=ordered[ordered.length-1];
       var subjectText=latest.querySelector('.danpus-activity-project')?.textContent.trim() || 'Laporan tanpa perihal';
-      var details=document.createElement('details');
-      details.className='danpus-report-dropdown';
+      var details=document.createElement('details');details.className='danpus-report-dropdown';
       if(latest.dataset.permintaanId) details.dataset.permintaanId=latest.dataset.permintaanId;
       if(latest.dataset.laporanId) details.dataset.laporanId=latest.dataset.laporanId;
-
       var summary=document.createElement('summary');
       var main=document.createElement('div');main.className='danpus-report-summary-main';
       var chevron=document.createElement('span');chevron.className='danpus-report-chevron';
       var subject=document.createElement('span');subject.className='danpus-report-subject';subject.textContent=subjectText;
-      main.appendChild(chevron);main.appendChild(subject);
-      summary.appendChild(main);
-      summary.appendChild(makeHistory(group));
-      details.appendChild(summary);
-
-      var content=document.createElement('div');content.className='danpus-report-content';
-      content.appendChild(latest);
-      details.appendChild(content);
-      list.appendChild(details);
+      main.appendChild(chevron);main.appendChild(subject);summary.appendChild(main);summary.appendChild(makeHistory(ordered));details.appendChild(summary);
+      var content=document.createElement('div');content.className='danpus-report-content';content.appendChild(latest);details.appendChild(content);list.appendChild(details);
     });
-
-    wrapper.innerHTML='';
-    wrapper.appendChild(list);
-    wrapper.dataset.dropdownReady='1';
+    wrapper.innerHTML='';wrapper.appendChild(list);wrapper.dataset.dropdownReady='1';
   }
-
   function applyDanpusActivityDropdown(){
-    if(!document.body) return;
+    if(!document.body)return;
     document.querySelectorAll('section[id^="satlak-"] .clean-table-wrap').forEach(wrapLogsInDropdown);
   }
-
   window.siberadRefreshDanpusActivityDropdown=applyDanpusActivityDropdown;
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){setTimeout(applyDanpusActivityDropdown,0)});
   else setTimeout(applyDanpusActivityDropdown,0);
