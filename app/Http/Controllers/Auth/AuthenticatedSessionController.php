@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
-use App\Models\Satuan;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,9 +25,10 @@ class AuthenticatedSessionController extends Controller
             'captcha' => ['required', 'string'],
         ]);
 
-        // Dibandingkan case-sensitive — captcha memang campur huruf besar/kecil
-        // sebagai bagian dari kode yang harus diketik persis.
-        $captchaBenar = hash_equals((string) $request->session()->get('captcha_code'), $credentials['captcha']);
+        $captchaBenar = hash_equals(
+            (string) $request->session()->get('captcha_code'),
+            $credentials['captcha']
+        );
         $request->session()->forget('captcha_code');
 
         $kredensialBenar = Auth::validate([
@@ -47,17 +47,28 @@ class AuthenticatedSessionController extends Controller
             throw ValidationException::withMessages($errors);
         }
 
-        // Satu akun hanya boleh dipakai di satu device dalam satu waktu.
-        // Sesi milik request/browser saat ini tidak dihitung sebagai device lain.
         $user = User::where('username', $credentials['username'])->first();
 
         if (config('session.driver') === 'database') {
-            $batasAktif = now()->subMinutes((int) config('session.lifetime', 120))->timestamp;
+            $currentSessionId = $request->session()->getId();
+
+            // Session database yang sudah tidak aktif jangan sampai mengunci
+            // akun hanya karena browser sebelumnya ditutup/crash tanpa logout.
+            // 10 menit cukup untuk membedakan session aktif dengan session basi,
+            // sementara request halaman/AJAX yang berjalan terus memperbarui
+            // last_activity.
+            $batasSessionAktif = now()->subMinutes(10)->timestamp;
+
+            DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->where('id', '!=', $currentSessionId)
+                ->where('last_activity', '<', $batasSessionAktif)
+                ->delete();
 
             $sesiMasihAktif = DB::table('sessions')
                 ->where('user_id', $user->id)
-                ->where('id', '!=', $request->session()->getId())
-                ->where('last_activity', '>=', $batasAktif)
+                ->where('id', '!=', $currentSessionId)
+                ->where('last_activity', '>=', $batasSessionAktif)
                 ->exists();
 
             if ($sesiMasihAktif) {
