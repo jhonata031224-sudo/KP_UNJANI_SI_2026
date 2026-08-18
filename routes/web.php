@@ -63,6 +63,10 @@ Route::post('/laporan', [LaporanController::class, 'store'])
     ->middleware('auth')
     ->name('laporan.store');
 
+Route::get('/laporan/log-aktivitas/realtime', [LaporanController::class, 'realtime'])
+    ->middleware('auth')
+    ->name('laporan.log-aktivitas.realtime');
+
 Route::patch('/laporan/{laporan}/status', [LaporanController::class, 'updateStatus'])
     ->middleware('auth')
     ->name('laporan.status');
