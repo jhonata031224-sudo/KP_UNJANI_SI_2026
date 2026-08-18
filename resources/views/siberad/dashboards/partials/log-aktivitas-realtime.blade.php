@@ -17,6 +17,25 @@
             tanggal: row.querySelector('.detail-btn')?.dataset.tanggal || ''
         };
     }
+    // Satu perihal hanya menampilkan SATU checkpoint untuk setiap nilai
+    // progres. Jika backend/realtime mengirim dua checkpoint dengan persen
+    // yang sama (contoh 100% lama + 100% terbaru), yang dipakai adalah
+    // checkpoint dengan ID laporan paling baru. Ini mencegah satu progres
+    // tampil dua kali di Riwayat progres tanpa menghilangkan checkpoint
+    // dengan persentase berbeda.
+    function dedupeProgressEntries(entries) {
+        const byProgress = new Map();
+        (entries || []).forEach(entry => {
+            if (!entry || !entry.laporanId) return;
+            const progress = String(entry.progres ?? '').trim();
+            const key = progress === '' ? `laporan:${entry.laporanId}` : `progres:${progress}`;
+            const current = byProgress.get(key);
+            if (!current || Number(entry.laporanId) > Number(current.laporanId)) {
+                byProgress.set(key, entry);
+            }
+        });
+        return [...byProgress.values()].sort((a, b) => Number(a.laporanId) - Number(b.laporanId));
+    }
     function groups(html) {
         const map = new Map();
         allRows(html).forEach(row => {
@@ -25,7 +44,7 @@
         });
         return [...map.values()].map(rows => {
             rows.sort((a,b) => Number(a.dataset.laporanId||0)-Number(b.dataset.laporanId||0));
-            return { rows, latest: rows[rows.length-1], requestId: rows[0].dataset.permintaanId||'', entries: rows.filter(r=>r.dataset.laporanId).map(rowToEntry) };
+            return { rows, latest: rows[rows.length-1], requestId: rows[0].dataset.permintaanId||'', entries: dedupeProgressEntries(rows.filter(r=>r.dataset.laporanId).map(rowToEntry)) };
         });
     }
     function findDetails(requestId, laporanId, subject) {
@@ -54,13 +73,13 @@
     }
     function readExistingHistory(card) {
         const history=card?.querySelector(':scope > .danpus-inline-progress-history');
-        return history ? [...history.querySelectorAll('[data-laporan-id]')].map(el=>({laporanId:el.dataset.laporanId,progres:el.dataset.progres,tanggal:el.dataset.tanggal||''})) : [];
+        return history ? dedupeProgressEntries([...history.querySelectorAll('[data-laporan-id]')].map(el=>({laporanId:el.dataset.laporanId,progres:el.dataset.progres,tanggal:el.dataset.tanggal||''}))) : [];
     }
     function openProgressDetail(details, laporanId) {
         if (!details) return;
-        const nodes = [...details.querySelectorAll('.danpus-progress-node')];
+        const nodes = [...details.querySelectorAll('.danpus-progress-node, .danpus-snake-progress-item')];
         const node = nodes.reverse().find(n => n.dataset.laporanId && n.dataset.laporanId===String(laporanId));
-        const button = node?.querySelector('.detail-btn');
+        const button = node?.querySelector('.detail-btn, .danpus-snake-detail');
         if (button) button.click();
     }
     function createProgressItem(entry, latestEntry, oldIds, details) {
@@ -93,7 +112,9 @@
         const old=readExistingHistory(card);
         const merged=new Map();
         old.concat(incomingEntries||[]).forEach(e=>{ if(e.laporanId) merged.set(e.laporanId,e); });
-        const entries=[...merged.values()].sort((a,b)=>Number(a.laporanId)-Number(b.laporanId));
+        // Dedupe juga setelah merge. Ini penting saat endpoint realtime
+        // mengirim ulang checkpoint lama bersamaan dengan checkpoint baru.
+        const entries=dedupeProgressEntries([...merged.values()]);
         if(!entries.length) return;
         const oldIds=new Set(old.map(e=>e.laporanId)); const latestEntry=entries[entries.length-1];
         const history=card.querySelector(':scope > .danpus-inline-progress-history'); if(history) history.remove();
