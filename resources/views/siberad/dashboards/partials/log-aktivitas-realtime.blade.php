@@ -13,9 +13,49 @@
     function highlightRow(row, className) {
         row.classList.remove('is-realtime-new', 'is-realtime-updated');
         row.classList.add(className);
-        window.setTimeout(function () {
-            row.classList.remove(className);
-        }, 1800);
+        window.setTimeout(function () { row.classList.remove(className); }, 1800);
+    }
+
+    function findCurrentRow(section, laporanId) {
+        if (!section) return null;
+        return section.querySelector('tr[data-laporan-id="' + laporanId + '"]');
+    }
+
+    function createDropdownForRow(row) {
+        var details = document.createElement('details');
+        details.className = 'danpus-report-dropdown is-realtime-new';
+        var permintaanId = row.getAttribute('data-permintaan-id');
+        if (permintaanId) details.dataset.permintaanId = permintaanId;
+
+        var summary = document.createElement('summary');
+        var main = document.createElement('div');
+        main.className = 'danpus-report-summary-main';
+        var chevron = document.createElement('span');
+        chevron.className = 'danpus-report-chevron';
+        var subject = document.createElement('span');
+        subject.className = 'danpus-report-subject';
+        subject.textContent = row.getAttribute('data-perihal') || row.querySelector('.subject')?.textContent.trim() || 'Laporan tanpa perihal';
+        main.appendChild(chevron);
+        main.appendChild(subject);
+        summary.appendChild(main);
+        details.appendChild(summary);
+
+        var content = document.createElement('div');
+        content.className = 'danpus-report-content';
+        content.appendChild(row);
+        details.appendChild(content);
+        return details;
+    }
+
+    function replaceInsideDropdown(oldRow, newRow) {
+        var details = oldRow.closest('.danpus-report-dropdown');
+        if (!details) return false;
+        newRow.classList.add('is-realtime-updated');
+        oldRow.replaceWith(newRow);
+        var subject = details.querySelector('.danpus-report-subject');
+        if (subject) subject.textContent = newRow.getAttribute('data-perihal') || newRow.querySelector('.subject')?.textContent.trim() || 'Laporan tanpa perihal';
+        highlightRow(newRow, 'is-realtime-updated');
+        return true;
     }
 
     function upsertRows(rowsBySatuan, items) {
@@ -25,11 +65,11 @@
         });
 
         Object.keys(rowsBySatuan || {}).forEach(function (satuanId) {
-            var tbody = document.getElementById('satlakLaporanBody-' + satuanId);
-            if (!tbody) return;
+            var section = document.getElementById('satlak-' + satuanId);
+            if (!section) return;
 
-            var emptyRow = document.getElementById('satlakLaporanEmpty-' + satuanId);
-            if (emptyRow) emptyRow.remove();
+            var cleanWrap = section.querySelector('.clean-table-wrap');
+            var hasDropdown = !!cleanWrap?.querySelector('.danpus-report-dropdown');
 
             var temp = document.createElement('tbody');
             temp.innerHTML = rowsBySatuan[satuanId] || '';
@@ -39,7 +79,7 @@
                 var laporanId = row.getAttribute('data-laporan-id');
                 if (!laporanId) return;
 
-                var existing = tbody.querySelector('tr[data-laporan-id="' + laporanId + '"]');
+                var existing = findCurrentRow(section, laporanId);
                 var meta = changedMeta[String(laporanId)] || {};
                 var oldProgress = existing ? existing.getAttribute('data-progres') : null;
                 var newProgress = row.getAttribute('data-progres');
@@ -47,42 +87,47 @@
                 var newStatus = row.getAttribute('data-laporan-status');
                 var oldUpdated = existing ? existing.getAttribute('data-updated') : null;
                 var newUpdated = row.getAttribute('data-updated');
+                var oldKendala = existing ? existing.getAttribute('data-kendala') : null;
+                var newKendala = row.getAttribute('data-kendala');
 
-                /*
-                 * Jangan hanya mengandalkan updated_at. Progress adalah field
-                 * utama yang harus terlihat realtime di DANPUS. Kalau timestamp
-                 * dari DB/proxy kebetulan tidak berubah, perubahan progress atau
-                 * status tetap dianggap sebagai perubahan dan row tetap diganti.
-                 */
                 var changed = !!existing && (
                     oldUpdated !== newUpdated ||
                     String(oldProgress) !== String(newProgress) ||
                     oldStatus !== newStatus ||
-                    existing.getAttribute('data-kendala') !== row.getAttribute('data-kendala')
+                    oldKendala !== newKendala
                 );
 
                 if (!existing && !initialRenderComplete) return;
 
                 if (!existing) {
-                    row.classList.add('is-realtime-new');
-                    tbody.insertBefore(row, tbody.firstChild);
-                    window.setTimeout(function () {
-                        row.classList.remove('is-realtime-new');
-                    }, 1800);
+                    if (hasDropdown && cleanWrap) {
+                        var list = cleanWrap.querySelector('.danpus-report-dropdown-list');
+                        if (list) {
+                            list.insertBefore(createDropdownForRow(row), list.firstChild);
+                            return;
+                        }
+                    }
+                    var tbody = cleanWrap?.querySelector('tbody');
+                    if (tbody) {
+                        row.classList.add('is-realtime-new');
+                        tbody.insertBefore(row, tbody.firstChild);
+                    }
                     return;
                 }
 
                 if (!changed) return;
 
-                existing.replaceWith(row);
-                highlightRow(row, 'is-realtime-updated');
+                if (replaceInsideDropdown(existing, row)) {
+                    // dropdown version handled above
+                } else {
+                    existing.replaceWith(row);
+                    highlightRow(row, 'is-realtime-updated');
+                }
 
                 if (initialRenderComplete && String(oldProgress) !== String(newProgress) && meta.is_progres) {
                     var sender = row.getAttribute('data-satuan-nama') || 'Satuan';
-                    var subject = row.getAttribute('data-perihal') || meta.perihal || 'Laporan';
-                    if (window.siberadShowToast) {
-                        window.siberadShowToast('success', 'Progres ' + newProgress + '% masuk dari ' + sender + ': ' + subject);
-                    }
+                    var subjectText = row.getAttribute('data-perihal') || meta.perihal || 'Laporan';
+                    if (window.siberadShowToast) window.siberadShowToast('success', 'Progres ' + newProgress + '% masuk dari ' + sender + ': ' + subjectText);
                 } else if (initialRenderComplete && oldStatus !== newStatus && window.siberadShowToast) {
                     var senderStatus = row.getAttribute('data-satuan-nama') || 'Satuan';
                     var subjectStatus = row.getAttribute('data-perihal') || meta.perihal || 'Laporan';
@@ -107,16 +152,11 @@
     function poll() {
         if (polling) return;
         polling = true;
-
         fetch(endpoint + '?since=0&realtime=1&_=' + Date.now(), {
             method: 'GET',
             credentials: 'same-origin',
             cache: 'no-store',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'Cache-Control': 'no-cache'
-            }
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'Cache-Control': 'no-cache' }
         })
         .then(function (response) {
             if (response.status === 401) {
@@ -128,7 +168,6 @@
         })
         .then(function (data) {
             if (!data) return;
-
             updateStats(data.stats);
             setText('kpiTotalLaporan', data.total_laporan);
             setText('kpiDisetujuiLaporan', data.total_disetujui);
@@ -137,62 +176,32 @@
             initialRenderComplete = true;
         })
         .catch(function () {})
-        .finally(function () {
-            polling = false;
-        });
+        .finally(function () { polling = false; });
     }
 
     function scheduleNextPoll() {
         if (pollTimer) window.clearTimeout(pollTimer);
-        pollTimer = window.setTimeout(function () {
-            poll();
-            scheduleNextPoll();
-        }, 2000);
+        pollTimer = window.setTimeout(function () { poll(); scheduleNextPoll(); }, 2000);
     }
 
     function start() {
-        /*
-         * Jangan berhenti hanya karena tabel belum ada saat script dieksekusi.
-         * Shell DANPUS memuat partial ini terpisah dari markup tabel, sehingga
-         * selector tabel bukan syarat untuk memulai realtime.
-         */
         poll();
         scheduleNextPoll();
-
         document.addEventListener('visibilitychange', function () {
-            if (!document.hidden) {
-                poll();
-                scheduleNextPoll();
-            }
+            if (!document.hidden) { poll(); scheduleNextPoll(); }
         });
-        window.addEventListener('focus', function () {
-            poll();
-            scheduleNextPoll();
-        });
+        window.addEventListener('focus', function () { poll(); scheduleNextPoll(); });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', start, { once: true });
-    } else {
-        start();
-    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+    else start();
 })();
 </script>
 <style>
 #monitoring tr.is-realtime-updated,
-[id^="satlak-"] tr.is-realtime-updated {
-    animation: satlakRowRealtimeUpdated 1.8s ease;
-}
+[id^="satlak-"] tr.is-realtime-updated { animation: satlakRowRealtimeUpdated 1.8s ease; }
 #monitoring tr.is-realtime-new,
-[id^="satlak-"] tr.is-realtime-new {
-    animation: satlakRowRealtimeNew 1.8s ease;
-}
-@keyframes satlakRowRealtimeUpdated {
-    0% { background: rgba(245, 158, 11, .22); }
-    100% { background: transparent; }
-}
-@keyframes satlakRowRealtimeNew {
-    0% { background: rgba(59, 130, 246, .18); }
-    100% { background: transparent; }
-}
+[id^="satlak-"] tr.is-realtime-new { animation: satlakRowRealtimeNew 1.8s ease; }
+@keyframes satlakRowRealtimeUpdated { 0% { background: rgba(245, 158, 11, .22); } 100% { background: transparent; } }
+@keyframes satlakRowRealtimeNew { 0% { background: rgba(59, 130, 246, .18); } 100% { background: transparent; } }
 </style>
