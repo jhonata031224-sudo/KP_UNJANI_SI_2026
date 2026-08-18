@@ -171,10 +171,10 @@ class LaporanController extends Controller
         return back()->with('status', 'Laporan berhasil dikirim ke Pimpinan.');
     }
 
-    // Edit checkpoint progres yang SUDAH terkirim tapi BELUM final (masih
-    // status Laporan::STATUS_PROGRES) -- UPDATE row yang sama, bukan bikin
-    // row baru, supaya satuan bisa betulkan salah ketik/salah persentase
-    // tanpa nambah entry riwayat progres baru.
+    // Setiap klik Update Progres untuk laporan yang masih berjalan membuat
+    // CHECKPOINT BARU. Row checkpoint lama sengaja tidak diubah agar riwayat
+    // progres 20 -> 40 -> 70 -> ... tetap permanen di database dan dapat
+    // diterima DANPUS sebagai item realtime baru dalam satu perihal.
     public function updateProgres(Request $request, Laporan $laporan): RedirectResponse
     {
         $validated = $request->validate([
@@ -189,54 +189,51 @@ class LaporanController extends Controller
         $satuanAsal = $user->satuan;
         abort_unless($satuanAsal, 403, 'Akun ini belum terhubung ke satuan manapun.');
         abort_unless((int) $laporan->satuan_id === (int) $satuanAsal->id, 403, 'Anda tidak berhak mengedit laporan ini.');
-        abort_unless($laporan->status === Laporan::STATUS_PROGRES, 422, 'Hanya checkpoint progres yang belum final yang dapat diedit.');
+        abort_unless($laporan->status === Laporan::STATUS_PROGRES, 422, 'Hanya checkpoint progres yang belum final yang dapat diperbarui.');
 
         $progresValue = (int) $validated['progres'];
+        $laporanBaru = null;
 
-        DB::transaction(function () use (&$laporan, $progresValue, $validated, $request) {
-            $laporan = Laporan::whereKey($laporan->id)->lockForUpdate()->first();
-            abort_unless($laporan->status === Laporan::STATUS_PROGRES, 422, 'Checkpoint ini sudah final dan tidak dapat diedit.');
+        DB::transaction(function () use (&$laporanBaru, $laporan, $progresValue, $validated, $request, $user, $satuanAsal) {
+            $sumber = Laporan::whereKey($laporan->id)->lockForUpdate()->first();
+            abort_unless($sumber && $sumber->status === Laporan::STATUS_PROGRES, 422, 'Checkpoint ini sudah final dan tidak dapat diperbarui.');
 
-            $permintaan = $laporan->permintaan_laporan_id
-                ? PermintaanLaporan::whereKey($laporan->permintaan_laporan_id)->lockForUpdate()->first()
+            $permintaan = $sumber->permintaan_laporan_id
+                ? PermintaanLaporan::whereKey($sumber->permintaan_laporan_id)->lockForUpdate()->first()
                 : null;
 
             if ($permintaan) {
                 abort_if($permintaan->status === PermintaanLaporan::STATUS_DIBATALKAN, 422, 'Permintaan laporan ini sudah dibatalkan oleh Pimpinan.');
-                $progresCheckpointSebelumnya = Laporan::where('permintaan_laporan_id', $permintaan->id)
-                    ->where('id', '!=', $laporan->id)
-                    ->max('progres') ?? 0;
-                abort_if($progresValue < $progresCheckpointSebelumnya, 422, 'Persentase progres tidak boleh lebih kecil dari checkpoint sebelumnya ('.$progresCheckpointSebelumnya.'%).');
+                $progresTerakhir = (int) (Laporan::where('permintaan_laporan_id', $permintaan->id)->max('progres') ?? 0);
+                abort_if($progresValue < $progresTerakhir, 422, 'Persentase progres tidak boleh lebih kecil dari progres terakhir ('.$progresTerakhir.'%).');
             }
 
-            $lampiranPath = $laporan->lampiran_path;
+            $lampiranPath = $sumber->lampiran_path;
             if ($request->hasFile('lampiran')) {
-                if ($lampiranPath) {
-                    Storage::disk('public')->delete($lampiranPath);
-                }
                 $lampiranPath = $request->file('lampiran')->store('lampiran-laporan', 'public');
             }
 
-            $laporan->update([
+            $statusLaporan = ($permintaan && $progresValue < 100) ? Laporan::STATUS_PROGRES : 'Menunggu';
+
+            $laporanBaru = Laporan::create([
+                'satuan_id' => $sumber->satuan_id,
+                'user_id' => $user->id,
+                'tujuan_satuan_id' => $sumber->tujuan_satuan_id,
+                'permintaan_laporan_id' => $sumber->permintaan_laporan_id,
+                'proyek' => $sumber->proyek,
+                'perihal' => $sumber->perihal,
                 'deskripsi' => $validated['deskripsi'],
                 'kendala' => $validated['kendala'] ?? null,
                 'progres' => $progresValue,
                 'prioritas' => $validated['prioritas'],
                 'lampiran_path' => $lampiranPath,
-                'status' => ($permintaan && $progresValue < 100) ? Laporan::STATUS_PROGRES : 'Menunggu',
+                'status' => $statusLaporan,
             ]);
 
             if ($permintaan) {
-                // Progres permintaan dihitung ulang sebagai nilai TERTINGGI
-                // antar semua checkpoint (bukan langsung ditimpa nilai baru),
-                // supaya kalau yang diedit itu checkpoint LAMA (bukan yang
-                // terakhir), progres permintaan tidak ikut mundur.
-                $progresCheckpointSebelumnya = Laporan::where('permintaan_laporan_id', $permintaan->id)
-                    ->where('id', '!=', $laporan->id)
-                    ->max('progres') ?? 0;
-                $permintaan->progres = max($progresValue, $progresCheckpointSebelumnya);
+                $permintaan->progres = max($progresValue, (int) $permintaan->progres);
                 if ($progresValue >= 100) {
-                    $permintaan->laporan_id = $laporan->id;
+                    $permintaan->laporan_id = $laporanBaru->id;
                     $permintaan->status = PermintaanLaporan::STATUS_PEMERIKSAAN;
                     $permintaan->selesai_at = null;
                 }
@@ -244,12 +241,13 @@ class LaporanController extends Controller
             }
         });
 
-        ActivityLog::catat('laporan.update-progres', "Mengedit checkpoint progres laporan \"{$laporan->perihal}\" menjadi {$laporan->progres}%.", $user, [
-            'laporan_id' => $laporan->id,
-            'progres' => $laporan->progres,
+        ActivityLog::catat('laporan.update-progres', "Mengirim checkpoint progres baru laporan \"{$laporanBaru->perihal}\" sebesar {$laporanBaru->progres}%.", $user, [
+            'laporan_id' => $laporanBaru->id,
+            'progres' => $laporanBaru->progres,
+            'permintaan_laporan_id' => $laporanBaru->permintaan_laporan_id,
         ]);
 
-        return back()->with('status', 'Progres laporan berhasil diperbarui.');
+        return back()->with('status', 'Checkpoint progres '.$laporanBaru->progres.'% berhasil dikirim.');
     }
 
     public function updateStatus(Request $request, Laporan $laporan): RedirectResponse
