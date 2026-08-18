@@ -1,0 +1,44 @@
+name: Apply modal corner fix
+
+on:
+  push:
+    branches:
+      - refactor-fokus-laporan
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refactor-fokus-laporan
+          fetch-depth: 1
+
+      - name: Patch modal CSS and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          file="resources/views/siberad/dashboards/laporan-role.blade.php"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("resources/views/siberad/dashboards/laporan-role.blade.php")
+          s = p.read_text(encoding="utf-8")
+          old = '.report-modal-card{width:min(720px,100%);max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--border-soft);border-radius:14px;'
+          new = '.report-modal-card{width:min(720px,100%);max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--border-soft);border-radius:20px !important;background-clip:padding-box;'
+          if old not in s:
+              raise SystemExit("target modal CSS not found; refusing to modify unrelated code")
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding="utf-8")
+          PY
+
+          rm -f .github/workflows/apply-modal-corner-fix.yml
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add resources/views/siberad/dashboards/laporan-role.blade.php .github/workflows/apply-modal-corner-fix.yml
+          git commit -m "fix: round report edit modal corners" || exit 0
+          git push origin HEAD:refactor-fokus-laporan
