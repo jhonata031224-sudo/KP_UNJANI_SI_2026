@@ -5,7 +5,7 @@
     data-permintaan-dibatalkan="{{ $l->permintaanLaporan?->dibatalkan_at?->translatedFormat('d M Y H:i') }}"
     data-permintaan-terlambat="{{ $l->permintaanLaporan?->isTerlambat() ? '1' : '' }}"
     data-progres="{{ $l->progres }}"
-    data-updated="{{ $l->updated_at?->translatedFormat('d M Y H:i') }}"
+    data-updated="{{ $l->updated_at?->format('Y-m-d H:i:s.uP') }}"
     data-kendala="{{ e($l->kendala ?? '') }}"
     data-permintaan-id="{{ $l->permintaan_laporan_id }}"
     data-laporan-id="{{ $l->id }}"
