@@ -3,24 +3,11 @@
     var endpoint = '{{ route('laporan.log-aktivitas.realtime') }}';
     var polling = false;
     var initialRenderComplete = false;
+    var pollTimer = null;
 
     function setText(id, value) {
         var el = document.getElementById(id);
         if (el) el.textContent = value;
-    }
-
-    function statusClass(status) {
-        var value = String(status || '').toLowerCase();
-        if (value.indexOf('tolak') !== -1) return 'bad';
-        if (value.indexOf('setuj') !== -1 || value.indexOf('diterima') !== -1) return 'ok';
-        if (value.indexOf('revisi') !== -1) return 'revisi';
-        if (value.indexOf('progres') !== -1 || value.indexOf('sedang') !== -1) return 'blue';
-        return 'wait';
-    }
-
-    function statusLabel(item) {
-        if (item && item.is_progres) return 'Progres · ' + item.progres + '%';
-        return item.status || '-';
     }
 
     function highlightRow(row, className) {
@@ -53,12 +40,28 @@
                 if (!laporanId) return;
 
                 var existing = tbody.querySelector('tr[data-laporan-id="' + laporanId + '"]');
-                var changed = !!existing && existing.getAttribute('data-updated') !== row.getAttribute('data-updated');
-                var isNew = !existing;
+                var meta = changedMeta[String(laporanId)] || {};
+                var oldProgress = existing ? existing.getAttribute('data-progres') : null;
+                var newProgress = row.getAttribute('data-progres');
+                var oldStatus = existing ? existing.getAttribute('data-laporan-status') : null;
+                var newStatus = row.getAttribute('data-laporan-status');
+                var oldUpdated = existing ? existing.getAttribute('data-updated') : null;
+                var newUpdated = row.getAttribute('data-updated');
 
-                if (!existing && !initialRenderComplete) {
-                    return;
-                }
+                /*
+                 * Jangan hanya mengandalkan updated_at. Progress adalah field
+                 * utama yang harus terlihat realtime di DANPUS. Kalau timestamp
+                 * dari DB/proxy kebetulan tidak berubah, perubahan progress atau
+                 * status tetap dianggap sebagai perubahan dan row tetap diganti.
+                 */
+                var changed = !!existing && (
+                    oldUpdated !== newUpdated ||
+                    String(oldProgress) !== String(newProgress) ||
+                    oldStatus !== newStatus ||
+                    existing.getAttribute('data-kendala') !== row.getAttribute('data-kendala')
+                );
+
+                if (!existing && !initialRenderComplete) return;
 
                 if (!existing) {
                     row.classList.add('is-realtime-new');
@@ -71,11 +74,6 @@
 
                 if (!changed) return;
 
-                var oldProgress = existing.getAttribute('data-progres');
-                var newProgress = row.getAttribute('data-progres');
-                var oldStatus = existing.getAttribute('data-laporan-status');
-                var meta = changedMeta[String(laporanId)] || {};
-
                 existing.replaceWith(row);
                 highlightRow(row, 'is-realtime-updated');
 
@@ -85,7 +83,7 @@
                     if (window.siberadShowToast) {
                         window.siberadShowToast('success', 'Progres ' + newProgress + '% masuk dari ' + sender + ': ' + subject);
                     }
-                } else if (initialRenderComplete && oldStatus !== row.getAttribute('data-laporan-status') && window.siberadShowToast) {
+                } else if (initialRenderComplete && oldStatus !== newStatus && window.siberadShowToast) {
                     var senderStatus = row.getAttribute('data-satuan-nama') || 'Satuan';
                     var subjectStatus = row.getAttribute('data-perihal') || meta.perihal || 'Laporan';
                     window.siberadShowToast('success', 'Status laporan diperbarui dari ' + senderStatus + ': ' + subjectStatus);
@@ -110,13 +108,14 @@
         if (polling) return;
         polling = true;
 
-        fetch(endpoint + '?since=0&realtime=1', {
+        fetch(endpoint + '?since=0&realtime=1&_=' + Date.now(), {
             method: 'GET',
             credentials: 'same-origin',
             cache: 'no-store',
             headers: {
                 'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Cache-Control': 'no-cache'
             }
         })
         .then(function (response) {
@@ -134,7 +133,6 @@
             setText('kpiTotalLaporan', data.total_laporan);
             setText('kpiDisetujuiLaporan', data.total_disetujui);
             setText('kpiDitolakLaporan', data.total_ditolak);
-
             upsertRows(data.rows || {}, data.items || []);
             initialRenderComplete = true;
         })
@@ -144,14 +142,37 @@
         });
     }
 
+    function scheduleNextPoll() {
+        if (pollTimer) window.clearTimeout(pollTimer);
+        pollTimer = window.setTimeout(function () {
+            poll();
+            scheduleNextPoll();
+        }, 2000);
+    }
+
     function start() {
-        if (!document.querySelector('[id^="satlakLaporanBody-"]')) return;
+        /*
+         * Jangan berhenti hanya karena tabel belum ada saat script dieksekusi.
+         * Shell DANPUS memuat partial ini terpisah dari markup tabel, sehingga
+         * selector tabel bukan syarat untuk memulai realtime.
+         */
         poll();
-        window.setInterval(poll, 2000);
+        scheduleNextPoll();
+
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) {
+                poll();
+                scheduleNextPoll();
+            }
+        });
+        window.addEventListener('focus', function () {
+            poll();
+            scheduleNextPoll();
+        });
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', start);
+        document.addEventListener('DOMContentLoaded', start, { once: true });
     } else {
         start();
     }
