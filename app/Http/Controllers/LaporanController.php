@@ -15,67 +15,6 @@ use Illuminate\Support\Facades\Storage;
 
 class LaporanController extends Controller
 {
-    private const KODE_SATUAN_PELAKSANA = [
-        'SATLAKDAK', 'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDUKTEK',
-        'DIKLAT', 'BINUM', 'BINFUNG', 'BINMAT',
-    ];
-
-    public function realtime(Request $request): JsonResponse
-    {
-        $user = $request->user()->load('satuan');
-        $kode = strtoupper((string) $user->satuan?->kode);
-        abort_unless(in_array($kode, ['DANPUS', 'WADAN'], true), 403);
-
-        $satuanIds = Satuan::whereIn('kode', self::KODE_SATUAN_PELAKSANA)->pluck('id');
-        $since = max(0, (int) $request->query('since', 0));
-
-        $latestId = (int) (Laporan::whereIn('satuan_id', $satuanIds)->max('id') ?? 0);
-
-        $items = Laporan::with(['satuan', 'tujuanSatuan', 'permintaanLaporan'])
-            ->whereIn('satuan_id', $satuanIds)
-            ->where('id', '>', $since)
-            ->orderBy('id')
-            ->get();
-
-        $rowsBySatuan = $items->groupBy('satuan_id')->map(
-            fn ($group) => $group
-                ->map(fn ($l) => view('siberad.dashboards.partials.laporan-pimpinan-row', ['l' => $l])->render())
-                ->implode('')
-        );
-
-        $semuaStatus = Laporan::whereIn('satuan_id', $satuanIds)->get(['satuan_id', 'status']);
-        $statsBySatuan = collect($satuanIds)->mapWithKeys(function ($satuanId) use ($semuaStatus) {
-            $group = $semuaStatus->where('satuan_id', $satuanId);
-            return [$satuanId => [
-                'total' => $group->count(),
-                'menunggu' => $group->where('status', 'Menunggu')->count(),
-                'diterima' => $group->filter(fn ($l) => str_contains(strtolower($l->status), 'setuj') || str_contains(strtolower($l->status), 'diterima'))->count(),
-                'ditolak' => $group->filter(fn ($l) => str_contains(strtolower($l->status), 'tolak'))->count(),
-            ]];
-        });
-
-        $meta = $items->map(fn ($l) => [
-            'laporan_id' => $l->id,
-            'satuan_id' => $l->satuan_id,
-            'satuan_nama' => $l->satuan->nama ?? 'Satuan',
-            'perihal' => $l->perihal,
-            'progres' => $l->progres,
-            'is_progres' => $l->status === Laporan::STATUS_PROGRES,
-        ])->values();
-
-        return response()->json([
-            'latest_id' => $latestId,
-            'rows' => $rowsBySatuan,
-            'stats' => $statsBySatuan,
-            'items' => $meta,
-            'total_laporan' => $semuaStatus->count(),
-            'total_disetujui' => $semuaStatus->filter(fn ($l) => str_contains(strtolower($l->status), 'setuj') || str_contains(strtolower($l->status), 'diterima'))->count(),
-            'total_ditolak' => $semuaStatus->filter(fn ($l) => str_contains(strtolower($l->status), 'tolak'))->count(),
-        ], 200, [
-            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-        ]);
-    }
-
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
