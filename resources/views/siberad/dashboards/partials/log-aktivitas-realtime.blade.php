@@ -12,6 +12,7 @@
     function highlightRow(row) {
         if (!row) return;
         row.classList.remove('is-realtime-updated', 'is-realtime-new');
+        void row.offsetWidth;
         row.classList.add('is-realtime-updated');
         window.setTimeout(function () { row.classList.remove('is-realtime-updated'); }, 1800);
     }
@@ -37,16 +38,68 @@
         return history;
     }
 
+    // Ini adalah history yang benar-benar ditampilkan DI DALAM isi
+    // "Laporan dibuat". Setiap checkpoint baru ditambahkan, bukan mengganti
+    // history sebelumnya.
+    function renderProgressFlow(details, values) {
+        if (!details) return;
+        var clean = uniqueProgress(values);
+        var content = details.querySelector(':scope > .danpus-report-content');
+        if (!content) return;
+
+        var flow = content.querySelector(':scope > .danpus-progress-flow');
+        if (!flow) {
+            flow = document.createElement('div');
+            flow.className = 'danpus-progress-flow';
+            flow.setAttribute('data-danpus-progress-flow', '1');
+            var label = document.createElement('div');
+            label.className = 'danpus-progress-flow-label';
+            label.textContent = 'Progres laporan';
+            flow.appendChild(label);
+            var list = document.createElement('div');
+            list.className = 'danpus-progress-flow-list';
+            flow.appendChild(list);
+            content.insertBefore(flow, content.firstChild);
+        }
+
+        var list = flow.querySelector('.danpus-progress-flow-list');
+        if (!list) return;
+        var oldValues = Array.prototype.slice.call(list.querySelectorAll('.danpus-progress-flow-item')).map(function (el) {
+            return el.getAttribute('data-progress');
+        });
+        var oldLast = oldValues.length ? oldValues[oldValues.length - 1] : null;
+
+        list.innerHTML = '';
+        clean.forEach(function (value, index) {
+            var item = document.createElement('span');
+            item.className = 'danpus-progress-flow-item' + (index === clean.length - 1 ? ' latest' : '');
+            item.setAttribute('data-progress', value);
+            item.textContent = 'Progres · ' + value + '%';
+            if (String(value) !== String(oldLast)) {
+                item.classList.add('is-progress-added');
+            }
+            list.appendChild(item);
+            if (index < clean.length - 1) {
+                var arrow = document.createElement('span');
+                arrow.className = 'danpus-progress-flow-arrow';
+                arrow.textContent = '→';
+                list.appendChild(arrow);
+            }
+        });
+    }
+
     function setHistory(details, values) {
         if (!details) return;
         var history = makeHistory(values);
-        var old = details.querySelector(':scope > summary .danpus-progress-history');
-        if (old) old.replaceWith(history);
-        else details.querySelector(':scope > summary')?.appendChild(history);
+        var summary = details.querySelector(':scope > summary');
+        if (summary) {
+            var old = summary.querySelector(':scope > .danpus-progress-history');
+            if (old) old.replaceWith(history);
+            else summary.appendChild(history);
+        }
+        renderProgressFlow(details, values);
     }
 
-    // Update persentase yang tampil DI DALAM alur/detail laporan juga,
-    // bukan hanya chip progres pada judul dropdown.
     function updateProgressInsideRow(row) {
         if (!row) return;
         var progress = row.getAttribute('data-progres');
@@ -57,18 +110,14 @@
             el.setAttribute('data-progres', progress);
             if (el.matches('.status-pill') || el.classList.contains('status-pill')) {
                 var status = row.getAttribute('data-laporan-status') || '';
-                if (status.toLowerCase().indexOf('progres') !== -1) {
-                    el.textContent = 'Progres · ' + progress + '%';
-                }
+                if (status.toLowerCase().indexOf('progres') !== -1) el.textContent = 'Progres · ' + progress + '%';
             }
         });
 
         var pill = row.querySelector('.status-pill');
         if (pill) {
             var statusText = row.getAttribute('data-laporan-status') || '';
-            if (statusText.toLowerCase().indexOf('progres') !== -1) {
-                pill.textContent = 'Progres · ' + progress + '%';
-            }
+            if (statusText.toLowerCase().indexOf('progres') !== -1) pill.textContent = 'Progres · ' + progress + '%';
         }
 
         var detailButton = row.querySelector('.detail-btn');
@@ -80,14 +129,10 @@
         if (permintaanId) {
             var byRequest = section.querySelector('.danpus-report-dropdown[data-permintaan-id="' + permintaanId + '"]');
             if (byRequest) return byRequest;
-            var rowByRequest = section.querySelector('tr[data-permintaan-id="' + permintaanId + '"]');
-            if (rowByRequest) return rowByRequest.closest('.danpus-report-dropdown');
         }
         if (laporanId) {
             var byReport = section.querySelector('.danpus-report-dropdown[data-laporan-id="' + laporanId + '"]');
             if (byReport) return byReport;
-            var rowByReport = section.querySelector('tr[data-laporan-id="' + laporanId + '"]');
-            if (rowByReport) return rowByReport.closest('.danpus-report-dropdown');
         }
         return null;
     }
@@ -95,9 +140,7 @@
     function findCurrentRow(details, permintaanId, laporanId) {
         if (details) return details.querySelector('tr[data-laporan-id]');
         if (!permintaanId && !laporanId) return null;
-        var selector = permintaanId
-            ? 'tr[data-permintaan-id="' + permintaanId + '"]'
-            : 'tr[data-laporan-id="' + laporanId + '"]';
+        var selector = permintaanId ? 'tr[data-permintaan-id="' + permintaanId + '"]' : 'tr[data-laporan-id="' + laporanId + '"]';
         return document.querySelector(selector);
     }
 
@@ -125,6 +168,7 @@
         content.className = 'danpus-report-content';
         content.appendChild(row);
         details.appendChild(content);
+        renderProgressFlow(details, progressValues);
         return details;
     }
 
@@ -152,9 +196,7 @@
         });
         return Object.keys(groups).map(function (key) {
             var group = groups[key];
-            group.sort(function (a, b) {
-                return (Number(a.getAttribute('data-laporan-id')) || 0) - (Number(b.getAttribute('data-laporan-id')) || 0);
-            });
+            group.sort(function (a, b) { return (Number(a.getAttribute('data-laporan-id')) || 0) - (Number(b.getAttribute('data-laporan-id')) || 0); });
             var latest = group[group.length - 1];
             var values = uniqueProgress(group.map(function (row) { return row.getAttribute('data-progres'); }));
             return { key: key, latest: latest, progress: values };
@@ -195,15 +237,11 @@
                 var oldUpdated = current ? current.getAttribute('data-updated') : null;
                 var changed = !current || oldProgress !== row.getAttribute('data-progres') || oldUpdated !== row.getAttribute('data-updated') || current.getAttribute('data-laporan-id') !== laporanId;
 
-                // Dua target realtime sekaligus:
-                // 1) chip progres di header/perihal
-                // 2) persentase progres di dalam alur/detail laporan dibuat.
+                // Satu perihal tetap satu dropdown. Riwayat persen bertambah
+                // dan juga langsung terlihat di isi/alur "Laporan dibuat".
                 setHistory(details, item.progress);
-                if (changed) {
-                    replaceCurrentRow(details, row);
-                } else {
-                    updateProgressInsideRow(current);
-                }
+                if (changed) replaceCurrentRow(details, row);
+                else updateProgressInsideRow(current);
             });
         });
     }
@@ -270,6 +308,14 @@
 #monitoring tr.is-realtime-updated,
 [id^="satlak-"] tr.is-realtime-updated { animation: satlakRowRealtimeUpdated 1.8s ease; }
 [id^="satlak-"] .danpus-report-dropdown.is-realtime-new { animation: satlakDropdownRealtimeNew 1.8s ease; }
+.danpus-progress-flow { margin: 10px 0 12px; padding: 10px 12px; border: 1px solid rgba(59,130,246,.16); border-radius: 10px; background: rgba(59,130,246,.035); }
+.danpus-progress-flow-label { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 7px; opacity: .7; }
+.danpus-progress-flow-list { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.danpus-progress-flow-item { display: inline-flex; align-items: center; padding: 5px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1px solid rgba(100,116,139,.18); background: #fff; }
+.danpus-progress-flow-item.latest { border-color: rgba(16,185,129,.45); }
+.danpus-progress-flow-item.is-progress-added { animation: danpusProgressAdded .65s ease; }
+.danpus-progress-flow-arrow { opacity: .45; font-weight: 700; }
+@keyframes danpusProgressAdded { 0% { transform: scale(.82); opacity: .2; } 65% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
 @keyframes satlakRowRealtimeUpdated { 0% { background: rgba(245, 158, 11, .22); } 100% { background: transparent; } }
 @keyframes satlakDropdownRealtimeNew { 0% { box-shadow: 0 0 0 2px rgba(59, 130, 246, .28); } 100% { box-shadow: none; } }
 </style>
