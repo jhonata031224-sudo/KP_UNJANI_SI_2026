@@ -25,6 +25,7 @@ class PermintaanLaporan extends Model
         'dikerjakan_at',
         'selesai_at',
         'dibatalkan_at',
+        'archived_at',
     ];
 
     protected $casts = [
@@ -32,6 +33,7 @@ class PermintaanLaporan extends Model
         'dikerjakan_at' => 'datetime',
         'selesai_at' => 'datetime',
         'dibatalkan_at' => 'datetime',
+        'archived_at' => 'datetime',
         'progres' => 'integer',
     ];
 
