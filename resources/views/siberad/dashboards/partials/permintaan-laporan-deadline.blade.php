@@ -45,7 +45,7 @@
         }:{
             title:'Update Progres',
             desc:'Kirim update progres untuk permintaan ini.',
-            submit:'Kirim Update Progres',
+            submit:'Update Progres',
             confirmTitle:'Kirim Update Progres?',
             confirmBody:'Pastikan data yang kamu isi sudah benar. Progres ini masih bisa kamu edit lagi nanti lewat tombol Edit sebelum laporan final dikirim.',
             confirmYes:'Ya, Kirim'
@@ -88,6 +88,26 @@
         var tujuan=form.querySelector('[name="tujuan_satuan_id"]');
         if(tujuan) tujuan.disabled=locked;
     }
+    // <select> tidak punya "readonly" asli di HTML -- satu-satunya cara
+    // ngunci interaksinya adalah disabled, tapi field yang disabled tidak
+    // ikut terkirim saat submit form. Jadi kalau select ini mau dikunci
+    // (misal Tujuan Laporan/Prioritas pas mode "Update Progres" yang wajib
+    // dikirim ke LaporanController::store), sisipkan input hidden kembar
+    // yang bawa nilainya. Panggil dengan locked=false untuk lepas kuncinya
+    // lagi (dipakai saat modal yang sama dibuka ulang buat mode Edit).
+    function lockSelectWithShadow(select,locked){
+        if(!select) return;
+        select.disabled=locked;
+        var form=select.form; if(!form) return;
+        var shadow=form.querySelector('input[type="hidden"][data-shadow-for="'+select.name+'"]');
+        if(locked){
+            if(!shadow){shadow=document.createElement('input');shadow.type='hidden';shadow.setAttribute('data-shadow-for',select.name);form.appendChild(shadow)}
+            shadow.name=select.name;
+            shadow.value=select.value;
+        } else if(shadow){
+            shadow.removeAttribute('name');
+        }
+    }
     function initUsePermintaanButtons(){
         document.querySelectorAll('.use-permintaan').forEach(function(btn){
             if(btn.dataset.useBound === '1') return;
@@ -99,29 +119,42 @@
                 form.dataset.mode='create';
                 if(form.dataset.storeAction) form.action=form.dataset.storeAction;
                 setFormMethod(form,null);
-                lockIdentityFields(form,false);
+                lockIdentityFields(form,true);
                 var hidden=form.querySelector('input[name="permintaan_laporan_id"]');
                 if(!hidden){hidden=document.createElement('input');hidden.type='hidden';hidden.name='permintaan_laporan_id';form.appendChild(hidden)}
                 hidden.value=btn.dataset.requestId||'';
-                var tujuan=form.querySelector('[name="tujuan_satuan_id"]'); if(tujuan && btn.dataset.targetId) tujuan.value=btn.dataset.targetId;
+                var tujuan=form.querySelector('select[name="tujuan_satuan_id"]'); if(tujuan && btn.dataset.targetId) tujuan.value=btn.dataset.targetId;
                 var perihal=form.querySelector('[name="perihal"]'); if(perihal && btn.dataset.perihal) perihal.value=btn.dataset.perihal;
                 var kategori=form.querySelector('[name="proyek"]'); if(kategori && btn.dataset.kategori) kategori.value=btn.dataset.kategori;
-                var prioritas=form.querySelector('[name="prioritas"]'); if(prioritas && btn.dataset.prioritas) prioritas.value=btn.dataset.prioritas;
-                var deskripsi=form.querySelector('[name="deskripsi"]'); if(deskripsi && btn.dataset.instruksi && !deskripsi.value.trim()) deskripsi.value=btn.dataset.instruksi;
+                var prioritas=form.querySelector('select[name="prioritas"]'); if(prioritas && btn.dataset.prioritas) prioritas.value=btn.dataset.prioritas;
+                lockSelectWithShadow(tujuan,true);
+                lockSelectWithShadow(prioritas,true);
+                var deskripsi=form.querySelector('[name="deskripsi"]'); if(deskripsi) deskripsi.value='';
                 var kendala=form.querySelector('[name="kendala"]'); if(kendala) kendala.value='';
                 var lampiran=form.querySelector('[name="lampiran"]'); if(lampiran) lampiran.value='';
+                var lampiranClearBtn=document.getElementById('lampiranClearBtn'); if(lampiranClearBtn) lampiranClearBtn.style.display='none';
                 var progresInput=form.querySelector('[name="progres"]');
                 var progresHint=document.getElementById('progresHint');
                 if(progresInput){
                     var current=parseInt(btn.dataset.progres||'0',10);
-                    progresInput.min=current;
-                    if(!progresInput.value || parseInt(progresInput.value,10) < current) progresInput.value=current;
-                    if(progresHint) progresHint.textContent='Progres terakhir: '+current+'%. Isi minimal segitu, atau 100 kalau laporan ini sudah final.';
+                    // Tombol "Revisi" (resubmit laporan final yang ditolak)
+                    // beda aturan dari "Update Progres" checkpoint biasa --
+                    // progres permintaan-nya nyangkut di angka lama (biasanya
+                    // 100%) karena sengaja nggak direset pas ditolak, jadi di
+                    // sini progres yang SAMA boleh (cukup nggak boleh turun),
+                    // bukan wajib naik kayak checkpoint biasa.
+                    var isRevisi=btn.classList.contains('deadline-revisi');
+                    var minAllowed=isRevisi?current:Math.min(current+1,100);
+                    progresInput.min=minAllowed;
+                    if(!progresInput.value || parseInt(progresInput.value,10) < minAllowed) progresInput.value=minAllowed;
+                    if(progresHint) progresHint.textContent=isRevisi
+                        ? 'Minimal '+current+'%, atau 100% kalau sudah final.'
+                        : 'Harus lebih besar dari '+current+'%, atau 100% kalau sudah final.';
                 }
                 bindProgresLiveText(form);
                 applyLaporanTexts('create',progresInput?progresInput.value:0);
                 modal.classList.add('open');
-                perihal?.focus();
+                deskripsi?.focus();
             });
         });
     }
@@ -143,29 +176,110 @@
                 form.dataset.mode='edit';
                 form.action=btn.dataset.updateUrl;
                 setFormMethod(form,'PATCH');
+                var tujuan=form.querySelector('select[name="tujuan_satuan_id"]'); if(tujuan && btn.dataset.tujuanSatuanId) tujuan.value=btn.dataset.tujuanSatuanId;
+                lockSelectWithShadow(tujuan,false);
+                var prioritas=form.querySelector('select[name="prioritas"]'); if(prioritas) prioritas.value=btn.dataset.prioritas||'';
+                lockSelectWithShadow(prioritas,false);
                 lockIdentityFields(form,true);
-                var tujuan=form.querySelector('[name="tujuan_satuan_id"]'); if(tujuan && btn.dataset.tujuanSatuanId) tujuan.value=btn.dataset.tujuanSatuanId;
                 var perihal=form.querySelector('[name="perihal"]'); if(perihal) perihal.value=btn.dataset.perihal||'';
                 var kategori=form.querySelector('[name="proyek"]'); if(kategori) kategori.value=btn.dataset.proyek||'';
-                var prioritas=form.querySelector('[name="prioritas"]'); if(prioritas) prioritas.value=btn.dataset.prioritas||'';
                 var deskripsi=form.querySelector('[name="deskripsi"]'); if(deskripsi) deskripsi.value=btn.dataset.deskripsi||'';
                 var kendala=form.querySelector('[name="kendala"]'); if(kendala) kendala.value=btn.dataset.kendala||'';
                 var lampiran=form.querySelector('[name="lampiran"]'); if(lampiran) lampiran.value='';
+                var lampiranClearBtn=document.getElementById('lampiranClearBtn'); if(lampiranClearBtn) lampiranClearBtn.style.display='none';
                 var progresInput=form.querySelector('[name="progres"]');
                 var progresHint=document.getElementById('progresHint');
                 if(progresInput){
                     progresInput.min=0;
                     progresInput.value=btn.dataset.progres||'0';
-                    if(progresHint) progresHint.textContent='Mengedit checkpoint progres yang sudah dikirim. Perihal, kategori, dan tujuan tidak bisa diubah lewat form ini.';
+                    if(progresHint) progresHint.textContent='Mengedit checkpoint yang sudah dikirim.';
                 }
                 bindProgresLiveText(form);
                 applyLaporanTexts('edit',progresInput?progresInput.value:0);
                 modal.classList.add('open');
-                perihal?.focus();
+                deskripsi?.focus();
             });
         });
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initEditProgresButtons); else initEditProgresButtons();
+
+    // Validasi wajib-diisi custom untuk form Update Progres/Kirim Laporan --
+    // niru pola yang sama dipakai di modal "Buat Permintaan Laporan" pimpinan:
+    // ganti tooltip bawaan browser jadi pesan merah di bawah kolom + border
+    // merah, otomatis ke-reset begitu field-nya diisi/diubah lagi.
+    function initKirimLaporanValidation(){
+        var form=document.getElementById('kirimLaporanForm');
+        if(!form||form.dataset.validationReady==='1') return;
+        form.dataset.validationReady='1';
+        var messages={
+            tujuan_satuan_id:'Tujuan laporan wajib dipilih.',
+            progres:'Progres wajib diisi.',
+            prioritas:'Pilih salah satu prioritas.',
+            perihal:'Perihal wajib diisi.',
+            deskripsi:'Isi laporan wajib diisi.'
+        };
+        form.querySelectorAll('input[required],select[required],textarea[required]').forEach(function(input){
+            var anchor=input.closest('.form-field')||input;
+            var msg=anchor.querySelector(':scope > .kirim-laporan-error');
+            if(!msg){
+                msg=document.createElement('span');
+                msg.className='kirim-laporan-error';
+                msg.style.display='none';
+                anchor.appendChild(msg);
+            }
+            input.addEventListener('invalid',function(e){
+                e.preventDefault();
+                input.classList.add('field-invalid');
+                var text=messages[input.name]||'Kolom ini wajib diisi.';
+                if(input.name==='progres'&&input.validity.rangeUnderflow){
+                    text='Progres tidak boleh kurang dari '+input.min+'%.';
+                }
+                msg.textContent=text;
+                msg.style.display='flex';
+            });
+            function clearInvalid(){
+                input.classList.remove('field-invalid');
+                msg.style.display='none';
+            }
+            input.addEventListener('input',clearInvalid);
+            input.addEventListener('change',clearInvalid);
+        });
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initKirimLaporanValidation); else initKirimLaporanValidation();
+
+    // Tombol silang di sebelah input Lampiran -- muncul begitu ada file
+    // terpilih, klik buat ngosongin input-nya lagi (browser gak ngasih cara
+    // native buat clear file input selain reset value ke '').
+    function initLampiranClear(){
+        var wrap=document.querySelector('.lampiran-input-wrap');
+        var btn=document.getElementById('lampiranClearBtn');
+        if(!wrap||!btn||wrap.dataset.clearBound==='1') return;
+        wrap.dataset.clearBound='1';
+        function bindChange(input){
+            input.addEventListener('change',function(){
+                btn.style.display=(input.files&&input.files.length)?'flex':'none';
+            });
+        }
+        bindChange(document.getElementById('lampiran'));
+        btn.addEventListener('click',function(){
+            // Input ini juga "dipercantik" sama siberadEnhanceFileInputs()
+            // (dash-styles.blade.php) yang bikin tombol "Pilih File" + teks
+            // nama file SENDIRI di luar input aslinya. Reset value doang
+            // nggak nyentuh teks itu -- makanya harus nembak event 'change'
+            // biar listener punya enhancement itu juga ikut update tampilan
+            // balik ke "Tidak ada file yang dipilih".
+            var input=document.getElementById('lampiran');
+            input.value='';
+            input.dispatchEvent(new Event('change',{bubbles:true}));
+            btn.style.display='none';
+        });
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initLampiranClear); else initLampiranClear();
+
+    // Dipanggil ulang oleh polling realtime (permintaan-laporan-realtime.blade.php,
+    // laporan-role-realtime-sync.blade.php) setiap kali kartu permintaan diganti/
+    // ditambah, supaya tombol Update Progres/Revisi/Edit yang baru tetap bisa diklik.
+    window.siberadRebindPermintaanActions=function(){initUsePermintaanButtons();initEditProgresButtons();};
 
     // Pencarian daftar Permintaan Laporan -- reuse gaya .rpt-filter-* yang
     // sama dengan tabel lain (1 sistem), tapi logikanya custom karena isinya

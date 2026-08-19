@@ -128,14 +128,6 @@ class DashboardController
             ->latest()
             ->first();
         $laporanTerkirim = Laporan::with('tujuanSatuan')->where('satuan_id', $satuan->id)->latest()->get();
-        $laporanMasuk = Laporan::with(['satuan','tujuanSatuan'])
-            ->where('tujuan_satuan_id', $satuan->id)
-            ->where(function ($query) {
-                $query->where('status', 'Menunggu')
-                    ->orWhere('status', 'like', 'Revisi%');
-            })
-            ->latest()
-            ->get();
         // Urutan tampil: Admin -> Pimpinan -> Direktorat -> Satuan, lalu
         // abjad nama di dalam kategori yang sama.
         $prioritasKategori = Satuan::prioritasKategori();
@@ -193,10 +185,27 @@ class DashboardController
         $laporanPimpinanSatlak = collect();
         if ($modePimpinan) {
             $satuanPimpinanIds = Satuan::whereIn('kode', $kodeSatuanPelaksanaUrut)->pluck('id');
+            // Tiap checkpoint progres tersimpan sebagai baris Laporan
+            // tersendiri demi riwayat (lihat komentar di
+            // LaporanController::updateProgres) -- itu laporan beneran (ada
+            // isinya sendiri per tahap) jadi masing-masing tetap dihitung.
+            // Yang JANGAN ikut dobel-dihitung adalah laporan FINAL yang
+            // sempat ditolak/revisi lalu dikirim ulang (mis. Tahap Akhir ->
+            // ditolak -> Revisi -> ditolak lagi -> Revisi lagi -> disetujui):
+            // itu semua satu deliverable yang sama, cuma baris terbaru (hasil
+            // akhirnya sekarang) yang dihitung, versi-versi lama yang sudah
+            // "ketimpa" resubmit tidak.
             $laporanPimpinanSatlak = Laporan::with(['satuan','tujuanSatuan','permintaanLaporan'])
                 ->whereIn('satuan_id', $satuanPimpinanIds)
                 ->latest()
-                ->get();
+                ->get()
+                ->groupBy(fn ($l) => $l->permintaan_laporan_id ?? 'single-'.$l->id)
+                ->flatMap(function ($group) {
+                    $progres = $group->where('status', Laporan::STATUS_PROGRES);
+                    $final = $group->reject(fn ($l) => $l->status === Laporan::STATUS_PROGRES)->sortByDesc('id')->take(1);
+                    return $progres->merge($final);
+                })
+                ->values();
             $monitoringPimpinanSatlak = Satuan::whereIn('id', $satuanPimpinanIds)->get()
                 ->sortBy(fn ($satuanPimpinan) => array_search($satuanPimpinan->kode, $kodeSatuanPelaksanaUrut))
                 ->values()
@@ -204,18 +213,29 @@ class DashboardController
                 'id' => $satuanPimpinan->id,
                 'kode' => $satuanPimpinan->kode,
                 'nama' => $satuanPimpinan->nama,
-                'total' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->count(),
+                // "Total Laporan" di sini ringkasan JENIS aktivitas per
+                // permintaan (maks 2: ada checkpoint progres dan/atau ada
+                // laporan final), bukan jumlah baris mentah -- beda level
+                // dari riwayat detail di Log Aktivitas yang sengaja tetap
+                // menghitung tiap checkpoint satu-satu.
+                'total' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)
+                    ->groupBy(fn ($l) => $l->permintaan_laporan_id ?? 'single-'.$l->id)
+                    ->sum(function ($group) {
+                        $adaProgres = $group->contains(fn ($l) => $l->status === Laporan::STATUS_PROGRES);
+                        $adaFinal = $group->contains(fn ($l) => $l->status !== Laporan::STATUS_PROGRES);
+                        return ($adaProgres ? 1 : 0) + ($adaFinal ? 1 : 0);
+                    }),
                 'menunggu' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->where('status', 'Menunggu')->count(),
                 'diterima' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count(),
                 'ditolak' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count(),
             ]);
-            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','laporanMasuk','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending'));
+            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending'));
         }
         // Terlambat/Dibatalkan dihitung dari SELURUH permintaan laporan yang
         // ditujukan ke satuan ini, bukan $permintaanLaporan (yang sengaja
         // sudah difilter cuma yang masih actionable, tanpa Selesai/
         // Dibatalkan, khusus buat daftar tugas di tab "Permintaan Laporan").
         $permintaanLaporanSemua = PermintaanLaporan::where('tujuan_satuan_id', $satuan->id)->get();
-        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanMasuk','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending') + ['defaultTujuanId' => $defaultDanpus?->id, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count(), 'masuk' => $laporanMasuk->count()]]);
+        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending') + ['defaultTujuanId' => $defaultDanpus?->id, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
     }
 }

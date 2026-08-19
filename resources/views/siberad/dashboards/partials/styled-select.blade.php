@@ -28,6 +28,7 @@
 .styled-select-trigger:hover,.styled-select-wrap.open .styled-select-trigger{border-color:#c97a00;background:var(--p-surface,var(--panel));box-shadow:0 3px 12px rgba(15,23,42,.06)}
 .styled-select-trigger:focus-visible{outline:none;border-color:#c97a00;box-shadow:0 0 0 3px rgba(201,122,0,.10)}
 .styled-select-trigger.disabled{opacity:.55;cursor:not-allowed}
+.styled-select-trigger.disabled .ss-chevron{display:none}
 .styled-select-trigger .ss-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;flex:1;min-width:0}
 .styled-select-trigger .ss-chevron{width:14px;height:14px;flex:0 0 auto;color:var(--p-muted,var(--text-muted));transition:transform .2s ease}
 .styled-select-wrap.open .ss-chevron{transform:rotate(180deg)}

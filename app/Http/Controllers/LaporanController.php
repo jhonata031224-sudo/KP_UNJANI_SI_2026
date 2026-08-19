@@ -144,13 +144,13 @@ class LaporanController extends Controller
     {
         $validated = $request->validate([
             'tujuan_satuan_id' => ['required', 'integer', 'exists:satuans,id'],
-            'permintaan_laporan_id' => ['nullable', 'integer', 'exists:permintaan_laporans,id'],
+            'permintaan_laporan_id' => ['required', 'integer', 'exists:permintaan_laporans,id'],
             'proyek' => ['nullable', 'string', 'max:255'],
             'perihal' => ['required', 'string', 'max:255'],
             'deskripsi' => ['required', 'string', 'max:10000'],
             'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
             'lampiran' => ['nullable', 'file', 'mimes:pdf', 'max:20480'],
-            'progres' => ['nullable', 'integer', 'min:0', 'max:100', 'required_with:permintaan_laporan_id'],
+            'progres' => ['required', 'integer', 'min:0', 'max:100'],
             'kendala' => ['nullable', 'string', 'max:5000'],
         ]);
 
@@ -171,35 +171,39 @@ class LaporanController extends Controller
             );
         }
 
-        $permintaan = null;
-        if (!empty($validated['permintaan_laporan_id'])) {
-            $permintaan = PermintaanLaporan::findOrFail($validated['permintaan_laporan_id']);
-            abort_unless((int) $permintaan->tujuan_satuan_id === (int) $satuanAsal->id, 403, 'Permintaan laporan bukan untuk satuan Anda.');
-            abort_unless((int) $permintaan->pembuat->satuan_id === (int) $tujuan->id, 422, 'Tujuan laporan tidak sesuai dengan permintaan laporan.');
-        }
+        $permintaan = PermintaanLaporan::findOrFail($validated['permintaan_laporan_id']);
+        abort_unless((int) $permintaan->tujuan_satuan_id === (int) $satuanAsal->id, 403, 'Permintaan laporan bukan untuk satuan Anda.');
+        abort_unless((int) $permintaan->pembuat->satuan_id === (int) $tujuan->id, 422, 'Tujuan laporan tidak sesuai dengan permintaan laporan.');
 
-        $progresValue = $permintaan ? (int) $validated['progres'] : 100;
+        $progresValue = (int) $validated['progres'];
         $laporan = null;
 
         DB::transaction(function () use (&$laporan, &$permintaan, $progresValue, $validated, $satuanAsal, $user, $tujuan, $request) {
-            if ($permintaan) {
-                $permintaan = PermintaanLaporan::whereKey($permintaan->id)->lockForUpdate()->first();
-                abort_if($permintaan->laporan_id, 422, 'Permintaan laporan tersebut sudah memiliki laporan yang menunggu pemeriksaan atau sudah diputuskan.');
-                abort_if($permintaan->status === PermintaanLaporan::STATUS_DIBATALKAN, 422, 'Permintaan laporan ini sudah dibatalkan oleh Pimpinan.');
-                abort_if($progresValue < $permintaan->progres, 422, 'Persentase progres tidak boleh lebih kecil dari progres terakhir ('.$permintaan->progres.'%).');
-            }
+            $permintaan = PermintaanLaporan::whereKey($permintaan->id)->lockForUpdate()->first();
+            abort_if($permintaan->laporan_id, 422, 'Permintaan laporan tersebut sudah memiliki laporan yang menunggu pemeriksaan atau sudah diputuskan.');
+            abort_if($permintaan->status === PermintaanLaporan::STATUS_DIBATALKAN, 422, 'Permintaan laporan ini sudah dibatalkan oleh Pimpinan.');
+            // Progres yang sama cuma ditolak buat checkpoint biasa (harus
+            // strictly naik). Kalau ini resubmit hasil Revisi, laporan
+            // terakhirnya udah ditolak/diminta revisi -- progres permintaan
+            // masih nyangkut di angka lama (biasanya 100%) karena memang
+            // sengaja nggak direset pas ditolak, jadi di sini cukup nggak
+            // boleh MENURUN dari itu, boleh sama.
+            $progresMinimal = $permintaan->isSedangRevisi() ? $permintaan->progres : $permintaan->progres + 1;
+            abort_if($progresValue < $progresMinimal, 422, $permintaan->isSedangRevisi()
+                ? 'Persentase progres tidak boleh lebih kecil dari progres terakhir ('.$permintaan->progres.'%).'
+                : 'Persentase progres harus lebih besar dari progres terakhir ('.$permintaan->progres.'%).');
 
             $lampiranPath = $request->hasFile('lampiran')
                 ? $request->file('lampiran')->store('lampiran-laporan', 'public')
                 : null;
 
-            $statusLaporan = ($permintaan && $progresValue < 100) ? Laporan::STATUS_PROGRES : 'Menunggu';
+            $statusLaporan = $progresValue < 100 ? Laporan::STATUS_PROGRES : 'Menunggu';
 
             $laporan = Laporan::create([
                 'satuan_id' => $satuanAsal->id,
                 'user_id' => $user->id,
                 'tujuan_satuan_id' => $tujuan->id,
-                'permintaan_laporan_id' => $permintaan?->id,
+                'permintaan_laporan_id' => $permintaan->id,
                 'proyek' => $validated['proyek'] ?? null,
                 'perihal' => $validated['perihal'],
                 'deskripsi' => $validated['deskripsi'],
@@ -210,15 +214,13 @@ class LaporanController extends Controller
                 'status' => $statusLaporan,
             ]);
 
-            if ($permintaan) {
-                $permintaan->progres = $progresValue;
-                if ($progresValue >= 100) {
-                    $permintaan->laporan_id = $laporan->id;
-                    $permintaan->status = PermintaanLaporan::STATUS_PEMERIKSAAN;
-                    $permintaan->selesai_at = null;
-                }
-                $permintaan->save();
+            $permintaan->progres = $progresValue;
+            if ($progresValue >= 100) {
+                $permintaan->laporan_id = $laporan->id;
+                $permintaan->status = PermintaanLaporan::STATUS_PEMERIKSAAN;
+                $permintaan->selesai_at = null;
             }
+            $permintaan->save();
         });
 
         foreach (User::where('satuan_id', $tujuan->id)->get() as $penerima) {

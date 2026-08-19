@@ -67,6 +67,8 @@
                 const existing=[...list.querySelectorAll('[data-realtime-permintaan-id]')];const seen=new Set();
                 existing.forEach(function(item){const id=String(item.dataset.realtimePermintaanId||'');const replacement=freshById.get(id);if(replacement){item.replaceWith(replacement);seen.add(id);}else if(id)item.remove();});
                 fresh.slice().reverse().forEach(function(item){const id=String(item.dataset.realtimePermintaanId||'');if(!id||seen.has(id)||list.querySelector('[data-realtime-permintaan-id="'+id+'"]'))return;list.insertBefore(item,list.firstChild);});
+                window.siberadBindPermintaanDetailButtons&&window.siberadBindPermintaanDetailButtons();
+                window.siberadRebindPermintaanActions&&window.siberadRebindPermintaanActions();
             }).catch(function(){});
     }
 
