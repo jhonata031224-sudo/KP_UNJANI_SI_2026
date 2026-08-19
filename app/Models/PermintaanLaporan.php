@@ -11,6 +11,21 @@ class PermintaanLaporan extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope('hideArchivedOnPimpinanDashboard', function ($query): void {
+            $user = request()->user();
+            $kode = $user?->satuan?->kode ? strtoupper(trim($user->satuan->kode)) : null;
+
+            // Hanya berlaku pada initial Dashboard Pimpinan/Danpus.
+            // Endpoint realtime/riwayat tetap bisa mengambil data arsip
+            // karena tidak melewati kondisi request /dashboard ini.
+            if (request()->is('dashboard') && in_array($kode, ['DANPUS', 'WADAN'], true)) {
+                $query->whereNull($query->getModel()->getTable() . '.archived_at');
+            }
+        });
+    }
+
     protected $fillable = [
         'pembuat_id',
         'tujuan_satuan_id',
