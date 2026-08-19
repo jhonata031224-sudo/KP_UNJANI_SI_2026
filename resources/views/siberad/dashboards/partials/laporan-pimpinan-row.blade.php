@@ -8,7 +8,7 @@
     data-updated="{{ $l->updated_at?->format('Y-m-d H:i:s.uP') }}"
     data-kendala="{{ e($l->kendala ?? '') }}"
     data-permintaan-id="{{ $l->permintaan_laporan_id }}"
-    data-laporan-id="{{ $l->id }}"
+    data-laporan-id="{{ $l->permintaanLaporan && $l->permintaanLaporan->dikerjakan_at && $l->created_at && $l->created_at->lt($l->permintaanLaporan->dikerjakan_at) ? '' : $l->id }}"
     data-laporan-status="{{ e($l->status) }}"
     data-satuan-nama="{{ e($l->satuan->nama ?? '-') }}"
     data-perihal="{{ e($l->perihal) }}"
