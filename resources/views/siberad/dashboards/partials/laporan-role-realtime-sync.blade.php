@@ -86,4 +86,16 @@
     }
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
+
+// Delegated fallback specifically for Danpus/Wadan Riwayat Laporan.
+// Tabel Riwayat dapat diganti realtime (tbody replace), jadi listener dipasang
+// pada document dan tetap hidup tanpa mengubah tombol/fungsi lain.
+document.addEventListener('click',function(event){
+    const button=event.target.closest('#riwayat .detail-btn[onclick*="openReportDetail"]');
+    if(!button)return;
+    event.preventDefault();
+    if(typeof window.openReportDetail==='function'){
+        window.openReportDetail(button);
+    }
+},true);
 </script>
