@@ -51,7 +51,7 @@
             <button type="button" class="deadline-secondary small" data-request-detail-close="{{ $modalId }}" onclick="(function(id){var m=document.getElementById(id);if(!m)return;m.classList.remove('open');m.setAttribute('aria-hidden','true');if(!document.querySelector('.request-detail-modal.open,.progress-update-modal.open'))document.body.style.overflow='';})('{{ $modalId }}')">Kembali</button>
             <form method="POST" action="{{ route('permintaan-laporan.mulai', $permintaan) }}">
                 @csrf @method('PATCH')
-                <button type="submit" class="deadline-secondary small confirm-btn">Konfirmasi</button>
+                <button type="submit" class="deadline-secondary small request-confirm-submit">Konfirmasi</button>
             </form>
         </div>
     </div>
