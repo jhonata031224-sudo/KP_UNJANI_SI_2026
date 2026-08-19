@@ -13,9 +13,11 @@
 #permintaan-laporan .danpus-archive-row-content{min-width:0;display:inline-flex;align-items:center}
 #permintaan-laporan .danpus-archive-checkbox{width:16px;height:16px;flex:0 0 16px;margin:0;padding:0;accent-color:var(--p-accent);cursor:pointer}
 #permintaan-laporan .danpus-archive-checkbox:focus-visible{outline:2px solid color-mix(in srgb,var(--p-accent) 55%,transparent);outline-offset:2px;border-radius:4px}
-/* Baris non-eligible diberi ruang visual yang sama dengan checkbox+gap. */
-#permintaan-laporan.danpus-archive-mode .request-table tbody tr:not(.danpus-archive-eligible-row) td:first-child > .satuan-pill{display:inline-flex;align-items:center;gap:0;transform:translateX(6px)}
-#permintaan-laporan.danpus-archive-mode .request-table tbody tr:not(.danpus-archive-eligible-row) td:first-child > .satuan-pill::before{content:"";display:inline-block;width:25px;height:1px;flex:0 0 25px}
+/* Baris tanpa checkbox tetap benar-benar tanpa checkbox. Yang ditambahkan
+   hanya spacer transparan selebar checkbox + gap + offset yang sama,
+   sehingga pill SATLAK/SATLAK SISOS mulai pada x yang persis sama dengan
+   baris yang punya checkbox. */
+#permintaan-laporan.danpus-archive-mode .request-table tbody tr:not(.danpus-archive-eligible-row) td:first-child::before{content:"";display:inline-block;width:31px;height:16px;flex:0 0 31px;vertical-align:middle;}
 #permintaan-laporan .request-table tbody tr.danpus-archive-selected td{background:color-mix(in srgb,var(--p-accent) 5%,transparent)}
 #permintaan-laporan .request-table tbody tr.danpus-archive-selected td:first-child{box-shadow:inset 3px 0 0 var(--p-accent)}
 #permintaan-laporan.danpus-archive-mode .request-table tbody tr.danpus-archive-eligible-row{cursor:default}
