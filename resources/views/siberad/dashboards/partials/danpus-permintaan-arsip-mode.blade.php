@@ -1,11 +1,11 @@
 <style>
 /* Arsip mode hanya menyentuh tabel Permintaan Laporan Danpus. */
-#permintaan-laporan .danpus-archive-toggle-wrap{
+#permintaan-laporan .danpus-archive-actions{
   display:inline-flex;
   align-items:center;
   justify-content:flex-end;
   gap:8px;
-  flex-wrap:wrap;
+  flex:0 0 auto;
 }
 #permintaan-laporan .danpus-archive-toggle{
   display:inline-flex;
@@ -72,6 +72,13 @@
 #permintaan-laporan .danpus-archive-row-cell{
   justify-content:flex-start;
   gap:9px;
+  width:100%;
+  min-width:0;
+}
+#permintaan-laporan .danpus-archive-row-content{
+  min-width:0;
+  display:inline-flex;
+  align-items:center;
 }
 #permintaan-laporan .danpus-archive-checkbox{
   width:16px;
@@ -91,10 +98,10 @@
   cursor:not-allowed;
   opacity:.45;
 }
-#permintaan-laporan .request-table tbody tr.danpus-archive-eligible-row td{
+/* Geser seluruh baris secara utuh agar semua kolom tetap sejajar. */
+#permintaan-laporan .request-table tbody tr.danpus-archive-eligible-row{
   position:relative;
-  left:7px;
-  transition:left .2s ease,background-color .2s ease;
+  left:6px;
 }
 #permintaan-laporan .request-table tbody tr.danpus-archive-selected td{
   background:color-mix(in srgb,var(--p-accent) 5%,transparent);
@@ -106,7 +113,7 @@
   cursor:default;
 }
 @media(max-width:700px){
-  #permintaan-laporan .danpus-archive-toggle-wrap{justify-content:flex-start;margin-top:10px}
+  #permintaan-laporan .danpus-archive-actions{justify-content:flex-start}
 }
 </style>
 <script>
@@ -124,7 +131,6 @@
     panel.dataset.danpusArchiveModeBound='1';
 
     let active=false;
-    let observer=null;
     let refreshQueued=false;
     const selectedIds=new Set();
 
@@ -137,25 +143,39 @@
     };
 
     const rowStatus=row=>row?.dataset?.status||'';
-    const rowId=row=>{
-      const source=row?.querySelector('[data-permintaan-id]');
-      return String(source?.dataset?.permintaanId||'');
-    };
+    const rowId=row=>String(row?.querySelector('[data-permintaan-id]')?.dataset?.permintaanId||'');
     const eligibleRows=()=>Array.from(tbody.querySelectorAll('tr[data-status]')).filter(row=>eligibleStatus(rowStatus(row)));
 
-    const controls=document.createElement('div');
-    controls.className='danpus-archive-toggle-wrap';
-    controls.innerHTML=`
-      <span class="danpus-archive-count" id="danpusArchiveSelectedCount" aria-live="polite">0</span>
-      <button type="button" class="danpus-archive-toggle" id="danpusArchiveToggle" aria-pressed="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h16"></path><path d="M6.5 7.5v10.5A2 2 0 0 0 8.5 20h7a2 2 0 0 0 2-2V7.5"></path><path d="M9 7.5V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5v2"></path><path d="M10 11v5"></path><path d="M14 11v5"></path></svg>
-        <span class="danpus-archive-toggle-label">Arsip</span>
-      </button>`;
-    head.appendChild(controls);
+    /* Tombol Arsip ditempatkan tepat di sebelah kiri tombol Buat Permintaan,
+       tetapi keduanya tetap berada di group kanan yang sama agar posisi
+       tombol Buat Permintaan tidak berubah dari layout sebelumnya. */
+    const createButton=head.querySelector('#danpusOpenRequestForm');
+    if(!createButton)return;
+    let actions=head.querySelector('.danpus-archive-actions');
+    if(!actions){
+      actions=document.createElement('div');
+      actions.className='danpus-archive-actions';
+      createButton.parentNode?.insertBefore(actions,createButton);
+      actions.appendChild(createButton);
+    }
 
-    const toggle=controls.querySelector('#danpusArchiveToggle');
-    const toggleLabel=controls.querySelector('.danpus-archive-toggle-label');
-    const countBadge=controls.querySelector('#danpusArchiveSelectedCount');
+    const archiveButton=document.createElement('button');
+    archiveButton.type='button';
+    archiveButton.className='danpus-archive-toggle';
+    archiveButton.id='danpusArchiveToggle';
+    archiveButton.setAttribute('aria-pressed','false');
+    archiveButton.innerHTML=`
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h16"></path><path d="M6.5 7.5v10.5A2 2 0 0 0 8.5 20h7a2 2 0 0 0 2-2V7.5"></path><path d="M9 7.5V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5v2"></path><path d="M10 11v5"></path><path d="M14 11v5"></path></svg>
+      <span class="danpus-archive-toggle-label">Arsip</span>`;
+    actions.insertBefore(archiveButton,createButton);
+
+    const toggleLabel=archiveButton.querySelector('.danpus-archive-toggle-label');
+    const countBadge=document.createElement('span');
+    countBadge.className='danpus-archive-count';
+    countBadge.id='danpusArchiveSelectedCount';
+    countBadge.setAttribute('aria-live','polite');
+    countBadge.textContent='0';
+    actions.insertBefore(countBadge,archiveButton);
 
     function ensureHeaderCheckbox(){
       const firstTh=table.querySelector('thead tr th:first-child');
@@ -180,7 +200,8 @@
         checkbox.addEventListener('change',()=>{
           const rows=eligibleRows();
           rows.forEach(row=>{
-            const id=rowId(row); if(!id)return;
+            const id=rowId(row);
+            if(!id)return;
             if(checkbox.checked)selectedIds.add(id);else selectedIds.delete(id);
           });
           syncRows();
@@ -250,8 +271,10 @@
       const rows=Array.from(tbody.querySelectorAll('tr[data-status]'));
       rows.forEach(row=>{
         const eligible=eligibleStatus(rowStatus(row));
-        if(!active){removeRowArchiveUI(row);return;}
-        if(!eligible){removeRowArchiveUI(row);return;}
+        if(!active || !eligible){
+          removeRowArchiveUI(row);
+          return;
+        }
         row.classList.add('danpus-archive-eligible-row');
         const checkbox=ensureRowCheckbox(row);
         const id=rowId(row);
@@ -280,38 +303,31 @@
 
     function syncCount(){
       if(!countBadge)return;
-      let liveSelected=0;
-      eligibleRows().forEach(row=>{
-        const id=rowId(row);
-        if(id&&selectedIds.has(id))liveSelected++;
-      });
       for(const id of Array.from(selectedIds)){
-        const stillEligible=eligibleRows().some(row=>rowId(row)===id);
-        if(!stillEligible)selectedIds.delete(id);
+        if(!eligibleRows().some(row=>rowId(row)===id))selectedIds.delete(id);
       }
-      liveSelected=selectedIds.size;
-      countBadge.textContent=String(liveSelected);
-      countBadge.classList.toggle('is-visible',active&&liveSelected>0);
+      countBadge.textContent=String(selectedIds.size);
+      countBadge.classList.toggle('is-visible',active&&selectedIds.size>0);
     }
 
     function setMode(next){
       active=!!next;
       panel.classList.toggle('danpus-archive-mode',active);
-      toggle?.classList.toggle('is-active',active);
-      toggle?.setAttribute('aria-pressed',active?'true':'false');
+      archiveButton.classList.toggle('is-active',active);
+      archiveButton.setAttribute('aria-pressed',active?'true':'false');
       if(toggleLabel)toggleLabel.textContent=active?'Selesai':'Arsip';
       if(!active)selectedIds.clear();
       syncRows();
     }
 
-    toggle?.addEventListener('click',()=>setMode(!active));
+    archiveButton.addEventListener('click',()=>setMode(!active));
 
     const scheduleRefresh=()=>{
       if(refreshQueued)return;
       refreshQueued=true;
       requestAnimationFrame(()=>{refreshQueued=false;syncRows();});
     };
-    observer=new MutationObserver(scheduleRefresh);
+    const observer=new MutationObserver(scheduleRefresh);
     observer.observe(tbody,{childList:true,subtree:true});
 
     syncRows();
