@@ -7,20 +7,15 @@
 #permintaan-laporan .danpus-archive-toggle svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.9;flex-shrink:0}
 #permintaan-laporan .danpus-archive-count{display:none;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:var(--gold-dim);border:1px solid var(--border);color:var(--gold-bright);font-family:var(--mono);font-size:10px;font-weight:800}
 #permintaan-laporan .danpus-archive-count.is-visible{display:inline-flex}
-#permintaan-laporan .danpus-archive-head-cell,#permintaan-laporan .danpus-archive-row-cell{display:flex;align-items:center}
-#permintaan-laporan .danpus-archive-head-cell{justify-content:flex-start;gap:8px;transform:none}
-#permintaan-laporan .danpus-archive-row-cell{position:relative;justify-content:flex-start;gap:0;width:100%;min-width:0;transform:none;box-sizing:border-box;padding-left:25px}
-#permintaan-laporan .danpus-archive-row-content{min-width:0;display:inline-flex;align-items:center}
-#permintaan-laporan .danpus-archive-checkbox{width:16px;height:16px;flex:0 0 16px;margin:0;padding:0;accent-color:var(--p-accent);cursor:pointer}
-#permintaan-laporan .danpus-archive-row-cell > .danpus-archive-checkbox{position:absolute;left:0;top:50%;transform:translateY(-50%)}
+#permintaan-laporan .danpus-archive-head-cell{display:contents}
+#permintaan-laporan .danpus-archive-row-cell{display:contents}
+#permintaan-laporan .danpus-archive-row-content{display:contents}
+#permintaan-laporan .danpus-archive-checkbox{width:13px;height:13px;flex:0 0 13px;margin:0;padding:0;accent-color:var(--p-accent);cursor:pointer}
+#permintaan-laporan.danpus-archive-mode .request-table thead tr th:first-child,
+#permintaan-laporan.danpus-archive-mode .request-table tbody tr td:first-child{position:relative}
+#permintaan-laporan.danpus-archive-mode .danpus-archive-select-all,
+#permintaan-laporan.danpus-archive-mode .danpus-archive-row-checkbox{position:absolute;left:4px;top:50%;transform:translateY(-50%);z-index:2}
 #permintaan-laporan .danpus-archive-checkbox:focus-visible{outline:2px solid color-mix(in srgb,var(--p-accent) 55%,transparent);outline-offset:2px;border-radius:4px}
-/* Baris non-eligible memakai ruang kosong yang identik dengan slot checkbox + gap. */
-#permintaan-laporan.danpus-archive-mode .request-table tbody tr:not(.danpus-archive-eligible-row) td:first-child > .satuan-pill{display:inline-flex;align-items:center;transform:none;margin-left:25px}
-/* Kunci geometri tabel saat arsip aktif: checkbox muncul tanpa mengubah tinggi baris atau lebar kolom. */
-#permintaan-laporan.danpus-archive-mode .request-table{table-layout:fixed}
-#permintaan-laporan.danpus-archive-mode .request-table th,
-#permintaan-laporan.danpus-archive-mode .request-table td{vertical-align:middle}
-#permintaan-laporan.danpus-archive-mode .request-table tbody tr{position:relative}
 #permintaan-laporan .request-table tbody tr.danpus-archive-selected td{background:color-mix(in srgb,var(--p-accent) 5%,transparent)}
 #permintaan-laporan .request-table tbody tr.danpus-archive-selected td:first-child{box-shadow:inset 3px 0 0 var(--p-accent)}
 #permintaan-laporan.danpus-archive-mode .request-table tbody tr.danpus-archive-eligible-row{cursor:default}
