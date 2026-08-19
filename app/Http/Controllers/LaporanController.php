@@ -21,6 +21,23 @@ class LaporanController extends Controller
         'DIKLAT', 'BINUM', 'BINFUNG', 'BINMAT',
     ];
 
+    /**
+     * Baris "kosong" untuk tabel Riwayat Laporan / Laporan Masuk pada sinkronisasi
+     * realtime, agar sama dengan keterangan @empty di laporan-role.blade.php.
+     * Tanpa ini, replaceBody() di laporan-role-realtime-sync.blade.php akan
+     * menimpa tbody dengan string kosong setiap polling sehingga keterangan
+     * "Belum ada laporan" hilang begitu realtime sync jalan.
+     */
+    private function emptyStateRow(string $title, string $subtitle): string
+    {
+        $title = e($title);
+        $subtitle = e($subtitle);
+
+        return <<<HTML
+        <tr><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">{$title}</div><div class="empty-state-sub">{$subtitle}</div></div></td></tr>
+        HTML;
+    }
+
     public function realtime(Request $request): JsonResponse
     {
         $user = $request->user()->load('satuan');
@@ -58,8 +75,16 @@ class LaporanController extends Controller
 
             return response()->json([
                 'role' => 'pelaksana',
-                'sent_html' => $includeReports ? $sent->map(fn ($l) => view('siberad.dashboards.partials.laporan-role-realtime-sent-row', ['l' => $l])->render())->implode('') : '',
-                'incoming_html' => $includeReports ? $incoming->map(fn ($l) => view('siberad.dashboards.partials.laporan-role-realtime-incoming-row', ['l' => $l, 'canReview' => true, 'satuan' => $user->satuan])->render())->implode('') : '',
+                'sent_html' => $includeReports
+                    ? ($sent->isEmpty()
+                        ? $this->emptyStateRow('Belum ada laporan', 'Riwayat laporan yang kamu kirim akan muncul di sini.')
+                        : $sent->map(fn ($l) => view('siberad.dashboards.partials.laporan-role-realtime-sent-row', ['l' => $l])->render())->implode(''))
+                    : '',
+                'incoming_html' => $includeReports
+                    ? ($incoming->isEmpty()
+                        ? $this->emptyStateRow('Belum ada laporan masuk', 'Laporan dari satuan lain akan muncul di sini.')
+                        : $incoming->map(fn ($l) => view('siberad.dashboards.partials.laporan-role-realtime-incoming-row', ['l' => $l, 'canReview' => true, 'satuan' => $user->satuan])->render())->implode(''))
+                    : '',
                 'role_stats' => $roleStats,
             ], 200, [
                 'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
