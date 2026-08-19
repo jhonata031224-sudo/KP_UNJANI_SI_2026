@@ -92,7 +92,23 @@
                 existing.forEach(function(item){
                     const id=String(item.dataset.realtimePermintaanId||'');
                     const group=groups.get(id);
-                    if(group){item.replaceWith(group.article);placeModals(id,group.modals);seen.add(id);}
+                    if(group){
+                        // Endpoint ini selalu dipanggil dengan since=0 (lihat
+                        // syncRequestList di atas), jadi tiap 2.5 detik SEMUA
+                        // kartu aktif dikirim ulang meski tidak ada yang
+                        // berubah. Kalau selalu replaceWith tanpa syarat,
+                        // node tombol yang sedang diklik/di-hover user bisa
+                        // ikut tercabut dari DOM persis saat klik diproses --
+                        // event click-nya jadi tidak pernah sampai (terasa
+                        // seperti tombol tidak merespons). Modal yang lagi
+                        // dibuka user juga ikut tertutup paksa. Jadi kartu
+                        // hanya diganti kalau isinya benar-benar berubah, dan
+                        // tidak pernah diganti selagi modalnya sedang terbuka.
+                        const modalOpen=document.querySelector('.request-detail-modal.open[id$="-'+id+'"],.progress-update-modal.open[id$="-'+id+'"]');
+                        if(modalOpen){seen.add(id);return;}
+                        if(item.outerHTML===group.article.outerHTML){seen.add(id);return;}
+                        item.replaceWith(group.article);placeModals(id,group.modals);seen.add(id);
+                    }
                     else if(id){placeModals(id,[]);item.remove();}
                 });
                 [...groups.entries()].reverse().forEach(function(entry){
