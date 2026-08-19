@@ -2,6 +2,7 @@
 (function(){
     const endpoint='{{ route('laporan.log-aktivitas.realtime') }}';
     let busy=false;
+    let timer=null;
 
     function setItemState(item,kind,stateText){
         ['is-done','is-current','is-revisi','is-menunggu','is-rejected','is-approved'].forEach(c=>item.classList.remove(c));
@@ -97,12 +98,20 @@
             .catch(function(){}).finally(function(){busy=false;});
     }
 
+    function schedule(){
+        clearTimeout(timer);
+        timer=window.setTimeout(function(){poll();schedule();},2000);
+    }
+
     function start(){
-        if(!document.querySelector('.danpus-report-dropdown'))return;
+        // Timeline/dropdown dibangun oleh partial lain dan bisa selesai
+        // sedikit setelah script ini. Jangan return hanya karena dropdown
+        // belum ada; kalau return di race condition, watcher tidak pernah
+        // hidup lagi dan Danpus harus refresh untuk melihat perubahan.
         poll();
-        window.setInterval(poll,2000);
-        document.addEventListener('visibilitychange',function(){if(!document.hidden)poll();});
-        window.addEventListener('focus',poll);
+        schedule();
+        document.addEventListener('visibilitychange',function(){if(!document.hidden){poll();schedule();}});
+        window.addEventListener('focus',function(){poll();schedule();});
     }
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
