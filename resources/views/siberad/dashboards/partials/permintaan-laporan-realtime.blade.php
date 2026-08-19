@@ -1,29 +1,47 @@
-<style>
-#permintaanLaporanDetailView{display:none;position:fixed;inset:0;z-index:1200;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;background:rgba(15,23,42,.28);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;transition:opacity .22s ease;}
-#permintaanLaporanDetailView.is-visible{opacity:1;}
-#permintaanLaporanDetailView .permintaan-detail-dialog{width:min(760px,100%);max-height:min(86vh,760px);overflow:auto;background:var(--card-bg,#fff);border:1px solid rgba(148,163,184,.22);border-radius:18px;box-shadow:0 24px 70px rgba(15,23,42,.24);transform:translateY(10px) scale(.985);transition:transform .22s ease;}
-#permintaanLaporanDetailView.is-visible .permintaan-detail-dialog{transform:translateY(0) scale(1);}
-#permintaan-laporan .report-card.is-detail-leaving{opacity:0;transform:translateY(-6px);transition:opacity .18s ease,transform .18s ease;}
-@media (max-width:700px){#permintaanLaporanDetailView{padding:14px;}#permintaanLaporanDetailView .permintaan-detail-dialog{max-height:90vh;border-radius:16px;}}
-@media (prefers-reduced-motion: reduce){#permintaanLaporanDetailView,#permintaanLaporanDetailView .permintaan-detail-dialog,#permintaanLaporanDetailView.is-visible .permintaan-detail-dialog,#permintaan-laporan .report-card.is-detail-leaving{transition:none!important;transform:none!important;}}
-</style>
 <script>
 (function(){
-    var listSelector='#permintaan-laporan .deadline-sender-list';
+    // Catatan penting: dulu file ini juga ikut mengganti/menyisipkan
+    // <article> kartu Permintaan Laporan dan mengonversi tombol
+    // "Konfirmasi" jadi "Lihat Detail" lewat sistem overlay sendiri
+    // (bindDetailButtons/openDetail). Itu berjalan berbarengan dengan
+    // laporan-role-realtime-sync.blade.php yang JUGA polling & mengganti
+    // <article> yang sama tiap ~2.5 detik. Karena dua script berebut DOM
+    // yang sama di interval yang mepet, tombol/modal-nya terus-menerus
+    // dibongkar-pasang -- klik yang jatuh persis saat elemen sedang
+    // diganti jadi "hilang" (elemen yang diklik sudah tidak ada lagi di
+    // DOM saat event click diproses), sehingga tombol terasa tidak
+    // merespons. laporan-role-realtime-sync.blade.php sekarang jadi
+    // satu-satunya pemilik DOM kartu Permintaan Laporan (insert item baru
+    // + update status keduanya sudah ditangani di sana). File ini HANYA
+    // dipertahankan untuk toast "permintaan baru masuk" & sinkron angka
+    // kartu statistik "Laporan Masuk" -- tidak lagi menyentuh DOM kartu.
     var endpoint='{{ route('permintaan-laporan.realtime') }}';
     var lastSeen=0;
     var polling=false;
-    var initialPoll=true;
-    var detailViewId='permintaanLaporanDetailView';
-    function existingLatestId(){var ids=[];document.querySelectorAll('#permintaan-laporan [data-realtime-permintaan-id], #permintaan-laporan .use-permintaan[data-request-id], #permintaan-laporan form[action*="/permintaan-laporan/"]').forEach(function(el){var raw=el.getAttribute('data-realtime-permintaan-id')||el.getAttribute('data-request-id')||'';if(!raw){var action=el.getAttribute('action')||'';var match=action.match(/permintaan-laporan\/(\d+)\/(?:mulai|)/);if(match)raw=match[1];}var id=parseInt(raw||'0',10);if(id)ids.push(id);});return ids.length?Math.max.apply(Math,ids):0;}
+    function existingLatestId(){var ids=[];document.querySelectorAll('#permintaan-laporan [data-realtime-permintaan-id]').forEach(function(el){var id=parseInt(el.getAttribute('data-realtime-permintaan-id')||'0',10);if(id)ids.push(id);});return ids.length?Math.max.apply(Math,ids):0;}
     function syncIncomingReportCount(data){if(typeof data.laporan_masuk_count==='undefined')return;var value=String(parseInt(data.laporan_masuk_count||0,10));document.querySelectorAll('.stat-card .lbl').forEach(function(label){if((label.textContent||'').trim().toLowerCase()!=='laporan masuk')return;var card=label.closest('.stat-card');var valueEl=card&&card.querySelector('.val');if(valueEl)valueEl.textContent=value;});}
-    function insertItems(itemsHtml){var list=document.querySelector(listSelector);if(!list||!itemsHtml)return false;var temp=document.createElement('div');temp.innerHTML=itemsHtml;var items=Array.prototype.slice.call(temp.children);if(!items.length)return false;var existing={};list.querySelectorAll('[data-realtime-permintaan-id], .use-permintaan[data-request-id]').forEach(function(el){var id=el.getAttribute('data-realtime-permintaan-id')||el.getAttribute('data-request-id');if(id)existing[id]=true;});var inserted=false;items.reverse().forEach(function(item){var id=item.getAttribute('data-realtime-permintaan-id');if(!id||existing[id])return;list.insertBefore(item,list.firstChild);existing[id]=true;inserted=true;});return inserted;}
-    function ensureDetailView(){var existing=document.getElementById(detailViewId);if(existing)return existing;var section=document.getElementById('permintaan-laporan');if(!section)return null;var view=document.createElement('div');view.id=detailViewId;view.innerHTML='<div class="permintaan-detail-dialog"><div class="report-card" style="max-width:900px;margin:0 auto;box-shadow:none;border:0;">'+'<div class="panel-head" style="display:flex;align-items:center;gap:10px;justify-content:space-between;"><div><h2 style="margin:0;">Detail Permintaan Laporan</h2><p style="margin:4px 0 0;color:var(--text-muted);">Detail permintaan laporan dari Danpus/Wadan sebelum konfirmasi.</p></div><button type="button" class="detail-btn" id="permintaanDetailBack">Kembali</button></div>'+'<div class="detail-grid" style="margin-top:18px;"><div class="detail-item"><div class="detail-label">Pengirim</div><div class="detail-value" id="permintaanDetailPengirim">-</div></div><div class="detail-item"><div class="detail-label">Deadline</div><div class="detail-value" id="permintaanDetailDeadline">-</div></div><div class="detail-item"><div class="detail-label">Perihal</div><div class="detail-value" id="permintaanDetailPerihal">-</div></div><div class="detail-item"><div class="detail-label">Kategori</div><div class="detail-value" id="permintaanDetailKategori">-</div></div><div class="detail-item"><div class="detail-label">Prioritas</div><div class="detail-value" id="permintaanDetailPrioritas">-</div></div><div class="detail-item"><div class="detail-label">Status</div><div class="detail-value" id="permintaanDetailStatus">-</div></div><div class="detail-item full"><div class="detail-label">Instruksi Danpus/Wadan</div><div class="detail-value" id="permintaanDetailInstruksi">-</div></div></div>'+'<div class="modal-actions" style="justify-content:flex-end;"><form method="POST" id="permintaanDetailConfirmForm"><input type="hidden" name="_token" value="{{ csrf_token() }}"><input type="hidden" name="_method" value="PATCH"><button type="submit" class="deadline-primary small" id="permintaanDetailConfirmBtn">Konfirmasi</button></form></div>'+'</div></div>';section.appendChild(view);view.querySelector('#permintaanDetailBack').addEventListener('click',function(){showList(true);});view.addEventListener('click',function(e){if(e.target===view)showList(true);});return view;}
-    function showList(animate){var section=document.getElementById('permintaan-laporan');var view=document.getElementById(detailViewId);var list=section&&section.querySelector('.report-card');if(!section)return;if(view){view.classList.remove('is-visible');window.setTimeout(function(){view.style.display='none';},220);}if(list){list.style.display='';if(animate){list.style.opacity='0';list.style.transform='translateY(8px)';window.requestAnimationFrame(function(){list.style.transition='opacity .22s ease, transform .22s ease';list.style.opacity='1';list.style.transform='translateY(0)';});}}}
-    function openDetail(item){var section=document.getElementById('permintaan-laporan');var view=ensureDetailView();if(!section||!view)return;var title=item.querySelector('.deadline-sender-title');var meta=item.querySelector('.deadline-sender-meta');var instruction=item.querySelector('.deadline-sender-instruction');var pill=item.querySelector('.deadline-pill');var actionForm=item.querySelector('form[action*="/permintaan-laporan/"]');var target=item.querySelector('.use-permintaan');var sender=(meta&&meta.textContent||'').replace(/^Dari\s*/i,'').split('·')[0].trim();var deadline=(meta&&meta.textContent||'').split('· Deadline').slice(1).join('· Deadline').trim();var category=target&&target.getAttribute('data-kategori')||'-';var priority=target&&target.getAttribute('data-prioritas')||'-';var instr=target&&target.getAttribute('data-instruksi')||((instruction&&instruction.textContent)||'-');var formAction=actionForm&&actionForm.getAttribute('action')||'';if(!formAction){var id=item.getAttribute('data-realtime-permintaan-id')||'';if(id)formAction='{{ url('/permintaan-laporan') }}/'+id+'/mulai';}view.querySelector('#permintaanDetailPengirim').textContent=sender||'Pimpinan';view.querySelector('#permintaanDetailDeadline').textContent=deadline||'-';view.querySelector('#permintaanDetailPerihal').textContent=(title&&title.textContent)||'-';view.querySelector('#permintaanDetailKategori').textContent=category||'-';view.querySelector('#permintaanDetailPrioritas').textContent=priority||'-';view.querySelector('#permintaanDetailStatus').textContent=(pill&&pill.textContent)||'-';view.querySelector('#permintaanDetailInstruksi').textContent=instr||'-';var confirmForm=view.querySelector('#permintaanDetailConfirmForm');confirmForm.setAttribute('action',formAction);view.querySelector('#permintaanDetailConfirmBtn').disabled=!formAction;var card=section.querySelector('.report-card');if(card){card.style.transition='opacity .18s ease, transform .18s ease';card.style.opacity='0';card.style.transform='translateY(-6px)';window.setTimeout(function(){card.style.display='none';},180);}view.style.display='flex';window.requestAnimationFrame(function(){view.classList.add('is-visible');});}
-    function bindDetailButtons(){var list=document.querySelector(listSelector);if(!list)return;list.querySelectorAll('.confirm-btn').forEach(function(button){var form=button.closest('form');var item=button.closest('.deadline-sender-item');if(!form||!item||button.dataset.detailBound==='1')return;button.dataset.detailBound='1';button.textContent='Lihat Detail';button.classList.remove('confirm-btn');button.type='button';button.addEventListener('click',function(e){e.preventDefault();openDetail(item);});});}
-    function poll(initial){if(polling)return;polling=true;var since=initial?0:lastSeen;fetch(endpoint+'?since='+encodeURIComponent(since),{method:'GET',credentials:'same-origin',cache:'no-store',headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}}).then(function(response){if(response.status===401){if(window.siberadTampilkanSesiBerakhir)window.siberadTampilkanSesiBerakhir();return null;}if(response.status===419)return null;if(!response.ok)throw new Error('Realtime request failed');return response.json();}).then(function(data){if(!data)return;syncIncomingReportCount(data);var inserted=insertItems(data.items_html);bindDetailButtons();if(!initial&&inserted&&window.siberadShowToast)window.siberadShowToast('success','Permintaan laporan baru masuk.');lastSeen=Math.max(lastSeen,parseInt(data.latest_id||0,10));if(initial)lastSeen=Math.max(lastSeen,existingLatestId());initialPoll=false;}).catch(function(){}).finally(function(){polling=false;});}
-    function start(){if(!document.querySelector(listSelector))return;bindDetailButtons();poll(true);window.setInterval(function(){poll(false);},3000);}
+    function poll(initial){
+        if(polling)return;polling=true;
+        var since=initial?0:lastSeen;
+        fetch(endpoint+'?since='+encodeURIComponent(since),{method:'GET',credentials:'same-origin',cache:'no-store',headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}})
+            .then(function(response){
+                if(response.status===401){if(window.siberadTampilkanSesiBerakhir)window.siberadTampilkanSesiBerakhir();return null;}
+                if(response.status===419)return null;
+                if(!response.ok)throw new Error('Realtime request failed');
+                return response.json();
+            })
+            .then(function(data){
+                if(!data)return;
+                syncIncomingReportCount(data);
+                var latestId=parseInt(data.latest_id||0,10);
+                if(!initial && latestId>lastSeen && window.siberadShowToast)window.siberadShowToast('success','Permintaan laporan baru masuk.');
+                lastSeen=Math.max(lastSeen,latestId);
+                if(initial)lastSeen=Math.max(lastSeen,existingLatestId());
+            })
+            .catch(function(){})
+            .finally(function(){polling=false;});
+    }
+    function start(){if(!document.getElementById('permintaan-laporan'))return;poll(true);window.setInterval(function(){poll(false);},3000);}
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
 </script>
