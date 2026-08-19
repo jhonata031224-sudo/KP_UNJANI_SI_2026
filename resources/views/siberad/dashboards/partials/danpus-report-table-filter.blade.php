@@ -37,16 +37,6 @@
     var applying=false;
     var emptyRow=null;
 
-    function normalizeHistoryStatus(row){
-      var raw=(row.querySelector('td:nth-child(4)')?.textContent||'').trim().toLowerCase();
-      if(raw.indexOf('setuj')!==-1||raw.indexOf('diterima')!==-1)return 'disetujui';
-      if(raw.indexOf('tolak')!==-1)return 'ditolak';
-      if(raw.indexOf('revisi')!==-1)return 'revisi';
-      if(raw.indexOf('progres')!==-1)return 'progres';
-      if(raw.indexOf('menunggu')!==-1)return 'menunggu';
-      return 'lainnya';
-    }
-
     function prepareRow(row){
       if(cfg.prepareRow)cfg.prepareRow(row);
     }
@@ -61,7 +51,7 @@
     }
 
     function ensureEmptyRow(){
-      if(!tbody)return;
+      if(!tbody||cfg.showEmpty===false)return;
       emptyRow=tbody.querySelector(':scope > tr.rpt-filter-empty-row');
       if(emptyRow)return;
       emptyRow=document.createElement('tr');
@@ -104,7 +94,7 @@
         if(match)visible++;
       });
       count.textContent=visible+' dari '+rows.length+' data';
-      emptyRow.style.display=visible===0?'':'none';
+      if(emptyRow)emptyRow.style.display=visible===0?'':'none';
       applying=false;
     }
 
@@ -148,7 +138,7 @@
       filters:[{label:'Filter status',attr:'outcome',options:[{value:'all',label:'Semua Status'},{value:'disetujui',label:'Disetujui'},{value:'ditolak',label:'Ditolak'}]}],sortable:true
     });
     initReportFilter({
-      sectionId:'permintaan-laporan',tableSelector:'.request-table',anchorSelector:'.request-head',searchPlaceholder:'Cari perihal atau satuan tujuan...',emptyText:'Tidak ada permintaan laporan yang sesuai dengan pencarian/filter.',
+      sectionId:'permintaan-laporan',tableSelector:'.request-table',anchorSelector:'.request-head',searchPlaceholder:'Cari perihal atau satuan tujuan...',emptyText:'Tidak ada permintaan laporan yang sesuai dengan pencarian/filter.',showEmpty:false,
       filters:[{label:'Filter status',attr:'status',options:[{value:'all',label:'Semua Status'},{value:'Sedang diproses',label:'Sedang diproses'},{value:'Menunggu',label:'Menunggu'},{value:'Revisi',label:'Revisi'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'}]}],sortable:true
     });
 
