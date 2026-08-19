@@ -1,9 +1,10 @@
 <style>
 #permintaan-laporan .danpus-archive-actions{display:inline-flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto}
-#permintaan-laporan .danpus-archive-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:8px 13px;border:1px solid var(--p-border);border-radius:8px;background:var(--p-surface);color:var(--p-text);font:inherit;font-size:11px;font-weight:800;cursor:pointer;transition:background .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease}
+#permintaan-laporan .danpus-archive-toggle{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:8px 13px;border:1px solid var(--p-border);border-radius:8px;background:var(--p-surface);color:var(--p-text);font:inherit;font-size:11px;font-weight:800;cursor:pointer;transition:background .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease}
 #permintaan-laporan .danpus-archive-toggle:hover{border-color:var(--p-accent);background:var(--p-surface-2)}
 #permintaan-laporan .danpus-archive-toggle.is-active{background:var(--gold-solid-bright,#c97a00);border-color:var(--gold-solid-bright,#c97a00);color:var(--on-gold,#fff);box-shadow:0 7px 18px -9px rgba(201,122,0,.75)}
 #permintaan-laporan .danpus-archive-toggle.is-busy{opacity:.72;pointer-events:none}
+#permintaan-laporan .danpus-archive-icon{width:18px;height:18px;flex:0 0 18px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #permintaan-laporan .danpus-archive-count{display:none;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:var(--gold-dim);border:1px solid var(--border);color:var(--gold-bright);font-family:var(--mono);font-size:10px;font-weight:800}
 #permintaan-laporan .danpus-archive-count.is-visible{display:inline-flex}
 #permintaan-laporan .danpus-archive-head-cell,#permintaan-laporan .danpus-archive-row-cell,#permintaan-laporan .danpus-archive-row-content{display:contents}
@@ -26,7 +27,7 @@ function initDanpusArchiveMode(){
  const createButton=head.querySelector('#danpusOpenRequestForm');if(!createButton)return;let actions=head.querySelector('.danpus-archive-actions');
  if(!actions){actions=document.createElement('div');actions.className='danpus-archive-actions';createButton.parentNode?.insertBefore(actions,createButton);actions.appendChild(createButton)}
  const archiveButton=document.createElement('button');archiveButton.type='button';archiveButton.className='danpus-archive-toggle';archiveButton.id='danpusArchiveToggle';archiveButton.setAttribute('aria-pressed','false');archiveButton.title='Mode Arsip / Arsipkan permintaan terpilih';
- archiveButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v12H5z"></path><path d="M4 6.5h16"></path><path d="M8 4h8l1 2.5H7L8 4z"></path><path d="M9 11.5h6"></path></svg><span>Arsip</span>';actions.insertBefore(archiveButton,createButton);
+ archiveButton.innerHTML='<svg class="danpus-archive-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M4.5 14.5V27h23V14.5"></path><path d="M3.5 13h25"></path><path d="M6 13V8.5h20V13"></path><path d="M8 8.5V5.5h17l2 3"></path><path d="M10 13l7 5.5h9V13"></path><path d="M17 18.5h9v7.5a4 4 0 0 1-4 4H10a5.5 5.5 0 0 1-5.5-5.5V14.5"></path><path d="M16 19h7"></path><path d="M18 23h5"></path></svg><span>Arsip</span>';actions.insertBefore(archiveButton,createButton);
  const countBadge=document.createElement('span');countBadge.className='danpus-archive-count';countBadge.id='danpusArchiveSelectedCount';countBadge.setAttribute('aria-live','polite');countBadge.textContent='0';actions.insertBefore(countBadge,archiveButton);
  function csrf(){return document.querySelector('input[name="_token"]')?.value||document.querySelector('meta[name="csrf-token"]')?.content||''}
  function historyBodies(){return Array.from(document.querySelectorAll('#riwayat .dtbl tbody,#riwayat .clean-table tbody,#status .clean-table tbody,#status .dtbl tbody')).filter(Boolean)}
