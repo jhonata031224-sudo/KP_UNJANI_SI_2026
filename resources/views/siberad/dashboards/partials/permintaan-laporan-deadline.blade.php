@@ -293,9 +293,15 @@
         if(!items.length) return;
         section.dataset.searchReady='1';
 
+        // Simpan urutan asli (backend sudah pakai latest(), jadi index 0 =
+        // terbaru) -- sama persis pola sortable di initReportFilter
+        // (danpus-report-table-filter.blade.php), cuma di sini kartu
+        // <article>, bukan baris <tr>.
+        items.forEach(function(item,i){item.dataset.rptOrder=String(i)});
+
         var bar=document.createElement('div');
         bar.className='rpt-filter-bar';
-        bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="Cari perihal..." aria-label="Cari perihal"></div><span class="rpt-filter-count"></span>';
+        bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="Cari perihal..." aria-label="Cari perihal"></div><select class="rpt-filter-select" aria-label="Urutkan"><option value="newest">Terbaru</option><option value="oldest">Terlama</option></select><span class="rpt-filter-count"></span>';
         list.parentNode.insertBefore(bar,list);
 
         var emptyBox=document.createElement('div');
@@ -305,9 +311,15 @@
         list.parentNode.insertBefore(emptyBox,list.nextSibling);
 
         var input=bar.querySelector('input');
+        var sortSelect=bar.querySelector('select');
         var count=bar.querySelector('.rpt-filter-count');
 
         function apply(){
+            items.sort(function(a,b){
+                var diff=Number(a.dataset.rptOrder)-Number(b.dataset.rptOrder);
+                return sortSelect.value==='oldest'?-diff:diff;
+            });
+            items.forEach(function(item){list.appendChild(item)});
             var q=(input.value||'').trim().toLowerCase();
             var visible=0;
             items.forEach(function(item){
@@ -319,6 +331,7 @@
             emptyBox.style.display=visible===0?'block':'none';
         }
         input.addEventListener('input',apply);
+        sortSelect.addEventListener('change',apply);
         apply();
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initPermintaanSearch); else initPermintaanSearch();

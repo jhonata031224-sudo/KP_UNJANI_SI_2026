@@ -26,8 +26,12 @@
   .chart-mini-head{margin-bottom:10px;}
   .chart-mini-head h4{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:.01em;line-height:1.3;}
   .chart-mini-head p{font-size:11px;color:var(--text-muted);margin-top:2px;}
-  .chart-mini .chart-wrap{position:relative;height:210px;}
-  @media(max-width:980px){.chart-box-grid{grid-template-columns:1fr;}.chart-mini .chart-wrap{height:230px;}}
+  .chart-mini .chart-wrap{position:relative;height:178px;}
+  .chart-mini .chart-legend{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 10px;margin-top:10px;}
+  .chart-mini .chart-legend-item{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;color:var(--text-muted);white-space:nowrap;cursor:pointer;user-select:none;}
+  .chart-mini .chart-legend-item.is-hidden{text-decoration:line-through;opacity:.5;}
+  .chart-mini .chart-legend-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
+  @media(max-width:980px){.chart-box-grid{grid-template-columns:1fr;}.chart-mini .chart-wrap{height:198px;}}
 
   /* ===== toolbar cari & filter tabel =====
      Disamakan gayanya dengan .rpt-filter-bar/.danpus-log-search (Pimpinan):
@@ -826,6 +830,7 @@
                 <div><h4>Pengguna per Kategori Satuan</h4><p>Sebaran akun berdasarkan kategori.</p></div>
               </div>
               <div class="chart-wrap"><canvas id="chartKategoriSatuan"></canvas></div>
+              <div class="chart-legend" id="chartKategoriSatuanLegend"></div>
             </div>
 
             <div class="chart-mini chart-mini-link" data-tab-link="rekap-laporan" role="button" tabindex="0" title="Lihat Rekap Laporan">
@@ -834,6 +839,7 @@
                 <div><h4>Distribusi Status Laporan</h4><p>Proporsi status seluruh laporan di sistem.</p></div>
               </div>
               <div class="chart-wrap"><canvas id="chartStatusLaporan"></canvas></div>
+              <div class="chart-legend" id="chartStatusLaporanLegend"></div>
             </div>
 
             <div class="chart-mini chart-mini-link" data-tab-link="log-aktivitas" role="button" tabindex="0" title="Lihat Log Aktivitas">
@@ -2622,7 +2628,6 @@
     var cAmber = root.getPropertyValue('--amber').trim() || '#e0a83a';
     var cRed = root.getPropertyValue('--red').trim() || '#c62828';
     var cMuted = root.getPropertyValue('--text-muted').trim() || '#9fb3a5';
-    var cText = root.getPropertyValue('--text').trim() || '#f4f1e6';
 
     Chart.defaults.color = cMuted;
     Chart.defaults.font.family = "'JetBrains Mono', monospace";
@@ -2632,16 +2637,31 @@
       responsive: true,
       maintainAspectRatio: false,
       cutout: '62%',
-      plugins: { legend: { position: 'bottom', labels: { color: cText, boxWidth: 10, padding: 12 } } }
+      plugins: { legend: { display: false } }
     };
 
     function renderDoughnut(canvasId, labels, values, colors) {
       var el = document.getElementById(canvasId);
       if (!el) return;
-      new Chart(el, {
+      var chart = new Chart(el, {
         type: 'doughnut',
         data: { labels: labels, datasets: [{ data: values, backgroundColor: colors, borderColor: 'transparent' }] },
         options: doughnutOptions
+      });
+      var legendBox = document.getElementById(canvasId + 'Legend');
+      if (!legendBox) return;
+      legendBox.innerHTML = '';
+      labels.forEach(function (label, i) {
+        var item = document.createElement('span');
+        item.className = 'chart-legend-item';
+        item.innerHTML = '<span class="chart-legend-dot" style="background:' + colors[i] + '"></span>' + label;
+        item.addEventListener('click', function (e) {
+          e.stopPropagation();
+          chart.toggleDataVisibility(i);
+          chart.update();
+          item.classList.toggle('is-hidden', !chart.getDataVisibility(i));
+        });
+        legendBox.appendChild(item);
       });
     }
 
