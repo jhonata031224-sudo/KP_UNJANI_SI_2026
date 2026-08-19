@@ -68,12 +68,14 @@
 #permintaan-laporan .danpus-archive-head-cell{
   justify-content:flex-start;
   gap:8px;
+  transform:translateX(6px);
 }
 #permintaan-laporan .danpus-archive-row-cell{
   justify-content:flex-start;
   gap:9px;
   width:100%;
   min-width:0;
+  transform:translateX(6px);
 }
 #permintaan-laporan .danpus-archive-row-content{
   min-width:0;
@@ -98,10 +100,11 @@
   cursor:not-allowed;
   opacity:.45;
 }
-/* Geser seluruh baris secara utuh agar semua kolom tetap sejajar. */
+/* Semua kolom tetap di grid tabel aslinya. Efek geser hanya diterapkan pada
+   isi kolom pertama, sehingga tidak memunculkan horizontal scrollbar dan
+   checkbox header tetap satu garis dengan checkbox tiap baris. */
 #permintaan-laporan .request-table tbody tr.danpus-archive-eligible-row{
   position:relative;
-  left:6px;
 }
 #permintaan-laporan .request-table tbody tr.danpus-archive-selected td{
   background:color-mix(in srgb,var(--p-accent) 5%,transparent);
