@@ -12,9 +12,9 @@
   .danpus-activity-project{font-size:13px;font-weight:800;color:var(--p-text);margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--p-border)}
   .danpus-activity-item{position:relative;display:grid;grid-template-columns:22px minmax(0,1fr);column-gap:14px;padding:0 0 18px}
   .danpus-activity-item:last-child{padding-bottom:0}
-  .danpus-activity-line{position:absolute;left:10px;top:22px;bottom:-2px;width:2px;background:var(--p-border);transition:background .3s ease}
-  .danpus-activity-item.is-done .danpus-activity-line,.danpus-activity-item.is-approved .danpus-activity-line{background:var(--p-green)}
-  .danpus-activity-item.is-rejected .danpus-activity-line{background:var(--p-red)}
+  .danpus-activity-line{position:absolute;left:9px;top:28px;bottom:6px;width:0;border-left:4px dotted var(--p-border);transition:border-color .3s ease}
+  .danpus-activity-item.is-done .danpus-activity-line,.danpus-activity-item.is-approved .danpus-activity-line{border-color:var(--p-green)}
+  .danpus-activity-item.is-rejected .danpus-activity-line{border-color:var(--p-red)}
   .danpus-activity-item:last-child .danpus-activity-line{display:none}
   .danpus-activity-dot{position:relative;z-index:2;width:22px;height:22px;border-radius:50%;background:var(--p-surface);border:2px solid var(--p-border);box-sizing:border-box;display:flex;align-items:center;justify-content:center;transition:background .25s ease,border-color .25s ease}
   .danpus-activity-dot svg{width:11px;height:11px;stroke:#fff;stroke-width:3;fill:none;opacity:0;transform:scale(.6);transition:opacity .2s ease,transform .2s ease}
@@ -22,8 +22,8 @@
   .danpus-activity-item.is-done .danpus-activity-dot svg,.danpus-activity-item.is-approved .danpus-activity-dot svg{opacity:1;transform:scale(1)}
   .danpus-activity-item.is-rejected .danpus-activity-dot{background:var(--p-red);border-color:var(--p-red)}
   .danpus-activity-item.is-rejected .danpus-activity-dot svg{opacity:1;transform:scale(1)}
-  .danpus-activity-item.is-current .danpus-activity-dot{border-color:var(--p-orange);box-shadow:0 0 0 4px var(--p-orange-bg)}
-  .danpus-activity-item.is-current .danpus-activity-dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--p-orange-bg);border-top-color:var(--p-orange);border-right-color:var(--p-orange);animation:danpusDotSpin .8s linear infinite}
+  .danpus-activity-item.is-current .danpus-activity-dot{border-color:var(--p-orange)}
+  .danpus-activity-item.is-current .danpus-activity-dot::after{content:"";position:absolute;inset:3px;border-radius:50%;border:2px solid var(--p-orange-bg);border-top-color:var(--p-orange);border-right-color:var(--p-orange);animation:danpusDotSpin 2s linear infinite}
   @keyframes danpusDotSpin{to{transform:rotate(360deg)}}
   .danpus-activity-card{background:var(--p-surface);border:1px solid var(--p-border);border-radius:12px;padding:13px 16px;min-width:0;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:border-color .25s ease,box-shadow .25s ease}
   .danpus-activity-item.is-done .danpus-activity-card,.danpus-activity-item.is-approved .danpus-activity-card{border-color:color-mix(in srgb,var(--p-green) 25%,var(--p-border))}
@@ -40,15 +40,15 @@
   /* Checkpoint yang lagi nunggu satuan kirim ulang setelah di-Revisi --
      gold, sama persis kayak status-pill/tombol Revisi di tab Permintaan
      Laporan (--gold-solid), BUKAN oranye "Sedang diproses" biasa. */
-  .danpus-activity-item.is-revisi .danpus-activity-dot{border-color:var(--gold-solid);box-shadow:0 0 0 4px rgba(217,146,11,.14)}
-  .danpus-activity-item.is-revisi .danpus-activity-dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(217,146,11,.14);border-top-color:var(--gold-solid);border-right-color:var(--gold-solid);animation:danpusDotSpin .8s linear infinite}
+  .danpus-activity-item.is-revisi .danpus-activity-dot{border-color:var(--gold-solid)}
+  .danpus-activity-item.is-revisi .danpus-activity-dot::after{content:"";position:absolute;inset:3px;border-radius:50%;border:2px solid rgba(217,146,11,.14);border-top-color:var(--gold-solid);border-right-color:var(--gold-solid);animation:danpusDotSpin 2s linear infinite}
   .danpus-activity-item.is-revisi .danpus-activity-card{border-color:color-mix(in srgb,var(--gold-solid) 40%,var(--p-border));box-shadow:0 4px 14px -6px color-mix(in srgb,var(--gold-solid) 30%,transparent)}
   .danpus-activity-item.is-revisi .danpus-activity-state{color:var(--gold-solid);background:rgba(217,146,11,.14);border-color:rgba(217,146,11,.4)}
   /* Checkpoint yang lagi nunggu diperiksa Pimpinan -- biru, sama persis
      kayak pill "Menunggu pemeriksaan" (.deadline-pill.blue) di dashboard
      satuan, BUKAN oranye "Sedang diproses" biasa. */
-  .danpus-activity-item.is-menunggu .danpus-activity-dot{border-color:#2476ad;box-shadow:0 0 0 4px rgba(52,152,219,.1)}
-  .danpus-activity-item.is-menunggu .danpus-activity-dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(52,152,219,.1);border-top-color:#2476ad;border-right-color:#2476ad;animation:danpusDotSpin .8s linear infinite}
+  .danpus-activity-item.is-menunggu .danpus-activity-dot{border-color:#2476ad}
+  .danpus-activity-item.is-menunggu .danpus-activity-dot::after{content:"";position:absolute;inset:3px;border-radius:50%;border:2px solid rgba(52,152,219,.1);border-top-color:#2476ad;border-right-color:#2476ad;animation:danpusDotSpin 2s linear infinite}
   .danpus-activity-item.is-menunggu .danpus-activity-card{border-color:color-mix(in srgb,#2476ad 40%,var(--p-border));box-shadow:0 4px 14px -6px color-mix(in srgb,#2476ad 30%,transparent)}
   .danpus-activity-item.is-menunggu .danpus-activity-state{color:#2476ad;background:rgba(52,152,219,.1);border-color:rgba(52,152,219,.25)}
   .danpus-activity-item.is-rejected .danpus-activity-state{color:var(--p-red);background:color-mix(in srgb,var(--p-red) 10%,transparent);border-color:color-mix(in srgb,var(--p-red) 28%,transparent)}

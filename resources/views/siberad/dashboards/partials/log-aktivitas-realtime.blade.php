@@ -4,6 +4,45 @@
     let busy = false;
     let timer = null;
     let sinceId = 0;
+    function markRowBoundaries(board) {
+        const items = [...board.querySelectorAll('.danpus-snake-progress-item')];
+        items.forEach((item, i) => {
+            const prev = items[i - 1], next = items[i + 1];
+            item.classList.toggle('is-row-start', !prev || item.offsetTop > prev.offsetTop + 1);
+            item.classList.toggle('is-row-end', !!next && next.offsetTop > item.offsetTop + 1);
+        });
+    }
+    function drawRowConnectors(board) {
+        board.querySelectorAll(':scope > .danpus-snake-row-connector').forEach(el => el.remove());
+        const items = [...board.querySelectorAll('.danpus-snake-progress-item')];
+        const boardRect = board.getBoundingClientRect();
+        const seg = (x, y, w, h, pending) => {
+            if (w <= 0 || h <= 0) return;
+            const el = document.createElement('div');
+            el.className = 'danpus-snake-row-connector' + (pending ? ' is-pending' : '');
+            el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.width = w + 'px'; el.style.height = h + 'px';
+            board.appendChild(el);
+        };
+        items.forEach((item, i) => {
+            if (!item.classList.contains('is-row-end')) return;
+            const next = items[i + 1]; if (!next) return;
+            const fromDot = item.querySelector('.danpus-snake-progress-dot');
+            const toDot = next.querySelector('.danpus-snake-progress-dot');
+            if (!fromDot || !toDot) return;
+            const a = fromDot.getBoundingClientRect(), b = toDot.getBoundingClientRect();
+            const x1 = a.left + a.width / 2 - boardRect.left, y1 = a.top + a.height - boardRect.top;
+            const x2 = b.left + b.width / 2 - boardRect.left, y2 = b.top - boardRect.top;
+            const midY = (y1 + y2) / 2;
+            const pending = item.classList.contains('is-pending');
+            seg(x1 - 2, y1, 4, midY - y1, pending);
+            seg(Math.min(x1, x2) - 2, midY - 2, Math.abs(x2 - x1) + 4, 4, pending);
+            seg(x2 - 2, midY, 4, y2 - midY, pending);
+        });
+    }
+    function updateRowLayout(board) { markRowBoundaries(board); drawRowConnectors(board); }
+    const rowObserver = ('ResizeObserver' in window) ? new ResizeObserver(entries => {
+        entries.forEach(entry => updateRowLayout(entry.target));
+    }) : null;
 
     const text = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
     function allRows(html) {
@@ -95,23 +134,14 @@
         item.dataset.laporanId=entry.laporanId;
         item.dataset.progres=entry.progres;
         item.dataset.tanggal=entry.tanggal;
-        const dot=document.createElement('span'); dot.className='danpus-snake-progress-dot';
-        const body=document.createElement('span'); body.className='danpus-snake-progress-body';
-        const valueText=document.createElement('strong'); valueText.textContent=`${entry.progres}%`;
-        const label=document.createElement('small'); label.textContent=isLatest?'Terbaru':'Tercatat';
-        body.append(valueText,label);
-        if(entry.tanggal){ const dateEl=document.createElement('small'); dateEl.className='danpus-snake-progress-date'; dateEl.textContent=entry.tanggal; body.appendChild(dateEl); }
         const detail=document.createElement('button'); detail.type='button'; detail.className='danpus-snake-detail'; detail.textContent='Detail';
         detail.addEventListener('click',event=>{ event.preventDefault(); event.stopPropagation(); openProgressDetail(details,entry.laporanId); });
-        item.append(dot,body,detail);
+        const dot=document.createElement('span'); dot.className='danpus-snake-progress-dot'; dot.textContent=`${entry.progres}%`;
+        const body=document.createElement('span'); body.className='danpus-snake-progress-body';
+        if(entry.tanggal){ const dateEl=document.createElement('small'); dateEl.className='danpus-snake-progress-date'; dateEl.textContent=entry.tanggal; body.appendChild(dateEl); }
+        item.append(detail,dot,body);
         if(!oldIds.has(entry.laporanId)) item.classList.add('is-progress-added');
         return item;
-    }
-    function snakeColumns() {
-        if (window.innerWidth <= 430) return 2;
-        if (window.innerWidth <= 700) return 3;
-        if (window.innerWidth <= 1000) return 5;
-        return 7;
     }
     function renderHistory(details, incomingEntries) {
         const card=findLaporanDibuatCard(details); if(!card) return;
@@ -127,14 +157,10 @@
         label.innerHTML=`<span><b>Riwayat progres</b><em>Realtime</em></span><span class="danpus-inline-progress-count">${entries.length} update</span>`;
         next.appendChild(label);
         const board=document.createElement('div'); board.className='danpus-snake-board';
-        const columns=snakeColumns();
-        for(let start=0,rowIndex=0;start<entries.length;start+=columns,rowIndex++){
-            const row=document.createElement('div'); row.className='danpus-snake-row '+(rowIndex%2?'reverse':'forward');
-            entries.slice(start,start+columns).forEach(entry=>row.appendChild(createProgressItem(entry,latestEntry,oldIds,details)));
-            board.appendChild(row);
-            if(start+columns<entries.length){ const turn=document.createElement('div'); turn.className='danpus-snake-turn '+(rowIndex%2?'turn-left':'turn-right'); board.appendChild(turn); }
-        }
+        entries.forEach(entry=>board.appendChild(createProgressItem(entry,latestEntry,oldIds,details)));
         next.appendChild(board); card.appendChild(next);
+        updateRowLayout(board);
+        if (rowObserver) rowObserver.observe(board);
         const added=[...next.querySelectorAll('.is-progress-added')]; if(added.length) requestAnimationFrame(()=>added.forEach(el=>el.classList.add('is-progress-visible')));
     }
     function applyGroup(group){
@@ -159,20 +185,29 @@
 .danpus-progress-branch,.danpus-progress-history{display:none!important}
 .danpus-report-dropdown > .danpus-inline-progress-history,.danpus-report-content > .danpus-inline-progress-history{display:none!important}
 .danpus-inline-progress-history{position:relative;margin:15px 0 3px;padding:16px 16px 20px;border:1px solid color-mix(in srgb,var(--p-accent) 20%,var(--p-border));border-radius:16px;background:linear-gradient(145deg,color-mix(in srgb,var(--p-surface) 97%,var(--p-accent)),var(--p-surface-2));overflow:visible}
+.danpus-inline-progress-history:has(> .danpus-snake-board){padding-top:14px}
+.danpus-inline-progress-history:has(> .danpus-snake-board) > .danpus-inline-progress-label{display:none}
 .danpus-inline-progress-label{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;color:var(--p-muted);font-size:11px;font-weight:800}.danpus-inline-progress-label span:first-child{display:flex;align-items:center;gap:8px}.danpus-inline-progress-label span:first-child::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--p-green);box-shadow:0 0 0 4px color-mix(in srgb,var(--p-green) 12%,transparent)}
 .danpus-inline-progress-label em{font-style:normal;font-size:9px;padding:3px 8px;border-radius:999px;color:var(--p-green);background:color-mix(in srgb,var(--p-green) 9%,var(--p-surface));border:1px solid color-mix(in srgb,var(--p-green) 22%,var(--p-border))}.danpus-inline-progress-count{opacity:.7}
-.danpus-snake-board{position:relative;display:flex;flex-direction:column;gap:0;width:100%;padding:2px 4px 4px;box-sizing:border-box}
-.danpus-snake-row{position:relative;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;min-height:118px;align-items:start}.danpus-snake-row.reverse{direction:rtl}.danpus-snake-row.reverse .danpus-snake-progress-item{direction:ltr}
-.danpus-snake-row::before{content:"";position:absolute;left:4%;right:4%;top:47px;height:0;border-top:2px dotted color-mix(in srgb,var(--p-green) 45%,var(--p-border));z-index:0}
-.danpus-snake-progress-item{position:relative;z-index:2;min-width:0;min-height:96px;padding:12px 8px 10px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;border:1px solid color-mix(in srgb,var(--p-muted) 20%,var(--p-border));border-radius:15px;background:var(--p-surface);color:var(--p-text);box-shadow:0 4px 12px rgba(15,23,42,.06);text-align:center;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}.danpus-snake-progress-item:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(15,23,42,.09)}
-.danpus-snake-progress-item.latest{border-color:#78a9ff;box-shadow:0 0 0 3px rgba(59,130,246,.08),0 7px 18px rgba(59,130,246,.10)}
-.danpus-snake-progress-dot{width:9px;height:9px;flex:0 0 auto;border-radius:50%;background:var(--p-green);box-shadow:0 0 0 4px color-mix(in srgb,var(--p-green) 10%,transparent)}.danpus-snake-progress-item.latest .danpus-snake-progress-dot{background:#168f5a;box-shadow:0 0 0 4px rgba(22,143,90,.10)}
-.danpus-snake-progress-body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;line-height:1.1;text-align:center}.danpus-snake-progress-body strong{font-family:var(--mono);font-size:13px;font-weight:900;white-space:nowrap}.danpus-snake-progress-body small{margin-top:4px;color:var(--p-muted);font-size:9px;line-height:1;white-space:nowrap}.danpus-snake-progress-body small.danpus-snake-progress-date{margin-top:3px;font-size:8.5px;line-height:1.2;white-space:normal;opacity:.85}
-.danpus-snake-detail{display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:28px;padding:0 11px;border:1px solid var(--p-border);border-radius:9px;background:var(--p-surface);color:var(--p-text);font:700 11px/1 var(--font-sans,system-ui,sans-serif);cursor:pointer;transition:background .18s ease,border-color .18s ease,transform .18s ease}.danpus-snake-detail:hover{background:var(--p-surface-2);border-color:var(--p-accent);transform:translateY(-1px)}
-.danpus-snake-turn{height:22px;width:22px;box-sizing:border-box;z-index:1;border-bottom:2px dotted color-mix(in srgb,var(--p-green) 45%,var(--p-border));margin-top:-2px;margin-bottom:-2px}.danpus-snake-turn.turn-right{align-self:flex-end;border-right:2px dotted color-mix(in srgb,var(--p-green) 45%,var(--p-border));border-radius:0 0 11px 0}.danpus-snake-turn.turn-left{align-self:flex-start;border-left:2px dotted color-mix(in srgb,var(--p-green) 45%,var(--p-border));border-radius:0 0 0 11px}
-.danpus-snake-progress-item.is-progress-added{opacity:0;transform:translateY(13px) scale(.78)}.danpus-snake-progress-item.is-progress-added.is-progress-visible{animation:danpusSnakeAdd .65s cubic-bezier(.2,.85,.2,1) forwards}.danpus-inline-progress-history.realtime-history{animation:danpusHistoryFlash .65s ease}
-@keyframes danpusSnakeAdd{0%{opacity:0;transform:translateY(13px) scale(.78);filter:blur(2px)}55%{opacity:1;transform:translateY(-2px) scale(1.04);filter:blur(0)}100%{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes danpusHistoryFlash{0%{box-shadow:0 0 0 0 rgba(59,130,246,.16)}100%{box-shadow:0 0 0 14px transparent}}
-@media(max-width:1000px){.danpus-snake-row{grid-template-columns:repeat(5,minmax(0,1fr))}}@media(max-width:700px){.danpus-snake-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.danpus-snake-progress-item{min-height:94px;padding:10px 5px;border-radius:12px}}@media(max-width:430px){.danpus-snake-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(prefers-reduced-motion:reduce){.danpus-snake-progress-item.is-progress-added.is-progress-visible,.danpus-inline-progress-history.realtime-history{animation:none!important}}
-</style>
+.danpus-snake-board{position:relative;display:grid;grid-template-columns:repeat(6,1fr);gap:22px 0;width:100%;padding:14px 6px 6px;box-sizing:border-box}
+.danpus-snake-progress-item{position:relative;width:100%;min-width:0;padding-top:26px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.danpus-snake-progress-item:not(.is-row-start)::before{content:"";position:absolute;top:39px;left:calc(-50% + 15px);width:calc(100% - 30px);height:4px;background:var(--p-green);z-index:0}
+.danpus-snake-progress-item.is-pending:not(.is-row-start)::before{background:var(--p-border)}
+.danpus-snake-row-connector{position:absolute;background:var(--p-green);z-index:3}
+.danpus-snake-row-connector.is-pending{background:var(--p-border)}
+@media(max-width:900px){.danpus-snake-board{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:700px){.danpus-snake-board{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:430px){.danpus-snake-board{grid-template-columns:repeat(2,1fr)}}
+.danpus-snake-progress-dot{position:relative;z-index:1;width:30px;height:30px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--p-green);border:none;color:#fff;font:800 10px/1 var(--mono,ui-monospace,monospace);box-shadow:0 2px 6px rgba(15,23,42,.18)}
+.danpus-snake-progress-item.is-pending .danpus-snake-progress-dot{background:var(--p-border);color:var(--p-muted)}
+.danpus-snake-progress-body{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;box-sizing:border-box;line-height:1.15}
+.danpus-snake-progress-body small.danpus-snake-progress-date{display:block;width:100%;color:var(--p-muted);font-size:8.5px;line-height:1.3;white-space:normal;word-break:normal;overflow-wrap:break-word;text-align:center;opacity:.85}
+.danpus-snake-detail{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:2;-webkit-appearance:none;appearance:none;display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:20px;padding:0 8px;border:1px solid var(--p-border);border-radius:6px;background:var(--p-surface);color:var(--p-text);font:700 9px/1 var(--font-sans,system-ui,sans-serif);cursor:pointer;box-shadow:0 3px 8px rgba(15,23,42,.1);transition:background .18s ease,border-color .18s ease,transform .18s ease}
+.danpus-snake-detail::before{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);width:0;height:0;border:6px solid transparent;border-top-color:var(--p-border);transition:border-top-color .18s ease}
+.danpus-snake-detail::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%) translateY(-1px);width:0;height:0;border:5px solid transparent;border-top-color:var(--p-surface);transition:border-top-color .18s ease}
+.danpus-snake-detail:hover{background:var(--p-surface-2);border-color:var(--p-accent);transform:translateX(-50%) translateY(-1px)}
+.danpus-snake-detail:hover::before{border-top-color:var(--p-accent)}
+.danpus-snake-detail:hover::after{border-top-color:var(--p-surface-2)}
+.danpus-snake-progress-item.is-progress-added{opacity:1;transform:none}
+.danpus-snake-progress-item.is-progress-added.is-progress-visible{animation:none}
+.danpus-inline-progress-history.realtime-history{animation:none;box-shadow:none}</style>
