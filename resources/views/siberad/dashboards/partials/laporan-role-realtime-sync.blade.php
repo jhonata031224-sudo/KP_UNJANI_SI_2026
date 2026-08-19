@@ -63,10 +63,44 @@
                 if(!data)return;
                 const list=document.querySelector('#permintaan-laporan .deadline-sender-list');if(!list||typeof data.items_html!=='string')return;
                 const incoming=document.createElement('div');incoming.innerHTML=data.items_html;
-                const fresh=[...incoming.children];const freshById=new Map(fresh.map(el=>[String(el.dataset.realtimePermintaanId||''),el]));
+
+                // permintaan-laporan-realtime-items.blade.php merender per
+                // permintaan: <article data-realtime-permintaan-id="X">
+                // diikuti (opsional) modal Lihat Detail / Update Progres
+                // sebagai <div> terpisah (sibling, bukan child). Modal-modal
+                // itu TIDAK punya data-realtime-permintaan-id, jadi harus
+                // dikelompokkan manual per artikel sebelum disisipkan --
+                // kalau tidak, modal ikut hilang saat refresh dan tombol
+                // Lihat Detail/Update Progres jadi tidak berfungsi.
+                const groups=new Map();
+                let currentId=null;
+                [...incoming.children].forEach(function(node){
+                    if(node.hasAttribute && node.hasAttribute('data-realtime-permintaan-id')){
+                        currentId=String(node.dataset.realtimePermintaanId||'');
+                        groups.set(currentId,{article:node,modals:[]});
+                    }else if(currentId && node.classList && (node.classList.contains('request-detail-modal')||node.classList.contains('progress-update-modal'))){
+                        groups.get(currentId).modals.push(node);
+                    }
+                });
+
+                function placeModals(id,modals){
+                    document.querySelectorAll('.request-detail-modal[id$="-'+id+'"],.progress-update-modal[id$="-'+id+'"]').forEach(function(old){old.remove();});
+                    modals.forEach(function(m){document.body.appendChild(m);});
+                }
+
                 const existing=[...list.querySelectorAll('[data-realtime-permintaan-id]')];const seen=new Set();
-                existing.forEach(function(item){const id=String(item.dataset.realtimePermintaanId||'');const replacement=freshById.get(id);if(replacement){item.replaceWith(replacement);seen.add(id);}else if(id)item.remove();});
-                fresh.slice().reverse().forEach(function(item){const id=String(item.dataset.realtimePermintaanId||'');if(!id||seen.has(id)||list.querySelector('[data-realtime-permintaan-id="'+id+'"]'))return;list.insertBefore(item,list.firstChild);});
+                existing.forEach(function(item){
+                    const id=String(item.dataset.realtimePermintaanId||'');
+                    const group=groups.get(id);
+                    if(group){item.replaceWith(group.article);placeModals(id,group.modals);seen.add(id);}
+                    else if(id){placeModals(id,[]);item.remove();}
+                });
+                [...groups.entries()].reverse().forEach(function(entry){
+                    const id=entry[0],group=entry[1];
+                    if(!id||seen.has(id)||list.querySelector('[data-realtime-permintaan-id="'+id+'"]'))return;
+                    list.insertBefore(group.article,list.firstChild);
+                    placeModals(id,group.modals);
+                });
             }).catch(function(){});
     }
 
