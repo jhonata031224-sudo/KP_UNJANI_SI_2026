@@ -25,18 +25,57 @@ class LaporanController extends Controller
     {
         $user = $request->user()->load('satuan');
         $kode = strtoupper((string) $user->satuan?->kode);
-        abort_unless(in_array($kode, ['DANPUS', 'WADAN'], true), 403);
+        $isPimpinan = in_array($kode, ['DANPUS', 'WADAN'], true);
+        $isPelaksana = in_array($kode, self::KODE_SATUAN_PELAKSANA, true);
+        abort_unless($isPimpinan || $isPelaksana, 403);
 
-        $satuanIds = Satuan::whereIn('kode', self::KODE_SATUAN_PELAKSANA)->pluck('id');
+        $includeReports = $request->query('reports', '1') !== '0';
+        $includeRequests = $request->query('requests', '1') !== '0';
         $since = max(0, (int) $request->query('since', 0));
 
+        if ($isPelaksana) {
+            $sent = Laporan::with(['satuan', 'tujuanSatuan'])
+                ->where('satuan_id', $user->satuan->id)
+                ->latest('id')
+                ->get();
+            $incoming = Laporan::with(['satuan', 'tujuanSatuan'])
+                ->where('tujuan_satuan_id', $user->satuan->id)
+                ->where(function ($query) {
+                    $query->where('status', 'Menunggu')
+                        ->orWhere('status', 'like', 'Revisi%');
+                })
+                ->latest('id')
+                ->get();
+
+            $semuaPermintaan = PermintaanLaporan::where('tujuan_satuan_id', $user->satuan->id)->get();
+            $roleStats = [
+                'masuk' => $incoming->count(),
+                'disetujui' => $sent->filter(fn ($l) => str_contains(strtolower($l->status), 'setuj') || str_contains(strtolower($l->status), 'diterima'))->count(),
+                'ditolak' => $sent->filter(fn ($l) => str_contains(strtolower($l->status), 'tolak'))->count(),
+                'terlambat' => $semuaPermintaan->filter(fn ($p) => $p->isTerlambat())->count(),
+                'dibatalkan' => $semuaPermintaan->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count(),
+            ];
+
+            return response()->json([
+                'role' => 'pelaksana',
+                'sent_html' => $includeReports ? $sent->map(fn ($l) => view('siberad.dashboards.partials.laporan-role-realtime-sent-row', ['l' => $l])->render())->implode('') : '',
+                'incoming_html' => $includeReports ? $incoming->map(fn ($l) => view('siberad.dashboards.partials.laporan-role-realtime-incoming-row', ['l' => $l, 'canReview' => true, 'satuan' => $user->satuan])->render())->implode('') : '',
+                'role_stats' => $roleStats,
+            ], 200, [
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            ]);
+        }
+
+        $satuanIds = Satuan::whereIn('kode', self::KODE_SATUAN_PELAKSANA)->pluck('id');
         $latestId = (int) (Laporan::whereIn('satuan_id', $satuanIds)->max('id') ?? 0);
 
-        $items = Laporan::with(['satuan', 'tujuanSatuan', 'permintaanLaporan'])
-            ->whereIn('satuan_id', $satuanIds)
-            ->where('id', '>', $since)
-            ->orderBy('id')
-            ->get();
+        $items = $includeReports
+            ? Laporan::with(['satuan', 'tujuanSatuan', 'permintaanLaporan'])
+                ->whereIn('satuan_id', $satuanIds)
+                ->where('id', '>', $since)
+                ->orderBy('id')
+                ->get()
+            : collect();
 
         $rowsBySatuan = $items->groupBy('satuan_id')->map(
             fn ($group) => $group
@@ -64,11 +103,35 @@ class LaporanController extends Controller
             'is_progres' => $l->status === Laporan::STATUS_PROGRES,
         ])->values();
 
+        $requestStates = [];
+        if ($includeRequests) {
+            $requests = PermintaanLaporan::with(['laporan', 'laporans'])
+                ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS', 'WADAN']))
+                ->latest('id')
+                ->get();
+
+            foreach ($requests as $permintaan) {
+                $latestReport = $permintaan->laporans->sortByDesc('id')->first();
+                $requestStates[(string) $permintaan->id] = [
+                    'id' => $permintaan->id,
+                    'status' => $permintaan->status,
+                    'progres' => (int) $permintaan->progres,
+                    'laporan_id' => $permintaan->laporan_id,
+                    'laporan_status' => $latestReport?->status ?? $permintaan->laporan?->status ?? '',
+                    'ditinjau_at' => $permintaan->dikerjakan_at?->translatedFormat('d M Y H:i'),
+                    'dibatalkan_at' => $permintaan->dibatalkan_at?->translatedFormat('d M Y H:i'),
+                    'terlambat' => $permintaan->isTerlambat(),
+                ];
+            }
+        }
+
         return response()->json([
+            'role' => 'pimpinan',
             'latest_id' => $latestId,
             'rows' => $rowsBySatuan,
             'stats' => $statsBySatuan,
             'items' => $meta,
+            'request_states' => $requestStates,
             'total_laporan' => $semuaStatus->count(),
             'total_disetujui' => $semuaStatus->filter(fn ($l) => str_contains(strtolower($l->status), 'setuj') || str_contains(strtolower($l->status), 'diterima'))->count(),
             'total_ditolak' => $semuaStatus->filter(fn ($l) => str_contains(strtolower($l->status), 'tolak'))->count(),
