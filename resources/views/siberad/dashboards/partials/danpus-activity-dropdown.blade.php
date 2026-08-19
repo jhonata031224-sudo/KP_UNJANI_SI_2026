@@ -23,7 +23,7 @@
   .danpus-inline-progress-item::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--p-green);box-shadow:0 0 0 4px color-mix(in srgb,var(--p-green) 11%,transparent);flex:0 0 auto}
   .danpus-inline-progress-value{font-size:13px;font-weight:900;line-height:1.1}
   .danpus-inline-progress-meta{font-size:9px;font-weight:600;color:var(--p-muted);line-height:1.2}
-  .danpus-inline-progress-detail{margin-top:5px;border:1px solid var(--p-border);background:var(--p-surface-2);color:var(--p-text);border-radius:7px;padding:4px 9px;font-size:9px;font-weight:800;line-height:1;cursor:pointer;transition:background .15s ease,border-color .15s ease,color .15s ease,transform .15s ease}
+  .danpus-inline-progress-detail{position:relative;z-index:4;pointer-events:auto;touch-action:manipulation;display:inline-flex;align-items:center;justify-content:center;margin-top:5px;border:1px solid var(--p-border);background:var(--p-surface-2);color:var(--p-text);border-radius:7px;padding:4px 9px;font-size:9px;font-weight:800;line-height:1;cursor:pointer;transition:background .15s ease,border-color .15s ease,color .15s ease,transform .15s ease}
   .danpus-inline-progress-detail:hover{border-color:var(--p-accent);background:var(--p-surface);color:var(--p-accent);transform:translateY(-1px)}
   .danpus-inline-progress-detail:active{transform:scale(.96)}
   .danpus-inline-progress-item.latest{border-color:color-mix(in srgb,var(--p-green) 55%,var(--p-border));box-shadow:0 0 0 3px color-mix(in srgb,var(--p-green) 9%,transparent),0 6px 18px color-mix(in srgb,var(--p-green) 12%,transparent)}
@@ -66,7 +66,7 @@
       var old=item.querySelector('.danpus-inline-progress-detail');
       if(old)old.remove();
       var btn=document.createElement('button');
-      btn.type='button';btn.className='danpus-inline-progress-detail';btn.textContent='Detail';
+      btn.type='button';btn.className='danpus-inline-progress-detail';btn.textContent='Detail';btn.setAttribute('aria-label','Lihat detail progres laporan');
       btn.addEventListener('click',function(e){
         e.preventDefault();e.stopPropagation();
         var target=source;
@@ -74,10 +74,19 @@
           target=Array.from(document.querySelectorAll('.danpus-activity-log[data-laporan-id],tr[data-laporan-id]')).find(function(log){return String(log.dataset.laporanId||'')===String(item.dataset.laporanId);})||null;
         }
         var detail=findDetailControl(target);
-        if(detail){detail.click();return;}
+        if(detail){
+          if(typeof window.openReportDetail==='function'){
+            window.openReportDetail(detail);
+          }else{
+            detail.click();
+          }
+          return;
+        }
         if(target){
           var fallback=target.querySelector('button,a,[role="button"]');
-          if(fallback)fallback.click();
+          if(fallback){
+            if(typeof window.openReportDetail==='function')window.openReportDetail(fallback);else fallback.click();
+          }
         }
       });
       item.appendChild(btn);
