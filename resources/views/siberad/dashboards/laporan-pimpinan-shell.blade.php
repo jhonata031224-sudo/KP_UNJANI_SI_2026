@@ -14,3 +14,4 @@
 @include('siberad.dashboards.partials.profile-description-hide')
 @include('siberad.dashboards.partials.responsive-content-alignment')
 @include('siberad.dashboards.partials.sidebar-header-surface')
+@include('siberad.dashboards.partials.danpus-permintaan-arsip-mode')
