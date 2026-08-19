@@ -13,6 +13,13 @@
 #permintaan-laporan.danpus-archive-mode .danpus-archive-select-all,#permintaan-laporan.danpus-archive-mode .danpus-archive-row-checkbox{position:absolute;left:4px;top:50%;transform:translateY(-50%);z-index:2}
 #permintaan-laporan .request-table tbody tr.danpus-archive-selected td{background:color-mix(in srgb,var(--gold-solid-bright,#c97a00) 5%,transparent)}
 #permintaan-laporan .request-table tbody tr.danpus-archive-selected td:first-child{box-shadow:none}
+/* Arsip pada Riwayat/Status memakai layout tabel yang SAMA persis dengan baris laporan biasa. */
+#status .archive-request-row td{vertical-align:middle}
+#status .archive-request-row .archive-request-unit,#status .archive-request-row .archive-request-target{text-align:center}
+#status .archive-request-row .archive-request-sub{margin-top:3px;font-size:10px;color:var(--p-muted)}
+#status .archive-request-row .archive-request-date{justify-content:center}
+#status .archive-request-row .archive-request-status{white-space:nowrap}
+@media(max-width:700px){#status .archive-request-row .archive-request-status{white-space:normal}}
 </style>
 <script>
 (function(){
@@ -31,18 +38,38 @@ function initDanpusArchiveMode(){
  const countBadge=document.createElement('span');countBadge.className='danpus-archive-count';countBadge.id='danpusArchiveSelectedCount';countBadge.setAttribute('aria-live','polite');countBadge.textContent='0';actions.insertBefore(countBadge,archiveButton);
  function csrf(){return document.querySelector('input[name="_token"]')?.value||document.querySelector('meta[name="csrf-token"]')?.content||''}
  function historyBodies(){return Array.from(document.querySelectorAll('#riwayat .dtbl tbody,#riwayat .clean-table tbody,#status .clean-table tbody,#status .dtbl tbody')).filter(Boolean)}
- function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+ function esc(v){return String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]))}
+ function normalizeStatus(status){return String(status||'').replace(/\s+/g,' ').trim()}
+ function archiveStatusClass(status){const n=normalizeStatus(status).toLowerCase();if(n.includes('setuj')||n.includes('diterima'))return'ok';if(n.includes('tolak')||n.includes('batal')||n.includes('terlambat'))return'bad';return'wait'}
+ function archiveStatusLabel(status){const n=normalizeStatus(status);if(!n)return'Arsip';if(n==='Dibatalkan')return'Dibatalkan';if(n==='Terlambat')return'Terlambat';if(n==='Selesai · Disetujui')return'Selesai · Disetujui';if(n==='Selesai · Ditolak')return'Selesai · Ditolak';return n}
+ function isHistoryStatusTable(table){const headers=Array.from(table?.querySelectorAll('thead th')||[]).map(h=>h.textContent.trim().toLowerCase());return headers.length===6&&headers[0]==='unit'&&headers[1]==='perihal'&&headers[2]==='tujuan'&&headers[3]==='status'&&headers[4]==='tanggal'&&headers[5]==='aksi'}
  function renderArchivedItem(tb,item){
    const key='archive-'+item.id;if(tb.querySelector('[data-archive-key="'+key+'"]'))return;
    tb.querySelectorAll('tr').forEach(r=>{if(r.querySelector('.empty-state'))r.remove()});
-   const t=tb.closest('table');const headers=Array.from(t?.querySelectorAll('thead th')||[]).map(h=>h.textContent.trim().toLowerCase());
-   const isStatus=headers.includes('satlak')&&headers.includes('perihal')&&headers.includes('tujuan')&&headers.includes('status');
-   const tr=document.createElement('tr');tr.dataset.archiveKey=key;tr.dataset.search=(String(item.perihal||'')+' '+String(item.tujuan_nama||'')).toLowerCase();
-   if(isStatus){tr.innerHTML='<td style="text-align:center"><span class="satuan-pill">DANPUS</span></td><td class="subject">'+esc(item.perihal||'-')+'<div class="muted">Arsip permintaan laporan</div></td><td style="text-align:center"><span class="satuan-pill">'+esc(item.tujuan||item.tujuan_nama||'-')+'</span></td><td style="text-align:center"><span class="status-pill '+archiveStatusClass(item.status)+'">'+esc(item.status||'Arsip')+'</span></td><td style="text-align:center">'+esc(item.archived_at||'-')+'</td><td style="text-align:center"><button type="button" class="detail-btn archive-detail-btn" data-perihal="'+esc(item.perihal)+'" data-tujuan="'+esc(item.tujuan_nama||'-')+'" data-prioritas="'+esc(item.prioritas||'-')+'" data-tanggal="'+esc(item.archived_at||'-')+'">Lihat</button></td>'}
-   else{tr.innerHTML='<td>'+esc(item.perihal||'-')+'<div class="muted">Arsip permintaan laporan</div></td><td style="text-align:center"><span class="satuan-pill">'+esc(item.tujuan||item.tujuan_nama||'-')+'</span></td><td>'+esc(item.prioritas||'-')+'</td><td style="text-align:center"><span class="status-dot amber">'+esc(item.status||'Arsip')+'</span></td><td style="text-align:center">'+esc(item.archived_at||'-')+'</td><td style="text-align:center"><button type="button" class="detail-btn archive-detail-btn" data-perihal="'+esc(item.perihal)+'" data-tujuan="'+esc(item.tujuan_nama||'-')+'" data-prioritas="'+esc(item.prioritas||'-')+'" data-tanggal="'+esc(item.archived_at||'-')+'">Detail</button></td>'}
-   tb.prepend(tr);
+   const table=tb.closest('table');
+   if(isHistoryStatusTable(table)){
+     const status=archiveStatusLabel(item.status);
+     const statusClass=archiveStatusClass(status);
+     const unit=item.tujuan||item.tujuan_nama||'-';
+     const subject=item.perihal||'-';
+     const target=item.pengirim||item.pembuat_nama||'DANPUS';
+     const date=item.archived_at||item.created_at||'-';
+     const tr=document.createElement('tr');
+     tr.className='archive-request-row';
+     tr.dataset.archiveKey=key;
+     tr.dataset.search=(String(unit)+' '+String(subject)+' '+String(target)).toLowerCase();
+     tr.dataset.outcome=status.toLowerCase().includes('setuj')||status.toLowerCase().includes('diterima')?'disetujui':status.toLowerCase().includes('tolak')?'ditolak':'';
+     tr.innerHTML='<td class="archive-request-unit" style="text-align:center"><span class="satuan-pill">'+esc(unit)+'</span></td>'+
+       '<td class="subject"><div>'+esc(subject)+'</div><div class="archive-request-sub">Arsip permintaan laporan</div></td>'+
+       '<td class="archive-request-target" style="text-align:center"><span class="satuan-pill">'+esc(target)+'</span></td>'+
+       '<td style="text-align:center"><span class="status-pill archive-request-status '+statusClass+'">'+esc(status)+'</span></td>'+
+       '<td style="text-align:center"><div class="request-deadline archive-request-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>'+esc(date)+'</div></td>'+
+       '<td style="text-align:center"><button type="button" class="detail-btn archive-detail-btn" data-pengirim="'+esc(target)+'" data-perihal="'+esc(subject)+'" data-tujuan="'+esc(unit)+'" data-prioritas="'+esc(item.prioritas||'-')+'" data-progres="0" data-proyek="Arsip permintaan laporan" data-tanggal="'+esc(date)+'" data-deskripsi="Permintaan laporan yang telah dipindahkan ke Riwayat Laporan." data-readonly="1" data-readonly-text="Data arsip hanya untuk melihat.">Detail</button></td>';
+     tb.prepend(tr);
+     return;
+   }
+   /* Tabel lain dipertahankan apa adanya; arsip hanya ditambahkan jika tabel memang cocok dengan struktur history. */
  }
- function archiveStatusClass(status){const n=String(status||'').toLowerCase();if(n.includes('setuj'))return'ok';if(n.includes('tolak')||n.includes('batal')||n.includes('terlambat'))return'bad';return'wait'}
  function syncHistory(items){historyBodies().forEach(tb=>items.forEach(item=>renderArchivedItem(tb,item)))}
  async function loadHistory(){try{const r=await fetch(historyEndpoint+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}});if(!r.ok)return;const data=await r.json();const items=Array.isArray(data.items)?data.items:[];syncHistory(items);removeArchivedRows(items.map(i=>i.id));}catch(e){}}
  function removeArchivedRows(ids){const set=new Set((ids||[]).map(String));Array.from(tbody.querySelectorAll('tr[data-status]')).forEach(row=>{if(set.has(rowId(row)))row.remove()});selectedIds.forEach(id=>{if(set.has(String(id)))selectedIds.delete(id)});syncRows()}
@@ -56,7 +83,7 @@ function initDanpusArchiveMode(){
  function setMode(next){active=!!next;panel.classList.toggle('danpus-archive-mode',active);archiveButton.classList.toggle('is-active',active);archiveButton.setAttribute('aria-pressed',active?'true':'false');if(!active)selectedIds.clear();syncRows()}
  async function archiveSelected(){if(busy||selectedIds.size===0)return;busy=true;archiveButton.classList.add('is-busy');try{const form=new FormData();form.append('archive_mode','1');selectedIds.forEach(id=>form.append('permintaan_laporan_ids[]',id));const token=csrf();const r=await fetch(archiveEndpoint,{method:'POST',credentials:'same-origin',body:form,headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest',...(token?{'X-CSRF-TOKEN':token}:{})}});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.message||'Permintaan gagal diarsipkan.');const items=Array.isArray(data.items)?data.items:[];syncHistory(items);removeArchivedRows(data.archived_ids||items.map(i=>i.id));selectedIds.clear();setMode(false);window.siberadShowToast?.('success',data.message||'Permintaan berhasil dipindahkan ke Riwayat Laporan.')}catch(error){window.siberadShowToast?.('error',error.message||'Permintaan gagal diarsipkan.')}finally{busy=false;archiveButton.classList.remove('is-busy');syncRows()}}
  archiveButton.addEventListener('click',()=>{if(active&&selectedIds.size>0){archiveSelected();return}setMode(!active)});
- document.addEventListener('click',e=>{const btn=e.target.closest('.archive-detail-btn');if(!btn||!window.openReportDetail)return;const b=document.createElement('button');b.dataset.pengirim='DANPUS';b.dataset.tujuan=btn.dataset.tujuan||'-';b.dataset.perihal=btn.dataset.perihal||'-';b.dataset.prioritas=btn.dataset.prioritas||'-';b.dataset.progres='-';b.dataset.proyek='Arsip permintaan laporan';b.dataset.tanggal=btn.dataset.tanggal||'-';b.dataset.deskripsi='Permintaan laporan yang telah dipindahkan ke Riwayat Laporan.';b.dataset.readonly='1';b.dataset.readonlyText='Data arsip hanya untuk melihat.';window.openReportDetail(b)});
+ document.addEventListener('click',e=>{const btn=e.target.closest('.archive-detail-btn');if(!btn||!window.openReportDetail)return;window.openReportDetail(btn)});
  const scheduleRefresh=()=>{if(refreshQueued)return;refreshQueued=true;requestAnimationFrame(()=>{refreshQueued=false;syncRows()})};new MutationObserver(scheduleRefresh).observe(tbody,{childList:true,subtree:true});syncRows();loadHistory();window.setInterval(()=>{if(!document.hidden&&!busy)loadHistory()},5000)
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initDanpusArchiveMode,{once:true});else initDanpusArchiveMode();
