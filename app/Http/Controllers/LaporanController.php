@@ -352,7 +352,17 @@ class LaporanController extends Controller
         $user = $request->user()->load('satuan');
         $satuan = $user->satuan;
         abort_unless($satuan, 403, 'Akun belum terhubung ke satuan.');
-        abort_unless((int) $laporan->tujuan_satuan_id === (int) $satuan->id, 403, 'Anda bukan penerima laporan ini.');
+
+        // Danpus & Wadan itu satu payung pimpinan yang bisa saling gantiin --
+        // laporan yang tujuannya ke Danpus tetap boleh diputuskan (Terima/
+        // Tolak) oleh Wadan, begitu juga sebaliknya. Pola yang sama persis
+        // sudah dipakai di destroy() (hapus dari Riwayat) lewat
+        // $isPimpinanRiwayatSatlak, cuma di sini kelewatan belum diterapkan.
+        $isPenerimaLaporan = (int) $laporan->tujuan_satuan_id === (int) $satuan->id;
+        $isPimpinanRiwayatSatlak = in_array(strtoupper((string) $satuan->kode), ['DANPUS', 'WADAN'], true)
+            && $laporan->satuan
+            && $laporan->satuan->kategori === Satuan::KATEGORI_SATLAK;
+        abort_unless($isPenerimaLaporan || $isPimpinanRiwayatSatlak, 403, 'Anda bukan penerima laporan ini.');
         abort_if($laporan->status === Laporan::STATUS_PROGRES, 422, 'Baris ini adalah catatan progres, bukan laporan final — tidak dapat diputuskan.');
 
         $kode = strtoupper((string) $satuan->kode);
