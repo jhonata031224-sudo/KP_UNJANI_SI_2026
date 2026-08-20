@@ -1,22 +1,27 @@
 <style>
-/* Pencarian & filter tabel laporan -- dipakai bersama oleh Pimpinan dan halaman role. */
+/* Pencarian & filter tabel laporan -- dipakai bersama oleh Pimpinan dan halaman
+   role. Lebar kotak cari & dropdown-nya sengaja disamain persis sama
+   danpus-log-search.blade.php (acuan gaya "1 sistem" di Log Aktivitas) --
+   select-nya sendiri gak perlu CSS custom sama sekali, ke-enhance otomatis
+   sama styled-select.blade.php (trigger + menu melayang) yang jalan buat
+   SEMUA <select> di halaman lewat MutationObserver, jadi persis kelihatan
+   sama kayak dropdown "Terbaru/Terlama" di Log Aktivitas. */
 .rpt-filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 14px}
-.rpt-filter-search{position:relative;flex:1 1 240px;min-width:200px;max-width:360px}
-.rpt-filter-search svg{position:absolute;left:11px;top:50%;width:15px;height:15px;transform:translateY(-50%);color:var(--p-muted,var(--text-muted));pointer-events:none}
-.rpt-filter-search input{box-sizing:border-box;width:100%;height:38px;border:1px solid var(--p-border,var(--border));border-radius:9px;outline:0;background:var(--p-surface-2,var(--panel-alt));color:var(--p-text,var(--text));font:inherit;font-size:12px;padding:8px 11px 8px 34px}
+.rpt-filter-search{position:relative;width:330px;max-width:100%}
+.rpt-filter-search svg{position:absolute;left:11px;top:50%;width:16px;height:16px;transform:translateY(-50%);color:var(--p-muted,var(--text-muted));pointer-events:none}
+.rpt-filter-search input{box-sizing:border-box;width:100%;height:38px;border:1px solid var(--p-border,var(--border));border-radius:9px;outline:0;background:var(--p-surface-2,var(--panel-alt));color:var(--p-text,var(--text));font:inherit;font-size:12px;padding:8px 11px 8px 35px}
 .rpt-filter-search input:focus{border-color:var(--p-accent,var(--gold-bright));box-shadow:0 0 0 3px rgba(201,122,0,.10)}
 .rpt-filter-search input::placeholder{color:var(--p-muted,var(--text-muted))}
-.rpt-filter-select{box-sizing:border-box;height:38px;border:1px solid var(--p-border,var(--border));border-radius:9px;background-color:var(--p-surface-2,var(--panel-alt));color:var(--p-text,var(--text));font:inherit;font-size:11px;padding:0 28px 0 11px;outline:0;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 9px center;background-size:13px}
-.rpt-filter-select:focus{border-color:var(--p-accent,var(--gold-bright));box-shadow:0 0 0 3px rgba(201,122,0,.10)}
 .rpt-filter-count{font-size:10px;color:var(--p-muted,var(--text-muted));white-space:nowrap;margin-left:auto}
-.rpt-filter-empty{padding:24px 12px;text-align:center;color:var(--p-muted,var(--text-muted));font-size:12px;border:2px dotted var(--p-border,var(--border));border-radius:10px}
-@media(max-width:700px){.rpt-filter-bar{gap:7px}.rpt-filter-search{flex:1 1 100%;max-width:none}.rpt-filter-select{flex:1 1 100%;width:100%;max-width:none;box-sizing:border-box}.rpt-filter-count{width:100%;margin-left:0}}
+@media(max-width:700px){.rpt-filter-bar{gap:7px}.rpt-filter-search{width:100%}.rpt-filter-count{width:100%;margin-left:0}}
 </style>
 <script>
 (function(){
   function buildSelect(filterDef){
+    // Gak perlu class/CSS custom -- styled-select.blade.php otomatis
+    // nge-enhance select polos jadi trigger+menu melayang yang sama
+    // gayanya kayak dropdown "Terbaru/Terlama" di Log Aktivitas.
     var select=document.createElement('select');
-    select.className='rpt-filter-select';
     select.setAttribute('aria-label',filterDef.label);
     filterDef.options.forEach(function(opt){var o=document.createElement('option');o.value=opt.value;o.textContent=opt.label;select.appendChild(o);});
     return select;
@@ -58,8 +63,12 @@
       });
     }
 
-    var EMPTY_ICON_SEARCH='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block;opacity:.7"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>';
-    var EMPTY_ICON_NONE='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block;opacity:.7"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg>';
+    // Icon + markup empty-state disamain persis sama pola .empty-state/
+    // .empty-state-title yang dipakai di seluruh app (dash-styles.blade.php),
+    // bukan style kotak sendiri -- biar "Belum ada X" kelihatan sama gayanya
+    // di mana-mana, cuma isi icon+teksnya beda tergantung section.
+    var EMPTY_ICON_SEARCH='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted,var(--text-muted))" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>';
+    var EMPTY_ICON_NONE='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted,var(--text-muted))" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg>';
 
     function ensureEmptyRow(){
       if(!tbody||cfg.showEmpty===false)return;
@@ -71,7 +80,7 @@
       var emptyTd=document.createElement('td');
       emptyTd.colSpan=table.querySelectorAll('thead th').length||1;
       var emptyBox=document.createElement('div');
-      emptyBox.className='rpt-filter-empty';
+      emptyBox.className='empty-state';
       emptyTd.appendChild(emptyBox);emptyRow.appendChild(emptyTd);tbody.appendChild(emptyRow);
     }
 
@@ -112,7 +121,7 @@
       });
       count.textContent=visible+' dari '+rows.length+' data';
       if(emptyRow){
-        var emptyBox=emptyRow.querySelector('.rpt-filter-empty');
+        var emptyBox=emptyRow.querySelector('.empty-state');
         if(emptyBox){
           // Beda pesan tergantung PENYEBAB 0 hasilnya: kalau tabelnya emang
           // belum ada data sama sekali (rows.length===0), selalu bilang
@@ -121,7 +130,8 @@
           // sesuai pencarian/filter" cuma relevan kalau DATANYA ADA tapi
           // kefilter jadi 0 (rows.length>0, visible===0).
           var showingNoneMsg=rows.length===0;
-          emptyBox.innerHTML=(showingNoneMsg?EMPTY_ICON_NONE:EMPTY_ICON_SEARCH)+(showingNoneMsg?(cfg.emptyTextNone||'Belum ada data.'):cfg.emptyText);
+          var text=showingNoneMsg?(cfg.emptyTextNone||'Belum ada data.'):cfg.emptyText;
+          emptyBox.innerHTML=(showingNoneMsg?EMPTY_ICON_NONE:EMPTY_ICON_SEARCH)+'<div class="empty-state-title">'+text+'</div>';
         }
         emptyRow.style.display=visible===0?'':'none';
       }
