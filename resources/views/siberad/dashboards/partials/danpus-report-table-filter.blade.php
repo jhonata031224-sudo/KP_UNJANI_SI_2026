@@ -43,12 +43,22 @@
 
     function collectRows(){
       if(!tbody)return;
+      // Buang baris statis (bukan baris data asli -- gak ada data-search --
+      // dan bukan juga baris empty-state kita sendiri) yang nyangkut di
+      // tbody, misalnya sisa @empty dari Blade. Kalau dibiarkan, baris itu
+      // bakal tampil BARENGAN sama pesan kosong dinamis di bawah (dobel).
+      Array.from(tbody.querySelectorAll(':scope > tr')).forEach(function(tr){
+        if(!tr.hasAttribute('data-search') && !tr.classList.contains('rpt-filter-empty-row'))tr.remove();
+      });
       rows=Array.from(tbody.querySelectorAll(':scope > tr')).filter(function(tr){return tr.hasAttribute('data-search');});
       rows.forEach(function(row,i){
         if(row.dataset.rptOrder==null)row.dataset.rptOrder=String(i);
         prepareRow(row);
       });
     }
+
+    var EMPTY_ICON_SEARCH='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block;opacity:.7"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>';
+    var EMPTY_ICON_NONE='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block;opacity:.7"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg>';
 
     function ensureEmptyRow(){
       if(!tbody||cfg.showEmpty===false)return;
@@ -61,7 +71,6 @@
       emptyTd.colSpan=table.querySelectorAll('thead th').length||1;
       var emptyBox=document.createElement('div');
       emptyBox.className='rpt-filter-empty';
-      emptyBox.innerHTML='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block;opacity:.7"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>'+cfg.emptyText;
       emptyTd.appendChild(emptyBox);emptyRow.appendChild(emptyTd);tbody.appendChild(emptyRow);
     }
 
@@ -101,7 +110,20 @@
         if(match)visible++;
       });
       count.textContent=visible+' dari '+rows.length+' data';
-      if(emptyRow)emptyRow.style.display=visible===0?'':'none';
+      if(emptyRow){
+        var emptyBox=emptyRow.querySelector('.rpt-filter-empty');
+        if(emptyBox){
+          // Beda pesan tergantung PENYEBAB 0 hasilnya: kalau tabelnya emang
+          // belum ada data sama sekali (rows.length===0), selalu bilang
+          // "Belum ada X" -- gak peduli user lagi ngetik di kotak cari atau
+          // enggak, soalnya emang gak ada apa-apa buat dicari. Pesan "tidak
+          // sesuai pencarian/filter" cuma relevan kalau DATANYA ADA tapi
+          // kefilter jadi 0 (rows.length>0, visible===0).
+          var showingNoneMsg=rows.length===0;
+          emptyBox.innerHTML=(showingNoneMsg?EMPTY_ICON_NONE:EMPTY_ICON_SEARCH)+(showingNoneMsg?(cfg.emptyTextNone||'Belum ada data.'):cfg.emptyText);
+        }
+        emptyRow.style.display=visible===0?'':'none';
+      }
       applying=false;
     }
 
@@ -137,21 +159,21 @@
 
   function boot(){
     initReportFilter({
-      sectionId:'masuk',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari pengirim atau perihal...',emptyText:'Tidak ada laporan masuk yang sesuai dengan pencarian/filter.',
+      sectionId:'masuk',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari pengirim atau perihal...',emptyText:'Tidak ada laporan masuk yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan masuk.',
       filters:[{label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]}],sortable:true
     });
     initReportFilter({
-      sectionId:'status',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari satuan atau perihal...',emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',
+      sectionId:'status',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari satuan atau perihal...',emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan.',
       filters:[{label:'Filter status',attr:'outcome',options:[{value:'all',label:'Semua Status'},{value:'disetujui',label:'Disetujui'},{value:'ditolak',label:'Ditolak'}]}],sortable:true
     });
     initReportFilter({
-      sectionId:'permintaan-laporan',tableSelector:'.request-table',anchorSelector:'.request-head',searchPlaceholder:'Cari perihal atau satuan tujuan...',emptyText:'Tidak ada permintaan laporan yang sesuai dengan pencarian/filter.',showEmpty:false,
+      sectionId:'permintaan-laporan',tableSelector:'.request-table',anchorSelector:'.request-head',searchPlaceholder:'Cari perihal atau satuan tujuan...',emptyText:'Tidak ada permintaan laporan yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada permintaan laporan.',showEmpty:false,
       filters:[{label:'Filter status',attr:'status',options:[{value:'all',label:'Semua Status'},{value:'Sedang diproses',label:'Sedang diproses'},{value:'Menunggu',label:'Menunggu'},{value:'Revisi',label:'Revisi'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'}]}],sortable:true
     });
 
     var filterPrioritas=[{label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]}];
     initReportFilter({
-      sectionId:'riwayat',tableSelector:'.dtbl',anchorSelector:'.panel-head',searchPlaceholder:'Cari perihal atau tujuan...',emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',
+      sectionId:'riwayat',tableSelector:'.dtbl',anchorSelector:'.panel-head',searchPlaceholder:'Cari perihal atau tujuan...',emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan.',
       filters:[
         {label:'Filter status',attr:'reportStatus',options:[{value:'all',label:'Semua Status'},{value:'Sedang diproses',label:'Sedang diproses'},{value:'Menunggu',label:'Menunggu'},{value:'Revisi',label:'Revisi'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'}]},
         filterPrioritas[0]
@@ -162,10 +184,10 @@
       }
     });
     initReportFilter({
-      sectionId:'masuk',tableSelector:'.dtbl',anchorSelector:'.section-head',searchPlaceholder:'Cari pengirim atau perihal...',emptyText:'Tidak ada laporan masuk yang sesuai dengan pencarian/filter.',filters:filterPrioritas
+      sectionId:'masuk',tableSelector:'.dtbl',anchorSelector:'.section-head',searchPlaceholder:'Cari pengirim atau perihal...',emptyText:'Tidak ada laporan masuk yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan masuk.',filters:filterPrioritas
     });
     initReportFilter({
-      sectionId:'monitoring',tableSelector:'.dtbl',anchorSelector:'.monitor-grid',searchPlaceholder:'Cari satlak atau perihal...',emptyText:'Tidak ada laporan dari 3 Satlak yang sesuai dengan pencarian/filter.',filters:filterPrioritas
+      sectionId:'monitoring',tableSelector:'.dtbl',anchorSelector:'.monitor-grid',searchPlaceholder:'Cari satlak atau perihal...',emptyText:'Tidak ada laporan dari 3 Satlak yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan dari 3 Satlak.',filters:filterPrioritas
     });
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
