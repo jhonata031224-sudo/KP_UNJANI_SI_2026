@@ -15,3 +15,4 @@
 @include('siberad.dashboards.partials.sidebar-header-surface')
 @include('siberad.dashboards.partials.danpus-permintaan-arsip-mode')
 @include('siberad.dashboards.partials.danpus-history-detail-fix')
+@include('siberad.dashboards.partials.danpus-history-status-filter-match')
