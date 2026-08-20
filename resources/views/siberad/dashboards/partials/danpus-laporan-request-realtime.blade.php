@@ -104,7 +104,12 @@
         let finalText='Menunggu';
 
         if(status==='Belum dikerjakan'){
-            current=0;
+            // Tahap 0 ("Permintaan Terkirim") itu FAKTA yang udah kejadian
+            // begitu Pimpinan mengirim permintaan -- selalu langsung "Selesai",
+            // bukan tahap yang sedang aktif. Tahap yang beneran masih berjalan
+            // adalah tahap 1 ("Permintaan Ditinjau"), sama seperti override
+            // late/cancelled di bawah yang sudah benar pakai 1 (bukan 0).
+            current=1;
         }else if(status==='Sedang dikerjakan'){
             current=2;
         }else if(status==='Menunggu pemeriksaan'){
