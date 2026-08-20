@@ -26,6 +26,22 @@
         modal.classList.add('open');
     };
 
+    // Riwayat laporan diperbarui realtime dengan mengganti seluruh <tbody>.
+    // Karena itu binding langsung per tombol akan hilang setiap polling.
+    // Delegation di section yang stabil menjaga Edit tetap bekerja pada row lama
+    // maupun row baru tanpa memindah-mindahkan node tombol.
+    function bindEditDelegation(){
+        const section=document.getElementById('riwayat');
+        if(!section || section.dataset.editDelegationBound==='1') return;
+        section.dataset.editDelegationBound='1';
+        section.addEventListener('click',function(event){
+            const btn=event.target.closest('.edit-progres-btn');
+            if(!btn || !section.contains(btn)) return;
+            event.preventDefault();
+            window.siberadOpenEditProgres(btn);
+        });
+    }
+
     function stat(label,value){
         document.querySelectorAll('#dashboard .stat-card .lbl').forEach(function(el){
             if((el.textContent||'').trim().toLowerCase()!==label.toLowerCase())return;
@@ -63,8 +79,7 @@
                 if(!data)return;
                 const list=document.querySelector('#permintaan-laporan .deadline-sender-list');if(!list||typeof data.items_html!=='string')return;
                 const incoming=document.createElement('div');incoming.innerHTML=data.items_html;
-                const fresh=[...incoming.children];const freshById=new Map(fresh.map(el=>[String(el.dataset.realtimePermintaanId||''),el]));
-                const existing=[...list.querySelectorAll('[data-realtime-permintaan-id]')];const seen=new Set();
+                const fresh=[...incoming.children];const freshById=new Map(fresh.map(el=>[String(el.dataset.realtimePermintaanId||''),el]));const existing=[...list.querySelectorAll('[data-realtime-permintaan-id]')];const seen=new Set();
                 existing.forEach(function(item){const id=String(item.dataset.realtimePermintaanId||'');const replacement=freshById.get(id);if(replacement){item.replaceWith(replacement);seen.add(id);}else if(id)item.remove();});
                 fresh.slice().reverse().forEach(function(item){const id=String(item.dataset.realtimePermintaanId||'');if(!id||seen.has(id)||list.querySelector('[data-realtime-permintaan-id="'+id+'"]'))return;list.insertBefore(item,list.firstChild);});
                 window.siberadBindPermintaanDetailButtons&&window.siberadBindPermintaanDetailButtons();
@@ -81,11 +96,12 @@
 
     function start(){
         if(!document.getElementById('riwayat')&&!document.getElementById('masuk'))return;
+        bindEditDelegation();
         poll();timer=window.setInterval(poll,2500);
         document.addEventListener('visibilitychange',function(){if(!document.hidden)poll();});window.addEventListener('focus',poll);
     }
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
 
-// Detail button untuk Riwayat Laporan ditangani oleh global-shell-enhancements.
+// Detail button untuk Riwayat Laporan ditangani oleh inline renderer row.
 </script>
