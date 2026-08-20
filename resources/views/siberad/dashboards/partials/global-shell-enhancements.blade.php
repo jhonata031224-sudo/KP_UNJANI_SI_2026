@@ -243,6 +243,9 @@
     document.addEventListener('click', function(e){
       var detailButton = e.target.closest('.review-actions .detail-btn, .action-row .detail-btn');
       if (!detailButton) return;
+      if (typeof window.openReportDetail === 'function') {
+        window.openReportDetail(detailButton);
+      }
       setTimeout(function(){ populateDetailActions(detailButton); }, 0);
     });
   })();
