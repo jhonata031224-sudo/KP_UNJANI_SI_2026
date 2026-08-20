@@ -175,7 +175,7 @@
     });
     initReportFilter({
       sectionId:'status',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari satuan atau perihal...',emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan.',
-      filters:[{label:'Filter status',attr:'reportStatus',options:[{value:'all',label:'Semua Status'},{value:'Disetujui',label:'Disetujui'},{value:'Ditolak',label:'Ditolak'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'}]}],sortable:true,
+      filters:[{label:'Filter status',attr:'reportStatus',options:[{value:'all',label:'Semua Status'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'}]}],sortable:true,
       prepareRow:function(row){
         var raw=(row.querySelector('td:nth-child(4)')?.textContent||'').trim().toLowerCase();
         var isSelesai=raw.includes('selesai');
