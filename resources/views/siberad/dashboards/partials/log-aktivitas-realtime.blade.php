@@ -12,17 +12,28 @@
             item.classList.toggle('is-row-end', !!next && next.offsetTop > item.offsetTop + 1);
         });
     }
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const DOT_SIDE_GAP = 10;
+    function measureTextRight(el, fallbackRect) {
+        if (!el || !el.textContent.trim()) return fallbackRect.right;
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const r = range.getBoundingClientRect();
+        return r.width ? Math.max(fallbackRect.right, r.right) : fallbackRect.right;
+    }
     function drawRowConnectors(board) {
-        board.querySelectorAll(':scope > .danpus-snake-row-connector').forEach(el => el.remove());
+        let svg = board.querySelector(':scope > .danpus-snake-connectors');
+        if (!svg) {
+            svg = document.createElementNS(SVG_NS, 'svg');
+            svg.setAttribute('class', 'danpus-snake-connectors');
+            board.insertBefore(svg, board.firstChild);
+        }
+        while (svg.firstChild) svg.removeChild(svg.firstChild);
         const items = [...board.querySelectorAll('.danpus-snake-progress-item')];
         const boardRect = board.getBoundingClientRect();
-        const seg = (x, y, w, h, pending) => {
-            if (w <= 0 || h <= 0) return;
-            const el = document.createElement('div');
-            el.className = 'danpus-snake-row-connector' + (pending ? ' is-pending' : '');
-            el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.width = w + 'px'; el.style.height = h + 'px';
-            board.appendChild(el);
-        };
+        svg.setAttribute('width', boardRect.width);
+        svg.setAttribute('height', boardRect.height);
+        svg.setAttribute('viewBox', `0 0 ${boardRect.width} ${boardRect.height}`);
         items.forEach((item, i) => {
             if (!item.classList.contains('is-row-end')) return;
             const next = items[i + 1]; if (!next) return;
@@ -30,13 +41,35 @@
             const toDot = next.querySelector('.danpus-snake-progress-dot');
             if (!fromDot || !toDot) return;
             const a = fromDot.getBoundingClientRect(), b = toDot.getBoundingClientRect();
-            const x1 = a.left + a.width / 2 - boardRect.left, y1 = a.top + a.height - boardRect.top;
-            const x2 = b.left + b.width / 2 - boardRect.left, y2 = b.top - boardRect.top;
-            const midY = (y1 + y2) / 2;
+            if (!a.width || !b.width) return;
+            const itemRect = item.getBoundingClientRect();
+            const nextItemRect = next.getBoundingClientRect();
+            // Jalur cuma lewat CELAH KOSONG ASLI antar baris (bawah baris atas
+            // s/d atas baris bawah -- ruang gap:22px yang memang kosong, bukan
+            // area di atas baris atas), keluar/masuk dari SAMPING tiap dot
+            // (bukan atas/bawah), jadi gak pernah nyentuh dot lain di barisnya
+            // sendiri ataupun tombol Detail siapapun (yang selalu nempel di
+            // atas dot, di luar jalur ini sama sekali).
+            // Turunnya digeser secukupnya ke kanan -- pas ngelewatin lebar ASLI
+            // teks tanggal (diukur langsung dari node teksnya, bukan dari lebar
+            // kolom grid) -- supaya gak nabrak teks tanggal yang lebih lebar
+            // dari dot itu sendiri, tanpa perlu lompat jauh ke tepi board (yang
+            // bikin jarak kanan jomplang dibanding jarak kiri).
+            const dateEl = item.querySelector('.danpus-snake-progress-date');
+            const clearRight = measureTextRight(dateEl, a);
+            const startX = a.right - boardRect.left, startY = a.top + a.height / 2 - boardRect.top;
+            const departX = clearRight - boardRect.left + DOT_SIDE_GAP;
+            const gapTop = itemRect.bottom - boardRect.top;
+            const gapBottom = nextItemRect.top - boardRect.top;
+            const gapY = gapBottom > gapTop ? (gapTop + gapBottom) / 2 : gapTop + 4;
+            const approachX = b.left - boardRect.left - DOT_SIDE_GAP;
+            const endY = b.top + b.height / 2 - boardRect.top;
+            const endX = b.left - boardRect.left;
             const pending = item.classList.contains('is-pending');
-            seg(x1 - 2, y1, 4, midY - y1, pending);
-            seg(Math.min(x1, x2) - 2, midY - 2, Math.abs(x2 - x1) + 4, 4, pending);
-            seg(x2 - 2, midY, 4, y2 - midY, pending);
+            const path = document.createElementNS(SVG_NS, 'path');
+            path.setAttribute('d', `M ${startX} ${startY} L ${departX} ${startY} L ${departX} ${gapY} L ${approachX} ${gapY} L ${approachX} ${endY} L ${endX} ${endY}`);
+            path.setAttribute('class', 'danpus-snake-hook' + (pending ? ' is-pending' : ''));
+            svg.appendChild(path);
         });
     }
     function updateRowLayout(board) { markRowBoundaries(board); drawRowConnectors(board); }
@@ -193,8 +226,9 @@
 .danpus-snake-progress-item{position:relative;width:100%;min-width:0;padding-top:26px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
 .danpus-snake-progress-item:not(.is-row-start)::before{content:"";position:absolute;top:39px;left:calc(-50% + 15px);width:calc(100% - 30px);height:4px;background:var(--p-green);z-index:0}
 .danpus-snake-progress-item.is-pending:not(.is-row-start)::before{background:var(--p-border)}
-.danpus-snake-row-connector{position:absolute;background:var(--p-green);z-index:3}
-.danpus-snake-row-connector.is-pending{background:var(--p-border)}
+.danpus-snake-connectors{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0}
+.danpus-snake-hook{fill:none;stroke:var(--p-green);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.danpus-snake-hook.is-pending{stroke:var(--p-border)}
 @media(max-width:900px){.danpus-snake-board{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:700px){.danpus-snake-board{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:430px){.danpus-snake-board{grid-template-columns:repeat(2,1fr)}}

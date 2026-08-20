@@ -16,6 +16,15 @@
     const endpoint='{{ route('laporan.log-aktivitas.realtime') }}';
     let busy=false;
 
+    function findDropdown(requestId){
+        const id=String(requestId||'');
+        if(!id)return null;
+        const direct=[...document.querySelectorAll('.danpus-report-dropdown')].find(el=>String(el.dataset.permintaanId||'')===id);
+        if(direct)return direct;
+        const nested=[...document.querySelectorAll('[data-permintaan-id]')].find(el=>String(el.dataset.permintaanId||'')===id);
+        return nested?.closest('.danpus-report-dropdown')||null;
+    }
+
     function setItemState(item,kind,stateText){
         ['is-done','is-current','is-revisi','is-menunggu','is-rejected','is-approved'].forEach(c=>item.classList.remove(c));
         const dot=item.querySelector('.danpus-activity-dot');
@@ -29,16 +38,15 @@
         if(rejected)item.classList.add('is-rejected');
         if(approved)item.classList.add('is-approved');
         if(dot){
-            if(rejected){dot.innerHTML='<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>';}
-            else if(kind==='current'||kind==='revisi'||kind==='menunggu'){dot.innerHTML='<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>';}
-            else {dot.innerHTML='<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>';}
+            dot.innerHTML=rejected
+                ?'<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>'
+                :'<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>';
         }
         if(state)state.textContent=stateText;
     }
 
     function clearFlow(log){
-        const old=log.querySelectorAll('.danpus-realtime-flow');
-        old.forEach(el=>el.remove());
+        log.querySelectorAll('.danpus-realtime-flow').forEach(el=>el.remove());
     }
 
     function animateTransition(log,items,previousIndex,currentIndex){
@@ -74,13 +82,15 @@
     }
 
     function syncOne(s){
-        const id=String(s.id||'');
-        if(!id)return;
-        const dropdown=[...document.querySelectorAll('.danpus-report-dropdown')].find(el=>String(el.dataset.permintaanId||'')===id);
+        const dropdown=findDropdown(s.id);
         if(!dropdown)return;
         const log=dropdown.querySelector('.danpus-activity-log');
         if(!log)return;
-        const items=[...log.querySelectorAll(':scope > .danpus-activity-item')];
+        // Jangan asumsikan timeline item selalu anak langsung -- markup bisa
+        // punya wrapper di antaranya, makanya query pakai descendant biasa
+        // (bukan :scope >), biar dot gak pernah ketinggalan satu langkah
+        // dari teks status sampai halaman di-refresh manual.
+        const items=[...log.querySelectorAll('.danpus-activity-item')];
         if(items.length<3)return;
 
         const status=String(s.status||'');
@@ -104,12 +114,12 @@
             if(latestStatus.includes('tolak')){finalKind='rejected';finalText='Selesai · Ditolak';}
             else {finalKind='approved';finalText='Selesai · Disetujui';}
         }else if(cancelled){
-            current=s.dikerjakan_at?2:1;
+            current=s.ditinjau_at?2:1;
         }
 
         if(revisi){current=2;}
         if(late && !hasFinal && status!=='Menunggu pemeriksaan' && status!=='Selesai'){
-            current=s.dikerjakan_at?2:1;
+            current=s.ditinjau_at?2:1;
         }
 
         const transitionSignature=[status,current,latestStatus,hasFinal?1:0,revisi?1:0,cancelled?1:0,late?1:0].join('|');
@@ -157,9 +167,9 @@
     }
 
     function start(){
-        if(!document.querySelector('.danpus-report-dropdown'))return;
+        if(!document.querySelector('.danpus-activity-log'))return;
         poll();
-        window.setInterval(poll,2000);
+        window.setInterval(poll,1200);
         document.addEventListener('visibilitychange',function(){if(!document.hidden)poll();});
         window.addEventListener('focus',poll);
     }
