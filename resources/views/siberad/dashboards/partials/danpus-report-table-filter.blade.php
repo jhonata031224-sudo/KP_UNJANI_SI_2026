@@ -146,10 +146,13 @@
     initReportFilter({
       sectionId:'riwayat',tableSelector:'.dtbl',anchorSelector:'.panel-head',searchPlaceholder:'Cari perihal atau tujuan...',emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',
       filters:[
-        {label:'Filter status',attr:'reportStatus',options:[{value:'all',label:'Semua Status'},{value:'progres',label:'Progres'},{value:'menunggu',label:'Menunggu'},{value:'revisi',label:'Revisi'},{value:'disetujui',label:'Disetujui'},{value:'ditolak',label:'Ditolak'},{value:'lainnya',label:'Lainnya'}]},
+        {label:'Filter status',attr:'reportStatus',options:[{value:'all',label:'Semua Status'},{value:'Sedang diproses',label:'Sedang diproses'},{value:'Menunggu',label:'Menunggu'},{value:'Revisi',label:'Revisi'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'}]},
         filterPrioritas[0]
       ],sortable:true,
-      prepareRow:function(row){var raw=(row.querySelector('td:nth-child(4)')?.textContent||'').trim().toLowerCase();row.dataset.reportStatus=raw.indexOf('setuj')!==-1||raw.indexOf('diterima')!==-1?'disetujui':raw.indexOf('tolak')!==-1?'ditolak':raw.indexOf('revisi')!==-1?'revisi':raw.indexOf('progres')!==-1?'progres':raw.indexOf('menunggu')!==-1?'menunggu':'lainnya';}
+      prepareRow:function(row){
+        var raw=(row.querySelector('td:nth-child(4)')?.textContent||'').trim().toLowerCase();
+        row.dataset.reportStatus=raw.includes('terl')?'Terlambat':raw.includes('batal')?'Dibatalkan':raw.includes('tolak')?'Selesai · Ditolak':(raw.includes('setuj')||raw.includes('diterima'))?'Selesai · Disetujui':raw.includes('revisi')?'Revisi':raw.includes('menunggu')?'Menunggu':(raw.includes('progres')||raw.includes('proses'))?'Sedang diproses':'Sedang diproses';
+      }
     });
     initReportFilter({
       sectionId:'masuk',tableSelector:'.dtbl',anchorSelector:'.section-head',searchPlaceholder:'Cari pengirim atau perihal...',emptyText:'Tidak ada laporan masuk yang sesuai dengan pencarian/filter.',filters:filterPrioritas
