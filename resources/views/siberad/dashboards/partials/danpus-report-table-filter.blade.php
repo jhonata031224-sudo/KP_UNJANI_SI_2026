@@ -140,12 +140,13 @@
       sectionId:'masuk',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari pengirim atau perihal...',emptyText:'Tidak ada laporan masuk yang sesuai dengan pencarian/filter.',
       filters:[{label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]}],sortable:true
     });
-    initReportFilter({
-      sectionId:'status',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari satuan atau perihal...',emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',
-      filters:[{label:'Filter status',attr:'reportStatus',options:[{value:'all',label:'Semua Status'},{value:'Sedang diproses',label:'Sedang diproses'},{value:'Menunggu',label:'Menunggu'},{value:'Revisi',label:'Revisi'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'}]}],sortable:true,
+       initReportFilter({
+      sectionId:'status',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari satuan atau perihal...',emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',showEmpty:false,
+      filters:[{label:'Filter status',attr:'reportStatus',options:[{value:'all',label:'Semua Status'},{value:'Disetujui',label:'Disetujui'},{value:'Ditolak',label:'Ditolak'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'}]}],sortable:true,
       prepareRow:function(row){
         var raw=(row.querySelector('td:nth-child(4)')?.textContent||'').trim().toLowerCase();
-        row.dataset.reportStatus=raw.includes('terl')?'Terlambat':raw.includes('batal')?'Dibatalkan':raw.includes('tolak')?'Selesai · Ditolak':(raw.includes('setuj')||raw.includes('diterima'))?'Selesai · Disetujui':raw.includes('revisi')?'Revisi':raw.includes('menunggu')?'Menunggu':(raw.includes('progres')||raw.includes('proses'))?'Sedang diproses':'Sedang diproses';
+        var isSelesai=raw.includes('selesai');
+        row.dataset.reportStatus=raw.includes('terl')?'Terlambat':raw.includes('batal')?'Dibatalkan':raw.includes('tolak')?(isSelesai?'Selesai · Ditolak':'Ditolak'):(raw.includes('setuj')||raw.includes('diterima'))?(isSelesai?'Selesai · Disetujui':'Disetujui'):'';
       }
     });
     initReportFilter({
