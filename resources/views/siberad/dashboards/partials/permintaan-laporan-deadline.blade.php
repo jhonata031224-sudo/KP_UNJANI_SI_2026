@@ -319,7 +319,11 @@
                 var diff=Number(a.dataset.rptOrder)-Number(b.dataset.rptOrder);
                 return sortSelect.value==='oldest'?-diff:diff;
             });
-            items.forEach(function(item){list.appendChild(item)});
+            // Cuma reorder DOM kalau urutannya beneran berubah -- appendChild
+            // tanpa syarat di tiap keystroke boros & berisiko (pola yang sama
+            // yang bikin loop di danpus-report-table-filter.blade.php).
+            var needsReorder=items.some(function(item,i){return item.nextElementSibling!==(items[i+1]||null)});
+            if(needsReorder)items.forEach(function(item){list.appendChild(item)});
             var q=(input.value||'').trim().toLowerCase();
             var visible=0;
             items.forEach(function(item){

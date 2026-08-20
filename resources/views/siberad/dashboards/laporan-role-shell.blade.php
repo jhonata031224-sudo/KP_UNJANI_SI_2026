@@ -3,6 +3,7 @@
 @include('siberad.dashboards.partials.satlak-notification-close-text')
 @include('siberad.dashboards.partials.profile-description-hide')
 @include('siberad.dashboards.partials.responsive-content-alignment')
+@include('siberad.dashboards.partials.danpus-report-table-filter')
 @include('siberad.dashboards.partials.permintaan-laporan-deadline')
 @include('siberad.dashboards.partials.permintaan-laporan-realtime')
 @include('siberad.dashboards.partials.laporan-role-realtime-sync')
