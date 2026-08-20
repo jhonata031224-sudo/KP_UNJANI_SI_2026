@@ -45,8 +45,9 @@
       if(!tbody)return;
       // Buang baris statis (bukan baris data asli -- gak ada data-search --
       // dan bukan juga baris empty-state kita sendiri) yang nyangkut di
-      // tbody, misalnya sisa @empty dari Blade. Kalau dibiarkan, baris itu
-      // bakal tampil BARENGAN sama pesan kosong dinamis di bawah (dobel).
+      // tbody, misalnya sisa blok fallback kosong dari Blade. Kalau
+      // dibiarkan, baris itu bakal tampil BARENGAN sama pesan kosong
+      // dinamis di bawah (dobel).
       Array.from(tbody.querySelectorAll(':scope > tr')).forEach(function(tr){
         if(!tr.hasAttribute('data-search') && !tr.classList.contains('rpt-filter-empty-row'))tr.remove();
       });
