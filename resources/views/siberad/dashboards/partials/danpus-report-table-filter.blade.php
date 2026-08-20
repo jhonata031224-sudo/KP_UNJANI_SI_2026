@@ -82,12 +82,6 @@
       applying=true;
       if(sortSelect){
         rows.sort(function(a,b){var diff=Number(a.dataset.rptOrder)-Number(b.dataset.rptOrder);return sortValue==='oldest'?-diff:diff;});
-        // Cuma reinsert kalau urutannya beneran berubah -- tableObserver di
-        // bawah ngawasin childList di seluruh tabel ini, jadi insertBefore
-        // yang jalan terus padahal urutannya udah pas bikin observer motret
-        // diri sendiri lagi tanpa henti (ratusan reorder/detik), yang bikin
-        // node tombol Aksi kebongkar-pasang terus & klik user gagal ke-synthesize
-        // browser (mousedown/mouseup jalan tapi click-nya gak pernah muncul).
         var needsReorder=rows.some(function(row,i){return row.nextElementSibling!==(rows[i+1]||emptyRow);});
         if(needsReorder){
           if(tableObserver)tableObserver.disconnect();
