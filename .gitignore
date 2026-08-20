@@ -23,6 +23,8 @@ yarn-error.log
 
 # File lokal & generated
 database/database.sqlite
+database/database.sqlite.backup
+*.patch
 storage/logs/*.log
 !storage/logs/.gitkeep
 storage/app/public/*

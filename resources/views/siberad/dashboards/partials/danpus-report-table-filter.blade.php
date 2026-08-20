@@ -173,20 +173,14 @@
       sectionId:'masuk',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari pengirim atau perihal...',emptyText:'Tidak ada laporan masuk yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan masuk.',
       filters:[{label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]}],sortable:true
     });
-<<<<<<< HEAD
-       initReportFilter({
-      sectionId:'status',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari satuan atau perihal...',emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',showEmpty:false,
+    initReportFilter({
+      sectionId:'status',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari satuan atau perihal...',emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan.',
       filters:[{label:'Filter status',attr:'reportStatus',options:[{value:'all',label:'Semua Status'},{value:'Disetujui',label:'Disetujui'},{value:'Ditolak',label:'Ditolak'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'}]}],sortable:true,
       prepareRow:function(row){
         var raw=(row.querySelector('td:nth-child(4)')?.textContent||'').trim().toLowerCase();
         var isSelesai=raw.includes('selesai');
-        row.dataset.reportStatus=raw.includes('terl')?'Terlambat':raw.includes('batal')?'Dibatalkan':raw.includes('tolak')?(isSelesai?'Selesai · Ditolak':'Ditolak'):(raw.includes('setuj')||raw.includes('diterima'))?(isSelesai?'Selesai · Disetujui':'Disetujui'):'';
+        row.dataset.reportStatus=raw.includes('terl')?'Terlambat':raw.includes('batal')?'Dibatalkan':raw.includes('tolak')?(isSelesai?'Selesai · Ditolak':'Ditolak'):(raw.includes('setuj')||raw.includes('diterima'))?(isSelesai?'Selesai · Disetujui':'Disetujui'):''
       }
-=======
-    initReportFilter({
-      sectionId:'status',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari satuan atau perihal...',emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan.',
-      filters:[{label:'Filter status',attr:'outcome',options:[{value:'all',label:'Semua Status'},{value:'disetujui',label:'Disetujui'},{value:'ditolak',label:'Ditolak'}]}],sortable:true
->>>>>>> 93d5479ba2feac5a0ebebc40ac7f234ff5735d41
     });
     initReportFilter({
       sectionId:'permintaan-laporan',tableSelector:'.request-table',anchorSelector:'.request-head',searchPlaceholder:'Cari perihal atau satuan tujuan...',emptyText:'Tidak ada permintaan laporan yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada permintaan laporan.',showEmpty:false,
