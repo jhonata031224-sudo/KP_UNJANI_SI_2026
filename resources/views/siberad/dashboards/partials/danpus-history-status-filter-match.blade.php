@@ -39,6 +39,16 @@
     const select=section.querySelector('.rpt-filter-bar .rpt-filter-select');
     if(!select) return false;
 
+    const alreadyMatched=select.options.length===STATUS_OPTIONS.length && STATUS_OPTIONS.every(function(opt,index){
+      const current=select.options[index];
+      return current && current.value===opt.value && current.textContent===opt.label;
+    });
+
+    if(alreadyMatched){
+      syncRows();
+      return true;
+    }
+
     const current=select.value;
     select.innerHTML='';
     STATUS_OPTIONS.forEach(function(opt){
