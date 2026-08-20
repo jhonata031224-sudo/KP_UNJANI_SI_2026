@@ -386,18 +386,18 @@ $alasanTidakBisaEdit=$bisaEditDeadline?'':$item->alasanTidakBisaEditDeadline();
   document.getElementById('hapusRiwayatClose')?.addEventListener('click',()=>tutupHapusRiwayatPimpinan());
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('hapusRiwayatModal')?.classList.contains('open'))tutupHapusRiwayatPimpinan()});
 
-  window.bukaBatalkanPermintaan=function(button){const id=button.dataset.permintaanId;if(!id)return;document.getElementById('formBatalkanPermintaan').action='{{ url('/permintaan-laporan') }}/'+id+'/batal';document.getElementById('batalkanPermintaanPerihal').textContent=button.dataset.perihal?'"'+button.dataset.perihal+'"':'ini';document.getElementById('batalkanPermintaanOverlay')?.classList.add('open')};
+  window.bukaBatalkanPermintaan=function(button){const id=button.dataset.permintaanId;if(!id)return;document.getElementById('formBatalkanPermintaan').action='{{ url('/permintaan-laporan') }}/'+id+'/batal';document.getElementById('batalkanPermintaanPerihal').textContent=button.dataset.perihal?'"'+button.dataset.perihal+'"':'ini';document.getElementById('reportDetailModal')?.classList.remove('open');document.getElementById('batalkanPermintaanOverlay')?.classList.add('open')};
   window.tutupBatalkanPermintaan=function(){document.getElementById('batalkanPermintaanOverlay')?.classList.remove('open')};
   document.getElementById('batalkanPermintaanTutup')?.addEventListener('click',()=>tutupBatalkanPermintaan());
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('batalkanPermintaanOverlay')?.classList.contains('open'))tutupBatalkanPermintaan()});
 
-  window.bukaTerimaLaporanPimpinan=function(laporanId){if(!laporanId)return;document.getElementById('formTerimaLaporanPimpinan').action='{{ url('/laporan') }}/'+laporanId+'/status';document.getElementById('terimaLaporanOverlay')?.classList.add('open')};
-  window.bukaTolakLaporanPimpinan=function(laporanId){if(!laporanId)return;document.getElementById('formTolakLaporanPimpinan').action='{{ url('/laporan') }}/'+laporanId+'/status';const catatan=document.getElementById('tolakLaporanCatatan');if(catatan)catatan.value='';document.getElementById('tolakLaporanOverlay')?.classList.add('open')};
+  window.bukaTerimaLaporanPimpinan=function(laporanId){if(!laporanId)return;document.getElementById('formTerimaLaporanPimpinan').action='{{ url('/laporan') }}/'+laporanId+'/status';document.getElementById('reportDetailModal')?.classList.remove('open');document.getElementById('terimaLaporanOverlay')?.classList.add('open')};
+  window.bukaTolakLaporanPimpinan=function(laporanId){if(!laporanId)return;document.getElementById('formTolakLaporanPimpinan').action='{{ url('/laporan') }}/'+laporanId+'/status';const catatan=document.getElementById('tolakLaporanCatatan');if(catatan)catatan.value='';document.getElementById('reportDetailModal')?.classList.remove('open');document.getElementById('tolakLaporanOverlay')?.classList.add('open')};
   document.getElementById('terimaLaporanBatal')?.addEventListener('click',()=>document.getElementById('terimaLaporanOverlay')?.classList.remove('open'));
   document.getElementById('tolakLaporanBatal')?.addEventListener('click',()=>document.getElementById('tolakLaporanOverlay')?.classList.remove('open'));
   document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;document.getElementById('terimaLaporanOverlay')?.classList.remove('open');document.getElementById('tolakLaporanOverlay')?.classList.remove('open');document.getElementById('revisiLaporanOverlay')?.classList.remove('open')});
 
-  window.bukaRevisiLaporanPimpinan=function(button){const laporanId=button?.dataset?.laporanId;if(!laporanId)return;document.getElementById('formRevisiLaporanPimpinan').action='{{ url('/laporan') }}/'+laporanId+'/status';document.getElementById('revisiLaporanOverlay')?.classList.add('open')};
+  window.bukaRevisiLaporanPimpinan=function(button){const laporanId=button?.dataset?.laporanId;if(!laporanId)return;document.getElementById('formRevisiLaporanPimpinan').action='{{ url('/laporan') }}/'+laporanId+'/status';document.getElementById('reportDetailModal')?.classList.remove('open');document.getElementById('revisiLaporanOverlay')?.classList.add('open')};
   document.getElementById('revisiLaporanBatal')?.addEventListener('click',()=>document.getElementById('revisiLaporanOverlay')?.classList.remove('open'));
 
   window.bukaEditDeadlinePermintaan=function(button){

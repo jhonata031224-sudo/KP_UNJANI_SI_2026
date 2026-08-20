@@ -23,9 +23,14 @@
   user-select:none;
 }
 
-/* Modal detail harus berada di atas seluruh modal/overlay enhancement Danpus. */
+/* Modal detail harus di atas tombol Detail arsip (z-index 100120/100121 di
+   atas), TAPI tetap di bawah .confirm-overlay (z-index:100200 di dash-styles)
+   -- soalnya Tolak/Terima/Batalkan/Hapus/Edit Deadline semua dialog konfirmasi
+   yang dibuka DARI DALAM modal ini tanpa modal ini ditutup dulu, jadi harus
+   tetap bisa nongol di atasnya. Sebelumnya z-index:100500 melompati
+   .confirm-overlay, bikin dialog konfirmasi ketutup modal Detail. */
 #reportDetailModal{
-  z-index:100500 !important;
+  z-index:100150 !important;
   pointer-events:none !important;
 }
 #reportDetailModal.open{
@@ -33,7 +38,7 @@
 }
 #reportDetailModal .report-modal-card{
   position:relative;
-  z-index:100501 !important;
+  z-index:100151 !important;
   pointer-events:auto !important;
 }
 </style>
