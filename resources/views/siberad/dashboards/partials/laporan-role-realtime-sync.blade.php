@@ -26,19 +26,12 @@
         modal.classList.add('open');
     };
 
-    // Riwayat laporan diperbarui realtime dengan mengganti seluruh <tbody>.
-    // Karena itu binding langsung per tombol akan hilang setiap polling.
-    // Delegation di section yang stabil menjaga Edit tetap bekerja pada row lama
-    // maupun row baru tanpa memindah-mindahkan node tombol.
-    function bindEditDelegation(){
-        const section=document.getElementById('riwayat');
-        if(!section || section.dataset.editDelegationBound==='1') return;
-        section.dataset.editDelegationBound='1';
-        section.addEventListener('click',function(event){
-            const btn=event.target.closest('.edit-progres-btn');
-            if(!btn || !section.contains(btn)) return;
-            event.preventDefault();
-            window.siberadOpenEditProgres(btn);
+    function bindInitialEditButtons(){
+        document.querySelectorAll('#riwayat .edit-progres-btn').forEach(function(btn){
+            if(btn.getAttribute('onclick'))return;
+            if(btn.dataset.editInitBound==='1')return;
+            btn.dataset.editInitBound='1';
+            btn.addEventListener('click',function(){window.siberadOpenEditProgres(btn);});
         });
     }
 
@@ -61,14 +54,79 @@
         chart.update('none');
     }
 
-    function replaceBody(selector,html){
-        const body=document.querySelector(selector);if(!body||typeof html!=='string')return;
-        const next=document.createElement('tbody');next.innerHTML=html;body.replaceWith(next);
+    function rowKey(row){
+        const cells=Array.from(row.cells||[]).slice(0,5).map(function(cell){return (cell.textContent||'').replace(/\s+/g,' ').trim();}).join('|');
+        return [row.dataset.search||'',row.dataset.prioritas||'',cells].join('§');
+    }
+
+    function buildRows(html){
+        const holder=document.createElement('tbody');
+        holder.innerHTML=String(html||'').trim();
+        return Array.from(holder.children);
+    }
+
+    function syncBody(selector,html){
+        const body=document.querySelector(selector);
+        if(!body||typeof html!=='string')return;
+
+        const freshRows=buildRows(html);
+        const existingRows=Array.from(body.children);
+        const existingById=new Map();
+        const existingByKey=new Map();
+        const used=new Set();
+
+        existingRows.forEach(function(row){
+            if(row.matches('tr[data-laporan-id]')){
+                const id=String(row.dataset.laporanId||'');
+                if(id)existingById.set(id,row);
+            }
+            if(row.matches('tr[data-search]')){
+                const key=rowKey(row);
+                if(!existingByKey.has(key))existingByKey.set(key,[]);
+                existingByKey.get(key).push(row);
+            }
+        });
+
+        const ordered=[];
+        freshRows.forEach(function(fresh){
+            let current=null;
+            const id=fresh.dataset?.laporanId ? String(fresh.dataset.laporanId) : '';
+            if(id)current=existingById.get(id)||null;
+
+            if(!current && fresh.matches('tr[data-search]')){
+                const bucket=existingByKey.get(rowKey(fresh));
+                while(bucket?.length){
+                    const candidate=bucket.shift();
+                    if(!used.has(candidate)){current=candidate;break;}
+                }
+            }
+
+            if(current){
+                used.add(current);
+                if(current.outerHTML!==fresh.outerHTML){
+                    current.replaceWith(fresh);
+                    current=fresh;
+                }
+                ordered.push(current);
+            }else{
+                ordered.push(fresh);
+            }
+        });
+
+        existingRows.forEach(function(row){
+            if(!used.has(row) && !ordered.includes(row))row.remove();
+        });
+
+        ordered.forEach(function(row,index){
+            const target=body.children[index];
+            if(target!==row)body.insertBefore(row,target||null);
+        });
     }
 
     function syncReports(data){
-        if(data.sent_html!==undefined)replaceBody('#riwayat .dtbl tbody',data.sent_html);
-        if(data.incoming_html!==undefined)replaceBody('#masuk .dtbl tbody',data.incoming_html);
+        if(data.sent_html!==undefined)syncBody('#riwayat .dtbl tbody',data.sent_html);
+        if(data.incoming_html!==undefined)syncBody('#masuk .dtbl tbody',data.incoming_html);
+        bindInitialEditButtons();
         const stats=data.role_stats||{};
         stat('Laporan Masuk',stats.masuk);stat('Disetujui',stats.disetujui);stat('Ditolak',stats.ditolak);stat('Terlambat',stats.terlambat);stat('Dibatalkan',stats.dibatalkan);syncChart(stats);
     }
@@ -96,12 +154,10 @@
 
     function start(){
         if(!document.getElementById('riwayat')&&!document.getElementById('masuk'))return;
-        bindEditDelegation();
+        bindInitialEditButtons();
         poll();timer=window.setInterval(poll,2500);
         document.addEventListener('visibilitychange',function(){if(!document.hidden)poll();});window.addEventListener('focus',poll);
     }
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
-
-// Detail button untuk Riwayat Laporan ditangani oleh inline renderer row.
 </script>
