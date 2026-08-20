@@ -42,9 +42,17 @@
 (function(){
   'use strict';
 
+  const lastOpenedAt = new WeakMap();
+
   function openDetail(button){
     if(!button) return false;
     if(typeof window.openReportDetail !== 'function') return false;
+
+    const now = Date.now();
+    const previous = lastOpenedAt.get(button) || 0;
+    if(now - previous < 350) return true;
+    lastOpenedAt.set(button, now);
+
     window.openReportDetail(button);
     return true;
   }
@@ -97,13 +105,10 @@
    * bisa melihat koordinat klik dan mencocokkannya dengan bounding rect tombol.
    */
   document.addEventListener('click', function(event){
-    if(event.__danpusDetailHandled) return;
-
     const directButton = getDetailButtonFromNode(event.target);
     const button = directButton || findDetailButtonAtPoint(event.clientX, event.clientY);
     if(!button) return;
 
-    event.__danpusDetailHandled = true;
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
@@ -114,7 +119,6 @@
   document.addEventListener('pointerup', function(event){
     const button = getDetailButtonFromNode(event.target) || findDetailButtonAtPoint(event.clientX, event.clientY);
     if(!button) return;
-
     openDetail(button);
   }, true);
 
@@ -136,16 +140,16 @@
 
   window.siberadEnhanceDanpusHistoryDetail = enhanceArchiveDetailButtons;
 
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', function(){
-      enhanceArchiveDetailButtons(document);
-      setTimeout(function(){enhanceArchiveDetailButtons(document);}, 0);
-      setTimeout(function(){enhanceArchiveDetailButtons(document);}, 300);
-    });
-  }else{
+  function scheduleEnhance(){
     enhanceArchiveDetailButtons(document);
     setTimeout(function(){enhanceArchiveDetailButtons(document);}, 0);
     setTimeout(function(){enhanceArchiveDetailButtons(document);}, 300);
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', scheduleEnhance);
+  }else{
+    scheduleEnhance();
   }
 
   /* Observer supaya tombol tetap aman setelah Riwayat diisi/di-refresh realtime. */
