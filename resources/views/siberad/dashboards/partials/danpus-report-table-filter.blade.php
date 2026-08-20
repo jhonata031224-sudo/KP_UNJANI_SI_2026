@@ -82,7 +82,20 @@
       applying=true;
       if(sortSelect){
         rows.sort(function(a,b){var diff=Number(a.dataset.rptOrder)-Number(b.dataset.rptOrder);return sortValue==='oldest'?-diff:diff;});
-        rows.forEach(function(row){tbody.insertBefore(row,emptyRow);});
+        // Cuma reinsert kalau urutannya beneran berubah -- tableObserver di
+        // bawah ngawasin childList di seluruh tabel ini, jadi insertBefore
+        // yang jalan terus padahal urutannya udah pas bikin observer motret
+        // diri sendiri lagi tanpa henti (ratusan reorder/detik), yang bikin
+        // node tombol Aksi kebongkar-pasang terus & klik user gagal ke-synthesize
+        // browser (mousedown/mouseup jalan tapi click-nya gak pernah muncul).
+        var needsReorder=rows.some(function(row,i){return row.nextElementSibling!==(rows[i+1]||emptyRow);});
+        if(needsReorder){
+          if(tableObserver)tableObserver.disconnect();
+          if(tbodyObserver)tbodyObserver.disconnect();
+          rows.forEach(function(row){tbody.insertBefore(row,emptyRow);});
+          if(tableObserver)tableObserver.observe(table,{childList:true,subtree:true});
+          if(tbody&&tbodyObserver)tbodyObserver.observe(tbody,{childList:true,subtree:true});
+        }
       }
       var q=(input.value||'').trim().toLowerCase();
       var visible=0;

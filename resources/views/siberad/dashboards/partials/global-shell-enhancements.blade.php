@@ -243,6 +243,14 @@
     document.addEventListener('click', function(e){
       var detailButton = e.target.closest('.review-actions .detail-btn, .action-row .detail-btn');
       if (!detailButton) return;
+      // .action-row juga dipakai buat tombol lain yang gak ada hubungannya
+      // (mis. tombol "Batal" permintaan) -- itu bukan tombol Detail beneran,
+      // cuma kebetulan sama-sama pakai class .detail-btn di dalam wrapper
+      // .action-row. Delegation ini cuma valid buat kartu review yang beneran
+      // punya form approve/reject tersembunyi di containernya; kalau gak ada
+      // form sama sekali, jangan buka/replace modal Detail dengan data kosong.
+      var container = detailButton.closest('.review-actions, .action-row');
+      if (!container || !container.querySelector('form')) return;
       if (typeof window.openReportDetail === 'function') {
         window.openReportDetail(detailButton);
       }
