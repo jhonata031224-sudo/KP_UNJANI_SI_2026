@@ -1,0 +1,42 @@
+name: tmp-compact-admin-access-modal
+on:
+  push:
+    branches: [refactor-fokus-laporan]
+permissions:
+  contents: write
+jobs:
+  compact:
+    if: ${{ github.event.head_commit.message != 'ui(admin): compactkan modal verifikasi pengaturan umum' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compact modal
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('resources/views/siberad/dashboards/partials/pengumuman-banner.blade.php')
+          s=p.read_text()
+          replacements={
+            '.admin-access-card{width:560px;':'.admin-access-card{width:430px;',
+            'padding:28px 32px 30px;transform:translateY(14px) scale(.97);':'padding:24px 24px 26px;transform:translateY(14px) scale(.97);',
+            'font-size:28px;line-height:1.15;':'font-size:22px;line-height:1.2;',
+            'font-size:15px;line-height:1.7;':'font-size:13px;line-height:1.55;',
+            'margin:0 48px 24px 0;':'margin:0 20px 18px 0;',
+            'height:56px;box-sizing:border-box;border:1px solid #dbe3ec;border-radius:12px;':'height:48px;box-sizing:border-box;border:1px solid #dbe3ec;border-radius:10px;',
+            'grid-template-columns:minmax(0,1fr) 56px minmax(150px,.9fr);':'grid-template-columns:minmax(0,1fr) 48px minmax(110px,.72fr);',
+            'width:56px;height:56px;':'width:48px;height:48px;',
+            'min-width:176px;':'min-width:150px;',
+          }
+          for a,b in replacements.items(): s=s.replace(a,b,1)
+          s=s.replace('color:#fff;background:#d88900','color:#111;background:#eebd5a',1)
+          s=s.replace('color:#fff;background:#d88900;','color:#111;background:#eebd5a;',1)
+          p.write_text(s)
+          PY
+      - name: Commit and remove temporary workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add resources/views/siberad/dashboards/partials/pengumuman-banner.blade.php
+          git rm .github/workflows/tmp-compact-admin-access-modal.yml
+          git commit -m 'ui(admin): compactkan modal verifikasi pengaturan umum'
+          git push
