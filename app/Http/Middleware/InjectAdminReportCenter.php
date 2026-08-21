@@ -30,9 +30,18 @@ class InjectAdminReportCenter
             return $response;
         }
 
+        // Normalisasi label yang tampil di menu bantuan/monitoring dan judul tabel.
+        // Identifier internal seperti data-tab-link="sesi-aktif" tidak disentuh.
+        $html = str_replace(
+            ['Sesi Login Aktif', 'Sesi Aktif'],
+            ['Pengguna Aktif', 'Pengguna Aktif'],
+            $html
+        );
+
         // The main report script may already be present in the page. Do not
         // skip the hardening script in that case; inject the fix independently.
         if (str_contains($html, 'admin-report-center-fix.js')) {
+            $response->setContent($html);
             return $response;
         }
 
@@ -47,6 +56,8 @@ class InjectAdminReportCenter
         $pos = strripos($html, '</body>');
         if ($pos !== false) {
             $html = substr($html, 0, $pos).$script.substr($html, $pos);
+            $response->setContent($html);
+        } else {
             $response->setContent($html);
         }
 
