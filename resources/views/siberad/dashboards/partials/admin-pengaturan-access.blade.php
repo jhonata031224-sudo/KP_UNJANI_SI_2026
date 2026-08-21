@@ -2,16 +2,16 @@
 <style id="admin-pengaturan-access-style">
 .admin-access-overlay{position:fixed;inset:0;z-index:100500;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;background:rgba(15,23,42,.56);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s ease}
 .admin-access-overlay.open{opacity:1;visibility:visible;pointer-events:auto}
-.admin-access-card{width:560px;max-width:calc(100vw - 36px);box-sizing:border-box;background:#fff;color:#17212b;border:1px solid #e2e8f0;border-radius:18px;box-shadow:0 28px 72px rgba(0,0,0,.32);padding:30px 34px 28px;position:relative;transform:translateY(10px) scale(.985);transition:transform .2s ease}
+.admin-access-card{width:500px;max-width:calc(100vw - 36px);box-sizing:border-box;background:#fff;color:#17212b;border:1px solid #e2e8f0;border-radius:18px;box-shadow:0 28px 72px rgba(0,0,0,.32);padding:28px 28px 26px;position:relative;transform:translateY(10px) scale(.985);transition:transform .2s ease}
 .admin-access-overlay.open .admin-access-card{transform:none}
 .admin-access-close{position:absolute;top:18px;right:18px;width:40px;height:40px;border:1px solid #dbe3ec;border-radius:10px;background:#fff;color:#64748b;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s ease,border-color .2s ease,color .2s ease}
 .admin-access-close:hover{transform:rotate(90deg);border-color:#cbd5e1;color:#17212b}
 .admin-access-close svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.admin-access-icon{width:62px;height:62px;border-radius:16px;background:#fff3dc;color:#c4720a;display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+.admin-access-icon{width:62px;height:62px;border-radius:16px;background:#fff3dc;color:#c4720a;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
 .admin-access-icon svg{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.admin-access-title{margin:0 52px 8px 0;font-family:var(--display);font-size:25px;line-height:1.2;font-weight:700;color:#17212b}
-.admin-access-desc{margin:0 28px 22px 0;font-family:var(--body);font-size:14px;line-height:1.6;color:#64748b}
-.admin-access-field{margin-top:16px}
+.admin-access-title{margin:0 42px 8px 0;font-family:var(--display);font-size:24px;line-height:1.2;font-weight:700;color:#17212b}
+.admin-access-desc{margin:0 16px 20px 0;font-family:var(--body);font-size:13.5px;line-height:1.6;color:#64748b}
+.admin-access-field{margin-top:15px}
 .admin-access-label{display:block;margin:0 0 8px;font-family:var(--body);font-size:12px;font-weight:800;letter-spacing:.045em;text-transform:uppercase;color:#17212b}
 .admin-access-input-wrap{position:relative}
 .admin-access-input{width:100%;height:54px;box-sizing:border-box;border:1px solid #dbe3ec;border-radius:11px;background:#f8fafc;color:#17212b;font-family:var(--body);font-size:15px;padding:0 48px 0 52px;outline:none;transition:border-color .2s ease,box-shadow .2s ease}
@@ -31,7 +31,7 @@
 .admin-access-captcha-input{min-width:0}
 .admin-access-error{display:none;margin-top:10px;padding:10px 12px;border:1px solid rgba(175,55,46,.24);background:rgba(175,55,46,.07);color:#af372e;border-radius:9px;font-size:12px;line-height:1.45}
 .admin-access-error.show{display:block}
-.admin-access-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:24px}
+.admin-access-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:22px}
 .admin-access-btn{min-height:44px;border-radius:10px;padding:10px 18px;box-sizing:border-box;font-family:var(--body);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s ease,background .2s ease,border-color .2s ease,color .2s ease}
 .admin-access-btn:active{transform:scale(.98)}
 .admin-access-btn.cancel{border:1px solid #dbe3ec;background:#fff;color:#64748b;min-width:86px}
@@ -40,7 +40,7 @@
 .admin-access-btn.submit:hover{background:#cd8f1d;border-color:#cd8f1d}
 .admin-access-btn.submit[disabled]{opacity:.65;cursor:not-allowed}
 .admin-access-btn.submit svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-@media(max-width:620px){.admin-access-card{width:520px;max-width:calc(100vw - 24px);padding:26px 22px 24px}.admin-access-title{font-size:22px}.admin-access-desc{font-size:13.5px;margin-right:0}.admin-access-captcha-row{grid-template-columns:minmax(0,1fr) 50px minmax(0,1fr);gap:8px}.admin-access-refresh{width:50px;height:54px}.admin-access-actions{justify-content:stretch}.admin-access-btn{flex:1}.admin-access-btn.submit{min-width:0}}
+@media(max-width:620px){.admin-access-card{width:480px;max-width:calc(100vw - 24px);padding:24px 20px 22px}.admin-access-title{font-size:22px}.admin-access-desc{font-size:13px;margin-right:0}.admin-access-captcha-row{grid-template-columns:minmax(0,1fr) 50px minmax(0,1fr);gap:8px}.admin-access-refresh{width:50px;height:54px}.admin-access-actions{justify-content:stretch}.admin-access-btn{flex:1}.admin-access-btn.submit{min-width:0}}
 @media(max-width:500px){.admin-access-captcha-row{grid-template-columns:minmax(0,1fr) 50px}.admin-access-captcha-input{grid-column:1/-1}.admin-access-actions{flex-direction:column-reverse}.admin-access-btn{width:100%}}
 </style>
 <div class="admin-access-overlay" id="adminPengaturanAccessModal" aria-hidden="true">
