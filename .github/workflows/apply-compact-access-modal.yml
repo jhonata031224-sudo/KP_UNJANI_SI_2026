@@ -1,0 +1,45 @@
+name: apply-compact-access-modal
+on:
+  push:
+    branches: [refactor-fokus-laporan]
+permissions:
+  contents: write
+jobs:
+  compact:
+    if: ${{ github.event.head_commit.message != 'ui(admin): compactkan modal akses pengaturan umum' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compact modal and adjust submit text
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('resources/views/siberad/dashboards/partials/pengumuman-banner.blade.php')
+          s = p.read_text()
+          replacements = {
+            '.admin-access-card{width:560px;': '.admin-access-card{width:500px;',
+            'padding:28px 32px 30px;transform:translateY(14px) scale(.97);': 'padding:26px 28px 28px;transform:translateY(14px) scale(.97);',
+            'font-size:28px;line-height:1.15;': 'font-size:24px;line-height:1.2;',
+            'margin:0 46px 8px 0;': 'margin:0 32px 8px 0;',
+            'margin:0 48px 24px 0;': 'margin:0 28px 20px 0;',
+            'font-size:15px;line-height:1.7;': 'font-size:14px;line-height:1.6;',
+            'margin-top:18px;': 'margin-top:15px;',
+            'height:56px;box-sizing:border-box;border:1px solid #dbe3ec;border-radius:12px;': 'height:52px;box-sizing:border-box;border:1px solid #dbe3ec;border-radius:11px;',
+            'grid-template-columns:minmax(0,1fr) 56px minmax(150px,.9fr);': 'grid-template-columns:minmax(0,1fr) 52px minmax(125px,.78fr);',
+            'width:56px;height:56px;': 'width:52px;height:52px;',
+            'min-width:176px;': 'min-width:166px;',
+            'margin-top:28px;': 'margin-top:22px;',
+            'border:1px solid #c97a00;background:#c97a00;color:#fff;min-width:166px;': 'border:1px solid #c97a00;background:#c97a00;color:#111827;min-width:166px;',
+          }
+          for a, b in replacements.items():
+              s = s.replace(a, b, 1)
+          p.write_text(s)
+          PY
+      - name: Commit changes and remove workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add resources/views/siberad/dashboards/partials/pengumuman-banner.blade.php
+          git rm .github/workflows/apply-compact-access-modal.yml
+          git commit -m 'ui(admin): compactkan modal akses pengaturan umum'
+          git push
