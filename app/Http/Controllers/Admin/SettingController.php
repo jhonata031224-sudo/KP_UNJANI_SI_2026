@@ -7,12 +7,77 @@ use App\Models\ActivityLog;
 use App\Models\Pengaturan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
+    private const ACCESS_TTL_SECONDS = 900;
+
+    public function verifyLandingAccess(Request $request)
+    {
+        if ($request->input('action') === 'revoke') {
+            $request->session()->forget([
+                'pengaturan_umum_terverifikasi',
+                'pengaturan_umum_terverifikasi_at',
+                'captcha_code',
+            ]);
+            return response()->json(['ok' => true, 'access' => false]);
+        }
+
+        $key = 'admin-landing-access:'.$request->user()->id.'|'.$request->ip();
+
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $seconds = RateLimiter::availableIn($key);
+            return response()->json([
+                'message' => 'Terlalu banyak percobaan. Coba lagi dalam '.$seconds.' detik.',
+            ], 429);
+        }
+
+        RateLimiter::increment($key, 60);
+
+        $validated = $request->validate([
+            'password' => ['required', 'string'],
+            'captcha' => ['required', 'string', 'size:5'],
+        ], [
+            'password.required' => 'Password wajib diisi.',
+            'captcha.required' => 'Captcha wajib diisi.',
+            'captcha.size' => 'Captcha harus terdiri dari 5 karakter.',
+        ]);
+
+        $captchaExpected = (string) $request->session()->pull('captcha_code', '');
+        $captchaGiven = (string) $validated['captcha'];
+        $passwordValid = Hash::check($validated['password'], (string) $request->user()->password);
+        $captchaValid = $captchaExpected !== '' && hash_equals($captchaExpected, $captchaGiven);
+
+        if (! $passwordValid || ! $captchaValid) {
+            ActivityLog::catat('pengaturan.landing.access_denied', 'Percobaan membuka Pengaturan Umum ditolak karena password atau captcha tidak valid.');
+            return response()->json([
+                'message' => 'Konfirmasi akses gagal. Periksa password dan captcha lalu coba lagi.',
+            ], 422);
+        }
+
+        RateLimiter::clear($key);
+        $request->session()->put('pengaturan_umum_terverifikasi', true);
+        $request->session()->put('pengaturan_umum_terverifikasi_at', now()->timestamp);
+        $request->session()->regenerate();
+
+        ActivityLog::catat('pengaturan.landing.access_granted', 'Konfirmasi akses Pengaturan Umum berhasil.');
+
+        return response()->json(['ok' => true, 'access' => true]);
+    }
+
     public function updateLanding(Request $request): RedirectResponse
     {
+        $verified = $request->session()->get('pengaturan_umum_terverifikasi', false);
+        $verifiedAt = (int) $request->session()->get('pengaturan_umum_terverifikasi_at', 0);
+
+        if (! $verified || $verifiedAt <= 0 || (now()->timestamp - $verifiedAt) > self::ACCESS_TTL_SECONDS) {
+            $request->session()->forget(['pengaturan_umum_terverifikasi', 'pengaturan_umum_terverifikasi_at']);
+            return back()->with('error', 'Akses Pengaturan Umum sudah berakhir. Masukkan password dan captcha terlebih dahulu.');
+        }
+
         $validated = $request->validate([
             'hero_eyebrow'=>['nullable','string','max:255'],
             'hero_judul_awal'=>['nullable','string','max:50'],
