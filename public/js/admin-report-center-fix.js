@@ -11,7 +11,7 @@
     { key:'satlakkal', label:'Satlak Kal' },
     { key:'satlakdak', label:'Satlak Dak' },
     { key:'satlaksisos', label:'Satlak Siber Sos' },
-    { key:'satlakduktek', label:'Satlak Dukteksi' }
+    { key:'satlakdukteksi', label:'Satlak Dukteksi' }
   ];
   var ADMIN_USER_ORDER_INDEX = ADMIN_USER_ORDER.reduce(function(map,item,index){map[item.key]=index;return map;},{});
   var ADMIN_USER_LABELS = ADMIN_USER_ORDER.reduce(function(map,item){map[item.key]=item.label;return map;},{});
@@ -68,10 +68,30 @@
     return true;
   }
 
+  function normalizeReportLabels(){
+    document.querySelectorAll('[data-tab-link="laporan-admin"]').forEach(function(link){
+      var textNode=Array.prototype.slice.call(link.childNodes).find(function(node){return node.nodeType===3;});
+      if(textNode)textNode.nodeValue='Data Laporan';
+      link.setAttribute('title','Data Laporan');
+    });
+
+    var center=document.getElementById('siberadAdminReportCenter');
+    if(!center)return;
+
+    var headings=center.querySelectorAll('h1,h2,h3,h4,h5,h6,p');
+    headings.forEach(function(node){
+      var value=(node.textContent||'').trim();
+      if(value==='Laporan Pengguna & Aktivitas' || value==='Laporan dan Aktivitas' || value==='Laporan & Aktivitas'){
+        node.textContent='Data Laporan';
+      }
+    });
+  }
+
   function applyReportFix(){
     var center=document.getElementById('siberadAdminReportCenter');
     if(!center){
       applyAdminUserListOrder();
+      normalizeReportLabels();
       return false;
     }
 
@@ -118,6 +138,7 @@
       search.addEventListener('input',function(){search.readOnly=false;});
     }
 
+    normalizeReportLabels();
     return true;
   }
 
@@ -132,6 +153,7 @@
     applyAdminUserListOrder();
     applyReportFix();
     clearReportSearch();
+    normalizeReportLabels();
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
@@ -139,6 +161,6 @@
   window.addEventListener('resize',applyReportFix,{passive:true});
   document.addEventListener('click',function(e){
     var tab=e.target.closest&&e.target.closest('[data-report-kind]');
-    if(tab)setTimeout(function(){clearReportSearch();applyReportFix();},0);
+    if(tab)setTimeout(function(){clearReportSearch();applyReportFix();normalizeReportLabels();},0);
   });
 })();
