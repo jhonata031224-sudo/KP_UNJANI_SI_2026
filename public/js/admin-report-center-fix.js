@@ -118,7 +118,6 @@
       search.addEventListener('input',function(){search.readOnly=false;});
     }
 
-    applyAdminUserListOrder();
     return true;
   }
 
@@ -129,15 +128,17 @@
     search.defaultValue='';
   }
 
-  function boot(){applyReportFix();clearReportSearch();applyAdminUserListOrder();}
+  function boot(){
+    applyAdminUserListOrder();
+    applyReportFix();
+    clearReportSearch();
+  }
+
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   window.addEventListener('pageshow',boot);
   window.addEventListener('resize',applyReportFix,{passive:true});
   document.addEventListener('click',function(e){
     var tab=e.target.closest&&e.target.closest('[data-report-kind]');
-    if(tab)setTimeout(function(){clearReportSearch();applyReportFix();applyAdminUserListOrder();},0);
+    if(tab)setTimeout(function(){clearReportSearch();applyReportFix();},0);
   });
-  var observer=new MutationObserver(function(){if(applyReportFix())clearReportSearch();applyAdminUserListOrder();});
-  observer.observe(document.body,{childList:true,subtree:true});
-  setTimeout(function(){observer.disconnect();},15000);
 })();
