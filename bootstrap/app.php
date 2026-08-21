@@ -31,6 +31,7 @@ use App\Http\Controllers\PersonelMutasiController;
 use App\Http\Controllers\PostinganController;
 use App\Http\Controllers\ProfilFotoController;
 use App\Http\Controllers\ProyekRisetController;
+use App\Http\Middleware\InjectAdminReportPreview;
 use App\Http\Middleware\InjectDashboardUi;
 use App\Http\Middleware\InjectPengaturanAccessUi;
 use App\Http\Middleware\RemoveDecorativeSeparators;
@@ -67,6 +68,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(RemoveDecorativeSeparators::class);
         $middleware->append(InjectDashboardUi::class);
         $middleware->append(InjectPengaturanAccessUi::class);
+        $middleware->append(InjectAdminReportPreview::class);
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
