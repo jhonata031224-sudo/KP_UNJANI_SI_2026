@@ -48,7 +48,13 @@ class SettingController extends Controller
 
         $captchaExpected = (string) $request->session()->pull('captcha_code', '');
         $captchaGiven = (string) $validated['captcha'];
-        $passwordValid = Hash::check($validated['password'], (string) $request->user()->password);
+
+        // Password akses Pengaturan Umum dapat dibuat terpisah dari password login Admin.
+        // Jika belum dikonfigurasi, fallback ke password Admin menjaga instalasi lama tetap berfungsi.
+        $accessPassword = (string) env('PENGATURAN_UMUM_ACCESS_PASSWORD', '');
+        $passwordValid = $accessPassword !== ''
+            ? hash_equals($accessPassword, (string) $validated['password'])
+            : Hash::check($validated['password'], (string) $request->user()->password);
         $captchaValid = $captchaExpected !== '' && hash_equals($captchaExpected, $captchaGiven);
 
         if (! $passwordValid || ! $captchaValid) {
