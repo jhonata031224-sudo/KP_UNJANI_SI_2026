@@ -58,6 +58,20 @@ class Satuan extends Model
     ];
 
     /**
+     * Penjelasan singkat per modul, dipakai di halaman Admin > Hak Akses
+     * Pengguna supaya jelas menu apa yang muncul/hilang saat modul itu
+     * dicentang, tanpa perlu buka-tutup dashboard satuan yang bersangkutan
+     * untuk mengecek sendiri.
+     */
+    public const MODUL_HAK_AKSES_DESKRIPSI = [
+        'laporan' => 'Bisa membuat & mengirim laporan kegiatan ke satuan lain, lalu memantau statusnya (menunggu, disetujui, revisi, atau ditolak).',
+        'medsos' => 'Bisa mengelola akun media sosial resmi satuan dan membuat/melaporkan postingan publikasi (mis. Instagram).',
+        'personel' => 'Bisa mengelola data personel: penempatan, mutasi/pindah satuan, dan dokumen administrasi personel.',
+        'monitoring' => 'Bisa memantau (lihat saja, tanpa mengelola) laporan dan aktivitas dari satuan-satuan lain.',
+        'notifikasi' => 'Menerima notifikasi lonceng otomatis di dashboard saat ada laporan baru, permintaan laporan, atau aktivitas penting lainnya.',
+    ];
+
+    /**
      * Matriks modul yang relevan dengan tanggung jawab tiap role/satuan.
      * Ini dipakai Admin saat mengatur Role & Hak Akses agar pilihan modul
      * tidak lagi sama untuk seluruh role.

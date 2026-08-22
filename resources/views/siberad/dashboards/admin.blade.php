@@ -1584,17 +1584,38 @@
           <p>Setiap satuan berperan sebagai role login. Atur modul apa saja yang boleh diakses tiap satuan.</p>
         </div>
 
+        <div class="notice">
+          <b>Cara pakai halaman ini:</b> tiap kotak di bawah ini adalah satu satuan/akun login. Modul yang <b>dicentang</b> akan muncul di menu dashboard mereka saat login — modul yang <b>tidak dicentang</b> akan disembunyikan dan tidak bisa diakses. Baca dulu keterangan di bawah nama tiap modul untuk tahu apa fungsinya, centang/hapus centang sesuai kebutuhan, lalu klik tombol <b>"Simpan Hak Akses"</b> di satuan yang diubah. Satuan hanya menampilkan modul yang memang relevan dengan tugasnya — kalau suatu modul tidak muncul di satuan tertentu, artinya modul itu memang tidak berlaku untuk satuan tersebut.
+        </div>
+
+        <style>
+          .perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-bottom:14px;}
+          .perm-card{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--panel-alt);cursor:pointer;transition:border-color .15s,background .15s;}
+          .perm-card:hover{border-color:var(--border-strong);}
+          .perm-card input[type="checkbox"]{margin-top:3px;width:16px;height:16px;accent-color:var(--gold-bright);flex-shrink:0;cursor:pointer;}
+          .perm-card-main{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;}
+          .perm-card-title{font-size:12.5px;font-weight:700;color:var(--text);}
+          .perm-card-desc{font-size:11px;color:var(--text-muted);line-height:1.55;}
+          .perm-card-status{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:var(--panel-2);color:var(--text-dim);white-space:nowrap;flex-shrink:0;}
+          .perm-card.is-active{border-color:var(--gold-bright);background:var(--gold-dim);}
+          .perm-card.is-active .perm-card-status{background:var(--panel-alt);color:var(--gold-bright);}
+        </style>
 
         @foreach($semuaSatuan as $s)
         <div class="panel">
           <div class="panel-head"><div><h3>{{ $s->nama }} <span class="badge">{{ $s->kode }}</span></h3><p>{{ $s->deskripsi ?: 'Tidak ada deskripsi.' }}</p></div></div>
           <form method="POST" action="{{ route('admin.satuan.permissions', $s) }}" style="padding:18px 22px;">
             @csrf @method('PATCH')
-            <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px;">
+            <div class="perm-grid">
               @foreach(\App\Models\Satuan::modulHakAksesUntukRole($s->kode) as $key => $label)
-              <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-muted);">
-                <input type="checkbox" name="permissions[]" value="{{ $key }}" @checked(in_array($key, $s->permissions ?? []))>
-                {{ $label }}
+              @php $modulAktif = in_array($key, $s->permissions ?? []); @endphp
+              <label class="perm-card {{ $modulAktif ? 'is-active' : '' }}">
+                <input type="checkbox" name="permissions[]" value="{{ $key }}" @checked($modulAktif)>
+                <span class="perm-card-main">
+                  <span class="perm-card-title">{{ $label }}</span>
+                  <span class="perm-card-desc">{{ \App\Models\Satuan::MODUL_HAK_AKSES_DESKRIPSI[$key] ?? '' }}</span>
+                </span>
+                <span class="perm-card-status">{{ $modulAktif ? 'Aktif' : 'Nonaktif' }}</span>
               </label>
               @endforeach
             </div>
@@ -1602,6 +1623,19 @@
           </form>
         </div>
         @endforeach
+
+        <script>
+          (function () {
+            document.querySelectorAll('[data-tab-panel="role-akses"] .perm-card input[type="checkbox"]').forEach(function (cb) {
+              cb.addEventListener('change', function () {
+                var card = cb.closest('.perm-card');
+                var status = card.querySelector('.perm-card-status');
+                card.classList.toggle('is-active', cb.checked);
+                status.textContent = cb.checked ? 'Aktif' : 'Nonaktif';
+              });
+            });
+          })();
+        </script>
       </section>
 
       {{-- ===== LOG AKTIVITAS ===== --}}
