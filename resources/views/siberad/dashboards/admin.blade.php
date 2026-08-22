@@ -184,14 +184,14 @@
 
   .dl-search-row{display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
   .dl-search-count{font-size:12px;color:var(--text-dim);white-space:nowrap;margin-left:auto;}
-  .dl-date-filter{display:flex;flex-direction:column;gap:4px;}
-  .dl-date-filter label{font-size:10px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;}
+  .dl-date-filter{display:flex;flex-direction:row;align-items:center;gap:6px;}
+  .dl-date-filter label{font-size:10px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
   .dl-date-filter .table-filter{min-width:140px;}
-  .dl-filter-reset{box-sizing:border-box;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--border);border-radius:9px;color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease;align-self:flex-end;}
+  .dl-filter-reset{box-sizing:border-box;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--border);border-radius:9px;color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease;align-self:center;}
   .dl-filter-reset svg{width:16px;height:16px;}
   .dl-filter-reset:hover{background:var(--hover-tint);color:var(--gold-bright);border-color:var(--gold);}
   .dl-filter-reset.spinning svg{animation:logFilterResetSpin .5s ease;}
-  @media(max-width:640px){.dl-search-row{flex-direction:column;align-items:stretch;}.dl-date-filter .table-filter{width:100%;}.dl-filter-reset{width:100%;height:38px;}.dl-search-count{margin-left:0;}}
+  @media(max-width:640px){.dl-search-row{flex-direction:column;align-items:stretch;}.dl-date-filter{flex-direction:column;align-items:stretch;gap:4px;}.dl-date-filter .table-filter{width:100%;}.dl-filter-reset{width:100%;height:38px;}.dl-search-count{margin-left:0;}}
 
   .dl-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;}
   .dl-foot p{font-size:11.5px;color:var(--text-dim);}
