@@ -64,7 +64,7 @@ if(!modal)return;
 function setError(msg){error.textContent=msg||'';error.classList.toggle('show',!!msg)}
 function lockPanel(){if(lockStyle||granted)return;lockStyle=document.createElement('style');lockStyle.id='adminPengaturanAccessPanelLock';lockStyle.textContent='[data-tab-panel="pengaturan-umum"]{display:none!important;}';document.head.appendChild(lockStyle)}
 function unlockPanel(){if(lockStyle){lockStyle.remove();lockStyle=null}}
-function refreshCaptcha(){if(!img)return;refresh.classList.remove('spinning');void refresh.offsetWidth;refresh.classList.add('spinning');setError('');img.src=captchaUrl+'?t='+Date.now()}
+function refreshCaptcha(){if(!img)return;refresh.classList.remove('spinning');void refresh.offsetWidth;refresh.classList.add('spinning');setError('');captcha.value='';img.src=captchaUrl+'?t='+Date.now();captcha.focus()}
 function openModal(){pass.value='';captcha.value='';pass.type='password';modal.classList.add('open');modal.setAttribute('aria-hidden','false');setError('');refreshCaptcha();setTimeout(function(){pass.value='';pass.focus()},80)}
 function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');pass.value='';captcha.value='';pass.type='password';setError('')}
 function activateSettingTab(){unlockPanel();document.querySelectorAll('[data-tab-panel]').forEach(function(p){p.classList.remove('active')});document.querySelectorAll('[data-tab-link]').forEach(function(l){l.classList.remove('active')});document.querySelectorAll('[data-tab-panel="pengaturan-umum"]').forEach(function(p){p.classList.add('active')});document.querySelectorAll('[data-tab-link="pengaturan-umum"]').forEach(function(l){l.classList.add('active')})}
