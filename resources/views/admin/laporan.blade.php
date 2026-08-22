@@ -61,10 +61,10 @@
   <div class="panel">
     <h3>Daftar Pengguna ({{ $semuaPengguna->count() }})</h3>
     <table>
-      <thead><tr><th>Nama</th><th>Username</th><th>Satuan</th><th>Jabatan</th></tr></thead>
+      <thead><tr><th>Nama</th><th>Username</th><th>Satuan</th></tr></thead>
       <tbody>
         @foreach($semuaPengguna as $u)
-        <tr><td>{{ $u->name }}</td><td>{{ $u->username }}</td><td>{{ $u->satuan->nama ?? '-' }}</td><td>{{ $u->jabatan ?? '-' }}</td></tr>
+        <tr><td>{{ $u->name }}</td><td>{{ $u->username }}</td><td>{{ $u->satuan->nama ?? '-' }}</td></tr>
         @endforeach
       </tbody>
     </table>
