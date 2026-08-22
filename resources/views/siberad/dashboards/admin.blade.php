@@ -1902,7 +1902,7 @@
             </button>
             <button type="button" class="dl-tab" data-dl-tab="dl-aktivitas">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-              Aktivitas Sistem
+              Data Aktivitas
             </button>
           </div>
 
@@ -1970,11 +1970,11 @@
             </div>
           </div>
 
-          {{-- ----- Sub-tab: Aktivitas Sistem ----- --}}
+          {{-- ----- Sub-tab: Data Aktivitas ----- --}}
           <div class="dl-section" data-dl-section="dl-aktivitas">
             <div class="dl-section-head">
               <div>
-                <h3>Aktivitas Sistem</h3>
+                <h3>Data Aktivitas</h3>
                 <p>Log aktivitas pengguna di dalam sistem yang dapat dilihat dan diunduh.</p>
               </div>
               <div class="dl-download" data-dropdown>
@@ -2036,7 +2036,7 @@
 
       <script>
       (function () {
-        // Toggle sub-tab Data Pengguna / Aktivitas Sistem di dalam panel Data Laporan.
+        // Toggle sub-tab Data Pengguna / Data Aktivitas di dalam panel Data Laporan.
         var tabs = document.querySelectorAll('.dl-tab');
         tabs.forEach(function (tab) {
           tab.addEventListener('click', function () {
