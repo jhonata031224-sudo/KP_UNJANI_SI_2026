@@ -182,8 +182,16 @@
   .dl-download-menu a:hover{background:var(--hover-tint);color:var(--gold-bright);}
   .dl-download-menu a svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0;}
 
-  .dl-search-row{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+  .dl-search-row{display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
   .dl-search-count{font-size:12px;color:var(--text-dim);white-space:nowrap;margin-left:auto;}
+  .dl-date-filter{display:flex;flex-direction:column;gap:4px;}
+  .dl-date-filter label{font-size:10px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;}
+  .dl-date-filter .table-filter{min-width:140px;}
+  .dl-filter-reset{box-sizing:border-box;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--border);border-radius:9px;color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease;align-self:flex-end;}
+  .dl-filter-reset svg{width:16px;height:16px;}
+  .dl-filter-reset:hover{background:var(--hover-tint);color:var(--gold-bright);border-color:var(--gold);}
+  .dl-filter-reset.spinning svg{animation:logFilterResetSpin .5s ease;}
+  @media(max-width:640px){.dl-search-row{flex-direction:column;align-items:stretch;}.dl-date-filter .table-filter{width:100%;}.dl-filter-reset{width:100%;height:38px;}.dl-search-count{margin-left:0;}}
 
   .dl-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;}
   .dl-foot p{font-size:11.5px;color:var(--text-dim);}
@@ -1759,6 +1767,17 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
                 <input type="text" class="table-search" data-dl-search="tblDlPengguna" placeholder="Cari pengguna...">
               </div>
+              <div class="dl-date-filter">
+                <label for="dlPenggunaDari">Dari</label>
+                <input type="date" id="dlPenggunaDari" class="table-filter" max="{{ now()->format('Y-m-d') }}">
+              </div>
+              <div class="dl-date-filter">
+                <label for="dlPenggunaSampai">Sampai</label>
+                <input type="date" id="dlPenggunaSampai" class="table-filter" max="{{ now()->format('Y-m-d') }}" value="{{ now()->format('Y-m-d') }}">
+              </div>
+              <button type="button" class="dl-filter-reset" id="dlPenggunaReset" title="Reset filter tanggal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+              </button>
               <span class="dl-search-count" data-dl-count="tblDlPengguna"></span>
             </div>
 
@@ -1774,7 +1793,7 @@
                     <td>{{ $p->email ?: '-' }}</td>
                     <td>{{ $p->satuan->nama ?? '-' }}</td>
                     <td>{{ $p->jabatan ?: '-' }}</td>
-                    <td style="white-space:nowrap;">{{ $p->created_at?->format('d/m/Y H:i') }}</td>
+                    <td style="white-space:nowrap;" data-tanggal="{{ $p->created_at?->format('Y-m-d') }}">{{ $p->created_at?->format('d/m/Y H:i') }}</td>
                   </tr>
                   @empty
                   <tr><td colspan="7"><div class="empty-state"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Belum ada pengguna</div></div></td></tr>
@@ -1812,6 +1831,17 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
                 <input type="text" class="table-search" data-dl-search="tblDlAktivitas" placeholder="Cari log aktivitas...">
               </div>
+              <div class="dl-date-filter">
+                <label for="dlAktivitasDari">Dari</label>
+                <input type="date" id="dlAktivitasDari" class="table-filter" max="{{ now()->format('Y-m-d') }}">
+              </div>
+              <div class="dl-date-filter">
+                <label for="dlAktivitasSampai">Sampai</label>
+                <input type="date" id="dlAktivitasSampai" class="table-filter" max="{{ now()->format('Y-m-d') }}" value="{{ now()->format('Y-m-d') }}">
+              </div>
+              <button type="button" class="dl-filter-reset" id="dlAktivitasReset" title="Reset filter tanggal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+              </button>
               <span class="dl-search-count" data-dl-count="tblDlAktivitas"></span>
             </div>
 
@@ -1821,7 +1851,7 @@
                 <tbody>
                   @forelse($logAktivitas as $l)
                   <tr data-search-value="{{ strtolower(($l->nama_pengguna ?? '').' '.$l->aksi.' '.$l->deskripsi) }}">
-                    <td style="white-space:nowrap;">{{ $l->created_at?->translatedFormat('d M Y H:i') }}</td>
+                    <td style="white-space:nowrap;" data-tanggal="{{ $l->created_at?->format('Y-m-d') }}">{{ $l->created_at?->translatedFormat('d M Y H:i') }}</td>
                     <td>{{ $l->nama_pengguna ?? '-' }}</td>
                     <td><span class="badge">{{ $l->aksi }}</span></td>
                     <td style="color:var(--text-muted);">{{ $l->deskripsi }}</td>
@@ -1896,9 +1926,109 @@
 
         ['tblDlPengguna', 'tblDlAktivitas'].forEach(function (id) {
           var input = document.querySelector('[data-dl-search="' + id + '"]');
-          if (input) input.addEventListener('input', function () { dlSaring(id); });
+          if (input) input.addEventListener('input', function () { dlSaringGabungan(id); });
           dlHitungTampil(id);
         });
+
+        // ── Filter tanggal + refresh untuk Data Laporan ──────────────────────
+        function parseLocalDate(str) {
+          if (!str) return null;
+          var p = str.split('-');
+          return p.length === 3 ? new Date(+p[0], +p[1] - 1, +p[2]) : null;
+        }
+
+        function dlSaringTanggal(tableId, dariId, sampaiId) {
+          var table   = document.getElementById(tableId);
+          var dariEl  = document.getElementById(dariId);
+          var sampaiEl= document.getElementById(sampaiId);
+          var searchEl= document.querySelector('[data-dl-search="' + tableId + '"]');
+          if (!table) return;
+
+          var dari   = dariEl   ? parseLocalDate(dariEl.value)   : null;
+          var sampai = sampaiEl ? parseLocalDate(sampaiEl.value) : null;
+          if (sampai) sampai.setHours(23, 59, 59, 999);
+          var q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+          table.querySelectorAll('tbody tr[data-search-value]').forEach(function (tr) {
+            // filter teks
+            var cocokTeks = !q || tr.getAttribute('data-search-value').indexOf(q) !== -1;
+
+            // filter tanggal — baca dari kolom pertama (td:first-child)
+            var cocokTgl = true;
+            if (dari || sampai) {
+              var td = tr.querySelector('td[data-tanggal]') || tr.querySelector('td:first-child');
+              var raw = td ? (td.getAttribute('data-tanggal') || td.textContent.trim()) : '';
+              // Coba parse ISO (YYYY-MM-DD) atau format lokal dd/MM/YYYY
+              var tgl = null;
+              if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+                tgl = parseLocalDate(raw.slice(0, 10));
+              } else if (/^\d{2}\/\d{2}\/\d{4}/.test(raw)) {
+                var bp = raw.split('/');
+                tgl = new Date(+bp[2], +bp[1] - 1, +bp[0]);
+              } else {
+                tgl = new Date(raw);
+              }
+              if (!tgl || isNaN(tgl.getTime())) { cocokTgl = !dari && !sampai; }
+              else {
+                if (dari   && tgl < dari)   cocokTgl = false;
+                if (sampai && tgl > sampai) cocokTgl = false;
+              }
+            }
+
+            tr.style.display = (cocokTeks && cocokTgl) ? '' : 'none';
+          });
+          dlHitungTampil(tableId);
+        }
+
+        // Override dlSaring untuk gabungkan teks + tanggal
+        function dlSaringGabungan(tableId) {
+          if (tableId === 'tblDlPengguna')  dlSaringTanggal('tblDlPengguna',  'dlPenggunaDari',  'dlPenggunaSampai');
+          if (tableId === 'tblDlAktivitas') dlSaringTanggal('tblDlAktivitas', 'dlAktivitasDari', 'dlAktivitasSampai');
+        }
+
+        // Pasang listener pada input tanggal
+        [
+          ['dlPenggunaDari',   'dlPenggunaSampai',   'tblDlPengguna'],
+          ['dlAktivitasDari',  'dlAktivitasSampai',  'tblDlAktivitas'],
+        ].forEach(function (cfg) {
+          var dariEl   = document.getElementById(cfg[0]);
+          var sampaiEl = document.getElementById(cfg[1]);
+          var tid      = cfg[2];
+          [dariEl, sampaiEl].forEach(function (el) {
+            if (el) el.addEventListener('change', function () { dlSaringTanggal(tid, cfg[0], cfg[1]); });
+          });
+        });
+
+        // Override listener search supaya juga jalankan filter tanggal
+        ['tblDlPengguna', 'tblDlAktivitas'].forEach(function (id) {
+          var input = document.querySelector('[data-dl-search="' + id + '"]');
+          if (input) {
+            // hapus listener lama (cloneNode), pasang yang baru
+            var fresh = input.cloneNode(true);
+            input.parentNode.replaceChild(fresh, input);
+            fresh.addEventListener('input', function () { dlSaringGabungan(id); });
+          }
+        });
+
+        // Tombol refresh/reset tanggal
+        function buatResetHandler(dariId, sampaiId, tableId) {
+          var btn = document.getElementById(
+            tableId === 'tblDlPengguna' ? 'dlPenggunaReset' : 'dlAktivitasReset'
+          );
+          if (!btn) return;
+          btn.addEventListener('click', function () {
+            var dariEl   = document.getElementById(dariId);
+            var sampaiEl = document.getElementById(sampaiId);
+            if (dariEl)   dariEl.value   = '';
+            if (sampaiEl) sampaiEl.value = '';
+            dlSaringTanggal(tableId, dariId, sampaiId);
+            btn.classList.remove('spinning');
+            void btn.offsetWidth;
+            btn.classList.add('spinning');
+          });
+        }
+        buatResetHandler('dlPenggunaDari',  'dlPenggunaSampai',  'tblDlPengguna');
+        buatResetHandler('dlAktivitasDari', 'dlAktivitasSampai', 'tblDlAktivitas');
       })();
       </script>
 
