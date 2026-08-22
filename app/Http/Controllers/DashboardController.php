@@ -176,10 +176,13 @@ class DashboardController
             default => 'Pelaporan kegiatan dan koordinasi satuan melalui satu alur yang terukur.',
         };
 
+        // Urutan: Urdal -> Pok Analis -> 4 Sdir (Binfung, Binum, Bindiklat,
+        // Binmat) -> 4 Satlak (Kal, Dak, Siber Sos, Dukteksi), sesuai urutan
+        // organisasi yang diminta -- samain sama Satuan::kunciUrutSatuan().
         $kodeSatuanPelaksanaUrut = [
-            'SATLAKDAK', 'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDUKTEK',
-            'DIKLAT', 'BINUM', 'BINFUNG', 'BINMAT',
-            'POKANALIS', 'URDAL',
+            'URDAL', 'POKANALIS',
+            'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT',
+            'SATLAKKAL', 'SATLAKDAK', 'SATLAKSISOS', 'SATLAKDUKTEK',
         ];
         $permintaanLaporan = $modePimpinan
             ? PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan','laporans'])
