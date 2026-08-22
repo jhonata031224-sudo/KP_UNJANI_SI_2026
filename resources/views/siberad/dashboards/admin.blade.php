@@ -151,6 +151,43 @@
 .role-akses-table .role-akses-check{display:flex!important;width:100%!important;white-space:normal!important}
 .role-akses-action-head,.role-akses-action{text-align:center!important;vertical-align:middle!important}
 </style>
+<style>
+  /* ===== Data Laporan (submenu Monitoring) ===== */
+  .dl-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;}
+  .dl-head-icon{flex:0 0 auto;width:46px;height:46px;border-radius:12px;background:var(--gold-dim);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gold-bright);}
+  .dl-head-icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;}
+  .dl-head h2{font-family:var(--display);font-size:21px;font-weight:700;letter-spacing:.01em;}
+  .dl-head p{font-size:12.5px;color:var(--text-muted);margin-top:3px;}
+
+  .dl-tabs{display:flex;gap:10px;flex-wrap:wrap;padding-bottom:20px;margin-bottom:20px;border-bottom:1px solid var(--border-soft);}
+  .dl-tab{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;border:1px solid transparent;background:var(--gold-dim);color:var(--gold-bright);font-family:var(--body);font-size:13.5px;font-weight:700;cursor:pointer;transition:background .15s ease,color .15s ease,box-shadow .15s ease;}
+  .dl-tab svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+  .dl-tab.active{background:linear-gradient(135deg,var(--gold-solid-bright),var(--gold-solid));color:var(--on-gold);box-shadow:0 8px 20px -8px rgba(217,146,11,.55);}
+  .dl-tab:not(.active):hover{background:var(--hover-tint);color:var(--text);}
+
+  .dl-section{display:none;}
+  .dl-section.active{display:block;animation:fadeIn .2s ease;}
+  .dl-section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+  .dl-section-head h3{font-family:var(--display);font-size:16.5px;font-weight:700;}
+  .dl-section-head p{font-size:12px;color:var(--text-muted);margin-top:3px;}
+
+  .dl-download{position:relative;flex-shrink:0;}
+  .dl-download-btn{display:inline-flex;align-items:center;gap:8px;}
+  .dl-download-btn svg.chev{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.4;transition:transform .18s ease;}
+  .dl-download.open .dl-download-btn svg.chev{transform:rotate(180deg);}
+  .dl-download-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:200px;background:var(--panel);border:1px solid var(--border-soft);border-radius:10px;padding:6px;box-shadow:0 14px 34px rgba(0,0,0,.22);z-index:30;}
+  .dl-download.open .dl-download-menu{display:block;}
+  .dl-download-menu a{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:7px;color:var(--text);text-decoration:none;font-size:12.5px;font-weight:600;}
+  .dl-download-menu a:hover{background:var(--hover-tint);color:var(--gold-bright);}
+  .dl-download-menu a svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0;}
+
+  .dl-search-row{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+  .dl-search-count{font-size:12px;color:var(--text-dim);white-space:nowrap;margin-left:auto;}
+
+  .dl-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;}
+  .dl-foot p{font-size:11.5px;color:var(--text-dim);}
+  @media(max-width:640px){.dl-section-head{flex-direction:column;}.dl-download{align-self:stretch;}.dl-download-btn{width:100%;justify-content:center;}.dl-search-row{flex-direction:column;align-items:stretch;}.dl-search-count{margin-left:0;}.dl-foot{flex-direction:column;align-items:stretch;text-align:center;}}
+</style>
 </head>
 <body>
 <div class="profile-modal-overlay" id="profileModalOverlay">
@@ -536,7 +573,7 @@
         <div class="side-subnav"><div>
           <span class="side-subnav-label">Monitoring</span>
           <a href="#" class="side-sub-link" data-tab-link="rekap-laporan" title="Rekap Laporan"><span class="sub-dot"></span>Rekap Laporan</a>
-          <a href="#" class="side-sub-link" data-tab-link="laporan-admin" title="Laporan &amp; Export"><span class="sub-dot"></span>Laporan &amp; Export</a>
+          <a href="#" class="side-sub-link" data-tab-link="laporan-admin" title="Data Laporan"><span class="sub-dot"></span>Data Laporan</a>
           <a href="#" class="side-sub-link" data-tab-link="sesi-aktif" title="Sesi Aktif"><span class="sub-dot"></span>Sesi Aktif</a>
           <a href="#" class="side-sub-link" data-tab-link="log-aktivitas" title="Log Aktivitas"><span class="sub-dot"></span>Log Aktivitas</a>
         </div></div>
@@ -1671,19 +1708,196 @@
         </div>
       </section>
 
-      {{-- ===== LAPORAN & EXPORT ===== --}}
+      {{-- ===== DATA LAPORAN ===== --}}
       <section class="tab-panel" data-tab-panel="laporan-admin">
+        <div class="dl-head">
+          <div class="dl-head-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>
+          </div>
+          <div>
+            <h2>Data Laporan</h2>
+            <p>Rekap data pengguna dan aktivitas sistem, siap diekspor. Unduh dalam format CSV (bisa dibuka Excel) atau cetak sebagai PDF.</p>
+          </div>
+        </div>
+
         <div class="panel">
-          <div class="panel-head"><div><h2>Laporan Pengguna &amp; Aktivitas</h2><p>Rekap data pengguna dan aktivitas sistem, siap diekspor. Unduh dalam format CSV (bisa dibuka Excel) atau cetak sebagai PDF.</p></div></div>
-          <div class="btn-row" style="padding:18px 22px;flex-wrap:wrap;">
-            <a class="btn btn-primary btn-sm" href="{{ route('admin.laporan.export-pengguna') }}">Export Pengguna (Excel/CSV)</a>
-            <a class="btn btn-primary btn-sm" href="{{ route('admin.laporan.export-aktivitas') }}">Export Aktivitas (Excel/CSV)</a>
-            <a class="btn btn-sm" href="{{ route('admin.laporan.cetak', 'pengguna') }}" target="_blank">Cetak Pengguna (PDF)</a>
-            <a class="btn btn-sm" href="{{ route('admin.laporan.cetak', 'aktivitas') }}" target="_blank">Cetak Aktivitas (PDF)</a>
-            <a class="btn btn-sm" href="{{ route('admin.laporan.index') }}" target="_blank">Buka Halaman Laporan Lengkap</a>
+          <div class="dl-tabs">
+            <button type="button" class="dl-tab active" data-dl-tab="dl-pengguna">
+              <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Data Pengguna
+            </button>
+            <button type="button" class="dl-tab" data-dl-tab="dl-aktivitas">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              Aktivitas Sistem
+            </button>
+          </div>
+
+          {{-- ----- Sub-tab: Data Pengguna ----- --}}
+          <div class="dl-section active" data-dl-section="dl-pengguna">
+            <div class="dl-section-head">
+              <div>
+                <h3>Data Pengguna</h3>
+                <p>Daftar pengguna sistem yang dapat dilihat dan diunduh.</p>
+              </div>
+              <div class="dl-download" data-dropdown>
+                <button type="button" class="btn btn-primary btn-sm dl-download-btn" data-dropdown-toggle>
+                  Unduh
+                  <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="dl-download-menu">
+                  <a href="{{ route('admin.laporan.export-pengguna') }}"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Unduh CSV / Excel</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="dl-search-row">
+              <div class="table-search-wrap" style="flex:1 1 auto;max-width:none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+                <input type="text" class="table-search" data-dl-search="tblDlPengguna" placeholder="Cari pengguna...">
+              </div>
+              <span class="dl-search-count" data-dl-count="tblDlPengguna"></span>
+            </div>
+
+            <div class="tbl-wrap tbl-scroll" style="max-height:420px;">
+              <table class="dtbl" id="tblDlPengguna">
+                <thead><tr><th>No</th><th>Nama</th><th>Username</th><th>Email</th><th>Satuan</th><th>Jabatan</th><th>Dibuat</th></tr></thead>
+                <tbody>
+                  @forelse($semuaPengguna as $i => $p)
+                  <tr data-search-value="{{ strtolower($p->name.' '.$p->username.' '.$p->email.' '.($p->satuan->nama ?? '').' '.($p->jabatan ?? '')) }}">
+                    <td>{{ $i + 1 }}</td>
+                    <td><strong>{{ $p->name }}</strong></td>
+                    <td>{{ $p->username }}</td>
+                    <td>{{ $p->email ?: '-' }}</td>
+                    <td>{{ $p->satuan->nama ?? '-' }}</td>
+                    <td>{{ $p->jabatan ?: '-' }}</td>
+                    <td style="white-space:nowrap;">{{ $p->created_at?->format('d/m/Y H:i') }}</td>
+                  </tr>
+                  @empty
+                  <tr><td colspan="7"><div class="empty-state"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Belum ada pengguna</div></div></td></tr>
+                  @endforelse
+                </tbody>
+              </table>
+            </div>
+
+            <div class="dl-foot">
+              <p>Data ditampilkan langsung dari database sistem.</p>
+              <a class="btn btn-sm" href="{{ route('admin.laporan.cetak', 'pengguna') }}" target="_blank">Cetak / PDF</a>
+            </div>
+          </div>
+
+          {{-- ----- Sub-tab: Aktivitas Sistem ----- --}}
+          <div class="dl-section" data-dl-section="dl-aktivitas">
+            <div class="dl-section-head">
+              <div>
+                <h3>Aktivitas Sistem</h3>
+                <p>Log aktivitas pengguna di dalam sistem yang dapat dilihat dan diunduh.</p>
+              </div>
+              <div class="dl-download" data-dropdown>
+                <button type="button" class="btn btn-primary btn-sm dl-download-btn" data-dropdown-toggle>
+                  Unduh
+                  <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="dl-download-menu">
+                  <a href="{{ route('admin.laporan.export-aktivitas') }}"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Unduh CSV / Excel</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="dl-search-row">
+              <div class="table-search-wrap" style="flex:1 1 auto;max-width:none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+                <input type="text" class="table-search" data-dl-search="tblDlAktivitas" placeholder="Cari log aktivitas...">
+              </div>
+              <span class="dl-search-count" data-dl-count="tblDlAktivitas"></span>
+            </div>
+
+            <div class="tbl-wrap tbl-scroll" style="max-height:420px;">
+              <table class="dtbl" id="tblDlAktivitas">
+                <thead><tr><th>Waktu</th><th>Pengguna</th><th>Aksi</th><th>Deskripsi</th><th>IP</th></tr></thead>
+                <tbody>
+                  @forelse($logAktivitas as $l)
+                  <tr data-search-value="{{ strtolower(($l->nama_pengguna ?? '').' '.$l->aksi.' '.$l->deskripsi) }}">
+                    <td style="white-space:nowrap;">{{ $l->created_at?->translatedFormat('d M Y H:i') }}</td>
+                    <td>{{ $l->nama_pengguna ?? '-' }}</td>
+                    <td><span class="badge">{{ $l->aksi }}</span></td>
+                    <td style="color:var(--text-muted);">{{ $l->deskripsi }}</td>
+                    <td style="color:var(--text-dim);">{{ $l->ip_address }}</td>
+                  </tr>
+                  @empty
+                  <tr><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada aktivitas tercatat</div></div></td></tr>
+                  @endforelse
+                </tbody>
+              </table>
+            </div>
+
+            <div class="dl-foot">
+              <p>Data ditampilkan langsung dari database sistem.</p>
+              <a class="btn btn-sm" href="{{ route('admin.laporan.cetak', 'aktivitas') }}" target="_blank">Cetak / PDF</a>
+            </div>
           </div>
         </div>
       </section>
+
+      <script>
+      (function () {
+        // Toggle sub-tab Data Pengguna / Aktivitas Sistem di dalam panel Data Laporan.
+        var tabs = document.querySelectorAll('.dl-tab');
+        tabs.forEach(function (tab) {
+          tab.addEventListener('click', function () {
+            var target = tab.getAttribute('data-dl-tab');
+            document.querySelectorAll('.dl-tab').forEach(function (t) { t.classList.toggle('active', t === tab); });
+            document.querySelectorAll('.dl-section').forEach(function (s) {
+              s.classList.toggle('active', s.getAttribute('data-dl-section') === target);
+            });
+          });
+        });
+
+        // Dropdown tombol "Unduh" (dipisah dari dropdown lain di halaman ini
+        // lewat query scope [data-dropdown] di dalam .dl-download).
+        document.querySelectorAll('.dl-download[data-dropdown]').forEach(function (dd) {
+          var toggle = dd.querySelector('[data-dropdown-toggle]');
+          toggle.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var sudahTerbuka = dd.classList.contains('open');
+            document.querySelectorAll('.dl-download.open').forEach(function (o) { o.classList.remove('open'); });
+            if (!sudahTerbuka) dd.classList.add('open');
+          });
+        });
+        document.addEventListener('click', function () {
+          document.querySelectorAll('.dl-download.open').forEach(function (o) { o.classList.remove('open'); });
+        });
+
+        // Hitung jumlah data yang tampil untuk kedua tabel Data Laporan, format
+        // "X data ditampilkan" -- beda dari format global "X dari Y data" supaya
+        // sama persis dengan rancangan.
+        function dlHitungTampil(tableId) {
+          var table = document.getElementById(tableId);
+          var countEl = document.querySelector('[data-dl-count="' + tableId + '"]');
+          if (!table || !countEl) return;
+          var visible = Array.prototype.slice.call(table.querySelectorAll('tbody tr'))
+            .filter(function (tr) { return tr.style.display !== 'none' && tr.hasAttribute('data-search-value'); });
+          countEl.textContent = visible.length + ' data ditampilkan';
+        }
+
+        function dlSaring(tableId) {
+          var table = document.getElementById(tableId);
+          var input = document.querySelector('[data-dl-search="' + tableId + '"]');
+          if (!table || !input) return;
+          var q = input.value.trim().toLowerCase();
+          table.querySelectorAll('tbody tr[data-search-value]').forEach(function (tr) {
+            var cocok = !q || tr.getAttribute('data-search-value').indexOf(q) !== -1;
+            tr.style.display = cocok ? '' : 'none';
+          });
+          dlHitungTampil(tableId);
+        }
+
+        ['tblDlPengguna', 'tblDlAktivitas'].forEach(function (id) {
+          var input = document.querySelector('[data-dl-search="' + id + '"]');
+          if (input) input.addEventListener('input', function () { dlSaring(id); });
+          dlHitungTampil(id);
+        });
+      })();
+      </script>
 
       {{-- ===== PENGATURAN UMUM ===== --}}
       <section class="tab-panel" data-tab-panel="pengaturan-umum">
