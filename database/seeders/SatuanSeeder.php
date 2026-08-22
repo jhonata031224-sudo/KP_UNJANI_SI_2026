@@ -59,15 +59,15 @@ class SatuanSeeder extends Seeder
             );
         }
 
-        // --- Satuan berdiri sendiri (Mandiri), lapor langsung ke Danpus ---
+        // --- Pok Pel (Kelompok Pelayan), langsung di bawah/melayani Danpus ---
         // Akun pengguna SENGAJA tidak dibuat otomatis di sini -- ditambah
         // manual lewat Admin > Daftar Pengguna setelah satuannya tersedia.
-        $satuanMandiri = [
-            ['kode' => 'POKANALIS', 'nama' => 'Pok Analis (Kelompok Analis)', 'kategori' => Satuan::KATEGORI_MANDIRI, 'deskripsi' => 'Satuan analisis yang berdiri sendiri, lapor langsung ke Danpus.'],
-            ['kode' => 'URDAL',     'nama' => 'Urdal (Urusan Dalam)',         'kategori' => Satuan::KATEGORI_MANDIRI, 'deskripsi' => 'Satuan urusan dalam yang berdiri sendiri, lapor langsung ke Danpus.'],
+        $satuanPokPel = [
+            ['kode' => 'POKANALIS', 'nama' => 'Pok Analis (Kelompok Analis)', 'kategori' => Satuan::KATEGORI_POKPEL, 'deskripsi' => 'Kelompok Pelayan Danpus untuk analisis dan kajian.'],
+            ['kode' => 'URDAL',     'nama' => 'Urdal (Urusan Dalam)',         'kategori' => Satuan::KATEGORI_POKPEL, 'deskripsi' => 'Kelompok Pelayan Danpus untuk urusan dalam.'],
         ];
 
-        foreach ($satuanMandiri as $data) {
+        foreach ($satuanPokPel as $data) {
             Satuan::updateOrCreate(['kode' => $data['kode']], $data);
         }
     }

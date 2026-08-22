@@ -99,20 +99,20 @@ class Satuan extends Model
     public const KATEGORI_PIMPINAN = 'pimpinan';
     public const KATEGORI_ADMIN = 'admin';
     /**
-     * Satuan yang berdiri sendiri -- tidak masuk kelompok Direktorat
-     * (Sdir/Binfung/Binum/dst), Satlak, maupun Pimpinan (mis. Pok Analis,
-     * Urdal). Sama seperti satuan pembinaan, tetap lapor langsung ke
+     * Kelompok Pelayan (Pok Pel) -- satuan yang langsung di bawah/melayani
+     * Danpus, tidak masuk kelompok Direktorat (Sdir/Binfung/Binum/dst),
+     * Satlak, maupun Pimpinan (mis. Pok Analis, Urdal). Lapor langsung ke
      * DANPUS (lihat kodeTujuanUntuk()).
      */
-    public const KATEGORI_MANDIRI = 'mandiri';
+    public const KATEGORI_POKPEL = 'pokpel';
 
     /**
-     * Urutan tampil kategori secara umum (Admin -> Pimpinan -> Mandiri ->
+     * Urutan tampil kategori secara umum (Admin -> Pimpinan -> Pok Pel ->
      * Direktorat -> Satlak), dipakai di seluruh tempat yang menampilkan
      * daftar satuan gabungan lintas kategori -- menggantikan field "urutan"
      * manual yang sudah dihapus.
      *
-     * Mandiri (Pok Analis, Urdal) sengaja ditaruh setelah Pimpinan (Wadan)
+     * Pok Pel (Pok Analis, Urdal) sengaja ditaruh setelah Pimpinan (Wadan)
      * dan sebelum Direktorat (4 Sdir) sesuai urutan organisasi yang diminta.
      */
     public static function prioritasKategori(): array
@@ -120,7 +120,7 @@ class Satuan extends Model
         return [
             self::KATEGORI_ADMIN => 1,
             self::KATEGORI_PIMPINAN => 2,
-            self::KATEGORI_MANDIRI => 3,
+            self::KATEGORI_POKPEL => 3,
             self::KATEGORI_DIREKTORAT => 4,
             self::KATEGORI_SATLAK => 5,
         ];
@@ -233,17 +233,17 @@ class Satuan extends Model
     public const KODE_PEMBINAAN = ['BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT'];
 
     /**
-     * Kode satuan yang berdiri sendiri, bukan bagian Direktorat/Satlak/
-     * Pimpinan (Pok Analis, Urdal).
+     * Kode satuan Pok Pel (Kelompok Pelayan) -- langsung di bawah/melayani
+     * Danpus, bukan bagian Direktorat/Satlak/Pimpinan (Pok Analis, Urdal).
      */
-    public const KODE_MANDIRI = ['POKANALIS', 'URDAL'];
+    public const KODE_POKPEL = ['POKANALIS', 'URDAL'];
 
     /**
      * Alur tujuan laporan resmi (hierarki komando):
      * - Satlak hanya boleh lapor ke DANPUS/WADAN (tujuan utama).
      *   Satlak tidak boleh saling kirim ke sesama Satlak maupun ke satuan pembinaan.
      * - Satuan pembinaan (Binmat, Binfung, Binum, Diklat) langsung lapor ke DANPUS.
-     * - Satuan mandiri (Pok Analis, Urdal) juga langsung lapor ke DANPUS.
+     * - Satuan Pok Pel (Pok Analis, Urdal) juga langsung lapor ke DANPUS.
      * - Satuan lain (mis. WADAN) tidak dibatasi di sini (kembalikan null).
      *
      * @return string[]|null Daftar kode satuan tujuan yang diizinkan, atau null jika tidak dibatasi.
@@ -256,7 +256,7 @@ class Satuan extends Model
             return ['DANPUS', 'WADAN'];
         }
 
-        if (in_array($kodeAsal, self::KODE_PEMBINAAN, true) || in_array($kodeAsal, self::KODE_MANDIRI, true)) {
+        if (in_array($kodeAsal, self::KODE_PEMBINAAN, true) || in_array($kodeAsal, self::KODE_POKPEL, true)) {
             return ['DANPUS'];
         }
 
