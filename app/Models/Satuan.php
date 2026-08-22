@@ -51,8 +51,6 @@ class Satuan extends Model
      */
     public const MODUL_HAK_AKSES = [
         'laporan' => 'Kirim & Kelola Laporan',
-        'medsos' => 'Pelaporan Publikasi',
-        'personel' => 'Pelaporan Administrasi Personel',
         'monitoring' => 'Monitoring Laporan & Aktivitas',
         'notifikasi' => 'Notifikasi',
     ];
@@ -65,8 +63,6 @@ class Satuan extends Model
      */
     public const MODUL_HAK_AKSES_DESKRIPSI = [
         'laporan' => 'Bisa membuat & mengirim laporan kegiatan ke satuan lain, lalu memantau statusnya (menunggu, disetujui, revisi, atau ditolak).',
-        'medsos' => 'Bisa mengelola akun media sosial resmi satuan dan membuat/melaporkan postingan publikasi (mis. Instagram).',
-        'personel' => 'Bisa mengelola data personel: penempatan, mutasi/pindah satuan, dan dokumen administrasi personel.',
         'monitoring' => 'Bisa memantau (lihat saja, tanpa mengelola) laporan dan aktivitas dari satuan-satuan lain.',
         'notifikasi' => 'Menerima notifikasi lonceng otomatis di dashboard saat ada laporan baru, permintaan laporan, atau aktivitas penting lainnya.',
     ];
@@ -77,14 +73,14 @@ class Satuan extends Model
      * tidak lagi sama untuk seluruh role.
      */
     public const MODUL_HAK_AKSES_PER_ROLE = [
-        'ADMIN' => ['laporan', 'medsos', 'personel', 'monitoring', 'notifikasi'],
-        'DANPUS' => ['laporan', 'medsos', 'monitoring', 'notifikasi'],
-        'WADAN' => ['laporan', 'medsos', 'monitoring', 'notifikasi'],
+        'ADMIN' => ['laporan', 'monitoring', 'notifikasi'],
+        'DANPUS' => ['laporan', 'monitoring', 'notifikasi'],
+        'WADAN' => ['laporan', 'monitoring', 'notifikasi'],
         'SATLAKKAL' => ['laporan', 'monitoring', 'notifikasi'],
-        'SATLAKSISOS' => ['laporan', 'medsos', 'notifikasi'],
+        'SATLAKSISOS' => ['laporan', 'notifikasi'],
         'SATLAKDAK' => ['laporan', 'monitoring', 'notifikasi'],
         'SATLAKDUKTEK' => ['laporan', 'monitoring', 'notifikasi'],
-        'BINFUNG' => ['laporan', 'personel', 'monitoring', 'notifikasi'],
+        'BINFUNG' => ['laporan', 'monitoring', 'notifikasi'],
         'BINUM' => ['laporan', 'monitoring', 'notifikasi'],
         'DIKLAT' => ['laporan', 'monitoring', 'notifikasi'],
         'BINMAT' => ['laporan', 'monitoring', 'notifikasi'],

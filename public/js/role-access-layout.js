@@ -2,14 +2,14 @@
   'use strict';
 
   var ALLOWED = {
-    ADMIN: ['laporan', 'medsos', 'personel', 'monitoring', 'notifikasi'],
-    DANPUS: ['laporan', 'medsos', 'monitoring', 'notifikasi'],
-    WADAN: ['laporan', 'medsos', 'monitoring', 'notifikasi'],
+    ADMIN: ['laporan', 'monitoring', 'notifikasi'],
+    DANPUS: ['laporan', 'monitoring', 'notifikasi'],
+    WADAN: ['laporan', 'monitoring', 'notifikasi'],
     SATLAKKAL: ['laporan', 'monitoring', 'notifikasi'],
-    SATLAKSISOS: ['laporan', 'medsos', 'notifikasi'],
+    SATLAKSISOS: ['laporan', 'notifikasi'],
     SATLAKDAK: ['laporan', 'monitoring', 'notifikasi'],
     SATLAKDUKTEK: ['laporan', 'monitoring', 'notifikasi'],
-    BINFUNG: ['laporan', 'personel', 'monitoring', 'notifikasi'],
+    BINFUNG: ['laporan', 'monitoring', 'notifikasi'],
     BINUM: ['laporan', 'monitoring', 'notifikasi'],
     DIKLAT: ['laporan', 'monitoring', 'notifikasi'],
     BINMAT: ['laporan', 'monitoring', 'notifikasi']
@@ -17,8 +17,6 @@
 
   var MODULE_LABEL_TO_KEY = {
     'Kirim & Kelola Laporan': 'laporan',
-    'Pelaporan Publikasi': 'medsos',
-    'Pelaporan Administrasi Personel': 'personel',
     'Monitoring Laporan & Aktivitas': 'monitoring',
     'Notifikasi': 'notifikasi'
   };

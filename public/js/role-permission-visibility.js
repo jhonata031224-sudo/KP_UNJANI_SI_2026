@@ -2,15 +2,15 @@
   'use strict';
 
   var ALLOWED = {
-    ADMIN: ['laporan', 'medsos', 'personel', 'monitoring', 'notifikasi'],
-    DANPUS: ['laporan', 'medsos', 'monitoring', 'notifikasi'],
+    ADMIN: ['laporan', 'monitoring', 'notifikasi'],
+    DANPUS: ['laporan', 'monitoring', 'notifikasi'],
     WADAN: ['laporan', 'monitoring', 'notifikasi'],
     SDIR: ['laporan', 'monitoring', 'notifikasi'],
     SATLAKKAL: ['laporan', 'monitoring', 'notifikasi'],
-    SATLAKSISOS: ['laporan', 'medsos', 'notifikasi'],
+    SATLAKSISOS: ['laporan', 'notifikasi'],
     SATLAKDAK: ['laporan', 'monitoring', 'notifikasi'],
     SATLAKDUKTEK: ['laporan', 'monitoring', 'notifikasi'],
-    BINFUNG: ['laporan', 'personel', 'notifikasi'],
+    BINFUNG: ['laporan', 'notifikasi'],
     BINUM: ['laporan', 'monitoring', 'notifikasi'],
     DIKLAT: ['laporan', 'notifikasi'],
     BINMAT: ['laporan', 'notifikasi']

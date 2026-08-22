@@ -46,7 +46,7 @@ class InjectDashboardUi
 
             $landingPreviewAsset = asset('js/siberad-landing-preview.js') . '?v=20260816-4';
             $landingPreviewInjection = '<script src="' . e($landingPreviewAsset) . '"></script>';
-            $roleAccessAsset = asset('js/role-access-layout.js') . '?v=20260816-10';
+            $roleAccessAsset = asset('js/role-access-layout.js') . '?v=20260822-1';
             $roleAccessInjection = '<script src="' . e($roleAccessAsset) . '"></script>';
 
             $roleAccessPolicyInjection = <<<'HTML'
@@ -54,23 +54,21 @@ class InjectDashboardUi
 (function () {
   'use strict';
   var ALLOWED = {
-    ADMIN: ['laporan', 'medsos', 'personel', 'monitoring', 'notifikasi'],
-    DANPUS: ['laporan', 'medsos', 'monitoring', 'notifikasi'],
+    ADMIN: ['laporan', 'monitoring', 'notifikasi'],
+    DANPUS: ['laporan', 'monitoring', 'notifikasi'],
     WADAN: ['laporan', 'monitoring', 'notifikasi'],
     SDIR: ['laporan', 'monitoring', 'notifikasi'],
     SATLAKKAL: ['laporan', 'monitoring', 'notifikasi'],
-    SATLAKSISOS: ['laporan', 'medsos', 'notifikasi'],
+    SATLAKSISOS: ['laporan', 'notifikasi'],
     SATLAKDAK: ['laporan', 'monitoring', 'notifikasi'],
     SATLAKDUKTEK: ['laporan', 'monitoring', 'notifikasi'],
-    BINFUNG: ['laporan', 'personel', 'notifikasi'],
+    BINFUNG: ['laporan', 'notifikasi'],
     BINUM: ['laporan', 'monitoring', 'notifikasi'],
     DIKLAT: ['laporan', 'notifikasi'],
     BINMAT: ['laporan', 'notifikasi']
   };
   var LABELS = {
     'Kirim & Kelola Laporan': 'laporan',
-    'Pelaporan Publikasi': 'medsos',
-    'Pelaporan Administrasi Personel': 'personel',
     'Monitoring Laporan & Aktivitas': 'monitoring',
     'Notifikasi': 'notifikasi'
   };
