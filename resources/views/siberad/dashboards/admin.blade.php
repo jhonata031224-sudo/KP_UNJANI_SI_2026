@@ -2953,7 +2953,7 @@
       new Chart(elRekap, {
         type: 'bar',
         data: {
-          labels: rekapSatuan.map(function (s) { return s.kode; }),
+          labels: rekapSatuan.map(function (s) { return (s.nama || s.kode).split('(')[0].trim(); }),
           datasets: [{
             label: 'Total Laporan',
             data: rekapSatuan.map(function (s) { return s.total_laporan; }),
