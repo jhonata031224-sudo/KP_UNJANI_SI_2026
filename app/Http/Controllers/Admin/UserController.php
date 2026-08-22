@@ -33,17 +33,33 @@ class UserController extends Controller
     {
         $validated = $this->validated($request, $user);
 
-        if (filled($validated['password'] ?? null)) {
+        $passwordDiubah = filled($validated['password'] ?? null);
+
+        if ($passwordDiubah) {
             $validated['password'] = Hash::make($validated['password']);
         } else {
             unset($validated['password']);
         }
 
+        // Catat field lain (di luar password) yang benar-benar berubah, agar
+        // jejak Log Aktivitas selalu jelas -- termasuk kalau Admin mengganti
+        // password pengguna lain, supaya tidak ada perubahan yang lolos tanpa
+        // tercatat (transparansi/akuntabilitas aksi Admin).
+        $fieldLain = collect($validated)->except('password')->filter(
+            fn ($nilai, $field) => (string) $user->getAttribute($field) !== (string) $nilai
+        )->keys();
+
         $user->update($validated);
 
-        ActivityLog::catat('user.update', "Memperbarui akun pengguna \"{$user->name}\" ({$user->username}).");
+        if ($passwordDiubah && $fieldLain->isEmpty()) {
+            ActivityLog::catat('user.update_password', "Mengubah password akun pengguna \"{$user->name}\" ({$user->username}).");
+        } elseif ($passwordDiubah) {
+            ActivityLog::catat('user.update_password', "Memperbarui akun pengguna \"{$user->name}\" ({$user->username}), termasuk mengubah password.");
+        } else {
+            ActivityLog::catat('user.update', "Memperbarui akun pengguna \"{$user->name}\" ({$user->username}).");
+        }
 
-        return back()->with('status', "Akun \"{$user->name}\" berhasil diperbarui.");
+        return back()->with('status', "Akun \"{$user->name}\" berhasil diperbarui.".($passwordDiubah ? ' Password baru sudah aktif.' : ''));
     }
 
     /**

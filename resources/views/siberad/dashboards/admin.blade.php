@@ -123,6 +123,10 @@
   .table-action-btn.edit:hover{background:var(--success-bright);color:#fff;border-color:var(--success-bright);filter:brightness(1.08);}
   .table-action-btn.danger{background:color-mix(in srgb, var(--red) 10%, transparent);border-color:color-mix(in srgb, var(--red) 35%, transparent);color:var(--red);}
   .table-action-btn.danger:hover{background:var(--red);color:#fff;border-color:var(--red);filter:brightness(1.08);}
+  .table-action-btn.icon-only{width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;background:color-mix(in srgb, var(--gold) 10%, transparent);border-color:color-mix(in srgb, var(--gold) 35%, transparent);color:var(--gold-bright);}
+  .table-action-btn.icon-only:hover{background:var(--gold-bright);color:#fff;border-color:var(--gold-bright);filter:brightness(1.05);}
+  .table-action-btn.icon-only svg{width:15px;height:15px;flex-shrink:0;}
+  .th-center{text-align:center;}
   #tblPengguna th:last-child,#tblPengguna td:last-child,
   #tblSatuan th:last-child,#tblSatuan td:last-child{text-align:center;}
   #tblPengguna .btn-row,#tblSatuan .btn-row{justify-content:center;}
@@ -385,6 +389,50 @@
         <button class="btn btn-primary" type="submit">Simpan Perubahan</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="user-modal-overlay" id="ubahPasswordPenggunaModal">
+  <div class="user-modal-card" role="dialog" aria-modal="true" aria-label="Ubah Password Pengguna">
+    <div class="user-modal-head">
+      <div>
+        <h3>Ubah Password</h3>
+        <p>Akun: <strong id="uppNamaLabel">-</strong> (<span id="uppUsernameLabel">-</span>)</p>
+      </div>
+      <button type="button" class="user-modal-close" id="ubahPasswordPenggunaClose" aria-label="Tutup">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    </div>
+    <form class="form-grid" method="POST" action="" id="ubahPasswordPenggunaForm" autocomplete="off">
+      @csrf
+      @method('PATCH')
+      <input type="hidden" name="name" id="uppName">
+      <input type="hidden" name="username" id="uppUsername">
+      <input type="hidden" name="email" id="uppEmail">
+      <input type="hidden" name="satuan_id" id="uppSatuanId">
+      <div class="form-field">
+        <label for="uppPassword">Password Baru</label>
+        <input id="uppPassword" name="password" type="text" autocomplete="off" placeholder="Masukkan password baru" required minlength="6">
+      </div>
+      <div class="user-modal-actions">
+        <button class="btn" type="button" id="ubahPasswordPenggunaCancel">Batal</button>
+        <button class="btn btn-primary" type="submit">Simpan Password</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="ubahPasswordPenggunaKonfirmasiOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="ubahPasswordPenggunaKonfirmasiTitle">
+    <div class="confirm-icon" style="background:var(--gold-dim);color:var(--gold-bright)">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+    </div>
+    <h3 id="ubahPasswordPenggunaKonfirmasiTitle">Ubah Password Akun Ini?</h3>
+    <p>Password akun <strong id="uppKonfirmasiNama">ini</strong> akan langsung diganti dan tercatat di Log Aktivitas.</p>
+    <div class="confirm-actions">
+      <button type="button" class="btn" id="ubahPasswordPenggunaKonfirmasiBatal">Batal</button>
+      <button type="button" class="btn btn-primary" id="ubahPasswordPenggunaKonfirmasiYa">Ya, Ubah Password</button>
+    </div>
   </div>
 </div>
 
@@ -1029,7 +1077,7 @@
           </div>
           <div class="tbl-wrap" data-row-limit="8">
             <table class="dtbl" id="tblPengguna">
-              <thead><tr><th>Nama</th><th>Username</th><th>Email</th><th>Satuan</th><th>Aksi</th></tr></thead>
+              <thead><tr><th>Nama</th><th>Username</th><th>Email</th><th>Satuan</th><th class="th-center">Password</th><th>Aksi</th></tr></thead>
               <tbody>
                 @foreach($semuaPengguna as $p)
                 @php
@@ -1046,6 +1094,17 @@
                   <td><span class="badge badge-plain">{{ $p->username }}</span></td>
                   <td style="color:var(--text-muted);">{{ $p->email ?: '-' }}</td>
                   <td>{{ $p->satuan->nama_keterangan ?? '-' }}</td>
+                  <td class="th-center">
+                    <button class="table-action-btn icon-only" type="button" onclick="bukaUbahPasswordPengguna(this)"
+                      data-action="{{ route('admin.users.update', $p) }}"
+                      data-name="{{ $p->name }}"
+                      data-username="{{ $p->username }}"
+                      data-email="{{ $p->email }}"
+                      data-satuan-id="{{ $p->satuan_id }}"
+                      title="Ubah password {{ $p->name }}" aria-label="Ubah password {{ $p->name }}">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </button>
+                  </td>
                   <td>
                     <div class="btn-row">
                       <button class="table-action-btn edit" type="button" onclick="bukaUbahPengguna(this)"
@@ -1154,6 +1213,19 @@
           document.getElementById('ubahPenggunaModal').classList.add('open');
         };
 
+        window.bukaUbahPasswordPengguna = function (btn) {
+          document.getElementById('ubahPasswordPenggunaForm').action = btn.dataset.action;
+          document.getElementById('uppName').value = btn.dataset.name || '';
+          document.getElementById('uppUsername').value = btn.dataset.username || '';
+          document.getElementById('uppEmail').value = btn.dataset.email || '';
+          document.getElementById('uppSatuanId').value = btn.dataset.satuanId || '';
+          document.getElementById('uppPassword').value = '';
+          document.getElementById('uppNamaLabel').textContent = btn.dataset.name || '-';
+          document.getElementById('uppUsernameLabel').textContent = btn.dataset.username || '-';
+          document.getElementById('uppKonfirmasiNama').textContent = btn.dataset.name || 'ini';
+          document.getElementById('ubahPasswordPenggunaModal').classList.add('open');
+        };
+
         window.bukaHapusPengguna = function (btn) {
           document.getElementById('formHapusPengguna').action = btn.dataset.action;
           document.getElementById('hapusPenggunaNama').textContent = btn.dataset.nama || 'ini';
@@ -1161,6 +1233,58 @@
         };
         document.getElementById('hapusPenggunaBatal')?.addEventListener('click', () => document.getElementById('hapusPenggunaOverlay')?.classList.remove('open'));
         document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusPenggunaOverlay')?.classList.remove('open'); });
+
+        (function () {
+          var modal = document.getElementById('ubahPasswordPenggunaModal');
+          var closeBtn = document.getElementById('ubahPasswordPenggunaClose');
+          var cancelBtn = document.getElementById('ubahPasswordPenggunaCancel');
+          if (!modal) return;
+          function close() { modal.classList.remove('open'); }
+          if (closeBtn) closeBtn.addEventListener('click', close);
+          if (cancelBtn) cancelBtn.addEventListener('click', close);
+          document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+
+          var form = modal.querySelector('form');
+          var passwordField = document.getElementById('uppPassword');
+          if (passwordField) {
+            var msg = passwordField.nextElementSibling;
+            if (!msg || !msg.classList.contains('profile-field-error')) {
+              msg = document.createElement('span');
+              msg.className = 'profile-field-error';
+              msg.style.display = 'none';
+              passwordField.insertAdjacentElement('afterend', msg);
+            }
+            passwordField.addEventListener('invalid', function (e) {
+              e.preventDefault();
+              passwordField.classList.add('field-invalid');
+              msg.textContent = passwordField.validity.tooShort
+                ? 'Password minimal 6 karakter.'
+                : 'Password baru wajib diisi.';
+              msg.style.display = 'flex';
+            });
+            passwordField.addEventListener('input', function () {
+              passwordField.classList.remove('field-invalid');
+              msg.style.display = 'none';
+            });
+          }
+
+          var konfirmOverlay = document.getElementById('ubahPasswordPenggunaKonfirmasiOverlay');
+          if (form && konfirmOverlay) {
+            function closeKonfirm() { konfirmOverlay.classList.remove('open'); }
+            form.addEventListener('submit', function (e) {
+              if (form.dataset.confirmed === '1') { form.dataset.confirmed = ''; return; }
+              e.preventDefault();
+              konfirmOverlay.classList.add('open');
+            });
+            document.getElementById('ubahPasswordPenggunaKonfirmasiBatal')?.addEventListener('click', closeKonfirm);
+            document.getElementById('ubahPasswordPenggunaKonfirmasiYa')?.addEventListener('click', function () {
+              closeKonfirm();
+              form.dataset.confirmed = '1';
+              form.requestSubmit ? form.requestSubmit() : form.submit();
+            });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && konfirmOverlay.classList.contains('open')) closeKonfirm(); });
+          }
+        })();
 
         window.bukaHapusBackup = function (btn) {
           document.getElementById('formHapusBackup').action = btn.dataset.action;
