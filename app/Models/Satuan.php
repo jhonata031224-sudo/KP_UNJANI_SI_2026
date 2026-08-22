@@ -91,6 +91,45 @@ class Satuan extends Model
         ];
     }
 
+    /**
+     * Urutan tampil satuan di DALAM satu kategori yang sama (dipakai sebagai
+     * tie-breaker setelah prioritasKategori()), berdasarkan kode -- BUKAN
+     * alfabet nama. Dulu tie-breaker-nya alfabet nama, tapi begitu nama
+     * satuan Direktorat/Satlak diubah pakai prefix "Sdir"/"Satlak" hasil
+     * alfabetnya jadi acak dan tidak sesuai urutan organisasi yang diminta.
+     * Kode dipilih sebagai kunci karena kode tidak pernah berubah walau
+     * nama tampilnya diubah-ubah.
+     */
+    public static function urutanDalamKategori(): array
+    {
+        return [
+            'ADMIN' => 1,
+            'DANPUS' => 1,
+            'WADAN' => 2,
+            'BINFUNG' => 1,
+            'BINUM' => 2,
+            'DIKLAT' => 3,
+            'BINMAT' => 4,
+            'SATLAKKAL' => 1,
+            'SATLAKDAK' => 2,
+            'SATLAKSISOS' => 3,
+            'SATLAKDUKTEK' => 4,
+        ];
+    }
+
+    /**
+     * Kunci urut gabungan (kategori lalu urutan-dalam-kategori) yang dipakai
+     * di semua tempat yang menampilkan daftar satuan/pengguna lintas
+     * kategori, supaya urutannya konsisten di seluruh sistem.
+     */
+    public static function kunciUrutSatuan(?string $kategori, ?string $kode): string
+    {
+        $prioritasKategori = self::prioritasKategori()[$kategori ?? ''] ?? 9;
+        $urutanDalamKategori = self::urutanDalamKategori()[strtoupper($kode ?? '')] ?? 99;
+
+        return sprintf('%d-%03d', $prioritasKategori, $urutanDalamKategori);
+    }
+
     public function users(): HasMany
     {
         return $this->hasMany(User::class);

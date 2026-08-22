@@ -131,11 +131,10 @@ class PermintaanLaporanController extends Controller
             'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
         ]);
 
-        $prioritasKategori = Satuan::prioritasKategori();
         $tujuan = Satuan::whereIn('id', $validated['tujuan_satuan_ids'])
             ->whereIn('kode', self::PENGIRIM_KODE)
             ->get()
-            ->sortBy(fn ($s) => sprintf('%d-%s', $prioritasKategori[$s->kategori] ?? 9, $s->nama))
+            ->sortBy(fn ($s) => Satuan::kunciUrutSatuan($s->kategori, $s->kode))
             ->values();
 
         abort_if($tujuan->count() !== count($validated['tujuan_satuan_ids']), 422, 'Permintaan hanya dapat ditujukan kepada 8 satuan pengirim yang tersedia.');

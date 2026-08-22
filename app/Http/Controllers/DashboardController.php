@@ -31,7 +31,7 @@ class DashboardController
         // urutan alfabet/urutan input), sesuai jenjang role di organisasi.
         $prioritasKategori = Satuan::prioritasKategori();
         $semuaPengguna = User::with('satuan')->get()
-            ->sortBy(fn ($p) => sprintf('%d-%s', $prioritasKategori[$p->satuan->kategori ?? ''] ?? 9, $p->name))
+            ->sortBy(fn ($p) => Satuan::kunciUrutSatuan($p->satuan->kategori ?? null, $p->satuan->kode ?? null))
             ->values();
         // Di dalam kategori yang sama, satuan yang paling baru ditambahkan
         // tampil paling atas (id dipakai sebagai penentu akhir kalau
@@ -128,7 +128,7 @@ class DashboardController
                 ->where('deadline_at', '<', now()),
             'permintaanLaporanMasuk as laporan_dibatalkan' => fn ($q) => $q->where('status', PermintaanLaporan::STATUS_DIBATALKAN),
         ])->get()
-            ->sortBy(fn ($s) => sprintf('%d-%s', $prioritasKategori[$s->kategori] ?? 9, $s->nama))
+            ->sortBy(fn ($s) => Satuan::kunciUrutSatuan($s->kategori, $s->kode))
             ->values()
             ->map(function ($s) use ($laporanRekapDeduped) {
                 $s->total_laporan = $laporanRekapDeduped->where('satuan_id', $s->id)->count();
@@ -147,9 +147,9 @@ class DashboardController
             ->first();
         $laporanTerkirim = Laporan::with('tujuanSatuan')->where('satuan_id', $satuan->id)->latest()->get();
         // Urutan tampil: Admin -> Pimpinan -> Direktorat -> Satuan, lalu
-        // abjad nama di dalam kategori yang sama.
-        $prioritasKategori = Satuan::prioritasKategori();
-        $urutkanSatuan = fn ($s) => sprintf('%d-%s', $prioritasKategori[$s->kategori] ?? 9, $s->nama);
+        // urutan tetap per-kode di dalam kategori yang sama (lihat
+        // Satuan::kunciUrutSatuan).
+        $urutkanSatuan = fn ($s) => Satuan::kunciUrutSatuan($s->kategori, $s->kode);
         $kodeTujuanDiizinkan = Satuan::kodeTujuanUntuk($kode);
         $tujuan = $kodeTujuanDiizinkan !== null
             ? Satuan::whereIn('kode', $kodeTujuanDiizinkan)->get()->sortBy($urutkanSatuan)->values()
