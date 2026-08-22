@@ -34,8 +34,8 @@ class SatuanSeeder extends Seeder
             ['kode' => 'BINMAT',  'username' => 'binmat', 'nama' => 'Sdir Binmat (Pembinaan Materiil)',  'kategori' => Satuan::KATEGORI_DIREKTORAT, 'deskripsi' => 'Pengurusan material/perlengkapan satuan.'],
 
             // --- Koordinasi / Pimpinan ---
-            ['kode' => 'WADAN',  'username' => 'wadan',  'nama' => 'Wakil Komandan',       'kategori' => Satuan::KATEGORI_PIMPINAN, 'deskripsi' => 'Penerima laporan dari Satlak.'],
-            ['kode' => 'DANPUS', 'username' => 'danpus', 'nama' => 'Komandan Pusat', 'kategori' => Satuan::KATEGORI_PIMPINAN, 'deskripsi' => 'Penerima laporan tertinggi dari seluruh satuan.'],
+            ['kode' => 'WADAN',  'username' => 'wadan',  'nama' => 'Wadan (Wakil Komandan Pussiberad)',       'kategori' => Satuan::KATEGORI_PIMPINAN, 'deskripsi' => 'Penerima laporan dari Satlak.'],
+            ['kode' => 'DANPUS', 'username' => 'danpus', 'nama' => 'Danpus (Komandan Pusat Pussiberad)', 'kategori' => Satuan::KATEGORI_PIMPINAN, 'deskripsi' => 'Penerima laporan tertinggi dari seluruh satuan.'],
         ];
 
         foreach ($satuans as $data) {
