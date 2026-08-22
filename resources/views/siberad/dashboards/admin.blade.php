@@ -312,7 +312,7 @@
         <select id="uSatuan" name="satuan_id" required>
           <option value="">— Pilih Satuan —</option>
           @foreach($semuaSatuan as $s)
-          <option value="{{ $s->id }}">{{ $s->nama }} ({{ $s->kode }})</option>
+          <option value="{{ $s->id }}">{{ $s->nama }}{{ in_array($s->kode, ['URDAL', 'POKANALIS'], true) ? '' : ' ('.$s->kode.')' }}</option>
           @endforeach
         </select>
       </div>
@@ -372,7 +372,7 @@
         <label for="upSatuan">Satuan</label>
         <select id="upSatuan" name="satuan_id" required>
           @foreach($semuaSatuan as $s)
-          <option value="{{ $s->id }}">{{ $s->nama }} ({{ $s->kode }})</option>
+          <option value="{{ $s->id }}">{{ $s->nama }}{{ in_array($s->kode, ['URDAL', 'POKANALIS'], true) ? '' : ' ('.$s->kode.')' }}</option>
           @endforeach
         </select>
       </div>
