@@ -589,7 +589,7 @@
         <div class="side-subnav"><div>
           <span class="side-subnav-label">Kelola Sistem</span>
           <a href="#" class="side-sub-link" data-tab-link="satlak" title="Manajemen Satuan"><span class="sub-dot"></span>Manajemen Satuan</a>
-          <a href="#" class="side-sub-link" data-tab-link="role-akses" title="Role &amp; Hak Akses"><span class="sub-dot"></span>Role &amp; Hak Akses</a>
+          <a href="#" class="side-sub-link" data-tab-link="role-akses" title="Hak Akses Pengguna"><span class="sub-dot"></span>Hak Akses Pengguna</a>
           <a href="#" class="side-sub-link" data-tab-link="backup" title="Backup Database"><span class="sub-dot"></span>Backup Database</a>
           <a href="#" class="side-sub-link" data-tab-link="pengaturan-umum" title="Pengaturan Umum"><span class="sub-dot"></span>Pengaturan Umum</a>
         </div></div>
@@ -1439,10 +1439,10 @@
         })();
       </script>
 
-      {{-- ===== ROLE & HAK AKSES ===== --}}
+      {{-- ===== HAK AKSES PENGGUNA ===== --}}
       <section class="tab-panel" data-tab-panel="role-akses">
         <div class="section-head panel">
-          <h2>Role &amp; Hak Akses</h2>
+          <h2>Hak Akses Pengguna</h2>
           <p>Setiap satuan berperan sebagai role login. Atur modul apa saja yang boleh diakses tiap satuan.</p>
         </div>
 
