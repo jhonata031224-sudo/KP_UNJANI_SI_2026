@@ -58,5 +58,17 @@ class SatuanSeeder extends Seeder
                 ]
             );
         }
+
+        // --- Satuan berdiri sendiri (Mandiri), lapor langsung ke Danpus ---
+        // Akun pengguna SENGAJA tidak dibuat otomatis di sini -- ditambah
+        // manual lewat Admin > Daftar Pengguna setelah satuannya tersedia.
+        $satuanMandiri = [
+            ['kode' => 'POKANALIS', 'nama' => 'Pok Analis (Kelompok Analis)', 'kategori' => Satuan::KATEGORI_MANDIRI, 'deskripsi' => 'Satuan analisis yang berdiri sendiri, lapor langsung ke Danpus.'],
+            ['kode' => 'URDAL',     'nama' => 'Urdal (Urusan Dalam)',         'kategori' => Satuan::KATEGORI_MANDIRI, 'deskripsi' => 'Satuan urusan dalam yang berdiri sendiri, lapor langsung ke Danpus.'],
+        ];
+
+        foreach ($satuanMandiri as $data) {
+            Satuan::updateOrCreate(['kode' => $data['kode']], $data);
+        }
     }
 }

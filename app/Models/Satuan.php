@@ -74,6 +74,8 @@ class Satuan extends Model
         'BINUM' => ['laporan', 'monitoring', 'notifikasi'],
         'DIKLAT' => ['laporan', 'monitoring', 'notifikasi'],
         'BINMAT' => ['laporan', 'monitoring', 'notifikasi'],
+        'POKANALIS' => ['laporan', 'monitoring', 'notifikasi'],
+        'URDAL' => ['laporan', 'monitoring', 'notifikasi'],
     ];
 
     public static function modulHakAksesUntukRole(?string $kode): array
@@ -96,12 +98,19 @@ class Satuan extends Model
     public const KATEGORI_DIREKTORAT = 'direktorat';
     public const KATEGORI_PIMPINAN = 'pimpinan';
     public const KATEGORI_ADMIN = 'admin';
+    /**
+     * Satuan yang berdiri sendiri -- tidak masuk kelompok Direktorat
+     * (Sdir/Binfung/Binum/dst), Satlak, maupun Pimpinan (mis. Pok Analis,
+     * Urdal). Sama seperti satuan pembinaan, tetap lapor langsung ke
+     * DANPUS (lihat kodeTujuanUntuk()).
+     */
+    public const KATEGORI_MANDIRI = 'mandiri';
 
     /**
      * Urutan tampil kategori secara umum (Admin -> Pimpinan -> Direktorat ->
-     * Satlak), dipakai di seluruh tempat yang menampilkan daftar satuan
-     * gabungan lintas kategori -- menggantikan field "urutan" manual yang
-     * sudah dihapus.
+     * Mandiri -> Satlak), dipakai di seluruh tempat yang menampilkan daftar
+     * satuan gabungan lintas kategori -- menggantikan field "urutan" manual
+     * yang sudah dihapus.
      */
     public static function prioritasKategori(): array
     {
@@ -109,7 +118,8 @@ class Satuan extends Model
             self::KATEGORI_ADMIN => 1,
             self::KATEGORI_PIMPINAN => 2,
             self::KATEGORI_DIREKTORAT => 3,
-            self::KATEGORI_SATLAK => 4,
+            self::KATEGORI_MANDIRI => 4,
+            self::KATEGORI_SATLAK => 5,
         ];
     }
 
@@ -132,6 +142,8 @@ class Satuan extends Model
             'BINUM' => 2,
             'DIKLAT' => 3,
             'BINMAT' => 4,
+            'POKANALIS' => 1,
+            'URDAL' => 2,
             'SATLAKKAL' => 1,
             'SATLAKDAK' => 2,
             'SATLAKSISOS' => 3,
@@ -218,10 +230,17 @@ class Satuan extends Model
     public const KODE_PEMBINAAN = ['BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT'];
 
     /**
+     * Kode satuan yang berdiri sendiri, bukan bagian Direktorat/Satlak/
+     * Pimpinan (Pok Analis, Urdal).
+     */
+    public const KODE_MANDIRI = ['POKANALIS', 'URDAL'];
+
+    /**
      * Alur tujuan laporan resmi (hierarki komando):
      * - Satlak hanya boleh lapor ke DANPUS/WADAN (tujuan utama).
      *   Satlak tidak boleh saling kirim ke sesama Satlak maupun ke satuan pembinaan.
      * - Satuan pembinaan (Binmat, Binfung, Binum, Diklat) langsung lapor ke DANPUS.
+     * - Satuan mandiri (Pok Analis, Urdal) juga langsung lapor ke DANPUS.
      * - Satuan lain (mis. WADAN) tidak dibatasi di sini (kembalikan null).
      *
      * @return string[]|null Daftar kode satuan tujuan yang diizinkan, atau null jika tidak dibatasi.
@@ -234,7 +253,7 @@ class Satuan extends Model
             return ['DANPUS', 'WADAN'];
         }
 
-        if (in_array($kodeAsal, self::KODE_PEMBINAAN, true)) {
+        if (in_array($kodeAsal, self::KODE_PEMBINAAN, true) || in_array($kodeAsal, self::KODE_MANDIRI, true)) {
             return ['DANPUS'];
         }
 

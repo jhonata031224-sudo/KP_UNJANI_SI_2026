@@ -458,6 +458,7 @@
           <option value="{{ \App\Models\Satuan::KATEGORI_ADMIN }}">Admin</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_PIMPINAN }}">Pimpinan</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_MANDIRI }}">Mandiri</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
         </select>
       </div>
@@ -506,6 +507,7 @@
           <option value="{{ \App\Models\Satuan::KATEGORI_ADMIN }}">Admin</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_PIMPINAN }}">Pimpinan</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_MANDIRI }}">Mandiri</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
         </select>
       </div>
@@ -1020,6 +1022,7 @@
               <option value="Admin">Admin</option>
               <option value="Pimpinan">Pimpinan</option>
               <option value="Direktorat">Direktorat</option>
+              <option value="Mandiri">Mandiri</option>
               <option value="Satlak">Satlak</option>
             </select>
             <span class="table-filter-count" data-table-count="tblPengguna"></span>
@@ -1034,6 +1037,7 @@
                     \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
                     \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
                     \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+                    \App\Models\Satuan::KATEGORI_MANDIRI => 'Mandiri',
                     default => 'Satlak',
                   };
                 @endphp
@@ -1252,6 +1256,7 @@
               <option value="Admin">Admin</option>
               <option value="Pimpinan">Pimpinan</option>
               <option value="Direktorat">Direktorat</option>
+              <option value="Mandiri">Mandiri</option>
               <option value="Satlak">Satlak</option>
             </select>
             <span class="table-filter-count" data-table-count="tblSatuan"></span>
@@ -1267,6 +1272,7 @@
                     \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
                     \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
                     \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+                    \App\Models\Satuan::KATEGORI_MANDIRI => 'Mandiri',
                     default => 'Satlak',
                   };
                 @endphp
@@ -2527,6 +2533,7 @@
             <select class="table-filter" data-table-filter="tblRekapSatuan">
               <option value="">Semua Kategori</option>
               <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
+              <option value="{{ \App\Models\Satuan::KATEGORI_MANDIRI }}">Mandiri</option>
               <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
             </select>
             <span class="table-filter-count" data-table-count="tblRekapSatuan"></span>
