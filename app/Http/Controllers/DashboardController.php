@@ -33,16 +33,20 @@ class DashboardController
         $semuaPengguna = User::with('satuan')->get()
             ->sortBy(fn ($p) => Satuan::kunciUrutSatuan($p->satuan->kategori ?? null, $p->satuan->kode ?? null))
             ->values();
-        // Di dalam kategori yang sama, satuan yang paling baru ditambahkan
-        // tampil paling atas (id dipakai sebagai penentu akhir kalau
-        // created_at-nya kebetulan sama persis, misal data hasil seeding).
+        // Urutan satuan (dipakai tab "Data Satuan" & "Hak Akses Pengguna")
+        // SELALU ikut jenjang organisasi resmi lewat Satuan::kunciUrutSatuan()
+        // -- Danpus -> Wadan -> Urdal -> Pok Analis -> 4 Sdir -> 4 Satlak --
+        // bukan urutan alfabet ataupun kapan satuan dibuat. Satuan baru yang
+        // kodenya belum ada di Satuan::urutanDalamKategori() otomatis jatuh
+        // ke urutan terakhir dalam kategorinya (created_at/id sebagai
+        // penentu akhir kalau ada beberapa satuan baru sekaligus).
         $semuaSatuan = Satuan::withCount('users')->get()
-            ->sort(function ($a, $b) use ($prioritasKategori) {
-                $prioA = $prioritasKategori[$a->kategori] ?? 9;
-                $prioB = $prioritasKategori[$b->kategori] ?? 9;
-                if ($prioA !== $prioB) return $prioA <=> $prioB;
-                if ($a->created_at != $b->created_at) return $b->created_at <=> $a->created_at;
-                return $b->id <=> $a->id;
+            ->sort(function ($a, $b) {
+                $kunciA = Satuan::kunciUrutSatuan($a->kategori, $a->kode);
+                $kunciB = Satuan::kunciUrutSatuan($b->kategori, $b->kode);
+                if ($kunciA !== $kunciB) return $kunciA <=> $kunciB;
+                if ($a->created_at != $b->created_at) return $a->created_at <=> $b->created_at;
+                return $a->id <=> $b->id;
             })
             ->values();
         $permintaanResetPassword = PermintaanResetPassword::with(['user.satuan', 'diprosesOleh'])->latest()->get();

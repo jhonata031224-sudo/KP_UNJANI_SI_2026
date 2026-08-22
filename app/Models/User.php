@@ -39,6 +39,21 @@ class User extends Authenticatable
     }
 
     /**
+     * Daftar SEMUA pengguna, terurut sesuai jenjang organisasi resmi
+     * (Danpus -> Wadan -> Urdal -> Pok Analis -> 4 Sdir -> 4 Satlak, lihat
+     * Satuan::kunciUrutSatuan()) -- BUKAN alfabet nama. Dipakai di semua
+     * tabel/daftar/export pengguna Admin supaya urutannya konsisten di
+     * seluruh sistem dan otomatis ikut urut yang benar walau ada satuan
+     * atau pengguna baru ditambahkan nanti.
+     */
+    public static function terurutOrganisasi()
+    {
+        return self::with('satuan')->get()
+            ->sortBy(fn ($u) => Satuan::kunciUrutSatuan($u->satuan->kategori ?? null, $u->satuan->kode ?? null))
+            ->values();
+    }
+
+    /**
      * The attributes that should be hidden for serialization.
      *
      * @var list<string>

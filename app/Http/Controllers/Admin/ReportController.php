@@ -32,7 +32,7 @@ class ReportController extends Controller
             'user' => $request->user()->load('satuan'),
             'satuan' => $request->user()->satuan,
             'pengaturan' => Pengaturan::current(),
-            'semuaPengguna' => User::with('satuan')->orderBy('name')->get(),
+            'semuaPengguna' => User::terurutOrganisasi(),
             'log' => $log,
             'dari' => $dariTanggal?->format('Y-m-d'),
             'sampai' => $sampaiTanggal?->format('Y-m-d'),
@@ -45,7 +45,7 @@ class ReportController extends Controller
      */
     public function exportUsersExcel()
     {
-        $users = User::with('satuan')->orderBy('name')->get();
+        $users = User::terurutOrganisasi();
         $rows = $users->map(fn ($u) => [
             $u->name ?: '-',
             $u->username ?: '-',
@@ -164,7 +164,7 @@ class ReportController extends Controller
             'jenis' => $jenis,
             'pengaturan' => Pengaturan::current(),
             'semuaPengguna' => $jenis === 'pengguna'
-                ? User::with('satuan')->orderBy('name')->get()
+                ? User::terurutOrganisasi()
                 : collect(),
             'log' => $jenis === 'aktivitas'
                 ? ActivityLog::with('user.satuan')->latest('created_at')->limit(500)->get()

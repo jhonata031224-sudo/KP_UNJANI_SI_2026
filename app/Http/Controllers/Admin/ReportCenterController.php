@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\Satuan;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -12,6 +13,8 @@ class ReportCenterController extends Controller
     public function users(Request $request)
     {
         $query = trim((string) $request->query('q', ''));
+        // Urut sesuai jenjang organisasi (Satuan::kunciUrutSatuan), bukan
+        // alfabet nama -- disamain sama tabel pengguna di dashboard Admin.
         $users = User::with('satuan')
             ->when($query !== '', function ($q) use ($query) {
                 $q->where(function ($sub) use ($query) {
@@ -21,9 +24,10 @@ class ReportCenterController extends Controller
                         ->orWhere('jabatan', 'like', '%'.$query.'%');
                 });
             })
-            ->orderBy('name')
-            ->limit(500)
-            ->get();
+            ->get()
+            ->sortBy(fn ($u) => Satuan::kunciUrutSatuan($u->satuan->kategori ?? null, $u->satuan->kode ?? null))
+            ->take(500)
+            ->values();
 
         return response()->json([
             'total' => $users->count(),
