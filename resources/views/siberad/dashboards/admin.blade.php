@@ -2344,7 +2344,7 @@
               <tbody>
                 @forelse($permintaanResetPassword as $r)
                 <tr data-created="{{ $r->created_at->timestamp }}" data-search-value="{{ strtolower(($r->user->name ?? '').' '.($r->user->satuan->nama ?? '').' '.($r->user->satuan->kode ?? '')) }}">
-                  <td><div class="subject">{{ $r->user->name ?? '-' }}</div><span class="badge">{{ $r->user->satuan->kode ?? '-' }}</span></td>
+                  <td><div class="subject">{{ $r->user->name ?? '-' }}</div></td>
                   <td style="color:var(--text-muted);">{{ trim((string) $r->catatan) !== '' ? $r->catatan : '-' }}</td>
                   <td><div class="request-deadline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>{{ $r->created_at->translatedFormat('d M Y H:i') }}</div></td>
                   <td>
