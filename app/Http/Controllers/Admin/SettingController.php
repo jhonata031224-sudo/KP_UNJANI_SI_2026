@@ -51,17 +51,31 @@ class SettingController extends Controller
 
         // Password akses Pengaturan Umum dapat dibuat terpisah dari password login Admin.
         // Jika belum dikonfigurasi, fallback ke password Admin menjaga instalasi lama tetap berfungsi.
-        $accessPassword = (string) env('PENGATURAN_UMUM_ACCESS_PASSWORD', '');
+        // trim() di sini mengantisipasi spasi/baris baru tak sengaja ikut
+        // tersimpan saat isi value environment variable lewat panel hosting.
+        $accessPassword = trim((string) env('PENGATURAN_UMUM_ACCESS_PASSWORD', ''));
+        $passwordGiven = trim((string) $validated['password']);
         $passwordValid = $accessPassword !== ''
-            ? hash_equals($accessPassword, (string) $validated['password'])
-            : Hash::check($validated['password'], (string) $request->user()->password);
+            ? hash_equals($accessPassword, $passwordGiven)
+            : Hash::check($passwordGiven, (string) $request->user()->password);
         $captchaValid = $captchaExpected !== '' && hash_equals($captchaExpected, $captchaGiven);
 
         if (! $passwordValid || ! $captchaValid) {
             ActivityLog::catat('pengaturan.landing.access_denied', 'Percobaan membuka Pengaturan Umum ditolak karena password atau captcha tidak valid.');
-            return response()->json([
-                'message' => 'Konfirmasi akses gagal. Periksa password dan captcha lalu coba lagi.',
-            ], 422);
+
+            // Pesan dipisah per-field (bukan digabung generik) supaya Admin
+            // tidak salah menebak mana yang sebenarnya keliru saat gagal.
+            if (! $passwordValid && ! $captchaValid) {
+                $pesan = 'Password dan captcha salah. Periksa ulang keduanya.';
+            } elseif (! $passwordValid) {
+                $pesan = $accessPassword !== ''
+                    ? 'Password salah. Periksa lagi nilai PENGATURAN_UMUM_ACCESS_PASSWORD di environment variable server.'
+                    : 'Password salah. Karena PENGATURAN_UMUM_ACCESS_PASSWORD belum diisi, sistem memakai password login Admin yang sedang aktif.';
+            } else {
+                $pesan = 'Kode captcha salah atau sudah kedaluwarsa. Captcha baru sudah dimuat ulang, coba masukkan lagi.';
+            }
+
+            return response()->json(['message' => $pesan], 422);
         }
 
         RateLimiter::clear($key);
