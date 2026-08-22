@@ -23,6 +23,28 @@ class Satuan extends Model
     ];
 
     /**
+     * Bagian nama sebelum tanda kurung, mis. "Sdir Binfung" dari
+     * "Sdir Binfung (Pembinaan Fungsi)". Jika tidak ada kurung,
+     * kembalikan nama lengkap.
+     */
+    public function getNamaSingkatAttribute(): string
+    {
+        $pos = strpos($this->nama, '(');
+        return $pos !== false ? rtrim(substr($this->nama, 0, $pos)) : $this->nama;
+    }
+
+    /**
+     * Bagian nama di dalam tanda kurung, mis. "Pembinaan Fungsi" dari
+     * "Sdir Binfung (Pembinaan Fungsi)". Jika tidak ada kurung,
+     * kembalikan nama lengkap.
+     */
+    public function getNamaKeteranganAttribute(): string
+    {
+        preg_match('/\(([^)]+)\)/', $this->nama, $m);
+        return $m[1] ?? $this->nama;
+    }
+
+    /**
      * Modul dashboard yang bisa diatur hak aksesnya lewat "Manajemen Role &
      * Hak Akses" (Admin). Kunci dipakai sebagai nilai checkbox, label untuk
      * ditampilkan di UI.

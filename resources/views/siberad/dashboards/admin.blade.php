@@ -1038,10 +1038,10 @@
                   };
                 @endphp
                 <tr data-filter-value="{{ $kategoriLabel }}" data-search-value="{{ strtolower($p->name.' '.($p->satuan->nama ?? '').' '.($p->satuan->kode ?? '')) }}">
-                  <td>{{ $p->name }}</td>
+                  <td>{{ $p->satuan->nama_singkat ?? $p->name }}</td>
                   <td><span class="badge badge-plain">{{ $p->username }}</span></td>
                   <td style="color:var(--text-muted);">{{ $p->email ?: '-' }}</td>
-                  <td>{{ $p->satuan->nama ?? '-' }}</td>
+                  <td>{{ $p->satuan->nama_keterangan ?? '-' }}</td>
                   <td>
                     <div class="btn-row">
                       <button class="table-action-btn edit" type="button" onclick="bukaUbahPengguna(this)"
@@ -1788,10 +1788,10 @@
                   @forelse($semuaPengguna as $i => $p)
                   <tr data-search-value="{{ strtolower($p->name.' '.$p->username.' '.$p->email.' '.($p->satuan->nama ?? '').' '.($p->jabatan ?? '')) }}">
                     <td>{{ $i + 1 }}</td>
-                    <td><strong>{{ $p->name }}</strong></td>
+                    <td><strong>{{ $p->satuan->nama_singkat ?? $p->name }}</strong></td>
                     <td>{{ $p->username }}</td>
                     <td>{{ $p->email ?: '-' }}</td>
-                    <td>{{ $p->satuan->nama ?? '-' }}</td>
+                    <td>{{ $p->satuan->nama_keterangan ?? '-' }}</td>
                     <td>{{ $p->jabatan ?: '-' }}</td>
                     <td style="white-space:nowrap;" data-tanggal="{{ $p->created_at?->format('Y-m-d') }}">{{ $p->created_at?->format('d/m/Y H:i') }}</td>
                   </tr>

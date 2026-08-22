@@ -64,7 +64,7 @@
       <thead><tr><th>Nama</th><th>Username</th><th>Satuan</th></tr></thead>
       <tbody>
         @foreach($semuaPengguna as $u)
-        <tr><td>{{ $u->name }}</td><td>{{ $u->username }}</td><td>{{ $u->satuan->nama ?? '-' }}</td></tr>
+        <tr><td>{{ $u->satuan->nama_singkat ?? $u->name }}</td><td>{{ $u->username }}</td><td>{{ $u->satuan->nama_keterangan ?? '-' }}</td></tr>
         @endforeach
       </tbody>
     </table>
