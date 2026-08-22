@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>{{ $jenis === 'pengguna' ? 'Cetak Laporan Pengguna' : 'Cetak Log Aktivitas' }} — {{ $pengaturan->singkatan ?? 'SIBERAD' }}</title>
+<title>{{ $jenis === 'pengguna' ? 'Cetak Laporan Pengguna' : 'Cetak Riwayat Aktivitas' }} — {{ $pengaturan->singkatan ?? 'SIBERAD' }}</title>
 <style>
   body{font-family:Georgia,'Times New Roman',serif;color:#111;margin:36px;}
   header{display:flex;align-items:center;gap:14px;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:18px;}
@@ -25,7 +25,7 @@
     @endif
     <div>
       <h1>{{ $pengaturan->nama_instansi }}</h1>
-      <p>{{ $jenis === 'pengguna' ? 'Laporan Daftar Pengguna Sistem SIBERAD' : 'Laporan Log Aktivitas Sistem SIBERAD' }}</p>
+      <p>{{ $jenis === 'pengguna' ? 'Laporan Daftar Pengguna Sistem SIBERAD' : 'Laporan Riwayat Aktivitas Sistem SIBERAD' }}</p>
     </div>
   </header>
 
@@ -40,7 +40,7 @@
     </tbody>
   </table>
   @else
-  <h2>Log Aktivitas ({{ $log->count() }})</h2>
+  <h2>Riwayat Aktivitas ({{ $log->count() }})</h2>
   <table>
     <thead><tr><th>Waktu</th><th>Pengguna</th><th>Satuan</th><th>Aksi</th><th>Deskripsi</th></tr></thead>
     <tbody>

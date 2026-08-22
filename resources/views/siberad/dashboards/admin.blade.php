@@ -428,7 +428,7 @@
       <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
     </div>
     <h3 id="ubahPasswordPenggunaKonfirmasiTitle">Ubah Password Akun Ini?</h3>
-    <p>Password akun <strong id="uppKonfirmasiNama">ini</strong> akan langsung diganti dan tercatat di Log Aktivitas.</p>
+    <p>Password akun <strong id="uppKonfirmasiNama">ini</strong> akan langsung diganti dan tercatat di Riwayat Aktivitas.</p>
     <div class="confirm-actions">
       <button type="button" class="btn" id="ubahPasswordPenggunaKonfirmasiBatal">Batal</button>
       <button type="button" class="btn btn-primary" id="ubahPasswordPenggunaKonfirmasiYa">Ya, Ubah Password</button>
@@ -634,7 +634,7 @@
           <a href="#" class="side-sub-link" data-tab-link="rekap-laporan" title="Rekap Laporan"><span class="sub-dot"></span>Rekap Laporan</a>
           <a href="#" class="side-sub-link" data-tab-link="laporan-admin" title="Data Laporan"><span class="sub-dot"></span>Data Laporan</a>
           <a href="#" class="side-sub-link" data-tab-link="sesi-aktif" title="Sesi Aktif"><span class="sub-dot"></span>Sesi Aktif</a>
-          <a href="#" class="side-sub-link" data-tab-link="log-aktivitas" title="Log Aktivitas"><span class="sub-dot"></span>Log Aktivitas</a>
+          <a href="#" class="side-sub-link" data-tab-link="log-aktivitas" title="Riwayat Aktivitas"><span class="sub-dot"></span>Riwayat Aktivitas</a>
         </div></div>
       </div>
 
@@ -938,7 +938,7 @@
               <div class="chart-legend" id="chartStatusLaporanLegend"></div>
             </div>
 
-            <div class="chart-mini chart-mini-link" data-tab-link="log-aktivitas" role="button" tabindex="0" title="Lihat Log Aktivitas">
+            <div class="chart-mini chart-mini-link" data-tab-link="log-aktivitas" role="button" tabindex="0" title="Lihat Riwayat Aktivitas">
               <div class="chart-mini-head">
                 <div class="chart-mini-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
                 <div><h4>Aktivitas 7 Hari Terakhir</h4><p>Jumlah aksi tercatat per hari.</p></div>
@@ -1641,7 +1641,7 @@
       {{-- ===== LOG AKTIVITAS ===== --}}
       <section class="tab-panel" data-tab-panel="log-aktivitas">
         <div class="panel">
-          <div class="panel-head"><div><h2>Log Aktivitas</h2><p>Rekam jejak login, logout, dan seluruh aksi kelola sistem oleh Admin.</p></div></div>
+          <div class="panel-head"><div><h2>Riwayat Aktivitas</h2><p>Rekam jejak login, logout, dan seluruh aksi kelola sistem oleh Admin.</p></div></div>
 
           <div class="dl-search-row">
             <div class="table-search-wrap" style="max-width:280px;">

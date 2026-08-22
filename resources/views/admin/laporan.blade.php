@@ -40,7 +40,7 @@
       <div class="dropdown-menu">
         <div class="dropdown-label">Pilih data</div>
         <a href="{{ route('admin.laporan.export-pengguna') }}">👤 Daftar Pengguna</a>
-        <a href="{{ route('admin.laporan.export-aktivitas') }}">📋 Log Aktivitas</a>
+        <a href="{{ route('admin.laporan.export-aktivitas') }}">📋 Riwayat Aktivitas</a>
       </div>
     </div>
     <div class="dropdown" data-dropdown>
@@ -48,7 +48,7 @@
       <div class="dropdown-menu">
         <div class="dropdown-label">Pilih data</div>
         <a href="{{ route('admin.laporan.cetak', 'pengguna') }}" target="_blank">👤 Daftar Pengguna</a>
-        <a href="{{ route('admin.laporan.cetak', 'aktivitas') }}" target="_blank">📋 Log Aktivitas</a>
+        <a href="{{ route('admin.laporan.cetak', 'aktivitas') }}" target="_blank">📋 Riwayat Aktivitas</a>
       </div>
     </div>
     <form method="GET" action="{{ route('admin.laporan.index') }}">
@@ -72,7 +72,7 @@
 
   <div class="panel">
     <h3>
-      Log Aktivitas (<span id="log-count">{{ $log->count() }}</span>)
+      Riwayat Aktivitas (<span id="log-count">{{ $log->count() }}</span>)
       <span id="live-indicator" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;color:#7fd99a;margin-left:10px;vertical-align:middle;">
         <span style="width:7px;height:7px;border-radius:50%;background:#7fd99a;display:inline-block;animation:pulse-live 1.5s infinite;"></span>
         LIVE

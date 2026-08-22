@@ -84,7 +84,7 @@ class ReportController extends Controller
 
         return SimpleXlsx::download(
             'log-aktivitas-'.now()->format('Ymd_His').'.xlsx',
-            'Log Aktivitas',
+            'Riwayat Aktivitas',
             ['Waktu', 'Pengguna', 'Satuan', 'Aksi', 'Deskripsi', 'Detail', 'IP Address'],
             $rows,
             [23, 32, 26, 30, 70, 46, 22],
