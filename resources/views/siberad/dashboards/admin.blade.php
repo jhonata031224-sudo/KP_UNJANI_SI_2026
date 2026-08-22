@@ -153,7 +153,8 @@
 </style>
 <style>
   /* ===== Data Laporan (submenu Monitoring) ===== */
-  .dl-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;}
+  .dl-head{display:flex;align-items:flex-start;gap:14px;}
+  .dl-head-panel{margin-bottom:20px;}
   .dl-head-icon{flex:0 0 auto;width:46px;height:46px;border-radius:12px;background:var(--gold-dim);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gold-bright);}
   .dl-head-icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;}
   .dl-head h2{font-family:var(--display);font-size:21px;font-weight:700;letter-spacing:.01em;}
@@ -1710,13 +1711,15 @@
 
       {{-- ===== DATA LAPORAN ===== --}}
       <section class="tab-panel" data-tab-panel="laporan-admin">
-        <div class="dl-head">
-          <div class="dl-head-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>
-          </div>
-          <div>
-            <h2>Data Laporan</h2>
-            <p>Rekap data pengguna dan aktivitas sistem, siap diekspor. Unduh dalam format CSV (bisa dibuka Excel) atau cetak sebagai PDF.</p>
+        <div class="panel dl-head-panel">
+          <div class="dl-head">
+            <div class="dl-head-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>
+            </div>
+            <div>
+              <h2>Data Laporan</h2>
+              <p>Rekap data pengguna dan aktivitas sistem, siap diekspor. Unduh dalam format CSV (bisa dibuka Excel) atau cetak sebagai PDF.</p>
+            </div>
           </div>
         </div>
 
