@@ -107,18 +107,21 @@ class Satuan extends Model
     public const KATEGORI_MANDIRI = 'mandiri';
 
     /**
-     * Urutan tampil kategori secara umum (Admin -> Pimpinan -> Direktorat ->
-     * Mandiri -> Satlak), dipakai di seluruh tempat yang menampilkan daftar
-     * satuan gabungan lintas kategori -- menggantikan field "urutan" manual
-     * yang sudah dihapus.
+     * Urutan tampil kategori secara umum (Admin -> Pimpinan -> Mandiri ->
+     * Direktorat -> Satlak), dipakai di seluruh tempat yang menampilkan
+     * daftar satuan gabungan lintas kategori -- menggantikan field "urutan"
+     * manual yang sudah dihapus.
+     *
+     * Mandiri (Pok Analis, Urdal) sengaja ditaruh setelah Pimpinan (Wadan)
+     * dan sebelum Direktorat (4 Sdir) sesuai urutan organisasi yang diminta.
      */
     public static function prioritasKategori(): array
     {
         return [
             self::KATEGORI_ADMIN => 1,
             self::KATEGORI_PIMPINAN => 2,
-            self::KATEGORI_DIREKTORAT => 3,
-            self::KATEGORI_MANDIRI => 4,
+            self::KATEGORI_MANDIRI => 3,
+            self::KATEGORI_DIREKTORAT => 4,
             self::KATEGORI_SATLAK => 5,
         ];
     }
