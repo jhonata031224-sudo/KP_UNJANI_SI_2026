@@ -2408,7 +2408,7 @@
               <tbody>
                 @forelse($rekapLaporanSatuan as $s)
                 <tr data-filter-value="{{ $s->kategori }}" data-search-value="{{ strtolower($s->nama.' '.$s->kode) }}">
-                  <td>{{ $s->nama }} <span class="badge">{{ $s->kode }}</span></td>
+                  <td>{{ $s->nama }}</td>
                   <td style="text-align:center;">{{ $s->total_laporan }}</td>
                   <td style="text-align:center;"><span class="badge-status ok">{{ $s->laporan_disetujui }}</span></td>
                   <td style="text-align:center;"><span class="badge-status bad">{{ $s->laporan_ditolak }}</span></td>
