@@ -1784,7 +1784,6 @@
 
             <div class="dl-foot">
               <p>Data ditampilkan langsung dari database sistem.</p>
-              <a class="btn btn-sm" href="{{ route('admin.laporan.cetak', 'pengguna') }}" target="_blank">Cetak / PDF</a>
             </div>
           </div>
 
@@ -1835,7 +1834,6 @@
 
             <div class="dl-foot">
               <p>Data ditampilkan langsung dari database sistem.</p>
-              <a class="btn btn-sm" href="{{ route('admin.laporan.cetak', 'aktivitas') }}" target="_blank">Cetak / PDF</a>
             </div>
           </div>
         </div>
