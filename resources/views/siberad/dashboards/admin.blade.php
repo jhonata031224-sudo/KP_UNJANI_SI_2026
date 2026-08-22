@@ -1485,25 +1485,24 @@
         <div class="panel">
           <div class="panel-head"><div><h2>Log Aktivitas</h2><p>Rekam jejak login, logout, dan seluruh aksi kelola sistem oleh Admin.</p></div></div>
 
-          <form method="GET" action="{{ route('dashboard') }}" class="log-filter-row" id="logFilterForm">
-            <div class="log-filter-field">
-              <label for="logDariInput">Dari</label>
-              <input type="date" id="logDariInput" class="table-filter" name="log_dari" value="{{ $logDari->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}">
-            </div>
-            <div class="log-filter-field">
-              <label for="logSampaiInput">Sampai</label>
-              <input type="date" id="logSampaiInput" class="table-filter" name="log_sampai" value="{{ $logSampai->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}">
-            </div>
-            <button type="button" id="logFilterReset" class="log-filter-reset" title="Reset ke rentang default">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
-            </button>
-          </form>
-
-          <div class="table-toolbar">
-            <div class="table-search-wrap">
+          <div class="dl-search-row">
+            <div class="table-search-wrap" style="max-width:280px;">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
               <input type="text" class="table-search" data-table-search="tblLogAktivitas" placeholder="Cari pengguna atau aksi...">
             </div>
+            <form method="GET" action="{{ route('dashboard') }}" id="logFilterForm" style="display:contents;">
+              <div class="dl-date-filter">
+                <label for="logDariInput">Dari</label>
+                <input type="date" id="logDariInput" class="table-filter" name="log_dari" value="{{ $logDari->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}">
+              </div>
+              <div class="dl-date-filter">
+                <label for="logSampaiInput">Sampai</label>
+                <input type="date" id="logSampaiInput" class="table-filter" name="log_sampai" value="{{ $logSampai->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}">
+              </div>
+              <button type="button" id="logFilterReset" class="dl-filter-reset" title="Reset ke rentang default">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+              </button>
+            </form>
             <span class="table-filter-count" data-table-count="tblLogAktivitas"></span>
           </div>
           <div class="tbl-wrap" data-row-limit="10">
