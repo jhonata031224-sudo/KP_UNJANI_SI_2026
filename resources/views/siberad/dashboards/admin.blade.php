@@ -999,7 +999,7 @@
 
         <div class="panel">
           <div class="panel-head">
-            <div><h2>Kelola Pengguna</h2><p>Seluruh akun yang terdaftar, satu akun per satuan. Klik "Ubah" untuk mengedit satuan/jabatan/password.</p></div>
+            <div><h2>Daftar Pengguna</h2><p>Seluruh akun yang terdaftar, satu akun per satuan. Klik "Ubah" untuk mengedit satuan/jabatan/password.</p></div>
             <button class="btn btn-primary" type="button" id="tambahPenggunaOpen">Tambah Pengguna</button>
           </div>
           <div class="table-toolbar">
@@ -1469,7 +1469,7 @@
       {{-- ===== LOG AKTIVITAS ===== --}}
       <section class="tab-panel" data-tab-panel="log-aktivitas">
         <div class="panel">
-          <div class="panel-head"><div><h2>Monitoring Aktivitas Sistem</h2><p>Rekam jejak login, logout, dan seluruh aksi kelola sistem oleh Admin.</p></div></div>
+          <div class="panel-head"><div><h2>Log Aktivitas</h2><p>Rekam jejak login, logout, dan seluruh aksi kelola sistem oleh Admin.</p></div></div>
 
           <form method="GET" action="{{ route('dashboard') }}" class="log-filter-row" id="logFilterForm">
             <div class="log-filter-field">
@@ -2428,7 +2428,7 @@
       <section class="tab-panel" data-tab-panel="sesi-aktif">
 
         <div class="panel">
-          <div class="panel-head"><div><h2>Sesi Login Aktif</h2><p>Pantau perangkat/browser yang sedang login, dan paksa logout kalau perlu.</p></div></div>
+          <div class="panel-head"><div><h2>Sesi Aktif</h2><p>Pantau perangkat/browser yang sedang login, dan paksa logout kalau perlu.</p></div></div>
           <div class="tbl-wrap">
             <table class="dtbl">
               <thead><tr><th>Pengguna</th><th>IP Address</th><th>Perangkat / Browser</th><th>Terakhir Aktif</th><th>Aksi</th></tr></thead>
