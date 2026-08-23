@@ -380,7 +380,7 @@
   .login-submit{border:none;cursor:pointer;justify-content:center;margin-top:4px;width:100%;}
   .captcha-row{display:flex;align-items:center;gap:6px;margin-bottom:12px;}
   .captcha-img{
-    height:56px;flex:1;min-width:0;object-fit:cover;
+    height:56px;flex:1;min-width:0;object-fit:contain;background:#0a1a12;
     border-radius:8px;border:1px solid var(--border);
   }
   .captcha-row .captcha-input{
