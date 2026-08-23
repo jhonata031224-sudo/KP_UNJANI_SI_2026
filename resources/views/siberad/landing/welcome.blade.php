@@ -855,7 +855,7 @@
           </div>
           <div class="stat">
             <div class="stat-num">100%</div>
-            <div class="stat-label">Data Terpusat &amp; Terverifikasi</div>
+            <div class="stat-label">Transparan &amp; Real-Time</div>
           </div>
           <div class="stat">
             <div class="stat-num">1</div>
