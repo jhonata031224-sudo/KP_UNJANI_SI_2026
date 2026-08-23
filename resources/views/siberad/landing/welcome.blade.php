@@ -851,7 +851,7 @@
           </div>
           <div class="stat">
             <div class="stat-num">24/7</div>
-            <div class="stat-label">Monitoring &amp; Pelaporan</div>
+            <div class="stat-label">Layanan Aktif</div>
           </div>
           <div class="stat">
             <div class="stat-num">100%</div>
