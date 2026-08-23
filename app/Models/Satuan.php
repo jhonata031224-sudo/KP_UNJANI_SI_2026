@@ -168,7 +168,21 @@ class Satuan extends Model
             'SATLAKDAK' => 2,
             'SATLAKSISOS' => 3,
             'SATLAKDUKTEK' => 4,
-        ];
+        ] + self::urutanKodamKasansi();
+    }
+
+    /**
+     * Urutan Kodam 1 s.d. Kodam 23 (kategori Kasansi) supaya tampil
+     * berurutan sesuai nomornya, bukan acak.
+     */
+    private static function urutanKodamKasansi(): array
+    {
+        $urutan = [];
+        for ($i = 1; $i <= 23; $i++) {
+            $urutan['KODAM'.$i] = $i;
+        }
+
+        return $urutan;
     }
 
     /**
