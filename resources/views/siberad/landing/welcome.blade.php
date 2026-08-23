@@ -859,7 +859,7 @@
           </div>
           <div class="stat">
             <div class="stat-num">1</div>
-            <div class="stat-label">Sistem Untuk Seluruh Satuan</div>
+            <div class="stat-label">Sistem Pelaporan Digital</div>
           </div>
         </div>
       </div>
