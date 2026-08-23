@@ -224,7 +224,7 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
       var trigger=document.createElement('button');
       trigger.type='button';
       trigger.className='btn btn-sm backup-upload-trigger';
-      trigger.textContent='Upload Backup';
+      trigger.textContent='Unggah File Cadangan';
       actions.appendChild(trigger);
       trigger.addEventListener('click',function(){
         modal.classList.add('open');
