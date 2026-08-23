@@ -148,7 +148,7 @@
   .sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);backdrop-filter:blur(12px);border-right:1px solid var(--border-soft);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;transition:transform .25s ease,background-color .25s ease,border-color .25s ease;z-index:100010;}
   .side-brand{height:82px;padding:0 22px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;gap:13px;box-sizing:border-box;background:var(--surface);flex-shrink:0;position:relative;}
   .side-brand img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:1px solid var(--border-strong);box-shadow:0 0 0 3px rgba(217,146,11,.08);flex-shrink:0;}
-  .side-brand .logo{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:.03em;text-transform:uppercase;}
+  .side-brand .logo{font-family:var(--display);font-weight:700;font-size:15px;line-height:1.2;letter-spacing:.015em;text-transform:uppercase;flex:1;min-width:0;}
   .side-brand .logo span{color:var(--gold-bright);}
   .side-unit{padding:16px 22px;border-bottom:1px solid var(--border-soft);}
   .side-unit .eyebrow{margin-bottom:6px;}
