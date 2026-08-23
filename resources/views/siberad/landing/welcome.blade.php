@@ -378,13 +378,16 @@
     box-shadow:0 0 0 3px rgba(224,122,114,.15);
   }
   .login-submit{border:none;cursor:pointer;justify-content:center;margin-top:4px;width:100%;}
-  .captcha-row{display:flex;align-items:center;gap:6px;margin-bottom:12px;}
+  .captcha-row{
+    display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr);
+    align-items:center;gap:6px;margin-bottom:12px;
+  }
   .captcha-img{
-    height:56px;flex:1;min-width:0;object-fit:contain;background:#0a1a12;
+    width:100%;height:56px;object-fit:contain;background:#0a1a12;
     border-radius:8px;border:1px solid var(--border);
   }
   .captcha-row .captcha-input{
-    box-sizing:border-box;height:56px;width:auto;flex:1;min-width:0;margin-bottom:0;
+    box-sizing:border-box;height:56px;width:100%;margin-bottom:0;
     padding:0 14px;font-size:12px;
   }
   .captcha-refresh{
