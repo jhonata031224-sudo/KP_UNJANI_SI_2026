@@ -619,7 +619,7 @@
         <div class="side-subnav"><div>
           <span class="side-subnav-label">Kelola Pengguna</span>
           <a href="#" class="side-sub-link" data-tab-link="pengguna" title="Daftar Pengguna"><span class="sub-dot"></span>Daftar Pengguna</a>
-          <a href="#" class="side-sub-link" data-tab-link="reset-password" title="Permintaan Reset Password"><span class="sub-dot"></span>Permintaan Reset Password</a>
+          <a href="#" class="side-sub-link" data-tab-link="reset-password" title="Permintaan Ganti Password"><span class="sub-dot"></span>Permintaan Ganti Password</a>
         </div></div>
       </div>
 
@@ -960,7 +960,7 @@
         <div class="dash-two-col">
           <div class="panel activity-panel">
             <div class="panel-head">
-              <div><h3>Permintaan Reset Password</h3><p>5 permintaan terbaru.</p></div>
+              <div><h3>Permintaan Ganti Password</h3><p>5 permintaan terbaru.</p></div>
               <a href="#" class="btn btn-ghost btn-sm" data-tab-link="reset-password">Lihat Semua</a>
             </div>
             <ul class="activity-feed">
@@ -2618,7 +2618,7 @@
       {{-- ===== PERMINTAAN RESET PASSWORD ===== --}}
       <section class="tab-panel" data-tab-panel="reset-password">
         <div class="panel">
-          <div class="panel-head"><div><h2>Permintaan Reset Password</h2><p>Permintaan ganti kata sandi yang dikirim pengguna lewat menu "Pengaturan Akun".</p></div></div>
+          <div class="panel-head"><div><h2>Permintaan Ganti Password</h2><p>Permintaan ganti kata sandi yang dikirim pengguna lewat menu "Pengaturan Akun".</p></div></div>
           <div class="table-toolbar">
             <div class="table-search-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
