@@ -33,6 +33,17 @@
   .chart-mini .chart-legend-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
   @media(max-width:980px){.chart-box-grid{grid-template-columns:1fr;}.chart-mini .chart-wrap{height:198px;}}
 
+  /* ===== toggle "Lihat Detail per Satuan" di header chart Total Laporan
+     per Satuan -- tabel Detail per Satuan disembunyikan default supaya
+     chart-nya sendiri punya ruang lebih leluasa, baru muncul (dengan
+     scrollbar sendiri di dalam) begitu tombol ini diklik ===== */
+  .chart-mini-head-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .chart-mini-head-row h4{margin:0;}
+  .btn-toggle-detail{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;border:1px solid var(--border-soft);background:var(--panel);font-family:inherit;font-size:11px;font-weight:700;color:var(--text-muted);cursor:pointer;white-space:nowrap;transition:border-color .15s ease,color .15s ease;}
+  .btn-toggle-detail:hover{border-color:var(--gold-bright);color:var(--text);}
+  .btn-toggle-detail .chevron{transition:transform .2s ease;flex:0 0 auto;}
+  .btn-toggle-detail[aria-expanded="true"] .chevron{transform:rotate(180deg);}
+
   /* ===== toolbar cari & filter tabel =====
      Disamakan gayanya dengan .rpt-filter-bar/.danpus-log-search (Pimpinan):
      tinggi 38px, radius 9px, ikon di posisi yang sama, dan teks jumlah hasil
@@ -2677,10 +2688,16 @@
         <div class="chart-box">
           <div class="chart-mini">
             <div class="chart-mini-head">
-              <h4>Total Laporan per Satuan</h4>
+              <div class="chart-mini-head-row">
+                <h4>Total Laporan per Satuan</h4>
+                <button type="button" class="btn-toggle-detail" id="btnToggleDetailSatuan" aria-expanded="false" aria-controls="panelDetailPerSatuan">
+                  <span id="btnToggleDetailSatuanLabel">Lihat Detail per Satuan</span>
+                  <svg class="chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+              </div>
               <p>Semua satuan pengirim laporan (Pok Pel, Direktorat, Satlak, dan 23 satuan Kasansi) tersusun dari atas ke bawah per kategori -- warna batang menunjukkan kategorinya. Makin panjang batang, makin banyak laporan yang sudah dikirim satuan itu. Scroll ke bawah untuk lihat semua satuan.</p>
             </div>
-            <div class="chart-wrap" style="overflow-y:auto;overflow-x:hidden;max-height:520px;">
+            <div class="chart-wrap" style="overflow-y:auto;overflow-x:hidden;max-height:640px;">
               <div id="chartRekapLaporanWrap" style="position:relative;width:100%;">
                 <canvas id="chartRekapLaporan"></canvas>
               </div>
@@ -2689,7 +2706,7 @@
           </div>
         </div>
 
-        <div class="panel">
+        <div class="panel" id="panelDetailPerSatuan" hidden>
           <div class="panel-head"><div><h3>Detail per Satuan</h3></div></div>
           <div class="table-toolbar">
             <div class="table-search-wrap">
@@ -2705,7 +2722,7 @@
             </select>
             <span class="table-filter-count" data-table-count="tblRekapSatuan"></span>
           </div>
-          <div class="tbl-wrap">
+          <div class="tbl-wrap tbl-scroll" style="max-height:420px;">
             <table class="dtbl" id="tblRekapSatuan">
               <colgroup><col style="width:30%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"></colgroup>
               <thead><tr><th>Satuan</th><th style="text-align:center;">Total Laporan</th><th style="text-align:center;">Disetujui</th><th style="text-align:center;">Ditolak</th><th style="text-align:center;">Terlambat</th><th style="text-align:center;">Dibatalkan</th></tr></thead>
@@ -3338,6 +3355,25 @@
         });
       }
     }
+  })();
+  </script>
+
+  <script>
+  (function () {
+    // Toggle tabel "Detail per Satuan" -- disembunyikan default supaya
+    // chart "Total Laporan per Satuan" di atasnya punya ruang lebih lega,
+    // baru muncul (dengan scrollbar sendiri) begitu tombol ini diklik.
+    var btn = document.getElementById('btnToggleDetailSatuan');
+    var panel = document.getElementById('panelDetailPerSatuan');
+    var label = document.getElementById('btnToggleDetailSatuanLabel');
+    if (!btn || !panel) return;
+    btn.addEventListener('click', function () {
+      var terbuka = panel.hidden;
+      panel.hidden = !terbuka;
+      btn.setAttribute('aria-expanded', terbuka ? 'true' : 'false');
+      if (label) label.textContent = terbuka ? 'Sembunyikan Detail per Satuan' : 'Lihat Detail per Satuan';
+      if (terbuka) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
   })();
   </script>
 
