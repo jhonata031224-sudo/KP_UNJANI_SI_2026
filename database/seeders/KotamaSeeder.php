@@ -14,31 +14,32 @@ class KotamaSeeder extends Seeder
      * berkategori Kotama. Data resmi -- kode & username dibuat dari
      * nama/julukan wilayah masing-masing (bukan penomoran generik
      * dam1, dam2, dst) supaya lebih natural secara teknis.
+     * Diurutkan GEOGRAFIS dari Barat ke Timur (Aceh -> Papua).
      * Sama seperti satuan lain, satu satuan = satu akun login.
      */
     public function run(): void
     {
         $kotamas = [
-            ['username' => 'bukitbarisan',    'nama' => 'Kodam I/Bukit Barisan'],
-            ['username' => 'sriwijaya',       'nama' => 'Kodam II/Sriwijaya'],
-            ['username' => 'siliwangi',       'nama' => 'Kodam III/Siliwangi'],
-            ['username' => 'diponegoro',      'nama' => 'Kodam IV/Diponegoro'],
-            ['username' => 'brawijaya',       'nama' => 'Kodam V/Brawijaya'],
-            ['username' => 'mulawarman',      'nama' => 'Kodam VI/Mulawarman'],
-            ['username' => 'udayana',         'nama' => 'Kodam IX/Udayana'],
-            ['username' => 'tanjungpura',     'nama' => 'Kodam XII/Tanjungpura'],
-            ['username' => 'merdeka',         'nama' => 'Kodam XIII/Merdeka'],
-            ['username' => 'hasanuddin',      'nama' => 'Kodam XIV/Hasanuddin'],
-            ['username' => 'pattimura',       'nama' => 'Kodam XV/Pattimura'],
-            ['username' => 'cenderawasih',    'nama' => 'Kodam XVII/Cenderawasih'],
-            ['username' => 'kasuari',         'nama' => 'Kodam XVIII/Kasuari'],
-            ['username' => 'jaya',            'nama' => 'Kodam Jayakarta'],
             ['username' => 'iskandarmuda',    'nama' => 'Kodam Iskandar Muda'],
+            ['username' => 'bukitbarisan',    'nama' => 'Kodam I/Bukit Barisan'],
             ['username' => 'tuankutambusai',  'nama' => 'Kodam XIX/Tuanku Tambusai'],
             ['username' => 'imambonjol',      'nama' => 'Kodam XX/Tuanku Imam Bonjol'],
+            ['username' => 'sriwijaya',       'nama' => 'Kodam II/Sriwijaya'],
             ['username' => 'radininten',      'nama' => 'Kodam XXI/Radin Inten'],
+            ['username' => 'siliwangi',       'nama' => 'Kodam III/Siliwangi'],
+            ['username' => 'jaya',            'nama' => 'Kodam Jayakarta'],
+            ['username' => 'diponegoro',      'nama' => 'Kodam IV/Diponegoro'],
+            ['username' => 'brawijaya',       'nama' => 'Kodam V/Brawijaya'],
+            ['username' => 'udayana',         'nama' => 'Kodam IX/Udayana'],
+            ['username' => 'tanjungpura',     'nama' => 'Kodam XII/Tanjungpura'],
             ['username' => 'tambunbungai',    'nama' => 'Kodam XXII/Tambun Bungai'],
+            ['username' => 'mulawarman',      'nama' => 'Kodam VI/Mulawarman'],
             ['username' => 'palakawira',      'nama' => 'Kodam XXIII/Palaka Wira'],
+            ['username' => 'hasanuddin',      'nama' => 'Kodam XIV/Hasanuddin'],
+            ['username' => 'merdeka',         'nama' => 'Kodam XIII/Merdeka'],
+            ['username' => 'pattimura',       'nama' => 'Kodam XV/Pattimura'],
+            ['username' => 'kasuari',         'nama' => 'Kodam XVIII/Kasuari'],
+            ['username' => 'cenderawasih',    'nama' => 'Kodam XVII/Cenderawasih'],
             ['username' => 'mandalatrikora',  'nama' => 'Kodam XXIV/Mandala Trikora'],
         ];
 

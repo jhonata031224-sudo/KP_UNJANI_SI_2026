@@ -172,8 +172,9 @@ class Satuan extends Model
     }
 
     /**
-     * Urutan 21 Kodam aktif (kategori Kotama) supaya tampil berurutan sesuai
-     * nomor Kodam resmi (I, II, III, ... XXIV), bukan alfabet kode/nama.
+     * Urutan 21 Kodam aktif (kategori Kotama) supaya tampil berurutan
+     * GEOGRAFIS dari Barat ke Timur (Aceh -> Papua) sesuai KODE_KOTAMA,
+     * bukan alfabet kode/nama maupun nomor Kodam.
      */
     private static function urutanKotama(): array
     {
@@ -269,17 +270,20 @@ class Satuan extends Model
     public const KODE_POKPEL = ['POKANALIS', 'URDAL'];
 
     /**
-     * Kode 21 Kodam aktif (kategori Kotama), sesuai nomor Kodam resmi
-     * (I, II, III, IV, V, VI, IX, XII, XIII, XIV, XV, XVII, XVIII, Jayakarta,
-     * Iskandar Muda, XIX, XX, XXI, XXII, XXIII, XXIV). Kode dibuat dari
-     * nama/julukan wilayah (bukan penomoran generik dam1, dam2, dst).
+     * Kode 21 Kodam aktif (kategori Kotama), diurutkan GEOGRAFIS dari Barat
+     * ke Timur (Aceh -> Papua): Iskandar Muda, Bukit Barisan, Tuanku
+     * Tambusai, Tuanku Imam Bonjol, Sriwijaya, Radin Inten, Siliwangi,
+     * Jayakarta, Diponegoro, Brawijaya, Udayana, Tanjungpura, Tambun
+     * Bungai, Mulawarman, Palaka Wira, Hasanuddin, Merdeka, Pattimura,
+     * Kasuari, Cenderawasih, Mandala Trikora. Kode dibuat dari nama/julukan
+     * wilayah (bukan penomoran generik dam1, dam2, dst).
      */
     public const KODE_KOTAMA = [
-        'BUKITBARISAN', 'SRIWIJAYA', 'SILIWANGI', 'DIPONEGORO', 'BRAWIJAYA',
-        'MULAWARMAN', 'UDAYANA', 'TANJUNGPURA', 'MERDEKA', 'HASANUDDIN',
-        'PATTIMURA', 'CENDERAWASIH', 'KASUARI', 'JAYA', 'ISKANDARMUDA',
-        'TUANKUTAMBUSAI', 'IMAMBONJOL', 'RADININTEN', 'TAMBUNBUNGAI',
-        'PALAKAWIRA', 'MANDALATRIKORA',
+        'ISKANDARMUDA', 'BUKITBARISAN', 'TUANKUTAMBUSAI', 'IMAMBONJOL',
+        'SRIWIJAYA', 'RADININTEN', 'SILIWANGI', 'JAYA', 'DIPONEGORO',
+        'BRAWIJAYA', 'UDAYANA', 'TANJUNGPURA', 'TAMBUNBUNGAI', 'MULAWARMAN',
+        'PALAKAWIRA', 'HASANUDDIN', 'MERDEKA', 'PATTIMURA', 'KASUARI',
+        'CENDERAWASIH', 'MANDALATRIKORA',
     ];
 
     /**
