@@ -185,13 +185,18 @@ class DashboardController
         };
 
         // Urutan: Urdal -> Pok Analis -> 4 Sdir (Binfung, Binum, Bindiklat,
-        // Binmat) -> 4 Satlak (Kal, Dak, Siber Sos, Dukteksi), sesuai urutan
-        // organisasi yang diminta -- samain sama Satuan::kunciUrutSatuan().
-        $kodeSatuanPelaksanaUrut = [
+        // Binmat) -> 4 Satlak (Kal, Dak, Siber Sos, Dukteksi) -> 23 Kasansi
+        // (Kodam 1-23), sesuai urutan organisasi -- samain sama
+        // Satuan::kunciUrutSatuan(). 23 Kasansi ditambahkan di akhir supaya
+        // monitoring Pimpinan dan rekap laporan ikut menampilkan data mereka,
+        // konsisten dengan $rekapLaporanSatuan yang sudah include Kasansi
+        // lewat whereNotIn(['admin','pimpinan']) di bagian atas.
+        $kodeKasansi = array_map(fn ($i) => 'KODAM'.$i, range(1, 23));
+        $kodeSatuanPelaksanaUrut = array_merge([
             'URDAL', 'POKANALIS',
             'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT',
             'SATLAKKAL', 'SATLAKDAK', 'SATLAKSISOS', 'SATLAKDUKTEK',
-        ];
+        ], $kodeKasansi);
         $permintaanLaporan = $modePimpinan
             ? PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan','laporans'])
                 ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS','WADAN']))

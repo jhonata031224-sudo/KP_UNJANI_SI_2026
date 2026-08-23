@@ -2678,10 +2678,12 @@
           <div class="chart-mini">
             <div class="chart-mini-head">
               <h4>Total Laporan per Satuan</h4>
-              <p>Perbandingan volume laporan yang sudah dikirim tiap satuan pelaksana.</p>
+              <p>Perbandingan volume laporan yang sudah dikirim tiap satuan pelaksana (termasuk 23 satuan Kasansi).</p>
             </div>
-            <div class="chart-wrap" style="height:260px;">
-              <canvas id="chartRekapLaporan"></canvas>
+            <div class="chart-wrap" style="overflow-x:auto;overflow-y:hidden;">
+              <div id="chartRekapLaporanWrap" style="height:280px;min-width:100%;">
+                <canvas id="chartRekapLaporan"></canvas>
+              </div>
             </div>
           </div>
         </div>
@@ -2717,7 +2719,7 @@
                   <td style="text-align:center;"><span class="badge-status cancelled">{{ $s->laporan_dibatalkan }}</span></td>
                 </tr>
                 @empty
-                <tr class="table-empty-row"><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada data Satlak</div></div></td></tr>
+                <tr class="table-empty-row"><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada data satuan</div></div></td></tr>
                 @endforelse
               </tbody>
             </table>
@@ -3243,33 +3245,59 @@
       });
     }
 
-    // ===== Grafik 4: Rekap Total Laporan per Satlak =====
+    // ===== Grafik 4: Rekap Total Laporan per Satuan (termasuk 23 Kasansi) =====
     var rekapSatuan = @json($rekapLaporanSatuan);
     var elRekap = document.getElementById('chartRekapLaporan');
     if (elRekap) {
+      // Dengan 23 satuan Kasansi + satuan lain (~10-13), total bisa 35+ bar.
+      // Lebar per bar dibuat dinamis (min 36px) supaya tidak cramped, dan
+      // canvas diperlebar otomatis kalau melebihi container -- parent wrap
+      // di-overflow-x:auto agar bisa di-scroll horizontal.
+      var BAR_WIDTH_PX = 40;
+      var minWidth = Math.max(rekapSatuan.length * BAR_WIDTH_PX, 400);
+      var wrapEl = document.getElementById('chartRekapLaporanWrap');
+      if (wrapEl) wrapEl.style.minWidth = minWidth + 'px';
+
       var rekapCtx = elRekap.getContext('2d');
-      var rekapGradient = rekapCtx.createLinearGradient(0, 0, 0, elRekap.height || 260);
+      var rekapGradient = rekapCtx.createLinearGradient(0, 0, 0, 280);
       rekapGradient.addColorStop(0, '#6366f1');
       rekapGradient.addColorStop(1, '#3b82f6');
       new Chart(elRekap, {
         type: 'bar',
         data: {
-          labels: rekapSatuan.map(function (s) { return (s.nama || s.kode).split('(')[0].trim(); }),
+          labels: rekapSatuan.map(function (s) {
+            // Potong nama panjang supaya label x-axis tetap terbaca:
+            // tampilkan kode satuan kalau nama > 18 karakter.
+            var nama = (s.nama || s.kode).split('(')[0].trim();
+            return nama.length > 18 ? (s.kode || nama) : nama;
+          }),
           datasets: [{
             label: 'Total Laporan',
             data: rekapSatuan.map(function (s) { return s.total_laporan; }),
             backgroundColor: rekapGradient,
             hoverBackgroundColor: '#4f46e5',
-            borderRadius: 6,
-            maxBarThickness: 46
+            borderRadius: 4,
+            maxBarThickness: 34
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                // Tampilkan nama lengkap satuan di tooltip meski label dipotong.
+                title: function (items) {
+                  var idx = items[0] && items[0].dataIndex;
+                  var s = rekapSatuan[idx];
+                  return s ? (s.nama || s.kode) : '';
+                }
+              }
+            }
+          },
           scales: {
-            x: { grid: { display: false } },
+            x: { grid: { display: false }, ticks: { maxRotation: 55, minRotation: 35, font: { size: 9.5 } } },
             y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(255,255,255,.06)' } }
           }
         }

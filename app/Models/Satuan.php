@@ -291,6 +291,12 @@ class Satuan extends Model
             return ['DANPUS'];
         }
 
+        // 23 satuan Kasansi (Kodam 1-23) lapor langsung ke DANPUS,
+        // sama seperti satuan pembinaan dan Pok Pel.
+        if (preg_match('/^KODAM([1-9]|1\d|2[0-3])$/', $kodeAsal)) {
+            return ['DANPUS'];
+        }
+
         return null;
     }
 }
