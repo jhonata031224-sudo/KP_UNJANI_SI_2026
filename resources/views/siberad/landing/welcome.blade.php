@@ -549,13 +549,12 @@
   .feature-grid{
     display:grid;grid-template-columns:repeat(auto-fit, minmax(230px, 270px));gap:18px;justify-content:center;
   }
-  .feature-card{padding:28px 24px;min-height:250px;display:flex;flex-direction:column;transition:border-color .25s ease, transform .25s ease, box-shadow .25s ease;}
+  .feature-card{padding:28px 24px;min-height:250px;display:flex;flex-direction:column;align-items:center;text-align:center;transition:border-color .25s ease, transform .25s ease, box-shadow .25s ease;}
   .feature-card:hover{border-color:var(--border-strong);transform:translateY(-4px);box-shadow:0 16px 40px -14px rgba(0,0,0,.5);}
   .feature-icon{
     width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;
     background:var(--gold-dim);border:1px solid var(--border);margin-bottom:16px;color:var(--gold-bright);
   }
-  .feature-code{font-family:var(--mono);font-size:10.5px;color:var(--text-dim);letter-spacing:.12em;}
   .feature-card h4{font-family:var(--display);font-size:20px;margin:10px 0 10px;font-weight:700;letter-spacing:.01em;}
   .feature-card p{color:var(--text-muted);font-size:13.5px;line-height:1.65;}
   .back-to-top-wrap{display:flex;justify-content:center;margin-top:44px;}
@@ -886,7 +885,6 @@
           @foreach (($pengaturan->fitur ?? []) as $i => $fitur)
             <div class="feature-card hud-panel">
               <div class="feature-icon">{!! $fiturIcons[$i] ?? $fiturIcons[0] !!}</div>
-              <div class="feature-code">KEUNGGULAN / {{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</div>
               <h4>{{ $fitur['judul'] }}</h4>
               <p>{{ $fitur['deskripsi'] }}</p>
             </div>
