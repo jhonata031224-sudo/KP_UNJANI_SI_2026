@@ -328,7 +328,7 @@
   .login-close svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;}
   .login-crest{width:84px;height:84px;border-radius:50%;overflow:hidden;border:1px solid var(--border-strong);margin:0 auto 16px;}
   .login-crest img{width:100%;height:100%;object-fit:cover;}
-  .login-title{font-family:var(--display);font-size:26px;font-weight:700;margin-top:6px;letter-spacing:.01em;}
+  .login-title{font-family:var(--display);font-size:26px;font-weight:700;margin-top:6px;letter-spacing:.01em;text-align:center;}
   .login-sub{color:var(--text-muted);font-size:13px;margin-top:8px;line-height:1.6;}
   .login-form{display:flex;flex-direction:column;margin-top:24px;}
   .login-label{
@@ -766,7 +766,7 @@
               <path d="M12 2.5v2.4M12 19.1v2.4M4.4 4.4l1.7 1.7M17.9 17.9l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.4 19.6l1.7-1.7M17.9 6.1l1.7-1.7"></path>
             </svg>
           </button>
-          <a class="btn btn-primary btn-nav" href="#login">Login</a>
+          <a class="btn btn-primary btn-nav" href="#login">Masuk</a>
         </div>
       </nav>
     </div>
@@ -777,7 +777,7 @@
     <div class="login-card hud-panel" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
       <button class="login-close" id="loginClose" type="button" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
       <div class="login-crest"><img src="{{ asset('images/logo-pussiberad.jpg') }}" alt="Lambang Pussiberad"></div>
-      <h3 id="loginTitle" class="login-title">Login Sistem</h3>
+      <h3 id="loginTitle" class="login-title">Masuk</h3>
       <p class="login-sub">Masuk menggunakan akun personel yang terdaftar.</p>
       <form class="login-form" id="loginForm" method="POST" action="{{ route('login') }}" autocomplete="off">
         @csrf
