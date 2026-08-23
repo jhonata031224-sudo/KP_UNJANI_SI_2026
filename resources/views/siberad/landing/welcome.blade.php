@@ -847,7 +847,7 @@
         <div class="stats-grid" data-reveal>
           <div class="stat">
             <div class="stat-num">12</div>
-            <div class="stat-label">Pengguna Terpantau</div>
+            <div class="stat-label">Akun Terdaftar</div>
           </div>
           <div class="stat">
             <div class="stat-num">24/7</div>
