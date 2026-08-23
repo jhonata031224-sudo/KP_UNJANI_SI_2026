@@ -1801,7 +1801,7 @@
           <div class="panel-head"><div><h3>Buat Cadangan Baru</h3><p>Untuk koneksi SQLite: salin file database. Untuk MySQL: jalankan mysqldump.</p></div></div>
           <form method="POST" action="{{ route('admin.backup.store') }}" style="padding:18px 22px;">
             @csrf
-            <button class="btn btn-primary" type="submit">+ Buat Backup Sekarang</button>
+            <button class="btn btn-primary" type="submit">+ Buat Cadangan</button>
           </form>
         </div>
 
@@ -1809,7 +1809,7 @@
           <form method="POST" action="{{ route('admin.backup.upload') }}" enctype="multipart/form-data">
             @csrf
             <input type="file" name="backup_file" accept=".sql,.sqlite" required>
-            <button class="btn btn-primary" type="submit">Upload</button>
+            <button class="btn btn-primary" type="submit">Unggah File Cadangan</button>
           </form>
         </div>
 
