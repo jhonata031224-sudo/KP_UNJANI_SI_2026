@@ -3301,8 +3301,35 @@
 
       var warnaBar = rekapSatuan.map(function (s) { return kategoriWarna[s.kategori] || '#94a3b8'; });
 
+      // Kalibrasi sumbu X: 1 laporan = 3mm panjang batang, berapa pun lebar
+      // layar. Angka maksimal sumbu X dihitung otomatis dari lebar area plot
+      // (bukan angka statis) supaya rasio "3mm per laporan" tetap akurat di
+      // berbagai ukuran layar/kontainer.
+      var MM_PER_LAPORAN = 3;
+      var PX_PER_MM = 96 / 25.4;
+      var pxPerLaporan = MM_PER_LAPORAN * PX_PER_MM;
+      var pluginKalibrasiSumbuX = {
+        id: 'kalibrasiSumbuXRekap',
+        afterLayout: function (chart) {
+          var lebarPlot = chart.chartArea && chart.chartArea.width;
+          if (!lebarPlot || lebarPlot <= 0) return;
+          var maxBaru = Math.max(1, Math.round(lebarPlot / pxPerLaporan));
+          if (chart.options.scales.x.max !== maxBaru) {
+            chart.options.scales.x.max = maxBaru;
+            chart._perluUpdateSumbuX = true;
+          }
+        },
+        afterRender: function (chart) {
+          if (chart._perluUpdateSumbuX) {
+            chart._perluUpdateSumbuX = false;
+            chart.update('none');
+          }
+        }
+      };
+
       var chartRekapInstance = new Chart(elRekap, {
         type: 'bar',
+        plugins: [pluginKalibrasiSumbuX],
         data: {
           labels: rekapSatuan.map(function (s) {
             // Horizontal punya lebih banyak ruang dari vertikal, tapi nama
@@ -3343,7 +3370,7 @@
             }
           },
           scales: {
-            x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(255,255,255,.06)' } },
+            x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(255,255,255,.06)' } /* max diisi otomatis oleh pluginKalibrasiSumbuX */ },
             y: { grid: { display: false }, ticks: { font: { size: 10 } } }
           }
         }
