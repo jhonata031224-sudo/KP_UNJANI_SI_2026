@@ -556,7 +556,7 @@
     background:var(--gold-dim);border:1px solid var(--border);margin-bottom:16px;color:var(--gold-bright);
   }
   .feature-card h4{font-family:var(--display);font-size:20px;margin:10px 0 10px;font-weight:700;letter-spacing:.01em;}
-  .feature-card p{color:var(--text-muted);font-size:13.5px;line-height:1.65;}
+  .feature-card p{color:var(--text-muted);font-size:13.5px;line-height:1.65;text-align:left;align-self:stretch;}
   .back-to-top-wrap{display:flex;justify-content:center;margin-top:44px;}
   .btn-top{
     width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
