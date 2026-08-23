@@ -871,7 +871,7 @@
         <div class="section-head center" data-reveal>
           <div class="eyebrow">Keunggulan</div>
           <h3>Kenapa Memakai Sistem Ini</h3>
-          <p>Dirancang untuk menyederhanakan alur pelaporan harian, dari input di lapangan hingga pengambilan keputusan.</p>
+          <p>Membantu proses pelaporan dan persetujuan agar lebih tertata dan mudah dipantau.</p>
         </div>
         @php
           $fiturIcons = [

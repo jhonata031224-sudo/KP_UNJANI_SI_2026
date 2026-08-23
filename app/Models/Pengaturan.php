@@ -55,7 +55,7 @@ class Pengaturan extends Model
             'nav'=>[['label'=>'Beranda','url'=>'#tentang'],['label'=>'Fitur','url'=>'#fitur'],['label'=>'Tentang','url'=>'#tentang-pussiberad'],['label'=>'Kontak','url'=>'#tim']],
             'hero'=>['button_label'=>'Selengkapnya','button_url'=>'#fitur','crest_caption'=>'Pusat Siber Angkatan Darat','crest_motto'=>''],
             'stats'=>[['number'=>'12','label'=>'Akun Terdaftar'],['number'=>'24/7','label'=>'Layanan Aktif'],['number'=>'100%','label'=>'Transparan & Real-Time'],['number'=>'1','label'=>'Sistem Pelaporan Digital']],
-            'features_section'=>['eyebrow'=>'Keunggulan','title'=>'Kenapa Memakai Sistem Ini','description'=>'Dirancang untuk menyederhanakan alur pelaporan harian, dari input di lapangan hingga pengambilan keputusan.'],
+            'features_section'=>['eyebrow'=>'Keunggulan','title'=>'Kenapa Memakai Sistem Ini','description'=>'Membantu proses pelaporan dan persetujuan agar lebih tertata dan mudah dipantau.'],
             'about_section'=>['eyebrow'=>'Tentang','title'=>'Pussiberad'],
             'footer'=>['description'=>'Sistem Informasi Berbasis Elektronik Angkatan Darat, mendigitalisasi alur pelaporan seluruh Satuan Pelaksana Pussiberad.','copyright'=>'BRAHMASTRA WIRA · Pussiberad · TNI AD'],
         ];
