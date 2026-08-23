@@ -2678,13 +2678,14 @@
           <div class="chart-mini">
             <div class="chart-mini-head">
               <h4>Total Laporan per Satuan</h4>
-              <p>Perbandingan volume laporan yang sudah dikirim tiap satuan pelaksana (termasuk 23 satuan Kasansi).</p>
+              <p>Semua satuan pengirim laporan (Pok Pel, Direktorat, Satlak, dan 23 satuan Kasansi) tersusun dari atas ke bawah per kategori -- warna batang menunjukkan kategorinya. Makin panjang batang, makin banyak laporan yang sudah dikirim satuan itu. Scroll ke bawah untuk lihat semua satuan.</p>
             </div>
-            <div class="chart-wrap" style="overflow-x:auto;overflow-y:hidden;">
-              <div id="chartRekapLaporanWrap" style="height:280px;min-width:100%;">
+            <div class="chart-wrap" style="overflow-y:auto;overflow-x:hidden;max-height:520px;">
+              <div id="chartRekapLaporanWrap" style="position:relative;width:100%;">
                 <canvas id="chartRekapLaporan"></canvas>
               </div>
             </div>
+            <div class="chart-legend" id="chartRekapLaporanLegend"></div>
           </div>
         </div>
 
@@ -3246,62 +3247,96 @@
     }
 
     // ===== Grafik 4: Rekap Total Laporan per Satuan (termasuk 23 Kasansi) =====
+    // Horizontal bar (bukan vertikal) supaya dengan 35+ satuan, nama satuan
+    // tetap kebaca utuh tanpa dirotasi/dipotong -- yang discroll cukup
+    // sumbu vertikal (lebih wajar buat orang baru dibanding scroll ke
+    // samping). Tiap batang diwarnai sesuai kategori satuannya (Pok Pel /
+    // Direktorat / Satlak / Kasansi) pakai palet yang sama dengan doughnut
+    // "Pengguna per Kategori Satuan" di atas, supaya konsisten dan orang
+    // baru langsung bisa menghubungkan warna dengan kategori.
     var rekapSatuan = @json($rekapLaporanSatuan);
+    var kategoriWarna = {
+      pokpel: '#0ea5e9',
+      direktorat: '#22c55e',
+      satlak: '#f59e0b',
+      kasansi: '#ec4899'
+    };
+    var kategoriLabel = {
+      pokpel: 'Pok Pel',
+      direktorat: 'Direktorat',
+      satlak: 'Satlak',
+      kasansi: 'Kasansi'
+    };
     var elRekap = document.getElementById('chartRekapLaporan');
     if (elRekap) {
-      // Dengan 23 satuan Kasansi + satuan lain (~10-13), total bisa 35+ bar.
-      // Lebar per bar dibuat dinamis (min 36px) supaya tidak cramped, dan
-      // canvas diperlebar otomatis kalau melebihi container -- parent wrap
-      // di-overflow-x:auto agar bisa di-scroll horizontal.
-      var BAR_WIDTH_PX = 40;
-      var minWidth = Math.max(rekapSatuan.length * BAR_WIDTH_PX, 400);
-      var wrapEl = document.getElementById('chartRekapLaporanWrap');
-      if (wrapEl) wrapEl.style.minWidth = minWidth + 'px';
+      var ROW_HEIGHT_PX = 22;
+      var chartHeight = Math.max(rekapSatuan.length * ROW_HEIGHT_PX, 240);
+      var innerEl = document.getElementById('chartRekapLaporanWrap');
+      if (innerEl) innerEl.style.height = chartHeight + 'px';
 
-      var rekapCtx = elRekap.getContext('2d');
-      var rekapGradient = rekapCtx.createLinearGradient(0, 0, 0, 280);
-      rekapGradient.addColorStop(0, '#6366f1');
-      rekapGradient.addColorStop(1, '#3b82f6');
+      var warnaBar = rekapSatuan.map(function (s) { return kategoriWarna[s.kategori] || '#94a3b8'; });
+
       new Chart(elRekap, {
         type: 'bar',
         data: {
           labels: rekapSatuan.map(function (s) {
-            // Potong nama panjang supaya label x-axis tetap terbaca:
-            // tampilkan kode satuan kalau nama > 18 karakter.
+            // Horizontal punya lebih banyak ruang dari vertikal, tapi nama
+            // yang sangat panjang tetap dipotong dikit biar margin kiri
+            // nggak kebesaran -- nama lengkap tetap muncul di tooltip.
             var nama = (s.nama || s.kode).split('(')[0].trim();
-            return nama.length > 18 ? (s.kode || nama) : nama;
+            return nama.length > 30 ? nama.slice(0, 28) + '…' : nama;
           }),
           datasets: [{
             label: 'Total Laporan',
             data: rekapSatuan.map(function (s) { return s.total_laporan; }),
-            backgroundColor: rekapGradient,
-            hoverBackgroundColor: '#4f46e5',
+            backgroundColor: warnaBar,
             borderRadius: 4,
-            maxBarThickness: 34
+            maxBarThickness: 16
           }]
         },
         options: {
+          indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
             tooltip: {
               callbacks: {
-                // Tampilkan nama lengkap satuan di tooltip meski label dipotong.
+                // Tampilkan nama lengkap + kategori satuan di tooltip meski label dipotong.
                 title: function (items) {
                   var idx = items[0] && items[0].dataIndex;
                   var s = rekapSatuan[idx];
                   return s ? (s.nama || s.kode) : '';
-                }
+                },
+                afterTitle: function (items) {
+                  var idx = items[0] && items[0].dataIndex;
+                  var s = rekapSatuan[idx];
+                  return s ? 'Kategori: ' + (kategoriLabel[s.kategori] || s.kategori) : '';
+                },
+                label: function (item) { return 'Total Laporan: ' + item.raw; }
               }
             }
           },
           scales: {
-            x: { grid: { display: false }, ticks: { maxRotation: 55, minRotation: 35, font: { size: 9.5 } } },
-            y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(255,255,255,.06)' } }
+            x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(255,255,255,.06)' } },
+            y: { grid: { display: false }, ticks: { font: { size: 10 } } }
           }
         }
       });
+
+      // Legend statis warna kategori (bukan toggle seperti doughnut, karena
+      // satu batang cuma punya 1 kategori -- klik legend nggak relevan di sini).
+      var legendBox = document.getElementById('chartRekapLaporanLegend');
+      if (legendBox) {
+        legendBox.innerHTML = '';
+        Object.keys(kategoriLabel).forEach(function (kunci) {
+          if (!rekapSatuan.some(function (s) { return s.kategori === kunci; })) return;
+          var item = document.createElement('span');
+          item.className = 'chart-legend-item';
+          item.innerHTML = '<span class="chart-legend-dot" style="background:' + kategoriWarna[kunci] + '"></span>' + kategoriLabel[kunci];
+          legendBox.appendChild(item);
+        });
+      }
     }
   })();
   </script>
