@@ -24,7 +24,7 @@ class Pengaturan extends Model
             'hero_eyebrow' => 'PUSSIBERAD // SISTEM PENDUKUNG OPERASIONAL',
             'hero_judul_awal' => 'BRAHMASTRA ', 'hero_judul_aksen' => 'WIRA',
             'hero_subjudul' => 'Sistem Informasi Berbasis Elektronik Angkatan Darat',
-            'hero_deskripsi' => 'Mendigitalisasi alur pelaporan kegiatan seluruh Satuan Pelaksana Pusat Siber Angkatan Darat — dari input laporan di lapangan, verifikasi berjenjang, hingga visualisasi real-time bagi pengambil keputusan.',
+            'hero_deskripsi' => 'Sistem pendukung operasional Satuan Siber AD dan jajaran Pusat Siber TNI Angkatan Darat — mulai dari input laporan, hingga visualisasi real-time bagi pengambil keputusan.',
             'fitur' => [
                 ['judul'=>'Real-time','deskripsi'=>'Laporan dan status pekerjaan dapat dipantau secara langsung tanpa menunggu rekap manual.'],
                 ['judul'=>'Terpusat','deskripsi'=>'Seluruh data laporan dan dokumen pendukung tersimpan dalam satu sistem yang mudah diakses.'],
