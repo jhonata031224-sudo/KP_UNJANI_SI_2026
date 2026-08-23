@@ -2703,7 +2703,7 @@
               </div>
               <p>Semua satuan pengirim laporan (Pok Pel, Direktorat, Satlak, dan 23 satuan Kasansi) tersusun dari atas ke bawah per kategori -- warna batang menunjukkan kategorinya. Makin panjang batang, makin banyak laporan yang sudah dikirim satuan itu. Scroll ke bawah untuk lihat semua satuan.</p>
             </div>
-            <div class="chart-wrap" style="overflow-y:auto;overflow-x:hidden;max-height:640px;">
+            <div class="chart-wrap" style="overflow-y:auto;overflow-x:auto;max-height:640px;">
               <div id="chartRekapLaporanWrap" style="position:relative;width:100%;">
                 <canvas id="chartRekapLaporan"></canvas>
               </div>
@@ -3301,31 +3301,47 @@
 
       var warnaBar = rekapSatuan.map(function (s) { return kategoriWarna[s.kategori] || '#94a3b8'; });
 
-      // Kalibrasi sumbu X: 1 laporan = 3mm panjang batang, berapa pun lebar
-      // layar. Angka maksimal sumbu X dihitung otomatis dari lebar area plot
-      // (bukan angka statis) supaya rasio "3mm per laporan" tetap akurat di
-      // berbagai ukuran layar/kontainer.
+      // Kalibrasi sumbu X: 1 laporan = 3mm panjang batang, tidak dibatasi
+      // lebar layar. Batas atas sumbu X (xMaxTarget) dihitung dari total
+      // laporan terbesar (dibulatkan ke atas kelipatan 10 + sedikit ruang
+      // napas), lalu kanvas dilebarkan (bukan dipepetkan) kalau lebar yang
+      // dibutuhkan untuk rasio 3mm/laporan itu melebihi lebar panel --
+      // sisanya baru discroll ke samping lewat "chart-wrap".
       var MM_PER_LAPORAN = 3;
       var PX_PER_MM = 96 / 25.4;
       var pxPerLaporan = MM_PER_LAPORAN * PX_PER_MM;
+      var maxTotalLaporan = rekapSatuan.reduce(function (m, s) { return Math.max(m, s.total_laporan || 0); }, 0);
+      var xMaxTarget = Math.max(10, Math.ceil((maxTotalLaporan + 1) / 10) * 10);
       var pluginKalibrasiSumbuX = {
         id: 'kalibrasiSumbuXRekap',
         afterLayout: function (chart) {
-          var lebarPlot = chart.chartArea && chart.chartArea.width;
-          if (!lebarPlot || lebarPlot <= 0) return;
-          var maxBaru = Math.max(1, Math.round(lebarPlot / pxPerLaporan));
-          if (chart.options.scales.x.max !== maxBaru) {
-            chart.options.scales.x.max = maxBaru;
-            chart._perluUpdateSumbuX = true;
+          if (chart._sudahDikalibrasi) return;
+          var overhead = chart.width - (chart.chartArea ? chart.chartArea.width : chart.width);
+          var lebarDibutuhkan = Math.ceil(xMaxTarget * pxPerLaporan + overhead);
+          var lebarWrapSaatIni = innerEl.getBoundingClientRect().width;
+          chart._sudahDikalibrasi = true;
+          if (lebarDibutuhkan > lebarWrapSaatIni + 1) {
+            innerEl.style.width = lebarDibutuhkan + 'px';
+            chart._perluResizeUlang = true;
           }
         },
         afterRender: function (chart) {
-          if (chart._perluUpdateSumbuX) {
-            chart._perluUpdateSumbuX = false;
-            chart.update('none');
+          if (chart._perluResizeUlang) {
+            chart._perluResizeUlang = false;
+            chart.resize();
           }
         }
       };
+      // Reset kalibrasi saat window di-resize (mis. rotasi layar/ubah ukuran
+      // browser) supaya lebar kanvas dievaluasi ulang terhadap lebar panel
+      // yang baru.
+      window.addEventListener('resize', function () {
+        if (chartRekapInstance) {
+          chartRekapInstance._sudahDikalibrasi = false;
+          innerEl.style.width = '100%';
+          chartRekapInstance.resize();
+        }
+      });
 
       var chartRekapInstance = new Chart(elRekap, {
         type: 'bar',
@@ -3370,7 +3386,7 @@
             }
           },
           scales: {
-            x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(255,255,255,.06)' } /* max diisi otomatis oleh pluginKalibrasiSumbuX */ },
+            x: { beginAtZero: true, max: xMaxTarget, ticks: { precision: 0 }, grid: { color: 'rgba(255,255,255,.06)' } },
             y: { grid: { display: false }, ticks: { font: { size: 10 } } }
           }
         }
