@@ -2698,6 +2698,7 @@
               <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
               <option value="{{ \App\Models\Satuan::KATEGORI_POKPEL }}">Pok Pel</option>
               <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
+              <option value="{{ \App\Models\Satuan::KATEGORI_KASANSI }}">Kasansi</option>
             </select>
             <span class="table-filter-count" data-table-count="tblRekapSatuan"></span>
           </div>
@@ -3183,15 +3184,15 @@
     }
 
     // ===== Grafik 1: Pengguna per Kategori Satuan (warna literal — urutan
-    // grup dari backend dijamin selalu Admin, Pimpinan, Direktorat, Satlak
-    // lewat Satuan::prioritasKategori(), bukan ikut urutan $semuaSatuan
-    // begitu saja) =====
+    // grup dari backend dijamin selalu Admin, Pimpinan, Pok Pel, Direktorat,
+    // Satlak, Kasansi lewat Satuan::prioritasKategori(), bukan ikut urutan
+    // $semuaSatuan begitu saja) =====
     var distribusiKategori = @json($distribusiPenggunaKategori);
     renderDoughnut(
       'chartKategoriSatuan',
       distribusiKategori.map(function (d) { return d.kategori; }),
       distribusiKategori.map(function (d) { return d.jumlah; }),
-      [cGold, '#6366f1', '#22c55e', '#f59e0b']
+      [cGold, '#6366f1', '#0ea5e9', '#22c55e', '#f59e0b', '#ec4899']
     );
 
     // ===== Grafik 2: Distribusi Status Laporan (data asli, warna tetap

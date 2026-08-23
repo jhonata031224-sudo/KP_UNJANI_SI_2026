@@ -105,11 +105,15 @@ class DashboardController
             ->leftJoin('users', 'sessions.user_id', '=', 'users.id')
             ->orderByDesc('sessions.last_activity')
             ->get(['sessions.id','sessions.ip_address','sessions.user_agent','sessions.last_activity','users.name as user_name']);
-        $kodeSatuanPengirim = [
-            'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK', 'SATLAKDUKTEK',
-            'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT',
-            'POKANALIS', 'URDAL',
-        ];
+        // Satuan pengirim laporan = semua satuan SELAIN Admin & Pimpinan
+        // (Admin cuma pengelola sistem, Pimpinan/Danpus-Wadan cuma
+        // menerima & meninjau, bukan pengirim). Dihitung otomatis dari
+        // kategori, bukan daftar kode manual, supaya kategori satuan baru
+        // (mis. Kasansi) otomatis ikut ke "Ringkasan Data"/"Detail per
+        // Satuan" tanpa perlu diedit lagi di sini tiap kali ada satuan baru.
+        $kodeSatuanPengirim = Satuan::whereNotIn('kategori', [Satuan::KATEGORI_ADMIN, Satuan::KATEGORI_PIMPINAN])
+            ->pluck('kode')
+            ->all();
         // "Total Laporan" di sini (KPI atas & kolom Rekap Laporan) cuma
         // ngitung baris (checkpoint progres maupun laporan final, dedup
         // dulu yang sempat ditolak/direvisi sebelum disetujui/ditolak
