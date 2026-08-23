@@ -5,8 +5,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SIBERAD — Sistem Informasi Berbasis Elektronik Angkatan Darat | PUSSIBERAD</title>
-<meta name="description" content="SIBERAD — Sistem Informasi Berbasis Elektronik Angkatan Darat. Platform pelaporan dan monitoring resmi Pusat Siber Angkatan Darat (PUSSIBERAD).">
+<title>BRAHMASTRA WIRA — Sistem Informasi Berbasis Elektronik Angkatan Darat | PUSSIBERAD</title>
+<meta name="description" content="BRAHMASTRA WIRA — Sistem Informasi Berbasis Elektronik Angkatan Darat. Platform pelaporan dan monitoring resmi Pusat Siber Angkatan Darat (PUSSIBERAD).">
 <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-pussiberad.jpg') }}">
 <link rel="preload" as="image" href="{{ asset('images/logo-pussiberad.jpg') }}" fetchpriority="high">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -747,7 +747,7 @@
       <nav>
         <a class="logo" href="#tentang">
           <span class="logo-badge"><img src="{{ asset('images/logo-pussiberad.jpg') }}" alt="Lambang Pussiberad"></span>
-          <span class="logo-text"><b>SIBER<span>AD</span></b><small>Pussiberad &middot; TNI AD</small></span>
+          <span class="logo-text"><b>BRAHMASTRA <span>WIRA</span></b><small>Pussiberad &middot; TNI AD</small></span>
         </a>
         <ul class="nav-links">
           <li><a href="#tentang">Beranda</a></li>
@@ -835,7 +835,7 @@
                 <div class="mark-plate"><img src="{{ asset('images/logo-pussiberad.jpg') }}" alt="Lambang Pussiberad"></div>
               </div>
             </div>
-            <div class="hero-crest-caption">Pusat Siber Angkatan Darat<br><b>&ldquo;Satria Yudha Waskita&rdquo;</b></div>
+            <div class="hero-crest-caption">Pusat Siber Angkatan Darat</div>
           </div>
         </div>
       </div>
@@ -846,8 +846,8 @@
       <div class="wrap">
         <div class="stats-grid" data-reveal>
           <div class="stat">
-            <div class="stat-num">04</div>
-            <div class="stat-label">Satuan Pelaksana Terpantau</div>
+            <div class="stat-num">12</div>
+            <div class="stat-label">Pengguna Terpantau</div>
           </div>
           <div class="stat">
             <div class="stat-num">24/7</div>
@@ -858,7 +858,7 @@
             <div class="stat-label">Data Terpusat &amp; Terverifikasi</div>
           </div>
           <div class="stat">
-            <div class="stat-num">01</div>
+            <div class="stat-num">1</div>
             <div class="stat-label">Sistem Untuk Seluruh Satuan</div>
           </div>
         </div>
@@ -962,7 +962,7 @@
           <div class="footer-brand-row">
             <span class="footer-crest"><img src="{{ asset('images/logo-pussiberad.jpg') }}" alt="Lambang Pussiberad"></span>
             <div class="footer-brand">
-              <b>SIBER<span style="display:inline;color:var(--gold-bright);">AD</span></b>
+              <b>BRAHMASTRA <span style="display:inline;color:var(--gold-bright);">WIRA</span></b>
               <span>Pusat Siber Angkatan Darat</span>
             </div>
           </div>
@@ -1007,7 +1007,7 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>&copy; 2026 SIBERAD — PUSSIBERAD. Seluruh hak cipta dilindungi.</span>
+        <span>&copy; 2026 BRAHMASTRA WIRA — PUSSIBERAD. Seluruh hak cipta dilindungi.</span>
         <span>Satria &middot; Yudha &middot; Waskita</span>
       </div>
     </div>
@@ -1230,7 +1230,7 @@
   @endif
 
   @if(session('logout_success'))
-    siberadShowToast('success', 'Anda berhasil logout dari SIBERAD.');
+    siberadShowToast('success', 'Anda berhasil logout dari BRAHMASTRA WIRA.');
   @endif
 
   // ---------- scroll reveal ----------

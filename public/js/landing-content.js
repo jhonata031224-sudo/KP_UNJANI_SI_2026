@@ -9,7 +9,7 @@
     if(cfg.logo_url){qa('.logo-badge img,.hero-crest .mark-plate img,#loader .mark-plate img,#tentang-pussiberad img').forEach(img=>attr(img,'src',cfg.logo_url));const f=q('link[rel="icon"]');if(f)f.href=cfg.logo_url;}
     if(Array.isArray(cfg.nav))qa('.nav-links a').forEach((el,i)=>{const x=cfg.nav[i];if(x){text(el,x.label);attr(el,'href',x.url||'#');}});
     const hero=cfg.hero||{},hb=q('.hero-actions .btn-primary');text(hb,hero.button_label||'Selengkapnya');attr(hb,'href',hero.button_url||'#fitur');
-    const crest=q('.hero-crest-caption');if(crest)crest.innerHTML=(hero.crest_caption||'Pusat Siber Angkatan Darat')+'<br><b>“'+(hero.crest_motto||'Satria Yudha Waskita')+'”</b>';
+    const crest=q('.hero-crest-caption');if(crest)crest.innerHTML=(hero.crest_caption||'Pusat Siber Angkatan Darat')+(hero.crest_motto?('<br><b>“'+hero.crest_motto+'”</b>'):'');
     if(Array.isArray(cfg.stats))qa('.stats-grid .stat').forEach((el,i)=>{const x=cfg.stats[i];if(x){text(q('.stat-num',el),x.number);text(q('.stat-label',el),x.label);}});
     const fs=cfg.features_section||{},fr=q('#fitur');if(fr){text(q('.section-head .eyebrow',fr),fs.eyebrow);text(q('.section-head h3',fr),fs.title);text(q('.section-head p',fr),fs.description);}
     const as=cfg.about_section||{},ar=q('#tentang-pussiberad');if(ar){text(q('.eyebrow',ar),as.eyebrow);text(q('.about-top h3',ar),as.title);}
