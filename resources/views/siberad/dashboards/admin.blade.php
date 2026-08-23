@@ -1963,7 +1963,7 @@
 
             <div class="tbl-wrap tbl-scroll" style="max-height:420px;">
               <table class="dtbl" id="tblDlPengguna">
-                <thead><tr><th>No</th><th>Nama</th><th>Username</th><th>Email</th><th>Satuan</th><th>Jabatan</th><th>Dibuat</th></tr></thead>
+                <thead><tr><th>No</th><th>Nama</th><th>Username</th><th>Email</th><th>Satuan</th><th>Dibuat</th></tr></thead>
                 <tbody>
                   @forelse($semuaPengguna as $i => $p)
                   <tr data-search-value="{{ strtolower($p->name.' '.$p->username.' '.$p->email.' '.($p->satuan->nama ?? '').' '.($p->jabatan ?? '')) }}">
@@ -1972,11 +1972,10 @@
                     <td>{{ $p->username }}</td>
                     <td>{{ $p->email ?: '-' }}</td>
                     <td>{{ $p->satuan->nama_keterangan ?? '-' }}</td>
-                    <td>{{ $p->jabatan ?: '-' }}</td>
                     <td style="white-space:nowrap;" data-tanggal="{{ $p->created_at?->format('Y-m-d') }}">{{ $p->created_at?->format('d/m/Y H:i') }}</td>
                   </tr>
                   @empty
-                  <tr><td colspan="7"><div class="empty-state"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Belum ada pengguna</div></div></td></tr>
+                  <tr><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Belum ada pengguna</div></div></td></tr>
                   @endforelse
                 </tbody>
               </table>
