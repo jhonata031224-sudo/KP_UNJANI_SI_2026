@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             SosmedSeeder::class,
             PangkatSeeder::class,
             JabatanSeeder::class,
+            KodamDuktekSeeder::class,
         ]);
     }
 }

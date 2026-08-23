@@ -115,15 +115,21 @@ class Satuan extends Model
      * DANPUS (lihat kodeTujuanUntuk()).
      */
     public const KATEGORI_POKPEL = 'pokpel';
+    /**
+     * Kategori Kasansi -- kelompok satuan baru di luar Satlak/Direktorat/
+     * Pimpinan/Pok Pel/Admin.
+     */
+    public const KATEGORI_KASANSI = 'kasansi';
 
     /**
      * Urutan tampil kategori secara umum (Admin -> Pimpinan -> Pok Pel ->
-     * Direktorat -> Satlak), dipakai di seluruh tempat yang menampilkan
-     * daftar satuan gabungan lintas kategori -- menggantikan field "urutan"
-     * manual yang sudah dihapus.
+     * Direktorat -> Satlak -> Kasansi), dipakai di seluruh tempat yang
+     * menampilkan daftar satuan gabungan lintas kategori -- menggantikan
+     * field "urutan" manual yang sudah dihapus.
      *
      * Pok Pel (Pok Analis, Urdal) sengaja ditaruh setelah Pimpinan (Wadan)
      * dan sebelum Direktorat (4 Sdir) sesuai urutan organisasi yang diminta.
+     * Kasansi ditaruh paling akhir karena kategori paling baru.
      */
     public static function prioritasKategori(): array
     {
@@ -133,6 +139,7 @@ class Satuan extends Model
             self::KATEGORI_POKPEL => 3,
             self::KATEGORI_DIREKTORAT => 4,
             self::KATEGORI_SATLAK => 5,
+            self::KATEGORI_KASANSI => 6,
         ];
     }
 

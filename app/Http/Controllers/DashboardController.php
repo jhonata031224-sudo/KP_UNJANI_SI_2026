@@ -50,7 +50,7 @@ class DashboardController
             })
             ->values();
         $permintaanResetPassword = PermintaanResetPassword::with(['user.satuan', 'diprosesOleh'])->latest()->get();
-        $labelKategori = [Satuan::KATEGORI_SATLAK => 'Satlak', Satuan::KATEGORI_DIREKTORAT => 'Direktorat', Satuan::KATEGORI_PIMPINAN => 'Pimpinan', Satuan::KATEGORI_ADMIN => 'Admin', Satuan::KATEGORI_POKPEL => 'Pok Pel'];
+        $labelKategori = [Satuan::KATEGORI_SATLAK => 'Satlak', Satuan::KATEGORI_DIREKTORAT => 'Direktorat', Satuan::KATEGORI_PIMPINAN => 'Pimpinan', Satuan::KATEGORI_ADMIN => 'Admin', Satuan::KATEGORI_POKPEL => 'Pok Pel', Satuan::KATEGORI_KASANSI => 'Kasansi'];
         // Urutan grup di sini SENGAJA dipastikan lewat prioritasKategori
         // (bukan ikut urutan asli $semuaSatuan begitu saja), soalnya grafik
         // "Pengguna per Kategori Satuan" pasangin warna berdasarkan posisi --

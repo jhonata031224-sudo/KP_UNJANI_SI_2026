@@ -508,6 +508,7 @@
           <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_POKPEL }}">Pok Pel</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_KASANSI }}">Kasansi</option>
         </select>
       </div>
       <div class="form-field full"><label for="sDeskripsi">Deskripsi (opsional)</label><textarea id="sDeskripsi" name="deskripsi" rows="2" autocomplete="off" placeholder="Contoh: Pengelolaan logistik dan perbekalan satuan."></textarea></div>
@@ -557,6 +558,7 @@
           <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_POKPEL }}">Pok Pel</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_KASANSI }}">Kasansi</option>
         </select>
       </div>
       <div class="form-field full"><label for="usDeskripsi">Deskripsi (opsional)</label><textarea id="usDeskripsi" name="deskripsi" rows="2" autocomplete="off" placeholder="Contoh: Pengelolaan logistik dan perbekalan satuan."></textarea></div>
@@ -1072,6 +1074,7 @@
               <option value="Direktorat">Direktorat</option>
               <option value="Pok Pel">Pok Pel</option>
               <option value="Satlak">Satlak</option>
+              <option value="Kasansi">Kasansi</option>
             </select>
             <span class="table-filter-count" data-table-count="tblPengguna"></span>
           </div>
@@ -1086,6 +1089,7 @@
                     \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
                     \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
                     \App\Models\Satuan::KATEGORI_POKPEL => 'Pok Pel',
+                    \App\Models\Satuan::KATEGORI_KASANSI => 'Kasansi',
                     default => 'Satlak',
                   };
                 @endphp
@@ -1382,6 +1386,7 @@
               <option value="Direktorat">Direktorat</option>
               <option value="Pok Pel">Pok Pel</option>
               <option value="Satlak">Satlak</option>
+              <option value="Kasansi">Kasansi</option>
             </select>
             <span class="table-filter-count" data-table-count="tblSatuan"></span>
           </div>
@@ -1397,6 +1402,7 @@
                     \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
                     \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
                     \App\Models\Satuan::KATEGORI_POKPEL => 'Pok Pel',
+                    \App\Models\Satuan::KATEGORI_KASANSI => 'Kasansi',
                     default => 'Satlak',
                   };
                 @endphp
