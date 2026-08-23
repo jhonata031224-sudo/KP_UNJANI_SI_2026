@@ -1787,7 +1787,7 @@
 
 
         <div class="panel">
-          <div class="panel-head"><div><h3>Buat Backup Baru</h3><p>Untuk koneksi SQLite: salin file database. Untuk MySQL: jalankan mysqldump.</p></div></div>
+          <div class="panel-head"><div><h3>Buat Cadangan Baru</h3><p>Untuk koneksi SQLite: salin file database. Untuk MySQL: jalankan mysqldump.</p></div></div>
           <form method="POST" action="{{ route('admin.backup.store') }}" style="padding:18px 22px;">
             @csrf
             <button class="btn btn-primary" type="submit">+ Buat Backup Sekarang</button>
