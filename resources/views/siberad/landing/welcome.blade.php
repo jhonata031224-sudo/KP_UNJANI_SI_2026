@@ -379,7 +379,10 @@
   }
   .login-submit{border:none;cursor:pointer;justify-content:center;margin-top:4px;width:100%;}
   .captcha-row{display:flex;align-items:center;gap:6px;margin-bottom:12px;}
-  .captcha-img{height:56px;border-radius:8px;border:1px solid var(--border);flex-shrink:0;}
+  .captcha-img{
+    height:56px;flex:1;min-width:0;object-fit:cover;
+    border-radius:8px;border:1px solid var(--border);
+  }
   .captcha-row .captcha-input{
     box-sizing:border-box;height:56px;width:auto;flex:1;min-width:0;margin-bottom:0;
     padding:0 14px;font-size:12px;
