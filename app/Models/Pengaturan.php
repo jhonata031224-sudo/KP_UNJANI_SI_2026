@@ -57,7 +57,7 @@ class Pengaturan extends Model
             'stats'=>[['number'=>'12','label'=>'Pengguna Terpantau'],['number'=>'24/7','label'=>'Monitoring & Pelaporan'],['number'=>'100%','label'=>'Data Terpusat & Terverifikasi'],['number'=>'1','label'=>'Sistem Untuk Seluruh Satuan']],
             'features_section'=>['eyebrow'=>'Keunggulan','title'=>'Kenapa Memakai Sistem Ini','description'=>'Dirancang untuk menyederhanakan alur pelaporan harian, dari input di lapangan hingga pengambilan keputusan.'],
             'about_section'=>['eyebrow'=>'Tentang','title'=>'Pussiberad'],
-            'footer'=>['description'=>'Sistem Informasi Berbasis Elektronik Angkatan Darat — mendigitalisasi alur pelaporan seluruh Satuan Pelaksana Pussiberad.','copyright'=>'BRAHMASTRA WIRA · Pussiberad · TNI AD'],
+            'footer'=>['description'=>'Sistem Informasi Berbasis Elektronik Angkatan Darat, mendigitalisasi alur pelaporan seluruh Satuan Pelaksana Pussiberad.','copyright'=>'BRAHMASTRA WIRA · Pussiberad · TNI AD'],
         ];
     }
 

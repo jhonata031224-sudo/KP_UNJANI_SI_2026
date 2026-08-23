@@ -966,7 +966,7 @@
               <span>Pusat Siber Angkatan Darat</span>
             </div>
           </div>
-          <p class="footer-desc">Sistem Informasi Berbasis Elektronik Angkatan Darat — mendigitalisasi alur pelaporan seluruh Satuan Pelaksana Pussiberad.</p>
+          <p class="footer-desc">Sistem Informasi Berbasis Elektronik Angkatan Darat, mendigitalisasi alur pelaporan seluruh Satuan Pelaksana Pussiberad.</p>
         </div>
         <div>
           <div class="footer-col-title">Navigasi</div>
