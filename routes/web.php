@@ -17,6 +17,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DukunganTeknisController;
 use App\Http\Controllers\JabatanController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\LaporanKeluhanController;
 use App\Http\Controllers\LaporanMonitoringController;
 use App\Http\Controllers\LaporanPublikasiController;
 use App\Http\Controllers\LogUjiPengembanganController;
@@ -98,6 +99,17 @@ Route::patch('/permintaan-laporan/{permintaanLaporan}/batal', [PermintaanLaporan
 Route::patch('/permintaan-laporan/{permintaanLaporan}/deadline', [PermintaanLaporanController::class, 'editDeadline'])
     ->middleware('auth')
     ->name('permintaan-laporan.edit-deadline');
+
+// ===== Laporan Keluhan Kasansi (21 Kodam) ke Satlak =====
+Route::post('/laporan-keluhan', [LaporanKeluhanController::class, 'store'])
+    ->middleware('auth')
+    ->name('laporan-keluhan.store');
+Route::patch('/laporan-keluhan/{laporanKeluhan}/status', [LaporanKeluhanController::class, 'updateStatus'])
+    ->middleware('auth')
+    ->name('laporan-keluhan.status');
+Route::delete('/laporan-keluhan/{laporanKeluhan}', [LaporanKeluhanController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('laporan-keluhan.destroy');
 
 // ===== Laporan Publikasi ke DANPUS (Satuan Pelaksanaan Siber Sosial) =====
 Route::post('/laporan-publikasi', [LaporanPublikasiController::class, 'store'])
