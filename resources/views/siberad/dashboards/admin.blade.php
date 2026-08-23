@@ -39,6 +39,13 @@
      scrollbar sendiri di dalam) begitu tombol ini diklik ===== */
   .chart-mini-head-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
   .chart-mini-head-row h4{margin:0;}
+  /* Panel "Total Laporan per Satuan" (Ringkasan Data) butuh header block biasa
+     (judul di kiri, tombol "Lihat Detail per Satuan" di kanan lewat
+     .chart-mini-head-row di atas), bukan flex-row ikon+teks seperti 3 kartu
+     ringkasan lain yang memakai .chart-mini-head -- makanya di-scope lewat
+     class tambahan ini supaya nggak ikut kena aturan .chart-mini-head{display:flex}
+     di bawah dan tombolnya nggak lagi turun ke bawah judul. */
+  .chart-mini-head.chart-mini-head-rekap{display:block;}
   .btn-toggle-detail{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;border:1px solid var(--border-soft);background:var(--panel);font-family:inherit;font-size:11px;font-weight:700;color:var(--text-muted);cursor:pointer;white-space:nowrap;transition:border-color .15s ease,color .15s ease;}
   .btn-toggle-detail:hover{border-color:var(--gold-bright);color:var(--text);}
   .btn-toggle-detail .chevron{transition:transform .2s ease;flex:0 0 auto;}
@@ -2686,7 +2693,7 @@
 
         <div class="chart-box">
           <div class="chart-mini">
-            <div class="chart-mini-head">
+            <div class="chart-mini-head chart-mini-head-rekap">
               <div class="chart-mini-head-row">
                 <h4>Total Laporan per Satuan</h4>
                 <button type="button" class="btn-toggle-detail" id="btnToggleDetailSatuan" aria-expanded="false" aria-controls="panelDetailPerSatuan">
