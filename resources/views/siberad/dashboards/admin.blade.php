@@ -3304,48 +3304,20 @@
       // Kalibrasi sumbu X: 1 laporan = 3mm panjang batang, tidak dibatasi
       // lebar layar. Batas atas sumbu X (xMaxTarget) dihitung dari total
       // laporan terbesar (dibulatkan ke atas kelipatan 10 + sedikit ruang
-      // napas), lalu kanvas dilebarkan (bukan dipepetkan) kalau lebar yang
-      // dibutuhkan untuk rasio 3mm/laporan itu melebihi lebar panel --
-      // sisanya baru discroll ke samping lewat "chart-wrap".
+      // napas). Lebar kanvas aktual (innerEl) baru dihitung & dilebarkan
+      // di sesuaikanLebarChartRekap() di bawah -- SENGAJA tidak dihitung
+      // di sini, karena panel ini ada di dalam tab yang default
+      // display:none ("rekap-laporan"), jadi lebar container = 0 selama
+      // tab belum aktif. Kalau dihitung di sini, lebar kanvas bisa kekunci
+      // ke angka kecil yang salah sebelum tab pernah dibuka.
       var MM_PER_LAPORAN = 3;
       var PX_PER_MM = 96 / 25.4;
       var pxPerLaporan = MM_PER_LAPORAN * PX_PER_MM;
       var maxTotalLaporan = rekapSatuan.reduce(function (m, s) { return Math.max(m, s.total_laporan || 0); }, 0);
       var xMaxTarget = Math.max(10, Math.ceil((maxTotalLaporan + 1) / 10) * 10);
-      var pluginKalibrasiSumbuX = {
-        id: 'kalibrasiSumbuXRekap',
-        afterLayout: function (chart) {
-          if (chart._sudahDikalibrasi) return;
-          var overhead = chart.width - (chart.chartArea ? chart.chartArea.width : chart.width);
-          var lebarDibutuhkan = Math.ceil(xMaxTarget * pxPerLaporan + overhead);
-          var lebarWrapSaatIni = innerEl.getBoundingClientRect().width;
-          chart._sudahDikalibrasi = true;
-          if (lebarDibutuhkan > lebarWrapSaatIni + 1) {
-            innerEl.style.width = lebarDibutuhkan + 'px';
-            chart._perluResizeUlang = true;
-          }
-        },
-        afterRender: function (chart) {
-          if (chart._perluResizeUlang) {
-            chart._perluResizeUlang = false;
-            chart.resize();
-          }
-        }
-      };
-      // Reset kalibrasi saat window di-resize (mis. rotasi layar/ubah ukuran
-      // browser) supaya lebar kanvas dievaluasi ulang terhadap lebar panel
-      // yang baru.
-      window.addEventListener('resize', function () {
-        if (chartRekapInstance) {
-          chartRekapInstance._sudahDikalibrasi = false;
-          innerEl.style.width = '100%';
-          chartRekapInstance.resize();
-        }
-      });
 
       var chartRekapInstance = new Chart(elRekap, {
         type: 'bar',
-        plugins: [pluginKalibrasiSumbuX],
         data: {
           labels: rekapSatuan.map(function (s) {
             // Horizontal punya lebih banyak ruang dari vertikal, tapi nama
@@ -3436,7 +3408,29 @@
         chartWrapRekap.style.maxHeight = tersedia + 'px';
         innerEl.style.height = Math.max(tinggiMinimalSemuaBaris, tersedia) + 'px';
 
-        if (chartRekapInstance) chartRekapInstance.resize();
+        sesuaikanLebarChartRekap();
+      }
+
+      // Lebar kanvas (bukan tinggi): dipanggil dari sesuaikanTinggiChartRekap()
+      // di atas supaya ikut kena semua pemicu yang sama (tab "Rekap Laporan"
+      // baru dibuka, window di-resize, halaman baru dimuat) -- termasuk saat
+      // tab ini pertama kali diaktifkan, yang penting karena sebelum itu
+      // panel masih display:none sehingga lebar tidak bisa diukur dengan benar.
+      // Direset ke 100% dulu tiap kali supaya pengukuran "overhead" (ruang
+      // yang dipakai label sumbu Y) selalu berdasarkan lebar panel yang
+      // sebenarnya saat ini, baru dilebarkan kalau ternyata kurang untuk
+      // menjaga rasio 3mm per laporan -- sisanya discroll lewat chart-wrap.
+      function sesuaikanLebarChartRekap() {
+        if (!chartRekapInstance) return;
+        innerEl.style.width = '100%';
+        chartRekapInstance.resize();
+        var overhead = chartRekapInstance.width - (chartRekapInstance.chartArea ? chartRekapInstance.chartArea.width : chartRekapInstance.width);
+        var lebarDibutuhkan = Math.ceil(xMaxTarget * pxPerLaporan + overhead);
+        var lebarPanelSaatIni = innerEl.getBoundingClientRect().width;
+        if (lebarDibutuhkan > lebarPanelSaatIni + 1) {
+          innerEl.style.width = lebarDibutuhkan + 'px';
+          chartRekapInstance.resize();
+        }
       }
 
       new MutationObserver(sesuaikanTinggiChartRekap).observe(tabPanelRekap || document.body, { attributes: true, attributeFilter: ['class'] });
