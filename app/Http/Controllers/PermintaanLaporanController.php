@@ -15,10 +15,22 @@ use Illuminate\Support\Facades\DB;
 
 class PermintaanLaporanController extends Controller
 {
-    private const PENGIRIM_KODE = [
-        'SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK', 'SATLAKDUKTEK',
-        'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT',
-    ];
+    /**
+     * Semua satuan pelaksana yang boleh jadi tujuan Permintaan Laporan dari
+     * Danpus/Wadan: 4 Satlak, 4 Sdir (pembinaan), Pok Pel (Urdal, Pok
+     * Analis), dan 21 Kasansi (Kodam). Diambil dari konstanta Satuan supaya
+     * selalu ikut sinkron kalau daftar itu berubah, bukan daftar kode
+     * duplikat yang bisa ketinggalan zaman.
+     */
+    private static function pengirimKode(): array
+    {
+        return array_merge(
+            Satuan::KODE_SATLAK,
+            Satuan::KODE_PEMBINAAN,
+            Satuan::KODE_POKPEL,
+            Satuan::KODE_KOTAMA,
+        );
+    }
 
     private function isPimpinan(Request $request): bool
     {
@@ -29,7 +41,7 @@ class PermintaanLaporanController extends Controller
     private function isPengirim(Request $request): bool
     {
         $kode = strtoupper((string) $request->user()->load('satuan')->satuan?->kode);
-        return in_array($kode, self::PENGIRIM_KODE, true);
+        return in_array($kode, self::pengirimKode(), true);
     }
 
     public function index(Request $request): RedirectResponse
@@ -63,7 +75,7 @@ class PermintaanLaporanController extends Controller
         $user = $request->user()->load('satuan');
         $satuan = $user->satuan;
         $kode = strtoupper((string) $satuan?->kode);
-        abort_unless(in_array($kode, self::PENGIRIM_KODE, true), 403);
+        abort_unless(in_array($kode, self::pengirimKode(), true), 403);
 
         $latestId = (int) (PermintaanLaporan::where('tujuan_satuan_id', $satuan->id)->max('id') ?? 0);
         $since = max(0, (int) $request->query('since', 0));
@@ -132,12 +144,12 @@ class PermintaanLaporanController extends Controller
         ]);
 
         $tujuan = Satuan::whereIn('id', $validated['tujuan_satuan_ids'])
-            ->whereIn('kode', self::PENGIRIM_KODE)
+            ->whereIn('kode', self::pengirimKode())
             ->get()
             ->sortBy(fn ($s) => Satuan::kunciUrutSatuan($s->kategori, $s->kode))
             ->values();
 
-        abort_if($tujuan->count() !== count($validated['tujuan_satuan_ids']), 422, 'Permintaan hanya dapat ditujukan kepada 8 satuan pengirim yang tersedia.');
+        abort_if($tujuan->count() !== count($validated['tujuan_satuan_ids']), 422, 'Permintaan hanya dapat ditujukan kepada satuan pengirim yang tersedia.');
 
         $user = $request->user();
         $created = collect();
@@ -256,7 +268,7 @@ class PermintaanLaporanController extends Controller
         $user = $request->user()->load('satuan');
         abort_unless($user->satuan, 403);
         abort_unless((int) $permintaanLaporan->tujuan_satuan_id === (int) $user->satuan->id, 403);
-        abort_unless(in_array(strtoupper((string) $user->satuan->kode), self::PENGIRIM_KODE, true), 403);
+        abort_unless(in_array(strtoupper((string) $user->satuan->kode), self::pengirimKode(), true), 403);
         abort_if($permintaanLaporan->laporan_id, 422, 'Permintaan ini sudah memiliki laporan.');
         abort_if($permintaanLaporan->status === PermintaanLaporan::STATUS_DIBATALKAN, 422, 'Permintaan ini sudah dibatalkan oleh Pimpinan.');
         abort_if($permintaanLaporan->archived_at, 422, 'Permintaan ini sudah masuk Riwayat Laporan.');
