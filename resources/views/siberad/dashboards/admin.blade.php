@@ -3379,6 +3379,43 @@
 
   <script>
   (function () {
+    // Panel "Total Laporan per Satuan" sekarang sering jadi satu-satunya
+    // isi tab "Ringkasan Data" (Detail per Satuan disembunyikan default),
+    // jadi kalau tinggi chart-nya dipatok statis, bagian bawah halaman
+    // jadi kosong plong. Di sini tinggi chart-wrap dihitung dinamis
+    // mengikuti sisa tinggi viewport (bukan angka tetap), supaya panel
+    // selalu penuh sampai ke bawah layar.
+    var chartWrap = document.getElementById('chartRekapLaporan');
+    chartWrap = chartWrap ? chartWrap.closest('.chart-wrap') : null;
+    var tabPanel = document.querySelector('[data-tab-panel="rekap-laporan"]');
+    var legend = document.getElementById('chartRekapLaporanLegend');
+    if (!chartWrap || !tabPanel) return;
+
+    var MIN_HEIGHT_PX = 320;
+    var BOTTOM_BREATHING_ROOM_PX = 32;
+
+    function hitungTinggi() {
+      if (!tabPanel.classList.contains('active')) return;
+      var rectAtas = chartWrap.getBoundingClientRect().top;
+      var legendH = legend ? legend.offsetHeight : 0;
+      var sisa = window.innerHeight - rectAtas - legendH - BOTTOM_BREATHING_ROOM_PX;
+      chartWrap.style.maxHeight = Math.max(sisa, MIN_HEIGHT_PX) + 'px';
+    }
+
+    // Panel tab ini diaktifkan lewat activateAdminTab() di dash-script.blade.php
+    // (baik lewat klik sidebar maupun dipulihkan dari sessionStorage saat
+    // reload) -- keduanya cuma menambahkan class "active" ke elemen ini,
+    // jadi diobservasi lewat perubahan atribut class daripada nebak-nebak
+    // titik pemanggilannya.
+    new MutationObserver(hitungTinggi).observe(tabPanel, { attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('resize', hitungTinggi);
+    window.addEventListener('load', hitungTinggi);
+    hitungTinggi();
+  })();
+  </script>
+
+  <script>
+  (function () {
     function collectRows(table) {
       return Array.prototype.slice.call(table.querySelectorAll('tbody tr:not(.table-empty-row)'));
     }

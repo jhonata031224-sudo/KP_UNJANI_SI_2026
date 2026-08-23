@@ -50,9 +50,9 @@
     var input=document.createElement('input');
     input.type='file';input.name='backup_file';input.accept='.sql,.sqlite';input.hidden=true;
     var button=document.createElement('button');
-    button.type='button';button.className='btn backup-upload-btn';button.textContent='UPLOAD BACKUP';
+    button.type='button';button.className='btn backup-upload-btn';button.textContent='Unggah File Cadangan';
     button.addEventListener('click',function(){input.click()});
-    input.addEventListener('change',function(){if(!input.files||!input.files.length)return;button.disabled=true;button.textContent='MENGUNGGAH...';uploadForm.submit()});
+    input.addEventListener('change',function(){if(!input.files||!input.files.length)return;button.disabled=true;button.textContent='Mengunggah...';uploadForm.submit()});
     uploadForm.appendChild(csrf);uploadForm.appendChild(input);uploadForm.appendChild(button);row.appendChild(uploadForm);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initBackupUpload);else initBackupUpload();
