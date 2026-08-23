@@ -65,7 +65,9 @@ class InjectDashboardUi
     BINFUNG: ['laporan', 'notifikasi'],
     BINUM: ['laporan', 'monitoring', 'notifikasi'],
     DIKLAT: ['laporan', 'notifikasi'],
-    BINMAT: ['laporan', 'notifikasi']
+    BINMAT: ['laporan', 'notifikasi'],
+    POKANALIS: ['laporan', 'monitoring', 'notifikasi'],
+    URDAL: ['laporan', 'monitoring', 'notifikasi']
   };
   var LABELS = {
     'Kirim & Kelola Laporan': 'laporan',
