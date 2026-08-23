@@ -261,7 +261,7 @@
           </div>
           <div class="help-topic-body">
             <div class="help-topic-title">Monitoring</div>
-            <div class="help-topic-desc">Pantau rekap &amp; ekspor laporan dari seluruh satuan, lihat siapa saja yang sedang aktif login lewat Sesi Aktif, serta telusuri log aktivitas sistem.</div>
+            <div class="help-topic-desc">Pantau rekap &amp; ekspor laporan dari seluruh satuan, lihat siapa saja yang sedang aktif login lewat Pengguna Aktif, serta telusuri log aktivitas sistem.</div>
           </div>
         </div>
         <div class="help-topic">
@@ -631,9 +631,9 @@
         </button>
         <div class="side-subnav"><div>
           <span class="side-subnav-label">Monitoring</span>
-          <a href="#" class="side-sub-link" data-tab-link="rekap-laporan" title="Rekap Laporan"><span class="sub-dot"></span>Rekap Laporan</a>
+          <a href="#" class="side-sub-link" data-tab-link="rekap-laporan" title="Ringkasan Data"><span class="sub-dot"></span>Ringkasan Data</a>
           <a href="#" class="side-sub-link" data-tab-link="laporan-admin" title="Data Laporan"><span class="sub-dot"></span>Data Laporan</a>
-          <a href="#" class="side-sub-link" data-tab-link="sesi-aktif" title="Sesi Aktif"><span class="sub-dot"></span>Sesi Aktif</a>
+          <a href="#" class="side-sub-link" data-tab-link="sesi-aktif" title="Pengguna Aktif"><span class="sub-dot"></span>Pengguna Aktif</a>
           <a href="#" class="side-sub-link" data-tab-link="log-aktivitas" title="Riwayat Aktivitas"><span class="sub-dot"></span>Riwayat Aktivitas</a>
         </div></div>
       </div>
@@ -648,7 +648,7 @@
           <span class="side-subnav-label">Kelola Sistem</span>
           <a href="#" class="side-sub-link" data-tab-link="satlak" title="Data Satuan"><span class="sub-dot"></span>Data Satuan</a>
           <a href="#" class="side-sub-link" data-tab-link="role-akses" title="Hak Akses Pengguna"><span class="sub-dot"></span>Hak Akses Pengguna</a>
-          <a href="#" class="side-sub-link" data-tab-link="backup" title="Backup Database"><span class="sub-dot"></span>Backup Database</a>
+          <a href="#" class="side-sub-link" data-tab-link="backup" title="Cadangan Data"><span class="sub-dot"></span>Cadangan Data</a>
           <a href="#" class="side-sub-link" data-tab-link="pengaturan-umum" title="Pengaturan Umum"><span class="sub-dot"></span>Pengaturan Umum</a>
         </div></div>
       </div>
@@ -929,7 +929,7 @@
               <div class="chart-legend" id="chartKategoriSatuanLegend"></div>
             </div>
 
-            <div class="chart-mini chart-mini-link" data-tab-link="rekap-laporan" role="button" tabindex="0" title="Lihat Rekap Laporan">
+            <div class="chart-mini chart-mini-link" data-tab-link="rekap-laporan" role="button" tabindex="0" title="Lihat Ringkasan Data">
               <div class="chart-mini-head">
                 <div class="chart-mini-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
                 <div><h4>Distribusi Status Laporan</h4><p>Proporsi status seluruh laporan di sistem.</p></div>
@@ -1775,7 +1775,7 @@
       {{-- ===== BACKUP DATABASE ===== --}}
       <section class="tab-panel" data-tab-panel="backup">
         <div class="section-head panel">
-          <h2>Backup Database</h2>
+          <h2>Cadangan Data</h2>
           <p>Buat salinan database sewaktu-waktu dan unduh untuk disimpan di luar server.</p>
         </div>
 
@@ -2664,7 +2664,7 @@
       {{-- ===== REKAP LAPORAN LINTAS SATLAK ===== --}}
       <section class="tab-panel" data-tab-panel="rekap-laporan">
         <div class="section-head panel">
-          <h2>Rekap Laporan</h2>
+          <h2>Ringkasan Data</h2>
           <p>Ringkasan jumlah &amp; status laporan tiap satuan dalam satu tampilan.</p>
         </div>
 
@@ -2722,7 +2722,7 @@
       <section class="tab-panel" data-tab-panel="sesi-aktif">
 
         <div class="panel">
-          <div class="panel-head"><div><h2>Sesi Aktif</h2><p>Pantau perangkat/browser yang sedang login, dan paksa logout kalau perlu.</p></div></div>
+          <div class="panel-head"><div><h2>Pengguna Aktif</h2><p>Pantau perangkat/browser yang sedang login, dan paksa logout kalau perlu.</p></div></div>
           <div class="tbl-wrap">
             <table class="dtbl">
               <thead><tr><th>Pengguna</th><th>IP Address</th><th>Perangkat / Browser</th><th>Terakhir Aktif</th><th>Aksi</th></tr></thead>
