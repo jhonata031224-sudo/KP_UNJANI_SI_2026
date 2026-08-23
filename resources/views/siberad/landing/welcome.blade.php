@@ -509,7 +509,7 @@
     border-radius:14px;overflow:hidden;
   }
   @media (max-width:820px){ .stats-grid{grid-template-columns:repeat(2,1fr);} }
-  .stat{background:var(--panel);padding:26px 22px;position:relative;}
+  .stat{background:var(--panel);padding:26px 22px;position:relative;text-align:center;}
   .stat-num{font-family:var(--display);font-size:36px;font-weight:700;color:var(--gold-bright);}
   .stat-label{font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.5;text-transform:uppercase;letter-spacing:.03em;}
 
