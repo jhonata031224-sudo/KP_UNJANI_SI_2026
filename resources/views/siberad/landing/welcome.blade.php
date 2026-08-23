@@ -380,9 +380,12 @@
   .login-submit{border:none;cursor:pointer;justify-content:center;margin-top:4px;width:100%;}
   .captcha-row{display:flex;align-items:center;gap:6px;margin-bottom:12px;}
   .captcha-img{height:56px;border-radius:8px;border:1px solid var(--border);flex-shrink:0;}
-  .captcha-row .captcha-input{width:auto;flex:1;min-width:0;margin-bottom:0;padding:9px 10px;font-size:12px;}
+  .captcha-row .captcha-input{
+    box-sizing:border-box;height:56px;width:auto;flex:1;min-width:0;margin-bottom:0;
+    padding:0 14px;font-size:12px;
+  }
   .captcha-refresh{
-    box-sizing:border-box;width:36px;height:36px;flex-shrink:0;border-radius:8px;cursor:pointer;
+    box-sizing:border-box;width:56px;height:56px;flex-shrink:0;border-radius:8px;cursor:pointer;
     background:var(--bg-deep);border:1px solid var(--border);color:var(--text-muted);
     display:flex;align-items:center;justify-content:center;
     transition:background .15s ease,color .15s ease,border-color .15s ease;
