@@ -3314,7 +3314,7 @@
       var PX_PER_MM = 96 / 25.4;
       var pxPerLaporan = MM_PER_LAPORAN * PX_PER_MM;
       var maxTotalLaporan = rekapSatuan.reduce(function (m, s) { return Math.max(m, s.total_laporan || 0); }, 0);
-      var xMaxTarget = Math.max(10, Math.ceil((maxTotalLaporan + 1) / 10) * 10);
+      var xMaxTarget = Math.max(100, Math.ceil((maxTotalLaporan + 1) / 10) * 10);
 
       var chartRekapInstance = new Chart(elRekap, {
         type: 'bar',
