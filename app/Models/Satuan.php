@@ -116,20 +116,20 @@ class Satuan extends Model
      */
     public const KATEGORI_POKPEL = 'pokpel';
     /**
-     * Kategori Kasansi -- kelompok satuan baru di luar Satlak/Direktorat/
-     * Pimpinan/Pok Pel/Admin.
+     * Kategori Kotama (Komando Utama) -- 21 Kodam aktif di lingkungan TNI AD,
+     * kelompok satuan di luar Satlak/Direktorat/Pimpinan/Pok Pel/Admin.
      */
-    public const KATEGORI_KASANSI = 'kasansi';
+    public const KATEGORI_KOTAMA = 'kotama';
 
     /**
      * Urutan tampil kategori secara umum (Admin -> Pimpinan -> Pok Pel ->
-     * Direktorat -> Satlak -> Kasansi), dipakai di seluruh tempat yang
+     * Direktorat -> Satlak -> Kotama), dipakai di seluruh tempat yang
      * menampilkan daftar satuan gabungan lintas kategori -- menggantikan
      * field "urutan" manual yang sudah dihapus.
      *
      * Pok Pel (Pok Analis, Urdal) sengaja ditaruh setelah Pimpinan (Wadan)
      * dan sebelum Direktorat (4 Sdir) sesuai urutan organisasi yang diminta.
-     * Kasansi ditaruh paling akhir karena kategori paling baru.
+     * Kotama ditaruh paling akhir karena kategori paling baru.
      */
     public static function prioritasKategori(): array
     {
@@ -139,7 +139,7 @@ class Satuan extends Model
             self::KATEGORI_POKPEL => 3,
             self::KATEGORI_DIREKTORAT => 4,
             self::KATEGORI_SATLAK => 5,
-            self::KATEGORI_KASANSI => 6,
+            self::KATEGORI_KOTAMA => 6,
         ];
     }
 
@@ -168,21 +168,20 @@ class Satuan extends Model
             'SATLAKDAK' => 2,
             'SATLAKSISOS' => 3,
             'SATLAKDUKTEK' => 4,
-        ] + self::urutanKodamKasansi();
+        ] + self::urutanKotama();
     }
 
     /**
-     * Urutan Kodam 1 s.d. Kodam 23 (kategori Kasansi) supaya tampil
-     * berurutan sesuai nomornya, bukan acak.
+     * Urutan 21 Kodam aktif (kategori Kotama) supaya tampil berurutan sesuai
+     * nomor Kodam resmi (I, II, III, ... XXIV), bukan alfabet kode/nama.
      */
-    private static function urutanKodamKasansi(): array
+    private static function urutanKotama(): array
     {
-        $urutan = [];
-        for ($i = 1; $i <= 23; $i++) {
-            $urutan['KODAM'.$i] = $i;
-        }
+        $urutan = 1;
 
-        return $urutan;
+        return collect(self::KODE_KOTAMA)
+            ->mapWithKeys(fn ($kode) => [$kode => $urutan++])
+            ->all();
     }
 
     /**
@@ -270,6 +269,20 @@ class Satuan extends Model
     public const KODE_POKPEL = ['POKANALIS', 'URDAL'];
 
     /**
+     * Kode 21 Kodam aktif (kategori Kotama), sesuai nomor Kodam resmi
+     * (I, II, III, IV, V, VI, IX, XII, XIII, XIV, XV, XVII, XVIII, Jayakarta,
+     * Iskandar Muda, XIX, XX, XXI, XXII, XXIII, XXIV). Kode dibuat dari
+     * nama/julukan wilayah (bukan penomoran generik dam1, dam2, dst).
+     */
+    public const KODE_KOTAMA = [
+        'BUKITBARISAN', 'SRIWIJAYA', 'SILIWANGI', 'DIPONEGORO', 'BRAWIJAYA',
+        'MULAWARMAN', 'UDAYANA', 'TANJUNGPURA', 'MERDEKA', 'HASANUDDIN',
+        'PATTIMURA', 'CENDERAWASIH', 'KASUARI', 'JAYA', 'ISKANDARMUDA',
+        'TUANKUTAMBUSAI', 'IMAMBONJOL', 'RADININTEN', 'TAMBUNBUNGAI',
+        'PALAKAWIRA', 'MANDALATRIKORA',
+    ];
+
+    /**
      * Alur tujuan laporan resmi (hierarki komando):
      * - Satlak hanya boleh lapor ke DANPUS/WADAN (tujuan utama).
      *   Satlak tidak boleh saling kirim ke sesama Satlak maupun ke satuan pembinaan.
@@ -291,9 +304,9 @@ class Satuan extends Model
             return ['DANPUS'];
         }
 
-        // 23 satuan Kasansi (Kodam 1-23) lapor langsung ke DANPUS,
+        // 21 Kodam (kategori Kotama) lapor langsung ke DANPUS,
         // sama seperti satuan pembinaan dan Pok Pel.
-        if (preg_match('/^KODAM([1-9]|1\d|2[0-3])$/', $kodeAsal)) {
+        if (in_array($kodeAsal, self::KODE_KOTAMA, true)) {
             return ['DANPUS'];
         }
 

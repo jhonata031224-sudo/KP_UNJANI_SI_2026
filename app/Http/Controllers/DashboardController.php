@@ -50,7 +50,7 @@ class DashboardController
             })
             ->values();
         $permintaanResetPassword = PermintaanResetPassword::with(['user.satuan', 'diprosesOleh'])->latest()->get();
-        $labelKategori = [Satuan::KATEGORI_SATLAK => 'Satlak', Satuan::KATEGORI_DIREKTORAT => 'Direktorat', Satuan::KATEGORI_PIMPINAN => 'Pimpinan', Satuan::KATEGORI_ADMIN => 'Admin', Satuan::KATEGORI_POKPEL => 'Pok Pel', Satuan::KATEGORI_KASANSI => 'Kasansi'];
+        $labelKategori = [Satuan::KATEGORI_SATLAK => 'Satlak', Satuan::KATEGORI_DIREKTORAT => 'Direktorat', Satuan::KATEGORI_PIMPINAN => 'Pimpinan', Satuan::KATEGORI_ADMIN => 'Admin', Satuan::KATEGORI_POKPEL => 'Pok Pel', Satuan::KATEGORI_KOTAMA => 'Kotama'];
         // Urutan grup di sini SENGAJA dipastikan lewat prioritasKategori
         // (bukan ikut urutan asli $semuaSatuan begitu saja), soalnya grafik
         // "Pengguna per Kategori Satuan" pasangin warna berdasarkan posisi --
@@ -109,7 +109,7 @@ class DashboardController
         // (Admin cuma pengelola sistem, Pimpinan/Danpus-Wadan cuma
         // menerima & meninjau, bukan pengirim). Dihitung otomatis dari
         // kategori, bukan daftar kode manual, supaya kategori satuan baru
-        // (mis. Kasansi) otomatis ikut ke "Ringkasan Data"/"Detail per
+        // (mis. Kotama) otomatis ikut ke "Ringkasan Data"/"Detail per
         // Satuan" tanpa perlu diedit lagi di sini tiap kali ada satuan baru.
         $kodeSatuanPengirim = Satuan::whereNotIn('kategori', [Satuan::KATEGORI_ADMIN, Satuan::KATEGORI_PIMPINAN])
             ->pluck('kode')
@@ -185,18 +185,18 @@ class DashboardController
         };
 
         // Urutan: Urdal -> Pok Analis -> 4 Sdir (Binfung, Binum, Bindiklat,
-        // Binmat) -> 4 Satlak (Kal, Dak, Siber Sos, Dukteksi) -> 23 Kasansi
-        // (Kodam 1-23), sesuai urutan organisasi -- samain sama
-        // Satuan::kunciUrutSatuan(). 23 Kasansi ditambahkan di akhir supaya
+        // Binmat) -> 4 Satlak (Kal, Dak, Siber Sos, Dukteksi) -> 21 Kotama
+        // (21 Kodam aktif), sesuai urutan organisasi -- samain sama
+        // Satuan::kunciUrutSatuan(). 21 Kotama ditambahkan di akhir supaya
         // monitoring Pimpinan dan rekap laporan ikut menampilkan data mereka,
-        // konsisten dengan $rekapLaporanSatuan yang sudah include Kasansi
+        // konsisten dengan $rekapLaporanSatuan yang sudah include Kotama
         // lewat whereNotIn(['admin','pimpinan']) di bagian atas.
-        $kodeKasansi = array_map(fn ($i) => 'KODAM'.$i, range(1, 23));
+        $kodeKotama = Satuan::KODE_KOTAMA;
         $kodeSatuanPelaksanaUrut = array_merge([
             'URDAL', 'POKANALIS',
             'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT',
             'SATLAKKAL', 'SATLAKDAK', 'SATLAKSISOS', 'SATLAKDUKTEK',
-        ], $kodeKasansi);
+        ], $kodeKotama);
         $permintaanLaporan = $modePimpinan
             ? PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan','laporans'])
                 ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS','WADAN']))
