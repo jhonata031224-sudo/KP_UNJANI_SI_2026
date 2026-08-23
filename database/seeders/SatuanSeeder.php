@@ -66,17 +66,34 @@ class SatuanSeeder extends Seeder
         }
 
         // --- Pok Pel (Kelompok Pelayan), langsung di bawah/melayani Danpus ---
-        // Akun pengguna SENGAJA tidak dibuat otomatis di sini -- ditambah
-        // manual lewat Admin > Daftar Pengguna setelah satuannya tersedia.
-        // Kalau mau samain username-nya, isi manual: "Pok analis" untuk
-        // POKANALIS dan "urdal" untuk URDAL.
+        // Sama seperti satuan lain di atas: satu akun per satuan, username
+        // dibuat otomatis di sini.
         $satuanPokPel = [
-            ['kode' => 'POKANALIS', 'nama' => 'Pok Analis (Kelompok Analis)', 'kategori' => Satuan::KATEGORI_POKPEL, 'deskripsi' => 'Kelompok Pelayan Danpus untuk analisis dan kajian.'],
-            ['kode' => 'URDAL',     'nama' => 'Urdal (Urusan Dalam)',         'kategori' => Satuan::KATEGORI_POKPEL, 'deskripsi' => 'Kelompok Pelayan Danpus untuk urusan dalam.'],
+            ['kode' => 'POKANALIS', 'username' => 'Pok analis', 'nama' => 'Pok Analis (Kelompok Analis)', 'kategori' => Satuan::KATEGORI_POKPEL, 'deskripsi' => 'Kelompok Pelayan Danpus untuk analisis dan kajian.'],
+            ['kode' => 'URDAL',     'username' => 'urdal',      'nama' => 'Urdal (Urusan Dalam)',         'kategori' => Satuan::KATEGORI_POKPEL, 'deskripsi' => 'Kelompok Pelayan Danpus untuk urusan dalam.'],
         ];
 
         foreach ($satuanPokPel as $data) {
-            Satuan::updateOrCreate(['kode' => $data['kode']], $data);
+            $satuan = Satuan::updateOrCreate(
+                ['kode' => $data['kode']],
+                collect($data)->except('username')->all()
+            );
+
+            // Email tidak boleh mengandung spasi, jadi khusus untuk email
+            // dibuat dari username tanpa spasi -- login-nya sendiri tetap
+            // pakai username asli (boleh berspasi, mis. "Pok analis").
+            $emailLocal = str_replace(' ', '', $data['username']);
+
+            User::updateOrCreate(
+                ['satuan_id' => $satuan->id],
+                [
+                    'name' => $data['nama'],
+                    'username' => $data['username'],
+                    'email' => strtolower($emailLocal).'@pussiberad.mil.id',
+                    'password' => Hash::make('111'),
+                    'jabatan' => null,
+                ]
+            );
         }
     }
 }
