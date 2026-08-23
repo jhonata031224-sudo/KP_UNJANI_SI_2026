@@ -3285,14 +3285,16 @@
     };
     var elRekap = document.getElementById('chartRekapLaporan');
     if (elRekap) {
-      var ROW_HEIGHT_PX = 22;
-      var chartHeight = Math.max(rekapSatuan.length * ROW_HEIGHT_PX, 240);
       var innerEl = document.getElementById('chartRekapLaporanWrap');
-      if (innerEl) innerEl.style.height = chartHeight + 'px';
+      // Tinggi awal sekadar placeholder sebelum sesuaikanTinggiChartRekap()
+      // (di bawah, setelah chart dibuat) menghitung ukuran final berdasarkan
+      // sisa ruang viewport -- dibuat cukup besar biar Chart.js nggak
+      // sempat kepepet render di 0px lalu "loncat" pas resize pertama.
+      if (innerEl) innerEl.style.height = Math.max(rekapSatuan.length * 22, 320) + 'px';
 
       var warnaBar = rekapSatuan.map(function (s) { return kategoriWarna[s.kategori] || '#94a3b8'; });
 
-      new Chart(elRekap, {
+      var chartRekapInstance = new Chart(elRekap, {
         type: 'bar',
         data: {
           labels: rekapSatuan.map(function (s) {
@@ -3353,6 +3355,44 @@
           legendBox.appendChild(item);
         });
       }
+
+      // ===== Sizing dinamis: isi penuh sisa tinggi viewport, tanpa celah
+      // kosong yang canggung di bawah halaman =====
+      // Elemen ".chart-wrap" ini juga kena aturan CSS ".chart-mini .chart-wrap"
+      // (dipakai chart mini lain di dashboard) yang mematok height:178px --
+      // makanya "height" di sini WAJIB di-set langsung lewat inline style
+      // (bukan cuma max-height), karena inline style pasti menang atas
+      // aturan class manapun. Kalau ruang tersedia cukup buat semua satuan,
+      // baris dibuat lega mengisi penuh sisa layar (tanpa scroll, tanpa
+      // celah kosong di bawah). Kalau tidak cukup, tinggi baris dijaga di
+      // batas minimum biar batang tidak gepeng -- sisanya baru discroll,
+      // dan area scroll itu sendiri tetap mengisi penuh sisa layar (jadi
+      // scrollbar-nya juga sampai ke bawah, bukan berhenti di tengah).
+      var chartWrapRekap = elRekap.closest('.chart-wrap');
+      var tabPanelRekap = document.querySelector('[data-tab-panel="rekap-laporan"]');
+      var MIN_ROW_HEIGHT_PX = 20;
+      var MIN_WRAP_HEIGHT_PX = 320;
+      var BOTTOM_BREATHING_ROOM_PX = 32;
+
+      function sesuaikanTinggiChartRekap() {
+        if (!chartWrapRekap || !innerEl || !tabPanelRekap || !tabPanelRekap.classList.contains('active')) return;
+        var rectAtas = chartWrapRekap.getBoundingClientRect().top;
+        var legendH = legendBox ? legendBox.offsetHeight : 0;
+        var sisa = window.innerHeight - rectAtas - legendH - BOTTOM_BREATHING_ROOM_PX;
+        var tersedia = Math.max(sisa, MIN_WRAP_HEIGHT_PX);
+        var tinggiMinimalSemuaBaris = rekapSatuan.length * MIN_ROW_HEIGHT_PX;
+
+        chartWrapRekap.style.height = tersedia + 'px';
+        chartWrapRekap.style.maxHeight = tersedia + 'px';
+        innerEl.style.height = Math.max(tinggiMinimalSemuaBaris, tersedia) + 'px';
+
+        if (chartRekapInstance) chartRekapInstance.resize();
+      }
+
+      new MutationObserver(sesuaikanTinggiChartRekap).observe(tabPanelRekap || document.body, { attributes: true, attributeFilter: ['class'] });
+      window.addEventListener('resize', sesuaikanTinggiChartRekap);
+      window.addEventListener('load', sesuaikanTinggiChartRekap);
+      sesuaikanTinggiChartRekap();
     }
   })();
   </script>
@@ -3373,43 +3413,6 @@
       if (label) label.textContent = terbuka ? 'Sembunyikan Detail per Satuan' : 'Lihat Detail per Satuan';
       if (terbuka) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
-  })();
-  </script>
-
-  <script>
-  (function () {
-    // Panel "Total Laporan per Satuan" sekarang sering jadi satu-satunya
-    // isi tab "Ringkasan Data" (Detail per Satuan disembunyikan default),
-    // jadi kalau tinggi chart-nya dipatok statis, bagian bawah halaman
-    // jadi kosong plong. Di sini tinggi chart-wrap dihitung dinamis
-    // mengikuti sisa tinggi viewport (bukan angka tetap), supaya panel
-    // selalu penuh sampai ke bawah layar.
-    var chartWrap = document.getElementById('chartRekapLaporan');
-    chartWrap = chartWrap ? chartWrap.closest('.chart-wrap') : null;
-    var tabPanel = document.querySelector('[data-tab-panel="rekap-laporan"]');
-    var legend = document.getElementById('chartRekapLaporanLegend');
-    if (!chartWrap || !tabPanel) return;
-
-    var MIN_HEIGHT_PX = 320;
-    var BOTTOM_BREATHING_ROOM_PX = 32;
-
-    function hitungTinggi() {
-      if (!tabPanel.classList.contains('active')) return;
-      var rectAtas = chartWrap.getBoundingClientRect().top;
-      var legendH = legend ? legend.offsetHeight : 0;
-      var sisa = window.innerHeight - rectAtas - legendH - BOTTOM_BREATHING_ROOM_PX;
-      chartWrap.style.maxHeight = Math.max(sisa, MIN_HEIGHT_PX) + 'px';
-    }
-
-    // Panel tab ini diaktifkan lewat activateAdminTab() di dash-script.blade.php
-    // (baik lewat klik sidebar maupun dipulihkan dari sessionStorage saat
-    // reload) -- keduanya cuma menambahkan class "active" ke elemen ini,
-    // jadi diobservasi lewat perubahan atribut class daripada nebak-nebak
-    // titik pemanggilannya.
-    new MutationObserver(hitungTinggi).observe(tabPanel, { attributes: true, attributeFilter: ['class'] });
-    window.addEventListener('resize', hitungTinggi);
-    window.addEventListener('load', hitungTinggi);
-    hitungTinggi();
   })();
   </script>
 
