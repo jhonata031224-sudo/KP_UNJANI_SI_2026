@@ -1237,7 +1237,7 @@
   @endif
 
   @if(session('logout_success'))
-    siberadShowToast('success', 'Anda berhasil logout dari BRAHMASTRA WIRA.');
+    siberadShowToast('success', 'Anda berhasil logout dari DT-PHATRAM-2639.');
   @endif
 
   // ---------- scroll reveal ----------

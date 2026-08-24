@@ -22,7 +22,7 @@ class Pengaturan extends Model
             'alamat' => 'Jl. Veteran No. 5, Gambir, Jakarta Pusat, DKI Jakarta 10110',
             'telepon_kontak' => '(021) 3849192',
             'hero_eyebrow' => 'PUSSIBERAD // SISTEM PENDUKUNG OPERASIONAL',
-            'hero_judul_awal' => 'BRAHMASTRA ', 'hero_judul_aksen' => 'WIRA',
+            'hero_judul_awal' => 'DT-PHATRAM-', 'hero_judul_aksen' => '2639',
             'hero_subjudul' => 'Sistem Informasi Berbasis Elektronik Angkatan Darat',
             'hero_deskripsi' => 'Sistem pendukung operasional Satuan Siber AD dan jajaran Pusat Siber TNI Angkatan Darat — mulai dari input laporan, hingga visualisasi real-time bagi pengambil keputusan.',
             'fitur' => [
@@ -50,14 +50,14 @@ class Pengaturan extends Model
     public static function defaultLandingContent(): array
     {
         return [
-            'brand'=>['name'=>'BRAHMASTRA ','accent'=>'WIRA','tagline'=>'Pussiberad · TNI AD'],
-            'meta'=>['title'=>'BRAHMASTRA WIRA — Sistem Informasi Berbasis Elektronik Angkatan Darat | PUSSIBERAD','description'=>'BRAHMASTRA WIRA — Sistem Informasi Berbasis Elektronik Angkatan Darat. Platform pelaporan dan monitoring resmi Pusat Siber Angkatan Darat (PUSSIBERAD).'],
+            'brand'=>['name'=>'DT-PHATRAM-','accent'=>'2639','tagline'=>'Pussiberad · TNI AD'],
+            'meta'=>['title'=>'DT-PHATRAM-2639 — Sistem Informasi Berbasis Elektronik Angkatan Darat | PUSSIBERAD','description'=>'DT-PHATRAM-2639 — Sistem Informasi Berbasis Elektronik Angkatan Darat. Platform pelaporan dan monitoring resmi Pusat Siber Angkatan Darat (PUSSIBERAD).'],
             'nav'=>[['label'=>'Beranda','url'=>'#tentang'],['label'=>'Fitur','url'=>'#fitur'],['label'=>'Tentang','url'=>'#tentang-pussiberad'],['label'=>'Kontak','url'=>'#tim']],
             'hero'=>['button_label'=>'Selengkapnya','button_url'=>'#fitur','crest_caption'=>'Pusat Siber Angkatan Darat','crest_motto'=>''],
             'stats'=>[['number'=>'12','label'=>'Akun Terdaftar'],['number'=>'24/7','label'=>'Layanan Aktif'],['number'=>'100%','label'=>'Transparan & Real-Time'],['number'=>'1','label'=>'Sistem Pelaporan Digital']],
             'features_section'=>['eyebrow'=>'Keunggulan','title'=>'Kenapa Memakai Sistem Ini','description'=>'Membantu proses pelaporan dan persetujuan agar lebih tertata dan mudah dipantau.'],
             'about_section'=>['eyebrow'=>'Tentang','title'=>'Pussiberad'],
-            'footer'=>['description'=>'Sistem Informasi Berbasis Elektronik Angkatan Darat, mendigitalisasi alur pelaporan seluruh Satuan Pelaksana Pussiberad.','copyright'=>'BRAHMASTRA WIRA · Pussiberad · TNI AD'],
+            'footer'=>['description'=>'Sistem Informasi Berbasis Elektronik Angkatan Darat, mendigitalisasi alur pelaporan seluruh Satuan Pelaksana Pussiberad.','copyright'=>'DT-PHATRAM-2639 · Pussiberad · TNI AD'],
         ];
     }
 

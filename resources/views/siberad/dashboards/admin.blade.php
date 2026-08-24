@@ -624,7 +624,7 @@
   <aside class="sidebar" id="sidebar">
     <div class="side-brand">
       <img src="{{ asset('images/logo-pussiberad.jpg') }}" alt="Lambang Pussiberad">
-      <div class="logo">BRAHMASTRA <span>WIRA</span></div>
+      <div class="logo">DT-PHATRAM-<span>2639</span></div>
       <button type="button" class="side-collapse-btn" id="sideCollapseBtn" aria-label="Ciutkan sidebar" title="Ciutkan sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg></button>
     </div>
     <nav class="side-nav">
