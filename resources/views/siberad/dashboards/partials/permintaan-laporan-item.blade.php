@@ -16,12 +16,17 @@
             <span class="deadline-complete cancelled">✕ Dibatalkan Pimpinan</span>
         @elseif(!$permintaan->laporan_id)
             @if($permintaan->status !== 'Belum dikerjakan' && $permintaan->tasks->isNotEmpty())
-                <div class="deadline-task-list">
+                @php $dtActive = false; @endphp
+                <div class="deadline-task-track" data-permintaan-task-track>
                     @foreach($permintaan->tasks as $task)
-                        <label class="deadline-task-item {{ $task->selesai ? 'done' : '' }}">
-                            <input type="checkbox" class="permintaan-task-checkbox" data-toggle-url="{{ route('permintaan-laporan.task.toggle', $task) }}" {{ $task->selesai ? 'checked' : '' }}>
-                            <span>{{ $task->deskripsi }}</span>
-                        </label>
+                        @php
+                            $dtState = $task->selesai ? 'done' : ($dtActive ? 'pending' : 'active');
+                            if (!$task->selesai) { $dtActive = true; }
+                        @endphp
+                        <button type="button" class="deadline-task-step {{ $dtState }}" data-task-id="{{ $task->id }}" data-toggle-url="{{ route('permintaan-laporan.task.toggle', $task) }}" data-selesai="{{ $task->selesai ? '1' : '0' }}" data-step-number="{{ $loop->iteration }}" title="{{ $task->deskripsi }}">
+                            <span class="deadline-task-num">{{ $task->selesai ? '✓' : $loop->iteration }}</span>
+                            <span class="deadline-task-label">{{ $task->deskripsi }}</span>
+                        </button>
                     @endforeach
                 </div>
             @endif
