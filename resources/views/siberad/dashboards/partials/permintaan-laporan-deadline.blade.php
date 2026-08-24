@@ -8,7 +8,6 @@
 .deadline-task-step:first-child:last-child{clip-path:none;border-radius:8px}
 .deadline-task-step:hover{filter:brightness(1.08)}
 .deadline-task-step:disabled{cursor:not-allowed;opacity:.6;filter:none}
-.deadline-task-step.is-busy{cursor:wait;opacity:.75}
 .deadline-task-num{flex-shrink:0;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;background:var(--p-surface,var(--panel));color:inherit}
 .deadline-task-label{overflow:hidden;text-overflow:ellipsis;max-width:170px}
 .deadline-task-step.active{background:var(--gold-bright,#e0a83a);color:#1a1206;z-index:2;box-shadow:0 4px 12px -4px rgba(224,168,58,.6)}
@@ -138,6 +137,15 @@
                 var hidden=form.querySelector('input[name="permintaan_laporan_id"]');
                 if(!hidden){hidden=document.createElement('input');hidden.type='hidden';hidden.name='permintaan_laporan_id';form.appendChild(hidden)}
                 hidden.value=btn.dataset.requestId||'';
+                // Kalau tombolnya adalah satu step checklist task (lihat
+                // permintaan-laporan-item.blade.php), sertakan task_id supaya
+                // LaporanController::store() tahu task mana yang mau
+                // ditandai selesai/dibatalkan begitu checkpoint ini disubmit
+                // -- task-nya BARU berubah status setelah form ini terkirim,
+                // bukan langsung pas diklik.
+                var taskIdHidden=form.querySelector('input[name="task_id"]');
+                if(!taskIdHidden){taskIdHidden=document.createElement('input');taskIdHidden.type='hidden';taskIdHidden.name='task_id';form.appendChild(taskIdHidden)}
+                taskIdHidden.value=btn.dataset.taskId||'';
                 var tujuan=form.querySelector('select[name="tujuan_satuan_id"]'); if(tujuan && btn.dataset.targetId) tujuan.value=btn.dataset.targetId;
                 var perihal=form.querySelector('[name="perihal"]'); if(perihal && btn.dataset.perihal) perihal.value=btn.dataset.perihal;
                 var kategori=form.querySelector('[name="proyek"]'); if(kategori && btn.dataset.kategori) kategori.value=btn.dataset.kategori;
@@ -153,13 +161,18 @@
                 if(progresInput){
                     var current=parseInt(btn.dataset.progres||'0',10);
                     if(btn.dataset.hasTasks==='1'){
-                        // Permintaan ini punya checklist task -- progres
-                        // otomatis mengikuti task yang dicentang di kartu
-                        // (lihat PermintaanLaporanController::toggleTask),
-                        // bukan diketik manual lagi di form ini.
+                        // Permintaan ini punya checklist task -- progres di
+                        // sini nunjukin PREDIKSI angka setelah checkpoint ini
+                        // dikirim (target), bukan angka sekarang. Task-nya
+                        // sendiri baru benar-benar berubah status di server
+                        // setelah form ini disubmit.
                         progresInput.value=current;
                         progresInput.readOnly=true;
-                        if(progresHint) progresHint.textContent='Progres otomatis mengikuti checklist task yang sudah dicentang.';
+                        if(progresHint){
+                            progresHint.textContent=btn.dataset.taskId
+                                ? 'Mengirim checkpoint akan menandai "'+(btn.dataset.taskLabel||'task ini')+'" '+(btn.dataset.taskAction||'selesaikan')+' -- progres jadi '+current+'%.'
+                                : 'Progres otomatis mengikuti checklist task yang sudah dicentang.';
+                        }
                     }else{
                         // Permintaan lama tanpa checklist task -- tetap pakai
                         // alur manual seperti semula (harus naik dari progres
@@ -210,6 +223,12 @@
                 var kendala=form.querySelector('[name="kendala"]'); if(kendala) kendala.value=btn.dataset.kendala||'';
                 var lampiran=form.querySelector('[name="lampiran"]'); if(lampiran) lampiran.value='';
                 var lampiranClearBtn=document.getElementById('lampiranClearBtn'); if(lampiranClearBtn) lampiranClearBtn.style.display='none';
+                // Mode edit cuma buat ngoreksi teks checkpoint yang sudah
+                // dikirim -- gak pernah nyentuh status task, jadi task_id
+                // lama (kalau ada nyangkut dari klik step sebelumnya) wajib
+                // dikosongkan lagi di sini.
+                var taskIdHidden=form.querySelector('input[name="task_id"]');
+                if(taskIdHidden) taskIdHidden.value='';
                 var progresInput=form.querySelector('[name="progres"]');
                 var progresHint=document.getElementById('progresHint');
                 if(progresInput){

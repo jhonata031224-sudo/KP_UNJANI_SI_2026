@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Laporan;
 use App\Models\PermintaanLaporan;
+use App\Models\PermintaanLaporanTask;
 use App\Models\Satuan;
 use App\Models\User;
 use App\Notifications\LaporanBaruDiterima;
@@ -177,6 +178,7 @@ class LaporanController extends Controller
             'lampiran' => ['nullable', 'file', 'mimes:pdf', 'max:20480'],
             'progres' => ['required', 'integer', 'min:0', 'max:100'],
             'kendala' => ['nullable', 'string', 'max:5000'],
+            'task_id' => ['nullable', 'integer', 'exists:permintaan_laporan_tasks,id'],
         ]);
 
         $user = $request->user()->load('satuan');
@@ -210,12 +212,36 @@ class LaporanController extends Controller
 
             $permintaan->load('tasks');
             if ($permintaan->tasks->isNotEmpty()) {
-                // Permintaan ini punya checklist task -- progres sudah
-                // otomatis ter-update tiap task dicentang (lihat
-                // PermintaanLaporanController::toggleTask), jadi dipakai
-                // apa adanya di sini, bukan divalidasi "harus naik" ala
-                // checkpoint manual lagi (checklist boleh naik-turun kalau
-                // satuan koreksi centangan).
+                // Checkpoint ini sekaligus menandai satu task selesai/
+                // dibatalkan (klik step chevron di kartu langsung buka form
+                // ini, lihat initUsePermintaanButtons) -- task-nya BARU
+                // benar-benar berubah status di sini, setelah checkpoint-nya
+                // beneran disubmit, bukan diam-diam pas step-nya diklik.
+                if (! empty($validated['task_id'])) {
+                    $task = $permintaan->tasks->firstWhere('id', (int) $validated['task_id']);
+                    abort_unless($task, 422, 'Task tidak ditemukan untuk permintaan ini.');
+
+                    $akanSelesai = ! $task->selesai;
+                    if ($akanSelesai) {
+                        // Cuma boleh nandain selesai berurutan sesuai `urutan`
+                        // -- task sebelumnya harus sudah selesai duluan. Task
+                        // yang SUDAH selesai tetap boleh dibatalkan kapan saja.
+                        $adaYangBelumSelesai = $permintaan->tasks
+                            ->where('urutan', '<', $task->urutan)
+                            ->contains(fn (PermintaanLaporanTask $t) => ! $t->selesai);
+                        abort_if($adaYangBelumSelesai, 422, 'Selesaikan task sebelumnya dulu secara berurutan.');
+                    }
+
+                    $task->selesai = $akanSelesai;
+                    $task->selesai_at = $akanSelesai ? now() : null;
+                    $task->save();
+                    $permintaan->load('tasks');
+                }
+
+                // Progres dihitung dari checklist task (bukan dipercaya dari
+                // input client), jadi gak divalidasi "harus naik" ala
+                // checkpoint manual lagi -- checklist boleh naik-turun kalau
+                // satuan koreksi centangan.
                 $progresValue = $permintaan->hitungProgresDariTask();
             } else {
                 // Progres yang sama cuma ditolak buat checkpoint biasa (harus

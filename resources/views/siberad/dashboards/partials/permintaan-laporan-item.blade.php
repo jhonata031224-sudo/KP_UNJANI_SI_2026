@@ -16,14 +16,36 @@
             <span class="deadline-complete cancelled">✕ Dibatalkan Pimpinan</span>
         @elseif(!$permintaan->laporan_id)
             @if($permintaan->status !== 'Belum dikerjakan' && $permintaan->tasks->isNotEmpty())
-                @php $dtActive = false; @endphp
+                @php
+                    $dtActive = false;
+                    $dtTotal = $permintaan->tasks->count();
+                    $dtDoneNow = $permintaan->tasks->where('selesai', true)->count();
+                @endphp
                 <div class="deadline-task-track" data-permintaan-task-track>
                     @foreach($permintaan->tasks as $task)
                         @php
                             $dtState = $task->selesai ? 'done' : ($dtActive ? 'pending' : 'active');
                             if (!$task->selesai) { $dtActive = true; }
+                            // Task cuma bisa diklik buat menyelesaikan/membatalkan lewat
+                            // form "Update Progres" (harus isi deskripsi checkpoint dulu),
+                            // bukan langsung toggle diam-diam -- klik-nya numpang di
+                            // mekanisme .use-permintaan yang sudah ada (lihat
+                            // initUsePermintaanButtons di permintaan-laporan-deadline.blade.php).
+                            $dtDoneAfter = $task->selesai ? ($dtDoneNow - 1) : ($dtDoneNow + 1);
+                            $dtTargetProgres = $dtTotal > 0 ? (int) round($dtDoneAfter / $dtTotal * 100) : 0;
                         @endphp
-                        <button type="button" class="deadline-task-step {{ $dtState }}" data-task-id="{{ $task->id }}" data-toggle-url="{{ route('permintaan-laporan.task.toggle', $task) }}" data-selesai="{{ $task->selesai ? '1' : '0' }}" data-step-number="{{ $loop->iteration }}" title="{{ $task->deskripsi }}" {{ $dtState === 'pending' ? 'disabled' : '' }}>
+                        <button type="button" class="deadline-task-step {{ $dtState }} {{ $dtState !== 'pending' ? 'use-permintaan' : '' }}" title="{{ $task->deskripsi }}" {{ $dtState === 'pending' ? 'disabled' : '' }}
+                            data-request-id="{{ $permintaan->id }}"
+                            data-target-id="{{ $permintaan->pembuat->satuan_id }}"
+                            data-perihal="{{ e($permintaan->perihal) }}"
+                            data-kategori="{{ e($permintaan->kategori ?? '') }}"
+                            data-prioritas="{{ e($permintaan->prioritas) }}"
+                            data-instruksi="{{ e($permintaan->instruksi ?? '') }}"
+                            data-progres="{{ $dtTargetProgres }}"
+                            data-has-tasks="1"
+                            data-task-id="{{ $task->id }}"
+                            data-task-label="{{ e($task->deskripsi) }}"
+                            data-task-action="{{ $task->selesai ? 'batalkan' : 'selesaikan' }}">
                             <span class="deadline-task-num">{{ $task->selesai ? '✓' : $loop->iteration }}</span>
                             <span class="deadline-task-label">{{ $task->deskripsi }}</span>
                         </button>

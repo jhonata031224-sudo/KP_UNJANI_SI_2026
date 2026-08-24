@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Laporan;
 use App\Models\PermintaanLaporan;
-use App\Models\PermintaanLaporanTask;
 use App\Models\Satuan;
 use App\Models\User;
 use App\Notifications\PermintaanLaporanBaru;
@@ -343,41 +342,5 @@ class PermintaanLaporanController extends Controller
         ]);
 
         return back()->with('status', 'Deadline permintaan laporan berhasil diperbarui.');
-    }
-
-    public function toggleTask(Request $request, PermintaanLaporanTask $task): JsonResponse
-    {
-        $task->load('permintaanLaporan');
-        $permintaan = $task->permintaanLaporan;
-
-        $user = $request->user()->load('satuan');
-        abort_unless($user->satuan && (int) $permintaan->tujuan_satuan_id === (int) $user->satuan->id, 403);
-        abort_if($permintaan->status === PermintaanLaporan::STATUS_DIBATALKAN, 422, 'Permintaan ini sudah dibatalkan oleh Pimpinan.');
-
-        $akanSelesai = ! $task->selesai;
-        if ($akanSelesai) {
-            // Task cuma boleh ditandai selesai berurutan sesuai `urutan` --
-            // task sebelumnya harus sudah selesai duluan. Task yang SUDAH
-            // selesai tetap boleh dibatalkan/dikoreksi kapan saja (gak
-            // divalidasi di sini), cuma arah "maju" ini yang dikunci.
-            $permintaan->load('tasks');
-            $adaYangBelumSelesai = $permintaan->tasks
-                ->where('urutan', '<', $task->urutan)
-                ->contains(fn (PermintaanLaporanTask $t) => ! $t->selesai);
-            abort_if($adaYangBelumSelesai, 422, 'Selesaikan task sebelumnya dulu secara berurutan.');
-        }
-
-        $task->selesai = $akanSelesai;
-        $task->selesai_at = $akanSelesai ? now() : null;
-        $task->save();
-
-        $permintaan->load('tasks');
-        $permintaan->progres = $permintaan->hitungProgresDariTask();
-        $permintaan->save();
-
-        return response()->json([
-            'selesai' => $task->selesai,
-            'progres' => $permintaan->progres,
-        ]);
     }
 }
