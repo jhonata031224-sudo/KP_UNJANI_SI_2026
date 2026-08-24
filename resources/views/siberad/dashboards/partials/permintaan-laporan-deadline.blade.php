@@ -140,14 +140,28 @@
                 var progresInput=form.querySelector('[name="progres"]');
                 var progresHint=document.getElementById('progresHint');
                 if(progresInput){
-                    // Progres sekarang otomatis mengikuti checklist task yang
-                    // dicentang di kartu permintaan (lihat
-                    // PermintaanLaporanController::toggleTask) -- tidak lagi
-                    // diketik manual di form ini.
                     var current=parseInt(btn.dataset.progres||'0',10);
-                    progresInput.value=current;
-                    progresInput.readOnly=true;
-                    if(progresHint) progresHint.textContent='Progres otomatis mengikuti checklist task yang sudah dicentang.';
+                    if(btn.dataset.hasTasks==='1'){
+                        // Permintaan ini punya checklist task -- progres
+                        // otomatis mengikuti task yang dicentang di kartu
+                        // (lihat PermintaanLaporanController::toggleTask),
+                        // bukan diketik manual lagi di form ini.
+                        progresInput.value=current;
+                        progresInput.readOnly=true;
+                        if(progresHint) progresHint.textContent='Progres otomatis mengikuti checklist task yang sudah dicentang.';
+                    }else{
+                        // Permintaan lama tanpa checklist task -- tetap pakai
+                        // alur manual seperti semula (harus naik dari progres
+                        // terakhir, kecuali resubmit Revisi yang boleh sama).
+                        progresInput.readOnly=false;
+                        var isRevisi=btn.classList.contains('deadline-revisi');
+                        var minAllowed=isRevisi?current:Math.min(current+1,100);
+                        progresInput.min=minAllowed;
+                        if(!progresInput.value || parseInt(progresInput.value,10) < minAllowed) progresInput.value=minAllowed;
+                        if(progresHint) progresHint.textContent=isRevisi
+                            ? 'Minimal '+current+'%, atau 100% kalau sudah final.'
+                            : 'Harus lebih besar dari '+current+'%, atau 100% kalau sudah final.';
+                    }
                 }
                 bindProgresLiveText(form);
                 applyLaporanTexts('create',progresInput?progresInput.value:0);
@@ -189,8 +203,14 @@
                 var progresHint=document.getElementById('progresHint');
                 if(progresInput){
                     progresInput.value=btn.dataset.progres||'0';
-                    progresInput.readOnly=true;
-                    if(progresHint) progresHint.textContent='Progres otomatis mengikuti checklist task yang sudah dicentang.';
+                    if(btn.dataset.hasTasks==='1'){
+                        progresInput.readOnly=true;
+                        if(progresHint) progresHint.textContent='Progres otomatis mengikuti checklist task yang sudah dicentang.';
+                    }else{
+                        progresInput.readOnly=false;
+                        progresInput.min=0;
+                        if(progresHint) progresHint.textContent='Mengedit checkpoint yang sudah dikirim.';
+                    }
                 }
                 bindProgresLiveText(form);
                 applyLaporanTexts('edit',progresInput?progresInput.value:0);
@@ -229,6 +249,9 @@
                 e.preventDefault();
                 input.classList.add('field-invalid');
                 var text=messages[input.name]||'Kolom ini wajib diisi.';
+                if(input.name==='progres'&&input.validity.rangeUnderflow){
+                    text='Progres tidak boleh kurang dari '+input.min+'%.';
+                }
                 msg.textContent=text;
                 msg.style.display='flex';
             });

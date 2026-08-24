@@ -207,16 +207,28 @@ class LaporanController extends Controller
             $permintaan = PermintaanLaporan::whereKey($permintaan->id)->lockForUpdate()->first();
             abort_if($permintaan->laporan_id, 422, 'Permintaan laporan tersebut sudah memiliki laporan yang menunggu pemeriksaan atau sudah diputuskan.');
             abort_if($permintaan->status === PermintaanLaporan::STATUS_DIBATALKAN, 422, 'Permintaan laporan ini sudah dibatalkan oleh Pimpinan.');
-            // Progres yang sama cuma ditolak buat checkpoint biasa (harus
-            // strictly naik). Kalau ini resubmit hasil Revisi, laporan
-            // terakhirnya udah ditolak/diminta revisi -- progres permintaan
-            // masih nyangkut di angka lama (biasanya 100%) karena memang
-            // sengaja nggak direset pas ditolak, jadi di sini cukup nggak
-            // boleh MENURUN dari itu, boleh sama.
-            $progresMinimal = $permintaan->isSedangRevisi() ? $permintaan->progres : $permintaan->progres + 1;
-            abort_if($progresValue < $progresMinimal, 422, $permintaan->isSedangRevisi()
-                ? 'Persentase progres tidak boleh lebih kecil dari progres terakhir ('.$permintaan->progres.'%).'
-                : 'Persentase progres harus lebih besar dari progres terakhir ('.$permintaan->progres.'%).');
+
+            $permintaan->load('tasks');
+            if ($permintaan->tasks->isNotEmpty()) {
+                // Permintaan ini punya checklist task -- progres sudah
+                // otomatis ter-update tiap task dicentang (lihat
+                // PermintaanLaporanController::toggleTask), jadi dipakai
+                // apa adanya di sini, bukan divalidasi "harus naik" ala
+                // checkpoint manual lagi (checklist boleh naik-turun kalau
+                // satuan koreksi centangan).
+                $progresValue = $permintaan->hitungProgresDariTask();
+            } else {
+                // Progres yang sama cuma ditolak buat checkpoint biasa (harus
+                // strictly naik). Kalau ini resubmit hasil Revisi, laporan
+                // terakhirnya udah ditolak/diminta revisi -- progres permintaan
+                // masih nyangkut di angka lama (biasanya 100%) karena memang
+                // sengaja nggak direset pas ditolak, jadi di sini cukup nggak
+                // boleh MENURUN dari itu, boleh sama.
+                $progresMinimal = $permintaan->isSedangRevisi() ? $permintaan->progres : $permintaan->progres + 1;
+                abort_if($progresValue < $progresMinimal, 422, $permintaan->isSedangRevisi()
+                    ? 'Persentase progres tidak boleh lebih kecil dari progres terakhir ('.$permintaan->progres.'%).'
+                    : 'Persentase progres harus lebih besar dari progres terakhir ('.$permintaan->progres.'%).');
+            }
 
             $lampiranPath = $request->hasFile('lampiran')
                 ? $request->file('lampiran')->store('lampiran-laporan', 'public')
@@ -294,8 +306,16 @@ class LaporanController extends Controller
 
             if ($permintaan) {
                 abort_if($permintaan->status === PermintaanLaporan::STATUS_DIBATALKAN, 422, 'Permintaan laporan ini sudah dibatalkan oleh Pimpinan.');
-                $progresTerakhir = (int) (Laporan::where('permintaan_laporan_id', $permintaan->id)->max('progres') ?? 0);
-                abort_if($progresValue < $progresTerakhir, 422, 'Persentase progres tidak boleh lebih kecil dari progres terakhir ('.$progresTerakhir.'%).');
+                $permintaan->load('tasks');
+                if ($permintaan->tasks->isNotEmpty()) {
+                    // Sama seperti LaporanController::store() -- progres
+                    // checklist otomatis, gak perlu validasi "gak boleh
+                    // turun dari checkpoint terakhir" lagi.
+                    $progresValue = $permintaan->hitungProgresDariTask();
+                } else {
+                    $progresTerakhir = (int) (Laporan::where('permintaan_laporan_id', $permintaan->id)->max('progres') ?? 0);
+                    abort_if($progresValue < $progresTerakhir, 422, 'Persentase progres tidak boleh lebih kecil dari progres terakhir ('.$progresTerakhir.'%).');
+                }
             }
 
             $lampiranPath = $sumber->lampiran_path;
