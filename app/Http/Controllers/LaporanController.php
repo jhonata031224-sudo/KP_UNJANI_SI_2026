@@ -267,6 +267,7 @@ class LaporanController extends Controller
                 'user_id' => $user->id,
                 'tujuan_satuan_id' => $tujuan->id,
                 'permintaan_laporan_id' => $permintaan->id,
+                'task_id' => $validated['task_id'] ?? null,
                 'proyek' => $validated['proyek'] ?? null,
                 'perihal' => $validated['perihal'],
                 'deskripsi' => $validated['deskripsi'],

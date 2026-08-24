@@ -15,6 +15,7 @@ class Laporan extends Model
         'user_id',
         'tujuan_satuan_id',
         'permintaan_laporan_id',
+        'task_id',
         'proyek',
         'perihal',
         'deskripsi',
@@ -50,5 +51,10 @@ class Laporan extends Model
     public function permintaanLaporan(): BelongsTo
     {
         return $this->belongsTo(PermintaanLaporan::class, 'permintaan_laporan_id');
+    }
+
+    public function task(): BelongsTo
+    {
+        return $this->belongsTo(PermintaanLaporanTask::class, 'task_id');
     }
 }

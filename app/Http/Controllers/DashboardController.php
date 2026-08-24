@@ -199,7 +199,7 @@ class DashboardController
             'SATLAKKAL', 'SATLAKDAK', 'SATLAKSISOS', 'SATLAKDUKTEK',
         ], $kodeKotama);
         $permintaanLaporan = $modePimpinan
-            ? PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan','laporans','tasks'])
+            ? PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan','laporans','tasks.laporans'])
                 ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS','WADAN']))
                 ->latest('id')
                 ->get()
