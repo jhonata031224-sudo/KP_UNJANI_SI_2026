@@ -23,7 +23,7 @@
                             $dtState = $task->selesai ? 'done' : ($dtActive ? 'pending' : 'active');
                             if (!$task->selesai) { $dtActive = true; }
                         @endphp
-                        <button type="button" class="deadline-task-step {{ $dtState }}" data-task-id="{{ $task->id }}" data-toggle-url="{{ route('permintaan-laporan.task.toggle', $task) }}" data-selesai="{{ $task->selesai ? '1' : '0' }}" data-step-number="{{ $loop->iteration }}" title="{{ $task->deskripsi }}">
+                        <button type="button" class="deadline-task-step {{ $dtState }}" data-task-id="{{ $task->id }}" data-toggle-url="{{ route('permintaan-laporan.task.toggle', $task) }}" data-selesai="{{ $task->selesai ? '1' : '0' }}" data-step-number="{{ $loop->iteration }}" title="{{ $task->deskripsi }}" {{ $dtState === 'pending' ? 'disabled' : '' }}>
                             <span class="deadline-task-num">{{ $task->selesai ? '✓' : $loop->iteration }}</span>
                             <span class="deadline-task-label">{{ $task->deskripsi }}</span>
                         </button>
