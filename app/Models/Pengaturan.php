@@ -61,5 +61,23 @@ class Pengaturan extends Model
         ];
     }
 
-    public function landingConfig(): array { return array_replace_recursive(self::defaultLandingContent(), $this->landing_content ?? []); }
+    public function landingConfig(): array
+    {
+        $config = array_replace_recursive(self::defaultLandingContent(), $this->landing_content ?? []);
+
+        // "Akun Terdaftar" harus selalu nunjukin jumlah akun sungguhan di
+        // sistem (bukan angka yang diketik manual lewat editor landing page)
+        // -- stat lain (label, angka statis lain) tetap boleh diedit admin.
+        $config['stats'] = collect($config['stats'] ?? [])
+            ->map(function ($stat) {
+                if (str_contains(strtolower(trim((string) ($stat['label'] ?? ''))), 'akun terdaftar')) {
+                    $stat['number'] = (string) User::count();
+                }
+
+                return $stat;
+            })
+            ->all();
+
+        return $config;
+    }
 }

@@ -48,7 +48,7 @@ function initDanpusArchiveMode(){
  function normalizeStatus(status){return String(status||'').replace(/\s+/g,' ').trim()}
  function archiveStatusClass(status){const n=normalizeStatus(status).toLowerCase();if(n.includes('setuj')||n.includes('diterima'))return'ok';if(n.includes('tolak')||n.includes('batal')||n.includes('terlambat'))return'bad';return'wait'}
  function archiveStatusLabel(status){const n=normalizeStatus(status);if(!n)return'Arsip';if(n==='Dibatalkan')return'Dibatalkan';if(n==='Terlambat')return'Terlambat';if(n==='Selesai · Disetujui')return'Selesai · Disetujui';if(n==='Selesai · Ditolak')return'Selesai · Ditolak';return n}
- function isHistoryStatusTable(table){const headers=Array.from(table?.querySelectorAll('thead th')||[]).map(h=>h.textContent.trim().toLowerCase());return headers.length===6&&headers[0]==='unit'&&headers[1]==='perihal'&&headers[2]==='tujuan'&&headers[3]==='status'&&headers[4]==='tanggal'&&headers[5]==='aksi'}
+ function isHistoryStatusTable(table){const headers=Array.from(table?.querySelectorAll('thead th')||[]).map(h=>h.textContent.trim().toLowerCase());return headers.length===6&&(headers[0]==='unit'||headers[0]==='satlak')&&headers[1]==='perihal'&&headers[2]==='tujuan'&&headers[3]==='status'&&headers[4]==='tanggal'&&headers[5]==='aksi'}
  // Checklist task ikut dibawa ke Riwayat Laporan pas diarsipkan, dirender
  // pakai class .request-task-* yang SAMA dengan tab Permintaan Laporan
  // (sudah ke-load dari laporan-pimpinan.blade.php di shell yang sama) --
