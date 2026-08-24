@@ -1,14 +1,18 @@
 {{-- resources/views/welcome.blade.php --}}
 {{-- Halaman landing SIBERAD — Sistem Informasi Berbasis Elektronik Angkatan Darat (PUSSIBERAD) --}}
+@php
+  $lp = $pengaturan->landingConfig();
+  $lpLogoUrl = $pengaturan->logo_path ? asset('storage/'.$pengaturan->logo_path) : asset('images/logo-pussiberad.jpg');
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BRAHMASTRA WIRA — Sistem Informasi Berbasis Elektronik Angkatan Darat | PUSSIBERAD</title>
-<meta name="description" content="BRAHMASTRA WIRA — Sistem Informasi Berbasis Elektronik Angkatan Darat. Platform pelaporan dan monitoring resmi Pusat Siber Angkatan Darat (PUSSIBERAD).">
-<link rel="icon" type="image/jpeg" href="{{ asset('images/logo-pussiberad.jpg') }}">
-<link rel="preload" as="image" href="{{ asset('images/logo-pussiberad.jpg') }}" fetchpriority="high">
+<title>{{ $lp['meta']['title'] }}</title>
+<meta name="description" content="{{ $lp['meta']['description'] }}">
+<link rel="icon" type="image/jpeg" href="{{ $lpLogoUrl }}">
+<link rel="preload" as="image" href="{{ $lpLogoUrl }}" fetchpriority="high">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -746,7 +750,7 @@
           <circle class="ring-arc" cx="74" cy="74" r="65"></circle>
         </svg>
       </div>
-      <div class="mark-plate"><img src="{{ asset('images/logo-pussiberad.jpg') }}" alt="Lambang Pussiberad"></div>
+      <div class="mark-plate"><img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad"></div>
     </div>
     <div class="loader-caption">Memverifikasi Sistem&hellip;</div>
   </div>
@@ -756,14 +760,13 @@
     <div class="wrap">
       <nav>
         <a class="logo" href="#tentang">
-          <span class="logo-badge"><img src="{{ asset('images/logo-pussiberad.jpg') }}" alt="Lambang Pussiberad"></span>
-          <span class="logo-text"><b>BRAHMASTRA <span>WIRA</span></b><small>Pussiberad &middot; TNI AD</small></span>
+          <span class="logo-badge"><img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad"></span>
+          <span class="logo-text"><b>{{ $lp['brand']['name'] }}<span>{{ $lp['brand']['accent'] }}</span></b><small>{{ $lp['brand']['tagline'] }}</small></span>
         </a>
         <ul class="nav-links">
-          <li><a href="#tentang">Beranda</a></li>
-          <li><a href="#fitur">Fitur</a></li>
-          <li><a href="#tentang-pussiberad">Tentang</a></li>
-          <li><a href="#tim">Kontak</a></li>
+          @foreach ($lp['nav'] as $navItem)
+            <li><a href="{{ $navItem['url'] }}">{{ $navItem['label'] }}</a></li>
+          @endforeach
         </ul>
         <div class="nav-cta">
           <button class="btn-theme" type="button" id="themeToggle" aria-label="Ganti tema">
@@ -785,7 +788,7 @@
   <div class="login-overlay" id="loginOverlay">
     <div class="login-card hud-panel" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
       <button class="login-close" id="loginClose" type="button" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
-      <div class="login-crest"><img src="{{ asset('images/logo-pussiberad.jpg') }}" alt="Lambang Pussiberad"></div>
+      <div class="login-crest"><img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad"></div>
       <h3 id="loginTitle" class="login-title">Masuk</h3>
       <p class="login-sub">Masuk menggunakan akun personel yang terdaftar.</p>
       <form class="login-form" id="loginForm" method="POST" action="{{ route('login') }}" autocomplete="off">
@@ -828,7 +831,7 @@
           <h2>{{ $pengaturan->hero_subjudul }}</h2>
           <p>{{ $pengaturan->hero_deskripsi }}</p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="#fitur">Selengkapnya</a>
+            <a class="btn btn-primary" href="{{ $lp['hero']['button_url'] }}">{{ $lp['hero']['button_label'] }}</a>
           </div>
         </div>
         <div data-reveal>
@@ -842,10 +845,15 @@
                     <circle class="ring-arc" cx="74" cy="74" r="65"></circle>
                   </svg>
                 </div>
-                <div class="mark-plate"><img src="{{ asset('images/logo-pussiberad.jpg') }}" alt="Lambang Pussiberad"></div>
+                <div class="mark-plate"><img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad"></div>
               </div>
             </div>
-            <div class="hero-crest-caption">Pusat Siber Angkatan Darat</div>
+            <div class="hero-crest-caption">
+              {{ $lp['hero']['crest_caption'] }}
+              @if (!empty($lp['hero']['crest_motto']))
+                <br><span style="opacity:.72;">&ldquo;{{ $lp['hero']['crest_motto'] }}&rdquo;</span>
+              @endif
+            </div>
           </div>
         </div>
       </div>
@@ -855,22 +863,12 @@
     <section class="stats">
       <div class="wrap">
         <div class="stats-grid" data-reveal>
-          <div class="stat">
-            <div class="stat-num">12</div>
-            <div class="stat-label">Akun Terdaftar</div>
-          </div>
-          <div class="stat">
-            <div class="stat-num">24/7</div>
-            <div class="stat-label">Layanan Aktif</div>
-          </div>
-          <div class="stat">
-            <div class="stat-num">100%</div>
-            <div class="stat-label">Transparan &amp; Real-Time</div>
-          </div>
-          <div class="stat">
-            <div class="stat-num">1</div>
-            <div class="stat-label">Sistem Pelaporan Digital</div>
-          </div>
+          @foreach ($lp['stats'] as $stat)
+            <div class="stat">
+              <div class="stat-num">{{ $stat['number'] }}</div>
+              <div class="stat-label">{{ $stat['label'] }}</div>
+            </div>
+          @endforeach
         </div>
       </div>
     </section>
@@ -880,9 +878,9 @@
     <section class="features" id="fitur">
       <div class="wrap">
         <div class="section-head center" data-reveal>
-          <div class="eyebrow">Keunggulan</div>
-          <h3>Kenapa Memakai Sistem Ini</h3>
-          <p>Membantu proses pelaporan dan persetujuan agar lebih tertata dan mudah dipantau.</p>
+          <div class="eyebrow">{{ $lp['features_section']['eyebrow'] }}</div>
+          <h3>{{ $lp['features_section']['title'] }}</h3>
+          <p>{{ $lp['features_section']['description'] }}</p>
         </div>
         @php
           $fiturIcons = [
@@ -910,11 +908,11 @@
       <div class="wrap">
         <div class="about-top" data-reveal>
           <div class="about-crest">
-            <img src="{{ asset('images/logo-pussiberad.jpg') }}" alt="Lambang Pussiberad">
+            <img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">
           </div>
           <div>
-            <div class="eyebrow">Tentang</div>
-            <h3 style="font-family:var(--display);font-size:clamp(28px,3.4vw,38px);font-weight:700;margin:14px 0 14px;text-transform:uppercase;">Pussiberad</h3>
+            <div class="eyebrow">{{ $lp['about_section']['eyebrow'] }}</div>
+            <h3 style="font-family:var(--display);font-size:clamp(28px,3.4vw,38px);font-weight:700;margin:14px 0 14px;text-transform:uppercase;">{{ $lp['about_section']['title'] }}</h3>
             @foreach (explode("\n\n", $pengaturan->tentang_deskripsi ?? '') as $paragraf)
               <p style="color:var(--text-muted);line-height:1.8;font-size:15px;margin-top:14px;">{{ trim($paragraf) }}</p>
             @endforeach
@@ -969,13 +967,13 @@
       <div class="footer-grid">
         <div>
           <div class="footer-brand-row">
-            <span class="footer-crest"><img src="{{ asset('images/logo-pussiberad.jpg') }}" alt="Lambang Pussiberad"></span>
+            <span class="footer-crest"><img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad"></span>
             <div class="footer-brand">
-              <b>BRAHMASTRA <span style="display:inline;color:var(--gold-bright);">WIRA</span></b>
+              <b>{{ $lp['brand']['name'] }}<span style="display:inline;color:var(--gold-bright);">{{ $lp['brand']['accent'] }}</span></b>
               <span>Pusat Siber Angkatan Darat</span>
             </div>
           </div>
-          <p class="footer-desc">Sistem Informasi Berbasis Elektronik Angkatan Darat, mendigitalisasi alur pelaporan seluruh Satuan Pelaksana Pussiberad.</p>
+          <p class="footer-desc">{{ $lp['footer']['description'] }}</p>
         </div>
         <div>
           <div class="footer-col-title">Navigasi</div>
@@ -1016,7 +1014,7 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>&copy; 2026 BRAHMASTRA WIRA — PUSSIBERAD. Seluruh hak cipta dilindungi.</span>
+        <span>{{ $lp['footer']['copyright'] }}</span>
         <span>Satria &middot; Yudha &middot; Waskita</span>
       </div>
     </div>
