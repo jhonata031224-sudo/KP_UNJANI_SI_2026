@@ -470,9 +470,9 @@
   .org-list .lvl3{padding-left:36px;color:var(--text-dim);font-size:12.5px;}
 
   @media(max-width:900px){
-    .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);box-shadow:0 0 40px rgba(0,0,0,.4);}
-    .sidebar.open{transform:translateX(0);}
-    .menu-btn{display:inline-flex;}
+    .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);box-shadow:0 0 40px rgba(0,0,0,.4);pointer-events:none;}
+    .sidebar.open{transform:translateX(0);pointer-events:auto;}
+    .menu-btn{display:inline-flex;position:relative;z-index:100011;}
     .stat-grid{grid-template-columns:1fr 1fr;}
     .content{padding:22px 16px 60px;}
     .topbar{padding:0 16px;}
