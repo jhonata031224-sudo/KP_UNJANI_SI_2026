@@ -162,15 +162,18 @@
                     var current=parseInt(btn.dataset.progres||'0',10);
                     if(btn.dataset.hasTasks==='1'){
                         // Permintaan ini punya checklist task -- progres di
-                        // sini nunjukin PREDIKSI angka setelah checkpoint ini
-                        // dikirim (target), bukan angka sekarang. Task-nya
-                        // sendiri baru benar-benar berubah status di server
-                        // setelah form ini disubmit.
+                        // sini SENGAJA nunjukin angka SAAT INI (sama kayak
+                        // tombol "Update Progres" biasa), bukan prediksi hasil
+                        // abis toggle -- biar gak membingungkan (mis. kelihatan
+                        // 0% pas mau batalin 1 dari 5 task yang udah selesai).
+                        // Task-nya sendiri baru benar-benar berubah status di
+                        // server setelah form ini disubmit, angka barunya baru
+                        // kelihatan abis itu.
                         progresInput.value=current;
                         progresInput.readOnly=true;
                         if(progresHint){
                             progresHint.textContent=btn.dataset.taskId
-                                ? 'Mengirim checkpoint akan menandai "'+(btn.dataset.taskLabel||'task ini')+'" '+(btn.dataset.taskAction||'selesaikan')+' -- progres jadi '+current+'%.'
+                                ? 'Mengirim checkpoint ini akan menandai "'+(btn.dataset.taskLabel||'task ini')+'" '+(btn.dataset.taskAction||'selesaikan')+'. Progres saat ini: '+current+'%.'
                                 : 'Progres otomatis mengikuti checklist task yang sudah dicentang.';
                         }
                     }else{

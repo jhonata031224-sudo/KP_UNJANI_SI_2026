@@ -16,11 +16,7 @@
             <span class="deadline-complete cancelled">✕ Dibatalkan Pimpinan</span>
         @elseif(!$permintaan->laporan_id)
             @if($permintaan->status !== 'Belum dikerjakan' && $permintaan->tasks->isNotEmpty())
-                @php
-                    $dtActive = false;
-                    $dtTotal = $permintaan->tasks->count();
-                    $dtDoneNow = $permintaan->tasks->where('selesai', true)->count();
-                @endphp
+                @php $dtActive = false; @endphp
                 <div class="deadline-task-track" data-permintaan-task-track>
                     @foreach($permintaan->tasks as $task)
                         @php
@@ -31,8 +27,12 @@
                             // bukan langsung toggle diam-diam -- klik-nya numpang di
                             // mekanisme .use-permintaan yang sudah ada (lihat
                             // initUsePermintaanButtons di permintaan-laporan-deadline.blade.php).
-                            $dtDoneAfter = $task->selesai ? ($dtDoneNow - 1) : ($dtDoneNow + 1);
-                            $dtTargetProgres = $dtTotal > 0 ? (int) round($dtDoneAfter / $dtTotal * 100) : 0;
+                            // Progres yang ditampilkan di form itu SENGAJA progres SAAT
+                            // INI ($permintaan->progres, sama kayak tombol "Update Progres"
+                            // biasa) -- bukan prediksi hasil abis toggle, biar gak nunjukin
+                            // angka yang membingungkan (mis. 0% pas mau batalin task 1 dari
+                            // 1/5 yang udah selesai). Angka barunya baru kelihatan setelah
+                            // checkpoint-nya beneran disubmit.
                         @endphp
                         <button type="button" class="deadline-task-step {{ $dtState }} {{ $dtState !== 'pending' ? 'use-permintaan' : '' }}" title="{{ $task->deskripsi }}" {{ $dtState === 'pending' ? 'disabled' : '' }}
                             data-request-id="{{ $permintaan->id }}"
@@ -41,7 +41,7 @@
                             data-kategori="{{ e($permintaan->kategori ?? '') }}"
                             data-prioritas="{{ e($permintaan->prioritas) }}"
                             data-instruksi="{{ e($permintaan->instruksi ?? '') }}"
-                            data-progres="{{ $dtTargetProgres }}"
+                            data-progres="{{ $permintaan->progres }}"
                             data-has-tasks="1"
                             data-task-id="{{ $task->id }}"
                             data-task-label="{{ e($task->deskripsi) }}"
