@@ -57,7 +57,7 @@ class PermintaanLaporanController extends Controller
         // sehingga fitur baru tidak perlu menambah route baru yang berisiko
         // bertabrakan dengan alur realtime penerima yang sudah ada.
         if ($this->isPimpinan($request) && $request->boolean('history')) {
-            $items = PermintaanLaporan::with(['pembuat.satuan', 'tujuanSatuan', 'laporan'])
+            $items = PermintaanLaporan::with(['pembuat.satuan', 'tujuanSatuan', 'laporan', 'tasks'])
                 ->whereNotNull('archived_at')
                 ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS', 'WADAN']))
                 ->latest('archived_at')
@@ -205,7 +205,7 @@ class PermintaanLaporanController extends Controller
             ->unique()
             ->values();
 
-        $items = PermintaanLaporan::with(['pembuat.satuan', 'tujuanSatuan', 'laporan'])
+        $items = PermintaanLaporan::with(['pembuat.satuan', 'tujuanSatuan', 'laporan', 'tasks'])
             ->whereIn('id', $ids)
             ->whereNull('archived_at')
             ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS', 'WADAN']))
@@ -269,6 +269,11 @@ class PermintaanLaporanController extends Controller
             'deadline' => $item->deadline_at?->translatedFormat('d M Y, H:i') ?: '-',
             'status' => $statusLabel,
             'archived_at' => $item->archived_at?->translatedFormat('d M Y, H:i') ?: now()->translatedFormat('d M Y, H:i'),
+            'tasks' => $item->tasks->sortBy('urutan')->values()->map(fn ($task) => [
+                'deskripsi' => $task->deskripsi,
+                'selesai' => (bool) $task->selesai,
+                'selesai_at' => $task->selesai_at?->translatedFormat('d M Y H:i'),
+            ])->all(),
         ];
     }
 

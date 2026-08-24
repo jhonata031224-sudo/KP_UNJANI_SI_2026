@@ -49,6 +49,22 @@ function initDanpusArchiveMode(){
  function archiveStatusClass(status){const n=normalizeStatus(status).toLowerCase();if(n.includes('setuj')||n.includes('diterima'))return'ok';if(n.includes('tolak')||n.includes('batal')||n.includes('terlambat'))return'bad';return'wait'}
  function archiveStatusLabel(status){const n=normalizeStatus(status);if(!n)return'Arsip';if(n==='Dibatalkan')return'Dibatalkan';if(n==='Terlambat')return'Terlambat';if(n==='Selesai · Disetujui')return'Selesai · Disetujui';if(n==='Selesai · Ditolak')return'Selesai · Ditolak';return n}
  function isHistoryStatusTable(table){const headers=Array.from(table?.querySelectorAll('thead th')||[]).map(h=>h.textContent.trim().toLowerCase());return headers.length===6&&headers[0]==='unit'&&headers[1]==='perihal'&&headers[2]==='tujuan'&&headers[3]==='status'&&headers[4]==='tanggal'&&headers[5]==='aksi'}
+ // Checklist task ikut dibawa ke Riwayat Laporan pas diarsipkan, dirender
+ // pakai class .request-task-* yang SAMA dengan tab Permintaan Laporan
+ // (sudah ke-load dari laporan-pimpinan.blade.php di shell yang sama) --
+ // biar datanya (dan tampilannya) konsisten antara kedua tab.
+ function buildArchiveTaskTrack(tasks){
+   if(!tasks||!tasks.length)return '<div class="request-muted">Tidak ada task untuk permintaan ini.</div>';
+   let activeAssigned=false;
+   const steps=tasks.map(function(t,i){
+     var state;
+     if(t.selesai){state='done'}else if(!activeAssigned){state='active';activeAssigned=true}else{state='pending'}
+     var title=esc(t.deskripsi)+(t.selesai_at?' · Selesai '+esc(t.selesai_at):'');
+     var num=t.selesai?'✓':(i+1);
+     return '<div class="request-task-step '+state+'" title="'+title+'"><span class="request-task-num">'+num+'</span><span class="request-task-label">'+esc(t.deskripsi)+'</span></div>';
+   }).join('');
+   return '<div class="request-task-track">'+steps+'</div>';
+ }
  function renderArchivedItem(tb,item){
    const key='archive-'+item.id;if(tb.querySelector('[data-archive-key="'+key+'"]'))return;
    tb.querySelectorAll('tr').forEach(r=>{if(r.querySelector('.empty-state'))r.remove()});
@@ -62,16 +78,27 @@ function initDanpusArchiveMode(){
      const date=item.archived_at||item.created_at||'-';
      const tr=document.createElement('tr');
      tr.className='archive-request-row';
+     tr.style.cursor='pointer';
+     tr.setAttribute('onclick','danpusToggleTaskRow(this,event)');
      tr.dataset.archiveKey=key;
      tr.dataset.search=(String(unit)+' '+String(subject)+' '+String(target)).toLowerCase();
      tr.dataset.outcome=status.toLowerCase().includes('setuj')||status.toLowerCase().includes('diterima')?'disetujui':status.toLowerCase().includes('tolak')?'ditolak':'';
-     tr.innerHTML='<td class="archive-request-unit" style="text-align:center"><span class="satuan-pill">'+esc(unit)+'</span></td>'+
+     tr.innerHTML='<td class="archive-request-unit" style="text-align:center"><span class="request-row-caret" aria-hidden="true">▸</span><span class="satuan-pill">'+esc(unit)+'</span></td>'+
        '<td class="subject"><div>'+esc(subject)+'</div><div class="archive-request-sub">Arsip permintaan laporan</div></td>'+
        '<td class="archive-request-target" style="text-align:center"><span class="satuan-pill">'+esc(target)+'</span></td>'+
        '<td style="text-align:center"><span class="status-pill archive-request-status '+statusClass+'">'+esc(status)+'</span></td>'+
        '<td style="text-align:center"><div class="request-deadline archive-request-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>'+esc(date)+'</div></td>'+
        '<td style="text-align:center"><button type="button" class="detail-btn archive-detail-btn" data-pengirim="'+esc(target)+'" data-perihal="'+esc(subject)+'" data-tujuan="'+esc(unit)+'" data-prioritas="'+esc(item.prioritas||'-')+'" data-progres="0" data-proyek="Arsip permintaan laporan" data-tanggal="'+esc(date)+'" data-deskripsi="Permintaan laporan yang telah dipindahkan ke Riwayat Laporan." data-readonly="1" data-readonly-text="Data arsip hanya untuk melihat.">Detail</button></td>';
      tb.prepend(tr);
+     const taskTr=document.createElement('tr');
+     taskTr.className='request-task-row rpt-filter-detail-row';
+     taskTr.hidden=true;
+     taskTr.dataset.archiveKey=key+'-tasks';
+     const taskTd=document.createElement('td');
+     taskTd.colSpan=6;
+     taskTd.innerHTML=buildArchiveTaskTrack(item.tasks);
+     taskTr.appendChild(taskTd);
+     tr.after(taskTr);
      return;
    }
    /* Tabel lain dipertahankan apa adanya; arsip hanya ditambahkan jika tabel memang cocok dengan struktur history. */
