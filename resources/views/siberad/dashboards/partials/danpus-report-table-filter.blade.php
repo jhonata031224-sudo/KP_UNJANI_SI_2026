@@ -54,7 +54,7 @@
       // dibiarkan, baris itu bakal tampil BARENGAN sama pesan kosong
       // dinamis di bawah (dobel).
       Array.from(tbody.querySelectorAll(':scope > tr')).forEach(function(tr){
-        if(!tr.hasAttribute('data-search') && !tr.classList.contains('rpt-filter-empty-row'))tr.remove();
+        if(!tr.hasAttribute('data-search') && !tr.classList.contains('rpt-filter-empty-row') && !tr.classList.contains('rpt-filter-detail-row'))tr.remove();
       });
       rows=Array.from(tbody.querySelectorAll(':scope > tr')).filter(function(tr){return tr.hasAttribute('data-search');});
       rows.forEach(function(row,i){
@@ -99,13 +99,27 @@
       if(!tbody)return;
       collectRows();ensureEmptyRow();
       applying=true;
+      // Baris "detail" (.rpt-filter-detail-row, mis. dropdown checklist task
+      // di bawah baris Permintaan Laporan pimpinan) bukan baris data sendiri
+      // -- gak punya data-search, gak dihitung/di-sort/di-cari terpisah,
+      // tapi harus tetap NEMPEL & ikut pindah bareng baris pemiliknya
+      // (row.nextElementSibling) supaya gak salah pasangan pas di-sort.
+      var detailOf=new Map();
+      rows.forEach(function(row){
+        var d=row.nextElementSibling;
+        if(d&&d.classList.contains('rpt-filter-detail-row'))detailOf.set(row,d);
+      });
       if(sortSelect){
         rows.sort(function(a,b){var diff=Number(a.dataset.rptOrder)-Number(b.dataset.rptOrder);return sortValue==='oldest'?-diff:diff;});
-        var needsReorder=rows.some(function(row,i){return row.nextElementSibling!==(rows[i+1]||emptyRow);});
+        var needsReorder=detailOf.size>0||rows.some(function(row,i){return row.nextElementSibling!==(rows[i+1]||emptyRow);});
         if(needsReorder){
           if(tableObserver)tableObserver.disconnect();
           if(tbodyObserver)tbodyObserver.disconnect();
-          rows.forEach(function(row){tbody.insertBefore(row,emptyRow);});
+          rows.forEach(function(row){
+            tbody.insertBefore(row,emptyRow);
+            var d=detailOf.get(row);
+            if(d)tbody.insertBefore(d,emptyRow);
+          });
           if(tableObserver)tableObserver.observe(table,{childList:true,subtree:true});
           if(tbody&&tbodyObserver)tbodyObserver.observe(tbody,{childList:true,subtree:true});
         }
@@ -117,6 +131,8 @@
         var matchesFilters=selects.every(function(s){return s.el.value==='all'||row.dataset[s.attr]===s.el.value;});
         var match=matchesSearch&&matchesFilters;
         row.style.display=match?'':'none';
+        var detail=detailOf.get(row);
+        if(detail)detail.style.display=match?'':'none';
         if(match)visible++;
       });
       count.textContent=visible+' dari '+rows.length+' data';
