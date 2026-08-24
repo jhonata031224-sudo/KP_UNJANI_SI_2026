@@ -482,13 +482,37 @@ $alasanTidakBisaEdit=$bisaEditDeadline?'':$item->alasanTidakBisaEditDeadline();
       if(list && list.children.length>1)btn.closest('.danpus-task-row')?.remove();
     });
 
-    // Klik baris tabel Permintaan Laporan buat expand/collapse checklist task
-    // milik satuan itu -- klik yang berasal dari tombol aksi (Lihat/Edit/
-    // Batal/dst) sengaja diabaikan biar nggak ke-trigger dobel.
+    // Klik baris tabel Permintaan Laporan (atau baris arsip di Riwayat
+    // Laporan) buat expand/collapse checklist task milik satuan itu --
+    // klik yang berasal dari tombol aksi (Lihat/Edit/Batal/Detail/dst)
+    // sengaja diabaikan biar nggak ke-trigger dobel.
+    //
+    // Pasangan baris (tr -> baris task-nya) di-cache di properti JS
+    // (tr._danpusTaskRow), BUKAN dibaca ulang dari nextElementSibling tiap
+    // klik -- soalnya baris di tabel Riwayat/Status ikut diatur ulang
+    // posisinya sama script sort/filter tabel (danpus-report-table-filter)
+    // tiap ada data baru masuk lewat polling. Kalau reorder itu kebetulan
+    // nyelip DI ANTARA klik buka & klik tutup, baca ulang nextElementSibling
+    // bisa nunjuk ke baris yang salah (atau gak ketemu sama sekali) --
+    // makanya begitu pasangannya ketemu pertama kali, disimpan permanen
+    // biar toggle berikutnya selalu tepat sasaran walau posisinya geser.
+    // Klik kadang kekirim dobel buat elemen yang sama (kejadian serupa juga
+    // ditemukan & sengaja di-debounce di danpus-history-detail-fix.blade.php
+    // buat tombol Detail) -- tanpa penjagaan ini, toggle bisa jalan 2x dalam
+    // satu klik (kebuka lalu langsung ketutup lagi, atau sebaliknya) yang
+    // kelihatannya kayak "gak bisa dibuka/ditutup".
+    const danpusTaskRowLastToggle=new WeakMap();
     window.danpusToggleTaskRow=function(tr,event){
-      if(event?.target?.closest('button'))return;
-      const taskRow=tr?.nextElementSibling;
-      if(!taskRow||!taskRow.classList.contains('request-task-row'))return;
+      if(!tr||event?.target?.closest('button'))return;
+      const now=Date.now();
+      if(now-(danpusTaskRowLastToggle.get(tr)||0)<300)return;
+      danpusTaskRowLastToggle.set(tr,now);
+      let taskRow=tr._danpusTaskRow;
+      if(!taskRow||!taskRow.isConnected){
+        taskRow=tr.nextElementSibling;
+        if(!taskRow||!taskRow.classList.contains('request-task-row'))return;
+        tr._danpusTaskRow=taskRow;
+      }
       const isOpen=!taskRow.hasAttribute('hidden');
       if(isOpen){taskRow.setAttribute('hidden','')}else{taskRow.removeAttribute('hidden')}
       tr.classList.toggle('open',!isOpen);
