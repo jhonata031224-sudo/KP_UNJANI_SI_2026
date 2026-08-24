@@ -81,6 +81,21 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
    akan memotong flyout kalau cuma pakai position:absolute biasa. */
 .sidebar.collapsed .side-subnav{display:none;}
 .sidebar.collapsed .side-nav-group.open .side-subnav{display:block;position:fixed;min-width:216px;background:var(--p-surface);border:1px solid var(--p-border);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);padding:8px;z-index:100020;}
+/* Preferensi "sidebar ciutkan" disimpan di localStorage dan tetap kepasang
+   walau jendela sekarang sudah sempit (sidebar berubah jadi off-canvas via
+   hamburger, .collapsed itu fitur desktop doang) -- tanpa override ini,
+   flyout submenu position:fixed z-index:100020 di atas bisa nyangkut
+   ketimpa di sudut kiri-atas layar (karena posisinya dihitung dari sidebar
+   yang lagi translateX(-100%), jadi hitungannya ngaco) dan NUTUPIN tombol
+   hamburger (.menu-btn) sampai kelihatan kayak gak merespons klik sama
+   sekali. Balikin ke tampilan accordion normal (bukan flyout) di lebar
+   ini, apapun status .collapsed-nya. */
+@media(max-width:900px){
+  .sidebar.collapsed .side-subnav{display:grid}
+  .sidebar.collapsed .side-nav-group.open .side-subnav{position:static;top:auto!important;left:auto!important;min-width:0;background:none;border:0;box-shadow:none;padding:0;z-index:auto}
+  .sidebar.collapsed .side-subnav>div{margin-left:18px;border-left:1px solid var(--p-border,var(--border-soft));padding:3px 0}
+  .sidebar.collapsed .side-subnav-label{display:none}
+}
 .sidebar.collapsed .side-subnav>div{margin-left:0;border-left:none;padding:0;}
 .sidebar.collapsed .side-subnav-label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--p-muted);padding:4px 10px 8px;}
 .sidebar.collapsed .side-sub-link{padding:9px 10px;border-radius:8px;}
@@ -249,7 +264,7 @@ $alasanTidakBisaEdit=$bisaEditDeadline?'':$item->alasanTidakBisaEditDeadline();
     const subnav=g.querySelector('.side-subnav');
     const btn=g.querySelector('.side-nav-group-title');
     if(!subnav||!btn)return;
-    if(!sidebar?.classList.contains('collapsed')||!g.classList.contains('open')){
+    if(window.innerWidth<=900||!sidebar?.classList.contains('collapsed')||!g.classList.contains('open')){
       subnav.style.top='';subnav.style.left='';return;
     }
     const r=btn.getBoundingClientRect();
