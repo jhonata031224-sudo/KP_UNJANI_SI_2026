@@ -15,6 +15,16 @@
         @if($permintaan->status === \App\Models\PermintaanLaporan::STATUS_DIBATALKAN)
             <span class="deadline-complete cancelled">✕ Dibatalkan Pimpinan</span>
         @elseif(!$permintaan->laporan_id)
+            @if($permintaan->status !== 'Belum dikerjakan' && $permintaan->tasks->isNotEmpty())
+                <div class="deadline-task-list">
+                    @foreach($permintaan->tasks as $task)
+                        <label class="deadline-task-item {{ $task->selesai ? 'done' : '' }}">
+                            <input type="checkbox" class="permintaan-task-checkbox" data-toggle-url="{{ route('permintaan-laporan.task.toggle', $task) }}" {{ $task->selesai ? 'checked' : '' }}>
+                            <span>{{ $task->deskripsi }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            @endif
             <div class="deadline-actions">
                 @if($permintaan->status === 'Belum dikerjakan')
                     <button type="button" class="deadline-secondary small permintaan-lihat-detail-btn">Lihat Detail</button>
@@ -23,7 +33,7 @@
                 @else
                     <button type="button" class="deadline-primary small use-permintaan" data-request-id="{{ $permintaan->id }}" data-target-id="{{ $permintaan->pembuat->satuan_id }}" data-perihal="{{ e($permintaan->perihal) }}" data-kategori="{{ e($permintaan->kategori ?? '') }}" data-prioritas="{{ e($permintaan->prioritas) }}" data-instruksi="{{ e($permintaan->instruksi ?? '') }}" data-progres="{{ $permintaan->progres }}">Update Progres</button>
                     @if($latestProgresCheckpoint)
-                        <button type="button" class="deadline-secondary small edit-progres-btn" data-update-url="{{ route('laporan.update-progres', $latestProgresCheckpoint) }}" data-tujuan-satuan-id="{{ $latestProgresCheckpoint->tujuan_satuan_id }}" data-perihal="{{ e($latestProgresCheckpoint->perihal) }}" data-proyek="{{ e($latestProgresCheckpoint->proyek ?? '') }}" data-prioritas="{{ e($latestProgresCheckpoint->prioritas) }}" data-deskripsi="{{ e($latestProgresCheckpoint->deskripsi) }}" data-kendala="{{ e($latestProgresCheckpoint->kendala ?? '') }}" data-progres="{{ $latestProgresCheckpoint->progres }}">Edit</button>
+                        <button type="button" class="deadline-secondary small edit-progres-btn" data-update-url="{{ route('laporan.update-progres', $latestProgresCheckpoint) }}" data-tujuan-satuan-id="{{ $latestProgresCheckpoint->tujuan_satuan_id }}" data-perihal="{{ e($latestProgresCheckpoint->perihal) }}" data-proyek="{{ e($latestProgresCheckpoint->proyek ?? '') }}" data-prioritas="{{ e($latestProgresCheckpoint->prioritas) }}" data-deskripsi="{{ e($latestProgresCheckpoint->deskripsi) }}" data-kendala="{{ e($latestProgresCheckpoint->kendala ?? '') }}" data-progres="{{ $permintaan->progres }}">Edit</button>
                     @endif
                 @endif
             </div>

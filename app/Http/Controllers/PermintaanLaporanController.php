@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Laporan;
 use App\Models\PermintaanLaporan;
+use App\Models\PermintaanLaporanTask;
 use App\Models\Satuan;
 use App\Models\User;
 use App\Notifications\PermintaanLaporanBaru;
@@ -80,7 +81,7 @@ class PermintaanLaporanController extends Controller
         $latestId = (int) (PermintaanLaporan::where('tujuan_satuan_id', $satuan->id)->max('id') ?? 0);
         $since = max(0, (int) $request->query('since', 0));
 
-        $items = PermintaanLaporan::with(['pembuat.satuan', 'laporans'])
+        $items = PermintaanLaporan::with(['pembuat.satuan', 'laporans', 'tasks'])
             ->where('tujuan_satuan_id', $satuan->id)
             ->whereNull('archived_at')
             ->whereIn('status', [
@@ -141,6 +142,8 @@ class PermintaanLaporanController extends Controller
             'instruksi' => ['required', 'string', 'max:5000'],
             'deadline_at' => ['required', 'date', 'after:now'],
             'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
+            'tasks' => ['required', 'array', 'min:1'],
+            'tasks.*' => ['required', 'string', 'max:255'],
         ]);
 
         $tujuan = Satuan::whereIn('id', $validated['tujuan_satuan_ids'])
@@ -167,6 +170,13 @@ class PermintaanLaporanController extends Controller
                     'status' => PermintaanLaporan::STATUS_BELUM,
                 ]);
                 $created->push($permintaan);
+
+                foreach (array_values($validated['tasks']) as $urutan => $deskripsi) {
+                    $permintaan->tasks()->create([
+                        'deskripsi' => $deskripsi,
+                        'urutan' => $urutan,
+                    ]);
+                }
 
                 foreach (User::where('satuan_id', $satuan->id)->get() as $penerima) {
                     $penerima->notify(new PermintaanLaporanBaru($permintaan));
@@ -333,5 +343,28 @@ class PermintaanLaporanController extends Controller
         ]);
 
         return back()->with('status', 'Deadline permintaan laporan berhasil diperbarui.');
+    }
+
+    public function toggleTask(Request $request, PermintaanLaporanTask $task): JsonResponse
+    {
+        $task->load('permintaanLaporan');
+        $permintaan = $task->permintaanLaporan;
+
+        $user = $request->user()->load('satuan');
+        abort_unless($user->satuan && (int) $permintaan->tujuan_satuan_id === (int) $user->satuan->id, 403);
+        abort_if($permintaan->status === PermintaanLaporan::STATUS_DIBATALKAN, 422, 'Permintaan ini sudah dibatalkan oleh Pimpinan.');
+
+        $task->selesai = ! $task->selesai;
+        $task->selesai_at = $task->selesai ? now() : null;
+        $task->save();
+
+        $permintaan->load('tasks');
+        $permintaan->progres = $permintaan->hitungProgresDariTask();
+        $permintaan->save();
+
+        return response()->json([
+            'selesai' => $task->selesai,
+            'progres' => $permintaan->progres,
+        ]);
     }
 }

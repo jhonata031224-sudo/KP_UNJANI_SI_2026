@@ -99,6 +99,9 @@ Route::patch('/permintaan-laporan/{permintaanLaporan}/batal', [PermintaanLaporan
 Route::patch('/permintaan-laporan/{permintaanLaporan}/deadline', [PermintaanLaporanController::class, 'editDeadline'])
     ->middleware('auth')
     ->name('permintaan-laporan.edit-deadline');
+Route::patch('/permintaan-laporan-task/{task}/toggle', [PermintaanLaporanController::class, 'toggleTask'])
+    ->middleware('auth')
+    ->name('permintaan-laporan.task.toggle');
 
 // ===== Laporan Keluhan Kasansi (21 Kodam) ke Satlak =====
 Route::post('/laporan-keluhan', [LaporanKeluhanController::class, 'store'])

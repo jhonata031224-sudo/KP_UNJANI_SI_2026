@@ -83,6 +83,25 @@ class PermintaanLaporan extends Model
         return $this->hasMany(Laporan::class, 'permintaan_laporan_id');
     }
 
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(PermintaanLaporanTask::class)->orderBy('urutan');
+    }
+
+    /**
+     * Progres kini dihitung dari checklist task, bukan diketik manual.
+     * Fallback ke nilai `progres` yang sudah tersimpan kalau permintaan ini
+     * belum punya task sama sekali (row lama dari sebelum fitur checklist).
+     */
+    public function hitungProgresDariTask(): int
+    {
+        if ($this->tasks->isEmpty()) {
+            return (int) $this->progres;
+        }
+
+        return (int) round($this->tasks->where('selesai', true)->count() / $this->tasks->count() * 100);
+    }
+
     public function isTerlambat(): bool
     {
         return !$this->laporan_id
