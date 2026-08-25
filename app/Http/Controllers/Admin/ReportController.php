@@ -128,19 +128,19 @@ class ReportController extends Controller
      */
     public function logAktivitasRentang(Request $request)
     {
-        $sampai = $request->filled('log_sampai')
-            ? \Carbon\Carbon::parse($request->query('log_sampai'))->endOfDay()
-            : now()->endOfDay();
-        // "Dari" kosong (mis. setelah tombol reset) berarti tanpa batas
-        // bawah tanggal — samakan dengan filter tanggal Data Laporan, yang
-        // menganggap "Dari" kosong = tampilkan semua sampai batas "Sampai".
+        // "Dari"/"Sampai" kosong (mis. setelah tombol reset) berarti tanpa
+        // batas tanggal ke arah itu — samakan dengan filter tanggal Data
+        // Laporan, yang menganggap field kosong = tampilkan semua data.
         $dari = $request->filled('log_dari')
             ? \Carbon\Carbon::parse($request->query('log_dari'))->startOfDay()
+            : null;
+        $sampai = $request->filled('log_sampai')
+            ? \Carbon\Carbon::parse($request->query('log_sampai'))->endOfDay()
             : null;
 
         $log = ActivityLog::with('user.satuan')
             ->when($dari, fn ($q) => $q->where('created_at', '>=', $dari))
-            ->where('created_at', '<=', $sampai)
+            ->when($sampai, fn ($q) => $q->where('created_at', '<=', $sampai))
             ->latest('created_at')
             ->get();
 

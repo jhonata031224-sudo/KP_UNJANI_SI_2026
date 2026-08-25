@@ -1813,14 +1813,10 @@
             var resetBtn = document.getElementById('logFilterReset');
             if (resetBtn) {
               resetBtn.addEventListener('click', function () {
-                function formatDateLocal(d) {
-                  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-                }
-                var hariIni = new Date();
-                // Samakan dengan Data Laporan: "Dari" dikosongkan (tanpa batas
-                // bawah tanggal), "Sampai" balik ke hari ini.
+                // Samakan dengan Data Laporan: "Dari" & "Sampai" sama-sama
+                // dikosongkan (tanpa batas tanggal sama sekali).
                 dariInput.value = '';
-                sampaiInput.value = formatDateLocal(hariIni);
+                sampaiInput.value = '';
 
                 // Balikin juga filter kategori ke "Semua Kategori"
                 var kategoriEl = document.querySelector('[data-table-filter="tblLogAktivitas"]');
