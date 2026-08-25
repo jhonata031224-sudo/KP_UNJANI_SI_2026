@@ -25,12 +25,19 @@ class LaporanKendala extends Model
         'lampiran_path',
         'status',
         'catatan',
+        'confirmed_at',
+        'confirmed_by',
+    ];
+
+    protected $casts = [
+        'confirmed_at' => 'datetime',
     ];
 
     public const STATUS_MENUNGGU = 'Menunggu';
     public const STATUS_DITINDAKLANJUTI = 'Ditindaklanjuti';
     public const STATUS_SELESAI = 'Selesai';
     public const STATUS_DITOLAK = 'Ditolak';
+    public const STATUS_DIKONFIRMASI = 'Dikonfirmasi';
 
     public function satuan(): BelongsTo
     {
@@ -45,5 +52,10 @@ class LaporanKendala extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function confirmedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'confirmed_by');
     }
 }
