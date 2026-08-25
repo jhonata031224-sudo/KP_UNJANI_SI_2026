@@ -66,8 +66,8 @@
   .table-search:focus{outline:none;border-color:var(--gold);}
   .table-filter{
     box-sizing:border-box;background:var(--panel);border:1px solid var(--border);color:var(--text);font-family:var(--mono);
-    font-size:11.5px;letter-spacing:.02em;border-radius:9px;padding:0 10px;cursor:pointer;flex-shrink:0;
-    min-width:170px;height:38px;
+    font-size:11.5px;letter-spacing:.02em;border-radius:9px;padding:0 28px 0 10px;cursor:pointer;flex-shrink:0;
+    min-width:0;width:150px;height:38px;
   }
   .table-filter:focus{outline:none;border-color:var(--gold);}
   /* Filter kategori di baris search+tanggal (Riwayat Aktivitas & Data
@@ -76,13 +76,13 @@
      baris baru; ukurannya disamakan sependek filter kategori di Daftar
      Pengguna, bukan selebar teks opsi terpanjangnya ("Unsur Pembantu
      Pimpinan") kayak sebelumnya. */
-  .dl-kategori-filter{width:190px;flex:0 0 190px;}
+  .dl-kategori-filter{width:150px;flex:0 0 150px;min-width:0;padding:0 28px 0 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   @media(max-width:640px){.dl-kategori-filter{width:100%;flex:1 1 auto;}}
   .table-filter-count{font-size:10px;color:var(--text-dim);white-space:nowrap;margin-left:auto;}
   .log-filter-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin:2px 0 16px;}
   .log-filter-field{display:flex;flex-direction:column;gap:4px;}
   .log-filter-field label{font-size:10px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;}
-  .log-filter-field .table-filter{min-width:150px;}
+  .log-filter-field .table-filter{width:auto;min-width:140px;}
   .log-filter-reset{box-sizing:border-box;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--border);border-radius:9px;color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease;}
   .log-filter-reset svg{width:16px;height:16px;}
   .log-filter-reset:hover{background:var(--hover-tint);color:var(--gold-bright);border-color:var(--gold);}
@@ -217,7 +217,7 @@
   .dl-search-count{font-size:12px;color:var(--text-dim);white-space:nowrap;margin-left:auto;}
   .dl-date-filter{display:flex;flex-direction:row;align-items:center;gap:6px;}
   .dl-date-filter label{font-size:10px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
-  .dl-date-filter .table-filter{min-width:140px;}
+  .dl-date-filter .table-filter{width:auto;min-width:140px;}
   .dl-filter-reset{box-sizing:border-box;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--border);border-radius:9px;color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease;align-self:center;}
   .dl-filter-reset svg{width:16px;height:16px;}
   .dl-filter-reset:hover{background:var(--hover-tint);color:var(--gold-bright);border-color:var(--gold);}
