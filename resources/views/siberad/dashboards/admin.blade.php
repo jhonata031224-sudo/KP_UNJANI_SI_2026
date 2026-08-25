@@ -1821,6 +1821,16 @@
                 kemarin.setDate(hariIni.getDate() - 1);
                 dariInput.value = formatDateLocal(kemarin);
                 sampaiInput.value = formatDateLocal(hariIni);
+
+                // Balikin juga filter kategori ke "Semua Kategori"
+                var kategoriEl = document.querySelector('[data-table-filter="tblLogAktivitas"]');
+                if (kategoriEl && kategoriEl.value !== '') {
+                  kategoriEl.value = '';
+                  var ssWrap = kategoriEl.closest('.styled-select-wrap');
+                  if (ssWrap && ssWrap.__syncStyledSelect) ssWrap.__syncStyledSelect();
+                  kategoriEl.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+
                 muatUlang();
                 resetBtn.classList.remove('spinning');
                 void resetBtn.offsetWidth;
@@ -2290,6 +2300,15 @@
             var sampaiEl = document.getElementById(sampaiId);
             if (dariEl)   dariEl.value   = '';
             if (sampaiEl) sampaiEl.value = '';
+
+            // Balikin juga filter kategori ke "Semua Kategori"
+            var kategoriEl = document.querySelector('[data-dl-filter="' + tableId + '"]');
+            if (kategoriEl && kategoriEl.value !== '') {
+              kategoriEl.value = '';
+              var ssWrap = kategoriEl.closest('.styled-select-wrap');
+              if (ssWrap && ssWrap.__syncStyledSelect) ssWrap.__syncStyledSelect();
+            }
+
             dlSaringTanggal(tableId, dariId, sampaiId);
             btn.classList.remove('spinning');
             void btn.offsetWidth;
