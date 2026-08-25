@@ -2720,7 +2720,13 @@
         </div>
 
         <div class="panel" id="panelDetailPerSatuan" hidden>
-          <div class="panel-head"><div><h3>Detail per Satuan</h3></div></div>
+          <div class="panel-head">
+            <div><h3>Detail per Satuan</h3></div>
+            <button type="button" class="btn-toggle-detail" id="btnCloseDetailSatuan" aria-expanded="true" aria-controls="panelDetailPerSatuan" title="Tutup detail dan kembali ke grafik">
+              <span>Tutup Detail</span>
+              <svg class="chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+          </div>
           <div class="table-toolbar">
             <div class="table-search-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
@@ -3461,6 +3467,7 @@
     var btn = document.getElementById('btnToggleDetailSatuan');
     var panel = document.getElementById('panelDetailPerSatuan');
     var label = document.getElementById('btnToggleDetailSatuanLabel');
+    var btnClose = document.getElementById('btnCloseDetailSatuan');
     if (!btn || !panel) return;
     btn.addEventListener('click', function () {
       var terbuka = panel.hidden;
@@ -3469,6 +3476,19 @@
       if (label) label.textContent = terbuka ? 'Sembunyikan Detail per Satuan' : 'Lihat Detail per Satuan';
       if (terbuka) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
+
+    // Tombol "Tutup Detail" (dropup) di dalam panel Detail per Satuan --
+    // kebalikan dari tombol "Lihat Detail per Satuan" di atas: nutup lagi
+    // panel ini dan scroll baliknya ke tombol toggle di atas biar user
+    // ga nyasar keliatan halaman kosong abis tabelnya ilang.
+    if (btnClose) {
+      btnClose.addEventListener('click', function () {
+        panel.hidden = true;
+        btn.setAttribute('aria-expanded', 'false');
+        if (label) label.textContent = 'Lihat Detail per Satuan';
+        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    }
   })();
   </script>
 
