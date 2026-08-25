@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Pengaturan;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Storage;
 class SettingController extends Controller
 {
     private const ACCESS_TTL_SECONDS = 900;
+
+    /**
+     * Daftar platform sosial media yang boleh dipilih saat menambah entri baru
+     * lewat popup edit landing. Dipakai untuk validasi `in:`.
+     */
+    private const SOSIAL_PLATFORMS = ['instagram', 'tiktok', 'youtube', 'x', 'facebook', 'wikipedia'];
 
     public function verifyLandingAccess(Request $request)
     {
@@ -88,64 +94,198 @@ class SettingController extends Controller
         return response()->json(['ok' => true, 'access' => true]);
     }
 
-    public function updateLanding(Request $request): RedirectResponse
+    /**
+     * Memastikan sesi verifikasi password+captcha Pengaturan Umum masih berlaku.
+     * Dipanggil di setiap endpoint yang mengubah konten landing.
+     */
+    private function ensureLandingAccessVerified(Request $request): void
     {
         $verified = $request->session()->get('pengaturan_umum_terverifikasi', false);
         $verifiedAt = (int) $request->session()->get('pengaturan_umum_terverifikasi_at', 0);
 
         if (! $verified || $verifiedAt <= 0 || (now()->timestamp - $verifiedAt) > self::ACCESS_TTL_SECONDS) {
             $request->session()->forget(['pengaturan_umum_terverifikasi', 'pengaturan_umum_terverifikasi_at']);
-            return back()->with('error', 'Akses Pengaturan Umum sudah berakhir. Masukkan password dan captcha terlebih dahulu.');
+
+            abort(response()->json([
+                'message' => 'Sesi verifikasi Pengaturan Umum sudah berakhir. Muat ulang halaman lalu masukkan password dan captcha lagi.',
+                'session_expired' => true,
+            ], 440));
+        }
+    }
+
+    /**
+     * Endpoint tunggal untuk popup "klik elemen -> edit" di landing page.
+     * Menerima satu bagian konten setiap kali submit (bukan seluruh form
+     * sekaligus), lalu hanya menyimpan bagian itu dan mengembalikan nilai
+     * final dalam JSON supaya pratinjau bisa diperbarui tanpa reload.
+     */
+    public function updateLandingField(Request $request): JsonResponse
+    {
+        $this->ensureLandingAccessVerified($request);
+
+        $field = (string) $request->input('field');
+        $pengaturan = Pengaturan::current();
+
+        $result = match ($field) {
+            'logo' => $this->saveLogo($request, $pengaturan),
+            'brand' => $this->saveBrand($request, $pengaturan),
+            'hero_eyebrow' => $this->saveSimpleFields($request, $pengaturan, [
+                'hero_eyebrow' => ['nullable', 'string', 'max:255'],
+            ]),
+            'hero_judul' => $this->saveSimpleFields($request, $pengaturan, [
+                'hero_judul_awal' => ['nullable', 'string', 'max:50'],
+                'hero_judul_aksen' => ['nullable', 'string', 'max:50'],
+            ]),
+            'hero_subjudul' => $this->saveSimpleFields($request, $pengaturan, [
+                'hero_subjudul' => ['nullable', 'string', 'max:255'],
+            ]),
+            'hero_deskripsi' => $this->saveSimpleFields($request, $pengaturan, [
+                'hero_deskripsi' => ['nullable', 'string', 'max:2000'],
+            ]),
+            'hero_image' => $this->saveHeroImage($request, $pengaturan),
+            'fitur' => $this->saveFitur($request, $pengaturan),
+            'tentang_deskripsi' => $this->saveSimpleFields($request, $pengaturan, [
+                'tentang_deskripsi' => ['nullable', 'string', 'max:4000'],
+            ]),
+            'tentang_moto' => $this->saveSimpleFields($request, $pengaturan, [
+                'tentang_moto_judul' => ['nullable', 'string', 'max:255'],
+                'tentang_moto_deskripsi' => ['nullable', 'string', 'max:2000'],
+            ]),
+            'alamat' => $this->saveSimpleFields($request, $pengaturan, [
+                'alamat' => ['nullable', 'string', 'max:1000'],
+            ]),
+            'email_kontak' => $this->saveSimpleFields($request, $pengaturan, [
+                'email_kontak' => ['nullable', 'email', 'max:255'],
+            ]),
+            'telepon_kontak' => $this->saveSimpleFields($request, $pengaturan, [
+                'telepon_kontak' => ['nullable', 'string', 'max:30'],
+            ]),
+            'website' => $this->saveSimpleFields($request, $pengaturan, [
+                'website' => ['nullable', 'url', 'max:255'],
+            ]),
+            'sosial_media' => $this->saveSosialMedia($request, $pengaturan),
+            default => null,
+        };
+
+        if ($result === null) {
+            return response()->json(['message' => 'Bagian konten tidak dikenali.'], 422);
+        }
+
+        ActivityLog::catat('pengaturan.landing.update', 'Memperbarui bagian "'.$field.'" pada konten halaman landing.');
+
+        return response()->json(array_merge(['ok' => true, 'message' => 'Tersimpan.'], $result));
+    }
+
+    private function saveSimpleFields(Request $request, Pengaturan $pengaturan, array $rules): array
+    {
+        $validated = $request->validate($rules);
+        $pengaturan->update($validated);
+
+        return $validated;
+    }
+
+    private function saveLogo(Request $request, Pengaturan $pengaturan): array
+    {
+        $request->validate(['logo_file' => ['required', 'image', 'max:5120']]);
+
+        if ($pengaturan->logo_path) {
+            Storage::disk('public')->delete($pengaturan->logo_path);
+        }
+
+        $path = $request->file('logo_file')->store('pengaturan', 'public');
+        $pengaturan->update(['logo_path' => $path]);
+
+        return ['logo_url' => asset('storage/'.$path)];
+    }
+
+    private function saveHeroImage(Request $request, Pengaturan $pengaturan): array
+    {
+        $request->validate(['hero_image' => ['required', 'image', 'max:5120']]);
+
+        if ($pengaturan->hero_image_path) {
+            Storage::disk('public')->delete($pengaturan->hero_image_path);
+        }
+
+        $path = $request->file('hero_image')->store('pengaturan', 'public');
+        $pengaturan->update(['hero_image_path' => $path]);
+
+        return ['hero_image_url' => asset('storage/'.$path)];
+    }
+
+    private function saveBrand(Request $request, Pengaturan $pengaturan): array
+    {
+        $validated = $request->validate([
+            'brand_name' => ['nullable', 'string', 'max:50'],
+            'brand_accent' => ['nullable', 'string', 'max:50'],
+            'brand_tagline' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $content = $pengaturan->landing_content ?? [];
+        $content['brand'] = array_merge($content['brand'] ?? [], [
+            'name' => $validated['brand_name'] ?? '',
+            'accent' => $validated['brand_accent'] ?? '',
+            'tagline' => $validated['brand_tagline'] ?? '',
+        ]);
+        $pengaturan->update(['landing_content' => $content]);
+
+        return ['brand' => $content['brand']];
+    }
+
+    private function saveFitur(Request $request, Pengaturan $pengaturan): array
+    {
+        $validated = $request->validate([
+            'index' => ['required', 'integer', 'min:0', 'max:3'],
+            'judul' => ['required', 'string', 'max:100'],
+            'deskripsi' => ['required', 'string', 'max:500'],
+        ]);
+
+        $fitur = $pengaturan->fitur ?? [];
+        $fitur[$validated['index']] = [
+            'judul' => $validated['judul'],
+            'deskripsi' => $validated['deskripsi'],
+        ];
+        ksort($fitur);
+        $pengaturan->update(['fitur' => array_values($fitur)]);
+
+        return ['index' => $validated['index'], 'judul' => $validated['judul'], 'deskripsi' => $validated['deskripsi']];
+    }
+
+    private function saveSosialMedia(Request $request, Pengaturan $pengaturan): array
+    {
+        $action = (string) $request->input('action', 'save');
+        $sosial = $pengaturan->sosial_media ?? [];
+
+        if ($action === 'delete') {
+            $validated = $request->validate(['index' => ['required', 'integer', 'min:0']]);
+            unset($sosial[$validated['index']]);
+            $sosial = array_values($sosial);
+            $pengaturan->update(['sosial_media' => $sosial]);
+
+            return ['deleted' => true, 'sosial_media' => $sosial];
         }
 
         $validated = $request->validate([
-            'hero_eyebrow'=>['nullable','string','max:255'],
-            'hero_judul_awal'=>['nullable','string','max:50'],
-            'hero_judul_aksen'=>['nullable','string','max:50'],
-            'hero_subjudul'=>['nullable','string','max:255'],
-            'hero_deskripsi'=>['nullable','string','max:2000'],
-            'hero_image'=>['nullable','image','max:5120'],
-            'logo_file'=>['nullable','image','max:5120'],
-            'fitur'=>['required','array','size:4'],
-            'fitur.*.judul'=>['required','string','max:100'],
-            'fitur.*.deskripsi'=>['required','string','max:500'],
-            'tentang_deskripsi'=>['nullable','string','max:4000'],
-            'tentang_moto_judul'=>['nullable','string','max:255'],
-            'tentang_moto_deskripsi'=>['nullable','string','max:2000'],
-            'alamat'=>['nullable','string','max:1000'],
-            'email_kontak'=>['nullable','email','max:255'],
-            'telepon_kontak'=>['nullable','string','max:30'],
-            'website'=>['nullable','url','max:255'],
-            'sosial_media'=>['required','array'],
-            'sosial_media.*.platform'=>['required','string','max:30'],
-            'sosial_media.*.label'=>['nullable','string','max:100'],
-            'sosial_media.*.url'=>['nullable','url','max:500'],
-            'landing_content'=>['nullable','string','max:30000'],
+            'index' => ['nullable', 'integer', 'min:0'],
+            'platform' => ['required', 'string', 'in:'.implode(',', self::SOSIAL_PLATFORMS)],
+            'label' => ['nullable', 'string', 'max:100'],
+            'url' => ['nullable', 'url', 'max:500'],
         ]);
 
-        $pengaturan = Pengaturan::current();
+        $entry = [
+            'platform' => $validated['platform'],
+            'label' => $validated['label'] ?? '',
+            'url' => $validated['url'] ?? '',
+        ];
 
-        if ($request->hasFile('hero_image')) {
-            if ($pengaturan->hero_image_path) Storage::disk('public')->delete($pengaturan->hero_image_path);
-            $validated['hero_image_path'] = $request->file('hero_image')->store('pengaturan', 'public');
-        }
-        if ($request->hasFile('logo_file')) {
-            if ($pengaturan->logo_path) Storage::disk('public')->delete($pengaturan->logo_path);
-            $validated['logo_path'] = $request->file('logo_file')->store('pengaturan', 'public');
-        }
-
-        if (!empty($validated['landing_content'])) {
-            $decoded = json_decode($validated['landing_content'], true);
-            if (is_array($decoded)) $validated['landing_content'] = $decoded;
-            else unset($validated['landing_content']);
+        if (array_key_exists('index', $validated) && $validated['index'] !== null && isset($sosial[$validated['index']])) {
+            $sosial[$validated['index']] = $entry;
         } else {
-            unset($validated['landing_content']);
+            $sosial[] = $entry;
         }
 
-        unset($validated['hero_image'], $validated['logo_file']);
-        $pengaturan->update($validated);
-        ActivityLog::catat('pengaturan.landing.update', 'Memperbarui seluruh konten halaman landing (branding, navigasi, beranda, fitur, tentang, kontak, footer).');
+        $sosial = array_values($sosial);
+        $pengaturan->update(['sosial_media' => $sosial]);
 
-        return back()->with('status', 'Konten halaman landing berhasil disimpan.');
+        return ['sosial_media' => $sosial];
     }
 }

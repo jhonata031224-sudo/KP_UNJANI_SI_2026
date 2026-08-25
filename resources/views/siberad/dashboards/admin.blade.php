@@ -2333,258 +2333,170 @@
         </div>
 
 
-        {{-- ===== KONTEN HALAMAN LANDING ===== --}}
-        <div class="lp-layout">
+        {{-- ===== KONTEN HALAMAN LANDING (klik elemen di pratinjau untuk edit) ===== --}}
+        @php
+          $lp = $pengaturan->landingConfig();
+          $lpLogoUrl = $pengaturan->logo_path ? asset('storage/'.$pengaturan->logo_path) : asset('images/logo-pussiberad.jpg');
+          $lpHeroImageUrl = $pengaturan->hero_image_path ? asset('storage/'.$pengaturan->hero_image_path) : null;
+          $lpFiturList = $pengaturan->fitur ?? [];
+          $lpSosialList = $pengaturan->sosial_media ?? [];
+        @endphp
 
-          {{-- ---------- PANEL EDITOR ---------- --}}
-          <div class="panel lp-panel">
-            <div class="panel-head">
-              <div>
-                <h3>Konten Halaman Landing</h3>
-                <p>Pilih bagian yang mau diedit, lalu lihat hasilnya di panel pratinjau.</p>
-              </div>
+        <div class="panel lp-panel">
+          <div class="panel-head">
+            <div>
+              <h3>Konten Halaman Landing <span class="lp-live-dot" aria-hidden="true"></span></h3>
+              <p>Ini tampilan asli landing page. Klik langsung bagian yang mau diubah — logo, judul, deskripsi, kartu fitur, kontak, dan sosial media — lalu isi popup yang muncul.</p>
             </div>
-
-            <form id="landingForm" method="POST" action="{{ route('admin.pengaturan.landing.update') }}" enctype="multipart/form-data">
-              @csrf @method('PATCH')
-
-              <div class="lp-tabs" role="tablist">
-                <button type="button" class="lp-tab active" data-lp-tab="beranda">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
-                  Beranda
-                </button>
-                <button type="button" class="lp-tab" data-lp-tab="fitur">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-                  Fitur
-                </button>
-                <button type="button" class="lp-tab" data-lp-tab="tentang">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5"/><path d="M12 8h.01"/></svg>
-                  Tentang
-                </button>
-                <button type="button" class="lp-tab" data-lp-tab="kontak">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12a10 10 0 1 1-5.6-9"/><path d="M15 8l4-4"/><path d="M15 4h4v4"/></svg>
-                  Kontak
-                </button>
-              </div>
-
-              {{-- ===== TAB: BERANDA ===== --}}
-              <div class="lp-tab-panel active" data-lp-tab-panel="beranda">
-                <p class="lp-tab-desc">Bagian paling atas landing page — yang pertama kali dilihat pengunjung.</p>
-                <div class="form-grid">
-                  <div class="form-field full">
-                    <label for="lpEyebrow">Label Kecil di Atas Judul</label>
-                    <input id="lpEyebrow" name="hero_eyebrow" type="text" value="{{ old('hero_eyebrow', $pengaturan->hero_eyebrow) }}" data-lp="hero_eyebrow">
-                  </div>
-                  <div class="form-field">
-                    <label for="lpJudulAwal">Judul (bagian 1)</label>
-                    <input id="lpJudulAwal" name="hero_judul_awal" type="text" value="{{ old('hero_judul_awal', $pengaturan->hero_judul_awal) }}" data-lp="hero_judul_awal">
-                  </div>
-                  <div class="form-field">
-                    <label for="lpJudulAksen">Judul (bagian 2, warna emas)</label>
-                    <input id="lpJudulAksen" name="hero_judul_aksen" type="text" value="{{ old('hero_judul_aksen', $pengaturan->hero_judul_aksen) }}" data-lp="hero_judul_aksen">
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpSubjudul">Sub Judul</label>
-                    <input id="lpSubjudul" name="hero_subjudul" type="text" value="{{ old('hero_subjudul', $pengaturan->hero_subjudul) }}" data-lp="hero_subjudul">
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpDeskripsi">Deskripsi</label>
-                    <textarea id="lpDeskripsi" name="hero_deskripsi" rows="3" data-lp="hero_deskripsi">{{ old('hero_deskripsi', $pengaturan->hero_deskripsi) }}</textarea>
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpHeroImage">Gambar Latar Beranda (opsional)</label>
-                    <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image">
-                    @if($pengaturan->hero_image_path)
-                      <img src="{{ asset('storage/'.$pengaturan->hero_image_path) }}" alt="Gambar beranda saat ini" class="lp-current-image">
-                    @endif
-                  </div>
-                </div>
-              </div>
-
-              {{-- ===== TAB: FITUR ===== --}}
-              <div class="lp-tab-panel" data-lp-tab-panel="fitur">
-                <p class="lp-tab-desc">Empat kartu keunggulan yang tampil di bagian "Fitur".</p>
-                @foreach ((old('fitur') ?? $pengaturan->fitur ?? []) as $i => $fitur)
-                  <div class="lp-card">
-                    <div class="lp-card-title">Fitur {{ $i + 1 }}</div>
-                    <div class="form-grid">
-                      <div class="form-field full">
-                        <label for="lpFiturJudul{{ $i }}">Judul</label>
-                        <input id="lpFiturJudul{{ $i }}" name="fitur[{{ $i }}][judul]" type="text" value="{{ is_array($fitur) ? $fitur['judul'] : '' }}" data-lp="fitur_judul_{{ $i }}" required>
-                      </div>
-                      <div class="form-field full">
-                        <label for="lpFiturDesk{{ $i }}">Deskripsi</label>
-                        <textarea id="lpFiturDesk{{ $i }}" name="fitur[{{ $i }}][deskripsi]" rows="2" data-lp="fitur_deskripsi_{{ $i }}" required>{{ is_array($fitur) ? $fitur['deskripsi'] : '' }}</textarea>
-                      </div>
-                    </div>
-                  </div>
-                @endforeach
-              </div>
-
-              {{-- ===== TAB: TENTANG ===== --}}
-              <div class="lp-tab-panel" data-lp-tab-panel="tentang">
-                <p class="lp-tab-desc">Profil singkat instansi dan moto yang tampil di bagian "Tentang".</p>
-                <div class="form-grid">
-                  <div class="form-field full">
-                    <label for="lpTentangDeskripsi">Deskripsi Tentang (pisahkan paragraf dengan baris kosong)</label>
-                    <textarea id="lpTentangDeskripsi" name="tentang_deskripsi" rows="5" data-lp="tentang_deskripsi">{{ old('tentang_deskripsi', $pengaturan->tentang_deskripsi) }}</textarea>
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpMotoJudul">Judul Moto</label>
-                    <input id="lpMotoJudul" name="tentang_moto_judul" type="text" value="{{ old('tentang_moto_judul', $pengaturan->tentang_moto_judul) }}" data-lp="tentang_moto_judul">
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpMotoDeskripsi">Deskripsi Moto</label>
-                    <textarea id="lpMotoDeskripsi" name="tentang_moto_deskripsi" rows="3" data-lp="tentang_moto_deskripsi">{{ old('tentang_moto_deskripsi', $pengaturan->tentang_moto_deskripsi) }}</textarea>
-                  </div>
-                </div>
-              </div>
-
-              {{-- ===== TAB: KONTAK ===== --}}
-              <div class="lp-tab-panel" data-lp-tab-panel="kontak">
-                <p class="lp-tab-desc">Informasi kontak &amp; tautan sosial media yang tampil di footer.</p>
-                <div class="form-grid">
-                  <div class="form-field full">
-                    <label for="lpKontakAlamat">Alamat (tampil di footer)</label>
-                    <textarea id="lpKontakAlamat" name="alamat" rows="2" data-lp="alamat">{{ old('alamat', $pengaturan->alamat) }}</textarea>
-                  </div>
-                  <div class="form-field">
-                    <label for="lpKontakEmail">Email Kontak</label>
-                    <input id="lpKontakEmail" name="email_kontak" type="email" value="{{ old('email_kontak', $pengaturan->email_kontak) }}" data-lp="email_kontak">
-                  </div>
-                  <div class="form-field">
-                    <label for="lpKontakTelepon">Telepon Kontak (tampil di footer)</label>
-                    <input id="lpKontakTelepon" name="telepon_kontak" type="text" value="{{ old('telepon_kontak', $pengaturan->telepon_kontak) }}" data-lp="telepon_kontak">
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpWebsite">Website</label>
-                    <input id="lpWebsite" name="website" type="url" value="{{ old('website', $pengaturan->website) }}" data-lp="website" placeholder="https://...">
-                  </div>
-                </div>
-
-                <div class="lp-card-title" style="margin-top:18px;">Sosial Media</div>
-                @foreach ((old('sosial_media') ?? $pengaturan->sosial_media ?? []) as $i => $sosial)
-                  <div class="lp-card lp-card-compact">
-                    <input type="hidden" name="sosial_media[{{ $i }}][platform]" value="{{ is_array($sosial) ? $sosial['platform'] : '' }}" data-lp="sosial_platform_{{ $i }}">
-                    <div class="form-grid">
-                      <div class="form-field">
-                        <label>Label ({{ ucfirst(is_array($sosial) ? $sosial['platform'] : '') }})</label>
-                        <input name="sosial_media[{{ $i }}][label]" type="text" value="{{ is_array($sosial) ? $sosial['label'] : '' }}" data-lp="sosial_label_{{ $i }}">
-                      </div>
-                      <div class="form-field">
-                        <label>URL</label>
-                        <input name="sosial_media[{{ $i }}][url]" type="url" value="{{ is_array($sosial) ? $sosial['url'] : '' }}" placeholder="https://..." data-lp="sosial_url_{{ $i }}">
-                      </div>
-                    </div>
-                  </div>
-                @endforeach
-              </div>
-
-              <div class="lp-form-actions">
-                <button class="btn btn-primary" type="submit">Simpan Konten Landing</button>
-              </div>
-            </form>
           </div>
 
-          {{-- ---------- PANEL PRATINJAU (terpisah) ---------- --}}
-          <div class="panel lp-preview-panel">
-            <div class="panel-head">
-              <div>
-                <h3>Pratinjau Langsung <span class="lp-live-dot" aria-hidden="true"></span></h3>
-                <p>Mengikuti tema (gelap/terang) yang sedang aktif.</p>
+          <div class="lp-editor-body">
+            <div class="lp-browser-frame">
+              <div class="lp-browser-bar">
+                <span class="lp-browser-dot"></span><span class="lp-browser-dot"></span><span class="lp-browser-dot"></span>
+                <span class="lp-browser-url">siberad</span>
               </div>
-            </div>
-            <div class="lp-preview-body">
-              <div class="lp-browser-frame">
-                <div class="lp-browser-bar">
-                  <span class="lp-browser-dot"></span><span class="lp-browser-dot"></span><span class="lp-browser-dot"></span>
-                  <span class="lp-browser-url">siberad</span>
-                </div>
-                <div class="lp-preview" id="lpPreview">
-                  <div class="lp-hero" id="lpPreviewHero" data-lp-preview-section="beranda"
-                    @if($pengaturan->hero_image_path)
-                      style="background-image:linear-gradient(160deg, color-mix(in srgb, var(--panel-2) 85%, transparent), color-mix(in srgb, var(--bg-deep) 75%, transparent)), url('{{ asset('storage/'.$pengaturan->hero_image_path) }}');background-size:cover;background-position:center;"
-                    @endif
-                  >
-                    <div class="lp-eyebrow" id="lpPvEyebrow"></div>
-                    <div class="lp-h1"><span id="lpPvJudulAwal"></span><em id="lpPvJudulAksen"></em></div>
-                    <div class="lp-h2" id="lpPvSubjudul"></div>
-                    <div class="lp-p" id="lpPvDeskripsi"></div>
+
+              <div class="lp-preview" id="lpPreview">
+
+                {{-- ---------- NAVBAR: LOGO & MEREK ---------- --}}
+                <div class="lp-nav">
+                  <div class="lp-nav-brand">
+                    <button type="button" class="lp-hotspot lp-logo-hotspot" data-editable="logo" title="Klik untuk ganti logo">
+                      <img src="{{ $lpLogoUrl }}" alt="Logo" id="lpPvLogo">
+                      <span class="lp-hotspot-pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+                    </button>
+                    <button type="button" class="lp-hotspot lp-brand-hotspot" data-editable="brand" title="Klik untuk ubah nama & tagline">
+                      <span class="lp-nav-brand-text">
+                        <b id="lpPvBrandName"></b><em id="lpPvBrandAccent"></em>
+                        <small id="lpPvBrandTagline"></small>
+                      </span>
+                      <span class="lp-hotspot-pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+                    </button>
                   </div>
-                  <div class="lp-features" id="lpPvFitur" data-lp-preview-section="fitur"></div>
-                  <div class="lp-about" data-lp-preview-section="tentang">
-                    <div class="lp-section-title">Tentang</div>
+                  <span class="lp-nav-hint">Menu navigasi &amp; tombol masuk mengikuti tampilan asli (tidak dapat diedit di sini)</span>
+                </div>
+
+                {{-- ---------- HERO ---------- --}}
+                <div class="lp-hero" id="lpPreviewHero"
+                  @if($lpHeroImageUrl)
+                    style="background-image:linear-gradient(160deg, color-mix(in srgb, var(--panel-2) 85%, transparent), color-mix(in srgb, var(--bg-deep) 75%, transparent)), url('{{ $lpHeroImageUrl }}');background-size:cover;background-position:center;"
+                  @endif
+                >
+                  <button type="button" class="lp-hotspot lp-hotspot-block" data-editable="hero_eyebrow" title="Klik untuk ubah label">
+                    <div class="lp-eyebrow" id="lpPvEyebrow"></div>
+                    <span class="lp-hotspot-pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+                  </button>
+                  <button type="button" class="lp-hotspot lp-hotspot-block" data-editable="hero_judul" title="Klik untuk ubah judul utama">
+                    <div class="lp-h1"><span id="lpPvJudulAwal"></span><em id="lpPvJudulAksen"></em></div>
+                    <span class="lp-hotspot-pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+                  </button>
+                  <button type="button" class="lp-hotspot lp-hotspot-block" data-editable="hero_subjudul" title="Klik untuk ubah sub judul">
+                    <div class="lp-h2" id="lpPvSubjudul"></div>
+                    <span class="lp-hotspot-pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+                  </button>
+                  <button type="button" class="lp-hotspot lp-hotspot-block" data-editable="hero_deskripsi" title="Klik untuk ubah deskripsi">
+                    <div class="lp-p" id="lpPvDeskripsi"></div>
+                    <span class="lp-hotspot-pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+                  </button>
+                  <button type="button" class="lp-hotspot lp-hero-image-hotspot" data-editable="hero_image" title="Klik untuk ganti gambar latar">
+                    <span class="lp-hotspot-pencil lp-hotspot-pencil-static"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg> Ganti gambar latar</span>
+                  </button>
+                </div>
+
+                {{-- ---------- FITUR ---------- --}}
+                <div class="lp-features" id="lpPvFitur">
+                  @foreach ($lpFiturList as $i => $fitur)
+                    <button type="button" class="lp-feature-card lp-hotspot" data-editable="fitur" data-index="{{ $i }}" title="Klik untuk ubah kartu fitur ini">
+                      <b>{{ $fitur['judul'] ?? '' }}</b>
+                      <span>{{ $fitur['deskripsi'] ?? '' }}</span>
+                      <span class="lp-hotspot-pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+                    </button>
+                  @endforeach
+                </div>
+
+                {{-- ---------- TENTANG ---------- --}}
+                <div class="lp-about">
+                  <div class="lp-section-title">Tentang</div>
+                  <button type="button" class="lp-hotspot lp-hotspot-block" data-editable="tentang_deskripsi" title="Klik untuk ubah deskripsi tentang">
                     <div class="lp-p" id="lpPvTentang"></div>
+                    <span class="lp-hotspot-pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+                  </button>
+                  <button type="button" class="lp-hotspot lp-hotspot-block" data-editable="tentang_moto" title="Klik untuk ubah moto">
                     <div class="lp-moto-title" id="lpPvMotoJudul"></div>
                     <div class="lp-p" id="lpPvMoto"></div>
-                  </div>
-                  <div class="lp-footer" data-lp-preview-section="kontak">
-                    <div class="lp-section-title">Kontak</div>
-                    <div class="lp-p" id="lpPvAlamat" data-lp-empty="Alamat belum diisi"></div>
-                    <div class="lp-p" id="lpPvTelepon" data-lp-empty="Telepon belum diisi"></div>
-                    <div class="lp-p" id="lpPvEmail" data-lp-empty="Email belum diisi"></div>
-                    <div class="lp-p" id="lpPvWebsite" data-lp-empty="Website belum diisi"></div>
-                    <div class="lp-sosial-list" id="lpPvSosial"></div>
-                  </div>
+                    <span class="lp-hotspot-pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+                  </button>
                 </div>
+
+                {{-- ---------- KONTAK / FOOTER ---------- --}}
+                <div class="lp-footer">
+                  <div class="lp-section-title">Kontak</div>
+                  <button type="button" class="lp-hotspot lp-hotspot-inline" data-editable="alamat" title="Klik untuk ubah alamat">
+                    <div class="lp-p" id="lpPvAlamat" data-lp-empty="Alamat belum diisi"></div>
+                    <span class="lp-hotspot-pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+                  </button>
+                  <button type="button" class="lp-hotspot lp-hotspot-inline" data-editable="telepon_kontak" title="Klik untuk ubah telepon">
+                    <div class="lp-p" id="lpPvTelepon" data-lp-empty="Telepon belum diisi"></div>
+                    <span class="lp-hotspot-pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+                  </button>
+                  <button type="button" class="lp-hotspot lp-hotspot-inline" data-editable="email_kontak" title="Klik untuk ubah email">
+                    <div class="lp-p" id="lpPvEmail" data-lp-empty="Email belum diisi"></div>
+                    <span class="lp-hotspot-pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+                  </button>
+                  <button type="button" class="lp-hotspot lp-hotspot-inline" data-editable="website" title="Klik untuk ubah website">
+                    <div class="lp-p" id="lpPvWebsite" data-lp-empty="Website belum diisi"></div>
+                    <span class="lp-hotspot-pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+                  </button>
+
+                  <div class="lp-sosial-list" id="lpPvSosial">
+                    @foreach ($lpSosialList as $i => $sosial)
+                      <button type="button" class="lp-sosial-chip lp-hotspot" data-editable="sosial_media" data-index="{{ $i }}" title="Klik untuk ubah/hapus"></button>
+                    @endforeach
+                  </div>
+                  <button type="button" class="lp-add-sosial" id="lpAddSosial" data-editable="sosial_media" data-index="new">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    Tambah Sosial Media
+                  </button>
+                </div>
+
               </div>
             </div>
           </div>
-
         </div>
 
+        {{-- ---------- MODAL EDIT (generik, isinya diisi lewat JS sesuai elemen yang diklik) ---------- --}}
+        <div class="lp-modal-overlay" id="lpModalOverlay" aria-hidden="true">
+          <div class="lp-modal" role="dialog" aria-modal="true" aria-labelledby="lpModalTitle">
+            <button type="button" class="lp-modal-close" id="lpModalClose" aria-label="Tutup">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+            <h3 class="lp-modal-title" id="lpModalTitle"></h3>
+            <p class="lp-modal-desc" id="lpModalDesc"></p>
+            <div class="lp-modal-body" id="lpModalBody"></div>
+            <div class="lp-modal-error" id="lpModalError"></div>
+            <div class="lp-modal-actions">
+              <button type="button" class="lp-btn-delete" id="lpModalDelete" hidden>Hapus</button>
+              <div class="lp-modal-actions-right">
+                <button type="button" class="btn btn-ghost" id="lpModalCancel">Batal</button>
+                <button type="button" class="btn btn-primary" id="lpModalSave">Simpan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lp-toast" id="lpToast" role="status" aria-live="polite"></div>
+
         <style>
-          .lp-layout{display:grid;grid-template-columns:1.3fr 1fr;gap:22px;align-items:start;}
-          @media (max-width:1100px){ .lp-layout{grid-template-columns:1fr;} }
-
-          .lp-panel form{padding:22px;}
-
-          .lp-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;border-bottom:1px solid var(--border-soft);padding-bottom:16px;}
-          .lp-tab{
-            display:flex;align-items:center;gap:7px;
-            font-family:inherit;font-size:12.5px;font-weight:600;letter-spacing:.02em;
-            padding:9px 16px;border-radius:999px;cursor:pointer;
-            background:var(--panel-alt);border:1px solid var(--border-soft);color:var(--text-muted);
-            transition:background .15s ease,color .15s ease,border-color .15s ease;
-          }
-          .lp-tab svg{width:15px;height:15px;flex-shrink:0;}
-          .lp-tab:hover{color:var(--text);border-color:var(--border);}
-          .lp-tab.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold-bright);}
-
-          .lp-tab-panel{display:none;padding-top:18px;}
-          .lp-tab-panel.active{display:block;animation:lpFadeIn .18s ease;}
-          @keyframes lpFadeIn{ from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:none;} }
-          .lp-tab-desc{font-size:12.5px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;}
-
-          .lp-card{background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:10px;padding:16px;margin-bottom:14px;}
-          .lp-card-compact{padding:12px 16px;}
-          .lp-card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
-          .lp-current-image{height:52px;margin-top:10px;border-radius:6px;display:block;border:1px solid var(--border-soft);}
-
-          .lp-form-actions{margin-top:6px;padding-top:18px;border-top:1px solid var(--border-soft);}
-
-          .lp-preview-panel{position:sticky;top:16px;}
-          .lp-preview-panel .panel-head h3{display:flex;align-items:center;gap:9px;}
+          .lp-panel .panel-head h3{display:flex;align-items:center;gap:9px;}
           .lp-live-dot{width:7px;height:7px;border-radius:50%;background:var(--success-bright);box-shadow:0 0 0 3px var(--success-dim);animation:lpPulse 1.8s ease-in-out infinite;}
           @keyframes lpPulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
-          .lp-preview-body{padding:0 22px 22px;}
+          .lp-editor-body{padding:0 22px 22px;}
 
-          /* Preview dibuat seperti viewport desktop mini agar landing page utuh
-             terlihat di dalam kartu Admin tanpa memperbesar panel. */
           .lp-browser-frame{
             border-radius:12px;overflow:hidden;border:1px solid var(--border-soft);
             box-shadow:0 14px 34px -14px rgba(0,0,0,.4);
             background:var(--bg);
-          }
-          .lp-preview{
-            zoom:.72;
-            width:138.8889%;
-          }
-          @media (max-width:1280px){
-            .lp-preview{zoom:.64;width:156.25%;}
-          }
-          @media (max-width:1100px){
-            .lp-preview{zoom:.78;width:128.2051%;}
           }
           .lp-browser-bar{display:flex;align-items:center;gap:6px;padding:10px 12px;background:var(--panel-alt);border-bottom:1px solid var(--border-soft);}
           .lp-browser-dot{width:8px;height:8px;border-radius:50%;background:var(--border-strong);}
@@ -2594,20 +2506,51 @@
           }
 
           .lp-preview{background:var(--bg);color:var(--text);font-family:var(--body);}
-          .lp-preview [data-lp-preview-section]{position:relative;outline:2px solid transparent;outline-offset:-2px;transition:outline-color .2s ease;}
-          .lp-preview [data-lp-preview-section].is-focus{outline-color:var(--gold);}
 
-          .lp-hero{padding:26px 22px 22px;background:linear-gradient(160deg,var(--panel-2),var(--bg-deep));background-size:cover;background-position:center;}
+          /* ---- hotspot: elemen yang bisa diklik untuk edit ---- */
+          .lp-hotspot{
+            all:unset;box-sizing:border-box;position:relative;display:block;cursor:pointer;
+            outline:2px dashed transparent;outline-offset:2px;border-radius:6px;transition:outline-color .15s ease,background-color .15s ease;
+          }
+          .lp-hotspot:hover{outline-color:var(--gold);background:color-mix(in srgb, var(--gold) 6%, transparent);}
+          .lp-hotspot:focus-visible{outline-color:var(--gold);outline-style:solid;}
+          .lp-hotspot-block{width:100%;text-align:left;padding:2px 6px;margin:0 -6px;}
+          .lp-hotspot-inline{width:auto;display:inline-block;padding:2px 6px;margin:0 -6px 4px;}
+          .lp-hotspot-pencil{
+            position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:6px;
+            background:var(--gold);color:#1c1400;display:flex;align-items:center;justify-content:center;
+            opacity:0;transform:scale(.85);transition:opacity .15s ease,transform .15s ease;pointer-events:none;
+          }
+          .lp-hotspot-pencil svg{width:12px;height:12px;}
+          .lp-hotspot:hover .lp-hotspot-pencil{opacity:1;transform:scale(1);}
+          .lp-hotspot-pencil-static{position:static;opacity:1;transform:none;width:auto;height:auto;padding:6px 12px;gap:6px;font-size:11px;font-weight:700;}
+          .lp-hotspot-pencil-static svg{width:14px;height:14px;}
+
+          .lp-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 22px;border-bottom:1px solid var(--border-soft);flex-wrap:wrap;}
+          .lp-nav-brand{display:flex;align-items:center;gap:10px;}
+          .lp-logo-hotspot{width:38px;height:38px;border-radius:8px;overflow:hidden;padding:0;margin:0;}
+          .lp-logo-hotspot img{width:100%;height:100%;object-fit:cover;display:block;}
+          .lp-brand-hotspot{padding:2px 8px;margin:0 -8px;}
+          .lp-nav-brand-text{display:flex;flex-direction:column;line-height:1.15;}
+          .lp-nav-brand-text b{font-family:var(--display);font-size:14px;text-transform:uppercase;color:var(--text);}
+          .lp-nav-brand-text em{font-style:normal;color:var(--gold-bright);font-family:var(--display);font-size:14px;text-transform:uppercase;}
+          .lp-nav-brand-text small{font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:var(--text-dim);}
+          .lp-nav-hint{font-size:10.5px;color:var(--text-dim);font-style:italic;}
+
+          .lp-hero{position:relative;padding:26px 22px 60px;background:linear-gradient(160deg,var(--panel-2),var(--bg-deep));background-size:cover;background-position:center;}
           .lp-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
           .lp-h1{font-family:var(--display);font-size:27px;font-weight:700;line-height:1;text-transform:uppercase;margin-bottom:9px;color:var(--text);}
           .lp-h1 em{color:var(--gold-bright);font-style:normal;}
           .lp-h2{font-size:13px;font-weight:600;margin-bottom:9px;color:var(--text);}
           .lp-p{font-size:11.5px;line-height:1.65;color:var(--text-muted);white-space:pre-line;}
+          .lp-hero-image-hotspot{position:absolute;left:22px;bottom:16px;width:auto;display:inline-flex;padding:0;outline:none;background:none;}
+          .lp-hero-image-hotspot .lp-hotspot-pencil-static{background:var(--panel);border:1px solid var(--border-soft);color:var(--text);opacity:.92;display:flex;}
+          .lp-hero-image-hotspot:hover .lp-hotspot-pencil-static{border-color:var(--gold);color:var(--gold-bright);opacity:1;}
 
           .lp-features{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-soft);}
-          .lp-features .lp-feature-card{background:var(--panel);padding:15px;}
-          .lp-features .lp-feature-card b{display:block;font-family:var(--display);font-size:12.5px;margin-bottom:5px;color:var(--text);}
-          .lp-features .lp-feature-card span{font-size:10.5px;color:var(--text-muted);line-height:1.55;}
+          .lp-feature-card{background:var(--panel);padding:15px;width:100%;text-align:left;}
+          .lp-feature-card b{display:block;font-family:var(--display);font-size:12.5px;margin-bottom:5px;color:var(--text);}
+          .lp-feature-card span{font-size:10.5px;color:var(--text-muted);line-height:1.55;display:block;}
 
           .lp-about,.lp-footer{padding:20px 22px;border-top:1px solid var(--border-soft);}
           .lp-section-title{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:9px;}
@@ -2621,30 +2564,87 @@
             background:var(--panel-alt);
           }
           .lp-sosial-chip svg{width:12px;height:12px;color:var(--gold-bright);flex-shrink:0;}
+          .lp-add-sosial{
+            all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;margin-top:10px;cursor:pointer;
+            font-size:10.5px;font-weight:700;color:var(--gold-bright);border:1px dashed var(--gold);border-radius:999px;padding:6px 12px;
+            transition:background-color .15s ease;
+          }
+          .lp-add-sosial:hover{background:color-mix(in srgb, var(--gold) 10%, transparent);}
+          .lp-add-sosial svg{width:12px;height:12px;}
+
+          /* ---- modal popup ---- */
+          .lp-modal-overlay{position:fixed;inset:0;z-index:100600;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;background:rgba(10,14,20,.6);backdrop-filter:blur(4px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,visibility .18s ease;}
+          .lp-modal-overlay.open{opacity:1;visibility:visible;pointer-events:auto;}
+          .lp-modal{width:440px;max-width:calc(100vw - 32px);max-height:calc(100vh - 40px);overflow-y:auto;box-sizing:border-box;background:var(--panel);color:var(--text);border:1px solid var(--border-soft);border-radius:16px;box-shadow:0 30px 70px rgba(0,0,0,.4);padding:24px;position:relative;transform:translateY(8px) scale(.98);transition:transform .18s ease;}
+          .lp-modal-overlay.open .lp-modal{transform:none;}
+          .lp-modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border:1px solid var(--border-soft);border-radius:9px;background:var(--panel-alt);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+          .lp-modal-close:hover{color:var(--text);border-color:var(--border);}
+          .lp-modal-close svg{width:15px;height:15px;}
+          .lp-modal-title{margin:0 40px 6px 0;font-family:var(--display);font-size:18px;font-weight:700;color:var(--text);}
+          .lp-modal-desc{margin:0 0 16px;font-size:12px;line-height:1.55;color:var(--text-muted);}
+          .lp-modal-body{display:flex;flex-direction:column;gap:14px;}
+          .lp-modal-body label{display:block;font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;}
+          .lp-modal-body input[type=text],.lp-modal-body input[type=email],.lp-modal-body input[type=url],.lp-modal-body textarea,.lp-modal-body select{
+            width:100%;box-sizing:border-box;background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:9px;
+            color:var(--text);font-family:inherit;font-size:13px;padding:10px 12px;outline:none;transition:border-color .15s ease;
+          }
+          .lp-modal-body input:focus,.lp-modal-body textarea:focus,.lp-modal-body select:focus{border-color:var(--gold);}
+          .lp-modal-body textarea{resize:vertical;min-height:70px;}
+          .lp-modal-body input[type=file]{font-size:12px;color:var(--text-muted);}
+          .lp-modal-body .lp-current-image{display:block;height:56px;margin-top:8px;border-radius:8px;border:1px solid var(--border-soft);}
+          .lp-modal-error{display:none;margin-top:14px;padding:10px 12px;border:1px solid rgba(175,55,46,.3);background:rgba(175,55,46,.08);color:#e0847c;border-radius:9px;font-size:12px;line-height:1.5;}
+          .lp-modal-error.show{display:block;}
+          .lp-modal-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border-soft);}
+          .lp-modal-actions-right{display:flex;align-items:center;gap:8px;margin-left:auto;}
+          .lp-btn-delete{all:unset;box-sizing:border-box;font-size:12px;font-weight:700;color:#e0847c;cursor:pointer;padding:9px 12px;border-radius:8px;border:1px solid rgba(224,132,124,.35);}
+          .lp-btn-delete:hover{background:rgba(224,132,124,.1);}
+
+          .lp-toast{
+            position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);z-index:100700;
+            background:var(--success-bright,#2fa86b);color:#062b17;font-size:12.5px;font-weight:700;
+            padding:11px 18px;border-radius:999px;box-shadow:0 12px 30px -8px rgba(0,0,0,.4);
+            opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;
+          }
+          .lp-toast.show{opacity:1;transform:translate(-50%,0);}
         </style>
 
         <script>
           (function(){
-            var form = document.getElementById('landingForm');
-            if(!form) return;
+            var preview = document.getElementById('lpPreview');
+            if(!preview) return;
 
-            // ---------- tab switching ----------
-            var tabs = form.querySelectorAll('[data-lp-tab]');
-            var panels = form.querySelectorAll('[data-lp-tab-panel]');
-            var previewSections = document.querySelectorAll('[data-lp-preview-section]');
+            var updateFieldUrl = @json(route('admin.pengaturan.landing.update-field'));
+            var csrfToken = @json(csrf_token());
 
-            function activateTab(name){
-              tabs.forEach(function(t){ t.classList.toggle('active', t.dataset.lpTab === name); });
-              panels.forEach(function(p){ p.classList.toggle('active', p.dataset.lpTabPanel === name); });
-              previewSections.forEach(function(s){ s.classList.toggle('is-focus', s.dataset.lpPreviewSection === name); });
-            }
+            var lpData = @json([
+              'logo_url' => $lpLogoUrl,
+              'hero_image_url' => $lpHeroImageUrl,
+              'brand' => $lp['brand'],
+              'hero_eyebrow' => $pengaturan->hero_eyebrow,
+              'hero_judul_awal' => $pengaturan->hero_judul_awal,
+              'hero_judul_aksen' => $pengaturan->hero_judul_aksen,
+              'hero_subjudul' => $pengaturan->hero_subjudul,
+              'hero_deskripsi' => $pengaturan->hero_deskripsi,
+              'fitur' => $lpFiturList,
+              'tentang_deskripsi' => $pengaturan->tentang_deskripsi,
+              'tentang_moto_judul' => $pengaturan->tentang_moto_judul,
+              'tentang_moto_deskripsi' => $pengaturan->tentang_moto_deskripsi,
+              'alamat' => $pengaturan->alamat,
+              'telepon_kontak' => $pengaturan->telepon_kontak,
+              'email_kontak' => $pengaturan->email_kontak,
+              'website' => $pengaturan->website,
+              'sosial_media' => $lpSosialList,
+            ]);
 
-            tabs.forEach(function(t){
-              t.addEventListener('click', function(){ activateTab(t.dataset.lpTab); });
-            });
-
-            // ---------- live preview ----------
-            var sosialIcons = {
+            var SOSIAL_PLATFORMS = [
+              {value:'instagram', label:'Instagram'},
+              {value:'tiktok', label:'TikTok'},
+              {value:'youtube', label:'YouTube'},
+              {value:'x', label:'X (Twitter)'},
+              {value:'facebook', label:'Facebook'},
+              {value:'wikipedia', label:'Wikipedia / Profil Resmi'}
+            ];
+            var SOSIAL_ICONS = {
               instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1"/></svg>',
               tiktok: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 3h-3.1v12.4a2.7 2.7 0 1 1-1.9-2.6V9.6a5.8 5.8 0 1 0 5 5.7V9.4a7.9 7.9 0 0 0 4.4 1.3V7.6c-2.2-.2-4-1.9-4.4-4.1z"/></svg>',
               youtube: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.5 7.2c-.3-1.1-1.1-1.9-2.1-2.2C18.6 4.5 12 4.5 12 4.5s-6.6 0-8.4.5c-1 .3-1.8 1.1-2.1 2.2C1 9 1 12 1 12s0 3 .5 4.8c.3 1.1 1.1 1.9 2.1 2.2 1.8.5 8.4.5 8.4.5s6.6 0 8.4-.5c1-.3 1.8-1.1 2.1-2.2.5-1.8.5-4.8.5-4.8s0-3-.5-4.8zM9.8 15.3V8.7l6 3.3-6 3.3z"/></svg>',
@@ -2653,94 +2653,352 @@
               wikipedia: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9s1.3-6.5 3.8-9z"/></svg>'
             };
 
+            // ---------- konfigurasi tiap jenis elemen yang bisa diedit ----------
+            var FIELD_CONFIGS = {
+              logo: {
+                title: 'Ganti Logo', desc: 'Format gambar (PNG/JPG), maksimal 5MB.',
+                fields: [{name:'logo_file', label:'File Logo Baru', type:'file', accept:'image/*', showCurrent:function(){ return lpData.logo_url; }}]
+              },
+              brand: {
+                title: 'Nama & Merek', desc: 'Teks yang tampil di sebelah logo pada navigasi.',
+                fields: [
+                  {name:'brand_name', label:'Nama (mis. SIBER)', type:'text', maxlength:50, value:function(){return lpData.brand.name;}},
+                  {name:'brand_accent', label:'Aksen warna emas (mis. AD)', type:'text', maxlength:50, value:function(){return lpData.brand.accent;}},
+                  {name:'brand_tagline', label:'Tagline kecil di bawah nama', type:'text', maxlength:100, value:function(){return lpData.brand.tagline;}}
+                ]
+              },
+              hero_eyebrow: {
+                title: 'Label Kecil di Atas Judul',
+                fields: [{name:'hero_eyebrow', label:'Teks label', type:'text', maxlength:255, value:function(){return lpData.hero_eyebrow;}}]
+              },
+              hero_judul: {
+                title: 'Judul Utama',
+                fields: [
+                  {name:'hero_judul_awal', label:'Judul (bagian 1)', type:'text', maxlength:50, value:function(){return lpData.hero_judul_awal;}},
+                  {name:'hero_judul_aksen', label:'Judul (bagian 2, warna emas)', type:'text', maxlength:50, value:function(){return lpData.hero_judul_aksen;}}
+                ]
+              },
+              hero_subjudul: {
+                title: 'Sub Judul',
+                fields: [{name:'hero_subjudul', label:'Sub judul', type:'text', maxlength:255, value:function(){return lpData.hero_subjudul;}}]
+              },
+              hero_deskripsi: {
+                title: 'Deskripsi Beranda',
+                fields: [{name:'hero_deskripsi', label:'Deskripsi', type:'textarea', maxlength:2000, value:function(){return lpData.hero_deskripsi;}}]
+              },
+              hero_image: {
+                title: 'Gambar Latar Beranda', desc: 'Opsional. Format gambar, maksimal 5MB.',
+                fields: [{name:'hero_image', label:'File Gambar Baru', type:'file', accept:'image/*', showCurrent:function(){ return lpData.hero_image_url; }}]
+              },
+              fitur: {
+                title: 'Kartu Fitur',
+                fields: [
+                  {name:'judul', label:'Judul', type:'text', maxlength:100, value:function(idx){return lpData.fitur[idx] ? lpData.fitur[idx].judul : '';}},
+                  {name:'deskripsi', label:'Deskripsi', type:'textarea', maxlength:500, value:function(idx){return lpData.fitur[idx] ? lpData.fitur[idx].deskripsi : '';}}
+                ]
+              },
+              tentang_deskripsi: {
+                title: 'Deskripsi Tentang', desc: 'Pisahkan paragraf dengan baris kosong.',
+                fields: [{name:'tentang_deskripsi', label:'Deskripsi', type:'textarea', maxlength:4000, value:function(){return lpData.tentang_deskripsi;}}]
+              },
+              tentang_moto: {
+                title: 'Moto',
+                fields: [
+                  {name:'tentang_moto_judul', label:'Judul moto', type:'text', maxlength:255, value:function(){return lpData.tentang_moto_judul;}},
+                  {name:'tentang_moto_deskripsi', label:'Deskripsi moto', type:'textarea', maxlength:2000, value:function(){return lpData.tentang_moto_deskripsi;}}
+                ]
+              },
+              alamat: {
+                title: 'Alamat',
+                fields: [{name:'alamat', label:'Alamat (tampil di footer)', type:'textarea', maxlength:1000, value:function(){return lpData.alamat;}}]
+              },
+              telepon_kontak: {
+                title: 'Telepon Kontak',
+                fields: [{name:'telepon_kontak', label:'Nomor telepon', type:'text', maxlength:30, value:function(){return lpData.telepon_kontak;}}]
+              },
+              email_kontak: {
+                title: 'Email Kontak',
+                fields: [{name:'email_kontak', label:'Alamat email', type:'email', maxlength:255, value:function(){return lpData.email_kontak;}}]
+              },
+              website: {
+                title: 'Website',
+                fields: [{name:'website', label:'URL website', type:'url', maxlength:255, placeholder:'https://...', value:function(){return lpData.website;}}]
+              },
+              sosial_media: {
+                title: 'Sosial Media', deletable: true,
+                fields: [
+                  {name:'platform', label:'Platform', type:'select', options:SOSIAL_PLATFORMS, value:function(idx){ var s=lpData.sosial_media[idx]; return s ? s.platform : SOSIAL_PLATFORMS[0].value; }},
+                  {name:'label', label:'Label tampilan', type:'text', maxlength:100, value:function(idx){ var s=lpData.sosial_media[idx]; return s ? s.label : ''; }},
+                  {name:'url', label:'URL', type:'url', maxlength:500, placeholder:'https://...', value:function(idx){ var s=lpData.sosial_media[idx]; return s ? s.url : ''; }}
+                ]
+              }
+            };
+
+            // ---------- render preview dari lpData ----------
             function setText(id, val, emptyLabel){
               var el = document.getElementById(id);
               if(!el) return;
-              var hasVal = val && val.trim() !== '';
+              var hasVal = val && String(val).trim() !== '';
               el.textContent = hasVal ? val : (emptyLabel || el.dataset.lpEmpty || '');
               el.style.opacity = hasVal ? '1' : '.45';
               el.style.fontStyle = hasVal ? 'normal' : 'italic';
             }
 
+            function renderAll(){
+              document.getElementById('lpPvLogo').src = lpData.logo_url;
+              setText('lpPvBrandName', lpData.brand.name, 'SIBER');
+              document.getElementById('lpPvBrandAccent').textContent = lpData.brand.accent || 'AD';
+              setText('lpPvBrandTagline', lpData.brand.tagline);
+
+              var heroEl = document.getElementById('lpPreviewHero');
+              heroEl.style.backgroundImage = lpData.hero_image_url
+                ? 'linear-gradient(160deg, color-mix(in srgb, var(--panel-2) 85%, transparent), color-mix(in srgb, var(--bg-deep) 75%, transparent)), url(' + lpData.hero_image_url + ')'
+                : '';
+
+              setText('lpPvEyebrow', lpData.hero_eyebrow, 'PUSSIBERAD // SISTEM PENDUKUNG OPERASIONAL');
+              setText('lpPvJudulAwal', lpData.hero_judul_awal, 'SIBER');
+              setText('lpPvJudulAksen', lpData.hero_judul_aksen, 'AD');
+              setText('lpPvSubjudul', lpData.hero_subjudul);
+              setText('lpPvDeskripsi', lpData.hero_deskripsi);
+              setText('lpPvTentang', lpData.tentang_deskripsi);
+              setText('lpPvMotoJudul', lpData.tentang_moto_judul);
+              setText('lpPvMoto', lpData.tentang_moto_deskripsi);
+              setText('lpPvAlamat', lpData.alamat);
+              setText('lpPvTelepon', lpData.telepon_kontak);
+              setText('lpPvEmail', lpData.email_kontak);
+              setText('lpPvWebsite', lpData.website);
+
+              renderFitur();
+              renderSosial();
+            }
+
             function renderFitur(){
               var wrap = document.getElementById('lpPvFitur');
               wrap.innerHTML = '';
-              for(var i=0;i<4;i++){
-                var judul = form.querySelector('[data-lp="fitur_judul_'+i+'"]');
-                var desk = form.querySelector('[data-lp="fitur_deskripsi_'+i+'"]');
-                if(!judul) continue;
-                var card = document.createElement('div');
-                card.className = 'lp-feature-card';
-                card.innerHTML = '<b></b><span></span>';
-                card.querySelector('b').textContent = judul.value || 'Judul fitur ' + (i + 1);
-                card.querySelector('span').textContent = desk ? desk.value : '';
+              lpData.fitur.forEach(function(f, i){
+                var card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'lp-feature-card lp-hotspot';
+                card.setAttribute('data-editable', 'fitur');
+                card.setAttribute('data-index', i);
+                card.title = 'Klik untuk ubah kartu fitur ini';
+                card.innerHTML = '<b></b><span></span><span class="lp-hotspot-pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>';
+                card.querySelector('b').textContent = f.judul || ('Judul fitur ' + (i + 1));
+                card.querySelector('span').textContent = f.deskripsi || '';
                 wrap.appendChild(card);
-              }
+              });
             }
 
             function renderSosial(){
               var wrap = document.getElementById('lpPvSosial');
               wrap.innerHTML = '';
-              var i = 0;
-              while (true) {
-                var platformEl = form.querySelector('[data-lp="sosial_platform_'+i+'"]');
-                if(!platformEl) break;
-                var labelEl = form.querySelector('[data-lp="sosial_label_'+i+'"]');
-                var urlEl = form.querySelector('[data-lp="sosial_url_'+i+'"]');
-                var url = urlEl ? urlEl.value.trim() : '';
-                if(url){
-                  var chip = document.createElement('span');
-                  chip.className = 'lp-sosial-chip';
-                  chip.innerHTML = (sosialIcons[platformEl.value] || '') + '<span></span>';
-                  chip.querySelector('span').textContent = (labelEl && labelEl.value) || platformEl.value;
-                  wrap.appendChild(chip);
+              lpData.sosial_media.forEach(function(s, i){
+                var chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'lp-sosial-chip lp-hotspot';
+                chip.setAttribute('data-editable', 'sosial_media');
+                chip.setAttribute('data-index', i);
+                chip.title = 'Klik untuk ubah/hapus';
+                chip.innerHTML = (SOSIAL_ICONS[s.platform] || '') + '<span></span>';
+                chip.querySelector('span').textContent = s.label || s.platform;
+                wrap.appendChild(chip);
+              });
+            }
+
+            renderAll();
+
+            // ---------- modal ----------
+            var overlay = document.getElementById('lpModalOverlay');
+            var modalTitle = document.getElementById('lpModalTitle');
+            var modalDesc = document.getElementById('lpModalDesc');
+            var modalBody = document.getElementById('lpModalBody');
+            var modalError = document.getElementById('lpModalError');
+            var modalSave = document.getElementById('lpModalSave');
+            var modalDelete = document.getElementById('lpModalDelete');
+            var modalClose = document.getElementById('lpModalClose');
+            var modalCancel = document.getElementById('lpModalCancel');
+
+            var currentKey = null, currentIndex = null, currentConfig = null;
+
+            function setModalError(msg){
+              modalError.textContent = msg || '';
+              modalError.classList.toggle('show', !!msg);
+            }
+
+            function buildInput(field, idx){
+              var wrap = document.createElement('div');
+              var currentVal = field.value ? field.value(idx) : '';
+              var label = document.createElement('label');
+              label.textContent = field.label;
+              label.setAttribute('for', 'lpField_' + field.name);
+              wrap.appendChild(label);
+
+              var input;
+              if(field.type === 'textarea'){
+                input = document.createElement('textarea');
+                input.rows = 4;
+                input.value = currentVal || '';
+              } else if(field.type === 'select'){
+                input = document.createElement('select');
+                field.options.forEach(function(opt){
+                  var o = document.createElement('option');
+                  o.value = opt.value; o.textContent = opt.label;
+                  if(opt.value === currentVal) o.selected = true;
+                  input.appendChild(o);
+                });
+              } else if(field.type === 'file'){
+                input = document.createElement('input');
+                input.type = 'file';
+                if(field.accept) input.accept = field.accept;
+                var currentSrc = field.showCurrent ? field.showCurrent() : null;
+                if(currentSrc){
+                  var img = document.createElement('img');
+                  img.src = currentSrc; img.className = 'lp-current-image'; img.alt = 'Saat ini';
+                  wrap.appendChild(input);
+                  wrap.appendChild(img);
+                  input.id = 'lpField_' + field.name;
+                  input.name = field.name;
+                  return wrap;
                 }
-                i++;
+              } else {
+                input = document.createElement('input');
+                input.type = field.type || 'text';
+                input.value = currentVal || '';
+                if(field.placeholder) input.placeholder = field.placeholder;
               }
+              input.id = 'lpField_' + field.name;
+              input.name = field.name;
+              if(field.maxlength) input.maxLength = field.maxlength;
+              wrap.appendChild(input);
+              return wrap;
             }
 
-            function updatePreview(){
-              setText('lpPvEyebrow', form.querySelector('[data-lp="hero_eyebrow"]').value, 'PUSSIBERAD // SISTEM PENDUKUNG OPERASIONAL');
-              setText('lpPvJudulAwal', form.querySelector('[data-lp="hero_judul_awal"]').value, 'SIBER');
-              setText('lpPvJudulAksen', form.querySelector('[data-lp="hero_judul_aksen"]').value, 'AD');
-              setText('lpPvSubjudul', form.querySelector('[data-lp="hero_subjudul"]').value);
-              setText('lpPvDeskripsi', form.querySelector('[data-lp="hero_deskripsi"]').value);
-              setText('lpPvTentang', form.querySelector('[data-lp="tentang_deskripsi"]').value);
-              setText('lpPvMotoJudul', form.querySelector('[data-lp="tentang_moto_judul"]').value);
-              setText('lpPvMoto', form.querySelector('[data-lp="tentang_moto_deskripsi"]').value);
-              setText('lpPvAlamat', form.querySelector('[data-lp="alamat"]').value);
-              setText('lpPvTelepon', form.querySelector('[data-lp="telepon_kontak"]').value);
-              setText('lpPvEmail', form.querySelector('[data-lp="email_kontak"]').value);
-              setText('lpPvWebsite', form.querySelector('[data-lp="website"]').value);
-              renderFitur();
-              renderSosial();
-            }
+            function openModalFor(key, index){
+              var config = FIELD_CONFIGS[key];
+              if(!config) return;
+              currentKey = key; currentIndex = (index === undefined || index === null || index === 'new') ? null : parseInt(index, 10);
+              currentConfig = config;
 
-            form.querySelectorAll('[data-lp]').forEach(function(el){
-              el.addEventListener('input', updatePreview);
-              el.addEventListener('focus', function(){
-                var tabPanel = el.closest('[data-lp-tab-panel]');
-                if(tabPanel){
-                  previewSections.forEach(function(s){ s.classList.toggle('is-focus', s.dataset.lpPreviewSection === tabPanel.dataset.lpTabPanel); });
-                }
+              modalTitle.textContent = config.title;
+              modalDesc.textContent = config.desc || '';
+              modalDesc.style.display = config.desc ? 'block' : 'none';
+              modalBody.innerHTML = '';
+              config.fields.forEach(function(field){
+                modalBody.appendChild(buildInput(field, currentIndex));
               });
+              setModalError('');
+
+              var isNewSosial = key === 'sosial_media' && (index === 'new' || index === undefined || index === null);
+              modalDelete.hidden = !(config.deletable && !isNewSosial);
+              if(isNewSosial) modalTitle.textContent = 'Tambah Sosial Media';
+
+              overlay.classList.add('open');
+              overlay.setAttribute('aria-hidden', 'false');
+            }
+
+            function closeModal(){
+              overlay.classList.remove('open');
+              overlay.setAttribute('aria-hidden', 'true');
+              currentKey = null; currentIndex = null; currentConfig = null;
+            }
+
+            preview.addEventListener('click', function(e){
+              var hotspot = e.target.closest('[data-editable]');
+              if(!hotspot) return;
+              e.preventDefault();
+              openModalFor(hotspot.getAttribute('data-editable'), hotspot.getAttribute('data-index'));
             });
+            modalClose.addEventListener('click', closeModal);
+            modalCancel.addEventListener('click', closeModal);
+            overlay.addEventListener('click', function(e){ if(e.target === overlay) closeModal(); });
+            document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.classList.contains('open')) closeModal(); });
 
-            var heroImageInput = form.querySelector('[data-lp-image="hero_image"]');
-            if(heroImageInput){
-              heroImageInput.addEventListener('change', function(){
-                var file = this.files && this.files[0];
-                var heroEl = document.getElementById('lpPreviewHero');
-                if(!file){ heroEl.style.backgroundImage = ''; return; }
-                var reader = new FileReader();
-                reader.onload = function(e){
-                  heroEl.style.backgroundImage = 'linear-gradient(160deg, color-mix(in srgb, var(--panel-2) 85%, transparent), color-mix(in srgb, var(--bg-deep) 75%, transparent)), url(' + e.target.result + ')';
-                };
-                reader.readAsDataURL(file);
+            var toast = document.getElementById('lpToast');
+            var toastTimer = null;
+            function showToast(msg){
+              toast.textContent = msg;
+              toast.classList.add('show');
+              clearTimeout(toastTimer);
+              toastTimer = setTimeout(function(){ toast.classList.remove('show'); }, 2200);
+            }
+
+            function applyResultToData(key, index, data){
+              if(key === 'logo'){ lpData.logo_url = data.logo_url; }
+              else if(key === 'hero_image'){ lpData.hero_image_url = data.hero_image_url; }
+              else if(key === 'brand'){ lpData.brand = data.brand; }
+              else if(key === 'fitur'){ lpData.fitur[data.index] = {judul:data.judul, deskripsi:data.deskripsi}; }
+              else if(key === 'tentang_moto'){ lpData.tentang_moto_judul = data.tentang_moto_judul; lpData.tentang_moto_deskripsi = data.tentang_moto_deskripsi; }
+              else if(key === 'hero_judul'){ lpData.hero_judul_awal = data.hero_judul_awal; lpData.hero_judul_aksen = data.hero_judul_aksen; }
+              else if(key === 'sosial_media'){ lpData.sosial_media = data.sosial_media; }
+              else { Object.keys(data).forEach(function(k){ if(k in lpData) lpData[k] = data[k]; }); }
+            }
+
+            function handleSessionExpired(){
+              setModalError('Sesi verifikasi berakhir. Halaman akan dimuat ulang, silakan verifikasi ulang untuk melanjutkan.');
+              setTimeout(function(){ window.location.reload(); }, 1600);
+            }
+
+            function submitField(action){
+              if(!currentKey) return;
+              modalSave.disabled = true;
+              setModalError('');
+
+              var formData = new FormData();
+              formData.append('_method', 'PATCH');
+              formData.append('_token', csrfToken);
+              formData.append('field', currentKey);
+              if(currentIndex !== null) formData.append('index', currentIndex);
+              if(action === 'delete') formData.append('action', 'delete');
+
+              if(action !== 'delete'){
+                currentConfig.fields.forEach(function(field){
+                  var el = document.getElementById('lpField_' + field.name);
+                  if(!el) return;
+                  if(field.type === 'file'){
+                    if(el.files && el.files[0]) formData.append(field.name, el.files[0]);
+                  } else {
+                    formData.append(field.name, el.value);
+                  }
+                });
+              }
+
+              fetch(updateFieldUrl, {
+                method: 'POST',
+                headers: {'Accept':'application/json', 'X-CSRF-TOKEN': csrfToken},
+                body: formData
+              }).then(function(r){
+                return r.json().catch(function(){ return {message:'Respons server tidak valid.'}; }).then(function(data){
+                  if(r.status === 440){ handleSessionExpired(); throw new Error('session_expired'); }
+                  if(!r.ok){
+                    if(data.errors){
+                      var firstMsg = Object.values(data.errors)[0];
+                      throw new Error(Array.isArray(firstMsg) ? firstMsg[0] : String(firstMsg));
+                    }
+                    throw new Error(data.message || 'Gagal menyimpan.');
+                  }
+                  return data;
+                });
+              }).then(function(data){
+                if(action === 'delete'){
+                  lpData.sosial_media = data.sosial_media;
+                } else {
+                  applyResultToData(currentKey, currentIndex, data);
+                }
+                renderAll();
+                closeModal();
+                showToast(action === 'delete' ? 'Item dihapus.' : 'Perubahan tersimpan.');
+              }).catch(function(err){
+                if(err.message !== 'session_expired') setModalError(err.message || 'Gagal menyimpan.');
+              }).finally(function(){
+                modalSave.disabled = false;
               });
             }
 
-            updatePreview();
+            modalSave.addEventListener('click', function(){ submitField('save'); });
+            modalDelete.addEventListener('click', function(){
+              if(!window.confirm('Hapus item ini dari landing page?')) return;
+              submitField('delete');
+            });
           })();
         </script>
       </section>
