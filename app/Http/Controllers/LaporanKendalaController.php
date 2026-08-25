@@ -14,16 +14,13 @@ use Illuminate\Support\Facades\Storage;
 /**
  * Alur "Kirim Laporan" (kendala/laporan rutin) khusus 21 Kasansi (Kotama)
  * LANGSUNG ke DANPUS -- tanpa lewat Satlak. Berbeda dari LaporanController
- * (yang terikat alur Permintaan Laporan Danpus/Wadan, artinya "kebutuhan
- * khusus" yang diminta duluan oleh Danpus), fitur ini bebas dikirim kapan
- * saja oleh Kasansi tanpa perlu ada permintaan laporan lebih dulu --
- * sifatnya laporan rutin/kendala inisiatif Kasansi sendiri.
+ * (yang terikat alur Permintaan Laporan Danpus/Wadan), fitur ini bebas dikirim
+ * kapan saja oleh Kasansi tanpa perlu ada permintaan laporan lebih dulu.
  *
- * Tujuannya SENGAJA di-hardcode ke DANPUS (bukan dipilih lewat dropdown)
- * supaya alur ini tetap sederhana dan satu pintu. DANPUS & WADAN berdua
- * bisa melihat dan menindaklanjuti laporan yang masuk lewat controller ini
- * (lihat updateStatus()), sama seperti alur Laporan/Permintaan Laporan biasa
- * yang juga menganggap Danpus-Wadan sebagai satu payung pimpinan.
+ * Laporan kendala memakai tabel/model sendiri supaya tidak pernah bercampur
+ * dengan alur Permintaan Laporan. Setelah Danpus menekan Konfirmasi pada
+ * detail, record diberi tanda konfirmasi dan ditampilkan di Arsip Kendala
+ * Kasansi yang terpisah.
  */
 class LaporanKendalaController extends Controller
 {
@@ -45,8 +42,6 @@ class LaporanKendalaController extends Controller
             'Hanya Kasansi yang dapat mengirim laporan kendala ke Danpus.'
         );
 
-        // Tujuan selalu DANPUS -- tidak lagi dipilih lewat dropdown, lihat
-        // catatan di komentar class di atas.
         $tujuan = Satuan::where('kode', 'DANPUS')->firstOrFail();
 
         $lampiranPath = $request->hasFile('lampiran')
@@ -80,7 +75,7 @@ class LaporanKendalaController extends Controller
     public function updateStatus(Request $request, LaporanKendala $laporanKendala): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => ['required', 'in:Ditindaklanjuti,Selesai,Ditolak'],
+            'status' => ['required', 'in:Ditindaklanjuti,Selesai,Ditolak,Dikonfirmasi'],
             'catatan' => ['nullable', 'string', 'max:5000', 'required_if:status,Ditolak'],
         ], [
             'catatan.required_if' => 'Catatan penolakan wajib diisi.',
@@ -89,14 +84,36 @@ class LaporanKendalaController extends Controller
         $user = $request->user()->load('satuan');
         $satuan = $user->satuan;
         abort_unless($satuan, 403, 'Akun belum terhubung ke satuan.');
-        // Tujuan laporan kendala selalu DANPUS, tapi DANPUS & WADAN berdua
-        // dianggap satu payung pimpinan yang boleh menindaklanjuti -- sama
-        // seperti pola $isPimpinanRiwayatSatlak di LaporanController.
+
+        $kodeSatuan = strtoupper((string) $satuan->kode);
         abort_unless(
-            in_array(strtoupper((string) $satuan->kode), ['DANPUS', 'WADAN'], true),
+            in_array($kodeSatuan, ['DANPUS', 'WADAN'], true),
             403,
             'Anda bukan penerima laporan kendala ini.'
         );
+
+        // Konfirmasi/arsip adalah tindakan khusus Danpus. Wadan tetap boleh
+        // menindaklanjuti status laporan, tetapi tidak memindahkannya ke arsip
+        // penerimaan Danpus.
+        if ($validated['status'] === LaporanKendala::STATUS_DIKONFIRMASI) {
+            abort_unless($kodeSatuan === 'DANPUS', 403, 'Hanya Danpus yang dapat mengonfirmasi dan mengarsipkan laporan kendala.');
+            abort_unless(!$laporanKendala->confirmed_at, 422, 'Laporan kendala ini sudah dikonfirmasi dan diarsipkan.');
+
+            $laporanKendala->update([
+                'status' => LaporanKendala::STATUS_DIKONFIRMASI,
+                'confirmed_at' => now(),
+                'confirmed_by' => $user->id,
+            ]);
+
+            ActivityLog::catat('laporan-kendala.confirm', "Mengonfirmasi dan mengarsipkan laporan kendala \"{$laporanKendala->perihal}\".", $user, [
+                'laporan_kendala_id' => $laporanKendala->id,
+                'status' => LaporanKendala::STATUS_DIKONFIRMASI,
+            ]);
+
+            return back()->with('status', 'Laporan kendala berhasil dikonfirmasi dan dipindahkan ke Arsip Kendala Kasansi.');
+        }
+
+        abort_unless(!$laporanKendala->confirmed_at, 422, 'Laporan kendala ini sudah berada di arsip dan tidak dapat ditindaklanjuti dari daftar masuk.');
 
         $laporanKendala->update([
             'status' => $validated['status'],
