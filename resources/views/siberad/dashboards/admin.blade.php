@@ -70,6 +70,14 @@
     min-width:170px;height:38px;
   }
   .table-filter:focus{outline:none;border-color:var(--gold);}
+  /* Filter kategori di baris search+tanggal (Riwayat Aktivitas & Data
+     Laporan) -- lebar dipatok tetap (bukan cuma min-width) supaya select
+     ini nggak melebar penuh 1 baris sendiri waktu dia yang kena wrap ke
+     baris baru; ukurannya disamakan sependek filter kategori di Daftar
+     Pengguna, bukan selebar teks opsi terpanjangnya ("Unsur Pembantu
+     Pimpinan") kayak sebelumnya. */
+  .dl-kategori-filter{width:190px;flex:0 0 190px;}
+  @media(max-width:640px){.dl-kategori-filter{width:100%;flex:1 1 auto;}}
   .table-filter-count{font-size:10px;color:var(--text-dim);white-space:nowrap;margin-left:auto;}
   .log-filter-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin:2px 0 16px;}
   .log-filter-field{display:flex;flex-direction:column;gap:4px;}
@@ -1688,7 +1696,7 @@
                 <label for="logSampaiInput">Sampai</label>
                 <input type="date" id="logSampaiInput" class="table-filter" name="log_sampai" value="{{ $logSampai->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}">
               </div>
-              <select class="table-filter" data-table-filter="tblLogAktivitas">
+              <select class="table-filter dl-kategori-filter" data-table-filter="tblLogAktivitas">
                 <option value="">Semua Kategori</option>
                 <option value="Admin">Admin</option>
                 <option value="Pimpinan">Pimpinan</option>
@@ -1990,7 +1998,7 @@
                 <label for="dlPenggunaSampai">Sampai</label>
                 <input type="date" id="dlPenggunaSampai" class="table-filter" max="{{ now()->format('Y-m-d') }}" value="{{ now()->format('Y-m-d') }}">
               </div>
-              <select class="table-filter" data-dl-filter="tblDlPengguna">
+              <select class="table-filter dl-kategori-filter" data-dl-filter="tblDlPengguna">
                 <option value="">Semua Kategori</option>
                 <option value="Admin">Admin</option>
                 <option value="Pimpinan">Pimpinan</option>
@@ -2074,7 +2082,7 @@
                 <label for="dlAktivitasSampai">Sampai</label>
                 <input type="date" id="dlAktivitasSampai" class="table-filter" max="{{ now()->format('Y-m-d') }}" value="{{ now()->format('Y-m-d') }}">
               </div>
-              <select class="table-filter" data-dl-filter="tblDlAktivitas">
+              <select class="table-filter dl-kategori-filter" data-dl-filter="tblDlAktivitas">
                 <option value="">Semua Kategori</option>
                 <option value="Admin">Admin</option>
                 <option value="Pimpinan">Pimpinan</option>
