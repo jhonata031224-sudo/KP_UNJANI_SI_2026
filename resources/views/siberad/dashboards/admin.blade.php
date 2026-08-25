@@ -1679,16 +1679,6 @@
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
               <input type="text" class="table-search" data-table-search="tblLogAktivitas" placeholder="Cari pengguna atau aksi...">
             </div>
-            <select class="table-filter" data-table-filter="tblLogAktivitas">
-              <option value="">Semua Kategori</option>
-              <option value="Admin">Admin</option>
-              <option value="Pimpinan">Pimpinan</option>
-              <option value="Unsur Pelayanan">Unsur Pelayanan</option>
-              <option value="Unsur Pembantu Pimpinan">Unsur Pembantu Pimpinan</option>
-              <option value="Direktorat">Direktorat</option>
-              <option value="Satlak">Satlak</option>
-              <option value="Kasansi">Kasansi</option>
-            </select>
             <form method="GET" action="{{ route('dashboard') }}" id="logFilterForm" style="display:contents;">
               <div class="dl-date-filter">
                 <label for="logDariInput">Dari</label>
@@ -1698,6 +1688,16 @@
                 <label for="logSampaiInput">Sampai</label>
                 <input type="date" id="logSampaiInput" class="table-filter" name="log_sampai" value="{{ $logSampai->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}">
               </div>
+              <select class="table-filter" data-table-filter="tblLogAktivitas">
+                <option value="">Semua Kategori</option>
+                <option value="Admin">Admin</option>
+                <option value="Pimpinan">Pimpinan</option>
+                <option value="Unsur Pelayanan">Unsur Pelayanan</option>
+                <option value="Unsur Pembantu Pimpinan">Unsur Pembantu Pimpinan</option>
+                <option value="Direktorat">Direktorat</option>
+                <option value="Satlak">Satlak</option>
+                <option value="Kasansi">Kasansi</option>
+              </select>
               <button type="button" id="logFilterReset" class="dl-filter-reset" title="Reset ke rentang default">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
               </button>
@@ -1982,6 +1982,14 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
                 <input type="text" class="table-search" data-dl-search="tblDlPengguna" placeholder="Cari pengguna...">
               </div>
+              <div class="dl-date-filter">
+                <label for="dlPenggunaDari">Dari</label>
+                <input type="date" id="dlPenggunaDari" class="table-filter" max="{{ now()->format('Y-m-d') }}">
+              </div>
+              <div class="dl-date-filter">
+                <label for="dlPenggunaSampai">Sampai</label>
+                <input type="date" id="dlPenggunaSampai" class="table-filter" max="{{ now()->format('Y-m-d') }}" value="{{ now()->format('Y-m-d') }}">
+              </div>
               <select class="table-filter" data-dl-filter="tblDlPengguna">
                 <option value="">Semua Kategori</option>
                 <option value="Admin">Admin</option>
@@ -1992,14 +2000,6 @@
                 <option value="Satlak">Satlak</option>
                 <option value="Kasansi">Kasansi</option>
               </select>
-              <div class="dl-date-filter">
-                <label for="dlPenggunaDari">Dari</label>
-                <input type="date" id="dlPenggunaDari" class="table-filter" max="{{ now()->format('Y-m-d') }}">
-              </div>
-              <div class="dl-date-filter">
-                <label for="dlPenggunaSampai">Sampai</label>
-                <input type="date" id="dlPenggunaSampai" class="table-filter" max="{{ now()->format('Y-m-d') }}" value="{{ now()->format('Y-m-d') }}">
-              </div>
               <button type="button" class="dl-filter-reset" id="dlPenggunaReset" title="Reset filter tanggal">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
               </button>
@@ -2066,6 +2066,14 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
                 <input type="text" class="table-search" data-dl-search="tblDlAktivitas" placeholder="Cari log aktivitas...">
               </div>
+              <div class="dl-date-filter">
+                <label for="dlAktivitasDari">Dari</label>
+                <input type="date" id="dlAktivitasDari" class="table-filter" max="{{ now()->format('Y-m-d') }}">
+              </div>
+              <div class="dl-date-filter">
+                <label for="dlAktivitasSampai">Sampai</label>
+                <input type="date" id="dlAktivitasSampai" class="table-filter" max="{{ now()->format('Y-m-d') }}" value="{{ now()->format('Y-m-d') }}">
+              </div>
               <select class="table-filter" data-dl-filter="tblDlAktivitas">
                 <option value="">Semua Kategori</option>
                 <option value="Admin">Admin</option>
@@ -2076,14 +2084,6 @@
                 <option value="Satlak">Satlak</option>
                 <option value="Kasansi">Kasansi</option>
               </select>
-              <div class="dl-date-filter">
-                <label for="dlAktivitasDari">Dari</label>
-                <input type="date" id="dlAktivitasDari" class="table-filter" max="{{ now()->format('Y-m-d') }}">
-              </div>
-              <div class="dl-date-filter">
-                <label for="dlAktivitasSampai">Sampai</label>
-                <input type="date" id="dlAktivitasSampai" class="table-filter" max="{{ now()->format('Y-m-d') }}" value="{{ now()->format('Y-m-d') }}">
-              </div>
               <button type="button" class="dl-filter-reset" id="dlAktivitasReset" title="Reset filter tanggal">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
               </button>
