@@ -17,17 +17,18 @@ class PermintaanLaporanController extends Controller
 {
     /**
      * Semua satuan pelaksana yang boleh jadi tujuan Permintaan Laporan dari
-     * Danpus/Wadan: 4 Satlak, 4 Sdir (pembinaan), Pok Pel (Urdal, Pok
-     * Analis), dan 21 Kasansi (Sansidam). Diambil dari konstanta Satuan supaya
-     * selalu ikut sinkron kalau daftar itu berubah, bukan daftar kode
-     * duplikat yang bisa ketinggalan zaman.
+     * Danpus/Wadan: 4 Satlak, 4 Sdir (pembinaan), Unsur Pelayanan (Urdal),
+     * Unsur Pembantu Pimpinan (Pok Analis), dan 21 Kasansi (Sansidam).
+     * Diambil dari konstanta Satuan supaya selalu ikut sinkron kalau daftar
+     * itu berubah, bukan daftar kode duplikat yang bisa ketinggalan zaman.
      */
     private static function pengirimKode(): array
     {
         return array_merge(
             Satuan::KODE_SATLAK,
             Satuan::KODE_PEMBINAAN,
-            Satuan::KODE_POKPEL,
+            Satuan::KODE_UNSUR_PELAYANAN,
+            Satuan::KODE_UNSUR_PEMBANTU_PIMPINAN,
             Satuan::KODE_KOTAMA,
         );
     }

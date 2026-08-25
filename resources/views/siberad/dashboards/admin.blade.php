@@ -524,8 +524,9 @@
           <option value="">— Pilih Kategori —</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_ADMIN }}">Admin</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_PIMPINAN }}">Pimpinan</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN }}">Unsur Pelayanan</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN }}">Unsur Pembantu Pimpinan</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
-          <option value="{{ \App\Models\Satuan::KATEGORI_POKPEL }}">Pok Pel</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_KOTAMA }}">Kasansi</option>
         </select>
@@ -574,8 +575,9 @@
         <select id="usKategori" name="kategori" required>
           <option value="{{ \App\Models\Satuan::KATEGORI_ADMIN }}">Admin</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_PIMPINAN }}">Pimpinan</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN }}">Unsur Pelayanan</option>
+          <option value="{{ \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN }}">Unsur Pembantu Pimpinan</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
-          <option value="{{ \App\Models\Satuan::KATEGORI_POKPEL }}">Pok Pel</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
           <option value="{{ \App\Models\Satuan::KATEGORI_KOTAMA }}">Kasansi</option>
         </select>
@@ -1090,8 +1092,9 @@
               <option value="">Semua Kategori</option>
               <option value="Admin">Admin</option>
               <option value="Pimpinan">Pimpinan</option>
+              <option value="Unsur Pelayanan">Unsur Pelayanan</option>
+              <option value="Unsur Pembantu Pimpinan">Unsur Pembantu Pimpinan</option>
               <option value="Direktorat">Direktorat</option>
-              <option value="Pok Pel">Pok Pel</option>
               <option value="Satlak">Satlak</option>
               <option value="Kasansi">Kasansi</option>
             </select>
@@ -1106,8 +1109,9 @@
                   $kategoriLabel = match ($p->satuan->kategori ?? null) {
                     \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
                     \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
+                    \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+                    \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
                     \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
-                    \App\Models\Satuan::KATEGORI_POKPEL => 'Pok Pel',
                     \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
                     default => 'Satlak',
                   };
@@ -1402,8 +1406,9 @@
               <option value="">Semua Kategori</option>
               <option value="Admin">Admin</option>
               <option value="Pimpinan">Pimpinan</option>
+              <option value="Unsur Pelayanan">Unsur Pelayanan</option>
+              <option value="Unsur Pembantu Pimpinan">Unsur Pembantu Pimpinan</option>
               <option value="Direktorat">Direktorat</option>
-              <option value="Pok Pel">Pok Pel</option>
               <option value="Satlak">Satlak</option>
               <option value="Kasansi">Kasansi</option>
             </select>
@@ -1419,8 +1424,9 @@
                   $kategoriFilterLabel = match ($s->kategori) {
                     \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
                     \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
+                    \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+                    \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
                     \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
-                    \App\Models\Satuan::KATEGORI_POKPEL => 'Pok Pel',
                     \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
                     default => 'Satlak',
                   };
@@ -1428,7 +1434,7 @@
                 <tr data-filter-value="{{ $kategoriFilterLabel }}">
                   <td><span class="badge">{{ $s->kode }}</span></td>
                   <td>{{ $s->nama }}</td>
-                  <td style="color:var(--text-muted);text-transform:capitalize;">{{ $s->kategori }}</td>
+                  <td style="color:var(--text-muted);">{{ $kategoriFilterLabel }}</td>
                   <td>{{ $s->users_count }}</td>
                   <td>
                     <div class="btn-row">
@@ -2702,7 +2708,7 @@
                   <svg class="chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </button>
               </div>
-              <p>Semua satuan pengirim laporan (Pok Pel, Direktorat, Satlak, dan 21 satuan Kasansi) tersusun dari atas ke bawah per kategori -- warna batang menunjukkan kategorinya. Makin panjang batang, makin banyak laporan yang sudah dikirim satuan itu. Scroll ke bawah untuk lihat semua satuan.</p>
+              <p>Semua satuan pengirim laporan (Unsur Pelayanan, Unsur Pembantu Pimpinan, Direktorat, Satlak, dan 21 satuan Kasansi) tersusun dari atas ke bawah per kategori -- warna batang menunjukkan kategorinya. Makin panjang batang, makin banyak laporan yang sudah dikirim satuan itu. Scroll ke bawah untuk lihat semua satuan.</p>
             </div>
             <div class="chart-wrap" style="overflow-y:auto;overflow-x:auto;max-height:640px;">
               <div id="chartRekapLaporanWrap" style="position:relative;width:100%;">
@@ -2722,8 +2728,9 @@
             </div>
             <select class="table-filter" data-table-filter="tblRekapSatuan">
               <option value="">Semua Kategori</option>
+              <option value="{{ \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN }}">Unsur Pelayanan</option>
+              <option value="{{ \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN }}">Unsur Pembantu Pimpinan</option>
               <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
-              <option value="{{ \App\Models\Satuan::KATEGORI_POKPEL }}">Pok Pel</option>
               <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
               <option value="{{ \App\Models\Satuan::KATEGORI_KOTAMA }}">Kasansi</option>
             </select>
@@ -3211,15 +3218,16 @@
     }
 
     // ===== Grafik 1: Pengguna per Kategori Satuan (warna literal — urutan
-    // grup dari backend dijamin selalu Admin, Pimpinan, Pok Pel, Direktorat,
-    // Satlak, Kotama lewat Satuan::prioritasKategori(), bukan ikut urutan
-    // $semuaSatuan begitu saja) =====
+    // grup dari backend dijamin selalu Admin, Pimpinan, Unsur Pelayanan,
+    // Unsur Pembantu Pimpinan, Direktorat, Satlak, Kotama lewat
+    // Satuan::prioritasKategori(), bukan ikut urutan $semuaSatuan begitu
+    // saja) =====
     var distribusiKategori = @json($distribusiPenggunaKategori);
     renderDoughnut(
       'chartKategoriSatuan',
       distribusiKategori.map(function (d) { return d.kategori; }),
       distribusiKategori.map(function (d) { return d.jumlah; }),
-      [cGold, '#6366f1', '#0ea5e9', '#22c55e', '#f59e0b', '#ec4899']
+      [cGold, '#6366f1', '#0ea5e9', '#a855f7', '#22c55e', '#f59e0b', '#ec4899']
     );
 
     // ===== Grafik 2: Distribusi Status Laporan (data asli, warna tetap
@@ -3274,19 +3282,22 @@
     // Horizontal bar (bukan vertikal) supaya dengan 35+ satuan, nama satuan
     // tetap kebaca utuh tanpa dirotasi/dipotong -- yang discroll cukup
     // sumbu vertikal (lebih wajar buat orang baru dibanding scroll ke
-    // samping). Tiap batang diwarnai sesuai kategori satuannya (Pok Pel /
-    // Direktorat / Satlak / Kotama) pakai palet yang sama dengan doughnut
-    // "Pengguna per Kategori Satuan" di atas, supaya konsisten dan orang
-    // baru langsung bisa menghubungkan warna dengan kategori.
+    // samping). Tiap batang diwarnai sesuai kategori satuannya (Unsur
+    // Pelayanan / Unsur Pembantu Pimpinan / Direktorat / Satlak / Kotama)
+    // pakai palet yang sama dengan doughnut "Pengguna per Kategori Satuan"
+    // di atas, supaya konsisten dan orang baru langsung bisa menghubungkan
+    // warna dengan kategori.
     var rekapSatuan = @json($rekapLaporanSatuan);
     var kategoriWarna = {
-      pokpel: '#0ea5e9',
+      unsur_pelayanan: '#0ea5e9',
+      unsur_pembantu_pimpinan: '#a855f7',
       direktorat: '#22c55e',
       satlak: '#f59e0b',
       kotama: '#ec4899'
     };
     var kategoriLabel = {
-      pokpel: 'Pok Pel',
+      unsur_pelayanan: 'Unsur Pelayanan',
+      unsur_pembantu_pimpinan: 'Unsur Pembantu Pimpinan',
       direktorat: 'Direktorat',
       satlak: 'Satlak',
       kotama: 'Kasansi'

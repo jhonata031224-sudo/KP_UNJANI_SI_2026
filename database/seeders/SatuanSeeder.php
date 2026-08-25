@@ -65,15 +65,15 @@ class SatuanSeeder extends Seeder
             );
         }
 
-        // --- Pok Pel (Kelompok Pelayan), langsung di bawah/melayani Danpus ---
-        // Sama seperti satuan lain di atas: satu akun per satuan, username
-        // dibuat otomatis di sini.
-        $satuanPokPel = [
-            ['kode' => 'POKANALIS', 'username' => 'Pok analis', 'nama' => 'Pok Analis (Kelompok Analis)', 'kategori' => Satuan::KATEGORI_POKPEL, 'deskripsi' => 'Kelompok Pelayan Danpus untuk analisis dan kajian.'],
-            ['kode' => 'URDAL',     'username' => 'urdal',      'nama' => 'Urdal (Urusan Dalam)',         'kategori' => Satuan::KATEGORI_POKPEL, 'deskripsi' => 'Kelompok Pelayan Danpus untuk urusan dalam.'],
+        // --- Unsur Pelayanan (Urdal) & Unsur Pembantu Pimpinan (Pok Analis),
+        // langsung di bawah/melayani Danpus --- Sama seperti satuan lain di
+        // atas: satu akun per satuan, username dibuat otomatis di sini.
+        $satuanUnsurPelayananDanPembantuPimpinan = [
+            ['kode' => 'POKANALIS', 'username' => 'Pok analis', 'nama' => 'Pok Analis (Kelompok Analis)', 'kategori' => Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN, 'deskripsi' => 'Unsur Pembantu Pimpinan Danpus untuk analisis dan kajian.'],
+            ['kode' => 'URDAL',     'username' => 'urdal',      'nama' => 'Urdal (Urusan Dalam)',         'kategori' => Satuan::KATEGORI_UNSUR_PELAYANAN, 'deskripsi' => 'Unsur Pelayanan Danpus untuk urusan dalam.'],
         ];
 
-        foreach ($satuanPokPel as $data) {
+        foreach ($satuanUnsurPelayananDanPembantuPimpinan as $data) {
             $satuan = Satuan::updateOrCreate(
                 ['kode' => $data['kode']],
                 collect($data)->except('username')->all()

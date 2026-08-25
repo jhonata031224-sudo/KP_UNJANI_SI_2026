@@ -109,37 +109,48 @@ class Satuan extends Model
     public const KATEGORI_PIMPINAN = 'pimpinan';
     public const KATEGORI_ADMIN = 'admin';
     /**
-     * Kelompok Pelayan (Pok Pel) -- satuan yang langsung di bawah/melayani
-     * Danpus, tidak masuk kelompok Direktorat (Sdir/Binfung/Binum/dst),
-     * Satlak, maupun Pimpinan (mis. Pok Analis, Urdal). Lapor langsung ke
+     * Unsur Pelayanan -- satuan yang langsung di bawah/melayani Danpus untuk
+     * urusan dalam (Urdal), tidak masuk kelompok Direktorat
+     * (Sdir/Binfung/Binum/dst), Satlak, maupun Pimpinan. Lapor langsung ke
      * DANPUS (lihat kodeTujuanUntuk()).
      */
-    public const KATEGORI_POKPEL = 'pokpel';
+    public const KATEGORI_UNSUR_PELAYANAN = 'unsur_pelayanan';
+    /**
+     * Unsur Pembantu Pimpinan -- satuan yang langsung di bawah/melayani
+     * Danpus untuk analisis dan kajian (Pok Analis), tidak masuk kelompok
+     * Direktorat (Sdir/Binfung/Binum/dst), Satlak, maupun Pimpinan. Lapor
+     * langsung ke DANPUS (lihat kodeTujuanUntuk()).
+     */
+    public const KATEGORI_UNSUR_PEMBANTU_PIMPINAN = 'unsur_pembantu_pimpinan';
     /**
      * Kategori Kotama (Komando Utama) -- 21 Sansidam aktif di lingkungan TNI AD,
-     * kelompok satuan di luar Satlak/Direktorat/Pimpinan/Pok Pel/Admin.
+     * kelompok satuan di luar Satlak/Direktorat/Pimpinan/Unsur
+     * Pelayanan/Unsur Pembantu Pimpinan/Admin.
      */
     public const KATEGORI_KOTAMA = 'kotama';
 
     /**
-     * Urutan tampil kategori secara umum (Admin -> Pimpinan -> Pok Pel ->
-     * Direktorat -> Satlak -> Kotama), dipakai di seluruh tempat yang
-     * menampilkan daftar satuan gabungan lintas kategori -- menggantikan
-     * field "urutan" manual yang sudah dihapus.
+     * Urutan tampil kategori secara umum (Admin -> Pimpinan -> Unsur
+     * Pelayanan -> Unsur Pembantu Pimpinan -> Direktorat -> Satlak ->
+     * Kotama), dipakai di seluruh tempat yang menampilkan daftar satuan
+     * gabungan lintas kategori -- menggantikan field "urutan" manual yang
+     * sudah dihapus.
      *
-     * Pok Pel (Pok Analis, Urdal) sengaja ditaruh setelah Pimpinan (Wadan)
-     * dan sebelum Direktorat (4 Sdir) sesuai urutan organisasi yang diminta.
-     * Kotama ditaruh paling akhir karena kategori paling baru.
+     * Unsur Pelayanan (Urdal) dan Unsur Pembantu Pimpinan (Pok Analis)
+     * sengaja ditaruh setelah Pimpinan (Wadan) dan sebelum Direktorat (4
+     * Sdir) sesuai urutan organisasi yang diminta. Kotama ditaruh paling
+     * akhir karena kategori paling baru.
      */
     public static function prioritasKategori(): array
     {
         return [
             self::KATEGORI_ADMIN => 1,
             self::KATEGORI_PIMPINAN => 2,
-            self::KATEGORI_POKPEL => 3,
-            self::KATEGORI_DIREKTORAT => 4,
-            self::KATEGORI_SATLAK => 5,
-            self::KATEGORI_KOTAMA => 6,
+            self::KATEGORI_UNSUR_PELAYANAN => 3,
+            self::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 4,
+            self::KATEGORI_DIREKTORAT => 5,
+            self::KATEGORI_SATLAK => 6,
+            self::KATEGORI_KOTAMA => 7,
         ];
     }
 
@@ -163,7 +174,7 @@ class Satuan extends Model
             'DIKLAT' => 3,
             'BINMAT' => 4,
             'URDAL' => 1,
-            'POKANALIS' => 2,
+            'POKANALIS' => 1,
             'SATLAKKAL' => 1,
             'SATLAKDAK' => 2,
             'SATLAKSISOS' => 3,
@@ -264,10 +275,16 @@ class Satuan extends Model
     public const KODE_PEMBINAAN = ['BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT'];
 
     /**
-     * Kode satuan Pok Pel (Kelompok Pelayan) -- langsung di bawah/melayani
-     * Danpus, bukan bagian Direktorat/Satlak/Pimpinan (Pok Analis, Urdal).
+     * Kode satuan Unsur Pelayanan -- langsung di bawah/melayani Danpus untuk
+     * urusan dalam, bukan bagian Direktorat/Satlak/Pimpinan (Urdal).
      */
-    public const KODE_POKPEL = ['POKANALIS', 'URDAL'];
+    public const KODE_UNSUR_PELAYANAN = ['URDAL'];
+    /**
+     * Kode satuan Unsur Pembantu Pimpinan -- langsung di bawah/melayani
+     * Danpus untuk analisis dan kajian, bukan bagian Direktorat/Satlak/
+     * Pimpinan (Pok Analis).
+     */
+    public const KODE_UNSUR_PEMBANTU_PIMPINAN = ['POKANALIS'];
 
     /**
      * Kode 21 Sansidam aktif (kategori Kotama), diurutkan GEOGRAFIS dari Barat
@@ -291,7 +308,8 @@ class Satuan extends Model
      * - Satlak hanya boleh lapor ke DANPUS/WADAN (tujuan utama).
      *   Satlak tidak boleh saling kirim ke sesama Satlak maupun ke satuan pembinaan.
      * - Satuan pembinaan (Binmat, Binfung, Binum, Diklat) langsung lapor ke DANPUS.
-     * - Satuan Pok Pel (Pok Analis, Urdal) juga langsung lapor ke DANPUS.
+     * - Satuan Unsur Pelayanan (Urdal) dan Unsur Pembantu Pimpinan (Pok
+     *   Analis) juga langsung lapor ke DANPUS.
      * - Satuan lain (mis. WADAN) tidak dibatasi di sini (kembalikan null).
      *
      * @return string[]|null Daftar kode satuan tujuan yang diizinkan, atau null jika tidak dibatasi.
@@ -304,12 +322,15 @@ class Satuan extends Model
             return ['DANPUS', 'WADAN'];
         }
 
-        if (in_array($kodeAsal, self::KODE_PEMBINAAN, true) || in_array($kodeAsal, self::KODE_POKPEL, true)) {
+        if (in_array($kodeAsal, self::KODE_PEMBINAAN, true)
+            || in_array($kodeAsal, self::KODE_UNSUR_PELAYANAN, true)
+            || in_array($kodeAsal, self::KODE_UNSUR_PEMBANTU_PIMPINAN, true)) {
             return ['DANPUS'];
         }
 
         // 21 Sansidam (kategori Kotama) lapor langsung ke DANPUS,
-        // sama seperti satuan pembinaan dan Pok Pel.
+        // sama seperti satuan pembinaan, Unsur Pelayanan, dan Unsur
+        // Pembantu Pimpinan.
         if (in_array($kodeAsal, self::KODE_KOTAMA, true)) {
             return ['DANPUS'];
         }

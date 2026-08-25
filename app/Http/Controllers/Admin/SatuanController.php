@@ -69,7 +69,8 @@ class SatuanController extends Controller
                 Satuan::KATEGORI_DIREKTORAT,
                 Satuan::KATEGORI_PIMPINAN,
                 Satuan::KATEGORI_ADMIN,
-                Satuan::KATEGORI_POKPEL,
+                Satuan::KATEGORI_UNSUR_PELAYANAN,
+                Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN,
             ])],
             'deskripsi' => ['nullable', 'string'],
         ]);
