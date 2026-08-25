@@ -51,7 +51,7 @@ class KotamaSeeder extends Seeder
                 [
                     'nama' => $data['nama'],
                     'kategori' => Satuan::KATEGORI_KOTAMA,
-                    'deskripsi' => 'Satuan Kotama '.$data['nama'].'.',
+                    'deskripsi' => 'Satuan '.$data['nama'].'.',
                 ]
             );
 
