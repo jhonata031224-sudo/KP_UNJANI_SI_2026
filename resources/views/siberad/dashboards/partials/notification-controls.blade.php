@@ -4,7 +4,16 @@
 
   var POLL_INTERVAL_MS = 3000;
 
+  // Modul 'notifikasi' bisa dimatikan Admin per satuan lewat Manajemen Role
+  // & Hak Akses -- kalau nonaktif, lonceng notifikasi tidak dibuat sama
+  // sekali (dan polling tidak jalan) di navbar user tersebut. Endpoint
+  // /notifikasi/* sendiri sudah diblokir 403 di sisi server (lihat
+  // EnsureModulAktif), ini cuma supaya UI-nya tidak nyoba minta hal yang
+  // memang tidak diizinkan.
+  var SIBERAD_NOTIFIKASI_AKTIF = @json($modulAktif['notifikasi'] ?? true);
+
   function initNotificationControls() {
+    if (!SIBERAD_NOTIFIKASI_AKTIF) return;
     var actions = document.querySelector('.topbar-actions');
     if (!actions) return;
 

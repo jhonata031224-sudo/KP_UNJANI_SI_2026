@@ -62,10 +62,10 @@ class InjectDashboardUi
     SATLAKSISOS: ['laporan', 'notifikasi'],
     SATLAKDAK: ['laporan', 'monitoring', 'notifikasi'],
     SATLAKDUKTEK: ['laporan', 'monitoring', 'notifikasi'],
-    BINFUNG: ['laporan', 'notifikasi'],
+    BINFUNG: ['laporan', 'monitoring', 'notifikasi'],
     BINUM: ['laporan', 'monitoring', 'notifikasi'],
-    DIKLAT: ['laporan', 'notifikasi'],
-    BINMAT: ['laporan', 'notifikasi'],
+    DIKLAT: ['laporan', 'monitoring', 'notifikasi'],
+    BINMAT: ['laporan', 'monitoring', 'notifikasi'],
     POKANALIS: ['laporan', 'monitoring', 'notifikasi'],
     URDAL: ['laporan', 'monitoring', 'notifikasi']
   };
@@ -131,22 +131,30 @@ HTML;
             return $response;
         }
 
-        $notifications = $request->user()->unreadNotifications->take(20)->map(function ($notification) {
-            $data = is_array($notification->data) ? $notification->data : [];
-            return [
-                'message' => $data['pesan'] ?? $data['message'] ?? 'Laporan baru masuk.',
-                'time' => $notification->created_at?->diffForHumans() ?? '',
-            ];
-        })->values()->all();
+        // Modul 'notifikasi' bisa dimatikan Admin per satuan lewat Manajemen
+        // Role & Hak Akses. Kalau nonaktif, jangan kirim daftar notifikasi
+        // ataupun nyalakan lonceng-nya sama sekali di navbar.
+        $notifikasiAktif = $request->user()->satuan?->modulAktif('notifikasi') ?? true;
+
+        $notifications = $notifikasiAktif
+            ? $request->user()->unreadNotifications->take(20)->map(function ($notification) {
+                $data = is_array($notification->data) ? $notification->data : [];
+                return [
+                    'message' => $data['pesan'] ?? $data['message'] ?? 'Laporan baru masuk.',
+                    'time' => $notification->created_at?->diffForHumans() ?? '',
+                ];
+            })->values()->all()
+            : [];
 
         $notificationJson = json_encode(
             $notifications,
             JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE
         );
         $csrfJson = json_encode(csrf_token(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        $notifikasiAktifJson = json_encode($notifikasiAktif);
 
         $asset = asset('js/siberad-dashboard-ui.js');
-        $injection = '<script>window.__SIBERAD_NOTIFICATIONS__ = ' . $notificationJson . '; window.__SIBERAD_CSRF__ = ' . $csrfJson . ';</script>'
+        $injection = '<script>window.__SIBERAD_NOTIFICATIONS__ = ' . $notificationJson . '; window.__SIBERAD_CSRF__ = ' . $csrfJson . '; window.__SIBERAD_NOTIFIKASI_AKTIF__ = ' . $notifikasiAktifJson . ';</script>'
             . '<script src="' . e($asset) . '"> </script>'
             . $fixedHeaderInjection;
 

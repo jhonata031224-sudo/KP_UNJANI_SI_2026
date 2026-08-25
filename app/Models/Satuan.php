@@ -102,6 +102,46 @@ class Satuan extends Model
     }
 
     /**
+     * Modul yang BENAR-BENAR aktif untuk satuan ini saat ini -- dipakai baik
+     * untuk render menu (sembunyikan modul yang dimatikan) maupun untuk
+     * enforcement di EnsureModulAktif (blokir route kalau modul mati).
+     *
+     * - Kalau Admin BELUM PERNAH menyimpan Hak Akses untuk satuan ini
+     *   (kolom `permissions` masih null), semua modul yang relevan untuk
+     *   role tsb tetap aktif -- supaya satuan lama/baru tidak mendadak
+     *   ke-lockout hanya karena belum pernah disentuh dari halaman Hak
+     *   Akses.
+     * - Begitu Admin sudah pernah simpan (permissions berupa array, bisa
+     *   saja kosong), itulah yang jadi acuan -- tetap dibatasi supaya tidak
+     *   melampaui matriks role (MODUL_HAK_AKSES_PER_ROLE).
+     */
+    public function modulAktifKeys(): array
+    {
+        $allowedUntukRole = self::modulHakAksesKeysUntukRole($this->kode);
+
+        if ($this->permissions === null) {
+            return $allowedUntukRole;
+        }
+
+        return array_values(array_intersect($this->permissions, $allowedUntukRole));
+    }
+
+    /**
+     * Cek apakah satu modul ('laporan', 'monitoring', 'notifikasi') aktif
+     * untuk satuan ini. Role ADMIN SELALU dianggap aktif untuk semua modul
+     * -- supaya Admin tidak bisa mengunci dirinya sendiri lewat halaman Hak
+     * Akses miliknya sendiri.
+     */
+    public function modulAktif(string $key): bool
+    {
+        if (strtoupper(trim((string) $this->kode)) === 'ADMIN') {
+            return true;
+        }
+
+        return in_array($key, $this->modulAktifKeys(), true);
+    }
+
+    /**
      * Kategori satuan yang tersedia, dipakai untuk pengelompokan di dropdown login.
      */
     public const KATEGORI_SATLAK = 'satlak';

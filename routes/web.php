@@ -61,97 +61,97 @@ Route::get('/dashboard', DashboardController::class)
     ->name('dashboard');
 
 Route::post('/laporan', [LaporanController::class, 'store'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan.store');
 
 Route::get('/laporan/log-aktivitas/realtime', [LaporanController::class, 'realtime'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan.log-aktivitas.realtime');
 
 Route::patch('/laporan/{laporan}/status', [LaporanController::class, 'updateStatus'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan.status');
 
 Route::patch('/laporan/{laporan}/progres', [LaporanController::class, 'updateProgres'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan.update-progres');
 
 Route::delete('/laporan/{laporan}', [LaporanController::class, 'destroy'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan.destroy');
 
 // ===== Permintaan Laporan & Deadline dari DANPUS/WADAN =====
 Route::get('/permintaan-laporan', [PermintaanLaporanController::class, 'index'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('permintaan-laporan.index');
 Route::get('/permintaan-laporan/realtime', [PermintaanLaporanController::class, 'realtime'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('permintaan-laporan.realtime');
 Route::post('/permintaan-laporan', [PermintaanLaporanController::class, 'store'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('permintaan-laporan.store');
 Route::patch('/permintaan-laporan/{permintaanLaporan}/mulai', [PermintaanLaporanController::class, 'mulai'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('permintaan-laporan.mulai');
 Route::patch('/permintaan-laporan/{permintaanLaporan}/batal', [PermintaanLaporanController::class, 'batal'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('permintaan-laporan.batal');
 Route::patch('/permintaan-laporan/{permintaanLaporan}/deadline', [PermintaanLaporanController::class, 'editDeadline'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('permintaan-laporan.edit-deadline');
 
 // ===== Laporan Keluhan Kasansi (21 Sansidam) ke Satlak =====
 Route::post('/laporan-keluhan', [LaporanKeluhanController::class, 'store'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-keluhan.store');
 Route::patch('/laporan-keluhan/{laporanKeluhan}/status', [LaporanKeluhanController::class, 'updateStatus'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-keluhan.status');
 Route::delete('/laporan-keluhan/{laporanKeluhan}', [LaporanKeluhanController::class, 'destroy'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-keluhan.destroy');
 
 // ===== Laporan Publikasi ke DANPUS (Satuan Pelaksanaan Siber Sosial) =====
 Route::post('/laporan-publikasi', [LaporanPublikasiController::class, 'store'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-publikasi.store');
 Route::patch('/laporan-publikasi/{laporanPublikasi}', [LaporanPublikasiController::class, 'update'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-publikasi.update');
 Route::post('/laporan-publikasi/{laporanPublikasi}/kirim', [LaporanPublikasiController::class, 'kirim'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-publikasi.kirim');
 Route::post('/laporan-publikasi/{laporanPublikasi}/dokumentasi', [LaporanPublikasiController::class, 'uploadDokumentasi'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-publikasi.upload-dokumentasi');
 Route::delete('/laporan-publikasi-dokumen/{dokumen}', [LaporanPublikasiController::class, 'destroyDokumentasi'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-publikasi-dokumen.destroy');
 Route::delete('/laporan-publikasi/{laporanPublikasi}', [LaporanPublikasiController::class, 'destroy'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-publikasi.destroy');
 
 // ===== Laporan Monitoring & Recovery ke DANPUS =====
 Route::post('/laporan-monitoring', [LaporanMonitoringController::class, 'store'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-monitoring.store');
 Route::patch('/laporan-monitoring/{laporanMonitoring}', [LaporanMonitoringController::class, 'update'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-monitoring.update');
 Route::post('/laporan-monitoring/{laporanMonitoring}/kirim', [LaporanMonitoringController::class, 'kirim'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-monitoring.kirim');
 Route::post('/laporan-monitoring/{laporanMonitoring}/lampiran', [LaporanMonitoringController::class, 'uploadLampiran'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-monitoring.upload-lampiran');
 Route::delete('/laporan-monitoring-lampiran/{lampiran}', [LaporanMonitoringController::class, 'destroyLampiran'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-monitoring-lampiran.destroy');
 Route::delete('/laporan-monitoring/{laporanMonitoring}', [LaporanMonitoringController::class, 'destroy'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-monitoring.destroy');
 Route::patch('/laporan-monitoring/{laporanMonitoring}/status', [DanpusLaporanMonitoringController::class, 'updateStatus'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-monitoring.update-status');
 
 // ===== Foto Profil (semua role) =====
@@ -168,47 +168,47 @@ Route::post('/permintaan-reset-password', [PermintaanResetPasswordController::cl
     ->name('permintaan-reset-password.store');
 
 Route::get('/notifikasi/realtime', [NotifikasiController::class, 'realtime'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:notifikasi'])
     ->name('notifikasi.realtime');
 Route::delete('/notifikasi/{notifikasi}', [NotifikasiController::class, 'hapus'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:notifikasi'])
     ->name('notifikasi.hapus');
 
 // ===== Manajemen Akun Media Sosial =====
-Route::post('/akun-medsos', [AkunMedsosController::class, 'store'])->middleware('auth')->name('akun-medsos.store');
-Route::patch('/akun-medsos/{akunMedsos}', [AkunMedsosController::class, 'update'])->middleware('auth')->name('akun-medsos.update');
-Route::delete('/akun-medsos/{akunMedsos}', [AkunMedsosController::class, 'destroy'])->middleware('auth')->name('akun-medsos.destroy');
+Route::post('/akun-medsos', [AkunMedsosController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('akun-medsos.store');
+Route::patch('/akun-medsos/{akunMedsos}', [AkunMedsosController::class, 'update'])->middleware(['auth', 'modul:laporan'])->name('akun-medsos.update');
+Route::delete('/akun-medsos/{akunMedsos}', [AkunMedsosController::class, 'destroy'])->middleware(['auth', 'modul:laporan'])->name('akun-medsos.destroy');
 
 // ===== Postingan Media Sosial =====
-Route::post('/posting', [PostinganController::class, 'store'])->middleware('auth')->name('posting.store');
-Route::post('/posting/{posting}/terbitkan', [PostinganController::class, 'terbitkan'])->middleware('auth')->name('posting.terbitkan');
-Route::patch('/posting/{posting}/engagement', [PostinganController::class, 'updateEngagement'])->middleware('auth')->name('posting.engagement');
-Route::delete('/posting/{posting}', [PostinganController::class, 'destroy'])->middleware('auth')->name('posting.destroy');
+Route::post('/posting', [PostinganController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('posting.store');
+Route::post('/posting/{posting}/terbitkan', [PostinganController::class, 'terbitkan'])->middleware(['auth', 'modul:laporan'])->name('posting.terbitkan');
+Route::patch('/posting/{posting}/engagement', [PostinganController::class, 'updateEngagement'])->middleware(['auth', 'modul:laporan'])->name('posting.engagement');
+Route::delete('/posting/{posting}', [PostinganController::class, 'destroy'])->middleware(['auth', 'modul:laporan'])->name('posting.destroy');
 
 // ===== Satuan Pelaksanaan Dukungan Teknologi =====
-Route::post('/proyek-riset', [ProyekRisetController::class, 'store'])->middleware('auth')->name('proyek-riset.store');
-Route::patch('/proyek-riset/{proyekRiset}', [ProyekRisetController::class, 'update'])->middleware('auth')->name('proyek-riset.update');
-Route::delete('/proyek-riset/{proyekRiset}', [ProyekRisetController::class, 'destroy'])->middleware('auth')->name('proyek-riset.destroy');
-Route::post('/log-uji', [LogUjiPengembanganController::class, 'store'])->middleware('auth')->name('log-uji.store');
-Route::delete('/log-uji/{logUjiPengembangan}', [LogUjiPengembanganController::class, 'destroy'])->middleware('auth')->name('log-uji.destroy');
-Route::post('/dukungan-teknis', [DukunganTeknisController::class, 'store'])->middleware('auth')->name('dukungan-teknis.store');
-Route::delete('/dukungan-teknis/{dukunganTeknisLog}', [DukunganTeknisController::class, 'destroy'])->middleware('auth')->name('dukungan-teknis.destroy');
+Route::post('/proyek-riset', [ProyekRisetController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('proyek-riset.store');
+Route::patch('/proyek-riset/{proyekRiset}', [ProyekRisetController::class, 'update'])->middleware(['auth', 'modul:laporan'])->name('proyek-riset.update');
+Route::delete('/proyek-riset/{proyekRiset}', [ProyekRisetController::class, 'destroy'])->middleware(['auth', 'modul:laporan'])->name('proyek-riset.destroy');
+Route::post('/log-uji', [LogUjiPengembanganController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('log-uji.store');
+Route::delete('/log-uji/{logUjiPengembangan}', [LogUjiPengembanganController::class, 'destroy'])->middleware(['auth', 'modul:laporan'])->name('log-uji.destroy');
+Route::post('/dukungan-teknis', [DukunganTeknisController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('dukungan-teknis.store');
+Route::delete('/dukungan-teknis/{dukunganTeknisLog}', [DukunganTeknisController::class, 'destroy'])->middleware(['auth', 'modul:laporan'])->name('dukungan-teknis.destroy');
 
 // ===== Administrasi Personel =====
-Route::post('/personel', [PersonelController::class, 'store'])->middleware('auth')->name('personel.store');
-Route::patch('/personel/{personel}', [PersonelController::class, 'update'])->middleware('auth')->name('personel.update');
-Route::delete('/personel/{personel}', [PersonelController::class, 'destroy'])->middleware('auth')->name('personel.destroy');
-Route::post('/pangkat', [PangkatController::class, 'store'])->middleware('auth')->name('pangkat.store');
-Route::patch('/pangkat/{pangkat}', [PangkatController::class, 'update'])->middleware('auth')->name('pangkat.update');
-Route::delete('/pangkat/{pangkat}', [PangkatController::class, 'destroy'])->middleware('auth')->name('pangkat.destroy');
-Route::post('/jabatan', [JabatanController::class, 'store'])->middleware('auth')->name('jabatan.store');
-Route::patch('/jabatan/{jabatan}', [JabatanController::class, 'update'])->middleware('auth')->name('jabatan.update');
-Route::delete('/jabatan/{jabatan}', [JabatanController::class, 'destroy'])->middleware('auth')->name('jabatan.destroy');
-Route::post('/personel-mutasi', [PersonelMutasiController::class, 'store'])->middleware('auth')->name('personel-mutasi.store');
-Route::patch('/personel-mutasi/{mutasi}', [PersonelMutasiController::class, 'update'])->middleware('auth')->name('personel-mutasi.update');
-Route::delete('/personel-mutasi/{mutasi}', [PersonelMutasiController::class, 'destroy'])->middleware('auth')->name('personel-mutasi.destroy');
-Route::post('/personel-dokumen', [PersonelDokumenController::class, 'store'])->middleware('auth')->name('personel-dokumen.store');
-Route::delete('/personel-dokumen/{dokumen}', [PersonelDokumenController::class, 'destroy'])->middleware('auth')->name('personel-dokumen.destroy');
+Route::post('/personel', [PersonelController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('personel.store');
+Route::patch('/personel/{personel}', [PersonelController::class, 'update'])->middleware(['auth', 'modul:laporan'])->name('personel.update');
+Route::delete('/personel/{personel}', [PersonelController::class, 'destroy'])->middleware(['auth', 'modul:laporan'])->name('personel.destroy');
+Route::post('/pangkat', [PangkatController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('pangkat.store');
+Route::patch('/pangkat/{pangkat}', [PangkatController::class, 'update'])->middleware(['auth', 'modul:laporan'])->name('pangkat.update');
+Route::delete('/pangkat/{pangkat}', [PangkatController::class, 'destroy'])->middleware(['auth', 'modul:laporan'])->name('pangkat.destroy');
+Route::post('/jabatan', [JabatanController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('jabatan.store');
+Route::patch('/jabatan/{jabatan}', [JabatanController::class, 'update'])->middleware(['auth', 'modul:laporan'])->name('jabatan.update');
+Route::delete('/jabatan/{jabatan}', [JabatanController::class, 'destroy'])->middleware(['auth', 'modul:laporan'])->name('jabatan.destroy');
+Route::post('/personel-mutasi', [PersonelMutasiController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('personel-mutasi.store');
+Route::patch('/personel-mutasi/{mutasi}', [PersonelMutasiController::class, 'update'])->middleware(['auth', 'modul:laporan'])->name('personel-mutasi.update');
+Route::delete('/personel-mutasi/{mutasi}', [PersonelMutasiController::class, 'destroy'])->middleware(['auth', 'modul:laporan'])->name('personel-mutasi.destroy');
+Route::post('/personel-dokumen', [PersonelDokumenController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('personel-dokumen.store');
+Route::delete('/personel-dokumen/{dokumen}', [PersonelDokumenController::class, 'destroy'])->middleware(['auth', 'modul:laporan'])->name('personel-dokumen.destroy');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');

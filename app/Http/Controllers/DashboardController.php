@@ -22,11 +22,18 @@ class DashboardController
         $user = $request->user()->load('satuan');
         $satuan = $user->satuan;
         $kode = $satuan?->kode ? strtoupper(trim($satuan->kode)) : null;
-        if ($kode === 'ADMIN') return $this->admin($request, $user, $satuan);
-        return $this->pelaporan($user, $satuan, $kode);
+        // Sumber tunggal utk menu/section mana yang boleh dirender di dashboard
+        // user -- lihat Satuan::modulAktif(). Dipakai bareng dgn enforcement di
+        // EnsureModulAktif (route-level) supaya menu yang disembunyikan disini
+        // juga beneran diblokir kalau diakses langsung lewat URL.
+        $modulAktif = $satuan
+            ? collect(Satuan::MODUL_HAK_AKSES)->keys()->mapWithKeys(fn ($key) => [$key => $satuan->modulAktif($key)])->all()
+            : collect(Satuan::MODUL_HAK_AKSES)->keys()->mapWithKeys(fn ($key) => [$key => true])->all();
+        if ($kode === 'ADMIN') return $this->admin($request, $user, $satuan, $modulAktif);
+        return $this->pelaporan($user, $satuan, $kode, $modulAktif);
     }
 
-    private function admin(Request $request, $user, $satuan): View
+    private function admin(Request $request, $user, $satuan, array $modulAktif): View
     {
         // Urutan tampil: Admin -> Pimpinan -> Direktorat -> Satuan (bukan
         // urutan alfabet/urutan input), sesuai jenjang role di organisasi.
@@ -145,10 +152,10 @@ class DashboardController
 
                 return $s;
             });
-        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','aktivitasTujuhHari','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan','logDari','logSampai') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $laporanRekapDeduped->count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
+        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','aktivitasTujuhHari','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan','logDari','logSampai') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $laporanRekapDeduped->count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
     }
 
-    private function pelaporan($user, $satuan, ?string $kode): View
+    private function pelaporan($user, $satuan, ?string $kode, array $modulAktif): View
     {
         abort_unless($satuan, 403, 'Akun belum terhubung ke satuan.');
         $permintaanGantiPasswordPending = PermintaanResetPassword::where('user_id', $user->id)
@@ -274,7 +281,7 @@ class DashboardController
                 'diterima' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count(),
                 'ditolak' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count(),
             ]);
-            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending'));
+            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif'));
         }
         // Terlambat/Dibatalkan dihitung dari SELURUH permintaan laporan yang
         // ditujukan ke satuan ini, bukan $permintaanLaporan (yang sengaja
@@ -298,6 +305,6 @@ class DashboardController
             ? LaporanKeluhan::with('satuan')->where('tujuan_satuan_id', $satuan->id)->latest()->get()
             : collect();
 
-        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','isSatlakPenerimaKeluhan','satlakTujuanKeluhan','keluhanTerkirim','keluhanMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
+        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','isSatlakPenerimaKeluhan','satlakTujuanKeluhan','keluhanTerkirim','keluhanMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
     }
 }

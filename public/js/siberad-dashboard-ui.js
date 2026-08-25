@@ -300,6 +300,7 @@
   }
 
   function initNotifications() {
+    if (window.__SIBERAD_NOTIFIKASI_AKTIF__ === false) return;
     var actions = document.querySelector('.topbar-actions');
     if (!actions || document.getElementById('notifMenu')) return;
     var profileMenu = actions.querySelector('#profileMenu');
