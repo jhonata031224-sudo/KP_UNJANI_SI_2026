@@ -1817,9 +1817,9 @@
                   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
                 }
                 var hariIni = new Date();
-                var kemarin = new Date();
-                kemarin.setDate(hariIni.getDate() - 1);
-                dariInput.value = formatDateLocal(kemarin);
+                // Samakan dengan Data Laporan: "Dari" dikosongkan (tanpa batas
+                // bawah tanggal), "Sampai" balik ke hari ini.
+                dariInput.value = '';
                 sampaiInput.value = formatDateLocal(hariIni);
 
                 // Balikin juga filter kategori ke "Semua Kategori"
