@@ -100,7 +100,7 @@ Route::patch('/permintaan-laporan/{permintaanLaporan}/deadline', [PermintaanLapo
     ->middleware('auth')
     ->name('permintaan-laporan.edit-deadline');
 
-// ===== Laporan Keluhan Kasansi (21 Kodam) ke Satlak =====
+// ===== Laporan Keluhan Kasansi (21 Sansidam) ke Satlak =====
 Route::post('/laporan-keluhan', [LaporanKeluhanController::class, 'store'])
     ->middleware('auth')
     ->name('laporan-keluhan.store');

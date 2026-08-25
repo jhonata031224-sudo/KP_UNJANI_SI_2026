@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Laporan keluhan yang dikirim satuan Kasansi (21 Kodam) ke salah satu
+     * Laporan keluhan yang dikirim satuan Kasansi (21 Sansidam) ke salah satu
      * dari 4 Satlak operasional. Terpisah dari tabel "laporans" (yang
      * dipakai buat alur pelaporan progres/permintaan laporan resmi ke
      * Danpus/Wadan) karena keluhan ini sifatnya bebas/tidak terikat

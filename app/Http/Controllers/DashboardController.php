@@ -187,7 +187,7 @@ class DashboardController
 
         // Urutan: Urdal -> Pok Analis -> 4 Sdir (Binfung, Binum, Bindiklat,
         // Binmat) -> 4 Satlak (Kal, Dak, Siber Sos, Dukteksi) -> 21 Kotama
-        // (21 Kodam aktif), sesuai urutan organisasi -- samain sama
+        // (21 Sansidam aktif), sesuai urutan organisasi -- samain sama
         // Satuan::kunciUrutSatuan(). 21 Kotama ditambahkan di akhir supaya
         // monitoring Pimpinan dan rekap laporan ikut menampilkan data mereka,
         // konsisten dengan $rekapLaporanSatuan yang sudah include Kotama

@@ -116,7 +116,7 @@ class Satuan extends Model
      */
     public const KATEGORI_POKPEL = 'pokpel';
     /**
-     * Kategori Kotama (Komando Utama) -- 21 Kodam aktif di lingkungan TNI AD,
+     * Kategori Kotama (Komando Utama) -- 21 Sansidam aktif di lingkungan TNI AD,
      * kelompok satuan di luar Satlak/Direktorat/Pimpinan/Pok Pel/Admin.
      */
     public const KATEGORI_KOTAMA = 'kotama';
@@ -172,9 +172,9 @@ class Satuan extends Model
     }
 
     /**
-     * Urutan 21 Kodam aktif (kategori Kotama) supaya tampil berurutan
+     * Urutan 21 Sansidam aktif (kategori Kotama) supaya tampil berurutan
      * GEOGRAFIS dari Barat ke Timur (Aceh -> Papua) sesuai KODE_KOTAMA,
-     * bukan alfabet kode/nama maupun nomor Kodam.
+     * bukan alfabet kode/nama maupun nomor Sansidam.
      */
     private static function urutanKotama(): array
     {
@@ -270,7 +270,7 @@ class Satuan extends Model
     public const KODE_POKPEL = ['POKANALIS', 'URDAL'];
 
     /**
-     * Kode 21 Kodam aktif (kategori Kotama), diurutkan GEOGRAFIS dari Barat
+     * Kode 21 Sansidam aktif (kategori Kotama), diurutkan GEOGRAFIS dari Barat
      * ke Timur (Aceh -> Papua): Iskandar Muda, Bukit Barisan, Tuanku
      * Tambusai, Tuanku Imam Bonjol, Sriwijaya, Radin Inten, Siliwangi,
      * Jayakarta, Diponegoro, Brawijaya, Udayana, Tanjungpura, Tambun
@@ -308,7 +308,7 @@ class Satuan extends Model
             return ['DANPUS'];
         }
 
-        // 21 Kodam (kategori Kotama) lapor langsung ke DANPUS,
+        // 21 Sansidam (kategori Kotama) lapor langsung ke DANPUS,
         // sama seperti satuan pembinaan dan Pok Pel.
         if (in_array($kodeAsal, self::KODE_KOTAMA, true)) {
             return ['DANPUS'];

@@ -9,7 +9,7 @@ return new class extends Migration
      * Bersihkan 23 satuan Kasansi lama (kode KODAM1..KODAM23, hasil
      * KasansiSeeder) beserta akun & data turunannya (laporan, postingan,
      * dll -- semuanya cascade ikut terhapus lewat FK satuan_id), supaya
-     * KotamaSeeder (21 Kodam nama resmi, kode berbasis nama wilayah) bisa
+     * KotamaSeeder (21 Sansidam nama resmi, kode berbasis nama wilayah) bisa
      * diisi ulang tanpa duplikat/menggantung. Data lama ini murni dummy
      * percobaan, bukan data laporan sungguhan.
      */

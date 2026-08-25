@@ -18,7 +18,7 @@ class PermintaanLaporanController extends Controller
     /**
      * Semua satuan pelaksana yang boleh jadi tujuan Permintaan Laporan dari
      * Danpus/Wadan: 4 Satlak, 4 Sdir (pembinaan), Pok Pel (Urdal, Pok
-     * Analis), dan 21 Kasansi (Kodam). Diambil dari konstanta Satuan supaya
+     * Analis), dan 21 Kasansi (Sansidam). Diambil dari konstanta Satuan supaya
      * selalu ikut sinkron kalau daftar itu berubah, bukan daftar kode
      * duplikat yang bisa ketinggalan zaman.
      */
