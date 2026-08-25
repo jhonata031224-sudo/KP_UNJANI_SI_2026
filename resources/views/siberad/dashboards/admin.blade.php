@@ -3263,6 +3263,11 @@
     var cAmber = root.getPropertyValue('--amber').trim() || '#e0a83a';
     var cRed = root.getPropertyValue('--red').trim() || '#c62828';
     var cMuted = root.getPropertyValue('--text-muted').trim() || '#9fb3a5';
+    // Warna grid chart disamakan ke --border (bukan --border-soft) supaya
+    // garis bantu sumbu kelihatan jelas di kedua tema -- sebelumnya pakai
+    // rgba(255,255,255,.06) hardcode yang nyaris tak kelihatan di tema
+    // terang (background putih vs garis putih transparan).
+    var cGrid = root.getPropertyValue('--border').trim() || 'rgba(148,163,184,.35)';
 
     Chart.defaults.color = cMuted;
     Chart.defaults.font.family = "'JetBrains Mono', monospace";
@@ -3355,7 +3360,7 @@
           plugins: { legend: { display: false } },
           scales: {
             x: { grid: { display: false } },
-            y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(255,255,255,.06)' } }
+            y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: cGrid } }
           }
         }
       });
@@ -3453,7 +3458,7 @@
             }
           },
           scales: {
-            x: { beginAtZero: true, max: xMaxTarget, ticks: { precision: 0 }, grid: { color: 'rgba(255,255,255,.06)' } },
+            x: { beginAtZero: true, max: xMaxTarget, ticks: { precision: 0 }, grid: { color: cGrid } },
             y: { grid: { display: false }, ticks: { font: { size: 10 } } }
           }
         }
