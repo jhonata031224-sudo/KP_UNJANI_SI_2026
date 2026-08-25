@@ -17,7 +17,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DukunganTeknisController;
 use App\Http\Controllers\JabatanController;
 use App\Http\Controllers\LaporanController;
-use App\Http\Controllers\LaporanKeluhanController;
+use App\Http\Controllers\LaporanKendalaController;
 use App\Http\Controllers\LaporanMonitoringController;
 use App\Http\Controllers\LaporanPublikasiController;
 use App\Http\Controllers\LogUjiPengembanganController;
@@ -100,16 +100,16 @@ Route::patch('/permintaan-laporan/{permintaanLaporan}/deadline', [PermintaanLapo
     ->middleware(['auth', 'modul:laporan'])
     ->name('permintaan-laporan.edit-deadline');
 
-// ===== Laporan Keluhan Kasansi (21 Sansidam) ke Satlak =====
-Route::post('/laporan-keluhan', [LaporanKeluhanController::class, 'store'])
+// ===== Laporan Kendala Kasansi (21 Sansidam) langsung ke Danpus =====
+Route::post('/laporan-kendala', [LaporanKendalaController::class, 'store'])
     ->middleware(['auth', 'modul:laporan'])
-    ->name('laporan-keluhan.store');
-Route::patch('/laporan-keluhan/{laporanKeluhan}/status', [LaporanKeluhanController::class, 'updateStatus'])
+    ->name('laporan-kendala.store');
+Route::patch('/laporan-kendala/{laporanKendala}/status', [LaporanKendalaController::class, 'updateStatus'])
     ->middleware(['auth', 'modul:laporan'])
-    ->name('laporan-keluhan.status');
-Route::delete('/laporan-keluhan/{laporanKeluhan}', [LaporanKeluhanController::class, 'destroy'])
+    ->name('laporan-kendala.status');
+Route::delete('/laporan-kendala/{laporanKendala}', [LaporanKendalaController::class, 'destroy'])
     ->middleware(['auth', 'modul:laporan'])
-    ->name('laporan-keluhan.destroy');
+    ->name('laporan-kendala.destroy');
 
 // ===== Laporan Publikasi ke DANPUS (Satuan Pelaksanaan Siber Sosial) =====
 Route::post('/laporan-publikasi', [LaporanPublikasiController::class, 'store'])

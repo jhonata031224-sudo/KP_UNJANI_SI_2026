@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Admin\BackupController;
 use App\Models\ActivityLog;
 use App\Models\Laporan;
-use App\Models\LaporanKeluhan;
+use App\Models\LaporanKendala;
 use App\Models\Pengaturan;
 use App\Models\PermintaanLaporan;
 use App\Models\PermintaanResetPassword;
@@ -281,7 +281,20 @@ class DashboardController
                 'diterima' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count(),
                 'ditolak' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count(),
             ]);
-            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif'));
+            // ===== Laporan Kendala: 21 Kasansi (Kotama) -> DANPUS =====
+            // Kasansi kirim kendala/laporan rutin bebas kapan saja (tidak
+            // terikat Permintaan Laporan) LANGSUNG ke Danpus. Danpus & Wadan
+            // berdua bisa melihat & menindaklanjuti -- disatukan lewat kode
+            // satuan Danpus supaya sengaja TIDAK bercampur dengan
+            // $permintaanLaporan (alur "kebutuhan khusus" yang diminta
+            // Danpus/Wadan lebih dulu), lihat komentar di
+            // LaporanKendalaController.
+            $danpusSatuanId = Satuan::where('kode', 'DANPUS')->value('id');
+            $kendalaMasuk = $danpusSatuanId
+                ? LaporanKendala::with('satuan')->where('tujuan_satuan_id', $danpusSatuanId)->latest()->get()
+                : collect();
+
+            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk'));
         }
         // Terlambat/Dibatalkan dihitung dari SELURUH permintaan laporan yang
         // ditujukan ke satuan ini, bukan $permintaanLaporan (yang sengaja
@@ -289,22 +302,18 @@ class DashboardController
         // Dibatalkan, khusus buat daftar tugas di tab "Permintaan Laporan").
         $permintaanLaporanSemua = PermintaanLaporan::where('tujuan_satuan_id', $satuan->id)->get();
 
-        // ===== Laporan Keluhan: 21 Kasansi (Kotama) -> 4 Satlak =====
-        // Kasansi bisa kirim keluhan bebas kapan saja (tidak terikat
-        // Permintaan Laporan) ke salah satu Satlak operasional, sedangkan
-        // Satlak menerima & menindaklanjuti keluhan yang masuk untuknya.
+        // ===== Laporan Kendala: 21 Kasansi (Kotama) -> DANPUS =====
+        // Kasansi bisa kirim kendala/laporan rutin bebas kapan saja (tidak
+        // terikat Permintaan Laporan) LANGSUNG ke Danpus (bukan ke Satlak
+        // lagi) -- lihat komentar di LaporanKendalaController. Di sini cuma
+        // perlu riwayat kirim Kasansi sendiri; yang menerima & menindak
+        // lanjuti (Danpus/Wadan) sudah ditangani di cabang $modePimpinan di
+        // atas, jadi TIDAK bercampur dengan dashboard non-pimpinan ini.
         $isKasansi = in_array($kode, Satuan::KODE_KOTAMA, true);
-        $isSatlakPenerimaKeluhan = in_array($kode, Satuan::KODE_SATLAK, true);
-        $satlakTujuanKeluhan = $isKasansi
-            ? Satuan::whereIn('kode', Satuan::KODE_SATLAK)->get()->sortBy($urutkanSatuan)->values()
-            : collect();
-        $keluhanTerkirim = $isKasansi
-            ? LaporanKeluhan::with('tujuanSatuan')->where('satuan_id', $satuan->id)->latest()->get()
-            : collect();
-        $keluhanMasuk = $isSatlakPenerimaKeluhan
-            ? LaporanKeluhan::with('satuan')->where('tujuan_satuan_id', $satuan->id)->latest()->get()
+        $kendalaTerkirim = $isKasansi
+            ? LaporanKendala::with('tujuanSatuan')->where('satuan_id', $satuan->id)->latest()->get()
             : collect();
 
-        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','isSatlakPenerimaKeluhan','satlakTujuanKeluhan','keluhanTerkirim','keluhanMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
+        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','kendalaTerkirim') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
     }
 }

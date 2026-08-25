@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Laporan keluhan yang dikirim satuan Kasansi (21 Sansidam) ke salah satu
- * Satlak operasional. Lihat komentar migration create_laporan_keluhans_table
- * untuk alasan kenapa ini terpisah dari model Laporan.
+ * Laporan kendala/rutin yang dikirim satuan Kasansi (21 Sansidam) LANGSUNG
+ * ke DANPUS. Lihat komentar migration create_laporan_kendalas_table untuk
+ * alasan kenapa ini terpisah dari model Laporan.
  */
-class LaporanKeluhan extends Model
+class LaporanKendala extends Model
 {
     use HasFactory;
 
