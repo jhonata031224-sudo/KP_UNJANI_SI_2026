@@ -76,8 +76,8 @@
      baris baru; ukurannya disamakan sependek filter kategori di Daftar
      Pengguna, bukan selebar teks opsi terpanjangnya ("Unsur Pembantu
      Pimpinan") kayak sebelumnya. */
-  .dl-kategori-filter{width:150px;flex:0 0 150px;min-width:0;padding:0 28px 0 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  @media(max-width:640px){.dl-kategori-filter{width:100%;flex:1 1 auto;}}
+  .dl-kategori-filter{width:150px!important;max-width:150px!important;flex:0 0 150px!important;min-width:0!important;padding:0 28px 0 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  @media(max-width:640px){.dl-kategori-filter{width:100%!important;max-width:none!important;flex:1 1 auto!important;}}
   .table-filter-count{font-size:10px;color:var(--text-dim);white-space:nowrap;margin-left:auto;}
   .log-filter-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin:2px 0 16px;}
   .log-filter-field{display:flex;flex-direction:column;gap:4px;}
@@ -1687,7 +1687,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
               <input type="text" class="table-search" data-table-search="tblLogAktivitas" placeholder="Cari pengguna atau aksi...">
             </div>
-            <form method="GET" action="{{ route('dashboard') }}" id="logFilterForm" style="display:contents;">
+            <form method="GET" action="{{ route('dashboard') }}" id="logFilterForm" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
               <div class="dl-date-filter">
                 <label for="logDariInput">Dari</label>
                 <input type="date" id="logDariInput" class="table-filter" name="log_dari" value="{{ $logDari->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}">
