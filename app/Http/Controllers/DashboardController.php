@@ -94,7 +94,7 @@ class DashboardController
         $logDari = $request->filled('log_dari')
             ? \Carbon\Carbon::parse($request->query('log_dari'))->startOfDay()
             : now()->subDays(1)->startOfDay();
-        $logAktivitas = ActivityLog::with('user')
+        $logAktivitas = ActivityLog::with('user.satuan')
             ->whereBetween('created_at', [$logDari, $logSampai])
             ->latest('created_at')
             ->get();

@@ -1679,6 +1679,16 @@
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
               <input type="text" class="table-search" data-table-search="tblLogAktivitas" placeholder="Cari pengguna atau aksi...">
             </div>
+            <select class="table-filter" data-table-filter="tblLogAktivitas">
+              <option value="">Semua Kategori</option>
+              <option value="Admin">Admin</option>
+              <option value="Pimpinan">Pimpinan</option>
+              <option value="Unsur Pelayanan">Unsur Pelayanan</option>
+              <option value="Unsur Pembantu Pimpinan">Unsur Pembantu Pimpinan</option>
+              <option value="Direktorat">Direktorat</option>
+              <option value="Satlak">Satlak</option>
+              <option value="Kasansi">Kasansi</option>
+            </select>
             <form method="GET" action="{{ route('dashboard') }}" id="logFilterForm" style="display:contents;">
               <div class="dl-date-filter">
                 <label for="logDariInput">Dari</label>
@@ -1699,7 +1709,18 @@
               <thead><tr><th>Waktu</th><th>Pengguna</th><th>Aksi</th><th>Deskripsi</th><th>IP</th></tr></thead>
               <tbody>
                 @forelse($logAktivitas as $l)
-                <tr>
+                @php
+                  $kategoriLabelLog = $l->user && $l->user->satuan ? match ($l->user->satuan->kategori) {
+                    \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
+                    \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
+                    \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+                    \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
+                    \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+                    \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
+                    default => 'Satlak',
+                  } : null;
+                @endphp
+                <tr data-filter-value="{{ $kategoriLabelLog }}">
                   <td style="white-space:nowrap;">{{ $l->created_at?->translatedFormat('d M Y H:i') }}</td>
                   <td>{{ $l->nama_pengguna ?? '-' }}</td>
                   <td><span class="badge">{{ $l->aksi }}</span></td>
@@ -1747,7 +1768,7 @@
                   if (wrap) wrap.style.opacity = '';
                   if (!data || !Array.isArray(data.log)) throw new Error('Respons tidak sesuai format yang diharapkan.');
                   tbody.innerHTML = data.log.length ? data.log.map(function (l) {
-                    return '<tr>'
+                    return '<tr data-filter-value="' + escapeHtml(l.kategori || '') + '">'
                       + '<td style="white-space:nowrap;">' + escapeHtml(l.waktu) + '</td>'
                       + '<td>' + escapeHtml(l.pengguna) + '</td>'
                       + '<td><span class="badge">' + escapeHtml(l.aksi) + '</span></td>'
@@ -1961,6 +1982,16 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
                 <input type="text" class="table-search" data-dl-search="tblDlPengguna" placeholder="Cari pengguna...">
               </div>
+              <select class="table-filter" data-dl-filter="tblDlPengguna">
+                <option value="">Semua Kategori</option>
+                <option value="Admin">Admin</option>
+                <option value="Pimpinan">Pimpinan</option>
+                <option value="Unsur Pelayanan">Unsur Pelayanan</option>
+                <option value="Unsur Pembantu Pimpinan">Unsur Pembantu Pimpinan</option>
+                <option value="Direktorat">Direktorat</option>
+                <option value="Satlak">Satlak</option>
+                <option value="Kasansi">Kasansi</option>
+              </select>
               <div class="dl-date-filter">
                 <label for="dlPenggunaDari">Dari</label>
                 <input type="date" id="dlPenggunaDari" class="table-filter" max="{{ now()->format('Y-m-d') }}">
@@ -1980,7 +2011,18 @@
                 <thead><tr><th>No</th><th>Nama</th><th>Username</th><th>Email</th><th>Satuan</th><th>Dibuat</th></tr></thead>
                 <tbody>
                   @forelse($semuaPengguna as $i => $p)
-                  <tr data-search-value="{{ strtolower($p->name.' '.$p->username.' '.$p->email.' '.($p->satuan->nama ?? '').' '.($p->jabatan ?? '')) }}">
+                  @php
+                    $kategoriLabelDlPengguna = match ($p->satuan->kategori ?? null) {
+                      \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
+                      \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
+                      \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+                      \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
+                      \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+                      \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
+                      default => 'Satlak',
+                    };
+                  @endphp
+                  <tr data-filter-value="{{ $kategoriLabelDlPengguna }}" data-search-value="{{ strtolower($p->name.' '.$p->username.' '.$p->email.' '.($p->satuan->nama ?? '').' '.($p->jabatan ?? '')) }}">
                     <td>{{ $i + 1 }}</td>
                     <td><strong>{{ $p->satuan->nama_singkat ?? $p->name }}</strong></td>
                     <td>{{ $p->username }}</td>
@@ -2024,6 +2066,16 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
                 <input type="text" class="table-search" data-dl-search="tblDlAktivitas" placeholder="Cari log aktivitas...">
               </div>
+              <select class="table-filter" data-dl-filter="tblDlAktivitas">
+                <option value="">Semua Kategori</option>
+                <option value="Admin">Admin</option>
+                <option value="Pimpinan">Pimpinan</option>
+                <option value="Unsur Pelayanan">Unsur Pelayanan</option>
+                <option value="Unsur Pembantu Pimpinan">Unsur Pembantu Pimpinan</option>
+                <option value="Direktorat">Direktorat</option>
+                <option value="Satlak">Satlak</option>
+                <option value="Kasansi">Kasansi</option>
+              </select>
               <div class="dl-date-filter">
                 <label for="dlAktivitasDari">Dari</label>
                 <input type="date" id="dlAktivitasDari" class="table-filter" max="{{ now()->format('Y-m-d') }}">
@@ -2043,7 +2095,18 @@
                 <thead><tr><th>Waktu</th><th>Pengguna</th><th>Aksi</th><th>Deskripsi</th><th>IP</th></tr></thead>
                 <tbody>
                   @forelse($logAktivitas as $l)
-                  <tr data-search-value="{{ strtolower(($l->nama_pengguna ?? '').' '.$l->aksi.' '.$l->deskripsi) }}">
+                  @php
+                    $kategoriLabelDlAktivitas = $l->user && $l->user->satuan ? match ($l->user->satuan->kategori) {
+                      \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
+                      \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
+                      \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+                      \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
+                      \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+                      \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
+                      default => 'Satlak',
+                    } : null;
+                  @endphp
+                  <tr data-filter-value="{{ $kategoriLabelDlAktivitas }}" data-search-value="{{ strtolower(($l->nama_pengguna ?? '').' '.$l->aksi.' '.$l->deskripsi) }}">
                     <td style="white-space:nowrap;" data-tanggal="{{ $l->created_at?->format('Y-m-d') }}">{{ $l->created_at?->translatedFormat('d M Y H:i') }}</td>
                     <td>{{ $l->nama_pengguna ?? '-' }}</td>
                     <td><span class="badge">{{ $l->aksi }}</span></td>
@@ -2135,16 +2198,21 @@
           var dariEl  = document.getElementById(dariId);
           var sampaiEl= document.getElementById(sampaiId);
           var searchEl= document.querySelector('[data-dl-search="' + tableId + '"]');
+          var filterEl= document.querySelector('[data-dl-filter="' + tableId + '"]');
           if (!table) return;
 
           var dari   = dariEl   ? parseLocalDate(dariEl.value)   : null;
           var sampai = sampaiEl ? parseLocalDate(sampaiEl.value) : null;
           if (sampai) sampai.setHours(23, 59, 59, 999);
           var q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+          var f = filterEl ? filterEl.value : '';
 
           table.querySelectorAll('tbody tr[data-search-value]').forEach(function (tr) {
             // filter teks
             var cocokTeks = !q || tr.getAttribute('data-search-value').indexOf(q) !== -1;
+
+            // filter kategori (dropdown "Semua Kategori", sama seperti tabel lain)
+            var cocokFilter = !f || tr.getAttribute('data-filter-value') === f;
 
             // filter tanggal — baca dari kolom pertama (td:first-child)
             var cocokTgl = true;
@@ -2168,7 +2236,7 @@
               }
             }
 
-            tr.style.display = (cocokTeks && cocokTgl) ? '' : 'none';
+            tr.style.display = (cocokTeks && cocokFilter && cocokTgl) ? '' : 'none';
           });
           dlHitungTampil(tableId);
         }
@@ -2222,6 +2290,15 @@
         }
         buatResetHandler('dlPenggunaDari',  'dlPenggunaSampai',  'tblDlPengguna');
         buatResetHandler('dlAktivitasDari', 'dlAktivitasSampai', 'tblDlAktivitas');
+
+        // Dropdown filter kategori Data Laporan (Data Pengguna & Data Aktivitas)
+        ['tblDlPengguna', 'tblDlAktivitas'].forEach(function (id) {
+          var cfg = id === 'tblDlPengguna'
+            ? ['dlPenggunaDari', 'dlPenggunaSampai']
+            : ['dlAktivitasDari', 'dlAktivitasSampai'];
+          var filterEl = document.querySelector('[data-dl-filter="' + id + '"]');
+          if (filterEl) filterEl.addEventListener('change', function () { dlSaringTanggal(id, cfg[0], cfg[1]); });
+        });
       })();
       </script>
 

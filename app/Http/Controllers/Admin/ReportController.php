@@ -135,10 +135,23 @@ class ReportController extends Controller
             ? \Carbon\Carbon::parse($request->query('log_dari'))->startOfDay()
             : now()->subDays(1)->startOfDay();
 
-        $log = ActivityLog::with('user')
+        $log = ActivityLog::with('user.satuan')
             ->whereBetween('created_at', [$dari, $sampai])
             ->latest('created_at')
             ->get();
+
+        // Label kategori disamakan persis dengan yang dipakai filter
+        // "Detail per Satuan"/"Daftar Pengguna" di dashboard admin, supaya
+        // baris yang dimuat ulang lewat AJAX ini tetap kena filter kategori
+        // yang sama walau tabelnya dirender ulang lewat JS (bukan Blade).
+        $labelKategori = [
+            \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
+            \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
+            \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+            \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
+            \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+            \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
+        ];
 
         return response()->json([
             'log' => $log->map(fn ($l) => [
@@ -147,6 +160,9 @@ class ReportController extends Controller
                 'aksi' => $l->aksi,
                 'deskripsi' => $l->deskripsi,
                 'ip' => $l->ip_address,
+                'kategori' => $l->user?->satuan
+                    ? ($labelKategori[$l->user->satuan->kategori] ?? 'Satlak')
+                    : null,
             ]),
             'total_rentang' => $log->count(),
             'total_keseluruhan' => ActivityLog::count(),
