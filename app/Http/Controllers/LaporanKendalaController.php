@@ -26,11 +26,18 @@ class LaporanKendalaController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
+        // Lampiran WAJIB untuk laporan kendala Kasansi -> Danpus (beda dari
+        // alur "Kirim Laporan" biasa yang lampirannya opsional). Divalidasi
+        // lagi di sini sebagai jaring pengaman -- validasi di frontend
+        // (modal peringatan sebelum submit) bisa saja terlewat kalau ada
+        // yang mengirim request langsung tanpa lewat form.
         $validated = $request->validate([
             'perihal' => ['required', 'string', 'max:255'],
             'deskripsi' => ['required', 'string', 'max:10000'],
             'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
-            'lampiran' => ['nullable', 'file', 'mimes:pdf', 'max:20480'],
+            'lampiran' => ['required', 'file', 'mimes:pdf', 'max:20480'],
+        ], [
+            'lampiran.required' => 'Lampiran wajib diisi untuk mengirim laporan kendala ke Danpus.',
         ]);
 
         $user = $request->user()->load('satuan');
