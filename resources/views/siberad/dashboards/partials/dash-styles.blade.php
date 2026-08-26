@@ -479,6 +479,32 @@
     .topbar{padding:0 16px;}
   }
 
+  /* ===== Jaring pengaman responsif tambahan untuk HP kecil (≤480px) --
+     MURNI nambahin override, nggak mengubah/menghapus rule manapun di
+     atas. Beberapa grid 2-kolom (KPI/statistik/monitor/report/detail dsb)
+     di masing-masing dashboard sudah collapse ke 2 kolom di breakpoint
+     tablet-nya sendiri, tapi di layar HP yang sangat sempit (≤480px) 2
+     kolom itu masih bisa kepepet -- di sini dipaksa 1 kolom penuh biar
+     nyaman dibaca & disentuh, apa pun urutan CSS-nya (makanya pakai
+     !important, supaya jadi jaring pengaman terakhir yang selalu menang
+     di lebar ini, tanpa perlu ubah rule asli tiap file). Class yang
+     ditarget di sini murni struktur layout (grid), BUKAN elemen
+     fungsional -- jadi tidak ada interaksi/fitur yang berubah. ===== */
+  @media(max-width:480px){
+    .stat-grid,.kpi-grid,.report-grid,.monitor-grid,.pimp-kpis,.satlak-grid,
+    .detail-grid,.chart-box-grid,.dash-two-col,.perm-grid{
+      grid-template-columns:1fr!important;
+    }
+    .topbar{padding:0 12px;gap:10px;}
+    .topbar-title{font-size:17px;}
+    .side-brand{padding:0 14px;}
+    .content{padding:18px 12px 56px;}
+    .badge{font-size:9.5px;padding:6px 10px;}
+    .dash-hero{padding:16px;}
+    .profile-modal-card{padding:20px 16px 18px;}
+    .toast-stack{width:92vw;}
+  }
+
   .toast-stack{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2000;width:min(400px,86vw);pointer-events:none;height:0;}
   .toast{position:absolute;top:0;left:50%;overflow:hidden;pointer-events:auto;display:flex;align-items:center;gap:11px;padding:13px 18px 15px;border-radius:11px;background:var(--panel);border:1px solid var(--border-soft);box-shadow:0 15px 40px rgba(0,0,0,.35);font-family:var(--body);font-size:13px;color:var(--text);width:100%;box-sizing:border-box;opacity:0;transform:translate(-50%,-26px) scale(.97);transition:top .8s cubic-bezier(.34,1.2,.64,1);animation:toastIn .35s cubic-bezier(.34,1.56,.64,1) forwards;}
   .toast.leaving{animation:toastOut .4s cubic-bezier(.4,0,.2,1) forwards;}
