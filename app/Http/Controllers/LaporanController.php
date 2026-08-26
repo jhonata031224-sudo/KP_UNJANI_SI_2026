@@ -443,6 +443,15 @@ class LaporanController extends Controller
                 'laporan_id' => $isRevisi ? null : $permintaan->laporan_id,
                 'status' => $isRevisi ? PermintaanLaporan::STATUS_DIKERJAKAN : ($isSelesai ? PermintaanLaporan::STATUS_SELESAI : PermintaanLaporan::STATUS_PEMERIKSAAN),
                 'selesai_at' => $isSelesai ? now() : null,
+                // Keputusan akhir (Setujui/Tolak) langsung dipindah ke
+                // Riwayat Laporan tanpa perlu diarsipkan manual lewat mode
+                // Arsip -- beda dari Dibatalkan/Terlambat yang sengaja
+                // TETAP di Permintaan Laporan (dua status itu gak lewat
+                // endpoint ini sama sekali: Dibatalkan lewat
+                // PermintaanLaporanController::batal(), Terlambat itu
+                // properti terhitung dari deadline lewat, bukan status
+                // eksplisit -- jadi archived_at keduanya tetap manual).
+                'archived_at' => $isSelesai ? now() : $permintaan->archived_at,
             ]);
         }
 
