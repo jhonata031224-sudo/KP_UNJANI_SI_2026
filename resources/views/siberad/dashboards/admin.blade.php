@@ -2661,7 +2661,15 @@
           .lp-card{background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:10px;padding:16px;margin-bottom:14px;}
           .lp-card-compact{padding:12px 16px;}
           .lp-card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
+          .lp-card-desc{margin:-4px 0 14px;font-size:11.5px;line-height:1.55;color:var(--text-muted);}
           .lp-current-image{height:52px;margin-top:10px;border-radius:6px;display:block;border:1px solid var(--border-soft);}
+
+          /* Field & kartu tambahan yang disuntik lewat admin-landing-editor.js
+             (Identitas Brand, Tombol Hero, SEO, Logo, Navigasi, Statistik) --
+             dipisahkan dari field statis di atasnya dengan garis + jarak yang
+             jelas, supaya nggak kelihatan nempel/menyatu jadi satu tumpukan. */
+          .lp-dynamic-section{margin-top:22px;padding-top:22px;border-top:1px dashed var(--border-soft);}
+          .lp-dynamic-section .lp-card:last-child{margin-bottom:0;}
 
           .lp-form-actions{margin-top:6px;padding-top:18px;border-top:1px solid var(--border-soft);}
 

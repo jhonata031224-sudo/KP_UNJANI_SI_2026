@@ -457,6 +457,7 @@
      & form login) -- ganti tooltip bawaan browser jadi pesan Bahasa
      Indonesia + border merah, pakai ulang .profile-field-error yang sama. */
   .form-field input.field-invalid,.form-field select.field-invalid{border-color:var(--red)!important;box-shadow:0 0 0 3px color-mix(in srgb, var(--red) 15%, transparent);}
+  .form-field small{font-size:11px;line-height:1.5;color:var(--text-dim);}
   .form-hint{font-size:11px;color:var(--text-dim);}
   @media(max-width:640px){.form-grid{grid-template-columns:1fr;}}
 
