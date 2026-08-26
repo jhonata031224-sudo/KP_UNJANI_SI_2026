@@ -21,7 +21,7 @@ class Pengaturan extends Model
             'singkatan' => 'Pussiberad',
             'alamat' => 'Jl. Veteran No. 5, Gambir, Jakarta Pusat, DKI Jakarta 10110',
             'telepon_kontak' => '(021) 3849192',
-            'hero_eyebrow' => 'PUSSIBERAD // SISTEM PENDUKUNG OPERASIONAL',
+            'hero_eyebrow' => 'PUSSIBERAD SISTEM PENDUKUNG OPERASIONAL',
             'hero_judul_awal' => 'DT-PHATRAM-', 'hero_judul_aksen' => '2639',
             'hero_subjudul' => 'Sistem Informasi Berbasis Elektronik Angkatan Darat',
             'hero_deskripsi' => 'Sistem pendukung operasional Satuan Siber AD dan jajaran Pusat Siber TNI Angkatan Darat — mulai dari input laporan, hingga visualisasi real-time bagi pengambil keputusan.',

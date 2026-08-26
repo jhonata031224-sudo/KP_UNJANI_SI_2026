@@ -2802,7 +2802,7 @@
             }
 
             function updatePreview(){
-              setText('lpPvEyebrow', form.querySelector('[data-lp="hero_eyebrow"]').value, 'PUSSIBERAD // SISTEM PENDUKUNG OPERASIONAL');
+              setText('lpPvEyebrow', form.querySelector('[data-lp="hero_eyebrow"]').value, 'PUSSIBERAD SISTEM PENDUKUNG OPERASIONAL');
               setText('lpPvJudulAwal', form.querySelector('[data-lp="hero_judul_awal"]').value, 'SIBER');
               setText('lpPvJudulAksen', form.querySelector('[data-lp="hero_judul_aksen"]').value, 'AD');
               setText('lpPvSubjudul', form.querySelector('[data-lp="hero_subjudul"]').value);
