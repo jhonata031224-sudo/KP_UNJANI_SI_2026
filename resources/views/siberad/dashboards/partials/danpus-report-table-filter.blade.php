@@ -212,6 +212,14 @@
       }
     });
     initReportFilter({
+      sectionId:'kendala-kasansi',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari satuan atau perihal...',emptyText:'Tidak ada laporan kendala yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan kendala.',
+      filters:[
+        {label:'Filter status',attr:'kendalaStatus',options:[{value:'all',label:'Semua Status'},{value:'Menunggu',label:'Menunggu'},{value:'Ditindaklanjuti',label:'Ditindaklanjuti'},{value:'Selesai',label:'Selesai'},{value:'Ditolak',label:'Ditolak'}]},
+        {label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]}
+      ],sortable:true,
+      prepareRow:function(row){row.dataset.kendalaStatus=(row.querySelector('td:nth-child(4)')?.textContent||'').trim();}
+    });
+    initReportFilter({
       sectionId:'permintaan-laporan',tableSelector:'.request-table',anchorSelector:'.request-head',searchPlaceholder:'Cari perihal atau satuan tujuan...',emptyText:'Tidak ada permintaan laporan yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada permintaan laporan.',showEmpty:false,
       filters:[{label:'Filter status',attr:'status',options:[{value:'all',label:'Semua Status'},{value:'Sedang diproses',label:'Sedang diproses'},{value:'Menunggu',label:'Menunggu'},{value:'Revisi',label:'Revisi'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'}]}],sortable:true
     });

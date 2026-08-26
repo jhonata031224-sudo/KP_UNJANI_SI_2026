@@ -122,7 +122,14 @@ function initDanpusArchiveMode(){
    }
    /* Tabel lain dipertahankan apa adanya; arsip hanya ditambahkan jika tabel memang cocok dengan struktur history. */
  }
- function syncHistory(items,pimpinanNama){historyBodies().forEach(tb=>items.forEach(item=>renderArchivedItem(tb,item,pimpinanNama)))}
+ // items dari backend udah terurut TERBARU dulu (->latest('archived_at')),
+ // tapi renderArchivedItem prepend tiap baris ke ATAS satu-satu -- kalau
+ // di-iterate apa adanya (terbaru dulu), baris terbaru itu keprepend duluan
+ // lalu ketimpa ke bawah sama baris-baris berikutnya yang di-prepend
+ // belakangan, hasil akhirnya malah kebalik (terlama di atas, terbaru di
+ // bawah). Di-reverse dulu biar prepend TERAKHIR (yang beneran nempel
+ // paling atas) jatuh ke item TERBARU.
+ function syncHistory(items,pimpinanNama){historyBodies().forEach(tb=>items.slice().reverse().forEach(item=>renderArchivedItem(tb,item,pimpinanNama)))}
  async function loadHistory(){try{const r=await fetch(historyEndpoint+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}});if(!r.ok)return;const data=await r.json();const items=Array.isArray(data.items)?data.items:[];syncHistory(items,data.pimpinan_satuan_nama);removeArchivedRows(items.map(i=>i.id));}catch(e){}}
  function removeArchivedRows(ids){const set=new Set((ids||[]).map(String));Array.from(tbody.querySelectorAll('tr[data-status]')).forEach(row=>{if(set.has(rowId(row)))row.remove()});selectedIds.forEach(id=>{if(set.has(String(id)))selectedIds.delete(id)});syncRows()}
  function ensureHeaderCheckbox(){const th=table.querySelector('thead tr th:first-child');if(!th)return null;let wrap=th.querySelector('.danpus-archive-head-cell');if(!wrap){const label=document.createElement('span');label.className='danpus-archive-head-label';while(th.firstChild)label.appendChild(th.firstChild);wrap=document.createElement('span');wrap.className='danpus-archive-head-cell';wrap.appendChild(label);th.appendChild(wrap)}let cb=wrap.querySelector('.danpus-archive-select-all');if(!cb){cb=document.createElement('input');cb.type='checkbox';cb.className='danpus-archive-checkbox danpus-archive-select-all';cb.setAttribute('aria-label','Pilih semua baris yang dapat diarsipkan');wrap.insertBefore(cb,wrap.firstChild);cb.addEventListener('change',()=>{eligibleRows().forEach(row=>{const id=rowId(row);if(!id)return;cb.checked?selectedIds.add(id):selectedIds.delete(id)});syncRows();syncHeaderCheckbox()})}return cb}
