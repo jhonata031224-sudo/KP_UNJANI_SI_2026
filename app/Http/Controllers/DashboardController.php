@@ -241,7 +241,21 @@ class DashboardController
             // itu semua satu deliverable yang sama, cuma baris terbaru (hasil
             // akhirnya sekarang) yang dihitung, versi-versi lama yang sudah
             // "ketimpa" resubmit tidak.
-            $laporanPimpinanSatlak = Laporan::with(['satuan','tujuanSatuan','permintaanLaporan'])
+            $laporanPimpinanSatlak = Laporan::with([
+                    'satuan',
+                    'tujuanSatuan',
+                    // Global scope hideArchivedOnPimpinanDashboard (lihat
+                    // PermintaanLaporan::booted()) nge-filter permintaan yang
+                    // sudah diarsip supaya gak nongol lagi di tab Permintaan
+                    // Laporan yang aktif -- tapi timeline "Riwayat Aktivitas"
+                    // di sini butuh data permintaan-nya TERLEPAS dari status
+                    // arsip (laporan yang permintaannya udah diarsip/Selesai
+                    // tetap harus nampilin 5 tahap Permintaan Terkirim ->
+                    // Laporan Selesai, bukan jatuh ke fallback 3 tahap "laporan
+                    // tanpa permintaan"). Tanpa withoutGlobalScope ini,
+                    // permintaanLaporan() balik null begitu diarsip.
+                    'permintaanLaporan' => fn ($q) => $q->withoutGlobalScope('hideArchivedOnPimpinanDashboard'),
+                ])
                 ->whereIn('satuan_id', $satuanPimpinanIds)
                 ->latest()
                 ->get()
