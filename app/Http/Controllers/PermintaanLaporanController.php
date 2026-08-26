@@ -58,7 +58,7 @@ class PermintaanLaporanController extends Controller
         // sehingga fitur baru tidak perlu menambah route baru yang berisiko
         // bertabrakan dengan alur realtime penerima yang sudah ada.
         if ($this->isPimpinan($request) && $request->boolean('history')) {
-            $items = PermintaanLaporan::with(['pembuat.satuan', 'tujuanSatuan', 'laporan', 'tasks'])
+            $items = PermintaanLaporan::with(['pembuat.satuan', 'tujuanSatuan', 'laporan', 'tasks.laporans'])
                 ->whereNotNull('archived_at')
                 ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS', 'WADAN']))
                 ->latest('archived_at')
@@ -68,6 +68,7 @@ class PermintaanLaporanController extends Controller
 
             return response()->json([
                 'items' => $items,
+                'pimpinan_satuan_nama' => $request->user()->satuan?->nama ?: 'DANPUS',
             ], 200, [
                 'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             ]);
@@ -206,7 +207,7 @@ class PermintaanLaporanController extends Controller
             ->unique()
             ->values();
 
-        $items = PermintaanLaporan::with(['pembuat.satuan', 'tujuanSatuan', 'laporan', 'tasks'])
+        $items = PermintaanLaporan::with(['pembuat.satuan', 'tujuanSatuan', 'laporan', 'tasks.laporans'])
             ->whereIn('id', $ids)
             ->whereNull('archived_at')
             ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS', 'WADAN']))
@@ -244,6 +245,7 @@ class PermintaanLaporanController extends Controller
             'message' => $items->count().' permintaan laporan berhasil dipindahkan ke Riwayat Laporan.',
             'archived_ids' => $items->pluck('id')->values(),
             'items' => $items->map(fn (PermintaanLaporan $item) => $this->arsipItemData($item))->values(),
+            'pimpinan_satuan_nama' => $request->user()->satuan?->nama ?: 'DANPUS',
         ]);
     }
 
@@ -264,17 +266,36 @@ class PermintaanLaporanController extends Controller
             'id' => $item->id,
             'tujuan' => $item->tujuanSatuan?->kode ?: ($item->tujuanSatuan?->nama ?: '-'),
             'tujuan_nama' => $item->tujuanSatuan?->nama ?: '-',
+            'tujuan_satuan_id' => $item->tujuan_satuan_id,
             'perihal' => $item->perihal,
             'kategori' => $item->kategori ?: '-',
             'prioritas' => $item->prioritas ?: '-',
             'deadline' => $item->deadline_at?->translatedFormat('d M Y, H:i') ?: '-',
             'status' => $statusLabel,
             'archived_at' => $item->archived_at?->translatedFormat('d M Y, H:i') ?: now()->translatedFormat('d M Y, H:i'),
-            'tasks' => $item->tasks->sortBy('urutan')->values()->map(fn ($task) => [
-                'deskripsi' => $task->deskripsi,
-                'selesai' => (bool) $task->selesai,
-                'selesai_at' => $task->selesai_at?->translatedFormat('d M Y H:i'),
-            ])->all(),
+            // 'laporan' per task disertakan supaya task yang diklik di dropdown
+            // arsip bisa buka modal "Detail Aktivitas Laporan" beneran (data
+            // asli), sama kayak request-task-step di tab Permintaan Laporan
+            // yang masih aktif (lihat $rtLaporan di laporan-pimpinan.blade.php).
+            'tasks' => $item->tasks->sortBy('urutan')->values()->map(function ($task) {
+                $laporan = $task->laporans->sortByDesc('id')->first();
+
+                return [
+                    'deskripsi' => $task->deskripsi,
+                    'selesai' => (bool) $task->selesai,
+                    'selesai_at' => $task->selesai_at?->translatedFormat('d M Y H:i'),
+                    'laporan' => $laporan ? [
+                        'perihal' => $laporan->perihal,
+                        'prioritas' => $laporan->prioritas,
+                        'progres' => $laporan->progres,
+                        'kendala' => $laporan->kendala,
+                        'proyek' => $laporan->proyek,
+                        'tanggal' => $laporan->created_at?->translatedFormat('d M Y H:i'),
+                        'deskripsi' => $laporan->deskripsi,
+                        'lampiran' => $laporan->lampiran_path ? asset('storage/'.$laporan->lampiran_path) : null,
+                    ] : null,
+                ];
+            })->all(),
         ];
     }
 
