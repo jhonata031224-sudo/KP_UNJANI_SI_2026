@@ -111,7 +111,20 @@
       });
       if(sortSelect){
         rows.sort(function(a,b){var diff=Number(a.dataset.rptOrder)-Number(b.dataset.rptOrder);return sortValue==='oldest'?-diff:diff;});
-        var needsReorder=detailOf.size>0||rows.some(function(row,i){return row.nextElementSibling!==(rows[i+1]||emptyRow);});
+        // Baris data yang punya detail-row nempel (dropdown task) bikin
+        // row.nextElementSibling nunjuk ke detail-row itu, BUKAN ke baris
+        // data berikutnya -- kalau gak di-skip dulu, pengecekan ini SELALU
+        // nganggep butuh reorder walau urutannya udah bener, jadi tiap
+        // polling history nyegerin data, semua baris (+ detail-row-nya)
+        // ke-lepas-pasang ulang ke DOM tanpa perlu. Efeknya: kalau lepas-
+        // pasang itu kebetulan nimpa persis pas user mousedown->click baris
+        // yang sama, Chrome bisa batalin event click-nya -- dropdown task
+        // jadi kelihatan "gak mau kebuka" scara acak/intermiten.
+        var needsReorder=rows.some(function(row,i){
+          var actualNext=row.nextElementSibling;
+          if(actualNext===detailOf.get(row))actualNext=actualNext.nextElementSibling;
+          return actualNext!==(rows[i+1]||emptyRow);
+        });
         if(needsReorder){
           if(tableObserver)tableObserver.disconnect();
           if(tbodyObserver)tbodyObserver.disconnect();
