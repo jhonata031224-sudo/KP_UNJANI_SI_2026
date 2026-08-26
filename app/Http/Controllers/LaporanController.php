@@ -357,6 +357,14 @@ class LaporanController extends Controller
                 'user_id' => $user->id,
                 'tujuan_satuan_id' => $sumber->tujuan_satuan_id,
                 'permintaan_laporan_id' => $sumber->permintaan_laporan_id,
+                // task_id WAJIB ikut dibawa -- checkpoint hasil edit ini
+                // gantiin baris sumbernya sebagai checkpoint AKTIF buat task
+                // itu (lihat PermintaanLaporanTask::laporans()). Tanpa ini,
+                // baris hasil edit jadi task_id=null, bikin task-nya "lupa"
+                // checkpoint-nya sendiri -- baik buat tampilan riwayat di
+                // sini (klik task yang sudah selesai) maupun modal "Detail
+                // Aktivitas Laporan" per-task di sisi Pimpinan.
+                'task_id' => $sumber->task_id,
                 'proyek' => $sumber->proyek,
                 'perihal' => $sumber->perihal,
                 'deskripsi' => $validated['deskripsi'],

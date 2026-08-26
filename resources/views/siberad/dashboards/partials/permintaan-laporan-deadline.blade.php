@@ -44,7 +44,7 @@
                 confirmBody:'Pastikan data yang kamu isi sudah benar. Laporan final yang sudah terkirim tidak dapat diedit lagi.',
                 confirmYes:'Ya, Kirim'
             }:{
-                title:'Edit Update Progres',
+                title:'Edit Progres',
                 desc:'Perbarui data checkpoint progres yang sudah kamu kirim.',
                 submit:'Simpan Perubahan',
                 confirmTitle:'Simpan Perubahan?',
@@ -159,6 +159,10 @@
                 var kendala=form.querySelector('[name="kendala"]'); if(kendala) kendala.value='';
                 var lampiran=form.querySelector('[name="lampiran"]'); if(lampiran) lampiran.value='';
                 var lampiranClearBtn=document.getElementById('lampiranClearBtn'); if(lampiranClearBtn) lampiranClearBtn.style.display='none';
+                // Mode create belum punya lampiran apa pun buat ditunjukin --
+                // link "Lampiran saat ini" (dari mode edit) wajib disembunyikan
+                // lagi di sini, jaga-jaga modal yang sama abis dipakai edit.
+                var lampiranExisting=document.getElementById('lampiranExistingLink'); if(lampiranExisting) lampiranExisting.style.display='none';
                 var progresInput=form.querySelector('[name="progres"]');
                 var progresHint=document.getElementById('progresHint');
                 if(progresInput){
@@ -229,6 +233,20 @@
                 var kendala=form.querySelector('[name="kendala"]'); if(kendala) kendala.value=btn.dataset.kendala||'';
                 var lampiran=form.querySelector('[name="lampiran"]'); if(lampiran) lampiran.value='';
                 var lampiranClearBtn=document.getElementById('lampiranClearBtn'); if(lampiranClearBtn) lampiranClearBtn.style.display='none';
+                // Riwayat lampiran yang PERNAH dikirim buat checkpoint ini --
+                // input file gak bisa di-prefill (browser gak izinin), jadi
+                // satu-satunya cara nunjukin "ini yang udah ada" adalah link
+                // terpisah. Biarin kosong/tersembunyi kalau checkpoint-nya
+                // memang belum pernah dilampiri apa-apa.
+                var lampiranExisting=document.getElementById('lampiranExistingLink');
+                if(lampiranExisting){
+                    if(btn.dataset.lampiran){
+                        lampiranExisting.href=btn.dataset.lampiran;
+                        lampiranExisting.style.display='inline-flex';
+                    }else{
+                        lampiranExisting.style.display='none';
+                    }
+                }
                 // Mode edit cuma buat ngoreksi teks checkpoint yang sudah
                 // dikirim -- gak pernah nyentuh status task, jadi task_id
                 // lama (kalau ada nyangkut dari klik step sebelumnya) wajib
