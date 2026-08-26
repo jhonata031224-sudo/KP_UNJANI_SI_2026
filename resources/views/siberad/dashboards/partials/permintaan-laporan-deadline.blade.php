@@ -9,12 +9,12 @@
 .deadline-task-step:first-child:last-child::before{clip-path:none;border-radius:8px}
 .deadline-task-step:hover{filter:brightness(1.08)}
 .deadline-task-step:disabled{cursor:not-allowed;opacity:.6;filter:none}
-.deadline-task-step:focus-visible{outline:2px solid #334155;outline-offset:2px}
+.deadline-task-step:focus-visible{outline:2px solid var(--gold-bright,#e0a83a);outline-offset:2px}
 .deadline-task-num{flex-shrink:0;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;background:var(--p-surface,var(--panel));color:inherit}
 .deadline-task-label{overflow:hidden;text-overflow:ellipsis;max-width:170px}
-.deadline-task-step.active{color:#fff;z-index:2}
-.deadline-task-step.active::before{background:#334155;box-shadow:0 4px 12px -4px rgba(51,65,85,.5)}
-.deadline-task-step.active .deadline-task-num{background:#fff;color:#334155}
+.deadline-task-step.active{color:#1a1206;z-index:2}
+.deadline-task-step.active::before{background:var(--gold-bright,#e0a83a);box-shadow:0 4px 12px -4px rgba(224,168,58,.6)}
+.deadline-task-step.active .deadline-task-num{background:#1a1206;color:var(--gold-bright,#e0a83a)}
 .deadline-task-step.done{color:#8a7245}
 .deadline-task-step.done::before{background:#efe6d2}
 .deadline-task-step.done .deadline-task-num{background:var(--green,#16834b);color:#fff}
