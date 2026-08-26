@@ -65,7 +65,7 @@
                          TETAP dipertahankan cuma buat kasus ini. Begitu ada task,
                          klik langsung di task-step (lihat deadline-task-track di atas)
                          yang buka modal Update Progres/Edit-nya, jadi tombol terpisah
-                         ini sengaja gak dirender lagi biar gak dobel. }}
+                         ini sengaja gak dirender lagi biar gak dobel. --}}
                     <button type="button" class="deadline-primary small use-permintaan" data-request-id="{{ $permintaan->id }}" data-target-id="{{ $permintaan->pembuat->satuan_id }}" data-perihal="{{ e($permintaan->perihal) }}" data-kategori="{{ e($permintaan->kategori ?? '') }}" data-prioritas="{{ e($permintaan->prioritas) }}" data-instruksi="{{ e($permintaan->instruksi ?? '') }}" data-progres="{{ $permintaan->progres }}" data-has-tasks="0">Update Progres</button>
                     @if($latestProgresCheckpoint)
                         <button type="button" class="deadline-secondary small edit-progres-btn" data-update-url="{{ route('laporan.update-progres', $latestProgresCheckpoint) }}" data-tujuan-satuan-id="{{ $latestProgresCheckpoint->tujuan_satuan_id }}" data-perihal="{{ e($latestProgresCheckpoint->perihal) }}" data-proyek="{{ e($latestProgresCheckpoint->proyek ?? '') }}" data-prioritas="{{ e($latestProgresCheckpoint->prioritas) }}" data-deskripsi="{{ e($latestProgresCheckpoint->deskripsi) }}" data-kendala="{{ e($latestProgresCheckpoint->kendala ?? '') }}" data-progres="{{ $permintaan->progres }}" data-has-tasks="0">Edit</button>
