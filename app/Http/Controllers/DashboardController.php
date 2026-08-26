@@ -303,12 +303,22 @@ class DashboardController
             // $permintaanLaporan (alur "kebutuhan khusus" yang diminta
             // Danpus/Wadan lebih dulu), lihat komentar di
             // LaporanKendalaController.
+            //
+            // Begitu Danpus menekan "Konfirmasi & Arsipkan" (status jadi
+            // Dikonfirmasi, confirmed_at terisi), record otomatis pindah
+            // dari daftar "Kendala Kasansi" (masih actionable) ke submenu
+            // "Arsip Kendala Kasansi" -- makanya keduanya dipisah lewat
+            // whereNull/whereNotNull('confirmed_at'), BUKAN sekadar filter
+            // status, supaya laporan yang ditolak pun tetap bisa diarsipkan.
             $danpusSatuanId = Satuan::where('kode', 'DANPUS')->value('id');
             $kendalaMasuk = $danpusSatuanId
-                ? LaporanKendala::with('satuan')->where('tujuan_satuan_id', $danpusSatuanId)->latest()->get()
+                ? LaporanKendala::with('satuan')->where('tujuan_satuan_id', $danpusSatuanId)->whereNull('confirmed_at')->latest()->get()
+                : collect();
+            $kendalaArsip = $danpusSatuanId
+                ? LaporanKendala::with(['satuan', 'confirmedBy'])->where('tujuan_satuan_id', $danpusSatuanId)->whereNotNull('confirmed_at')->latest('confirmed_at')->get()
                 : collect();
 
-            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk'));
+            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk','kendalaArsip'));
         }
         // Terlambat/Dibatalkan dihitung dari SELURUH permintaan laporan yang
         // ditujukan ke satuan ini, bukan $permintaanLaporan (yang sengaja

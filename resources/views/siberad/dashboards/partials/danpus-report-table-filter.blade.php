@@ -242,6 +242,9 @@
     initReportFilter({
       sectionId:'monitoring',tableSelector:'.dtbl',anchorSelector:'.monitor-grid',searchPlaceholder:'Cari satlak atau perihal...',emptyText:'Tidak ada laporan dari 3 Satlak yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan dari 3 Satlak.',filters:filterPrioritas
     });
+    initReportFilter({
+      sectionId:'arsip-kendala-kasansi',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari pengirim atau perihal...',emptyText:'Tidak ada arsip kendala yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada kendala yang diarsipkan.',filters:filterPrioritas
+    });
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
