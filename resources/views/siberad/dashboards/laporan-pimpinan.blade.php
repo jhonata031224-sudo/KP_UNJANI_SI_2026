@@ -120,14 +120,14 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 .request-task-num{flex-shrink:0;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;background:var(--p-surface);color:inherit}
 .request-task-label{overflow:hidden;text-overflow:ellipsis;max-width:170px}
 .request-task-step.active{color:#fff;z-index:2}
-.request-task-step.active::before{background:var(--p-accent);box-shadow:0 4px 12px -4px rgba(201,122,0,.55)}
-.request-task-step.active .request-task-num{background:#fff;color:var(--p-accent)}
+.request-task-step.active::before{background:#38bdf8;box-shadow:0 4px 12px -4px rgba(56,189,248,.55)}
+.request-task-step.active .request-task-num{background:#fff;color:#0ea5e9}
 .request-task-step.done{color:#8a7245}
 .request-task-step.done::before{background:#efe6d2}
 .request-task-step.done .request-task-num{background:var(--p-green);color:#fff}
 .request-task-step.clickable{cursor:pointer}
 .request-task-step.clickable:hover::before{filter:brightness(1.06)}
-.request-task-step.clickable:focus-visible{outline:2px solid var(--p-accent);outline-offset:2px}
+.request-task-step.clickable:focus-visible{outline:2px solid #0ea5e9;outline-offset:2px}
 @media(max-width:640px){.request-task-step{margin-right:0;padding:7px 12px}.request-task-step::before{clip-path:none!important;border-radius:8px}}
 #danpusRequestTaskList{display:flex;flex-direction:column;gap:8px}
 .danpus-task-row{display:flex;flex-direction:column}.danpus-task-row-inputs{display:flex;gap:8px;align-items:center}
