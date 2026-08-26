@@ -259,6 +259,9 @@ class LaporanController extends Controller
             $lampiranPath = $request->hasFile('lampiran')
                 ? $request->file('lampiran')->store('lampiran-laporan', 'public')
                 : null;
+            $lampiranNamaAsli = $request->hasFile('lampiran')
+                ? $request->file('lampiran')->getClientOriginalName()
+                : null;
 
             $statusLaporan = $progresValue < 100 ? Laporan::STATUS_PROGRES : 'Menunggu';
 
@@ -275,6 +278,7 @@ class LaporanController extends Controller
                 'progres' => $progresValue,
                 'prioritas' => $validated['prioritas'],
                 'lampiran_path' => $lampiranPath,
+                'lampiran_nama_asli' => $lampiranNamaAsli,
                 'status' => $statusLaporan,
             ]);
 
@@ -346,8 +350,10 @@ class LaporanController extends Controller
             }
 
             $lampiranPath = $sumber->lampiran_path;
+            $lampiranNamaAsli = $sumber->lampiran_nama_asli;
             if ($request->hasFile('lampiran')) {
                 $lampiranPath = $request->file('lampiran')->store('lampiran-laporan', 'public');
+                $lampiranNamaAsli = $request->file('lampiran')->getClientOriginalName();
             }
 
             $statusLaporan = ($permintaan && $progresValue < 100) ? Laporan::STATUS_PROGRES : 'Menunggu';
@@ -372,6 +378,7 @@ class LaporanController extends Controller
                 'progres' => $progresValue,
                 'prioritas' => $validated['prioritas'],
                 'lampiran_path' => $lampiranPath,
+                'lampiran_nama_asli' => $lampiranNamaAsli,
                 'status' => $statusLaporan,
             ]);
 

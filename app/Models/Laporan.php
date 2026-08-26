@@ -24,6 +24,7 @@ class Laporan extends Model
         'progres',
         'prioritas',
         'lampiran_path',
+        'lampiran_nama_asli',
         'status',
     ];
 

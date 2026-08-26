@@ -42,6 +42,7 @@
                                 data-deskripsi="{{ e($taskLaporan->deskripsi) }}"
                                 data-kendala="{{ e($taskLaporan->kendala ?? '') }}"
                                 data-lampiran="{{ $taskLaporan->lampiran_path ? e(asset('storage/'.$taskLaporan->lampiran_path)) : '' }}"
+                                data-lampiran-nama="{{ $taskLaporan->lampiran_path ? e($taskLaporan->lampiran_nama_asli ?: basename($taskLaporan->lampiran_path)) : '' }}"
                                 data-progres="{{ $permintaan->progres }}"
                                 data-has-tasks="1">
                                 <span class="deadline-task-num">✓</span>
@@ -90,7 +91,7 @@
                          ini sengaja gak dirender lagi biar gak dobel. --}}
                     <button type="button" class="deadline-primary small use-permintaan" data-request-id="{{ $permintaan->id }}" data-target-id="{{ $permintaan->pembuat->satuan_id }}" data-perihal="{{ e($permintaan->perihal) }}" data-kategori="{{ e($permintaan->kategori ?? '') }}" data-prioritas="{{ e($permintaan->prioritas) }}" data-instruksi="{{ e($permintaan->instruksi ?? '') }}" data-progres="{{ $permintaan->progres }}" data-has-tasks="0">Update Progres</button>
                     @if($latestProgresCheckpoint)
-                        <button type="button" class="deadline-secondary small edit-progres-btn" data-update-url="{{ route('laporan.update-progres', $latestProgresCheckpoint) }}" data-tujuan-satuan-id="{{ $latestProgresCheckpoint->tujuan_satuan_id }}" data-perihal="{{ e($latestProgresCheckpoint->perihal) }}" data-proyek="{{ e($latestProgresCheckpoint->proyek ?? '') }}" data-prioritas="{{ e($latestProgresCheckpoint->prioritas) }}" data-deskripsi="{{ e($latestProgresCheckpoint->deskripsi) }}" data-kendala="{{ e($latestProgresCheckpoint->kendala ?? '') }}" data-lampiran="{{ $latestProgresCheckpoint->lampiran_path ? e(asset('storage/'.$latestProgresCheckpoint->lampiran_path)) : '' }}" data-progres="{{ $permintaan->progres }}" data-has-tasks="0">Edit</button>
+                        <button type="button" class="deadline-secondary small edit-progres-btn" data-update-url="{{ route('laporan.update-progres', $latestProgresCheckpoint) }}" data-tujuan-satuan-id="{{ $latestProgresCheckpoint->tujuan_satuan_id }}" data-perihal="{{ e($latestProgresCheckpoint->perihal) }}" data-proyek="{{ e($latestProgresCheckpoint->proyek ?? '') }}" data-prioritas="{{ e($latestProgresCheckpoint->prioritas) }}" data-deskripsi="{{ e($latestProgresCheckpoint->deskripsi) }}" data-kendala="{{ e($latestProgresCheckpoint->kendala ?? '') }}" data-lampiran="{{ $latestProgresCheckpoint->lampiran_path ? e(asset('storage/'.$latestProgresCheckpoint->lampiran_path)) : '' }}" data-lampiran-nama="{{ $latestProgresCheckpoint->lampiran_path ? e($latestProgresCheckpoint->lampiran_nama_asli ?: basename($latestProgresCheckpoint->lampiran_path)) : '' }}" data-progres="{{ $permintaan->progres }}" data-has-tasks="0">Edit</button>
                     @endif
                 @endif
             </div>

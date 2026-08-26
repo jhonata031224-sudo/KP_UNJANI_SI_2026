@@ -224,8 +224,11 @@
                 setFormMethod(form,'PATCH');
                 var tujuan=form.querySelector('select[name="tujuan_satuan_id"]'); if(tujuan && btn.dataset.tujuanSatuanId) tujuan.value=btn.dataset.tujuanSatuanId;
                 lockSelectWithShadow(tujuan,false);
+                // Prioritas ikut dikunci di mode edit -- itu nilai dari
+                // permintaan yang ditentukan Pimpinan, bukan sesuatu yang
+                // seharusnya bisa diubah-ubah lewat form checkpoint per task.
                 var prioritas=form.querySelector('select[name="prioritas"]'); if(prioritas) prioritas.value=btn.dataset.prioritas||'';
-                lockSelectWithShadow(prioritas,false);
+                lockSelectWithShadow(prioritas,true);
                 lockIdentityFields(form,true);
                 var perihal=form.querySelector('[name="perihal"]'); if(perihal) perihal.value=btn.dataset.perihal||'';
                 var kategori=form.querySelector('[name="proyek"]'); if(kategori) kategori.value=btn.dataset.proyek||'';
@@ -239,9 +242,11 @@
                 // terpisah. Biarin kosong/tersembunyi kalau checkpoint-nya
                 // memang belum pernah dilampiri apa-apa.
                 var lampiranExisting=document.getElementById('lampiranExistingLink');
+                var lampiranExistingName=document.getElementById('lampiranExistingName');
                 if(lampiranExisting){
                     if(btn.dataset.lampiran){
                         lampiranExisting.href=btn.dataset.lampiran;
+                        if(lampiranExistingName) lampiranExistingName.textContent=btn.dataset.lampiranNama||'Lampiran';
                         lampiranExisting.style.display='inline-flex';
                     }else{
                         lampiranExisting.style.display='none';
