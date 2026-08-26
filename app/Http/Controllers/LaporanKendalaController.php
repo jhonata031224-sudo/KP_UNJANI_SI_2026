@@ -122,6 +122,15 @@ class LaporanKendalaController extends Controller
 
         abort_unless(!$laporanKendala->confirmed_at, 422, 'Laporan kendala ini sudah berada di arsip dan tidak dapat ditindaklanjuti dari daftar masuk.');
 
+        // Alur Danpus untuk Kendala Kasansi disederhanakan jadi langsung
+        // "Konfirmasi & Arsipkan" saja -- Danpus tidak lagi menindaklanjuti
+        // atau menolak satu-satu (itu tetap jadi wewenang Wadan).
+        abort_if(
+            $kodeSatuan === 'DANPUS' && in_array($validated['status'], [LaporanKendala::STATUS_DITINDAKLANJUTI, LaporanKendala::STATUS_DITOLAK], true),
+            403,
+            'Danpus tidak lagi menindaklanjuti/menolak kendala satu-satu -- gunakan "Konfirmasi & Arsipkan".'
+        );
+
         $laporanKendala->update([
             'status' => $validated['status'],
             'catatan' => $validated['catatan'] ?? null,
