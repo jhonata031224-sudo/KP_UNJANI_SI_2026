@@ -1628,15 +1628,21 @@
         </div>
 
         <style>
-          .perm-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 14px;margin-bottom:12px;border:1px solid var(--border);border-radius:10px;background:var(--panel-2);}
-          .perm-toolbar-count{font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--text-dim);}
-          .perm-toolbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-          .perm-toolbar-btn{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel-alt);cursor:pointer;user-select:none;transition:border-color .15s,background .15s;line-height:1;}
-          .perm-toolbar-btn:hover{border-color:var(--border-strong);}
-          .perm-toolbar-btn input[type="checkbox"]{width:16px;height:16px;margin:0;accent-color:var(--gold-bright);cursor:pointer;flex-shrink:0;display:block;}
-          .perm-toolbar-btn span{font-size:11.5px;font-weight:700;color:var(--text);white-space:nowrap;}
-          .perm-toolbar-btn.is-all-active{border-color:var(--gold-bright);background:var(--gold-dim);}
-          .perm-toolbar-btn.is-all-active span{color:var(--gold-bright);}
+          .perm-global-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:12px 16px;margin-bottom:16px;border:1px solid var(--border);border-radius:10px;background:var(--panel-2);position:sticky;top:0;z-index:5;}
+          .perm-filter-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+          .perm-filter-btn{display:inline-flex;align-items:center;height:30px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel-alt);color:var(--text-dim);font-size:11.5px;font-weight:700;cursor:pointer;transition:border-color .15s,background .15s,color .15s;}
+          .perm-filter-btn:hover{border-color:var(--border-strong);}
+          .perm-filter-btn.is-active{border-color:var(--gold-bright);background:var(--gold-dim);color:var(--gold-bright);}
+          .perm-global-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+          .perm-global-count{font-size:11px;font-weight:700;color:var(--text-dim);white-space:nowrap;}
+          .perm-global-select-all{display:inline-flex;align-items:center;height:30px;gap:8px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel-alt);cursor:pointer;user-select:none;transition:border-color .15s,background .15s;}
+          .perm-global-select-all:hover{border-color:var(--border-strong);}
+          .perm-global-select-all input[type="checkbox"]{width:16px;height:16px;margin:0;accent-color:var(--gold-bright);cursor:pointer;flex-shrink:0;display:block;}
+          .perm-global-select-all span{font-size:11.5px;font-weight:700;color:var(--text);white-space:nowrap;}
+          .perm-global-select-all.is-all-active{border-color:var(--gold-bright);background:var(--gold-dim);}
+          .perm-global-select-all.is-all-active span{color:var(--gold-bright);}
+          .perm-satuan-list .panel[data-kategori]{display:block;}
+          .perm-satuan-list .panel[data-kategori].perm-hidden{display:none;}
           .perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-bottom:14px;}
           .perm-card{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--panel-alt);cursor:pointer;transition:border-color .15s,background .15s;}
           .perm-card:hover{border-color:var(--border-strong);}
@@ -1649,90 +1655,126 @@
           .perm-card.is-active .perm-card-status{background:var(--panel-alt);color:var(--gold-bright);}
         </style>
 
-        @foreach($semuaSatuan as $s)
-        @php $permGridId = 'permGrid'.$s->id; @endphp
-        <div class="panel">
-          <div class="panel-head"><div><h3>{{ $s->nama }} <span class="badge">{{ $s->kode }}</span></h3><p>{{ $s->deskripsi ?: 'Tidak ada deskripsi.' }}</p></div></div>
-          <form method="POST" action="{{ route('admin.satuan.permissions', $s) }}" style="padding:18px 22px;">
-            @csrf @method('PATCH')
+        @php
+          $permKategoriMap = [
+            \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
+            \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
+            \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+            \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
+            \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+            \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
+          ];
+        @endphp
 
-            <div class="perm-toolbar" data-perm-toolbar="{{ $permGridId }}">
-              <span class="perm-toolbar-count" data-perm-count></span>
-              <div class="perm-toolbar-actions">
-                <label class="perm-toolbar-btn" data-perm-select-all>
-                  <input type="checkbox">
-                  <span>Pilih Semua</span>
-                </label>
-              </div>
-            </div>
-
-            <div class="perm-grid" id="{{ $permGridId }}">
-              @foreach(\App\Models\Satuan::modulHakAksesUntukRole($s->kode) as $key => $label)
-              @php $modulAktif = in_array($key, $s->permissions ?? []); @endphp
-              <label class="perm-card {{ $modulAktif ? 'is-active' : '' }}">
-                <input type="checkbox" name="permissions[]" value="{{ $key }}" @checked($modulAktif)>
-                <span class="perm-card-main">
-                  <span class="perm-card-title">{{ $label }}</span>
-                  <span class="perm-card-desc">{{ \App\Models\Satuan::MODUL_HAK_AKSES_DESKRIPSI[$key] ?? '' }}</span>
-                </span>
-                <span class="perm-card-status">{{ $modulAktif ? 'Aktif' : 'Nonaktif' }}</span>
-              </label>
-              @endforeach
-            </div>
-            <button class="btn btn-primary btn-sm" type="submit">Simpan Hak Akses {{ $s->kode }}</button>
-          </form>
+        <div class="perm-global-toolbar">
+          <div class="perm-filter-group" data-perm-filter-group>
+            <button type="button" class="perm-filter-btn is-active" data-perm-filter="">Semua</button>
+            @foreach(['Admin','Pimpinan','Unsur Pelayanan','Unsur Pembantu Pimpinan','Direktorat','Satlak','Kasansi'] as $kategoriLabel)
+            <button type="button" class="perm-filter-btn" data-perm-filter="{{ $kategoriLabel }}">{{ $kategoriLabel }}</button>
+            @endforeach
+          </div>
+          <div class="perm-global-actions">
+            <span class="perm-global-count" data-perm-global-count></span>
+            <label class="perm-global-select-all" data-perm-global-select-all>
+              <input type="checkbox">
+              <span>Pilih Semua Modul</span>
+            </label>
+          </div>
         </div>
-        @endforeach
+
+        <div class="perm-satuan-list">
+          @foreach($semuaSatuan as $s)
+          @php $kategoriLabel = $permKategoriMap[$s->kategori ?? ''] ?? 'Satlak'; @endphp
+          <div class="panel" data-kategori="{{ $kategoriLabel }}">
+            <div class="panel-head"><div><h3>{{ $s->nama }} <span class="badge">{{ $s->kode }}</span></h3><p>{{ $s->deskripsi ?: 'Tidak ada deskripsi.' }}</p></div></div>
+            <form method="POST" action="{{ route('admin.satuan.permissions', $s) }}" style="padding:18px 22px;">
+              @csrf @method('PATCH')
+              <div class="perm-grid">
+                @foreach(\App\Models\Satuan::modulHakAksesUntukRole($s->kode) as $key => $label)
+                @php $modulAktif = in_array($key, $s->permissions ?? []); @endphp
+                <label class="perm-card {{ $modulAktif ? 'is-active' : '' }}">
+                  <input type="checkbox" name="permissions[]" value="{{ $key }}" @checked($modulAktif)>
+                  <span class="perm-card-main">
+                    <span class="perm-card-title">{{ $label }}</span>
+                    <span class="perm-card-desc">{{ \App\Models\Satuan::MODUL_HAK_AKSES_DESKRIPSI[$key] ?? '' }}</span>
+                  </span>
+                  <span class="perm-card-status">{{ $modulAktif ? 'Aktif' : 'Nonaktif' }}</span>
+                </label>
+                @endforeach
+              </div>
+              <button class="btn btn-primary btn-sm" type="submit">Simpan Hak Akses {{ $s->kode }}</button>
+            </form>
+          </div>
+          @endforeach
+        </div>
 
         <script>
           (function () {
             var panel = document.querySelector('[data-tab-panel="role-akses"]');
             if (!panel) return;
 
-            panel.querySelectorAll('.perm-toolbar[data-perm-toolbar]').forEach(function (toolbar) {
-              var gridId = toolbar.getAttribute('data-perm-toolbar');
-              var grid = document.getElementById(gridId);
-              if (!grid) return;
+            var satuanPanels = Array.prototype.slice.call(panel.querySelectorAll('.perm-satuan-list .panel[data-kategori]'));
+            var filterBtns = Array.prototype.slice.call(panel.querySelectorAll('[data-perm-filter]'));
+            var globalWrap = panel.querySelector('[data-perm-global-select-all]');
+            var globalCb = globalWrap.querySelector('input[type="checkbox"]');
+            var globalCountEl = panel.querySelector('[data-perm-global-count]');
+            var activeFilter = '';
 
-              var selectAllBtn = toolbar.querySelector('[data-perm-select-all]');
-              var selectAllCb = selectAllBtn.querySelector('input[type="checkbox"]');
-              var countEl = toolbar.querySelector('[data-perm-count]');
-              var moduleCbs = Array.prototype.slice.call(grid.querySelectorAll('input[type="checkbox"]'));
+            function refreshCard(cb) {
+              var card = cb.closest('.perm-card');
+              var status = card.querySelector('.perm-card-status');
+              card.classList.toggle('is-active', cb.checked);
+              status.textContent = cb.checked ? 'Aktif' : 'Nonaktif';
+            }
 
-              function refreshCard(cb) {
-                var card = cb.closest('.perm-card');
-                var status = card.querySelector('.perm-card-status');
-                card.classList.toggle('is-active', cb.checked);
-                status.textContent = cb.checked ? 'Aktif' : 'Nonaktif';
-              }
-
-              function refreshToolbar() {
-                var total = moduleCbs.length;
-                var checked = moduleCbs.filter(function (cb) { return cb.checked; }).length;
-                countEl.textContent = checked + ' dari ' + total + ' modul aktif';
-                selectAllCb.checked = total > 0 && checked === total;
-                selectAllCb.indeterminate = checked > 0 && checked < total;
-                selectAllBtn.classList.toggle('is-all-active', selectAllCb.checked);
-              }
-
-              moduleCbs.forEach(function (cb) {
-                cb.addEventListener('change', function () {
-                  refreshCard(cb);
-                  refreshToolbar();
-                });
+            function visibleCheckboxes() {
+              var boxes = [];
+              satuanPanels.forEach(function (p) {
+                if (p.classList.contains('perm-hidden')) return;
+                boxes = boxes.concat(Array.prototype.slice.call(p.querySelectorAll('.perm-grid input[type="checkbox"]')));
               });
+              return boxes;
+            }
 
-              selectAllCb.addEventListener('change', function () {
-                var next = selectAllCb.checked;
-                moduleCbs.forEach(function (cb) {
-                  cb.checked = next;
-                  refreshCard(cb);
-                });
-                refreshToolbar();
+            function refreshGlobal() {
+              var boxes = visibleCheckboxes();
+              var total = boxes.length;
+              var checked = boxes.filter(function (cb) { return cb.checked; }).length;
+              globalCountEl.textContent = checked + ' dari ' + total + ' modul aktif' + (activeFilter ? ' (' + activeFilter + ')' : '');
+              globalCb.checked = total > 0 && checked === total;
+              globalCb.indeterminate = checked > 0 && checked < total;
+              globalWrap.classList.toggle('is-all-active', globalCb.checked);
+            }
+
+            panel.querySelectorAll('.perm-grid input[type="checkbox"]').forEach(function (cb) {
+              cb.addEventListener('change', function () {
+                refreshCard(cb);
+                refreshGlobal();
               });
-
-              refreshToolbar();
             });
+
+            globalCb.addEventListener('change', function () {
+              var next = globalCb.checked;
+              visibleCheckboxes().forEach(function (cb) {
+                cb.checked = next;
+                refreshCard(cb);
+              });
+              refreshGlobal();
+            });
+
+            filterBtns.forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                activeFilter = btn.getAttribute('data-perm-filter') || '';
+                filterBtns.forEach(function (b) { b.classList.toggle('is-active', b === btn); });
+                satuanPanels.forEach(function (p) {
+                  var match = !activeFilter || p.getAttribute('data-kategori') === activeFilter;
+                  p.classList.toggle('perm-hidden', !match);
+                });
+                refreshGlobal();
+              });
+            });
+
+            refreshGlobal();
           })();
         </script>
       </section>
