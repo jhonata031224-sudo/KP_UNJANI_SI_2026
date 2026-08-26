@@ -195,6 +195,7 @@
         var status = statusInput ? String(statusInput.value || '').toLowerCase() : '';
         var isReject = status.indexOf('tolak') !== -1;
         var isRevise = status.indexOf('revisi') !== -1;
+        var isConfirmArchive = status.indexOf('dikonfirmasi') !== -1;
         if (isDanpus && isRevise) return;
 
         if (isReject) {
@@ -204,6 +205,23 @@
           rejectButton.textContent = 'Tolak';
           rejectButton.addEventListener('click', function(){ openRejectModal(originalForm); });
           actions.appendChild(rejectButton);
+          return;
+        }
+
+        if (isConfirmArchive) {
+          var archiveButton = document.createElement('button');
+          archiveButton.type = 'button';
+          archiveButton.className = 'approve';
+          var archiveLabel = originalForm.querySelector('button[type="submit"]');
+          archiveButton.textContent = archiveLabel ? archiveLabel.textContent.trim() : 'Konfirmasi & Arsipkan';
+          archiveButton.addEventListener('click', function(){
+            if (typeof window.bukaKonfirmasiArsipkanKendala === 'function') {
+              window.bukaKonfirmasiArsipkanKendala({ dataset: { action: originalForm.getAttribute('action') || '', perihal: originalForm.dataset.perihal || '' } });
+            } else {
+              originalForm.submit();
+            }
+          });
+          actions.appendChild(archiveButton);
           return;
         }
 
