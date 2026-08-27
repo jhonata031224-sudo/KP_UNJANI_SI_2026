@@ -62,7 +62,21 @@
           sessionStorage.removeItem(k);
         });
       } catch (e) {}
-      pendingForm.submit();
+
+      var formToSubmit = pendingForm;
+      confirmBtn.disabled = true;
+
+      // Lepas subscription push notifikasi milik user ini dari server SEBELUM
+      // sesi diakhiri -- endpoint-nya butuh auth, jadi wajib dipanggil di sini,
+      // bukan setelah logout. Kalau tidak, notifikasi user ini akan terus
+      // nyasar ke device/browser ini walau user lain yang login berikutnya.
+      var unsubscribe = window.siberadUnsubscribePush
+        ? window.siberadUnsubscribePush()
+        : Promise.resolve();
+
+      unsubscribe.then(function () {
+        formToSubmit.submit();
+      });
     });
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && overlay.classList.contains('open')) closeConfirm();

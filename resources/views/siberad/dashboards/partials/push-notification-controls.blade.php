@@ -76,6 +76,42 @@
     document.head.appendChild(style);
   }
 
+  // Dipanggil dari dialog konfirmasi logout (partials/global-shell-enhancements.blade.php)
+  // SEBELUM form logout benar-benar submit -- supaya baris push_subscriptions milik
+  // user yang lagi logout ini kehapus dari server. Kalau tidak, endpoint push
+  // browser/device ini tetap "nempel" ke akun lama selamanya, dan notifikasi
+  // user itu bakal terus nyasar ke device ini walau user lain yang login
+  // berikutnya. Sengaja TIDAK memanggil subscription.unsubscribe() di level
+  // browser -- biar endpoint push-nya sendiri tetap hidup, jadi kalau user
+  // BERIKUTNYA login di device yang sama dan izin notifikasi browser masih
+  // granted, dia otomatis ke-subscribe ulang (lihat cabang 'granted' di init())
+  // tanpa perlu klik "Aktifkan Notifikasi" lagi.
+  //
+  // Promise SELALU resolve (tidak pernah reject) dan dibatasi waktu tunggu,
+  // supaya proses logout tidak pernah nge-hang gara-gara network/push service
+  // lambat atau error.
+  window.siberadUnsubscribePush = function () {
+    return new Promise(function (resolve) {
+      var settled = false;
+      var finish = function () {
+        if (settled) return;
+        settled = true;
+        resolve();
+      };
+      setTimeout(finish, 2500); // jaring pengaman, jangan sampai logout ketahan lama
+
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return finish();
+
+      navigator.serviceWorker.getRegistration().then(function (registration) {
+        if (!registration) return finish();
+        return registration.pushManager.getSubscription().then(function (subscription) {
+          if (!subscription) return finish();
+          postJson(UNSUBSCRIBE_URL, { endpoint: subscription.endpoint }).then(finish).catch(finish);
+        });
+      }).catch(finish);
+    });
+  };
+
   function init() {
     if (Notification.permission === 'denied') return; // browser sendiri yang blokir prompt ulang, jangan paksa
 

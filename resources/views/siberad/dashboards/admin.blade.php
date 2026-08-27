@@ -3376,7 +3376,22 @@
         sessionStorage.removeItem(k);
       });
     } catch (e) {}
-    pendingForm.submit();
+
+    var formToSubmit = pendingForm;
+    confirmBtn.disabled = true;
+
+    // Lepas subscription push notifikasi milik user ini dari server SEBELUM
+    // sesi diakhiri (lihat penjelasan lengkap di siberadUnsubscribePush,
+    // partials/push-notification-controls.blade.php) -- kalau tidak,
+    // notifikasi admin ini akan terus nyasar ke device/browser ini walau
+    // user lain yang login berikutnya.
+    var unsubscribe = window.siberadUnsubscribePush
+      ? window.siberadUnsubscribePush()
+      : Promise.resolve();
+
+    unsubscribe.then(function () {
+      formToSubmit.submit();
+    });
   });
 })();
 </script>

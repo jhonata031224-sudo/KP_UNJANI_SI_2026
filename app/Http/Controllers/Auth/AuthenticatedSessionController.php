@@ -86,6 +86,19 @@ class AuthenticatedSessionController extends Controller
     {
         ActivityLog::catat('logout', 'Logout dari SIBERAD.', $request->user());
 
+        // Hapus semua subscription push notifikasi milik user ini SEBELUM
+        // sesi diakhiri. Kalau tidak, endpoint push di device/browser ini
+        // tetap "nempel" ke akun yang baru logout selamanya -- dan kalau
+        // device yang sama dipakai login user lain, notifikasi milik user
+        // yang sudah logout tadi akan terus nyasar muncul di situ.
+        //
+        // Sengaja dihapus di sini (server-side, satu titik pasti dilewati
+        // setiap logout) alih-alih hanya mengandalkan JS di
+        // push-notification-controls.blade.php -- ada beberapa implementasi
+        // tombol/dialog konfirmasi logout yang berbeda-beda di frontend,
+        // jadi titik paling aman untuk jaminan konsistensi adalah di sini.
+        $request->user()?->pushSubscriptions()->delete();
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
