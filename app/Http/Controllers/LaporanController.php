@@ -262,6 +262,52 @@ class LaporanController extends Controller
         ]);
     }
 
+    /**
+     * Long-polling buat tab "Permintaan Laporan" Pimpinan -- request ini
+     * SENGAJA ditahan server (bukan langsung dibalas) sampai ada perubahan
+     * beneran pada data yang relevan (satuan tujuan kirim progres/checklist
+     * task, ubah status permintaan, dst), atau batas waktu tercapai. Begitu
+     * balasannya nyampe (baik karena perubahan maupun timeout), client
+     * langsung minta lagi -- efeknya kerasa instan tanpa harus nebak-nebak
+     * interval polling.
+     *
+     * PENTING: cuma aman dipakai selama server production ngejalanin lebih
+     * dari 1 worker (lihat PHP_CLI_SERVER_WORKERS di Railway) -- kalau cuma
+     * 1 worker, 1 request yang ditahan sampai puluhan detik bisa nge-block
+     * SELURUH situs buat semua orang, karena `php artisan serve` melayani
+     * request satu-satu per worker.
+     */
+    public function tungguPerubahanPermintaan(Request $request): JsonResponse
+    {
+        $user = $request->user()->load('satuan');
+        $kode = strtoupper((string) $user->satuan?->kode);
+        abort_unless(in_array($kode, ['DANPUS', 'WADAN'], true), 403);
+
+        $knownVersion = (string) $request->query('version', '');
+        $maxWaitSeconds = 20;
+        $checkIntervalMicroseconds = 700_000;
+        $deadline = microtime(true) + $maxWaitSeconds;
+
+        $computeVersion = fn () => md5(implode('|', [
+            (string) Laporan::max('updated_at'),
+            (string) PermintaanLaporan::max('updated_at'),
+            (string) PermintaanLaporanTask::max('updated_at'),
+        ]));
+
+        $currentVersion = $computeVersion();
+        while ($currentVersion === $knownVersion && microtime(true) < $deadline) {
+            usleep($checkIntervalMicroseconds);
+            $currentVersion = $computeVersion();
+        }
+
+        return response()->json([
+            'changed' => $currentVersion !== $knownVersion,
+            'version' => $currentVersion,
+        ], 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([

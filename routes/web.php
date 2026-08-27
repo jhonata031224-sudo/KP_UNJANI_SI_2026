@@ -68,6 +68,10 @@ Route::get('/laporan/log-aktivitas/realtime', [LaporanController::class, 'realti
     ->middleware(['auth', 'modul:laporan'])
     ->name('laporan.log-aktivitas.realtime');
 
+Route::get('/laporan/permintaan-laporan/long-poll', [LaporanController::class, 'tungguPerubahanPermintaan'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('laporan.permintaan-laporan.long-poll');
+
 Route::patch('/laporan/{laporan}/status', [LaporanController::class, 'updateStatus'])
     ->middleware(['auth', 'modul:laporan'])
     ->name('laporan.status');

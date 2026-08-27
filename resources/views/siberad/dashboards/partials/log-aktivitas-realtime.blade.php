@@ -8,6 +8,7 @@
 <script>
 (function () {
     const endpoint = '{{ route('laporan.log-aktivitas.realtime') }}';
+    const longPollEndpoint = '{{ route('laporan.permintaan-laporan.long-poll') }}';
     let busy = false;
     let timer = null;
     let sinceId = 0;
@@ -132,6 +133,32 @@
             .then(data=>{ if(data) syncExistingRequests(data.requests_full_html); })
             .catch(function(){}).finally(function(){requestsFullBusy=false;});
     }
+    // Long-polling: request ini DITAHAN server (bukan langsung dibalas)
+    // sampai ada perubahan beneran pada permintaan laporan (satuan tujuan
+    // kirim progres/checklist task, dst) atau timeout ~20 detik. Begitu
+    // balasannya nyampe, langsung tarik data asli (pollExistingRequests)
+    // kalau memang ada perubahan, lalu SEKETIKA nembak long-poll berikutnya
+    // -- jadi kerasa instan tanpa nebak-nebak interval kayak polling biasa.
+    let requestsVersion = '';
+    let longPollRunning = false;
+    function longPollTick(){
+        if(document.hidden){ longPollRunning = false; return; }
+        fetch(longPollEndpoint+'?version='+encodeURIComponent(requestsVersion)+'&_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}})
+            .then(r=>r.ok?r.json():null)
+            .then(data=>{
+                if(!data){ window.setTimeout(longPollTick,3000); return; }
+                if(typeof data.version==='string') requestsVersion = data.version;
+                if(data.changed) pollExistingRequests();
+                longPollTick();
+            })
+            .catch(function(){ window.setTimeout(longPollTick,3000); });
+    }
+    function startLongPoll(){
+        if(longPollRunning) return;
+        if(!document.querySelector('#permintaan-laporan .request-table tbody')) return;
+        longPollRunning = true;
+        longPollTick();
+    }
     function poll(){
         if(busy)return; busy=true;
         fetch(endpoint+'?since='+sinceId+'&requests_since='+requestsSinceId+'&realtime=1&_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest','Cache-Control':'no-cache'}})
@@ -160,8 +187,12 @@
     function schedule(){ clearTimeout(timer); timer=setTimeout(()=>{poll();schedule();},2000); }
     function start(){
         setTimeout(()=>{poll();schedule();},150);
-        setTimeout(()=>{pollExistingRequests();window.setInterval(pollExistingRequests,4000);},600);
-        document.addEventListener('visibilitychange',()=>{if(!document.hidden){poll();schedule();pollExistingRequests();}});
+        // pollExistingRequests() sendiri dipicu instan lewat long-poll
+        // (startLongPoll) -- interval 20 detik di sini cuma jaring pengaman
+        // kalau koneksi long-poll-nya diam-diam gagal (mis. dibekukan
+        // ekstensi browser tertentu), bukan jalur utama.
+        setTimeout(()=>{pollExistingRequests();startLongPoll();window.setInterval(()=>{if(!document.hidden)pollExistingRequests();},20000);},600);
+        document.addEventListener('visibilitychange',()=>{if(!document.hidden){poll();schedule();pollExistingRequests();startLongPoll();}});
         window.addEventListener('focus',()=>{poll();schedule();pollExistingRequests();});
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start,{once:true}); else start();
