@@ -157,11 +157,17 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
     if(typeof window.siberadEnhanceFileInputs==='function')window.siberadEnhanceFileInputs(modal);
 
     var form=modal.querySelector('.siberad-backup-upload-form');form.action=oldForm.action;
-    var tokenInput=oldForm.querySelector('input[name="_token"]')||document.querySelector('input[name="_token"]');
-    if(tokenInput){var csrf=document.createElement('input');csrf.type='hidden';csrf.name='_token';csrf.value=tokenInput.value;form.insertBefore(csrf,form.firstChild);}
+    var csrf=document.createElement('input');csrf.type='hidden';csrf.name='_token';
+    form.insertBefore(csrf,form.firstChild);
+    function refreshCsrfToken(){
+      var meta=document.querySelector('meta[name="csrf-token"]');
+      var tokenInput=oldForm.querySelector('input[name="_token"]')||document.querySelector('input[name="_token"]');
+      csrf.value=(meta?meta.content:null)||(tokenInput?tokenInput.value:'');
+    }
+    refreshCsrfToken();
 
     function close(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');}
-    function open(){modal.classList.add('open');modal.setAttribute('aria-hidden','false');}
+    function open(){refreshCsrfToken();modal.classList.add('open');modal.setAttribute('aria-hidden','false');}
     trigger.addEventListener('click',open);
     modal.querySelector('.siberad-backup-upload-close').addEventListener('click',close);
     modal.querySelector('.backup-upload-cancel').addEventListener('click',close);

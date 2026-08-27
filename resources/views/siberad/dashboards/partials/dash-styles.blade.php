@@ -626,6 +626,33 @@
     });
   }
   window.siberadShowToast = siberadShowToast;
+
+  // Deteksi sesi habis (419) pada semua request fetch() di dashboard, termasuk
+  // polling realtime dan modal (upload backup, tolak laporan, dll). Tanpa ini,
+  // request yang gagal karena token/sesi kadaluarsa akan diam-diam gagal tanpa
+  // keterangan ke user.
+  (function siberadInit419Guard(){
+    if (window.__siberadSessionExpiredHandled) return;
+    var originalFetch = window.fetch;
+    if (typeof originalFetch !== 'function') return;
+    var warned = false;
+    function handleExpired(){
+      if (warned) return;
+      warned = true;
+      window.__siberadSessionExpiredHandled = true;
+      siberadShowToast('error', 'Sesi kamu sudah habis. Halaman akan dimuat ulang untuk login kembali.');
+      setTimeout(function(){ window.location.reload(); }, 2500);
+    }
+    window.fetch = function(){
+      return originalFetch.apply(this, arguments).then(function(response){
+        if (response && response.status === 419) {
+          handleExpired();
+        }
+        return response;
+      });
+    };
+  })();
+
   @if(session('login_success'))
     document.addEventListener('DOMContentLoaded', function(){
       siberadShowToast('success', {!! json_encode('Selamat Datang '.session('login_success')) !!});

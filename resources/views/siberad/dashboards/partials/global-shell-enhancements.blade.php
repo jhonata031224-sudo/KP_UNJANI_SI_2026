@@ -145,6 +145,9 @@
       var form = document.getElementById('reportRejectForm');
       if (!form) return;
       form.action = sourceForm.getAttribute('action') || '';
+      var tokenInput = form.querySelector('input[name="_token"]');
+      var freshMeta = document.querySelector('meta[name="csrf-token"]');
+      if (tokenInput && freshMeta) tokenInput.value = freshMeta.content;
       var sourceStatus = sourceForm.querySelector('input[name="status"]');
       var targetStatus = form.querySelector('input[name="status"]');
       if (targetStatus) targetStatus.value = sourceStatus?.value || 'Ditolak';
