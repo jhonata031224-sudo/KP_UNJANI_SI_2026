@@ -1,3 +1,8 @@
 [build]
-builder = "RAILPACK"
-buildCommand = "npm install --include=dev && chmod +x node_modules/.bin/vite && npm run build"
+# Pakai NIXPACKS supaya nixpacks.toml (composer install, npm ci, vite build)
+# yang benar-benar dipakai. Sebelumnya builder di sini di-set ke RAILPACK
+# dengan buildCommand yang cuma npm install+build -- composer install TIDAK
+# pernah dijalankan, sehingga package baru (mis. minishlink/web-push untuk
+# web push notification) tidak pernah ter-install di production walau sudah
+# ada di composer.json/composer.lock.
+builder = "NIXPACKS"
