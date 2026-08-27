@@ -636,16 +636,46 @@
     var originalFetch = window.fetch;
     if (typeof originalFetch !== 'function') return;
     var warned = false;
+    function hasUnsavedFormInput(){
+      var fields = document.querySelectorAll('form input[type="text"], form input[type="url"], form input[type="email"], form textarea');
+      for (var i = 0; i < fields.length; i++) {
+        if (fields[i].value && fields[i].value.trim() !== '' && fields[i].defaultValue !== fields[i].value) return true;
+      }
+      return false;
+    }
     function handleExpired(){
       if (warned) return;
       warned = true;
       window.__siberadSessionExpiredHandled = true;
-      siberadShowToast('error', 'Sesi kamu sudah habis. Halaman akan dimuat ulang untuk login kembali.');
-      setTimeout(function(){ window.location.reload(); }, 2500);
+      var stack = document.getElementById('siberadToastStack') || (function(){
+        var s = document.createElement('div'); s.id = 'siberadToastStack'; s.className = 'toast-stack';
+        document.body.appendChild(s); return s;
+      })();
+      var banner = document.createElement('div');
+      banner.className = 'toast error';
+      banner.style.cssText = 'position:relative;pointer-events:auto;';
+      banner.innerHTML = '<span class="toast-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="8" x2="12" y2="13"></line><circle cx="12" cy="16.5" r=".6" fill="currentColor" stroke="none"></circle><circle cx="12" cy="12" r="9.3"></circle></svg></span>'
+        + '<span class="toast-body"><span class="toast-label">Sesi Habis</span><span class="toast-text">'
+        + (hasUnsavedFormInput() ? 'Sesi kamu sudah berakhir. Salin dulu perubahan yang belum disimpan, lalu klik untuk muat ulang.' : 'Sesi kamu sudah berakhir. Klik untuk masuk kembali.')
+        + '</span></span>';
+      banner.style.cursor = 'pointer';
+      banner.addEventListener('click', function(){ window.location.reload(); });
+      stack.prepend(banner);
+      siberadRelayoutToasts(stack);
+      // Tidak auto-reload — biar user sempat menyalin isian form yang belum tersimpan.
     }
     window.fetch = function(){
-      return originalFetch.apply(this, arguments).then(function(response){
-        if (response && response.status === 419) {
+      var args = arguments;
+      var method = 'GET';
+      try {
+        if (args[1] && args[1].method) method = String(args[1].method).toUpperCase();
+        else if (args[0] && typeof args[0] === 'object' && args[0].method) method = String(args[0].method).toUpperCase();
+      } catch (e) {}
+      return originalFetch.apply(this, args).then(function(response){
+        // Cuma tanggapi 419 dari aksi simpan/ubah/hapus (POST/PUT/PATCH/DELETE).
+        // Polling background (GET) yang kena 419 di-skip diam-diam supaya tidak
+        // mengganggu/menghapus isian form yang sedang diketik user.
+        if (response && response.status === 419 && method !== 'GET') {
           handleExpired();
         }
         return response;

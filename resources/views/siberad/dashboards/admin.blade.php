@@ -2739,6 +2739,34 @@
             var form = document.getElementById('landingForm');
             if(!form) return;
 
+            // ---------- draft autosave (jaga-jaga sesi habis di tengah edit) ----------
+            var LP_DRAFT_KEY = 'siberadLandingDraft';
+            function saveDraft(){
+              try {
+                var data = {};
+                form.querySelectorAll('input[type="text"], input[type="url"], input[type="email"], textarea').forEach(function(el){
+                  if (el.name) data[el.name] = el.value;
+                });
+                sessionStorage.setItem(LP_DRAFT_KEY, JSON.stringify(data));
+              } catch (e) {}
+            }
+            function restoreDraftIfAny(){
+              try {
+                var raw = sessionStorage.getItem(LP_DRAFT_KEY);
+                if (!raw) return;
+                var data = JSON.parse(raw);
+                var restored = false;
+                Object.keys(data).forEach(function(name){
+                  var el = form.querySelector('[name="'+name+'"]');
+                  if (el && data[name] && el.value !== data[name]) { el.value = data[name]; restored = true; }
+                });
+                if (restored) siberadShowToast('success', 'Draft konten landing yang belum tersimpan berhasil dipulihkan.');
+              } catch (e) {}
+            }
+            restoreDraftIfAny();
+            form.addEventListener('input', function(){ saveDraft(); });
+            form.addEventListener('submit', function(){ try { sessionStorage.removeItem(LP_DRAFT_KEY); } catch (e) {} });
+
             // ---------- tab switching ----------
             var tabs = form.querySelectorAll('[data-lp-tab]');
             var panels = form.querySelectorAll('[data-lp-tab-panel]');
