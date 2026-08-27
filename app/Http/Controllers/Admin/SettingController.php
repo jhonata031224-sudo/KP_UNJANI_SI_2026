@@ -81,11 +81,24 @@ class SettingController extends Controller
         RateLimiter::clear($key);
         $request->session()->put('pengaturan_umum_terverifikasi', true);
         $request->session()->put('pengaturan_umum_terverifikasi_at', now()->timestamp);
-        $request->session()->regenerate();
+
+        // CATATAN: sengaja TIDAK memanggil $request->session()->regenerate() di sini.
+        // regenerate() otomatis me-regenerate token CSRF juga (lihat Illuminate\Session\Store::regenerate()),
+        // sehingga token _token yang sudah ter-render di form #landingForm (dimuat sebelum modal
+        // verifikasi ini dibuka) langsung basi walau form belum pernah di-refresh. Efeknya: submit
+        // form landing SELALU gagal dengan 419 setelah verifikasi password+captcha berhasil.
+        // Rate limiting + captcha di atas sudah cukup mencegah brute force, jadi regenerate ID sesi
+        // di sini tidak diperlukan untuk keamanan.
 
         ActivityLog::catat('pengaturan.landing.access_granted', 'Konfirmasi akses Pengaturan Umum berhasil.');
 
-        return response()->json(['ok' => true, 'access' => true]);
+        return response()->json([
+            'ok' => true,
+            'access' => true,
+            // Dikirim balik agar sisi klien bisa sinkronkan token CSRF di halaman
+            // (defense-in-depth kalau suatu saat sesi diregenerate oleh middleware lain).
+            'csrf_token' => $request->session()->token(),
+        ]);
     }
 
     public function updateLanding(Request $request): RedirectResponse
