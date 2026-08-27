@@ -12,6 +12,15 @@ if [ "$DB_CONNECTION" = "sqlite" ]; then
 fi
 
 php artisan config:clear
+
+# Regenerate cache discovery package (bootstrap/cache/packages.php &
+# services.php) di setiap container start. File ini sengaja TIDAK
+# di-commit ke git (lihat .gitignore) supaya production selalu pakai
+# daftar provider yang sesuai dependency production (--no-dev) yang
+# benar-benar ter-install, bukan snapshot lama yang bisa saja masih
+# menyertakan provider dev-only seperti Laravel Pail.
+php artisan package:discover --ansi
+
 php artisan migrate --force
 php artisan storage:link || true
 
