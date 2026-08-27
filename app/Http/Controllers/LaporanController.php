@@ -57,6 +57,14 @@ class LaporanController extends Controller
         // eager-load tasks.laporans + render partial per item bakal
         // kebayar sia-sia di poller itu tiap 1.2 detik.
         $includeNewRequests = $request->query('requests_new', '1') !== '0';
+        // Beda tujuan sama $includeNewRequests di atas -- itu cuma nangkep
+        // ITEM YANG BELUM PERNAH TAMPIL (cursor-based). Baris yang SUDAH ada
+        // di tabel Permintaan Laporan Pimpinan (mis. status berubah karena
+        // satuan tujuan kirim progres/checklist task) gak pernah ke-refresh
+        // tanpa reload manual -- gate terpisah ini nyalain render ULANG
+        // SEMUA baris aktif (bukan cuma yang baru) biar sisi client bisa
+        // diff & update baris lama yang isinya berubah.
+        $includeRequestsFull = $request->query('requests_full', '0') !== '0';
         $since = max(0, (int) $request->query('since', 0));
         // Cursor TERPISAH dari $since di atas -- PermintaanLaporan::id dan
         // Laporan::id itu 2 sequence auto-increment yang beda, jadi harus
@@ -177,9 +185,10 @@ class LaporanController extends Controller
         $requestStates = [];
         $requestsLatestId = 0;
         $requestsNewHtml = '';
+        $requestsFullHtml = '';
         if ($includeRequests) {
             $withRelations = ['laporan', 'laporans'];
-            if ($includeNewRequests) {
+            if ($includeNewRequests || $includeRequestsFull) {
                 $withRelations[] = 'tujuanSatuan';
                 $withRelations[] = 'tasks.laporans';
             }
@@ -221,6 +230,18 @@ class LaporanController extends Controller
                     fn (PermintaanLaporan $item) => view('siberad.dashboards.partials.permintaan-laporan-pimpinan-row', ['item' => $item, 'satuan' => $user->satuan])->render()
                 )->implode('');
             }
+
+            if ($includeRequestsFull) {
+                // Snapshot PENUH item aktif (bukan cursor) -- sisi client
+                // nge-diff outerHTML per pasangan baris terhadap yang sudah
+                // ada di DOM, cuma nge-replace yang beneran berubah. Sengaja
+                // dipoll di interval yang lebih santai dari $includeNewRequests
+                // (lihat log-aktivitas-realtime.blade.php) karena nge-render
+                // partial buat SEMUA item tiap kali, bukan cuma yang baru.
+                $requestsFullHtml = $requests->whereNull('archived_at')->map(
+                    fn (PermintaanLaporan $item) => view('siberad.dashboards.partials.permintaan-laporan-pimpinan-row', ['item' => $item, 'satuan' => $user->satuan])->render()
+                )->implode('');
+            }
         }
 
         return response()->json([
@@ -232,6 +253,7 @@ class LaporanController extends Controller
             'request_states' => $requestStates,
             'requests_latest_id' => $requestsLatestId,
             'requests_new_html' => $requestsNewHtml,
+            'requests_full_html' => $requestsFullHtml,
             'total_laporan' => $semuaStatus->count(),
             'total_disetujui' => $semuaStatus->filter(fn ($l) => str_contains(strtolower($l->status), 'setuj') || str_contains(strtolower($l->status), 'diterima'))->count(),
             'total_ditolak' => $semuaStatus->filter(fn ($l) => str_contains(strtolower($l->status), 'tolak'))->count(),

@@ -77,6 +77,61 @@
         });
         return inserted;
     }
+    // Baris yang SUDAH tampil di tabel Permintaan Laporan (bukan yang baru
+    // masuk -- itu tugas insertNewRequests() di atas) perlu ikut ke-refresh
+    // pas satuan tujuan kirim update progres/checklist task, soalnya status
+    // (pill "Sedang diproses" -> "Menunggu" dst) & dropdown checklist task
+    // dihitung penuh di server (banyak cabang kondisi, sengaja TIDAK
+    // diduplikasi ke JS). Dipoll terpisah & lebih santai dari poll() 2000ms
+    // di atas karena endpoint ini me-render ULANG partial buat SEMUA item
+    // aktif (bukan cuma yang baru lewat cursor), jadi lebih berat kalau
+    // disatuin ke siklus 2000ms.
+    let requestsFullBusy = false;
+    function syncExistingRequests(html){
+        if(typeof html !== 'string') return;
+        const tbody = document.querySelector('#permintaan-laporan .request-table tbody');
+        if(!tbody) return;
+        const temp = document.createElement('tbody');
+        temp.innerHTML = html;
+        const freshRows = Array.prototype.slice.call(temp.children);
+        const freshById = new Map();
+        for(let i = 0; i < freshRows.length; i += 2){
+            const main = freshRows[i], task = freshRows[i + 1];
+            if(!main || !task) continue;
+            const id = main.getAttribute('data-permintaan-id');
+            if(id) freshById.set(id, [main, task]);
+        }
+        Array.prototype.slice.call(tbody.querySelectorAll(':scope > tr.request-row[data-permintaan-id]')).forEach(function(currentMain){
+            const currentTask = currentMain.nextElementSibling;
+            if(!currentTask || !currentTask.classList.contains('request-task-row')) return;
+            const pair = freshById.get(currentMain.getAttribute('data-permintaan-id'));
+            // Item gak ketemu di snapshot (mis. sudah diarsipkan) -- dibiarkan,
+            // penghapusannya jadi tanggung jawab mekanisme arsip sendiri,
+            // biar gak dobel-hapus dari 2 poller berbeda.
+            if(!pair) return;
+            const [freshMain, freshTask] = pair;
+            if(currentMain.outerHTML === freshMain.outerHTML && currentTask.outerHTML === freshTask.outerHTML) return;
+            // Pertahankan status buka/tutup dropdown checklist task -- tanpa
+            // ini, dropdown yang lagi dibuka user bakal "nutup sendiri" tiap
+            // kali sinkronisasi ini jalan.
+            if(!currentTask.hasAttribute('hidden')){
+                freshTask.removeAttribute('hidden');
+                freshMain.classList.add('open');
+            }
+            freshMain.classList.add('siberad-row-updated');
+            currentMain.replaceWith(freshMain);
+            currentTask.replaceWith(freshTask);
+        });
+    }
+    function pollExistingRequests(){
+        if(requestsFullBusy) return;
+        if(!document.querySelector('#permintaan-laporan .request-table tbody')) return;
+        requestsFullBusy = true;
+        fetch(endpoint+'?reports=0&requests=1&requests_new=0&requests_full=1&_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest','Cache-Control':'no-cache'}})
+            .then(r=>r.ok?r.json():null)
+            .then(data=>{ if(data) syncExistingRequests(data.requests_full_html); })
+            .catch(function(){}).finally(function(){requestsFullBusy=false;});
+    }
     function poll(){
         if(busy)return; busy=true;
         fetch(endpoint+'?since='+sinceId+'&requests_since='+requestsSinceId+'&realtime=1&_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest','Cache-Control':'no-cache'}})
@@ -103,7 +158,12 @@
         .catch(()=>{}).finally(()=>{busy=false;});
     }
     function schedule(){ clearTimeout(timer); timer=setTimeout(()=>{poll();schedule();},2000); }
-    function start(){ setTimeout(()=>{poll();schedule();},150); document.addEventListener('visibilitychange',()=>{if(!document.hidden){poll();schedule();}}); window.addEventListener('focus',()=>{poll();schedule();}); }
+    function start(){
+        setTimeout(()=>{poll();schedule();},150);
+        setTimeout(()=>{pollExistingRequests();window.setInterval(pollExistingRequests,4000);},600);
+        document.addEventListener('visibilitychange',()=>{if(!document.hidden){poll();schedule();pollExistingRequests();}});
+        window.addEventListener('focus',()=>{poll();schedule();pollExistingRequests();});
+    }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start,{once:true}); else start();
 })();
 </script>
