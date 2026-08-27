@@ -913,6 +913,14 @@
       @include('siberad.dashboards.partials.styled-select')
       @if(session('status'))<script>document.addEventListener('DOMContentLoaded',function(){window.siberadShowToast?window.siberadShowToast('success',{!! json_encode(session('status')) !!}):null});</script>@endif
       @if(session('error'))<script>document.addEventListener('DOMContentLoaded',function(){window.siberadShowToast?window.siberadShowToast('error',{!! json_encode(session('error')) !!}):null});</script>@endif
+      {{-- Validasi form gagal ($errors) ditoast di sini (bukan cuma di 1 tab
+           tertentu) karena SEMUA tab admin ada di 1 halaman yang sama, cuma
+           ditampilkan/disembunyikan lewat JS (display:none) -- kalau pesan
+           errornya ditaruh di dalam satu tab-panel spesifik, pesan itu tidak
+           akan pernah kelihatan kalau user submit form dari tab LAIN
+           (JS mengembalikan user ke tab terakhir yang dibuka, bukan otomatis
+           ke tab yang errornya ada). --}}
+      @if($errors->any())<script>document.addEventListener('DOMContentLoaded',function(){window.siberadShowToast?window.siberadShowToast('error',{!! json_encode($errors->first()) !!}):null});</script>@endif
 
       {{-- ===== DASHBOARD ===== --}}
       <section class="tab-panel active" data-tab-panel="dashboard">
@@ -1083,10 +1091,6 @@
 
       {{-- ===== KELOLA PENGGUNA ===== --}}
       <section class="tab-panel" data-tab-panel="pengguna">
-        @if ($errors->any())
-          <div class="notice" style="border-color:var(--red);">{{ $errors->first() }}</div>
-        @endif
-
         <div class="panel">
           <div class="panel-head">
             <div><h2>Daftar Pengguna</h2><p>Seluruh akun yang terdaftar, satu akun per satuan. Klik "Ubah" untuk mengedit satuan/jabatan/password.</p></div>

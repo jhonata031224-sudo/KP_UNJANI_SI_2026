@@ -119,8 +119,10 @@
           }
           doSubscribe(registration).then(function () {
             setButtonState(button, true);
+            if (window.siberadShowToast) window.siberadShowToast('success', 'Notifikasi push berhasil diaktifkan.');
           }).catch(function () {
             setButtonState(button, false);
+            if (window.siberadShowToast) window.siberadShowToast('error', 'Gagal mengaktifkan notifikasi push. Coba lagi nanti.');
           });
         });
       });

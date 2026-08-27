@@ -131,15 +131,24 @@
         stat('Laporan Masuk',stats.masuk);stat('Disetujui',stats.disetujui);stat('Ditolak',stats.ditolak);stat('Terlambat',stats.terlambat);stat('Dibatalkan',stats.dibatalkan);syncChart(stats);
     }
 
+    // Item BARU (belum pernah tampil) sengaja BUKAN tugas fungsi ini --
+    // partials/permintaan-laporan-realtime.blade.php yang polling & nge-insert
+    // item baru itu (sekalian nge-toast "Permintaan laporan baru masuk.").
+    // Kalau di sini juga ikut nge-insert item baru, dua poller yang jalan
+    // independen (2500ms vs 3000ms) jadi rebutan siapa duluan yang nganggap
+    // suatu ID "baru" -- akibatnya toast itu jadi tidak bisa diandalkan
+    // (kadang kepicu, kadang enggak, tergantung timing). Fungsi ini HANYA
+    // menyegarkan (update konten) & menghapus (kalau sudah tidak lagi masuk
+    // hasil query aktif, misal permintaannya selesai/dibatalkan) item yang
+    // SUDAH ada di DOM.
     function syncRequestList(){
         fetch(requestEndpoint+'?since=0&_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}})
             .then(r=>r.ok?r.json():null).then(data=>{
                 if(!data)return;
                 const list=document.querySelector('#permintaan-laporan .deadline-sender-list');if(!list||typeof data.items_html!=='string')return;
                 const incoming=document.createElement('div');incoming.innerHTML=data.items_html;
-                const fresh=[...incoming.children];const freshById=new Map(fresh.map(el=>[String(el.dataset.realtimePermintaanId||''),el]));const existing=[...list.querySelectorAll('[data-realtime-permintaan-id]')];const seen=new Set();
-                existing.forEach(function(item){const id=String(item.dataset.realtimePermintaanId||'');const replacement=freshById.get(id);if(replacement){item.replaceWith(replacement);seen.add(id);}else if(id)item.remove();});
-                fresh.slice().reverse().forEach(function(item){const id=String(item.dataset.realtimePermintaanId||'');if(!id||seen.has(id)||list.querySelector('[data-realtime-permintaan-id="'+id+'"]'))return;list.insertBefore(item,list.firstChild);});
+                const fresh=[...incoming.children];const freshById=new Map(fresh.map(el=>[String(el.dataset.realtimePermintaanId||''),el]));const existing=[...list.querySelectorAll('[data-realtime-permintaan-id]')];
+                existing.forEach(function(item){const id=String(item.dataset.realtimePermintaanId||'');const replacement=freshById.get(id);if(replacement){item.replaceWith(replacement);}else if(id)item.remove();});
                 window.siberadBindPermintaanDetailButtons&&window.siberadBindPermintaanDetailButtons();
                 window.siberadRebindPermintaanActions&&window.siberadRebindPermintaanActions();
             }).catch(function(){});
