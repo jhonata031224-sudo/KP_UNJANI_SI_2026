@@ -31,7 +31,7 @@ class WebPushChannel
         }
 
         $vapid = config('webpush.vapid');
-        if (blank($vapid['publicKey']) || blank($vapid['private_key'])) {
+        if (blank($vapid['publicKey']) || blank($vapid['privateKey'])) {
             return;
         }
 
