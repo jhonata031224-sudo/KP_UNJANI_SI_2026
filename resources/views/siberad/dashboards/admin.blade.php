@@ -1835,7 +1835,7 @@
                     default => 'Satlak',
                   } : null;
                 @endphp
-                <tr data-filter-value="{{ $kategoriLabelLog }}">
+                <tr data-log-id="{{ $l->id }}" data-filter-value="{{ $kategoriLabelLog }}">
                   <td style="white-space:nowrap;">{{ $l->created_at?->translatedFormat('d M Y H:i') }}</td>
                   <td>{{ $l->nama_pengguna ?? '-' }}</td>
                   <td><span class="badge">{{ $l->aksi }}</span></td>
@@ -1883,7 +1883,7 @@
                   if (wrap) wrap.style.opacity = '';
                   if (!data || !Array.isArray(data.log)) throw new Error('Respons tidak sesuai format yang diharapkan.');
                   tbody.innerHTML = data.log.length ? data.log.map(function (l) {
-                    return '<tr data-filter-value="' + escapeHtml(l.kategori || '') + '">'
+                    return '<tr data-log-id="' + escapeHtml(String(l.id)) + '" data-filter-value="' + escapeHtml(l.kategori || '') + '">'
                       + '<td style="white-space:nowrap;">' + escapeHtml(l.waktu) + '</td>'
                       + '<td>' + escapeHtml(l.pengguna) + '</td>'
                       + '<td><span class="badge">' + escapeHtml(l.aksi) + '</span></td>'
@@ -2908,24 +2908,7 @@
               <colgroup><col style="width:26%"><col style="width:34%"><col style="width:20%"><col style="width:20%"></colgroup>
               <thead><tr><th>Pengaju</th><th>Catatan</th><th>Tanggal</th><th>Aksi</th></tr></thead>
               <tbody>
-                @forelse($permintaanResetPassword as $r)
-                <tr data-created="{{ $r->created_at->timestamp }}" data-search-value="{{ strtolower(($r->user->name ?? '').' '.($r->user->satuan->nama ?? '').' '.($r->user->satuan->kode ?? '')) }}">
-                  <td><div class="subject">{{ $r->user->name ?? '-' }}</div></td>
-                  <td style="color:var(--text-muted);">{{ trim((string) $r->catatan) !== '' ? $r->catatan : '-' }}</td>
-                  <td><div class="request-deadline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>{{ $r->created_at->translatedFormat('d M Y H:i') }}</div></td>
-                  <td>
-                    @if($r->status === \App\Models\PermintaanResetPassword::STATUS_MENUNGGU)
-                    <div class="btn-row">
-                      <button class="table-action-btn edit" type="button" onclick="bukaSetujuiResetPassword(this)" data-id="{{ $r->id }}" data-nama="{{ e($r->user->name ?? '-') }}">Setujui</button>
-                      <button class="table-action-btn danger" type="button" onclick="bukaTolakResetPassword(this)" data-id="{{ $r->id }}" data-nama="{{ e($r->user->name ?? '-') }}">Tolak</button>
-                    </div>
-                    @else
-                      <span style="font-size:11.5px;font-weight:700;color:{{ $r->status === \App\Models\PermintaanResetPassword::STATUS_DISETUJUI ? 'var(--success-bright)' : 'var(--red)' }};">{{ $r->status }}</span>
-                      <div style="font-size:10.5px;color:var(--text-dim);margin-top:2px;">oleh {{ $r->diprosesOleh->name ?? '-' }}</div>
-                    @endif
-                  </td>
-                </tr>
-                @empty
+                @forelse($permintaanResetPassword as $r)@include('siberad.dashboards.partials.permintaan-reset-password-row', ['r' => $r])@empty
                 <tr><td colspan="4"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada permintaan ganti password</div></div></td></tr>
                 @endforelse
               </tbody>
@@ -3017,28 +3000,7 @@
             <table class="dtbl">
               <thead><tr><th>Pengguna</th><th>IP Address</th><th>Perangkat / Browser</th><th>Terakhir Aktif</th><th>Aksi</th></tr></thead>
               <tbody>
-                @forelse($sesiAktif as $s)
-                <tr>
-                  <td>
-                    {{ $s->user_name ?? 'Tamu (belum login)' }}
-                    @if($s->id === $sesiSayaId)
-                      <span class="badge">Sesi Anda</span>
-                    @endif
-                  </td>
-                  <td>{{ $s->ip_address ?? '-' }}</td>
-                  <td style="color:var(--text-muted);max-width:260px;">{{ \Illuminate\Support\Str::limit($s->user_agent, 60) }}</td>
-                  <td>{{ \Carbon\Carbon::createFromTimestamp($s->last_activity)->diffForHumans() }}</td>
-                  <td>
-                    @if($s->id !== $sesiSayaId)
-                    <button class="btn btn-ghost-red btn-sm" type="button" onclick="bukaPaksaLogout(this)"
-                      data-action="{{ route('admin.sessions.destroy', $s->id) }}"
-                      data-nama="{{ $s->user_name ?? 'Tamu (belum login)' }}">Paksa Logout</button>
-                    @else
-                      <span style="font-size:11.5px;color:var(--text-dim);">—</span>
-                    @endif
-                  </td>
-                </tr>
-                @empty
+                @forelse($sesiAktif as $s)@include('siberad.dashboards.partials.sesi-aktif-row', ['s' => $s])@empty
                 <tr class="table-empty-row"><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Tidak ada sesi aktif</div></div></td></tr>
                 @endforelse
               </tbody>
@@ -3807,6 +3769,29 @@
 
     window.terapkanTabelFilter = terapkanTabelFilter;
 
+    // Urutkan baris tabel (dipakai tombol "Terbaru/Terlama" di Permintaan
+    // Ganti Password) berdasarkan data-created (unix timestamp) di tiap
+    // baris. Diekspos ke window supaya baris baru yang disisipkan realtime
+    // (lihat partials/admin-permintaan-reset-password-realtime.blade.php)
+    // ikut mengikuti urutan sort yang lagi aktif, bukan selalu nempel di atas.
+    function terapkanTabelSort(tableId, mode) {
+      var table = document.getElementById(tableId);
+      if (!table) return;
+      var tbody = table.querySelector('tbody');
+      if (!tbody) return;
+      var rows = Array.prototype.filter.call(tbody.children, function (r) {
+        return r.hasAttribute('data-created');
+      });
+      rows.sort(function (a, b) {
+        var ta = parseInt(a.getAttribute('data-created'), 10) || 0;
+        var tb = parseInt(b.getAttribute('data-created'), 10) || 0;
+        return mode === 'terlama' ? ta - tb : tb - ta;
+      });
+      rows.forEach(function (r) { tbody.appendChild(r); });
+      terapkanTabelFilter(tableId);
+    }
+    window.terapkanTabelSort = terapkanTabelSort;
+
     document.querySelectorAll('[data-table-search]').forEach(function (input) {
       input.addEventListener('input', function () {
         terapkanTabelFilter(input.getAttribute('data-table-search'));
@@ -3817,6 +3802,11 @@
         terapkanTabelFilter(select.getAttribute('data-table-filter'));
       });
     });
+    document.querySelectorAll('[data-table-sort]').forEach(function (select) {
+      select.addEventListener('change', function () {
+        terapkanTabelSort(select.getAttribute('data-table-sort'), select.value);
+      });
+    });
     // Isi teks jumlah data begitu halaman dimuat, bukan cuma pas user mulai cari/filter.
     document.querySelectorAll('[data-table-count]').forEach(function (el) {
       terapkanTabelFilter(el.getAttribute('data-table-count'));
@@ -3824,6 +3814,9 @@
   })();
   </script>
 
+@include('siberad.dashboards.partials.admin-log-aktivitas-realtime')
+@include('siberad.dashboards.partials.admin-permintaan-reset-password-realtime')
+@include('siberad.dashboards.partials.admin-sesi-aktif-realtime')
 @include('siberad.dashboards.partials.dash-script')
 </body>
 </html>

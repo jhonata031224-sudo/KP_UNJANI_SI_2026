@@ -7,6 +7,7 @@ use App\Models\LaporanKendala;
 use App\Models\Satuan;
 use App\Models\User;
 use App\Notifications\LaporanKendalaBaruDiterima;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -24,6 +25,62 @@ use Illuminate\Support\Facades\Storage;
  */
 class LaporanKendalaController extends Controller
 {
+    /**
+     * Realtime kendala Kasansi -> Danpus, dipoll dari JS (bukan WebSocket).
+     * Dua sisi beda kebutuhan: Danpus/Wadan cuma butuh kendala BARU sejak
+     * `since` (kendala lama statusnya tidak berubah dari sisi mereka selain
+     * lewat aksi mereka sendiri, yang sudah langsung update DOM tanpa poll).
+     * Kasansi (pengirim) butuh SNAPSHOT PENUH kendala miliknya sendiri tiap
+     * poll, karena yang berubah justru STATUS kendala yang sudah lama
+     * terkirim (ditindaklanjuti/ditolak/selesai oleh Danpus/Wadan) -- pola
+     * sama seperti syncRequestList() di laporan-role-realtime-sync.blade.php.
+     */
+    public function realtime(Request $request): JsonResponse
+    {
+        $user = $request->user()->load('satuan');
+        $satuan = $user->satuan;
+        $kode = strtoupper((string) $satuan?->kode);
+        $isPimpinan = in_array($kode, ['DANPUS', 'WADAN'], true);
+        $isKasansi = in_array($kode, Satuan::KODE_KOTAMA, true);
+        abort_unless($isPimpinan || $isKasansi, 403);
+
+        if ($isPimpinan) {
+            $danpusId = Satuan::where('kode', 'DANPUS')->value('id');
+            $since = max(0, (int) $request->query('since', 0));
+
+            $items = $danpusId
+                ? LaporanKendala::with('satuan')
+                    ->where('tujuan_satuan_id', $danpusId)
+                    ->whereNull('confirmed_at')
+                    ->where('id', '>', $since)
+                    ->orderBy('id')
+                    ->get()
+                : collect();
+
+            $latestId = $danpusId
+                ? (int) (LaporanKendala::where('tujuan_satuan_id', $danpusId)->whereNull('confirmed_at')->max('id') ?? 0)
+                : 0;
+
+            return response()->json([
+                'latest_id' => $latestId,
+                'items_html' => $items->map(fn (LaporanKendala $k) => view('siberad.dashboards.partials.kendala-kasansi-row', ['k' => $k, 'satuan' => $satuan])->render())->implode(''),
+            ], 200, [
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            ]);
+        }
+
+        $items = LaporanKendala::with('tujuanSatuan')
+            ->where('satuan_id', $satuan->id)
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'items_html' => $items->map(fn (LaporanKendala $k) => view('siberad.dashboards.partials.kendala-terkirim-row', ['k' => $k, 'satuan' => $satuan])->render())->implode(''),
+        ], 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         // Lampiran WAJIB untuk laporan kendala Kasansi -> Danpus (beda dari

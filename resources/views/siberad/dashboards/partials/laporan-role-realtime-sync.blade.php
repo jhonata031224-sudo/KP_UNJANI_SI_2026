@@ -1,9 +1,26 @@
+<style>
+/* Baris tabel yang disisipkan/diperbarui live lewat syncBody() -- fade+slide
+   halus buat baris BARU, kedip warna gold sebentar buat baris yang cuma
+   BERUBAH (mis. status laporan), senada sama animasi .tab-panel.active
+   (fadeIn .25s) yang sudah dipakai di seluruh dashboard. */
+@keyframes siberadRowIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes siberadRowUpdate{0%{background:var(--gold-dim)}100%{background:transparent}}
+.siberad-row-in{animation:siberadRowIn .35s ease}
+.siberad-row-updated{animation:siberadRowUpdate 1.2s ease}
+</style>
 <script>
 (function(){
     const endpoint='{{ route('laporan.log-aktivitas.realtime') }}';
     const requestEndpoint='{{ route('permintaan-laporan.realtime') }}';
     let busy=false;
     let timer=null;
+    // Render awal tabel Riwayat/Masuk/Monitoring pakai markup inline di
+    // laporan-role.blade.php (bukan partial yang sama persis dengan yang
+    // dirender endpoint realtime) -- poll PERTAMA dipakai buat "menyamakan"
+    // baseline tanpa animasi, biar beda format HTML kecil (bukan perubahan
+    // data beneran) tidak keliru kelihatan kayak semua baris "berubah" &
+    // ikut kedip pas dashboard baru dibuka.
+    let animateSync=false;
 
     window.siberadOpenEditProgres=function(btn){
         const form=document.getElementById('kirimLaporanForm');
@@ -104,11 +121,13 @@
             if(current){
                 used.add(current);
                 if(current.outerHTML!==fresh.outerHTML){
+                    if(animateSync)fresh.classList.add('siberad-row-updated');
                     current.replaceWith(fresh);
                     current=fresh;
                 }
                 ordered.push(current);
             }else{
+                if(animateSync)fresh.classList.add('siberad-row-in');
                 ordered.push(fresh);
             }
         });
@@ -126,9 +145,11 @@
     function syncReports(data){
         if(data.sent_html!==undefined)syncBody('#riwayat .dtbl tbody',data.sent_html);
         if(data.incoming_html!==undefined)syncBody('#masuk .dtbl tbody',data.incoming_html);
+        if(data.monitoring_html)syncBody('#monitoring .dtbl tbody',data.monitoring_html);
         bindInitialEditButtons();
         const stats=data.role_stats||{};
         stat('Laporan Masuk',stats.masuk);stat('Disetujui',stats.disetujui);stat('Ditolak',stats.ditolak);stat('Terlambat',stats.terlambat);stat('Dibatalkan',stats.dibatalkan);syncChart(stats);
+        animateSync=true;
     }
 
     // Item BARU (belum pernah tampil) sengaja BUKAN tugas fungsi ini --

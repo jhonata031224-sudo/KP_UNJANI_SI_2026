@@ -115,6 +115,19 @@ class ReportController extends Controller
                 'aksi' => $l->aksi,
                 'deskripsi' => $l->deskripsi,
                 'ip' => $l->ip_address,
+                // Dipakai tab "Log Aktivitas" dashboard admin (bukan
+                // halaman terpisah ini) buat filter kategori satuan --
+                // mapping-nya SAMA persis dengan yang di
+                // siberad.dashboards.admin (data-filter-value tiap baris).
+                'kategori' => $l->user && $l->user->satuan ? match ($l->user->satuan->kategori) {
+                    \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
+                    \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
+                    \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+                    \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
+                    \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+                    \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
+                    default => 'Satlak',
+                } : null,
             ]),
             'max_id' => $log->max('id') ?? $afterId,
         ]);
@@ -159,6 +172,7 @@ class ReportController extends Controller
 
         return response()->json([
             'log' => $log->map(fn ($l) => [
+                'id' => $l->id,
                 'waktu' => $l->created_at?->translatedFormat('d M Y H:i'),
                 'pengguna' => $l->nama_pengguna ?? '-',
                 'aksi' => $l->aksi,

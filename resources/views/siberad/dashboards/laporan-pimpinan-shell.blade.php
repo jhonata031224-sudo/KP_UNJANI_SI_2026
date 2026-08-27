@@ -16,3 +16,4 @@
 @include('siberad.dashboards.partials.danpus-permintaan-arsip-mode')
 @include('siberad.dashboards.partials.danpus-history-detail-fix')
 @include('siberad.dashboards.partials.danpus-history-status-filter-match')
+@include('siberad.dashboards.partials.danpus-kendala-kasansi-realtime')

@@ -104,6 +104,9 @@ Route::patch('/permintaan-laporan/{permintaanLaporan}/deadline', [PermintaanLapo
 Route::post('/laporan-kendala', [LaporanKendalaController::class, 'store'])
     ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-kendala.store');
+Route::get('/laporan-kendala/realtime', [LaporanKendalaController::class, 'realtime'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('laporan-kendala.realtime');
 Route::patch('/laporan-kendala/{laporanKendala}/status', [LaporanKendalaController::class, 'updateStatus'])
     ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-kendala.status');
@@ -241,7 +244,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->name('laporan.cetak');
     Route::get('/laporan/export/pengguna', [ReportController::class, 'exportUsersExcel'])->name('laporan.export-pengguna');
     Route::get('/laporan/export/aktivitas', [ReportController::class, 'exportActivityExcel'])->name('laporan.export-aktivitas');
+    Route::get('/sessions/realtime', [SessionController::class, 'realtime'])->name('sessions.realtime');
     Route::delete('/sessions/{id}', [SessionController::class, 'destroy'])->name('sessions.destroy');
+    Route::get('/permintaan-reset-password/realtime', [AdminPermintaanResetPasswordController::class, 'realtime'])->name('permintaan-reset-password.realtime');
     Route::patch('/permintaan-reset-password/{permintaanResetPassword}/setujui', [AdminPermintaanResetPasswordController::class, 'setujui'])->name('permintaan-reset-password.setujui');
     Route::patch('/permintaan-reset-password/{permintaanResetPassword}/tolak', [AdminPermintaanResetPasswordController::class, 'tolak'])->name('permintaan-reset-password.tolak');
 });

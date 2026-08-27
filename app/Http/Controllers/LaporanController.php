@@ -74,6 +74,24 @@ class LaporanController extends Controller
                 'dibatalkan' => $semuaPermintaan->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count(),
             ];
 
+            // Duktek doang yang punya tab "Monitoring 3 Satlak" (pantau
+            // laporan Penangkalan/Siber Sosial/Penindakan) -- dikirim
+            // sebagai snapshot penuh (bukan cursor "since") sama seperti
+            // sent_html/incoming_html di atas, biar dipakai bareng fungsi
+            // syncBody() yang sama persis di
+            // laporan-role-realtime-sync.blade.php (full diff insert/update).
+            $monitoringHtml = null;
+            if ($kode === 'SATLAKDUKTEK' && $includeReports) {
+                $satlakIds = Satuan::whereIn('kode', ['SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK'])->pluck('id');
+                $laporanSatlak = Laporan::with(['satuan', 'tujuanSatuan'])
+                    ->whereIn('satuan_id', $satlakIds)
+                    ->latest()
+                    ->get();
+                $monitoringHtml = $laporanSatlak->isEmpty()
+                    ? $this->emptyStateRow('Belum ada laporan dari 3 Satlak', 'Aktivitas Penangkalan, Siber Sosial, dan Penindakan akan muncul di sini.')
+                    : $laporanSatlak->map(fn ($l) => view('siberad.dashboards.partials.monitor-satlak-row', ['l' => $l])->render())->implode('');
+            }
+
             return response()->json([
                 'role' => 'pelaksana',
                 'sent_html' => $includeReports
@@ -87,6 +105,7 @@ class LaporanController extends Controller
                         : $incoming->map(fn ($l) => view('siberad.dashboards.partials.laporan-role-realtime-incoming-row', ['l' => $l, 'canReview' => true, 'satuan' => $user->satuan])->render())->implode(''))
                     : '',
                 'role_stats' => $roleStats,
+                'monitoring_html' => $monitoringHtml,
             ], 200, [
                 'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             ]);

@@ -6,12 +6,39 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\PermintaanResetPassword;
 use App\Notifications\PermintaanResetPasswordDiputuskan;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PermintaanResetPasswordController extends Controller
 {
+    /**
+     * Realtime tab "Permintaan Ganti Password" di dashboard Admin -- cuma
+     * kirim permintaan yang BENERAN baru sejak `since` (dirender pakai
+     * partial yang SAMA dengan render awal), bukan snapshot penuh. Status
+     * yang berubah lewat aksi Setujui/Tolak sudah langsung ter-update di DOM
+     * begitu admin sendiri yang melakukannya, jadi tidak perlu di-polling.
+     */
+    public function realtime(Request $request): JsonResponse
+    {
+        $since = max(0, (int) $request->query('since', 0));
+
+        $items = PermintaanResetPassword::with(['user.satuan', 'diprosesOleh'])
+            ->where('id', '>', $since)
+            ->orderBy('id')
+            ->get();
+
+        $latestId = (int) (PermintaanResetPassword::max('id') ?? 0);
+
+        return response()->json([
+            'latest_id' => $latestId,
+            'items_html' => $items->map(fn (PermintaanResetPassword $r) => view('siberad.dashboards.partials.permintaan-reset-password-row', ['r' => $r])->render())->implode(''),
+        ], 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
+    }
+
     /**
      * Setujui permintaan -- password baru yang diajukan langsung diterapkan
      * ke akun pengaju. Update lewat query builder (bukan Eloquent) karena
