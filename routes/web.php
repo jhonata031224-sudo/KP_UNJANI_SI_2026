@@ -174,6 +174,16 @@ Route::delete('/notifikasi/{notifikasi}', [NotifikasiController::class, 'hapus']
     ->middleware(['auth', 'modul:notifikasi'])
     ->name('notifikasi.hapus');
 
+// Push subscription (notifikasi di luar sistem/browser tertutup) --
+// sengaja TIDAK diikat modul:notifikasi, karena on/off-nya diatur lewat
+// izin browser masing-masing user, bukan konfigurasi per-satuan.
+Route::post('/push/subscribe', [\App\Http\Controllers\PushSubscriptionController::class, 'store'])
+    ->middleware('auth')
+    ->name('push.subscribe');
+Route::post('/push/unsubscribe', [\App\Http\Controllers\PushSubscriptionController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('push.unsubscribe');
+
 // ===== Manajemen Akun Media Sosial =====
 Route::post('/akun-medsos', [AkunMedsosController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('akun-medsos.store');
 Route::patch('/akun-medsos/{akunMedsos}', [AkunMedsosController::class, 'update'])->middleware(['auth', 'modul:laporan'])->name('akun-medsos.update');

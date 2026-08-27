@@ -35,6 +35,7 @@ use App\Http\Controllers\ProyekRisetController;
 use App\Http\Middleware\InjectAdminReportCenter;
 use App\Http\Middleware\InjectDashboardUi;
 use App\Http\Middleware\InjectPengaturanAccessUi;
+use App\Http\Middleware\InjectWebPushUi;
 use App\Http\Middleware\RemoveDecorativeSeparators;
 use App\Models\Pengaturan;
 use Illuminate\Foundation\Application;
@@ -74,6 +75,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(InjectDashboardUi::class);
         $middleware->append(InjectPengaturanAccessUi::class);
         $middleware->append(InjectAdminReportCenter::class);
+        $middleware->append(InjectWebPushUi::class);
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,

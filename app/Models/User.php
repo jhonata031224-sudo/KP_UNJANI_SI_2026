@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -36,6 +37,17 @@ class User extends Authenticatable
     public function satuan(): BelongsTo
     {
         return $this->belongsTo(Satuan::class);
+    }
+
+    /**
+     * Semua device/browser yang mengizinkan push notification untuk akun
+     * ini (bisa lebih dari satu -- HP & laptop sekaligus). Dipakai oleh
+     * App\Notifications\Channels\WebPushChannel setiap kali notifikasi
+     * baru dikirim.
+     */
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
     }
 
     /**
