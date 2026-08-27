@@ -207,8 +207,16 @@ class LaporanController extends Controller
                 // Permintaan yang BENERAN baru (dibuat sesi Pimpinan LAIN --
                 // Danpus/Wadan berbagi tab yang sama, keduanya bisa buat
                 // permintaan) sejak $requestsSince, dirender pakai partial
-                // yang SAMA dengan render awal supaya konsisten.
-                $newRequests = $requests->where('id', '>', $requestsSince);
+                // yang SAMA dengan render awal supaya konsisten. $requests di
+                // atas SENGAJA tidak difilter archived_at (dipakai juga buat
+                // $requestStates/sinkron dot timeline milik item lama), tapi
+                // baris yang disisipkan ke tab AKTIF wajib exclude yang sudah
+                // diarsip -- tanpa ini, item yang sudah pindah ke Riwayat
+                // Laporan sempat "muncul" balik ke tab aktif tiap kali id-nya
+                // masih di atas cursor $requestsSince, lalu langsung kehapus
+                // lagi oleh removeArchivedRows() di poll arsip berikutnya
+                // (efeknya: data kelihatan nongol lalu tiba-tiba hilang sendiri).
+                $newRequests = $requests->where('id', '>', $requestsSince)->whereNull('archived_at');
                 $requestsNewHtml = $newRequests->map(
                     fn (PermintaanLaporan $item) => view('siberad.dashboards.partials.permintaan-laporan-pimpinan-row', ['item' => $item, 'satuan' => $user->satuan])->render()
                 )->implode('');
