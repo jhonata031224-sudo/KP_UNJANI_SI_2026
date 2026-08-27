@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ $jenis === 'pengguna' ? 'Cetak Laporan Pengguna' : 'Cetak Riwayat Aktivitas' }} — {{ $pengaturan->singkatan ?? 'SIBERAD' }}</title>
 <style>
   body{font-family:Georgia,'Times New Roman',serif;color:#111;margin:36px;}
@@ -14,7 +15,9 @@
   th,td{border:1px solid #999;padding:5px 7px;text-align:left;}
   th{background:#eee;}
   footer{margin-top:30px;font-size:10px;color:#555;}
+  .tbl-scroll-wrap{overflow-x:auto;}
   @media print{ .no-print{display:none;} }
+  @media screen and (max-width:600px){ body{margin:16px;} header img{height:36px;} }
 </style>
 </head>
 <body>
@@ -31,6 +34,7 @@
 
   @if($jenis === 'pengguna')
   <h2>Daftar Pengguna ({{ $semuaPengguna->count() }})</h2>
+  <div class="tbl-scroll-wrap">
   <table>
     <thead><tr><th>#</th><th>Nama</th><th>Username</th><th>Satuan</th><th>Jabatan</th></tr></thead>
     <tbody>
@@ -39,8 +43,10 @@
       @endforeach
     </tbody>
   </table>
+  </div>
   @else
   <h2>Riwayat Aktivitas ({{ $log->count() }})</h2>
+  <div class="tbl-scroll-wrap">
   <table>
     <thead><tr><th>Waktu</th><th>Pengguna</th><th>Satuan</th><th>Aksi</th><th>Deskripsi</th></tr></thead>
     <tbody>
@@ -49,6 +55,7 @@
       @endforeach
     </tbody>
   </table>
+  </div>
   @endif
 
   <footer>Dicetak oleh {{ $dicetakOleh->name }} pada {{ $dicetakPada->translatedFormat('d M Y H:i') }} WIB.</footer>

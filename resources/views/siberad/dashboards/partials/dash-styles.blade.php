@@ -184,7 +184,9 @@
 
   .main{flex:1;min-width:0;}
   .topbar{background:var(--surface);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-soft);height:82px;padding:0 32px;box-sizing:border-box;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:30;gap:16px;}
-  .menu-btn{display:none;background:transparent;border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;color:var(--text);position:relative;z-index:41;touch-action:manipulation;-webkit-tap-highlight-color:rgba(212,175,55,.25);}
+  .menu-btn{display:none;align-items:center;justify-content:center;width:42px;height:42px;flex-shrink:0;box-sizing:border-box;font-size:18px;line-height:1;background:transparent;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text);position:relative;z-index:41;touch-action:manipulation;-webkit-tap-highlight-color:rgba(212,175,55,.25);transition:border-color .2s ease,color .2s ease,transform .2s ease;}
+  .menu-btn:hover{border-color:var(--gold);color:var(--gold-bright);transform:translateY(-2px);}
+  .menu-btn:active{transform:translateY(0);}
   .topbar-title{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:.01em;}
   .topbar-sub{font-size:12.5px;color:var(--text-muted);margin-top:3px;}
 
@@ -213,6 +215,7 @@
   .profile-menu-btn:hover{border-color:var(--gold);transform:translateY(-2px);}
   .profile-menu-btn.open{border-color:var(--gold);}
   .profile-dropdown{position:absolute;top:calc(100% + 10px);right:0;width:252px;background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 14px 34px rgba(0,0,0,.35);padding:8px;z-index:50;box-sizing:border-box;opacity:0;visibility:hidden;transform:translateY(-6px);pointer-events:none;transition:opacity .18s ease,transform .18s ease,visibility .18s ease;}
+  @media(max-width:340px){#profileDropdown.profile-dropdown{position:fixed;left:12px;right:12px;top:90px;width:auto;}}
   .profile-dropdown.open{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto;}
   .profile-dropdown-head{display:flex;align-items:center;gap:10px;padding:8px 8px 12px;border-bottom:1px solid var(--border-soft);margin-bottom:6px;}
   .profile-dropdown-avatar{width:38px;height:38px;border-radius:50%;background:var(--gold-dim);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:13px;flex-shrink:0;border:1px solid var(--border);position:relative;overflow:hidden;}
@@ -352,7 +355,7 @@
   .sidebar.collapsed .side-brand .logo{display:none;}
   .sidebar.collapsed .side-nav-label,.sidebar.collapsed .side-text,.sidebar.collapsed .chevron,.sidebar.collapsed .side-subnav{display:none;}
   .sidebar.collapsed .side-link,.sidebar.collapsed .side-nav-group-title{justify-content:center;padding:10px;gap:0;}
-  .sidebar{transition:width .25s cubic-bezier(.4,0,.2,1);}
+  .sidebar{transition:width .25s cubic-bezier(.4,0,.2,1),transform .28s cubic-bezier(.4,0,.2,1),background-color .25s ease,border-color .25s ease;}
   .tab-panel{display:none;}
   .tab-panel.active{display:block;animation:fadeIn .25s ease;}
   @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
@@ -477,6 +480,26 @@
     .stat-grid{grid-template-columns:1fr 1fr;}
     .content{padding:22px 16px 60px;}
     .topbar{padding:0 16px;}
+  }
+
+  /* Scrim gelap di belakang sidebar mobile -- dibuat/ditoggle otomatis lewat
+     initSidebarBackdrop() di partials/pengumuman-banner.blade.php (sinkron
+     lewat MutationObserver ke class "open" sidebar, jadi tetap ikut nutup
+     dari mana pun sidebar itu ditoggle: hamburger, tap di luar, atau klik
+     link menu). Sengaja HANYA tampil di breakpoint sidebar off-canvas
+     (≤900px) -- di layar besar sidebar statis, tidak butuh scrim. z-index
+     di bawah .sidebar (100010) & .menu-btn (100011) supaya keduanya tetap
+     bisa ditekan buat menutup selagi scrim aktif. */
+  .sidebar-backdrop{display:none;}
+  @media(max-width:900px){
+    .sidebar-backdrop{
+      display:block;position:fixed;inset:0;z-index:100009;
+      background:rgba(2,4,6,.6);
+      opacity:0;visibility:hidden;pointer-events:none;
+      transition:opacity .25s ease,visibility .25s ease;
+    }
+    :root[data-theme="light"] .sidebar-backdrop{background:rgba(40,32,14,.4);}
+    .sidebar-backdrop.open{opacity:1;visibility:visible;pointer-events:auto;}
   }
 
   /* ===== Jaring pengaman responsif tambahan untuk HP kecil (≤480px) --

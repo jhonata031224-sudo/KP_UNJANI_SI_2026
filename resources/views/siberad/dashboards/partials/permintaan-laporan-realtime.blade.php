@@ -1,5 +1,5 @@
 <style>
-#permintaanLaporanDetailView{display:none;position:fixed;inset:0;z-index:1200;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;background:rgba(15,23,42,.28);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;transition:opacity .22s ease;}
+#permintaanLaporanDetailView{display:none;position:fixed;inset:0;z-index:100200;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;background:rgba(15,23,42,.28);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;transition:opacity .22s ease;}
 #permintaanLaporanDetailView.is-visible{opacity:1;}
 #permintaanLaporanDetailView .permintaan-detail-dialog{width:min(760px,100%);max-height:min(86vh,760px);overflow:auto;background:var(--card-bg,#fff);border:1px solid rgba(148,163,184,.22);border-radius:18px;box-shadow:0 24px 70px rgba(15,23,42,.24);transform:translateY(10px) scale(.985);transition:transform .22s ease;}
 #permintaanLaporanDetailView.is-visible .permintaan-detail-dialog{transform:translateY(0) scale(1);}

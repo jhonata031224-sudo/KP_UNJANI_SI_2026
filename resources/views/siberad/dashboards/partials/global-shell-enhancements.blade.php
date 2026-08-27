@@ -93,7 +93,7 @@
       var style = document.createElement('style');
       style.id = 'globalReportActionStyles';
       style.textContent = `
-        .report-reject-overlay { position:fixed; inset:0; z-index:1200; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(0,0,0,.55); }
+        .report-reject-overlay { position:fixed; inset:0; z-index:100200; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(0,0,0,.55); }
         .report-reject-overlay.open { display:flex; }
         .report-reject-card { width:min(560px,100%); background:var(--panel,#fff); color:var(--text,#17212b); border:1px solid var(--border-soft,#ddd); border-radius:14px; padding:22px; box-shadow:0 25px 70px rgba(0,0,0,.25); }
         .report-reject-card h3 { margin:0 0 6px; font-family:var(--display); font-size:19px; }

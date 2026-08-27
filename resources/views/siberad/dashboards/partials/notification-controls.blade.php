@@ -66,6 +66,7 @@
         .notif-menu>#notifBtn svg{width:19px;height:19px;display:block;pointer-events:none;}
         .siberad-notif-badge{position:absolute;top:2px;right:2px;min-width:15px;height:15px;padding:0 3px;box-sizing:border-box;border-radius:999px;background:var(--red);color:#fff;font-size:9px;font-weight:800;line-height:15px;text-align:center;box-shadow:0 0 0 2px var(--panel,#0c2417);pointer-events:none;}
         #notifDropdown{position:absolute!important;z-index:100004!important;min-width:300px;max-width:340px;right:0;top:calc(100% + 8px);pointer-events:auto!important;padding:0!important;overflow:hidden;}
+        @media(max-width:420px){#notifDropdown{position:fixed!important;left:12px!important;right:12px!important;top:90px!important;min-width:0;max-width:none;width:auto;}}
         #notifDropdown .notif-head{display:flex;align-items:center;min-height:22px;padding:14px 16px 12px!important;margin-bottom:0!important;}
         /* ~4 item kelihatan sekaligus (tiap item kira-kira 72px), sisanya discroll. */
         #notifDropdown .siberad-notif-list{display:flex;flex-direction:column;max-height:288px;overflow-y:auto;}

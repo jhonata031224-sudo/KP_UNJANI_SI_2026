@@ -71,7 +71,8 @@
       '.siberad-push-btn:hover{border-color:var(--border-strong);color:var(--text);}' +
       '.siberad-push-btn.is-active{border-color:var(--gold,#d9920b);color:var(--gold-bright,#f2b94b);background:var(--gold-dim,rgba(217,146,11,.12));}' +
       '.siberad-push-btn[disabled]{opacity:.6;cursor:default;}' +
-      '@media(max-width:640px){.siberad-push-btn{padding:0 10px;font-size:10.5px;}}';
+      '@media(max-width:640px){.siberad-push-btn{padding:0 10px;font-size:10.5px;}}' +
+      '@media(max-width:480px){.siberad-push-btn{padding:0 7px;font-size:9px;margin-right:5px;height:32px;}}';
     document.head.appendChild(style);
   }
 

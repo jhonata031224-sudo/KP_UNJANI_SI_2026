@@ -106,22 +106,18 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
 })();
 </script>
 
-<script>
-(function(){
-  function initMobileSidebar(){
-    var menuBtn=document.getElementById('menuBtn');var sidebar=document.getElementById('sidebar');if(!menuBtn||!sidebar||menuBtn.dataset.mobileSidebarWideBound==='1')return;
-    menuBtn.dataset.mobileSidebarWideBound='1';var suppressNextClick=false;var suppressTimer=0;
-    function openSidebar(e){if(e){e.preventDefault();e.stopPropagation();}sidebar.classList.remove('collapsed');sidebar.classList.add('open');}
-    function closeSidebarMobile(){sidebar.classList.remove('open');sidebar.classList.add('collapsed');document.querySelectorAll('.side-dropdown.open,.side-nav-group.open').forEach(function(group){group.classList.remove('open');});}
-    if(window.PointerEvent){
-      menuBtn.addEventListener('pointerup',function(e){if(window.innerWidth>900)return;suppressNextClick=true;window.clearTimeout(suppressTimer);suppressTimer=window.setTimeout(function(){suppressNextClick=false;},500);openSidebar(e);},{passive:false});
-      menuBtn.addEventListener('click',function(e){if(window.innerWidth>900)return;if(suppressNextClick){suppressNextClick=false;window.clearTimeout(suppressTimer);e.preventDefault();e.stopPropagation();return;}if(e.detail===0)openSidebar(e);});
-    }else{menuBtn.addEventListener('click',function(e){if(window.innerWidth<=900)openSidebar(e);});}
-    document.addEventListener('click',function(e){if(window.innerWidth<=900&&sidebar.classList.contains('open')&&!sidebar.contains(e.target)&&e.target!==menuBtn)closeSidebarMobile();});
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initMobileSidebar);else initMobileSidebar();
-})();
-</script>
+<!-- Toggle sidebar mobile (hamburger) SUDAH ditangani tunggal oleh
+     initRoleUi() di partials/pengumuman-banner.blade.php (dikoordinasi
+     lewat flag menuBtn.dataset.uiBound bareng dash-script.blade.php &
+     inline script laporan-pimpinan.blade.php). Dulu di sini ada
+     initMobileSidebar() versi KEDUA yang pasang listener pointerup+click
+     sendiri di #menuBtn pakai flag terpisah (mobileSidebarWideBound) --
+     akibatnya DUA implementasi toggle sama-sama aktif di tombol yang sama
+     dan saling membatalkan tiap tap (sidebar kebuka sekejap lalu nutup
+     sendiri, atau sebaliknya gagal ketutup). Jangan tambahkan lagi
+     listener toggle sidebar di file manapun selain yang sudah dikoordinasi
+     lewat flag uiBound itu. -->
+
 
 <script>
 (function(){

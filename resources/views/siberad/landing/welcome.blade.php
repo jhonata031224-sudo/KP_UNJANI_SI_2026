@@ -234,6 +234,7 @@
   nav{
     display:flex;align-items:center;justify-content:space-between;
     padding:14px 0;
+    position:relative;
   }
   .logo{
     display:flex;align-items:center;gap:12px;color:var(--text);text-decoration:none;
@@ -280,7 +281,28 @@
     border-radius:8px;z-index:5;
   }
 
-  @media (max-width:900px){ .nav-links{display:none;} }
+  .nav-menu-btn{
+    display:none;align-items:center;justify-content:center;
+    width:40px;height:40px;flex-shrink:0;box-sizing:border-box;
+    border:1px solid var(--border);border-radius:8px;background:transparent;
+    color:var(--text);cursor:pointer;
+  }
+  .nav-menu-btn svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;}
+
+  @media (max-width:900px){
+    .nav-links{
+      display:none;flex-direction:column;gap:0;
+      position:absolute;top:100%;left:0;right:0;
+      background:var(--header-bg);backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--border-soft);
+      box-shadow:0 14px 34px rgba(0,0,0,.25);
+      padding:6px 0;
+    }
+    .nav-links.open{display:flex;}
+    .nav-links li{width:100%;}
+    .nav-links a{display:block;padding:13px 24px;font-size:14px;}
+    .nav-menu-btn{display:inline-flex;}
+  }
 
   .nav-cta{display:flex;align-items:center;gap:12px;}
   .btn-nav{padding:0 20px;height:42px;font-size:12px;box-sizing:border-box;}
@@ -764,12 +786,15 @@
           <span class="logo-badge"><img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad"></span>
           <span class="logo-text"><b>{{ $lp['brand']['name'] }}<span>{{ $lp['brand']['accent'] }}</span></b><small>{{ $lp['brand']['tagline'] }}</small></span>
         </a>
-        <ul class="nav-links">
+        <ul class="nav-links" id="navLinks">
           @foreach ($lp['nav'] as $navItem)
             <li><a href="{{ $navItem['url'] }}">{{ $navItem['label'] }}</a></li>
           @endforeach
         </ul>
         <div class="nav-cta">
+          <button class="nav-menu-btn" type="button" id="navMenuBtn" aria-label="Buka menu navigasi" aria-expanded="false" aria-controls="navLinks">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>
+          </button>
           <button class="btn-theme" type="button" id="themeToggle" aria-label="Ganti tema">
             <svg class="icon-moon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"></path>
@@ -1252,6 +1277,29 @@
 
   function revealOnLoad(){
     document.querySelectorAll('.hero [data-reveal]').forEach(el=>el.classList.add('in'));
+  }
+
+  // ---------- toggle menu navigasi mobile (hamburger, ≤900px) ----------
+  const navMenuBtn = document.getElementById('navMenuBtn');
+  const navLinksList = document.getElementById('navLinks');
+  if (navMenuBtn && navLinksList) {
+    navMenuBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const isOpen = navLinksList.classList.toggle('open');
+      navMenuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+    navLinksList.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () {
+        navLinksList.classList.remove('open');
+        navMenuBtn.setAttribute('aria-expanded', 'false');
+      });
+    });
+    document.addEventListener('click', function (e) {
+      if (navLinksList.classList.contains('open') && !navLinksList.contains(e.target) && e.target !== navMenuBtn && !navMenuBtn.contains(e.target)) {
+        navLinksList.classList.remove('open');
+        navMenuBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
   }
 
   // ---------- nav aktif mengikuti section (scrollspy) ----------

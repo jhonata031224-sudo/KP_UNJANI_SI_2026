@@ -61,6 +61,7 @@
 
   <div class="panel">
     <h3>Daftar Pengguna ({{ $semuaPengguna->count() }})</h3>
+    <div style="overflow-x:auto">
     <table>
       <thead><tr><th>Nama</th><th>Username</th><th>Satuan</th></tr></thead>
       <tbody>
@@ -69,6 +70,7 @@
         @endforeach
       </tbody>
     </table>
+    </div>
   </div>
 
   <div class="panel">
@@ -79,6 +81,7 @@
         LIVE
       </span>
     </h3>
+    <div style="overflow-x:auto">
     <table>
       <thead><tr><th>Waktu</th><th>Pengguna</th><th>Aksi</th><th>Deskripsi</th><th>IP</th></tr></thead>
       <tbody id="log-tbody">
@@ -93,6 +96,7 @@
         @endforeach
       </tbody>
     </table>
+    </div>
   </div>
 
   <style>
