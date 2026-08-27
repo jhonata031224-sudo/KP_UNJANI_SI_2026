@@ -77,15 +77,27 @@
   }
 
   // Dipanggil dari dialog konfirmasi logout (partials/global-shell-enhancements.blade.php)
-  // SEBELUM form logout benar-benar submit -- supaya baris push_subscriptions milik
-  // user yang lagi logout ini kehapus dari server. Kalau tidak, endpoint push
-  // browser/device ini tetap "nempel" ke akun lama selamanya, dan notifikasi
-  // user itu bakal terus nyasar ke device ini walau user lain yang login
-  // berikutnya. Sengaja TIDAK memanggil subscription.unsubscribe() di level
-  // browser -- biar endpoint push-nya sendiri tetap hidup, jadi kalau user
-  // BERIKUTNYA login di device yang sama dan izin notifikasi browser masih
-  // granted, dia otomatis ke-subscribe ulang (lihat cabang 'granted' di init())
-  // tanpa perlu klik "Aktifkan Notifikasi" lagi.
+  // SEBELUM form logout benar-benar submit -- supaya:
+  //   1) baris push_subscriptions milik user yang lagi logout ini kehapus
+  //      dari server (postJson ke UNSUBSCRIBE_URL), DAN
+  //   2) subscription-nya di level BROWSER (PushManager) juga benar-benar
+  //      di-unsubscribe (subscription.unsubscribe()).
+  //
+  // Awalnya langkah (2) sengaja DILEWATI supaya user berikutnya yang login
+  // di device yang sama bisa auto ke-subscribe ulang tanpa prompt izin lagi.
+  // Tapi itu artinya endpoint push di browser ini tetap "hidup" walau baris
+  // DB-nya sudah terhapus -- kalau penghapusan baris DB gagal/telat karena
+  // race condition, network, atau deploy yang belum sinkron, device ini
+  // masih bisa kebobolan nerima notifikasi push padahal usernya sudah
+  // logout. Supaya jaminannya benar-benar "tidak ada notif di luar sistem
+  // kalau belum/sudah-tidak login" (bukan cuma "biasanya tidak ada"), kedua
+  // langkah di atas WAJIB dua-duanya, bukan cuma DB.
+  //
+  // Konsekuensinya: user berikutnya yang login di device ini akan di-
+  // subscribe ulang secara otomatis (tetap tanpa prompt izin baru, karena
+  // izin notifikasi browser sifatnya per-origin bukan per-subscription --
+  // lihat cabang 'granted' di init()), hanya perlu 1 request tambahan ke
+  // SUBSCRIBE_URL yang tidak terasa oleh user.
   //
   // Promise SELALU resolve (tidak pernah reject) dan dibatasi waktu tunggu,
   // supaya proses logout tidak pernah nge-hang gara-gara network/push service
@@ -106,7 +118,18 @@
         if (!registration) return finish();
         return registration.pushManager.getSubscription().then(function (subscription) {
           if (!subscription) return finish();
-          postJson(UNSUBSCRIBE_URL, { endpoint: subscription.endpoint }).then(finish).catch(finish);
+
+          // Hapus dulu baris DB-nya (server jadi tidak akan kirim push baru
+          // ke endpoint ini), BARU cabut subscription-nya di browser. Urutan
+          // ini dijaga supaya kalau salah satu gagal, sisi lain tetap sudah
+          // aman: DB dihapus duluan berarti server sudah berhenti mengirim
+          // meski unsubscribe browser di bawah ini gagal.
+          return postJson(UNSUBSCRIBE_URL, { endpoint: subscription.endpoint })
+            .catch(function () {})
+            .then(function () {
+              return subscription.unsubscribe().catch(function () {});
+            })
+            .then(finish);
         });
       }).catch(finish);
     });
