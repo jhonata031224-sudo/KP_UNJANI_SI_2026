@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var VAPID_PUBLIC_KEY = @json(config('webpush.vapid.public_key'));
+  var VAPID_PUBLIC_KEY = @json(config('webpush.vapid.publicKey'));
   var SUBSCRIBE_URL = @json(route('push.subscribe'));
   var UNSUBSCRIBE_URL = @json(route('push.unsubscribe'));
 
