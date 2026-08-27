@@ -34,8 +34,17 @@
     return sampai.value >= tanggalLokalHariIni();
   }
 
+  // Tab admin lain (display:none, BUKAN di-unmount) tidak perlu ikut nge-
+  // fetch data yang tidak kelihatan -- hemat network/CPU selagi admin lagi
+  // buka tab LAIN (mis. Dashboard), poll otomatis lanjut lagi begitu admin
+  // balik ke tab ini (delay paling lama cuma 1 siklus interval).
+  function tabIniAktif() {
+    var panel = document.querySelector('[data-tab-panel="log-aktivitas"]');
+    return !panel || panel.classList.contains('active');
+  }
+
   function ambilAktivitasBaru() {
-    if (!sedangLihatHariIni()) return;
+    if (!tabIniAktif() || !sedangLihatHariIni()) return;
     fetch(url + '?after_id=' + lastId, { headers: { Accept: 'application/json' } })
       .then(function (res) { return res.ok ? res.json() : null; })
       .then(function (data) {

@@ -5,8 +5,16 @@
   var url = @json(route('admin.permintaan-reset-password.realtime'));
   var lastSeen = 0, polling = false, initial = true;
 
+  // Tab admin lain (display:none, BUKAN di-unmount) tidak perlu ikut nge-
+  // fetch data yang tidak kelihatan -- poll otomatis lanjut lagi begitu
+  // admin balik ke tab ini.
+  function tabIniAktif() {
+    var panel = document.querySelector('[data-tab-panel="reset-password"]');
+    return !panel || panel.classList.contains('active');
+  }
+
   function poll() {
-    if (polling) return;
+    if (polling || !tabIniAktif()) return;
     polling = true;
     fetch(url + '?since=' + (initial ? 0 : lastSeen) + '&_=' + Date.now(), { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
       .then(function (r) { return r.ok ? r.json() : null; })

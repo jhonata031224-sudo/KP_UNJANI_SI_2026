@@ -179,13 +179,21 @@
         if(busy)return;busy=true;
         fetch(endpoint+'?reports=1&requests=0&since=0&_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest','Cache-Control':'no-cache'}})
             .then(r=>r.ok?r.json():null).then(data=>{if(data)syncReports(data);}).catch(function(){}).finally(function(){busy=false;});
-        syncRequestList();
     }
 
     function start(){
         if(!document.getElementById('riwayat')&&!document.getElementById('masuk'))return;
         bindInitialEditButtons();
         poll();timer=window.setInterval(poll,2500);
+        // syncRequestList() sengaja DIPISAH dari siklus poll() 2500ms di atas
+        // (dulu dipanggil bareng di situ) -- endpoint yang sama JUGA sudah
+        // dipoll independen tiap 3000ms oleh permintaan-laporan-realtime.blade.php
+        // (yang nanganin item BARU+toast). Kalau syncRequestList() (yang cuma
+        // nanganin update/hapus item LAMA, lihat komentar di atas) ikut nempel
+        // di 2500ms, query ke endpoint yang sama jadi 2x lipat buat data yang
+        // tumpang-tindih. Interval lebih santai di sini masih cukup responsif
+        // buat update status (bukan insert-baru yang butuh terasa instan).
+        syncRequestList();window.setInterval(syncRequestList,6000);
         document.addEventListener('visibilitychange',function(){if(!document.hidden)poll();});window.addEventListener('focus',poll);
     }
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();

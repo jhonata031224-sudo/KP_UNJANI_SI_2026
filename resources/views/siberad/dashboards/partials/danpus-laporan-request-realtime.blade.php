@@ -16,13 +16,24 @@
     const endpoint='{{ route('laporan.log-aktivitas.realtime') }}';
     let busy=false;
 
-    function findDropdown(requestId){
-        const id=String(requestId||'');
-        if(!id)return null;
-        const direct=[...document.querySelectorAll('.danpus-report-dropdown')].find(el=>String(el.dataset.permintaanId||'')===id);
-        if(direct)return direct;
-        const nested=[...document.querySelectorAll('[data-permintaan-id]')].find(el=>String(el.dataset.permintaanId||'')===id);
-        return nested?.closest('.danpus-report-dropdown')||null;
+    // Dulu findDropdown() nge-scan ULANG SELURUH dokumen (2x querySelectorAll)
+    // buat TIAP item di request_states -- poller ini paling sering di seluruh
+    // sistem (1200ms), jadi makin banyak permintaan yang pernah dibuat Danpus/
+    // Wadan, makin berat (O(jumlah item x ukuran DOM) tiap 1.2 detik). Sekarang
+    // di-cache SEKALI per siklus poll jadi Map, lookup per item jadi O(1).
+    function buildDropdownIndex(){
+        const index=new Map();
+        document.querySelectorAll('.danpus-report-dropdown').forEach(el=>{
+            const id=String(el.dataset.permintaanId||'');
+            if(id)index.set(id,el);
+        });
+        document.querySelectorAll('[data-permintaan-id]').forEach(el=>{
+            const id=String(el.dataset.permintaanId||'');
+            if(!id||index.has(id))return;
+            const dropdown=el.closest('.danpus-report-dropdown');
+            if(dropdown)index.set(id,dropdown);
+        });
+        return index;
     }
 
     function setItemState(item,kind,stateText){
@@ -81,8 +92,8 @@
         window.setTimeout(()=>{flow.remove();log.classList.remove('realtime-state-changing');},900);
     }
 
-    function syncOne(s){
-        const dropdown=findDropdown(s.id);
+    function syncOne(s,dropdownIndex){
+        const dropdown=dropdownIndex.get(String(s.id||''));
         if(!dropdown)return;
         const log=dropdown.querySelector('.danpus-activity-log');
         if(!log)return;
@@ -165,9 +176,13 @@
     function poll(){
         if(busy)return;
         busy=true;
-        fetch(endpoint+'?reports=0&requests=1&_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest','Cache-Control':'no-cache'}})
+        fetch(endpoint+'?reports=0&requests=1&requests_new=0&_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest','Cache-Control':'no-cache'}})
             .then(r=>r.ok?r.json():null)
-            .then(data=>{if(data?.request_states)Object.values(data.request_states).forEach(syncOne);})
+            .then(data=>{
+                if(!data?.request_states)return;
+                const dropdownIndex=buildDropdownIndex();
+                Object.values(data.request_states).forEach(s=>syncOne(s,dropdownIndex));
+            })
             .catch(function(){}).finally(function(){busy=false;});
     }
 

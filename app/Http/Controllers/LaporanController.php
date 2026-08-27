@@ -49,7 +49,20 @@ class LaporanController extends Controller
 
         $includeReports = $request->query('reports', '1') !== '0';
         $includeRequests = $request->query('requests', '1') !== '0';
+        // Deteksi permintaan BARU (eager-load tambahan + render partial) di
+        // luar $includeRequests -- danpus-laporan-request-realtime.blade.php
+        // poll endpoint ini tiap 1200ms (PALING SERING di seluruh sistem)
+        // TAPI cuma baca request_states (status permintaan yang SUDAH ada),
+        // tidak pernah insert baris baru. Tanpa gate terpisah ini,
+        // eager-load tasks.laporans + render partial per item bakal
+        // kebayar sia-sia di poller itu tiap 1.2 detik.
+        $includeNewRequests = $request->query('requests_new', '1') !== '0';
         $since = max(0, (int) $request->query('since', 0));
+        // Cursor TERPISAH dari $since di atas -- PermintaanLaporan::id dan
+        // Laporan::id itu 2 sequence auto-increment yang beda, jadi harus
+        // dilacak sendiri-sendiri buat dedup item BARU di tab "Permintaan
+        // Laporan" milik Pimpinan sendiri (bukan yang diterima Satlak).
+        $requestsSince = max(0, (int) $request->query('requests_since', 0));
 
         if ($isPelaksana) {
             $sent = Laporan::with(['satuan', 'tujuanSatuan'])
@@ -128,16 +141,29 @@ class LaporanController extends Controller
                 ->implode('')
         );
 
-        $semuaStatus = Laporan::whereIn('satuan_id', $satuanIds)->get(['satuan_id', 'status']);
-        $statsBySatuan = collect($satuanIds)->mapWithKeys(function ($satuanId) use ($semuaStatus) {
-            $group = $semuaStatus->where('satuan_id', $satuanId);
-            return [$satuanId => [
-                'total' => $group->count(),
-                'menunggu' => $group->where('status', 'Menunggu')->count(),
-                'diterima' => $group->filter(fn ($l) => str_contains(strtolower($l->status), 'setuj') || str_contains(strtolower($l->status), 'diterima'))->count(),
-                'ditolak' => $group->filter(fn ($l) => str_contains(strtolower($l->status), 'tolak'))->count(),
-            ]];
-        });
+        // Sengaja di-gate sama $includeReports (SAMA seperti $items di atas) --
+        // danpus-laporan-request-realtime.blade.php poll tiap 1200ms (paling
+        // sering di seluruh sistem) manggil endpoint ini dengan
+        // ?reports=0&requests=1 justru KARENA cuma butuh request_states,
+        // TIDAK PERNAH baca 'stats'/'total_laporan'/'total_disetujui'/
+        // 'total_ditolak' sama sekali -- tanpa gate ini, query & looping
+        // berat di atas kebayar sia-sia tiap 1.2 detik buat hasil yang
+        // langsung dibuang si pemanggil.
+        if ($includeReports) {
+            $semuaStatus = Laporan::whereIn('satuan_id', $satuanIds)->get(['satuan_id', 'status']);
+            $statsBySatuan = collect($satuanIds)->mapWithKeys(function ($satuanId) use ($semuaStatus) {
+                $group = $semuaStatus->where('satuan_id', $satuanId);
+                return [$satuanId => [
+                    'total' => $group->count(),
+                    'menunggu' => $group->where('status', 'Menunggu')->count(),
+                    'diterima' => $group->filter(fn ($l) => str_contains(strtolower($l->status), 'setuj') || str_contains(strtolower($l->status), 'diterima'))->count(),
+                    'ditolak' => $group->filter(fn ($l) => str_contains(strtolower($l->status), 'tolak'))->count(),
+                ]];
+            });
+        } else {
+            $semuaStatus = collect();
+            $statsBySatuan = collect();
+        }
 
         $meta = $items->map(fn ($l) => [
             'laporan_id' => $l->id,
@@ -149,8 +175,15 @@ class LaporanController extends Controller
         ])->values();
 
         $requestStates = [];
+        $requestsLatestId = 0;
+        $requestsNewHtml = '';
         if ($includeRequests) {
-            $requests = PermintaanLaporan::with(['laporan', 'laporans'])
+            $withRelations = ['laporan', 'laporans'];
+            if ($includeNewRequests) {
+                $withRelations[] = 'tujuanSatuan';
+                $withRelations[] = 'tasks.laporans';
+            }
+            $requests = PermintaanLaporan::with($withRelations)
                 ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS', 'WADAN']))
                 ->latest('id')
                 ->get();
@@ -168,6 +201,18 @@ class LaporanController extends Controller
                     'terlambat' => $permintaan->isTerlambat(),
                 ];
             }
+
+            if ($includeNewRequests) {
+                $requestsLatestId = (int) ($requests->max('id') ?? 0);
+                // Permintaan yang BENERAN baru (dibuat sesi Pimpinan LAIN --
+                // Danpus/Wadan berbagi tab yang sama, keduanya bisa buat
+                // permintaan) sejak $requestsSince, dirender pakai partial
+                // yang SAMA dengan render awal supaya konsisten.
+                $newRequests = $requests->where('id', '>', $requestsSince);
+                $requestsNewHtml = $newRequests->map(
+                    fn (PermintaanLaporan $item) => view('siberad.dashboards.partials.permintaan-laporan-pimpinan-row', ['item' => $item, 'satuan' => $user->satuan])->render()
+                )->implode('');
+            }
         }
 
         return response()->json([
@@ -177,6 +222,8 @@ class LaporanController extends Controller
             'stats' => $statsBySatuan,
             'items' => $meta,
             'request_states' => $requestStates,
+            'requests_latest_id' => $requestsLatestId,
+            'requests_new_html' => $requestsNewHtml,
             'total_laporan' => $semuaStatus->count(),
             'total_disetujui' => $semuaStatus->filter(fn ($l) => str_contains(strtolower($l->status), 'setuj') || str_contains(strtolower($l->status), 'diterima'))->count(),
             'total_ditolak' => $semuaStatus->filter(fn ($l) => str_contains(strtolower($l->status), 'tolak'))->count(),

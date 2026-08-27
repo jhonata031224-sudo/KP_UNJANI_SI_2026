@@ -10,8 +10,16 @@
   // bikin semua baris ikut kedip pas dashboard baru dibuka.
   var animate = false;
 
+  // Tab admin lain (display:none, BUKAN di-unmount) tidak perlu ikut nge-
+  // fetch data yang tidak kelihatan -- poll otomatis lanjut lagi begitu
+  // admin balik ke tab ini.
+  function tabIniAktif() {
+    var panel = document.querySelector('[data-tab-panel="sesi-aktif"]');
+    return !panel || panel.classList.contains('active');
+  }
+
   function poll() {
-    if (busy) return;
+    if (busy || !tabIniAktif()) return;
     busy = true;
     fetch(url + '?_=' + Date.now(), { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
       .then(function (r) { return r.ok ? r.json() : null; })
