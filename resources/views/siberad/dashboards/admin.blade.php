@@ -2719,13 +2719,19 @@
              76px saat diciutkan, 0 saat mobile) supaya gak numpuk sidebar. */
           .lp-form-actions{
             position:fixed;left:var(--sidebar-w);right:0;bottom:0;
-            margin-top:0;padding:14px 24px;border-top:1px solid var(--border-soft);
+            margin-top:0;
+            /* padding horizontal 32px = sama dengan .content{padding:30px 32px}
+               agar sisi kiri tombol sejajar lurus dengan panel/tabel di atas
+               dan garis border-top sejajar dengan garis vertikal sidebar. */
+            padding:14px 32px;
+            border-top:1px solid var(--border-soft);
             background:var(--panel);z-index:4;
             box-shadow:0 -8px 16px -8px rgba(0,0,0,.12);
             transition:left .25s ease;
           }
-          .sidebar.collapsed ~ .main .lp-form-actions{left:76px;}
-          @media(max-width:900px){ .lp-form-actions{left:0;} }
+          .sidebar.collapsed ~ .main .lp-form-actions{left:76px;padding-left:32px;}
+          @media(max-width:900px){ .lp-form-actions{left:0;padding:14px 16px;} }
+          @media(max-width:600px){ .lp-form-actions{padding:12px;} }
 
           /* Pratinjau tetap di posisi normalnya (bawah editor, landscape) --
              tidak sticky karena sudah 1 kolom, bukan sejajar ke samping. */
