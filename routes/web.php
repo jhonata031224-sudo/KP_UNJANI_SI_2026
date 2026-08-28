@@ -236,6 +236,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/satuan/{satuan}', [SatuanController::class, 'destroy'])->name('satuan.destroy');
     Route::patch('/satuan/{satuan}/permissions', [PermissionController::class, 'update'])->name('satuan.permissions');
     Route::patch('/pengaturan/landing', [SettingController::class, 'updateLanding'])->name('pengaturan.landing.update');
+    Route::delete('/pengaturan/landing/gambar/{tipe}', [SettingController::class, 'deleteLandingImage'])->whereIn('tipe', ['logo', 'hero_image'])->name('pengaturan.landing.image.destroy');
     Route::post('/backup', [BackupController::class, 'store'])->name('backup.store');
     Route::post('/backup/upload', [BackupFileController::class, 'store'])->name('backup.upload');
     Route::get('/backup/{filename}/download', [BackupController::class, 'download'])->name('backup.download');

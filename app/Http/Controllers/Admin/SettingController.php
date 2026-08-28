@@ -161,4 +161,31 @@ class SettingController extends Controller
 
         return back()->with('status', 'Konten halaman landing berhasil disimpan.');
     }
+
+    public function deleteLandingImage(Request $request, string $tipe): RedirectResponse
+    {
+        // Guard akses sama persis dengan updateLanding() -- endpoint ini juga
+        // mengubah data Pengaturan Umum sehingga wajib sudah lolos verifikasi
+        // password + captcha dan belum kedaluwarsa (lihat ACCESS_TTL_SECONDS).
+        $verified = $request->session()->get('pengaturan_umum_terverifikasi', false);
+        $verifiedAt = (int) $request->session()->get('pengaturan_umum_terverifikasi_at', 0);
+
+        if (! $verified || $verifiedAt <= 0 || (now()->timestamp - $verifiedAt) > self::ACCESS_TTL_SECONDS) {
+            $request->session()->forget(['pengaturan_umum_terverifikasi', 'pengaturan_umum_terverifikasi_at']);
+            return back()->with('error', 'Akses Pengaturan Umum sudah berakhir. Masukkan password dan captcha terlebih dahulu.');
+        }
+
+        $kolom = $tipe === 'logo' ? 'logo_path' : 'hero_image_path';
+        $label = $tipe === 'logo' ? 'Logo' : 'Gambar latar (BG) beranda';
+
+        $pengaturan = Pengaturan::current();
+
+        if ($pengaturan->{$kolom}) {
+            Storage::disk('public')->delete($pengaturan->{$kolom});
+            $pengaturan->update([$kolom => null]);
+            ActivityLog::catat('pengaturan.landing.image_delete', $label.' landing page dihapus.');
+        }
+
+        return back()->with('status', $label.' berhasil dihapus.');
+    }
 }

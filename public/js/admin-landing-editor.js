@@ -78,6 +78,7 @@
     // data-current-logo di #landingForm (lihat admin.blade.php). Kalau
     // kosong berarti belum pernah upload logo -> tampilkan kotak placeholder.
     const currentLogo = form.dataset.currentLogo || '';
+    const logoDeleteUrl = form.dataset.logoDeleteUrl || '';
     addCardHtml(panel, `
       <div class="lp-card-title">Logo Landing Page</div>
       <p class="lp-card-desc">Satu logo ini otomatis dipakai di header, hero, layar loading, favicon tab browser, dan bagian Tentang -- tidak perlu upload berkali-kali di tempat lain.</p>
@@ -85,9 +86,10 @@
         <div class="form-field full">
           <label for="lpManagedLogo">Logo</label>
           <div class="lp-hero-image-row">
-            <input id="lpManagedLogo" name="logo_file" type="file" accept="image/png,image/jpeg,image/webp">
+            <input id="lpManagedLogo" name="logo_file" type="file" accept="image/png,image/jpeg,image/webp" data-has-current="${currentLogo ? '1' : '0'}" data-label-existing="Ganti Logo">
             <img src="${currentLogo}" alt="Logo saat ini" class="lp-current-image" id="lpLogoPreviewImg" style="${currentLogo ? '' : 'display:none'}">
             <div class="lp-image-placeholder" id="lpLogoPreviewPlaceholder" style="${currentLogo ? 'display:none' : ''}">Belum ada logo</div>
+            <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpLogoDeleteBtn" style="${currentLogo ? '' : 'display:none'}" onclick="window.bukaHapusLandingGambar(this)" data-action="${logoDeleteUrl}" data-nama="Logo Landing Page">Hapus Logo</button>
           </div>
           <small>Format JPG, PNG, atau WEBP · maksimal 5 MB.</small>
         </div>
@@ -161,10 +163,20 @@
       input.parentNode.insertBefore(wrap, input);
       wrap.appendChild(input);
 
+      // Kalau file ini sudah punya data aktif tersimpan di server (BG/logo
+      // yang sedang dipakai sistem), teks tombol diganti dari "Pilih File"
+      // generik jadi lebih spesifik ("Ganti Latar"/"Ganti Logo") supaya
+      // Admin tahu dia akan MENGGANTI, bukan mengunggah yang pertama kali.
+      const hasCurrent = input.dataset.hasCurrent === '1';
+      const buttonText = hasCurrent && input.dataset.labelExisting ? input.dataset.labelExisting : 'Pilih File';
+
       const label = document.createElement('label');
       label.className = 'landing-file-button';
       label.htmlFor = input.id;
-      label.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg><span>Pilih File</span>';
+      const labelTextSpan = document.createElement('span');
+      labelTextSpan.textContent = buttonText;
+      label.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>';
+      label.appendChild(labelTextSpan);
       wrap.appendChild(label);
 
       const name = document.createElement('span');

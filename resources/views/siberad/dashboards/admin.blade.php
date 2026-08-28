@@ -512,6 +512,23 @@
   </div>
 </div>
 
+<div class="confirm-overlay" id="hapusLandingGambarOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="hapusLandingGambarTitle">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
+    </div>
+    <h3 id="hapusLandingGambarTitle">Hapus Gambar?</h3>
+    <p><strong id="hapusLandingGambarNama">Gambar ini</strong> akan dihapus permanen dari server dan tidak bisa dikembalikan.</p>
+    <form id="formHapusLandingGambar" method="POST" action="">
+      @csrf @method('DELETE')
+      <div class="confirm-actions">
+        <button type="button" class="btn" id="hapusLandingGambarBatal">Batal</button>
+        <button type="submit" class="btn btn-ghost-red">Ya, Hapus</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="user-modal-overlay" id="tambahSatuanModal">
   <div class="user-modal-card" role="dialog" aria-modal="true" aria-label="Tambah Satuan">
     <div class="user-modal-head">
@@ -1333,6 +1350,16 @@
         };
         document.getElementById('hapusBackupBatal')?.addEventListener('click', () => document.getElementById('hapusBackupOverlay')?.classList.remove('open'));
         document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusBackupOverlay')?.classList.remove('open'); });
+
+        // Dipakai tombol "Hapus BG" (statis) dan "Hapus Logo" (disuntik oleh
+        // admin-landing-editor.js) di tab Pengaturan Umum -> Beranda.
+        window.bukaHapusLandingGambar = function (btn) {
+          document.getElementById('formHapusLandingGambar').action = btn.dataset.action;
+          document.getElementById('hapusLandingGambarNama').textContent = btn.dataset.nama || 'Gambar ini';
+          document.getElementById('hapusLandingGambarOverlay')?.classList.add('open');
+        };
+        document.getElementById('hapusLandingGambarBatal')?.addEventListener('click', () => document.getElementById('hapusLandingGambarOverlay')?.classList.remove('open'));
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusLandingGambarOverlay')?.classList.remove('open'); });
         (function () {
           var modal = document.getElementById('ubahPenggunaModal');
           var closeBtn = document.getElementById('ubahPenggunaClose');
@@ -2456,7 +2483,7 @@
               </div>
             </div>
 
-            <form id="landingForm" method="POST" action="{{ route('admin.pengaturan.landing.update') }}" enctype="multipart/form-data" data-current-logo="{{ $pengaturan->logo_path ? asset('storage/'.$pengaturan->logo_path) : '' }}">
+            <form id="landingForm" method="POST" action="{{ route('admin.pengaturan.landing.update') }}" enctype="multipart/form-data" data-current-logo="{{ $pengaturan->logo_path ? asset('storage/'.$pengaturan->logo_path) : '' }}" data-logo-delete-url="{{ route('admin.pengaturan.landing.image.destroy', 'logo') }}">
               @csrf @method('PATCH')
 
               <div class="lp-tabs" role="tablist">
@@ -2505,9 +2532,10 @@
                   <div class="form-field full">
                     <label for="lpHeroImage">Gambar Latar Beranda (opsional)</label>
                     <div class="lp-hero-image-row">
-                      <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image">
-                      <img src="{{ $pengaturan->hero_image_path ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="display:none">
-                      <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder">Belum ada gambar latar (BG)</div>
+                      <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturan->hero_image_path ? '1' : '0' }}" data-label-existing="Ganti Latar">
+                      <img src="{{ $pengaturan->hero_image_path ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}">
+                      <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturan->hero_image_path ? 'display:none' : '' }}">Belum ada gambar latar (BG)</div>
+                      <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar (BG) Beranda">Hapus BG</button>
                     </div>
                   </div>
                 </div>
@@ -2682,6 +2710,7 @@
           .lp-hero-image-row .lp-image-placeholder{align-self:flex-start;margin:0;}
           .lp-current-image{display:block;border-radius:9px;border:1px solid var(--border-soft);}
           .lp-image-placeholder{box-sizing:border-box;border-radius:9px;border:1.5px dashed var(--border-soft);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
+          .lp-delete-img-btn{align-self:flex-start;min-height:38px;height:38px;padding:0 16px;font-size:12px;}
           /* BG (Gambar Latar Beranda): rasio landscape, mengikuti bentuk asli
              foto latar (bukan kotak seperti logo) -- object-fit:cover supaya
              foto memenuhi kotak tanpa gepeng/distorsi. */
