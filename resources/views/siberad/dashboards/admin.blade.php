@@ -2722,7 +2722,12 @@
           /* --lp-bar-h: tinggi bar tombol Simpan (padding 14px atas+bawah + tombol ~38px).
              Dipakai untuk padding-bottom sidebar supaya border-right sidebar
              turun sampai tepat menyentuh border-top bar -- garis vertikal &
-             horizontal jadi lurus di pojok kiri bawah. */
+             horizontal jadi lurus di pojok kiri bawah.
+             Nilai 66px di bawah cuma FALLBACK -- nilai final yang benar-benar
+             dipakai browser diukur & di-set ulang secara akurat oleh JS
+             (lihat "sinkron --lp-bar-h" di <script> bawah), supaya tetap pas
+             piksel-demi-piksel walau tingginya berubah (responsif, font,
+             dll). Jangan andalkan angka statis ini sendirian. */
           :root{ --lp-bar-h:66px; }
 
           /* Wrapper luar: fixed full-width dari tepi sidebar ke kanan,
@@ -2736,6 +2741,22 @@
             box-shadow:0 -8px 16px -8px rgba(0,0,0,.12);
             transition:left .25s ease;
           }
+          /* pengumuman-banner.blade.php (di-include lebih awal di halaman,
+             lihat baris ~912) punya style generic ".lp-form-actions" &
+             ".lp-form-actions .btn" dengan !important (ditujukan utk konteks
+             lain, bar aksi yang menyatu di dalam form -- bukan bar fixed
+             ini) yang tanpa sengaja "bocor" ke sini karena sama-sama pakai
+             class .lp-form-actions. Efeknya: margin-top & padding-top
+             nambah, display berubah jadi flex, dan tombol Simpan dipaksa
+             min-height 42px -- tinggi bar asli jadi membengkak jauh di atas
+             --lp-bar-h (66px), sehingga sidebar (yang cuma reserve 66px
+             lewat padding-bottom) berhenti terlalu cepat & garis
+             pertemuannya jadi "anak tangga" / tidak sejajar dgn bar.
+             Reset di sini (aturan ini render LEBIH AKHIR di halaman jadi
+             menang di !important-vs-!important tie-break) supaya tinggi
+             bar balik ke ukuran desain aslinya. */
+          .lp-form-actions{margin-top:0!important;padding-top:0!important;display:block!important;}
+          .lp-form-actions .btn{min-height:0!important;}
           /* Wrapper dalam: padding 14px 32px meniru .content{padding:30px 32px}
              sehingga sisi kiri tombol sejajar lurus dengan tepi kiri panel/
              tabel di atasnya. */
@@ -2831,13 +2852,43 @@
             // garis vertikal sidebar dan garis horizontal footer lurus di pojok kiri bawah.
             (function(){
               var pengaturanPanel = document.querySelector('[data-tab-panel="pengaturan-umum"]');
+              var bar = document.querySelector('.lp-form-actions');
               if(!pengaturanPanel) return;
+
+              // ---- sinkron --lp-bar-h: ukur tinggi ASLI bar Simpan, jangan
+              // percaya angka statis di CSS. Bar ini display:none saat tab
+              // nggak aktif (tinggi kebaca 0), jadi cuma diukur waktu tab
+              // aktif. Dengan ini, --lp-bar-h selalu pas piksel-demi-piksel
+              // dgn tinggi bar yang beneran dirender browser -- kebal dari
+              // style bocor / perubahan CSS di masa depan yang mengubah
+              // tinggi bar tanpa sadar mengubah nomor 66px di CSS. ----
+              function syncBarHeight(){
+                if(!bar || !pengaturanPanel.classList.contains('active')) return;
+                var h = bar.getBoundingClientRect().height;
+                if(h > 0){
+                  document.documentElement.style.setProperty('--lp-bar-h', h + 'px');
+                }
+              }
               function syncLpActive(){
-                document.body.classList.toggle('lp-active', pengaturanPanel.classList.contains('active'));
+                var active = pengaturanPanel.classList.contains('active');
+                document.body.classList.toggle('lp-active', active);
+                if(active){
+                  // rAF: tunggu 1 frame supaya display:block dari .active
+                  // sudah kepakai & tinggi bar bisa diukur dgn benar.
+                  requestAnimationFrame(syncBarHeight);
+                }
               }
               syncLpActive(); // cek kondisi awal (sesi tersimpan)
               var obs = new MutationObserver(syncLpActive);
               obs.observe(pengaturanPanel, {attributes:true, attributeFilter:['class']});
+
+              window.addEventListener('resize', syncBarHeight);
+              if(bar && window.ResizeObserver){
+                new ResizeObserver(syncBarHeight).observe(bar);
+              }
+              if(document.fonts && document.fonts.ready){
+                document.fonts.ready.then(syncBarHeight);
+              }
             })();
 
             // ---------- draft autosave (jaga-jaga sesi habis di tengah edit) ----------
