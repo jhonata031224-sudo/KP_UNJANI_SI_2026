@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<title>Laporan Pengguna & Aktivitas — {{ $pengaturan->singkatan ?? 'SIBERAD' }}</title>
+<title>Laporan Pengguna & Aktivitas — {{ ($pengaturan->hero_judul_awal ?? '') . ($pengaturan->hero_judul_aksen ?? 'SIBERAD') }}</title>
 <style>
   body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0c1210;color:#e7efe9;margin:0;padding:32px;}
   h1{font-size:20px;margin:0 0 4px;}
