@@ -2452,7 +2452,7 @@
               </div>
             </div>
 
-            <form id="landingForm" method="POST" action="{{ route('admin.pengaturan.landing.update') }}" enctype="multipart/form-data">
+            <form id="landingForm" method="POST" action="{{ route('admin.pengaturan.landing.update') }}" enctype="multipart/form-data" data-current-logo="{{ $pengaturan->logo_path ? asset('storage/'.$pengaturan->logo_path) : '' }}">
               @csrf @method('PATCH')
 
               <div class="lp-tabs" role="tablist">
@@ -2502,9 +2502,8 @@
                     <label for="lpHeroImage">Gambar Latar Beranda (opsional)</label>
                     <div class="lp-hero-image-row">
                       <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image">
-                      @if($pengaturan->hero_image_path)
-                        <img src="{{ asset('storage/'.$pengaturan->hero_image_path) }}" alt="Gambar beranda saat ini" class="lp-current-image">
-                      @endif
+                      <img src="{{ $pengaturan->hero_image_path ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" @if(!$pengaturan->hero_image_path) style="display:none" @endif>
+                      <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" @if($pengaturan->hero_image_path) style="display:none" @endif>Belum ada gambar latar (BG)</div>
                     </div>
                   </div>
                 </div>
@@ -2673,6 +2672,8 @@
           .lp-hero-image-row .landing-file-picker{flex:1 1 220px;min-width:200px;}
           .lp-current-image{flex:0 0 260px;width:260px;height:150px;margin-top:0;border-radius:9px;display:block;border:1px solid var(--border-soft);object-fit:cover;object-position:center;}
           @media(max-width:560px){.lp-current-image{flex-basis:100%;width:100%;}}
+          .lp-image-placeholder{flex:0 0 260px;width:260px;height:150px;box-sizing:border-box;border-radius:9px;border:1.5px dashed var(--border-soft);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
+          @media(max-width:560px){.lp-image-placeholder{flex-basis:100%;width:100%;}}
 
           /* Field & kartu tambahan yang disuntik lewat admin-landing-editor.js
              (Identitas Brand, Tombol Hero, SEO, Logo, Navigasi, Statistik) --
@@ -2879,10 +2880,16 @@
               heroImageInput.addEventListener('change', function(){
                 var file = this.files && this.files[0];
                 var heroEl = document.getElementById('lpPreviewHero');
+                var previewImg = document.getElementById('lpHeroImagePreviewImg');
+                var placeholder = document.getElementById('lpHeroImagePreviewPlaceholder');
                 if(!file){ heroEl.style.backgroundImage = ''; return; }
                 var reader = new FileReader();
                 reader.onload = function(e){
                   heroEl.style.backgroundImage = 'linear-gradient(160deg, color-mix(in srgb, var(--panel-2) 85%, transparent), color-mix(in srgb, var(--bg-deep) 75%, transparent)), url(' + e.target.result + ')';
+                  // Tampilkan pratinjau BG realtime di sebelah tombol pilih file,
+                  // gantikan kotak "belum ada gambar" begitu file dipilih.
+                  if(previewImg){ previewImg.src = e.target.result; previewImg.style.display = 'block'; }
+                  if(placeholder){ placeholder.style.display = 'none'; }
                 };
                 reader.readAsDataURL(file);
               });

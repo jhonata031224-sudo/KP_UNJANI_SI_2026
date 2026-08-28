@@ -74,13 +74,21 @@
   }
 
   function addLogoField(panel) {
+    // Logo saat ini (kalau sudah pernah diupload) dikirim lewat atribut
+    // data-current-logo di #landingForm (lihat admin.blade.php). Kalau
+    // kosong berarti belum pernah upload logo -> tampilkan kotak placeholder.
+    const currentLogo = form.dataset.currentLogo || '';
     addCardHtml(panel, `
       <div class="lp-card-title">Logo Landing Page</div>
       <p class="lp-card-desc">Satu logo ini otomatis dipakai di header, hero, layar loading, favicon tab browser, dan bagian Tentang -- tidak perlu upload berkali-kali di tempat lain.</p>
       <div class="form-grid">
         <div class="form-field full">
           <label for="lpManagedLogo">Logo</label>
-          <input id="lpManagedLogo" name="logo_file" type="file" accept="image/png,image/jpeg,image/webp">
+          <div class="lp-hero-image-row">
+            <input id="lpManagedLogo" name="logo_file" type="file" accept="image/png,image/jpeg,image/webp">
+            <img src="${currentLogo}" alt="Logo saat ini" class="lp-current-image" id="lpLogoPreviewImg" style="${currentLogo ? '' : 'display:none'}">
+            <div class="lp-image-placeholder" id="lpLogoPreviewPlaceholder" style="${currentLogo ? 'display:none' : ''}">Belum ada logo</div>
+          </div>
           <small>Format JPG, PNG, atau WEBP · maksimal 5 MB.</small>
         </div>
       </div>
@@ -268,6 +276,14 @@
         if (!f) return;
         const r = new FileReader();
         r.onload = e => {
+          // Kotak pratinjau kecil di sebelah tombol pilih file: begitu logo
+          // dipilih, langsung ganti gambar & sembunyikan placeholder "belum
+          // ada logo" -- tanpa perlu submit form dulu.
+          const previewImg = document.getElementById('lpLogoPreviewImg');
+          const placeholder = document.getElementById('lpLogoPreviewPlaceholder');
+          if (previewImg) { previewImg.src = e.target.result; previewImg.style.display = 'block'; }
+          if (placeholder) { placeholder.style.display = 'none'; }
+
           const iframe = document.getElementById('lpLiveLandingFrame');
           if (iframe && iframe.contentDocument) {
             iframe.contentDocument
