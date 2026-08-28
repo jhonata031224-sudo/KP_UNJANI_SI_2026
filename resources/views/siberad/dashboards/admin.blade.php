@@ -2672,10 +2672,21 @@
           .lp-hero-image-row .landing-file-picker{align-self:flex-start;flex:0 0 auto;min-width:200px;}
           .lp-hero-image-row .lp-current-image,
           .lp-hero-image-row .lp-image-placeholder{align-self:center;margin:0 auto;}
-          .lp-current-image{flex:0 0 260px;width:260px;height:150px;margin-top:0;border-radius:9px;display:block;border:1px solid var(--border-soft);object-fit:cover;object-position:center;}
-          @media(max-width:560px){.lp-current-image{flex-basis:100%;width:100%;}}
-          .lp-image-placeholder{flex:0 0 260px;width:260px;height:150px;box-sizing:border-box;border-radius:9px;border:1.5px dashed var(--border-soft);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
-          @media(max-width:560px){.lp-image-placeholder{flex-basis:100%;width:100%;}}
+          .lp-current-image{display:block;border-radius:9px;border:1px solid var(--border-soft);}
+          .lp-image-placeholder{box-sizing:border-box;border-radius:9px;border:1.5px dashed var(--border-soft);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
+          /* BG (Gambar Latar Beranda): rasio landscape, mengikuti bentuk asli
+             foto latar (bukan kotak seperti logo) -- object-fit:cover supaya
+             foto memenuhi kotak tanpa gepeng/distorsi. */
+          #lpHeroImagePreviewImg{width:280px;height:158px;object-fit:cover;object-position:center;}
+          #lpHeroImagePreviewPlaceholder{width:280px;height:158px;}
+          @media(max-width:560px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{width:100%;max-width:340px;}}
+          /* Logo: kotak & object-fit:contain (bukan cover) supaya lambang/
+             logo utuh terlihat jelas tanpa terpotong, dengan ukuran yang
+             pas -- tidak menyisakan ruang kosong berlebihan seperti kotak
+             landscape BG. */
+          #lpLogoPreviewImg{width:150px;height:150px;object-fit:contain;background:var(--panel);padding:8px;box-sizing:border-box;}
+          #lpLogoPreviewPlaceholder{width:150px;height:150px;}
+          @media(max-width:560px){#lpLogoPreviewImg,#lpLogoPreviewPlaceholder{width:150px;}}
 
           /* Field & kartu tambahan yang disuntik lewat admin-landing-editor.js
              (Identitas Brand, Tombol Hero, SEO, Logo, Navigasi, Statistik) --
