@@ -2502,8 +2502,8 @@
                     <label for="lpHeroImage">Gambar Latar Beranda (opsional)</label>
                     <div class="lp-hero-image-row">
                       <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image">
-                      <img src="{{ $pengaturan->hero_image_path ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" @if(!$pengaturan->hero_image_path) style="display:none" @endif>
-                      <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" @if($pengaturan->hero_image_path) style="display:none" @endif>Belum ada gambar latar (BG)</div>
+                      <img src="{{ $pengaturan->hero_image_path ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="display:none">
+                      <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder">Belum ada gambar latar (BG)</div>
                     </div>
                   </div>
                 </div>
@@ -2670,10 +2670,10 @@
           .lp-card-compact{padding:12px 16px;}
           .lp-card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
           .lp-card-desc{margin:-4px 0 14px;font-size:11.5px;line-height:1.55;color:var(--text-muted);}
-          .lp-hero-image-row{display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:0;}
+          .lp-hero-image-row{display:flex;flex-direction:column;align-items:flex-start;gap:16px;margin-top:0;}
           .lp-hero-image-row .landing-file-picker{align-self:flex-start;flex:0 0 auto;min-width:200px;}
           .lp-hero-image-row .lp-current-image,
-          .lp-hero-image-row .lp-image-placeholder{align-self:center;margin:0 auto;}
+          .lp-hero-image-row .lp-image-placeholder{align-self:flex-start;margin:0;}
           .lp-current-image{display:block;border-radius:9px;border:1px solid var(--border-soft);}
           .lp-image-placeholder{box-sizing:border-box;border-radius:9px;border:1.5px dashed var(--border-soft);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
           /* BG (Gambar Latar Beranda): rasio landscape, mengikuti bentuk asli
@@ -2704,15 +2704,28 @@
              urutan <style> ini di render lebih akhir di halaman. */
           .lp-panel{overflow:visible;}
 
-          /* Tombol Simpan dibuat "menempel" (sticky) di dasar layar begitu
-             halaman di-scroll, supaya admin tidak perlu scroll sampai ke
-             ujung bawah tab yang panjang (Beranda dsb) hanya untuk
-             menyimpan perubahan -- tombol selalu terjangkau. */
+          /* Tombol Simpan pakai position:fixed (BUKAN sticky). Ternyata
+             .content (partials/admin-ui-consistency.blade.php) dikasih
+             overflow-x:hidden supaya chart/grid lain nggak bikin scroll
+             horizontal -- efek sampingnya, begitu overflow-x bukan
+             'visible', browser otomatis bikin overflow-y ikutan jadi
+             'auto' juga (aturan baku CSS box model). .content pun jadi
+             "kotak scroll" sendiri, dan position:sticky di dalamnya jadi
+             dihitung relatif ke kotak itu (yang tingginya persis sama
+             dengan isinya, jadi gak ada jarak buat "nempel") -- bukan ke
+             viewport, makanya tombol kelihatan diam di tempat biasa aja.
+             position:fixed gak kena masalah itu karena selalu relatif ke
+             viewport. Posisi kiri disesuaikan lebar sidebar (256px normal,
+             76px saat diciutkan, 0 saat mobile) supaya gak numpuk sidebar. */
           .lp-form-actions{
-            margin-top:6px;padding:16px 0;border-top:1px solid var(--border-soft);
-            position:sticky;bottom:0;background:var(--panel);z-index:4;
+            position:fixed;left:var(--sidebar-w);right:0;bottom:0;
+            margin-top:0;padding:14px 24px;border-top:1px solid var(--border-soft);
+            background:var(--panel);z-index:4;
             box-shadow:0 -8px 16px -8px rgba(0,0,0,.12);
+            transition:left .25s ease;
           }
+          .sidebar.collapsed ~ .main .lp-form-actions{left:76px;}
+          @media(max-width:900px){ .lp-form-actions{left:0;} }
 
           /* Pratinjau tetap di posisi normalnya (bawah editor, landscape) --
              tidak sticky karena sudah 1 kolom, bukan sejajar ke samping. */
