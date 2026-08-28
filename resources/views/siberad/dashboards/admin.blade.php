@@ -2769,9 +2769,12 @@
           .lp-form-actions .btn{min-height:0!important;}
           /* Wrapper dalam: padding 14px 32px meniru .content{padding:30px 32px}
              sehingga sisi kiri tombol sejajar lurus dengan tepi kiri panel/
-             tabel di atasnya. */
+             tabel di atasnya. flex + justify-content:flex-end supaya tombol
+             "Simpan Konten Landing" nempel ke KANAN (bukan default kiri). */
           .lp-form-actions-inner{
             padding:14px 32px;
+            display:flex;
+            justify-content:flex-end;
           }
           /* Kotak Keluar (.side-foot) dipindah jadi position:fixed nempel ke
              dasar viewport, PERSIS kayak bar Simpan (position:fixed;bottom:0)
@@ -2782,8 +2785,13 @@
              masih bisa meleset dikit. width ikut lebar sidebar (256px normal
              / 76px collapsed) biar nempel pas di bawah nav, dan .side-nav
              dikasih padding-bottom senilai --lp-bar-h supaya isi nav gak
-             ketutup kotak Keluar yang sekarang fixed. Hanya berlaku saat tab
-             Konten Landing aktif (body punya class lp-active yg ditambah JS). */
+             ketutup kotak Keluar yang sekarang fixed. border-right jadi
+             garis vertikal pembatas menerus dgn border-right .sidebar di
+             atasnya (warna & ketebalan sama) -- karena .side-foot sekarang
+             fixed & lepas dari flow .sidebar, garis vertikal .sidebar itu
+             sendiri gak otomatis "nempel" turun ke box ini, jadi digambar
+             ulang di sini. Hanya berlaku saat tab Konten Landing aktif
+             (body punya class lp-active yg ditambah JS). */
           body.lp-active .side-foot{
             position:fixed;
             left:0;bottom:0;
@@ -2793,6 +2801,7 @@
             display:flex;
             align-items:center;
             background:var(--panel);
+            border-right:1px solid var(--border-soft);
             z-index:100011;
             transition:width .25s ease;
           }
@@ -2803,7 +2812,7 @@
           @media(max-width:900px){
             .lp-form-actions{left:0;}
             .lp-form-actions-inner{padding:14px 16px;}
-            body.lp-active .side-foot{position:static;width:100%;height:auto;display:block;}
+            body.lp-active .side-foot{position:static;width:100%;height:auto;display:block;border-right:none;}
             body.lp-active .side-nav{padding-bottom:0;}
           }
           @media(max-width:600px){
