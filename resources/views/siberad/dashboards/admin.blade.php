@@ -2642,8 +2642,10 @@
         </div>
 
         <style>
-          .lp-layout{display:grid;grid-template-columns:1.3fr 1fr;gap:22px;align-items:start;}
-          @media (max-width:1100px){ .lp-layout{grid-template-columns:1fr;} }
+          /* Layout selalu 1 kolom: editor (tabel/tab) di atas, Pratinjau
+             Langsung tetap di bawah dalam posisi landscape/lebar seperti
+             sekarang -- SENGAJA tidak dibikin sejajar 2 kolom ke samping. */
+          .lp-layout{display:flex;flex-direction:column;gap:22px;}
 
           .lp-panel form{padding:22px;}
 
@@ -2712,12 +2714,9 @@
             box-shadow:0 -8px 16px -8px rgba(0,0,0,.12);
           }
 
-          /* Pratinjau ikut ter-scroll bersama editor tapi "menempel" di
-             dekat atas layar (bukan ikut turun jauh ke bawah) selama
-             kolom editor di sebelahnya masih lebih panjang -- jadi admin
-             bisa langsung lihat hasil pratinjau tanpa scroll bolak-balik. */
-          .lp-preview-panel{position:sticky;top:16px;}
-          @media (max-width:1100px){ .lp-preview-panel{position:static;top:auto;} }
+          /* Pratinjau tetap di posisi normalnya (bawah editor, landscape) --
+             tidak sticky karena sudah 1 kolom, bukan sejajar ke samping. */
+          .lp-preview-panel{position:static;}
           .lp-preview-panel .panel-head h3{display:flex;align-items:center;gap:9px;}
           .lp-live-dot{width:7px;height:7px;border-radius:50%;background:var(--success-bright);box-shadow:0 0 0 3px var(--success-dim);animation:lpPulse 1.8s ease-in-out infinite;}
           @keyframes lpPulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
