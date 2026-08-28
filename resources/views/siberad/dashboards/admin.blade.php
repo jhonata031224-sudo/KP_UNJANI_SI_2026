@@ -2695,9 +2695,29 @@
           .lp-dynamic-section{margin-top:22px;padding-top:22px;border-top:1px dashed var(--border-soft);}
           .lp-dynamic-section .lp-card:last-child{margin-bottom:0;}
 
-          .lp-form-actions{margin-top:6px;padding-top:18px;border-top:1px solid var(--border-soft);}
+          /* pengumuman-banner.blade.php men-set .lp-panel{overflow:hidden}
+             (buat clipping visual rounded corner) -- tapi overflow selain
+             visible pada ancestor bikin position:sticky di dalamnya (tombol
+             Simpan) tidak berfungsi. Dikembalikan ke visible di sini karena
+             urutan <style> ini di render lebih akhir di halaman. */
+          .lp-panel{overflow:visible;}
 
+          /* Tombol Simpan dibuat "menempel" (sticky) di dasar layar begitu
+             halaman di-scroll, supaya admin tidak perlu scroll sampai ke
+             ujung bawah tab yang panjang (Beranda dsb) hanya untuk
+             menyimpan perubahan -- tombol selalu terjangkau. */
+          .lp-form-actions{
+            margin-top:6px;padding:16px 0;border-top:1px solid var(--border-soft);
+            position:sticky;bottom:0;background:var(--panel);z-index:4;
+            box-shadow:0 -8px 16px -8px rgba(0,0,0,.12);
+          }
+
+          /* Pratinjau ikut ter-scroll bersama editor tapi "menempel" di
+             dekat atas layar (bukan ikut turun jauh ke bawah) selama
+             kolom editor di sebelahnya masih lebih panjang -- jadi admin
+             bisa langsung lihat hasil pratinjau tanpa scroll bolak-balik. */
           .lp-preview-panel{position:sticky;top:16px;}
+          @media (max-width:1100px){ .lp-preview-panel{position:static;top:auto;} }
           .lp-preview-panel .panel-head h3{display:flex;align-items:center;gap:9px;}
           .lp-live-dot{width:7px;height:7px;border-radius:50%;background:var(--success-bright);box-shadow:0 0 0 3px var(--success-dim);animation:lpPulse 1.8s ease-in-out infinite;}
           @keyframes lpPulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
