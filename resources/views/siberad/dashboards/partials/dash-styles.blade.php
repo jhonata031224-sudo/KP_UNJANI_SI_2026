@@ -131,6 +131,11 @@
     transition:background-color .25s ease,border-color .25s ease,color .25s ease,box-shadow .25s ease;
   }
 
+  /* Matikan transisi di isi tabel (bisa ratusan baris data) supaya ganti tema tetap ringan */
+  table,table *{
+    transition:none;
+  }
+
   body::before{
     content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.4;
     background-image:
