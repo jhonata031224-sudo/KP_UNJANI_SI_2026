@@ -2704,19 +2704,18 @@
           .lp-card-compact{padding:12px 16px;}
           .lp-card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
           .lp-card-desc{margin:-4px 0 14px;font-size:11.5px;line-height:1.55;color:var(--text-muted);}
-          .lp-hero-image-row{display:flex;flex-direction:column;align-items:flex-start;gap:16px;margin-top:0;}
-          .lp-hero-image-row .landing-file-picker{align-self:flex-start;flex:0 0 auto;min-width:200px;}
-          /* Preview BG digeser ke kanan (margin-left) supaya gak numpuk pas
-             di bawah tombol "Pilih File" -- dan dibikin lebih gede (lihat
-             #lpHeroImagePreviewImg di bawah) supaya fotonya keliatan jelas,
-             bukan cuma thumbnail kecil. Tombol Hapus tetap rata kiri
-             (align-self:flex-start bawaan, TIDAK ikut digeser) supaya masih
-             sejajar sama tombol "Pilih File" di atasnya. */
+          .lp-hero-image-row{display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:0;text-align:center;}
+          .lp-hero-image-row .landing-file-picker{align-self:center;flex:0 0 auto;min-width:200px;}
+          /* Tombol "Pilih File", preview gambar, & tombol "Hapus Latar
+             Belakang" semuanya rata tengah (align-items:center di parent
+             .lp-hero-image-row) -- sebelumnya rata kiri lalu preview
+             digeser pakai margin-left, sekarang cukup center semua & margin
+             kiri itu dihapus supaya gak nambah geser dari titik tengah. */
           .lp-hero-image-row .lp-current-image,
-          .lp-hero-image-row .lp-image-placeholder{align-self:flex-start;margin:0 0 0 64px;}
+          .lp-hero-image-row .lp-image-placeholder{align-self:center;margin:0;}
           .lp-current-image{display:block;border-radius:9px;border:1px solid var(--border-soft);}
           .lp-image-placeholder{box-sizing:border-box;border-radius:9px;border:1.5px dashed var(--border-soft);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
-          .lp-delete-img-btn{align-self:flex-start;min-height:38px;height:38px;padding:0 16px;font-size:12px;}
+          .lp-delete-img-btn{align-self:center;min-height:38px;height:38px;padding:0 16px;font-size:12px;}
           /* BG (Gambar Latar Beranda): rasio landscape, mengikuti bentuk asli
              foto latar (bukan kotak seperti logo) -- object-fit:cover supaya
              foto memenuhi kotak tanpa gepeng/distorsi. Ukuran diperbesar
@@ -2724,7 +2723,7 @@
              kelihatan. */
           #lpHeroImagePreviewImg{width:460px;height:259px;object-fit:cover;object-position:center;}
           #lpHeroImagePreviewPlaceholder{width:460px;height:259px;}
-          @media(max-width:760px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{width:100%;max-width:400px;margin-left:0;}}
+          @media(max-width:760px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{width:100%;max-width:400px;}}
           @media(max-width:560px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{max-width:340px;}}
           /* Logo: kotak & object-fit:contain (bukan cover) supaya lambang/
              logo utuh terlihat jelas tanpa terpotong, dengan ukuran yang
