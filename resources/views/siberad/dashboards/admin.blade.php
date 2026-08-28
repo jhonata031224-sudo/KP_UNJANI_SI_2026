@@ -2719,6 +2719,12 @@
              position:fixed gak kena masalah itu karena selalu relatif ke
              viewport. Posisi kiri disesuaikan lebar sidebar (256px normal,
              76px saat diciutkan, 0 saat mobile) supaya gak numpuk sidebar. */
+          /* --lp-bar-h: tinggi bar tombol Simpan (padding 14px atas+bawah + tombol ~38px).
+             Dipakai untuk padding-bottom sidebar supaya border-right sidebar
+             turun sampai tepat menyentuh border-top bar -- garis vertikal &
+             horizontal jadi lurus di pojok kiri bawah. */
+          :root{ --lp-bar-h:66px; }
+
           /* Wrapper luar: fixed full-width dari tepi sidebar ke kanan,
              tanpa padding horizontal -- supaya border-top dan background
              melebar penuh sejajar dengan garis topbar dan footer sidebar. */
@@ -2736,10 +2742,17 @@
           .lp-form-actions-inner{
             padding:14px 32px;
           }
+          /* Sidebar perlu padding-bottom setinggi bar supaya border-right
+             sidebar terus turun dan bertemu tepat dengan border-top bar.
+             Hanya berlaku saat tab Konten Landing aktif (body punya class
+             lp-active yang ditambah JS). Tanpa ini, sidebar berhenti
+             sebelum bar dan muncul celah/garis putus di pojok kiri bawah. */
+          body.lp-active .sidebar{padding-bottom:var(--lp-bar-h);}
           .sidebar.collapsed ~ .main .lp-form-actions{left:76px;}
           @media(max-width:900px){
             .lp-form-actions{left:0;}
             .lp-form-actions-inner{padding:14px 16px;}
+            body.lp-active .sidebar{padding-bottom:0;}
           }
           @media(max-width:600px){
             .lp-form-actions-inner{padding:12px;}
@@ -2811,6 +2824,21 @@
           (function(){
             var form = document.getElementById('landingForm');
             if(!form) return;
+
+            // ---------- lp-active body class: sidebar padding-bottom sinkron bar Simpan ----------
+            // Saat tab Pengaturan Umum aktif, body.lp-active memberi padding-bottom pada sidebar
+            // sehingga border-right sidebar terus turun tepat menyentuh border-top bar Simpan --
+            // garis vertikal sidebar dan garis horizontal footer lurus di pojok kiri bawah.
+            (function(){
+              var pengaturanPanel = document.querySelector('[data-tab-panel="pengaturan-umum"]');
+              if(!pengaturanPanel) return;
+              function syncLpActive(){
+                document.body.classList.toggle('lp-active', pengaturanPanel.classList.contains('active'));
+              }
+              syncLpActive(); // cek kondisi awal (sesi tersimpan)
+              var obs = new MutationObserver(syncLpActive);
+              obs.observe(pengaturanPanel, {attributes:true, attributeFilter:['class']});
+            })();
 
             // ---------- draft autosave (jaga-jaga sesi habis di tengah edit) ----------
             var LP_DRAFT_KEY = 'siberadLandingDraft';
