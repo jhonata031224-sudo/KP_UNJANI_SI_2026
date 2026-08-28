@@ -636,7 +636,7 @@
   <aside class="sidebar" id="sidebar">
     <div class="side-brand">
       <img src="{{ asset('images/logo-pussiberad.jpg') }}" alt="Lambang Pussiberad">
-      <div class="logo">DT-PHATRAM-<span>2639</span></div>
+      <div class="logo">{{ $pengaturan->hero_judul_awal }}<span>{{ $pengaturan->hero_judul_aksen }}</span></div>
       <button type="button" class="side-collapse-btn" id="sideCollapseBtn" aria-label="Ciutkan sidebar" title="Ciutkan sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg></button>
     </div>
     <nav class="side-nav">
@@ -2483,11 +2483,11 @@
                     <input id="lpEyebrow" name="hero_eyebrow" type="text" value="{{ old('hero_eyebrow', $pengaturan->hero_eyebrow) }}" data-lp="hero_eyebrow">
                   </div>
                   <div class="form-field">
-                    <label for="lpJudulAwal">Judul (bagian 1)</label>
+                    <label for="lpJudulAwal">Judul (bagian 1) — juga jadi nama sistem di logo &amp; sidebar semua pengguna</label>
                     <input id="lpJudulAwal" name="hero_judul_awal" type="text" value="{{ old('hero_judul_awal', $pengaturan->hero_judul_awal) }}" data-lp="hero_judul_awal">
                   </div>
                   <div class="form-field">
-                    <label for="lpJudulAksen">Judul (bagian 2, warna emas)</label>
+                    <label for="lpJudulAksen">Judul (bagian 2, warna emas) — juga ikut di logo &amp; sidebar semua pengguna</label>
                     <input id="lpJudulAksen" name="hero_judul_aksen" type="text" value="{{ old('hero_judul_aksen', $pengaturan->hero_judul_aksen) }}" data-lp="hero_judul_aksen">
                   </div>
                   <div class="form-field full">

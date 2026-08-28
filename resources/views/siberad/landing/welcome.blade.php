@@ -784,7 +784,7 @@
       <nav>
         <a class="logo" href="#tentang">
           <span class="logo-badge"><img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad"></span>
-          <span class="logo-text"><b>{{ $lp['brand']['name'] }}<span>{{ $lp['brand']['accent'] }}</span></b><small>{{ $lp['brand']['tagline'] }}</small></span>
+          <span class="logo-text"><b>{{ $pengaturan->hero_judul_awal }}<span>{{ $pengaturan->hero_judul_aksen }}</span></b><small>{{ $lp['brand']['tagline'] }}</small></span>
         </a>
         <ul class="nav-links" id="navLinks">
           @foreach ($lp['nav'] as $navItem)
@@ -995,7 +995,7 @@
           <div class="footer-brand-row">
             <span class="footer-crest"><img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad"></span>
             <div class="footer-brand">
-              <b>{{ $lp['brand']['name'] }}<span style="display:inline;color:var(--gold-bright);">{{ $lp['brand']['accent'] }}</span></b>
+              <b>{{ $pengaturan->hero_judul_awal }}<span style="display:inline;color:var(--gold-bright);">{{ $pengaturan->hero_judul_aksen }}</span></b>
               <span>Pusat Siber Angkatan Darat</span>
             </div>
           </div>
@@ -1263,7 +1263,7 @@
   @endif
 
   @if(session('logout_success'))
-    siberadShowToast('success', 'Anda berhasil logout dari DT-PHATRAM-2639.');
+    siberadShowToast('success', {!! json_encode('Anda berhasil logout dari '.$pengaturan->hero_judul_awal.$pengaturan->hero_judul_aksen.'.') !!});
   @endif
 
   // ---------- scroll reveal ----------
