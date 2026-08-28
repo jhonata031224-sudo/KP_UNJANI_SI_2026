@@ -2628,13 +2628,16 @@
             </form>
           </div>
 
-          {{-- ---------- PANEL PRATINJAU (terpisah) ---------- --}}
-          <div class="panel lp-preview-panel">
+          {{-- ---------- PANEL PRATINJAU (mengambang, dibuka lewat tombol lp-preview-toggle-btn) ---------- --}}
+          <div class="panel lp-preview-panel" id="lpPreviewPanel" role="dialog" aria-modal="true" aria-labelledby="lpPreviewPanelTitle" aria-hidden="true">
             <div class="panel-head">
               <div>
-                <h3>Pratinjau Langsung <span class="lp-live-dot" aria-hidden="true"></span></h3>
+                <h3 id="lpPreviewPanelTitle">Pratinjau Langsung <span class="lp-live-dot" aria-hidden="true"></span></h3>
                 <p>Mengikuti tema (gelap/terang) yang sedang aktif.</p>
               </div>
+              <button type="button" class="lp-preview-close" id="lpPreviewCloseBtn" aria-label="Tutup pratinjau">
+                <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              </button>
             </div>
             <div class="lp-preview-body">
               <div class="lp-browser-frame">
@@ -2675,10 +2678,24 @@
 
         </div>
 
+        {{-- Tombol sticky pemicu pratinjau mengambang + latar gelapnya --}}
+        <button type="button" class="lp-preview-toggle-btn" id="lpPreviewToggleBtn" aria-haspopup="dialog" aria-controls="lpPreviewPanel" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>Lihat Pratinjau</span>
+          <span class="lp-live-dot" aria-hidden="true"></span>
+        </button>
+        <div class="lp-preview-backdrop" id="lpPreviewBackdrop"></div>
+
         <style>
-          /* Layout selalu 1 kolom: editor (tabel/tab) di atas, Pratinjau
-             Langsung tetap di bawah dalam posisi landscape/lebar seperti
-             sekarang -- SENGAJA tidak dibikin sejajar 2 kolom ke samping. */
+          /* Editor (tabel/tab) mengisi .lp-layout sendirian -- Pratinjau
+             Langsung SENGAJA tidak lagi permanen menempel di bawah form
+             (dulu begitu, tapi jadinya editor jadi panjang & harus scroll
+             jauh buat lihat hasil). Sekarang preview jadi jendela
+             mengambang (modal, lihat .lp-preview-panel di bawah) yang
+             dibuka lewat tombol sticky .lp-preview-toggle-btn -- bisa
+             dipencet kapan saja tanpa scroll, dan tetap landscape/lebar
+             persis kayak sebelumnya (BUKAN dikecilin jadi kolom sempit
+             di samping -- itu sudah pernah dicoba & sengaja di-revert). */
           .lp-layout{display:flex;flex-direction:column;gap:22px;}
 
           .lp-panel form{padding:22px;}
@@ -2848,13 +2865,69 @@
             .lp-form-actions-inner{padding:12px;}
           }
 
-          /* Pratinjau tetap di posisi normalnya (bawah editor, landscape) --
-             tidak sticky karena sudah 1 kolom, bukan sejajar ke samping. */
-          .lp-preview-panel{position:static;}
+          /* ---------- Pratinjau mengambang (modal) ---------- */
+          /* Tombol sticky pemicu, nempel di pojok kanan bawah di ATAS bar
+             Simpan (posisinya ngikut --lp-bar-h yg sama dipakai bar Simpan,
+             jadi otomatis naik/turun kalau tinggi bar itu berubah). Selalu
+             terlihat di manapun user lagi scroll (tab Beranda/Fitur/
+             Tentang/Kontak), karena position:fixed relatif ke viewport. */
+          .lp-preview-toggle-btn{
+            position:fixed;right:24px;bottom:calc(var(--lp-bar-h) + 18px);
+            z-index:60;display:inline-flex;align-items:center;gap:8px;
+            padding:12px 20px;border-radius:999px;
+            border:1px solid var(--gold);background:var(--gold-dim);color:var(--gold-bright);
+            font-family:var(--body);font-size:12.5px;font-weight:700;letter-spacing:.01em;
+            cursor:pointer;box-shadow:0 12px 28px -10px rgba(0,0,0,.5);
+            transition:transform .15s ease,background .2s ease,bottom .2s ease;
+          }
+          .lp-preview-toggle-btn:hover{background:var(--gold-dim);transform:translateY(-2px);}
+          .lp-preview-toggle-btn:active{transform:translateY(0) scale(.97);}
+          .lp-preview-toggle-btn svg{width:16px;height:16px;flex-shrink:0;}
+          .lp-preview-toggle-btn .lp-live-dot{margin-left:1px;}
+          @media(max-width:900px){.lp-preview-toggle-btn{right:16px;bottom:calc(var(--lp-bar-h) + 14px);padding:11px 16px;font-size:12px;}}
+          @media(max-width:480px){.lp-preview-toggle-btn span{display:none;}.lp-preview-toggle-btn{padding:13px;border-radius:50%;}}
+
+          /* Latar gelap di belakang jendela pratinjau + klik utk nutup. */
+          .lp-preview-backdrop{
+            position:fixed;inset:0;z-index:100150;
+            background:rgba(6,10,16,.6);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+            opacity:0;visibility:hidden;pointer-events:none;
+            transition:opacity .2s ease,visibility .2s ease;
+          }
+          .lp-preview-backdrop.open{opacity:1;visibility:visible;pointer-events:auto;}
+
+          /* Panel preview jadi jendela mengambang di tengah layar, TETAP
+             landscape/lebar (bukan kolom sempit) -- cuma sekarang position
+             fixed & disembunyikan (opacity/visibility) sampai tombol di
+             atas dipencet, jadi gak makan tempat & gak nambah tinggi
+             halaman editor waktu ditutup. */
+          .lp-preview-panel{
+            position:fixed;top:50%;left:50%;
+            transform:translate(-50%,-50%) scale(.97);
+            width:min(1080px,92vw);max-height:88vh;overflow-y:auto;
+            z-index:100160;
+            opacity:0;visibility:hidden;pointer-events:none;
+            box-shadow:0 44px 96px -20px rgba(0,0,0,.55);
+            transition:opacity .2s ease,visibility .2s ease,transform .2s ease;
+          }
+          .lp-preview-panel.open{
+            opacity:1;visibility:visible;pointer-events:auto;
+            transform:translate(-50%,-50%) scale(1);
+          }
+          .lp-preview-panel .panel-head{position:sticky;top:0;background:var(--panel);z-index:1;padding-top:22px;}
           .lp-preview-panel .panel-head h3{display:flex;align-items:center;gap:9px;}
+          .lp-preview-close{
+            flex-shrink:0;width:38px;height:38px;border-radius:10px;
+            border:1px solid var(--border-soft);background:var(--panel-alt);color:var(--text-muted);
+            display:flex;align-items:center;justify-content:center;cursor:pointer;
+            transition:transform .2s ease,border-color .2s ease,color .2s ease;
+          }
+          .lp-preview-close:hover{transform:rotate(90deg);border-color:var(--gold);color:var(--gold-bright);}
+          .lp-preview-close svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
           .lp-live-dot{width:7px;height:7px;border-radius:50%;background:var(--success-bright);box-shadow:0 0 0 3px var(--success-dim);animation:lpPulse 1.8s ease-in-out infinite;}
           @keyframes lpPulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
           .lp-preview-body{padding:0 22px 22px;}
+          @media(max-width:1180px){.lp-preview-panel{width:96vw;max-height:92vh;}}
 
           /* Preview dibuat seperti viewport desktop mini agar landing page utuh
              terlihat di dalam kartu Admin tanpa memperbesar panel. */
@@ -2914,6 +2987,55 @@
           (function(){
             var form = document.getElementById('landingForm');
             if(!form) return;
+
+            // ---------- Pratinjau mengambang: buka/tutup + kunci scroll body ----------
+            // Konten preview (#lpPreview* ) sendiri disinkron terus-menerus oleh
+            // updatePreview() di bawah (jalan tiap ada 'input' di form) TERLEPAS
+            // dari modal ini kebuka/ketutup -- jadi begitu dibuka, isinya udah
+            // pasti up-to-date, gak perlu refresh manual.
+            (function(){
+              var toggleBtn = document.getElementById('lpPreviewToggleBtn');
+              var closeBtn = document.getElementById('lpPreviewCloseBtn');
+              var panel = document.getElementById('lpPreviewPanel');
+              var backdrop = document.getElementById('lpPreviewBackdrop');
+              if(!toggleBtn || !panel || !backdrop) return;
+              var lastFocused = null;
+
+              function openPreview(){
+                lastFocused = document.activeElement;
+                panel.classList.add('open');
+                backdrop.classList.add('open');
+                panel.setAttribute('aria-hidden', 'false');
+                toggleBtn.setAttribute('aria-expanded', 'true');
+                document.body.style.overflow = 'hidden';
+                closeBtn && closeBtn.focus();
+              }
+              function closePreview(){
+                panel.classList.remove('open');
+                backdrop.classList.remove('open');
+                panel.setAttribute('aria-hidden', 'true');
+                toggleBtn.setAttribute('aria-expanded', 'false');
+                document.body.style.overflow = '';
+                if(lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+              }
+
+              toggleBtn.addEventListener('click', openPreview);
+              closeBtn && closeBtn.addEventListener('click', closePreview);
+              backdrop.addEventListener('click', closePreview);
+              document.addEventListener('keydown', function(e){
+                if(e.key === 'Escape' && panel.classList.contains('open')) closePreview();
+              });
+
+              // Kalau tab Pengaturan Umum ditinggalin (pindah tab lain) sementara
+              // preview lagi kebuka, ikut ditutup -- supaya gak nyangkut mengambang
+              // di tab lain & body.style.overflow gak lupa direset.
+              var pengaturanPanelEl = document.querySelector('[data-tab-panel="pengaturan-umum"]');
+              if(pengaturanPanelEl && window.MutationObserver){
+                new MutationObserver(function(){
+                  if(!pengaturanPanelEl.classList.contains('active') && panel.classList.contains('open')) closePreview();
+                }).observe(pengaturanPanelEl, {attributes:true, attributeFilter:['class']});
+              }
+            })();
 
             // ---------- lp-active body class: kotak Keluar jadi fixed, nempel dasar ----------
             // Saat tab Pengaturan Umum aktif, body.lp-active bikin .side-foot (kotak Keluar)
