@@ -2720,9 +2720,15 @@
              viewport. Posisi kiri disesuaikan lebar sidebar (256px normal,
              76px saat diciutkan, 0 saat mobile) supaya gak numpuk sidebar. */
           /* --lp-bar-h: tinggi bar tombol Simpan (padding 14px atas+bawah + tombol ~38px).
-             Dipakai untuk padding-bottom sidebar supaya border-right sidebar
-             turun sampai tepat menyentuh border-top bar -- garis vertikal &
-             horizontal jadi lurus di pojok kiri bawah.
+             Dipakai supaya kotak Keluar di footer sidebar (.side-foot) dibikin
+             SETINGGI bar ini persis -- karena sidebar itu flex-column dgn
+             height:100vh (nav flex:1 + side-foot nempel di dasar), begitu
+             tinggi .side-foot == tinggi bar, garis atas (border-top) keduanya
+             otomatis jatuh di koordinat Y yang sama persis -- lurus, gak
+             "anak tangga". (Pendekatan lama: nambah padding-bottom ke
+             .sidebar -- ini KELIRU, cuma nambah ruang kosong di bawah kotak
+             Keluar tanpa mengubah tinggi kotaknya sendiri, jadi garis
+             atasnya tetap gak ketemu garis atas bar.)
              Nilai 66px di bawah cuma FALLBACK -- nilai final yang benar-benar
              dipakai browser diukur & di-set ulang secara akurat oleh JS
              (lihat "sinkron --lp-bar-h" di <script> bawah), supaya tetap pas
@@ -2763,17 +2769,24 @@
           .lp-form-actions-inner{
             padding:14px 32px;
           }
-          /* Sidebar perlu padding-bottom setinggi bar supaya border-right
-             sidebar terus turun dan bertemu tepat dengan border-top bar.
-             Hanya berlaku saat tab Konten Landing aktif (body punya class
-             lp-active yang ditambah JS). Tanpa ini, sidebar berhenti
-             sebelum bar dan muncul celah/garis putus di pojok kiri bawah. */
-          body.lp-active .sidebar{padding-bottom:var(--lp-bar-h);}
+          /* Kotak Keluar (.side-foot) dipaksa setinggi bar Simpan supaya
+             border-top-nya jatuh di Y yang sama dgn border-top bar --
+             lurus sejajar, bukan "anak tangga". flex+align-items:center
+             supaya isi form Keluar tetap ke-tengah vertikal walau tinggi
+             kotak berubah ikut var(--lp-bar-h). Hanya berlaku saat tab
+             Konten Landing aktif (body punya class lp-active yg ditambah JS). */
+          body.lp-active .side-foot{
+            min-height:var(--lp-bar-h);
+            box-sizing:border-box;
+            display:flex;
+            align-items:center;
+          }
+          body.lp-active .side-foot form.logout{width:100%;}
           .sidebar.collapsed ~ .main .lp-form-actions{left:76px;}
           @media(max-width:900px){
             .lp-form-actions{left:0;}
             .lp-form-actions-inner{padding:14px 16px;}
-            body.lp-active .sidebar{padding-bottom:0;}
+            body.lp-active .side-foot{min-height:0;display:block;}
           }
           @media(max-width:600px){
             .lp-form-actions-inner{padding:12px;}
@@ -2846,10 +2859,11 @@
             var form = document.getElementById('landingForm');
             if(!form) return;
 
-            // ---------- lp-active body class: sidebar padding-bottom sinkron bar Simpan ----------
-            // Saat tab Pengaturan Umum aktif, body.lp-active memberi padding-bottom pada sidebar
-            // sehingga border-right sidebar terus turun tepat menyentuh border-top bar Simpan --
-            // garis vertikal sidebar dan garis horizontal footer lurus di pojok kiri bawah.
+            // ---------- lp-active body class: tinggi kotak Keluar sinkron bar Simpan ----------
+            // Saat tab Pengaturan Umum aktif, body.lp-active memaksa tinggi .side-foot
+            // (kotak tombol Keluar) sama persis dgn tinggi bar Simpan (--lp-bar-h) --
+            // garis atas kotak Keluar & garis atas bar Simpan jadi lurus sejajar,
+            // bukan "anak tangga" lagi.
             (function(){
               var pengaturanPanel = document.querySelector('[data-tab-panel="pengaturan-umum"]');
               var bar = document.querySelector('.lp-form-actions');
