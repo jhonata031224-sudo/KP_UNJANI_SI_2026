@@ -2534,8 +2534,8 @@
                     <div class="lp-hero-image-row">
                       <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturan->hero_image_path ? '1' : '0' }}" data-label-existing="Ganti Latar">
                       <img src="{{ $pengaturan->hero_image_path ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}">
-                      <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturan->hero_image_path ? 'display:none' : '' }}">Belum ada gambar latar (BG)</div>
-                      <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar (BG) Beranda">Hapus BG</button>
+                      <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturan->hero_image_path ? 'display:none' : '' }}">Belum ada gambar latar belakang</div>
+                      <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Latar Belakang</button>
                     </div>
                   </div>
                 </div>
@@ -2706,17 +2706,26 @@
           .lp-card-desc{margin:-4px 0 14px;font-size:11.5px;line-height:1.55;color:var(--text-muted);}
           .lp-hero-image-row{display:flex;flex-direction:column;align-items:flex-start;gap:16px;margin-top:0;}
           .lp-hero-image-row .landing-file-picker{align-self:flex-start;flex:0 0 auto;min-width:200px;}
+          /* Preview BG digeser ke kanan (margin-left) supaya gak numpuk pas
+             di bawah tombol "Pilih File" -- dan dibikin lebih gede (lihat
+             #lpHeroImagePreviewImg di bawah) supaya fotonya keliatan jelas,
+             bukan cuma thumbnail kecil. Tombol Hapus tetap rata kiri
+             (align-self:flex-start bawaan, TIDAK ikut digeser) supaya masih
+             sejajar sama tombol "Pilih File" di atasnya. */
           .lp-hero-image-row .lp-current-image,
-          .lp-hero-image-row .lp-image-placeholder{align-self:flex-start;margin:0;}
+          .lp-hero-image-row .lp-image-placeholder{align-self:flex-start;margin:0 0 0 64px;}
           .lp-current-image{display:block;border-radius:9px;border:1px solid var(--border-soft);}
           .lp-image-placeholder{box-sizing:border-box;border-radius:9px;border:1.5px dashed var(--border-soft);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
           .lp-delete-img-btn{align-self:flex-start;min-height:38px;height:38px;padding:0 16px;font-size:12px;}
           /* BG (Gambar Latar Beranda): rasio landscape, mengikuti bentuk asli
              foto latar (bukan kotak seperti logo) -- object-fit:cover supaya
-             foto memenuhi kotak tanpa gepeng/distorsi. */
-          #lpHeroImagePreviewImg{width:280px;height:158px;object-fit:cover;object-position:center;}
-          #lpHeroImagePreviewPlaceholder{width:280px;height:158px;}
-          @media(max-width:560px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{width:100%;max-width:340px;}}
+             foto memenuhi kotak tanpa gepeng/distorsi. Ukuran diperbesar
+             (280x158 -> 460x259, tetap rasio ~16:9) supaya lebih jelas
+             kelihatan. */
+          #lpHeroImagePreviewImg{width:460px;height:259px;object-fit:cover;object-position:center;}
+          #lpHeroImagePreviewPlaceholder{width:460px;height:259px;}
+          @media(max-width:760px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{width:100%;max-width:400px;margin-left:0;}}
+          @media(max-width:560px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{max-width:340px;}}
           /* Logo: kotak & object-fit:contain (bukan cover) supaya lambang/
              logo utuh terlihat jelas tanpa terpotong, dengan ukuran yang
              pas -- tidak menyisakan ruang kosong berlebihan seperti kotak
