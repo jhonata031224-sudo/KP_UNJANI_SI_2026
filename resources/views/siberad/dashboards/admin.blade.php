@@ -1674,7 +1674,7 @@
         <div class="perm-global-toolbar">
           <div class="perm-filter-group" data-perm-filter-group>
             <button type="button" class="perm-filter-btn is-active" data-perm-filter="">Semua</button>
-            @foreach(['Admin','Pimpinan','Unsur Pelayanan','Unsur Pembantu Pimpinan','Direktorat','Satlak','Kasansi'] as $kategoriLabel)
+            @foreach(['Pimpinan','Unsur Pelayanan','Unsur Pembantu Pimpinan','Direktorat','Satlak','Kasansi'] as $kategoriLabel)
             <button type="button" class="perm-filter-btn" data-perm-filter="{{ $kategoriLabel }}">{{ $kategoriLabel }}</button>
             @endforeach
           </div>
@@ -1689,6 +1689,10 @@
 
         <div class="perm-satuan-list">
           @foreach($semuaSatuan as $s)
+          {{-- Admin selalu punya akses penuh ke semua modul dan tidak bisa
+               di-nonaktifkan, jadi kartu hak akses modul untuk kategori
+               Admin tidak perlu ditampilkan di sini. --}}
+          @continue(($s->kategori ?? null) === \App\Models\Satuan::KATEGORI_ADMIN)
           @php $kategoriLabel = $permKategoriMap[$s->kategori ?? ''] ?? 'Satlak'; @endphp
           <div class="panel" data-kategori="{{ $kategoriLabel }}">
             <div class="panel-head"><div><h3>{{ $s->nama }} <span class="badge">{{ $s->kode }}</span></h3><p>{{ $s->deskripsi ?: 'Tidak ada deskripsi.' }}</p></div></div>
