@@ -2769,24 +2769,38 @@
           .lp-form-actions-inner{
             padding:14px 32px;
           }
-          /* Kotak Keluar (.side-foot) dipaksa setinggi bar Simpan supaya
-             border-top-nya jatuh di Y yang sama dgn border-top bar --
-             lurus sejajar, bukan "anak tangga". flex+align-items:center
-             supaya isi form Keluar tetap ke-tengah vertikal walau tinggi
-             kotak berubah ikut var(--lp-bar-h). Hanya berlaku saat tab
+          /* Kotak Keluar (.side-foot) dipindah jadi position:fixed nempel ke
+             dasar viewport, PERSIS kayak bar Simpan (position:fixed;bottom:0)
+             -- dgn tinggi (height, bukan min-height) yg sama-sama pakai var
+             --lp-bar-h. Karena dua-duanya "nempel dasar viewport + tinggi
+             sama", border-top keduanya MESTI jatuh di Y yang sama persis --
+             gak lagi bergantung ke hitungan flex/100vh sidebar yang ternyata
+             masih bisa meleset dikit. width ikut lebar sidebar (256px normal
+             / 76px collapsed) biar nempel pas di bawah nav, dan .side-nav
+             dikasih padding-bottom senilai --lp-bar-h supaya isi nav gak
+             ketutup kotak Keluar yang sekarang fixed. Hanya berlaku saat tab
              Konten Landing aktif (body punya class lp-active yg ditambah JS). */
           body.lp-active .side-foot{
-            min-height:var(--lp-bar-h);
+            position:fixed;
+            left:0;bottom:0;
+            width:var(--sidebar-w);
+            height:var(--lp-bar-h);
             box-sizing:border-box;
             display:flex;
             align-items:center;
+            background:var(--panel);
+            z-index:100011;
+            transition:width .25s ease;
           }
           body.lp-active .side-foot form.logout{width:100%;}
+          body.lp-active .side-nav{padding-bottom:var(--lp-bar-h);}
+          body.lp-active .sidebar.collapsed .side-foot{width:76px;}
           .sidebar.collapsed ~ .main .lp-form-actions{left:76px;}
           @media(max-width:900px){
             .lp-form-actions{left:0;}
             .lp-form-actions-inner{padding:14px 16px;}
-            body.lp-active .side-foot{min-height:0;display:block;}
+            body.lp-active .side-foot{position:static;width:100%;height:auto;display:block;}
+            body.lp-active .side-nav{padding-bottom:0;}
           }
           @media(max-width:600px){
             .lp-form-actions-inner{padding:12px;}
@@ -2859,11 +2873,10 @@
             var form = document.getElementById('landingForm');
             if(!form) return;
 
-            // ---------- lp-active body class: tinggi kotak Keluar sinkron bar Simpan ----------
-            // Saat tab Pengaturan Umum aktif, body.lp-active memaksa tinggi .side-foot
-            // (kotak tombol Keluar) sama persis dgn tinggi bar Simpan (--lp-bar-h) --
-            // garis atas kotak Keluar & garis atas bar Simpan jadi lurus sejajar,
-            // bukan "anak tangga" lagi.
+            // ---------- lp-active body class: kotak Keluar jadi fixed, nempel dasar ----------
+            // Saat tab Pengaturan Umum aktif, body.lp-active bikin .side-foot (kotak Keluar)
+            // position:fixed;bottom:0 dgn tinggi --lp-bar-h -- persis kayak bar Simpan yg juga
+            // fixed;bottom:0 dgn tinggi sama. Border-top keduanya dijamin lurus di Y yang sama.
             (function(){
               var pengaturanPanel = document.querySelector('[data-tab-panel="pengaturan-umum"]');
               var bar = document.querySelector('.lp-form-actions');
