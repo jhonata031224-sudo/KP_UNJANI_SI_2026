@@ -2914,6 +2914,18 @@
             opacity:1;visibility:visible;pointer-events:auto;
             transform:translate(-50%,-50%) scale(1);
           }
+          /* Sembunyikan bar "Simpan Konten Landing" (.lp-form-actions) & kotak
+             "Keluar" (.side-foot) fixed selagi modal pratinjau terbuka -- kalau
+             tidak, dua-duanya tetap position:fixed nempel dasar viewport dan
+             cuma "didim + diblur" oleh backdrop-filter modal (bukan bener-bener
+             ketutup, karena modal cuma setinggi max-height:88vh di tengah
+             layar) -- itu yg selama ini kelihatan kayak garis/bar gelap ngintip
+             di bawah pratinjau. opacity dipakai (bukan display:none) supaya ada
+             transisi halus & gak ganggu perhitungan layout lain saat toggle. */
+          body.lp-preview-modal-open .lp-form-actions,
+          body.lp-preview-modal-open .side-foot{
+            opacity:0;pointer-events:none;transition:opacity .15s ease;
+          }
           .lp-preview-panel .panel-head{position:sticky;top:0;background:var(--panel);z-index:1;padding-top:22px;}
           .lp-preview-panel .panel-head h3{display:flex;align-items:center;gap:9px;}
           .lp-preview-close{
@@ -3001,6 +3013,36 @@
               if(!toggleBtn || !panel || !backdrop) return;
               var lastFocused = null;
 
+              // ---------- "Portal" ke <body> (backdrop + panel saja) ----------
+              // .lpPreviewPanel & .lpPreviewBackdrop awalnya ditaruh di dalam
+              // .content (section [data-tab-panel="pengaturan-umum"]), dan
+              // .content punya CSS position:relative + z-index:1 (lihat
+              // admin-ui-consistency.blade.php) -- itu artinya .content MEMBUAT
+              // STACKING CONTEXT SENDIRI. Akibatnya walau dua elemen ini
+              // position:fixed dgn z-index gede (100150/100160), z-index segede
+              // apapun cuma "menang" DI DALAM stacking context .content itu --
+              // begitu dibandingkan dgn elemen LAIN yg levelnya sejajar .content
+              // (contoh: .sidebar, z-index:100010, TIDAK ada di dalam .content),
+              // yg dipakai justru z-index .content sendiri (cuma 1). 1 < 100010,
+              // makanya sidebar kelihatan NUTUPIN preview (persis kayak di
+              // screenshot bug ini -- "Pratinjau Langsung" kepotong sidebar).
+              // Fix: pindahin (append) backdrop+panel jadi anak langsung
+              // <body>, supaya lepas dari stacking context .content dan
+              // z-index-nya beneran dibandingkan di level paling atas (menang
+              // lawan sidebar/topbar/bar apapun). Posisi visual (fixed,
+              // top/left/right/bottom) TIDAK berubah krn position:fixed sudah
+              // dari awal relatif ke viewport, bukan ke parent DOM-nya.
+              // Tombol sticky (toggleBtn) SENGAJA TIDAK dipindah -- dia perlu
+              // tetap jadi anak .tab-panel[data-tab-panel="pengaturan-umum"]
+              // supaya otomatis ikut disembunyikan (display:none) oleh CSS
+              // .tab-panel saat admin pindah ke tab lain; kalau dipindah ke
+              // body juga, tombol itu akan nyangkut kelihatan terus di semua
+              // tab (dia sendiri gak punya masalah ketutup sidebar krn cuma
+              // z-index:60, jauh di bawah sidebar tapi juga gak pernah perlu
+              // menang lawan sidebar).
+              if(backdrop.parentNode !== document.body) document.body.appendChild(backdrop);
+              if(panel.parentNode !== document.body) document.body.appendChild(panel);
+
               function openPreview(){
                 lastFocused = document.activeElement;
                 panel.classList.add('open');
@@ -3008,6 +3050,14 @@
                 panel.setAttribute('aria-hidden', 'false');
                 toggleBtn.setAttribute('aria-expanded', 'true');
                 document.body.style.overflow = 'hidden';
+                // Sembunyiin bar "Simpan Konten Landing" & kotak "Keluar" yg
+                // fixed nempel dasar viewport -- keduanya SEBELUMNYA tetap
+                // keliatan (didim + diblur backdrop-filter) ngintip di garis
+                // paling bawah preview krn sama-sama position:fixed & gak
+                // ketutup penuh sama modal yg cuma setinggi max-height:88vh
+                // di tengah layar. Itu yg kelihatan kayak "garis hitam" di
+                // bawah pratinjau.
+                document.body.classList.add('lp-preview-modal-open');
                 closeBtn && closeBtn.focus();
               }
               function closePreview(){
@@ -3016,6 +3066,7 @@
                 panel.setAttribute('aria-hidden', 'true');
                 toggleBtn.setAttribute('aria-expanded', 'false');
                 document.body.style.overflow = '';
+                document.body.classList.remove('lp-preview-modal-open');
                 if(lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
               }
 
