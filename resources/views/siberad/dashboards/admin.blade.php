@@ -2500,10 +2500,12 @@
                   </div>
                   <div class="form-field full">
                     <label for="lpHeroImage">Gambar Latar Beranda (opsional)</label>
-                    <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image">
-                    @if($pengaturan->hero_image_path)
-                      <img src="{{ asset('storage/'.$pengaturan->hero_image_path) }}" alt="Gambar beranda saat ini" class="lp-current-image">
-                    @endif
+                    <div class="lp-hero-image-row">
+                      <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image">
+                      @if($pengaturan->hero_image_path)
+                        <img src="{{ asset('storage/'.$pengaturan->hero_image_path) }}" alt="Gambar beranda saat ini" class="lp-current-image">
+                      @endif
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2667,7 +2669,10 @@
           .lp-card-compact{padding:12px 16px;}
           .lp-card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
           .lp-card-desc{margin:-4px 0 14px;font-size:11.5px;line-height:1.55;color:var(--text-muted);}
-          .lp-current-image{width:100%;height:160px;margin-top:10px;border-radius:6px;display:block;border:1px solid var(--border-soft);object-fit:cover;object-position:center;}
+          .lp-hero-image-row{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-top:0;}
+          .lp-hero-image-row .landing-file-picker{flex:1 1 220px;min-width:200px;}
+          .lp-current-image{flex:0 0 260px;width:260px;height:150px;margin-top:0;border-radius:9px;display:block;border:1px solid var(--border-soft);object-fit:cover;object-position:center;}
+          @media(max-width:560px){.lp-current-image{flex-basis:100%;width:100%;}}
 
           /* Field & kartu tambahan yang disuntik lewat admin-landing-editor.js
              (Identitas Brand, Tombol Hero, SEO, Logo, Navigasi, Statistik) --

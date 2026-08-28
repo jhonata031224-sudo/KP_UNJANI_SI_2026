@@ -17,6 +17,7 @@
 .admin-access-input{width:100%;height:54px;box-sizing:border-box;border:1px solid #dbe3ec;border-radius:11px;background:#f8fafc;color:#17212b;font-family:var(--body);font-size:15px;padding:0 48px 0 14px;outline:none;transition:border-color .2s ease,box-shadow .2s ease}
 .admin-access-input:focus{border-color:#c97a00;box-shadow:0 0 0 3px rgba(201,122,0,.12);background:#fff}
 .admin-access-input::placeholder{color:#8a97a6;opacity:1;white-space:nowrap;overflow:visible;text-overflow:clip}
+.admin-access-input::-ms-reveal,.admin-access-input::-ms-clear{display:none!important}
 .admin-access-input:-webkit-autofill,.admin-access-input:-webkit-autofill:hover,.admin-access-input:-webkit-autofill:focus{-webkit-text-fill-color:#17212b;-webkit-box-shadow:0 0 0 1000px #f8fafc inset;transition:background-color 9999s ease-in-out 0s}
 .admin-access-input-wrap::before{display:none}
 .admin-access-password-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;background:transparent;color:#64748b;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px}

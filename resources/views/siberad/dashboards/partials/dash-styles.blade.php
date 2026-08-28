@@ -586,6 +586,7 @@
   function siberadEnhanceFileInputs(root){
     (root||document).querySelectorAll('input[type="file"]:not([hidden])').forEach(function(input){
       if(input.dataset.siberadEnhanced==='1')return;
+      if(input.dataset.filePickerReady==='1'||input.closest('.landing-file-picker'))return;
       input.dataset.siberadEnhanced='1';
       var wrap=document.createElement('div');
       wrap.className='siberad-file-wrap';
