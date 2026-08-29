@@ -88,7 +88,10 @@
           <div class="lp-hero-image-row">
             <input id="lpManagedLogo" name="logo_file" type="file" accept="image/png,image/jpeg,image/webp" data-has-current="${currentLogo ? '1' : '0'}" data-label-existing="Ganti Logo">
             <img src="${currentLogo}" alt="Logo saat ini" class="lp-current-image" id="lpLogoPreviewImg" style="${currentLogo ? '' : 'display:none'}">
-            <div class="lp-image-placeholder" id="lpLogoPreviewPlaceholder" style="${currentLogo ? 'display:none' : ''}">Belum ada logo</div>
+            <div class="lp-image-placeholder" id="lpLogoPreviewPlaceholder" style="${currentLogo ? 'display:none' : ''}">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
+              <span>Belum ada logo</span>
+            </div>
             <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpLogoDeleteBtn" style="${currentLogo ? '' : 'display:none'}" onclick="window.bukaHapusLandingGambar(this)" data-action="${logoDeleteUrl}" data-nama="Logo Landing Page">Hapus Logo</button>
           </div>
           <small>Format JPG, PNG, atau WEBP · maksimal 5 MB.</small>

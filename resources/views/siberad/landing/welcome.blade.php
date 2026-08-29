@@ -2,7 +2,13 @@
 {{-- Halaman landing SIBERAD — Sistem Informasi Berbasis Elektronik Angkatan Darat (PUSSIBERAD) --}}
 @php
   $lp = $pengaturan->landingConfig();
-  $lpLogoUrl = $pengaturan->logo_path ? asset('storage/'.$pengaturan->logo_path) : asset('images/logo-pussiberad.jpg');
+  // Sengaja TIDAK fallback ke logo/gambar bawaan (images/logo-pussiberad.jpg,
+  // images/hero-lapangan-mabesad.jpg) lagi -- kalau Admin menghapus logo/
+  // gambar latar beranda di Pengaturan Umum, landing page ini HARUS ikut
+  // kosong (konsisten dengan kotak "Belum ada logo"/"Belum ada gambar latar
+  // belakang" yang tampil di panel admin), bukan diam-diam balik ke gambar
+  // default seolah-olah belum dihapus.
+  $lpLogoUrl = $pengaturan->logo_path ? asset('storage/'.$pengaturan->logo_path) : null;
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -12,8 +18,10 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>{{ $lp['meta']['title'] }}</title>
 <meta name="description" content="{{ $lp['meta']['description'] }}">
+@if ($lpLogoUrl)
 <link rel="icon" type="image/jpeg" href="{{ $lpLogoUrl }}">
 <link rel="preload" as="image" href="{{ $lpLogoUrl }}" fetchpriority="high">
+@endif
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -434,12 +442,19 @@
   }
 
   /* ================= HERO ================= */
+  /* Sengaja TIDAK fallback ke foto bawaan (images/hero-lapangan-mabesad.jpg)
+     lagi -- kalau Admin menghapus Gambar Latar Beranda, hero di sini HARUS
+     ikut kosong (cuma gradient overlay polos, tanpa foto sama sekali),
+     konsisten dengan kotak "Belum ada gambar latar belakang" di admin. */
   .hero-stats-bg{
     position:relative;overflow:hidden;
     background-image:
       linear-gradient(115deg, var(--hero-ov-1) 0%, var(--hero-ov-2) 32%, var(--hero-ov-3) 58%, var(--hero-ov-4) 100%),
-      linear-gradient(to top, var(--hero-ov-top) 0%, var(--hero-ov-top-fade) 26%),
-      url('{{ $pengaturan->hero_image_path ? asset('storage/'.$pengaturan->hero_image_path) : asset('images/hero-lapangan-mabesad.jpg') }}');
+      linear-gradient(to top, var(--hero-ov-top) 0%, var(--hero-ov-top-fade) 26%)
+      @if ($pengaturan->hero_image_path)
+      , url('{{ asset('storage/'.$pengaturan->hero_image_path) }}')
+      @endif
+      ;
     background-size:cover;
     background-position:center 58%;
     background-repeat:no-repeat;
@@ -773,7 +788,7 @@
           <circle class="ring-arc" cx="74" cy="74" r="65"></circle>
         </svg>
       </div>
-      <div class="mark-plate"><img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad"></div>
+      <div class="mark-plate">@if ($lpLogoUrl)<img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">@endif</div>
     </div>
     <div class="loader-caption">Memverifikasi Sistem&hellip;</div>
   </div>
@@ -783,7 +798,7 @@
     <div class="wrap">
       <nav>
         <a class="logo" href="#tentang">
-          <span class="logo-badge"><img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad"></span>
+          <span class="logo-badge">@if ($lpLogoUrl)<img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">@endif</span>
           <span class="logo-text"><b>{{ $pengaturan->hero_judul_awal }}<span>{{ $pengaturan->hero_judul_aksen }}</span></b><small>{{ $lp['brand']['tagline'] }}</small></span>
         </a>
         <ul class="nav-links" id="navLinks">
@@ -814,7 +829,7 @@
   <div class="login-overlay" id="loginOverlay">
     <div class="login-card hud-panel" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
       <button class="login-close" id="loginClose" type="button" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
-      <div class="login-crest"><img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad"></div>
+      <div class="login-crest">@if ($lpLogoUrl)<img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">@endif</div>
       <h3 id="loginTitle" class="login-title">Masuk</h3>
       <p class="login-sub">Masuk menggunakan akun personel yang terdaftar.</p>
       <form class="login-form" id="loginForm" method="POST" action="{{ route('login') }}" autocomplete="off">
@@ -871,7 +886,7 @@
                     <circle class="ring-arc" cx="74" cy="74" r="65"></circle>
                   </svg>
                 </div>
-                <div class="mark-plate"><img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad"></div>
+                <div class="mark-plate">@if ($lpLogoUrl)<img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">@endif</div>
               </div>
             </div>
             <div class="hero-crest-caption">
@@ -934,7 +949,7 @@
       <div class="wrap">
         <div class="about-top" data-reveal>
           <div class="about-crest">
-            <img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">
+            @if ($lpLogoUrl)<img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">@endif
           </div>
           <div>
             <div class="eyebrow">{{ $lp['about_section']['eyebrow'] }}</div>
@@ -993,7 +1008,7 @@
       <div class="footer-grid">
         <div>
           <div class="footer-brand-row">
-            <span class="footer-crest"><img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad"></span>
+            <span class="footer-crest">@if ($lpLogoUrl)<img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">@endif</span>
             <div class="footer-brand">
               <b>{{ $pengaturan->hero_judul_awal }}<span style="display:inline;color:var(--gold-bright);">{{ $pengaturan->hero_judul_aksen }}</span></b>
               <span>Pusat Siber Angkatan Darat</span>

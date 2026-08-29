@@ -2570,7 +2570,10 @@
                       <div class="lp-hero-image-row">
                         <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturan->hero_image_path ? '1' : '0' }}" data-label-existing="Ganti Gambar">
                         <img src="{{ $pengaturan->hero_image_path ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}">
-                        <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturan->hero_image_path ? 'display:none' : '' }}">Belum ada gambar latar belakang</div>
+                        <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturan->hero_image_path ? 'display:none' : '' }}">
+                          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
+                          <span>Belum ada gambar latar belakang</span>
+                        </div>
                         <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Latar Belakang</button>
                       </div>
                     </div>
@@ -2802,7 +2805,8 @@
           .lp-hero-image-row .lp-current-image,
           .lp-hero-image-row .lp-image-placeholder{align-self:center;margin:0;}
           .lp-current-image{display:block;border-radius:9px;border:1px solid var(--border-soft);}
-          .lp-image-placeholder{box-sizing:border-box;border-radius:9px;border:1.5px dashed var(--border-soft);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
+          .lp-image-placeholder{box-sizing:border-box;border-radius:12px;border:2px dashed var(--border-strong);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:14px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
+          .lp-image-placeholder svg{display:block;flex-shrink:0;}
           .lp-delete-img-btn{align-self:center;min-height:38px;height:38px;padding:0 16px;font-size:12px;}
           /* BG (Gambar Latar Beranda): rasio landscape, mengikuti bentuk asli
              foto latar (bukan kotak seperti logo) -- object-fit:cover supaya
