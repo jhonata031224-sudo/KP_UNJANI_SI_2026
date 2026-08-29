@@ -280,7 +280,7 @@
   .profile-form-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
   .profile-form-field:last-of-type{margin-bottom:0;}
   .profile-form-field label{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--text-dim);text-transform:uppercase;}
-  .profile-form-field input,.profile-form-field textarea{border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:var(--body);font-size:14px;background:var(--bg-deep);color:var(--text);resize:vertical;}
+  .profile-form-field input,.profile-form-field textarea{border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:var(--body);font-size:14px;background:var(--bg-deep);color:var(--text);resize:none;}
   .profile-form-field input:focus,.profile-form-field textarea:focus{outline:none;border-color:var(--gold);}
   .profile-form-field input::placeholder,.profile-form-field textarea::placeholder{color:var(--text-dim);}
   .profile-form-error{font-size:11.5px;color:var(--red);display:none;line-height:1.5;}
@@ -469,6 +469,17 @@
   .form-hint{font-size:11px;color:var(--text-dim);}
   @media(max-width:640px){.form-grid{grid-template-columns:1fr;}}
 
+  /* Handle resize bawaan browser (garis-garis diagonal di pojok kanan
+     bawah textarea) dimatikan total di SELURUH dashboard -- tinggi
+     textarea sudah diatur lewat "rows"/CSS masing-masing, jadi tanda ini
+     cuma "sampah visual" yang bikin pojok kartu keliatan kurang rapi.
+     Diletakkan di sini (dash-styles, dimuat di semua dashboard) sebagai
+     jaring pengaman generik untuk textarea yang belum punya aturan
+     resize eksplisit; textarea dengan class spesifik (.form-field,
+     .deadline-field, dll) sudah diubah langsung ke resize:none juga di
+     file masing-masing supaya tidak kalah spesifisitas CSS. */
+  textarea{resize:none;}
+
   .notice{background:var(--gold-dim);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:14px 16px;font-size:12.5px;line-height:1.65;margin-bottom:22px;}
   .notice b{color:var(--gold-bright);}
   .org-list{list-style:none;font-size:13px;}
@@ -581,7 +592,7 @@
      bawah -- input asli disembunyikan visual tapi tetap berfungsi. ===== */
   .siberad-file-wrap{display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:100%;}
   .siberad-file-wrap input[type="file"]{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
-  .siberad-file-trigger{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-weight:600;font-size:11px;letter-spacing:.03em;text-transform:uppercase;padding:9px 15px;border-radius:8px;border:1px solid var(--border);background:var(--panel-alt);color:var(--text);cursor:pointer;transition:border-color .15s ease,background-color .15s ease,color .15s ease;flex-shrink:0;}
+  .siberad-file-trigger{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-weight:700;font-size:11px;letter-spacing:.03em;text-transform:uppercase;padding:9px 15px;border-radius:8px;border:1px solid var(--border);background:var(--panel-alt);color:var(--text);cursor:pointer;transition:border-color .15s ease,background-color .15s ease,color .15s ease;flex-shrink:0;}
   .siberad-file-trigger svg{width:14px;height:14px;stroke:currentColor;flex-shrink:0;}
   .siberad-file-trigger:hover{border-color:var(--gold-bright);background:var(--panel);}
   .siberad-file-trigger:active{transform:scale(.97);}
@@ -593,6 +604,14 @@
       if(input.dataset.siberadEnhanced==='1')return;
       if(input.dataset.filePickerReady==='1'||input.closest('.landing-file-picker'))return;
       input.dataset.siberadEnhanced='1';
+      // Kalau file ini sudah punya file aktif tersimpan di server (mis. Gambar
+      // Latar Beranda/Logo yang sedang dipakai sistem -- ditandai lewat atribut
+      // data-has-current="1" di elemen <input>), teks tombol diganti dari
+      // "Pilih File" generik jadi lebih spesifik (mis. "Ganti Gambar") lewat
+      // data-label-existing, dan keterangan "Tidak ada file yang dipilih"
+      // disembunyikan karena sebenarnya SUDAH ada file yang terpakai.
+      var hasCurrent=input.dataset.hasCurrent==='1';
+      var labelExisting=input.dataset.labelExisting;
       var wrap=document.createElement('div');
       wrap.className='siberad-file-wrap';
       input.parentNode.insertBefore(wrap,input);
@@ -600,17 +619,17 @@
       var trigger=document.createElement('button');
       trigger.type='button';
       trigger.className='siberad-file-trigger';
-      trigger.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 12 15 15"></polyline></svg><span>Pilih File</span>';
+      trigger.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg><span>'+((hasCurrent&&labelExisting)?labelExisting:'Pilih File')+'</span>';
       trigger.addEventListener('click',function(){input.click();});
       wrap.appendChild(trigger);
       var nameEl=document.createElement('span');
       nameEl.className='siberad-file-name';
-      nameEl.textContent='Tidak ada file yang dipilih';
+      nameEl.textContent=hasCurrent?'':'Tidak ada file yang dipilih';
       wrap.appendChild(nameEl);
       input.addEventListener('change',function(){
         if(input.files && input.files.length===1){nameEl.textContent=input.files[0].name;}
         else if(input.files && input.files.length>1){nameEl.textContent=input.files.length+' file dipilih';}
-        else{nameEl.textContent='Tidak ada file yang dipilih';}
+        else{nameEl.textContent=hasCurrent?'':'Tidak ada file yang dipilih';}
       });
     });
   }

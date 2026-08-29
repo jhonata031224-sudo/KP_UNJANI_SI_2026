@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\LaporanKendala;
+use App\Models\LaporanKendalaTembusan;
 use App\Models\Satuan;
 use App\Models\User;
 use App\Notifications\LaporanKendalaBaruDiterima;
+use App\Notifications\LaporanKendalaTembusanBaru;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -48,17 +51,24 @@ class LaporanKendalaController extends Controller
             $danpusId = Satuan::where('kode', 'DANPUS')->value('id');
             $since = max(0, (int) $request->query('since', 0));
 
+            // Danpus/Wadan tidak boleh melihat (apalagi dipoll realtime)
+            // laporan yang masih mampir di tembusan -- baru muncul di sini
+            // begitu Kasansi menekan "Kirim ke Danpus" lewat teruskan().
             $items = $danpusId
                 ? LaporanKendala::with('satuan')
                     ->where('tujuan_satuan_id', $danpusId)
                     ->whereNull('confirmed_at')
+                    ->where('status', '!=', LaporanKendala::STATUS_MENUNGGU_TEMBUSAN)
                     ->where('id', '>', $since)
                     ->orderBy('id')
                     ->get()
                 : collect();
 
             $latestId = $danpusId
-                ? (int) (LaporanKendala::where('tujuan_satuan_id', $danpusId)->whereNull('confirmed_at')->max('id') ?? 0)
+                ? (int) (LaporanKendala::where('tujuan_satuan_id', $danpusId)
+                    ->whereNull('confirmed_at')
+                    ->where('status', '!=', LaporanKendala::STATUS_MENUNGGU_TEMBUSAN)
+                    ->max('id') ?? 0)
                 : 0;
 
             return response()->json([
@@ -69,7 +79,7 @@ class LaporanKendalaController extends Controller
             ]);
         }
 
-        $items = LaporanKendala::with('tujuanSatuan')
+        $items = LaporanKendala::with(['tujuanSatuan', 'tembusans.satuan'])
             ->where('satuan_id', $satuan->id)
             ->latest()
             ->get();
@@ -93,6 +103,13 @@ class LaporanKendalaController extends Controller
             'deskripsi' => ['required', 'string', 'max:10000'],
             'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
             'lampiran' => ['required', 'file', 'mimes:pdf', 'max:20480'],
+            // Tembusan (CC) opsional ke 4 Satlak/4 Sdir -- sekadar info
+            // koordinasi, sama sekali bukan tujuan approval kedua. Dibatasi
+            // ketat ke 8 kode yang diizinkan supaya tidak bisa
+            // "menembuskan" ke satuan lain (mis. sesama Kasansi) yang belum
+            // didukung.
+            'tembusan_ke' => ['nullable', 'array'],
+            'tembusan_ke.*' => ['string', 'in:'.implode(',', Satuan::kodeTembusanKasansi())],
         ], [
             'lampiran.required' => 'Lampiran wajib diisi untuk mengirim laporan kendala ke Danpus.',
         ]);
@@ -112,28 +129,115 @@ class LaporanKendalaController extends Controller
             ? $request->file('lampiran')->store('lampiran-kendala', 'public')
             : null;
 
-        $kendala = LaporanKendala::create([
-            'satuan_id' => $satuanAsal->id,
-            'user_id' => $user->id,
-            'tujuan_satuan_id' => $tujuan->id,
-            'perihal' => $validated['perihal'],
-            'deskripsi' => $validated['deskripsi'],
-            'prioritas' => $validated['prioritas'],
-            'lampiran_path' => $lampiranPath,
-            'status' => LaporanKendala::STATUS_MENUNGGU,
-        ]);
+        // Kode -> id satuan tembusan yang dipilih, dedup dan buang yang
+        // ternyata tidak ketemu di database (mis. satuan sudah dihapus).
+        $satuanTembusan = ! empty($validated['tembusan_ke'])
+            ? Satuan::whereIn('kode', array_unique($validated['tembusan_ke']))->get()
+            : collect();
 
-        foreach (User::where('satuan_id', $tujuan->id)->get() as $penerima) {
-            $penerima->notify(new LaporanKendalaBaruDiterima($kendala));
+        // Ada tembusan dipilih -> laporan MAMPIR dulu ke tembusan (belum
+        // sampai/actionable ke Danpus) sampai minimal satu tembusan kasih
+        // feedback dan Kasansi menekan "Kirim ke Danpus" lewat teruskan().
+        // Tanpa tembusan, tetap langsung Menunggu seperti alur lama.
+        $adaTembusan = $satuanTembusan->isNotEmpty();
+
+        $kendala = null;
+        DB::transaction(function () use (&$kendala, $satuanAsal, $user, $tujuan, $validated, $lampiranPath, $satuanTembusan, $adaTembusan) {
+            $kendala = LaporanKendala::create([
+                'satuan_id' => $satuanAsal->id,
+                'user_id' => $user->id,
+                'tujuan_satuan_id' => $tujuan->id,
+                'perihal' => $validated['perihal'],
+                'deskripsi' => $validated['deskripsi'],
+                'prioritas' => $validated['prioritas'],
+                'lampiran_path' => $lampiranPath,
+                'status' => $adaTembusan ? LaporanKendala::STATUS_MENUNGGU_TEMBUSAN : LaporanKendala::STATUS_MENUNGGU,
+            ]);
+
+            foreach ($satuanTembusan as $penerimaTembusan) {
+                LaporanKendalaTembusan::create([
+                    'laporan_kendala_id' => $kendala->id,
+                    'satuan_id' => $penerimaTembusan->id,
+                ]);
+            }
+        });
+
+        // Danpus baru diberi tahu begitu laporan BENAR-BENAR sampai ke
+        // mereka. Kalau ada tembusan dipilih, itu terjadi belakangan lewat
+        // teruskan() -- di sini cukup diam dulu.
+        if (! $adaTembusan) {
+            foreach (User::where('satuan_id', $tujuan->id)->get() as $penerima) {
+                $penerima->notify(new LaporanKendalaBaruDiterima($kendala));
+            }
+        }
+
+        // Notifikasi TERPISAH ke satuan tujuan tembusan -- pesannya beda
+        // (LaporanKendalaTembusanBaru, bukan LaporanKendalaBaruDiterima)
+        // supaya jelas ini cuma info koordinasi & diminta feedback, bukan
+        // sesuatu yang perlu diputuskan seperti punya DANPUS.
+        if ($adaTembusan) {
+            foreach (User::whereIn('satuan_id', $satuanTembusan->pluck('id'))->get() as $penerimaTembusan) {
+                $penerimaTembusan->notify(new LaporanKendalaTembusanBaru($kendala));
+            }
         }
 
         ActivityLog::catat('laporan-kendala.create', "Mengirim laporan kendala \"{$kendala->perihal}\" ke {$tujuan->nama}.", $user, [
             'laporan_kendala_id' => $kendala->id,
             'tujuan_satuan' => $tujuan->nama,
             'prioritas' => $kendala->prioritas,
+            'tembusan_ke' => $satuanTembusan->pluck('nama')->all(),
         ]);
 
-        return back()->with('status', 'Laporan kendala berhasil dikirim ke '.$tujuan->nama.'.');
+        return back()->with('status', $adaTembusan
+            ? 'Laporan kendala terkirim ke tembusan ('.$satuanTembusan->count().' satuan). Laporan akan diteruskan ke '.$tujuan->nama.' setelah ada feedback dari tembusan.'
+            : 'Laporan kendala berhasil dikirim ke '.$tujuan->nama.'.');
+    }
+
+    /**
+     * Kasansi meneruskan laporan kendala yang sempat mampir di tembusan
+     * (status Menunggu Tembusan) ke Danpus, setelah minimal satu satuan
+     * tembusan memberi feedback. Satu-satunya cara status berubah dari
+     * Menunggu Tembusan jadi Menunggu -- baru di titik ini Danpus diberi
+     * tahu (lihat komentar store() dan LaporanKendalaTembusanController).
+     */
+    public function teruskan(Request $request, LaporanKendala $laporanKendala): RedirectResponse
+    {
+        $user = $request->user()->load('satuan');
+        $satuan = $user->satuan;
+        abort_unless($satuan, 403, 'Akun belum terhubung ke satuan.');
+        abort_unless(
+            (int) $laporanKendala->satuan_id === (int) $satuan->id,
+            403,
+            'Laporan kendala ini bukan milik satuan Anda.'
+        );
+        abort_unless(
+            $laporanKendala->status === LaporanKendala::STATUS_MENUNGGU_TEMBUSAN,
+            422,
+            'Laporan kendala ini tidak sedang menunggu tembusan.'
+        );
+        abort_unless(
+            $laporanKendala->tembusans()->whereNotNull('feedback')->exists(),
+            422,
+            'Tunggu feedback dari minimal satu tembusan sebelum meneruskan ke Danpus.'
+        );
+
+        $laporanKendala->update([
+            'status' => LaporanKendala::STATUS_MENUNGGU,
+            'diteruskan_at' => now(),
+            'diteruskan_oleh' => $user->id,
+        ]);
+
+        $tujuan = $laporanKendala->tujuanSatuan;
+        foreach (User::where('satuan_id', $tujuan->id)->get() as $penerima) {
+            $penerima->notify(new LaporanKendalaBaruDiterima($laporanKendala));
+        }
+
+        ActivityLog::catat('laporan-kendala.teruskan', "Meneruskan laporan kendala \"{$laporanKendala->perihal}\" ke {$tujuan->nama} setelah feedback tembusan.", $user, [
+            'laporan_kendala_id' => $laporanKendala->id,
+            'tujuan_satuan' => $tujuan->nama,
+        ]);
+
+        return back()->with('status', 'Laporan kendala berhasil diteruskan ke '.$tujuan->nama.'.');
     }
 
     public function updateStatus(Request $request, LaporanKendala $laporanKendala): RedirectResponse
@@ -154,6 +258,17 @@ class LaporanKendalaController extends Controller
             in_array($kodeSatuan, ['DANPUS', 'WADAN'], true),
             403,
             'Anda bukan penerima laporan kendala ini.'
+        );
+
+        // Jaring pengaman -- laporan yang masih mampir di tembusan belum
+        // pernah "sampai" ke Danpus/Wadan sama sekali, jadi tidak boleh
+        // ditindaklanjuti biarpun request-nya dikirim manual langsung ke
+        // endpoint ini (di UI, laporan begini memang tidak pernah muncul di
+        // daftar Danpus/Wadan -- lihat realtime()/DashboardController).
+        abort_if(
+            $laporanKendala->status === LaporanKendala::STATUS_MENUNGGU_TEMBUSAN,
+            422,
+            'Laporan kendala ini masih menunggu tembusan dan belum diteruskan ke Danpus.'
         );
 
         // Konfirmasi/arsip adalah tindakan khusus Danpus. Wadan tetap boleh

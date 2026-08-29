@@ -84,11 +84,14 @@
       <p class="lp-card-desc">Satu logo ini otomatis dipakai di header, hero, layar loading, favicon tab browser, dan bagian Tentang -- tidak perlu upload berkali-kali di tempat lain.</p>
       <div class="form-grid">
         <div class="form-field full">
-          <label for="lpManagedLogo">Logo</label>
+          <label for="lpManagedLogo" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Logo</label>
           <div class="lp-hero-image-row">
             <input id="lpManagedLogo" name="logo_file" type="file" accept="image/png,image/jpeg,image/webp" data-has-current="${currentLogo ? '1' : '0'}" data-label-existing="Ganti Logo">
             <img src="${currentLogo}" alt="Logo saat ini" class="lp-current-image" id="lpLogoPreviewImg" style="${currentLogo ? '' : 'display:none'}">
-            <div class="lp-image-placeholder" id="lpLogoPreviewPlaceholder" style="${currentLogo ? 'display:none' : ''}">Belum ada logo</div>
+            <div class="lp-image-placeholder" id="lpLogoPreviewPlaceholder" style="${currentLogo ? 'display:none' : ''}">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
+              <span>Belum ada logo</span>
+            </div>
             <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpLogoDeleteBtn" style="${currentLogo ? '' : 'display:none'}" onclick="window.bukaHapusLandingGambar(this)" data-action="${logoDeleteUrl}" data-nama="Logo Landing Page">Hapus Logo</button>
           </div>
           <small>Format JPG, PNG, atau WEBP · maksimal 5 MB.</small>
@@ -143,12 +146,12 @@
       style.textContent = `
         .landing-file-picker{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:0;min-height:42px}
         .landing-file-picker input[type=file]{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;overflow:hidden!important;pointer-events:none!important}
-        .landing-file-button{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;border:1px solid var(--border-strong,#cbd5e1);background:var(--panel,#fff);color:var(--text,#17212b);min-width:128px!important;height:40px!important;box-sizing:border-box!important;margin:0!important;border-radius:9px;padding:0 14px;font:600 12px/40px var(--body,inherit);cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.04);transition:.15s ease}
+        .landing-file-button{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;border:1px solid var(--border-strong,#cbd5e1);background:var(--panel,#fff);color:var(--text,#17212b);min-width:112px!important;height:34px!important;box-sizing:border-box!important;margin:0!important;border-radius:8px;padding:0 12px;font:600 11.5px/34px var(--body,inherit);cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.04);transition:.15s ease}
         .landing-file-button:hover{border-color:var(--gold,#c97a00);color:var(--gold,#c97a00);background:var(--gold-dim,rgba(201,122,0,.08))}
         .landing-file-button:focus-visible{outline:3px solid rgba(201,122,0,.16);outline-offset:2px}
-        .landing-file-button svg{display:block!important;width:16px!important;height:16px!important;flex:0 0 16px!important;margin:0!important;vertical-align:middle!important}
-        .landing-file-button span{display:block!important;height:16px!important;line-height:16px!important;margin:0!important;padding:0!important;white-space:nowrap!important;vertical-align:middle!important}
-        .landing-file-name{display:inline-flex!important;align-items:center!important;height:40px!important;min-height:40px!important;margin:0!important;padding:0!important;color:var(--text-muted,#64748b);font-size:11.5px;min-width:0;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .landing-file-button svg{display:block!important;width:14px!important;height:14px!important;flex:0 0 14px!important;margin:0!important;vertical-align:middle!important}
+        .landing-file-button span{display:block!important;height:14px!important;line-height:14px!important;margin:0!important;padding:0!important;white-space:nowrap!important;vertical-align:middle!important}
+        .landing-file-name{display:inline-flex!important;align-items:center!important;height:34px!important;min-height:34px!important;margin:0!important;padding:0!important;color:var(--text-muted,#64748b);font-size:11px;min-width:0;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       `;
       document.head.appendChild(style);
     }
@@ -181,12 +184,27 @@
 
       const name = document.createElement('span');
       name.className = 'landing-file-name';
-      name.textContent = input.files && input.files[0] ? input.files[0].name : 'Belum ada file dipilih';
+      // Sama kayak logika tombol di atas: kalau sudah ada file aktif di
+      // server (hasCurrent) dan belum ada file baru yang dipilih user,
+      // keterangan "Belum ada file dipilih" disembunyikan -- soalnya
+      // sebenarnya SUDAH ada file yang terpakai, cuma belum diganti.
+      const updateName = () => {
+        const text = input.files && input.files[0] ? input.files[0].name : (hasCurrent ? '' : 'Belum ada file dipilih');
+        name.textContent = text;
+        // Kalau teksnya kosong, span ini HARUS benar-benar dihapus dari
+        // flow (bukan cuma dikosongkan) -- soalnya .landing-file-picker
+        // pakai `gap` antar child, jadi span kosong tetap makan lebar
+        // semu (gap) di sisi kanan tombol & bikin tombol kelihatan
+        // "nempel kiri" alih-alih benar-benar center.
+        // .landing-file-name punya display:inline-flex!important di CSS
+        // injeksi di atas, jadi override-nya juga wajib pakai !important
+        // lewat setProperty -- style.display biasa akan kalah/diabaikan.
+        name.style.setProperty('display', text ? 'inline-flex' : 'none', 'important');
+      };
+      updateName();
       wrap.appendChild(name);
 
-      input.addEventListener('change', () => {
-        name.textContent = input.files && input.files[0] ? input.files[0].name : 'Belum ada file dipilih';
-      });
+      input.addEventListener('change', updateName);
     });
   }
 

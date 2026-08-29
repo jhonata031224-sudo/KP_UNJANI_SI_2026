@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\BackupFileController;
 use App\Http\Controllers\Admin\PermintaanResetPasswordController as AdminPermintaanResetPasswordController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\ResetDataLaporanController;
 use App\Http\Controllers\Admin\SatuanController;
 use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\Admin\SettingController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\DukunganTeknisController;
 use App\Http\Controllers\JabatanController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\LaporanKendalaController;
+use App\Http\Controllers\LaporanKendalaTembusanController;
 use App\Http\Controllers\LaporanMonitoringController;
 use App\Http\Controllers\LaporanPublikasiController;
 use App\Http\Controllers\LogUjiPengembanganController;
@@ -43,8 +45,10 @@ Route::get('/', function () {
 Route::get('/landing-config', function () {
     $p = Pengaturan::current();
     $config = $p->landingConfig();
-    $config['logo_url'] = $p->logo_path ? asset('storage/'.$p->logo_path) : asset('images/logo-pussiberad.jpg');
-    $config['background_url'] = $p->hero_image_path ? asset('storage/'.$p->hero_image_path) : asset('images/hero-lapangan-mabesad.jpg');
+    // Sama seperti welcome.blade.php: TIDAK fallback ke logo/gambar bawaan
+    // lagi kalau Admin sudah menghapusnya -- biar konsisten "ikut kosong".
+    $config['logo_url'] = $p->logo_path ? asset('storage/'.$p->logo_path) : null;
+    $config['background_url'] = $p->hero_image_path ? asset('storage/'.$p->hero_image_path) : null;
     return response()->json(['config' => $config]);
 });
 
@@ -114,9 +118,21 @@ Route::get('/laporan-kendala/realtime', [LaporanKendalaController::class, 'realt
 Route::patch('/laporan-kendala/{laporanKendala}/status', [LaporanKendalaController::class, 'updateStatus'])
     ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-kendala.status');
+Route::patch('/laporan-kendala/{laporanKendala}/teruskan', [LaporanKendalaController::class, 'teruskan'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('laporan-kendala.teruskan');
 Route::delete('/laporan-kendala/{laporanKendala}', [LaporanKendalaController::class, 'destroy'])
     ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-kendala.destroy');
+
+// ===== Tembusan laporan kendala Kasansi ke 4 Satlak/4 Sdir (info/koordinasi
+// + feedback balik ke Kasansi -- lihat komentar LaporanKendalaTembusanController) =====
+Route::patch('/laporan-kendala-tembusan/{laporanKendalaTembusan}/baca', [LaporanKendalaTembusanController::class, 'tandaiDibaca'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('laporan-kendala-tembusan.baca');
+Route::patch('/laporan-kendala-tembusan/{laporanKendalaTembusan}/feedback', [LaporanKendalaTembusanController::class, 'beriFeedback'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('laporan-kendala-tembusan.feedback');
 
 // ===== Laporan Publikasi ke DANPUS (Satuan Pelaksanaan Siber Sosial) =====
 Route::post('/laporan-publikasi', [LaporanPublikasiController::class, 'store'])
@@ -254,4 +270,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/permintaan-reset-password/realtime', [AdminPermintaanResetPasswordController::class, 'realtime'])->name('permintaan-reset-password.realtime');
     Route::patch('/permintaan-reset-password/{permintaanResetPassword}/setujui', [AdminPermintaanResetPasswordController::class, 'setujui'])->name('permintaan-reset-password.setujui');
     Route::patch('/permintaan-reset-password/{permintaanResetPassword}/tolak', [AdminPermintaanResetPasswordController::class, 'tolak'])->name('permintaan-reset-password.tolak');
+    Route::delete('/permintaan-reset-password/riwayat', [AdminPermintaanResetPasswordController::class, 'hapusRiwayat'])->name('permintaan-reset-password.hapus-riwayat');
+    Route::delete('/reset-data-laporan', [ResetDataLaporanController::class, 'destroy'])->name('reset-data-laporan.destroy');
 });

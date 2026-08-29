@@ -512,6 +512,21 @@
   </div>
 </div>
 
+<div class="confirm-overlay" id="resetDataLaporanOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="resetDataLaporanTitle">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
+    </div>
+    <h3 id="resetDataLaporanTitle">Hapus Data Laporan Terpilih?</h3>
+    <p>Kategori berikut akan dihapus permanen dari database dan tidak bisa dikembalikan (kecuali dari backup):</p>
+    <ul id="resetDataLaporanDaftar" style="text-align:left;font-size:12px;font-weight:700;color:var(--text);margin:10px 0 0;padding-left:18px;"></ul>
+    <div class="confirm-actions">
+      <button type="button" class="btn" id="resetDataLaporanBatal">Batal</button>
+      <button type="button" class="btn btn-ghost-red" id="resetDataLaporanYa">Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+
 <div class="confirm-overlay" id="hapusLandingGambarOverlay">
   <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="hapusLandingGambarTitle">
     <div class="confirm-icon">
@@ -698,6 +713,7 @@
           <a href="#" class="side-sub-link" data-tab-link="satlak" title="Data Satuan"><span class="sub-dot"></span>Data Satuan</a>
           <a href="#" class="side-sub-link" data-tab-link="role-akses" title="Hak Akses Pengguna"><span class="sub-dot"></span>Hak Akses Pengguna</a>
           <a href="#" class="side-sub-link" data-tab-link="backup" title="Cadangan Data"><span class="sub-dot"></span>Cadangan Data</a>
+          <a href="#" class="side-sub-link" data-tab-link="reset-data-laporan" title="Reset Data Laporan"><span class="sub-dot"></span>Reset Data Laporan</a>
           <a href="#" class="side-sub-link" data-tab-link="pengaturan-umum" title="Pengaturan Umum"><span class="sub-dot"></span>Pengaturan Umum</a>
         </div></div>
       </div>
@@ -1665,7 +1681,7 @@
           .perm-filter-btn{display:inline-flex;align-items:center;height:30px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel-alt);color:var(--text-dim);font-size:11.5px;font-weight:700;cursor:pointer;transition:border-color .15s,background .15s,color .15s;}
           .perm-filter-btn:hover{border-color:var(--border-strong);}
           .perm-filter-btn.is-active{border-color:var(--gold-bright);background:var(--gold-dim);color:var(--gold-bright);}
-          .perm-global-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+          .perm-global-actions{display:flex;align-items:center;gap:12px;flex-wrap:nowrap;}
           .perm-global-count{font-size:11px;font-weight:700;color:var(--text-dim);white-space:nowrap;}
           .perm-global-select-all{display:inline-flex;align-items:center;height:30px;gap:8px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel-alt);cursor:pointer;user-select:none;transition:border-color .15s,background .15s;}
           .perm-global-select-all:hover{border-color:var(--border-strong);}
@@ -1673,6 +1689,17 @@
           .perm-global-select-all span{font-size:11.5px;font-weight:700;color:var(--text);white-space:nowrap;}
           .perm-global-select-all.is-all-active{border-color:var(--gold-bright);background:var(--gold-dim);}
           .perm-global-select-all.is-all-active span{color:var(--gold-bright);}
+          .perm-batch-fab{position:fixed;bottom:28px;right:32px;z-index:900;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none;}
+          .perm-batch-apply{display:none;align-items:center;gap:8px;padding:11px 20px;border:none;border-radius:12px;background:var(--gold-bright);color:#000;font-family:var(--mono);font-size:11.5px;font-weight:700;cursor:pointer;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.28);transition:opacity .2s,transform .2s,box-shadow .2s;pointer-events:auto;}
+          .perm-batch-apply:hover{opacity:.88;box-shadow:0 6px 24px rgba(0,0,0,.36);transform:translateY(-1px);}
+          .perm-batch-apply:active{transform:scale(.97);}
+          .perm-batch-apply.visible{display:inline-flex;animation:permFabIn .22s ease;}
+          .perm-batch-apply:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+          .perm-batch-progress{display:none;align-items:center;gap:9px;padding:10px 16px;border-radius:12px;background:var(--panel);border:1px solid var(--border-soft);box-shadow:0 4px 18px rgba(0,0,0,.22);font-size:11px;font-weight:700;color:var(--text-dim);pointer-events:auto;}
+          .perm-batch-progress.visible{display:inline-flex;}
+          .perm-batch-progress-bar{width:90px;height:5px;border-radius:3px;background:var(--border);overflow:hidden;}
+          .perm-batch-progress-fill{height:100%;width:0%;background:var(--gold-bright);border-radius:3px;transition:width .25s ease;}
+          @keyframes permFabIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
           .perm-satuan-list .panel[data-kategori]{display:block;}
           .perm-satuan-list .panel[data-kategori].perm-hidden{display:none;}
           .perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-bottom:14px;}
@@ -1709,9 +1736,20 @@
             <span class="perm-global-count" data-perm-global-count></span>
             <label class="perm-global-select-all" data-perm-global-select-all>
               <input type="checkbox">
-              <span>Pilih Semua Modul</span>
+              <span data-perm-global-select-all-label>Pilih Semua Modul</span>
             </label>
           </div>
+        </div>
+
+        {{-- FAB: Terapkan ke Semua (muncul floating di kanan bawah saat ada perubahan pending) --}}
+        <div class="perm-batch-fab">
+          <div class="perm-batch-progress" data-perm-batch-progress>
+            <div class="perm-batch-progress-bar"><div class="perm-batch-progress-fill" data-perm-batch-fill></div></div>
+            <span data-perm-batch-progress-text>Menyimpan...</span>
+          </div>
+          <button type="button" class="perm-batch-apply" data-perm-batch-apply>
+            <span data-perm-batch-apply-label>Terapkan ke Semua</span>
+          </button>
         </div>
 
         <div class="perm-satuan-list">
@@ -1753,8 +1791,37 @@
             var filterBtns = Array.prototype.slice.call(panel.querySelectorAll('[data-perm-filter]'));
             var globalWrap = panel.querySelector('[data-perm-global-select-all]');
             var globalCb = globalWrap.querySelector('input[type="checkbox"]');
+            var globalLabelEl = globalWrap.querySelector('[data-perm-global-select-all-label]');
             var globalCountEl = panel.querySelector('[data-perm-global-count]');
+            var batchBtn = document.querySelector('[data-perm-batch-apply]');
+            var batchApplyLabelEl = batchBtn.querySelector('[data-perm-batch-apply-label]');
+            var batchProgress = document.querySelector('[data-perm-batch-progress]');
+            var batchFill = document.querySelector('[data-perm-batch-fill]');
+            var batchProgressText = document.querySelector('[data-perm-batch-progress-text]');
             var activeFilter = '';
+            /* pristineSnapshot: diambil saat halaman load, sebelum user menyentuh apapun.
+               Tombol Terapkan muncul hanya jika state sekarang != pristine. */
+            var pristineSnapshot = {};
+            panel.querySelectorAll('.perm-grid input[type="checkbox"]').forEach(function (cb) {
+              pristineSnapshot[cb.closest('form').action + '||' + cb.value] = cb.checked;
+            });
+
+            function hasRealChanges() {
+              var changed = false;
+              panel.querySelectorAll('.perm-grid input[type="checkbox"]').forEach(function (cb) {
+                var key = cb.closest('form').action + '||' + cb.value;
+                if (cb.checked !== (pristineSnapshot[key] === true)) changed = true;
+              });
+              return changed;
+            }
+
+            function updatePristine() {
+              panel.querySelectorAll('.perm-grid input[type="checkbox"]').forEach(function (cb) {
+                pristineSnapshot[cb.closest('form').action + '||' + cb.value] = cb.checked;
+              });
+            }
+
+            var hasPendingChanges = false;
 
             function refreshCard(cb) {
               var card = cb.closest('.perm-card');
@@ -1772,32 +1839,135 @@
               return boxes;
             }
 
+            function visibleForms() {
+              var forms = [];
+              satuanPanels.forEach(function (p) {
+                if (p.classList.contains('perm-hidden')) return;
+                var f = p.querySelector('form[method="POST"]');
+                if (f) forms.push(f);
+              });
+              return forms;
+            }
+
+            var userHasInteracted = false;
+
             function refreshGlobal() {
               var boxes = visibleCheckboxes();
               var total = boxes.length;
               var checked = boxes.filter(function (cb) { return cb.checked; }).length;
               globalCountEl.textContent = checked + ' dari ' + total + ' modul aktif' + (activeFilter ? ' (' + activeFilter + ')' : '');
+              /* Checkbox global selalu mengikuti kondisi sebenarnya: jika seluruh
+                 modul yang tampil sudah aktif (baik dari awal maupun karena user
+                 mencentang satu-satu), checkbox "Pilih Semua Modul" otomatis ikut
+                 tercentang. Indeterminate (sebagian aktif) hanya ditampilkan
+                 setelah user berinteraksi, supaya tampilan awal halaman tidak
+                 langsung menunjukkan status "sebagian" sebelum disentuh. */
               globalCb.checked = total > 0 && checked === total;
-              globalCb.indeterminate = checked > 0 && checked < total;
+              globalCb.indeterminate = userHasInteracted && checked > 0 && checked < total;
               globalWrap.classList.toggle('is-all-active', globalCb.checked);
+              if (globalLabelEl) {
+                globalLabelEl.textContent = globalCb.checked ? 'Semua Modul Aktif' : 'Pilih Semua Modul';
+              }
+              refreshBatchApplyLabel();
             }
 
+            /* ---- Label tombol "Terapkan ke ..." mengikuti kategori/filter yang
+               sedang aktif, misalnya "Terapkan ke Pimpinan" saat filter Pimpinan
+               dipilih, atau "Terapkan ke Semua" saat tidak ada filter. ---- */
+            function refreshBatchApplyLabel() {
+              if (!batchApplyLabelEl) return;
+              batchApplyLabelEl.textContent = activeFilter ? ('Terapkan ke ' + activeFilter) : 'Terapkan ke Semua';
+            }
+
+            function setPending(val) {
+              hasPendingChanges = val;
+              /* Tampilkan tombol hanya jika benar-benar ada perubahan dari state awal */
+              if (val && hasRealChanges()) {
+                batchBtn.classList.add('visible');
+              } else if (!val || !hasRealChanges()) {
+                batchBtn.classList.remove('visible');
+              }
+            }
+
+            /* ---- Simpan semua form visible via fetch satu per satu ---- */
+            batchBtn.addEventListener('click', function () {
+              var forms = visibleForms();
+              if (!forms.length) return;
+              var total = forms.length;
+              var done = 0;
+
+              batchBtn.disabled = true;
+              batchBtn.classList.remove('visible');
+              batchProgress.classList.add('visible');
+              batchFill.style.width = '0%';
+              batchProgressText.textContent = '0 / ' + total + ' tersimpan';
+
+              function submitNext(i) {
+                if (i >= total) {
+                  /* semua selesai */
+                  batchFill.style.width = '100%';
+                  batchProgressText.textContent = 'Semua tersimpan!';
+                  batchBtn.disabled = false;
+                  /* Perbarui pristine agar state saat ini jadi baseline baru */
+                  updatePristine();
+                  setPending(false);
+                  window.setTimeout(function () {
+                    batchProgress.classList.remove('visible');
+                    batchFill.style.width = '0%';
+                  }, 2200);
+                  return;
+                }
+                var form = forms[i];
+                var data = new FormData(form);
+                /* FormData hanya mengambil checkbox yang checked,
+                   tapi kita perlu memastikan field permissions[] ada
+                   meski kosong (semua dicentang off) */
+                if (!data.has('permissions[]')) {
+                  data.append('permissions[]', '');
+                }
+                fetch(form.action, {
+                  method: 'POST',
+                  headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                  body: data,
+                  credentials: 'same-origin'
+                }).then(function () {
+                  done++;
+                  batchFill.style.width = Math.round((done / total) * 100) + '%';
+                  batchProgressText.textContent = done + ' / ' + total + ' tersimpan';
+                  submitNext(i + 1);
+                }).catch(function () {
+                  done++;
+                  batchProgressText.textContent = done + ' / ' + total + ' tersimpan';
+                  submitNext(i + 1);
+                });
+              }
+
+              submitNext(0);
+            });
+
+            /* ---- Checkbox individual → tandai pending ---- */
             panel.querySelectorAll('.perm-grid input[type="checkbox"]').forEach(function (cb) {
               cb.addEventListener('change', function () {
+                userHasInteracted = true;
                 refreshCard(cb);
                 refreshGlobal();
+                setPending(hasRealChanges());
               });
             });
 
+            /* ---- "Pilih Semua Modul" checkbox ---- */
             globalCb.addEventListener('change', function () {
+              userHasInteracted = true;
               var next = globalCb.checked;
               visibleCheckboxes().forEach(function (cb) {
                 cb.checked = next;
                 refreshCard(cb);
               });
               refreshGlobal();
+              setPending(hasRealChanges());
             });
 
+            /* ---- Filter kategori ---- */
             filterBtns.forEach(function (btn) {
               btn.addEventListener('click', function () {
                 activeFilter = btn.getAttribute('data-perm-filter') || '';
@@ -1807,6 +1977,9 @@
                   p.classList.toggle('perm-hidden', !match);
                 });
                 refreshGlobal();
+                /* reset pending & tombol saat ganti filter supaya tidak simpan
+                   lintas filter secara tidak sengaja */
+                setPending(false);
               });
             });
 
@@ -2082,6 +2255,101 @@
           })();
           </script>
         </div>
+      </section>
+
+      {{-- ===== RESET DATA LAPORAN ===== --}}
+      <section class="tab-panel" data-tab-panel="reset-data-laporan">
+        <div class="section-head panel">
+          <h2>Reset Data Laporan</h2>
+          <p>Hapus permanen data laporan (dummy/uji coba) per kategori. Data pengguna (username &amp; password), satuan, dan pengaturan sistem tidak ikut terhapus.</p>
+        </div>
+
+        <style>
+          .reset-data-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+          .reset-data-card{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--panel-alt);cursor:pointer;transition:border-color .15s,background .15s;}
+          .reset-data-card:hover{border-color:var(--border-strong);}
+          .reset-data-card input[type="checkbox"]{margin-top:3px;width:16px;height:16px;accent-color:#e5484d;flex-shrink:0;cursor:pointer;}
+          .reset-data-card-main{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;}
+          .reset-data-card-title{font-size:12.5px;font-weight:700;color:var(--text);}
+          .reset-data-card-count{font-size:11px;color:var(--text-muted);}
+          .reset-data-card.is-checked{border-color:#e5484d;background:rgba(229,72,77,.08);}
+          .reset-data-card.is-checked .reset-data-card-count{color:#e5484d;}
+        </style>
+
+        <div class="panel">
+          <div class="panel-head"><div><h3>Pilih Kategori yang Akan Dihapus</h3><p>Centang satu atau beberapa kategori data laporan. Kategori yang tidak dicentang tetap aman, tidak ikut terhapus.</p></div></div>
+          <form method="POST" action="{{ route('admin.reset-data-laporan.destroy') }}" id="formResetDataLaporan" style="padding:18px 22px;">
+            @csrf @method('DELETE')
+            <div class="reset-data-grid">
+              @foreach($resetDataKategori as $key => $def)
+              <label class="reset-data-card" data-reset-data-card>
+                <input type="checkbox" name="kategori[]" value="{{ $key }}">
+                <span class="reset-data-card-main">
+                  <span class="reset-data-card-title">{{ $def['label'] }}</span>
+                  <span class="reset-data-card-count">{{ number_format($resetDataCounts[$key] ?? 0) }} baris data saat ini</span>
+                </span>
+              </label>
+              @endforeach
+            </div>
+            <button type="button" class="btn btn-ghost-red" id="btnResetDataLaporan" style="margin-top:16px;" disabled>Hapus Data Terpilih</button>
+          </form>
+        </div>
+
+        <script>
+        (function () {
+          var panel = document.querySelector('[data-tab-panel="reset-data-laporan"]');
+          if (!panel) return;
+
+          var form = document.getElementById('formResetDataLaporan');
+          var cards = Array.prototype.slice.call(panel.querySelectorAll('[data-reset-data-card]'));
+          var btn = document.getElementById('btnResetDataLaporan');
+          var overlay = document.getElementById('resetDataLaporanOverlay');
+          var listEl = document.getElementById('resetDataLaporanDaftar');
+
+          function refresh() {
+            var checkedLabels = [];
+            cards.forEach(function (card) {
+              var cb = card.querySelector('input[type="checkbox"]');
+              var checked = cb.checked;
+              card.classList.toggle('is-checked', checked);
+              if (checked) checkedLabels.push(card.querySelector('.reset-data-card-title').textContent.trim());
+            });
+            btn.disabled = checkedLabels.length === 0;
+            return checkedLabels;
+          }
+
+          cards.forEach(function (card) {
+            card.querySelector('input[type="checkbox"]').addEventListener('change', refresh);
+          });
+
+          btn.addEventListener('click', function () {
+            var checkedLabels = refresh();
+            if (checkedLabels.length === 0 || !overlay || !listEl) return;
+            listEl.innerHTML = '';
+            checkedLabels.forEach(function (label) {
+              var li = document.createElement('li');
+              li.textContent = label;
+              listEl.appendChild(li);
+            });
+            overlay.classList.add('open');
+          });
+
+          var batal = document.getElementById('resetDataLaporanBatal');
+          if (batal && overlay) {
+            batal.addEventListener('click', function () { overlay.classList.remove('open'); });
+          }
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && overlay) overlay.classList.remove('open');
+          });
+
+          var ya = document.getElementById('resetDataLaporanYa');
+          if (ya && form) {
+            ya.addEventListener('click', function () { form.submit(); });
+          }
+
+          refresh();
+        })();
+        </script>
       </section>
 
       {{-- ===== DATA LAPORAN ===== --}}
@@ -2528,34 +2796,54 @@
               {{-- ===== TAB: BERANDA ===== --}}
               <div class="lp-tab-panel active" data-lp-tab-panel="beranda">
                 <p class="lp-tab-desc">Bagian paling atas landing page — yang pertama kali dilihat pengunjung.</p>
-                <div class="form-grid">
-                  <div class="form-field full">
-                    <label for="lpEyebrow">Label Kecil di Atas Judul</label>
-                    <input id="lpEyebrow" name="hero_eyebrow" type="text" value="{{ old('hero_eyebrow', $pengaturan->hero_eyebrow) }}" data-lp="hero_eyebrow">
+
+                {{-- Sebelumnya semua field statis di bawah numpuk jadi 1 form-grid
+                     panjang tanpa pengelompokan (beda sama kartu-kartu dinamis
+                     Fitur/Identitas Brand/dll yang sudah dibungkus .lp-card
+                     masing-masing) -- sekarang dipisah jadi 2 kartu senada:
+                     "Judul & Deskripsi Utama" dan "Gambar Latar Beranda". --}}
+                <div class="lp-card">
+                  <div class="lp-card-title">Judul &amp; Deskripsi Utama</div>
+                  <p class="lp-card-desc">Teks utama yang tampil di bagian paling atas (hero) landing page.</p>
+                  <div class="form-grid">
+                    <div class="form-field full">
+                      <label for="lpEyebrow">Label Kecil di Atas Judul</label>
+                      <input id="lpEyebrow" name="hero_eyebrow" type="text" value="{{ old('hero_eyebrow', $pengaturan->hero_eyebrow) }}" data-lp="hero_eyebrow">
+                    </div>
+                    <div class="form-field">
+                      <label for="lpJudulAwal">Judul (bagian 1) — juga jadi nama sistem di logo &amp; sidebar semua pengguna</label>
+                      <input id="lpJudulAwal" name="hero_judul_awal" type="text" value="{{ old('hero_judul_awal', $pengaturan->hero_judul_awal) }}" data-lp="hero_judul_awal">
+                    </div>
+                    <div class="form-field">
+                      <label for="lpJudulAksen">Judul (bagian 2, warna emas) — juga ikut di logo &amp; sidebar semua pengguna</label>
+                      <input id="lpJudulAksen" name="hero_judul_aksen" type="text" value="{{ old('hero_judul_aksen', $pengaturan->hero_judul_aksen) }}" data-lp="hero_judul_aksen">
+                    </div>
+                    <div class="form-field full">
+                      <label for="lpSubjudul">Sub Judul</label>
+                      <input id="lpSubjudul" name="hero_subjudul" type="text" value="{{ old('hero_subjudul', $pengaturan->hero_subjudul) }}" data-lp="hero_subjudul">
+                    </div>
+                    <div class="form-field full">
+                      <label for="lpDeskripsi">Deskripsi</label>
+                      <textarea id="lpDeskripsi" name="hero_deskripsi" rows="3" data-lp="hero_deskripsi">{{ old('hero_deskripsi', $pengaturan->hero_deskripsi) }}</textarea>
+                    </div>
                   </div>
-                  <div class="form-field">
-                    <label for="lpJudulAwal">Judul (bagian 1) — juga jadi nama sistem di logo &amp; sidebar semua pengguna</label>
-                    <input id="lpJudulAwal" name="hero_judul_awal" type="text" value="{{ old('hero_judul_awal', $pengaturan->hero_judul_awal) }}" data-lp="hero_judul_awal">
-                  </div>
-                  <div class="form-field">
-                    <label for="lpJudulAksen">Judul (bagian 2, warna emas) — juga ikut di logo &amp; sidebar semua pengguna</label>
-                    <input id="lpJudulAksen" name="hero_judul_aksen" type="text" value="{{ old('hero_judul_aksen', $pengaturan->hero_judul_aksen) }}" data-lp="hero_judul_aksen">
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpSubjudul">Sub Judul</label>
-                    <input id="lpSubjudul" name="hero_subjudul" type="text" value="{{ old('hero_subjudul', $pengaturan->hero_subjudul) }}" data-lp="hero_subjudul">
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpDeskripsi">Deskripsi</label>
-                    <textarea id="lpDeskripsi" name="hero_deskripsi" rows="3" data-lp="hero_deskripsi">{{ old('hero_deskripsi', $pengaturan->hero_deskripsi) }}</textarea>
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpHeroImage">Gambar Latar Beranda (opsional)</label>
-                    <div class="lp-hero-image-row">
-                      <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturan->hero_image_path ? '1' : '0' }}" data-label-existing="Ganti Latar">
-                      <img src="{{ $pengaturan->hero_image_path ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}">
-                      <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturan->hero_image_path ? 'display:none' : '' }}">Belum ada gambar latar belakang</div>
-                      <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Latar Belakang</button>
+                </div>
+
+                <div class="lp-card">
+                  <div class="lp-card-title">Gambar Latar Beranda</div>
+                  <p class="lp-card-desc">Foto latar belakang bagian hero (opsional) — kosongkan kalau tidak mau pakai gambar.</p>
+                  <div class="form-grid">
+                    <div class="form-field full">
+                      <label for="lpHeroImage" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Gambar Latar Beranda</label>
+                      <div class="lp-hero-image-row">
+                        <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturan->hero_image_path ? '1' : '0' }}" data-label-existing="Ganti Gambar">
+                        <img src="{{ $pengaturan->hero_image_path ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}">
+                        <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturan->hero_image_path ? 'display:none' : '' }}">
+                          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
+                          <span>Belum ada gambar latar belakang</span>
+                        </div>
+                        <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Latar Belakang</button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2584,18 +2872,33 @@
               {{-- ===== TAB: TENTANG ===== --}}
               <div class="lp-tab-panel" data-lp-tab-panel="tentang">
                 <p class="lp-tab-desc">Profil singkat instansi dan moto yang tampil di bagian "Tentang".</p>
-                <div class="form-grid">
-                  <div class="form-field full">
-                    <label for="lpTentangDeskripsi">Deskripsi Tentang (pisahkan paragraf dengan baris kosong)</label>
-                    <textarea id="lpTentangDeskripsi" name="tentang_deskripsi" rows="5" data-lp="tentang_deskripsi">{{ old('tentang_deskripsi', $pengaturan->tentang_deskripsi) }}</textarea>
+
+                {{-- Sama seperti tab Beranda: field statis dipisah jadi kartu
+                     ".lp-card" sendiri-sendiri (bukan numpuk dalam 1 form-grid
+                     panjang) supaya rapi & konsisten dengan tab Beranda/Fitur. --}}
+                <div class="lp-card">
+                  <div class="lp-card-title">Deskripsi Profil Instansi</div>
+                  <p class="lp-card-desc">Paragraf profil singkat instansi yang tampil di bagian "Tentang" landing page.</p>
+                  <div class="form-grid">
+                    <div class="form-field full">
+                      <label for="lpTentangDeskripsi">Deskripsi Tentang (pisahkan paragraf dengan baris kosong)</label>
+                      <textarea id="lpTentangDeskripsi" name="tentang_deskripsi" rows="10" data-lp="tentang_deskripsi">{{ old('tentang_deskripsi', $pengaturan->tentang_deskripsi) }}</textarea>
+                    </div>
                   </div>
-                  <div class="form-field full">
-                    <label for="lpMotoJudul">Judul Moto</label>
-                    <input id="lpMotoJudul" name="tentang_moto_judul" type="text" value="{{ old('tentang_moto_judul', $pengaturan->tentang_moto_judul) }}" data-lp="tentang_moto_judul">
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpMotoDeskripsi">Deskripsi Moto</label>
-                    <textarea id="lpMotoDeskripsi" name="tentang_moto_deskripsi" rows="3" data-lp="tentang_moto_deskripsi">{{ old('tentang_moto_deskripsi', $pengaturan->tentang_moto_deskripsi) }}</textarea>
+                </div>
+
+                <div class="lp-card">
+                  <div class="lp-card-title">Moto</div>
+                  <p class="lp-card-desc">Judul &amp; penjelasan moto instansi yang tampil di bagian "Tentang" landing page.</p>
+                  <div class="form-grid">
+                    <div class="form-field full">
+                      <label for="lpMotoJudul">Judul Moto</label>
+                      <input id="lpMotoJudul" name="tentang_moto_judul" type="text" value="{{ old('tentang_moto_judul', $pengaturan->tentang_moto_judul) }}" data-lp="tentang_moto_judul">
+                    </div>
+                    <div class="form-field full">
+                      <label for="lpMotoDeskripsi">Deskripsi Moto</label>
+                      <textarea id="lpMotoDeskripsi" name="tentang_moto_deskripsi" rows="3" data-lp="tentang_moto_deskripsi">{{ old('tentang_moto_deskripsi', $pengaturan->tentang_moto_deskripsi) }}</textarea>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2603,41 +2906,53 @@
               {{-- ===== TAB: KONTAK ===== --}}
               <div class="lp-tab-panel" data-lp-tab-panel="kontak">
                 <p class="lp-tab-desc">Informasi kontak &amp; tautan sosial media yang tampil di footer.</p>
-                <div class="form-grid">
-                  <div class="form-field full">
-                    <label for="lpKontakAlamat">Alamat (tampil di footer)</label>
-                    <textarea id="lpKontakAlamat" name="alamat" rows="2" data-lp="alamat">{{ old('alamat', $pengaturan->alamat) }}</textarea>
-                  </div>
-                  <div class="form-field">
-                    <label for="lpKontakEmail">Email Kontak</label>
-                    <input id="lpKontakEmail" name="email_kontak" type="email" value="{{ old('email_kontak', $pengaturan->email_kontak) }}" data-lp="email_kontak">
-                  </div>
-                  <div class="form-field">
-                    <label for="lpKontakTelepon">Telepon Kontak (tampil di footer)</label>
-                    <input id="lpKontakTelepon" name="telepon_kontak" type="text" value="{{ old('telepon_kontak', $pengaturan->telepon_kontak) }}" data-lp="telepon_kontak">
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpWebsite">Website</label>
-                    <input id="lpWebsite" name="website" type="url" value="{{ old('website', $pengaturan->website) }}" data-lp="website" placeholder="https://...">
+
+                {{-- Sama seperti tab Beranda/Tentang: field statis dipisah jadi
+                     kartu ".lp-card" sendiri-sendiri supaya rapi & konsisten. --}}
+                <div class="lp-card">
+                  <div class="lp-card-title">Informasi Kontak</div>
+                  <p class="lp-card-desc">Alamat, email, telepon, dan website yang tampil di bagian footer landing page.</p>
+                  <div class="form-grid">
+                    <div class="form-field full">
+                      <label for="lpKontakAlamat">Alamat (tampil di footer)</label>
+                      <textarea id="lpKontakAlamat" name="alamat" rows="2" data-lp="alamat">{{ old('alamat', $pengaturan->alamat) }}</textarea>
+                    </div>
+                    <div class="form-field">
+                      <label for="lpKontakEmail">Email Kontak</label>
+                      <input id="lpKontakEmail" name="email_kontak" type="email" value="{{ old('email_kontak', $pengaturan->email_kontak) }}" data-lp="email_kontak">
+                    </div>
+                    <div class="form-field">
+                      <label for="lpKontakTelepon">Telepon Kontak (tampil di footer)</label>
+                      <input id="lpKontakTelepon" name="telepon_kontak" type="text" value="{{ old('telepon_kontak', $pengaturan->telepon_kontak) }}" data-lp="telepon_kontak">
+                    </div>
+                    <div class="form-field full">
+                      <label for="lpWebsite">Website</label>
+                      <input id="lpWebsite" name="website" type="url" value="{{ old('website', $pengaturan->website) }}" data-lp="website" placeholder="https://...">
+                    </div>
                   </div>
                 </div>
 
-                <div class="lp-card-title" style="margin-top:18px;">Sosial Media</div>
-                @foreach ((old('sosial_media') ?? $pengaturan->sosial_media ?? []) as $i => $sosial)
-                  <div class="lp-card lp-card-compact">
-                    <input type="hidden" name="sosial_media[{{ $i }}][platform]" value="{{ is_array($sosial) ? $sosial['platform'] : '' }}" data-lp="sosial_platform_{{ $i }}">
-                    <div class="form-grid">
-                      <div class="form-field">
-                        <label>Label ({{ ucfirst(is_array($sosial) ? $sosial['platform'] : '') }})</label>
-                        <input name="sosial_media[{{ $i }}][label]" type="text" value="{{ is_array($sosial) ? $sosial['label'] : '' }}" data-lp="sosial_label_{{ $i }}">
+                <div class="lp-card">
+                  <div class="lp-card-title">Sosial Media</div>
+                  <p class="lp-card-desc">Label &amp; tautan akun sosial media yang tampil di bagian footer landing page.</p>
+                  <div class="lp-sosmed-list">
+                    @foreach ((old('sosial_media') ?? $pengaturan->sosial_media ?? []) as $i => $sosial)
+                      <div class="lp-sosmed-row">
+                        <input type="hidden" name="sosial_media[{{ $i }}][platform]" value="{{ is_array($sosial) ? $sosial['platform'] : '' }}" data-lp="sosial_platform_{{ $i }}">
+                        <div class="form-grid">
+                          <div class="form-field">
+                            <label>Label ({{ ucfirst(is_array($sosial) ? $sosial['platform'] : '') }})</label>
+                            <input name="sosial_media[{{ $i }}][label]" type="text" value="{{ is_array($sosial) ? $sosial['label'] : '' }}" data-lp="sosial_label_{{ $i }}">
+                          </div>
+                          <div class="form-field">
+                            <label>URL</label>
+                            <input name="sosial_media[{{ $i }}][url]" type="url" value="{{ is_array($sosial) ? $sosial['url'] : '' }}" placeholder="https://..." data-lp="sosial_url_{{ $i }}">
+                          </div>
+                        </div>
                       </div>
-                      <div class="form-field">
-                        <label>URL</label>
-                        <input name="sosial_media[{{ $i }}][url]" type="url" value="{{ is_array($sosial) ? $sosial['url'] : '' }}" placeholder="https://..." data-lp="sosial_url_{{ $i }}">
-                      </div>
-                    </div>
+                    @endforeach
                   </div>
-                @endforeach
+                </div>
               </div>
 
               <div class="lp-form-actions">
@@ -2720,41 +3035,36 @@
           @keyframes lpFadeIn{ from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:none;} }
           .lp-tab-desc{font-size:12.5px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;}
 
-          /* Backdrop blur hitam di BELAKANG tiap kartu (bukan mengubah warna
-             kartu itu sendiri -- kartu tetap terang/var(--panel-alt) seperti
-             semula) supaya kartu-kartu yang sebelumnya cuma dipisahkan garis
-             tipis + margin kecil sekarang kelihatan jelas terpisah satu sama
-             lain sebagai panel yang "melayang". position:relative + isolation
-             wajib di parent supaya ::before (z-index:-1) cuma nyembunyi di
-             belakang kartu ini sendiri, bukan ketiban ke bawah kartu lain di
-             atasnya lewat stacking context global. Jarak antar kartu (margin-
-             bottom) diperbesar dari 14px -> 26px supaya "halo" blur tiap
-             kartu kelihatan penuh & gak kepotong/numpuk sama kartu di
-             bawahnya. */
+          /* Percobaan pertama pakai backdrop blur hitam (::before blur+inset
+             negatif) ternyata malah bikin kartu-kartu yang berdempetan
+             "numpuk" jadi abu-abu kotor -- bukan kelihatan terpisah rapi.
+             Diganti ke pola yang SAMA persis dengan ".panel" (dipakai di
+             semua kartu Cadangan Data / Buat Cadangan Baru / Riwayat Backup
+             -- lihat dash-styles.blade.php): kartu solid var(--panel) +
+             box-shadow biasa (bukan blur melayang di belakang), supaya
+             gaya pemisahan antar kartu konsisten di seluruh dashboard, bukan
+             cuma di tab Konten Landing ini. */
           .lp-card{
-            position:relative;
-            isolation:isolate;
-            background:var(--panel-alt);
+            background:linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--panel);
             border:1px solid var(--border-soft);
-            border-radius:10px;
-            padding:16px;
-            margin-bottom:26px;
-          }
-          .lp-card::before{
-            content:'';
-            position:absolute;
-            inset:-14px;
-            background:rgba(0,0,0,.55);
-            filter:blur(24px);
-            border-radius:20px;
-            z-index:-1;
-            pointer-events:none;
+            border-radius:12px;
+            box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 10px 30px rgba(0,0,0,.25);
+            padding:18px;
+            margin-bottom:20px;
           }
           .lp-card-compact{padding:12px 16px;}
           .lp-card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
           .lp-card-desc{margin:-4px 0 14px;font-size:11.5px;line-height:1.55;color:var(--text-muted);}
+          /* Sosial Media: dulu tiap platform (Instagram/TikTok/dst) jadi
+             kartu ".lp-card" terpisah sendiri-sendiri (numpuk banyak kartu
+             kecil) -- sekarang digabung jadi SATU kartu "Sosial Media" berisi
+             beberapa baris yang cuma dipisahkan garis tipis, bukan kotak
+             kartu masing-masing. */
+          .lp-sosmed-row{padding:16px 0;border-top:1px solid var(--border-soft);}
+          .lp-sosmed-row:first-child{padding-top:0;border-top:none;}
+          .lp-sosmed-row:last-child{padding-bottom:0;}
           .lp-hero-image-row{display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:0;text-align:center;}
-          .lp-hero-image-row .landing-file-picker{align-self:center;flex:0 0 auto;min-width:200px;}
+          .lp-hero-image-row .landing-file-picker{align-self:center;flex:0 0 auto;min-width:200px;justify-content:center;}
           /* Tombol "Pilih File", preview gambar, & tombol "Hapus Latar
              Belakang" semuanya rata tengah (align-items:center di parent
              .lp-hero-image-row) -- sebelumnya rata kiri lalu preview
@@ -2763,8 +3073,9 @@
           .lp-hero-image-row .lp-current-image,
           .lp-hero-image-row .lp-image-placeholder{align-self:center;margin:0;}
           .lp-current-image{display:block;border-radius:9px;border:1px solid var(--border-soft);}
-          .lp-image-placeholder{box-sizing:border-box;border-radius:9px;border:1.5px dashed var(--border-soft);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
-          .lp-delete-img-btn{align-self:center;min-height:38px;height:38px;padding:0 16px;font-size:12px;}
+          .lp-image-placeholder{box-sizing:border-box;border-radius:12px;border:2px dashed var(--border-strong);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:14px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
+          .lp-image-placeholder svg{display:block;flex-shrink:0;}
+          .lp-delete-img-btn{align-self:center;min-height:32px;height:32px;padding:0 13px;font-size:11px;}
           /* BG (Gambar Latar Beranda): rasio landscape, mengikuti bentuk asli
              foto latar (bukan kotak seperti logo) -- object-fit:cover supaya
              foto memenuhi kotak tanpa gepeng/distorsi. Ukuran diperbesar
@@ -2784,9 +3095,14 @@
 
           /* Field & kartu tambahan yang disuntik lewat admin-landing-editor.js
              (Identitas Brand, Tombol Hero, SEO, Logo, Navigasi, Statistik) --
-             dipisahkan dari field statis di atasnya dengan garis + jarak yang
-             jelas, supaya nggak kelihatan nempel/menyatu jadi satu tumpukan. */
-          .lp-dynamic-section{margin-top:22px;padding-top:22px;border-top:1px dashed var(--border-soft);}
+             dulu dikasih garis putus-putus + jarak ekstra (22px+22px) buat
+             misahin dari field statis di atasnya. Sekarang field statis di
+             tab Beranda SUDAH dibungkus kartu ".lp-card" sendiri-sendiri
+             (Judul & Deskripsi Utama, Gambar Latar Beranda) yang masing-
+             masing sudah punya margin-bottom sendiri -- jadi garis + jarak
+             ekstra itu jadi dobel/kelebaran & keliatan kayak ada garis
+             nyangkut di tengah. Cukup diselarasi normal, tanpa garis. */
+          .lp-dynamic-section{margin-top:0;}
           .lp-dynamic-section .lp-card:last-child{margin-bottom:0;}
 
           /* pengumuman-banner.blade.php men-set .lp-panel{overflow:hidden}
@@ -3171,7 +3487,13 @@
       {{-- ===== PERMINTAAN RESET PASSWORD ===== --}}
       <section class="tab-panel" data-tab-panel="reset-password">
         <div class="panel">
-          <div class="panel-head"><div><h2>Permintaan Ganti Password</h2><p>Permintaan ganti kata sandi yang dikirim pengguna lewat menu "Pengaturan Akun".</p></div></div>
+          <div class="panel-head">
+            <div><h2>Permintaan Ganti Password</h2><p>Permintaan ganti kata sandi yang dikirim pengguna lewat menu "Pengaturan Akun".</p></div>
+            <button type="button" class="btn btn-ghost-red btn-sm" id="btnHapusRiwayatResetPassword">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
+              Hapus Riwayat
+            </button>
+          </div>
           <div class="table-toolbar">
             <div class="table-search-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
@@ -3391,6 +3713,28 @@
           </form>
         </div>
       </div>
+      {{-- ===== KONFIRMASI HAPUS RIWAYAT PERMINTAAN GANTI PASSWORD ===== --}}
+      <div class="confirm-overlay" id="hapusRiwayatResetPasswordOverlay">
+        <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="hapusRiwayatResetPasswordTitle">
+          <div class="confirm-icon">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
+          </div>
+          <h3 id="hapusRiwayatResetPasswordTitle">Hapus Riwayat Permintaan Ganti Password?</h3>
+          <p>Semua permintaan yang sudah <strong>Disetujui</strong> atau <strong>Ditolak</strong> akan dihapus permanen. Permintaan yang masih menunggu keputusan tidak akan ikut terhapus.</p>
+          <form id="formHapusRiwayatResetPassword" method="POST" action="{{ route('admin.permintaan-reset-password.hapus-riwayat') }}">
+            @csrf @method('DELETE')
+            <div class="confirm-actions">
+              <button type="button" class="btn" id="hapusRiwayatResetPasswordBatal">Batal</button>
+              <button type="submit" class="btn btn-ghost-red">Ya, Hapus</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <script>
+        document.getElementById('btnHapusRiwayatResetPassword')?.addEventListener('click', () => document.getElementById('hapusRiwayatResetPasswordOverlay')?.classList.add('open'));
+        document.getElementById('hapusRiwayatResetPasswordBatal')?.addEventListener('click', () => document.getElementById('hapusRiwayatResetPasswordOverlay')?.classList.remove('open'));
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusRiwayatResetPasswordOverlay')?.classList.remove('open'); });
+      </script>
       <script>
         function bukaSetujuiResetPassword(button) {
           var id = button.dataset.id, nama = button.dataset.nama;

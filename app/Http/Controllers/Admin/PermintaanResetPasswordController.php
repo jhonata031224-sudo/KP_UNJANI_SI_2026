@@ -86,4 +86,21 @@ class PermintaanResetPasswordController extends Controller
 
         return back()->with('status', 'Permintaan ganti password ditolak.');
     }
+
+    /**
+     * Hapus bersih riwayat permintaan ganti password yang SUDAH diproses
+     * (Disetujui/Ditolak). Permintaan yang masih "Menunggu" sengaja tidak
+     * ikut terhapus supaya tidak ada permintaan aktif yang hilang begitu
+     * saja sebelum sempat diputuskan admin.
+     */
+    public function hapusRiwayat(Request $request): RedirectResponse
+    {
+        $jumlah = PermintaanResetPassword::where('status', '!=', PermintaanResetPassword::STATUS_MENUNGGU)->count();
+
+        PermintaanResetPassword::where('status', '!=', PermintaanResetPassword::STATUS_MENUNGGU)->delete();
+
+        ActivityLog::catat('permintaan-reset-password.hapus-riwayat', "Menghapus {$jumlah} riwayat permintaan ganti password yang sudah diproses.", $request->user());
+
+        return back()->with('status', $jumlah > 0 ? "Riwayat permintaan ganti password ({$jumlah}) berhasil dihapus." : 'Tidak ada riwayat yang perlu dihapus.');
+    }
 }

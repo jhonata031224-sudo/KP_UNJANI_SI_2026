@@ -113,7 +113,7 @@
         .report-reject-card h3 { margin:0 0 6px; font-family:var(--display); font-size:19px; }
         .report-reject-card p { margin:0 0 16px; font-size:12px; color:var(--text-muted); line-height:1.6; }
         .report-reject-card label { display:block; font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:7px; }
-        .report-reject-card textarea { width:100%; min-height:130px; box-sizing:border-box; resize:vertical; padding:10px 11px; border:1px solid var(--border); border-radius:8px; background:var(--panel-alt); color:var(--text); font:inherit; font-size:13px; }
+        .report-reject-card textarea { width:100%; min-height:130px; box-sizing:border-box; resize:none; padding:10px 11px; border:1px solid var(--border); border-radius:8px; background:var(--panel-alt); color:var(--text); font:inherit; font-size:13px; }
         .report-reject-card .reject-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
         .report-reject-card .reject-actions button { border:1px solid var(--border); border-radius:8px; padding:8px 13px; background:var(--panel-alt); color:var(--text); cursor:pointer; }
         .report-reject-card .reject-actions .confirm-reject { border-color:var(--red); color:var(--red); }
