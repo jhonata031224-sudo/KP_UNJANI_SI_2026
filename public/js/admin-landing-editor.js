@@ -181,11 +181,15 @@
 
       const name = document.createElement('span');
       name.className = 'landing-file-name';
-      name.textContent = input.files && input.files[0] ? input.files[0].name : 'Belum ada file dipilih';
+      // Sama kayak logika tombol di atas: kalau sudah ada file aktif di
+      // server (hasCurrent) dan belum ada file baru yang dipilih user,
+      // keterangan "Belum ada file dipilih" disembunyikan -- soalnya
+      // sebenarnya SUDAH ada file yang terpakai, cuma belum diganti.
+      name.textContent = input.files && input.files[0] ? input.files[0].name : (hasCurrent ? '' : 'Belum ada file dipilih');
       wrap.appendChild(name);
 
       input.addEventListener('change', () => {
-        name.textContent = input.files && input.files[0] ? input.files[0].name : 'Belum ada file dipilih';
+        name.textContent = input.files && input.files[0] ? input.files[0].name : (hasCurrent ? '' : 'Belum ada file dipilih');
       });
     });
   }
