@@ -1673,15 +1673,17 @@
           .perm-global-select-all span{font-size:11.5px;font-weight:700;color:var(--text);white-space:nowrap;}
           .perm-global-select-all.is-all-active{border-color:var(--gold-bright);background:var(--gold-dim);}
           .perm-global-select-all.is-all-active span{color:var(--gold-bright);}
-          .perm-batch-apply{display:none;align-items:center;gap:7px;height:30px;padding:0 14px;border:1px solid var(--gold-bright);border-radius:8px;background:var(--gold-bright);color:#000;font-size:11.5px;font-weight:700;cursor:pointer;transition:opacity .15s,transform .15s;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;}
-          .perm-batch-apply:hover{opacity:.85;}
+          .perm-batch-fab{position:fixed;bottom:28px;right:28px;z-index:900;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none;}
+          .perm-batch-apply{display:none;align-items:center;gap:8px;padding:11px 20px;border:none;border-radius:12px;background:var(--gold-bright);color:#000;font-family:var(--mono);font-size:11.5px;font-weight:700;cursor:pointer;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.28);transition:opacity .2s,transform .2s,box-shadow .2s;pointer-events:auto;}
+          .perm-batch-apply:hover{opacity:.88;box-shadow:0 6px 24px rgba(0,0,0,.36);transform:translateY(-1px);}
           .perm-batch-apply:active{transform:scale(.97);}
-          .perm-batch-apply.visible{display:inline-flex;}
-          .perm-batch-apply:disabled{opacity:.55;cursor:not-allowed;transform:none;}
-          .perm-batch-progress{display:none;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--text-dim);}
+          .perm-batch-apply.visible{display:inline-flex;animation:permFabIn .22s ease;}
+          .perm-batch-apply:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+          .perm-batch-progress{display:none;align-items:center;gap:9px;padding:10px 16px;border-radius:12px;background:var(--panel);border:1px solid var(--border-soft);box-shadow:0 4px 18px rgba(0,0,0,.22);font-size:11px;font-weight:700;color:var(--text-dim);pointer-events:auto;}
           .perm-batch-progress.visible{display:inline-flex;}
-          .perm-batch-progress-bar{width:80px;height:5px;border-radius:3px;background:var(--border);overflow:hidden;}
-          .perm-batch-progress-fill{height:100%;width:0%;background:var(--gold-bright);border-radius:3px;transition:width .2s ease;}
+          .perm-batch-progress-bar{width:90px;height:5px;border-radius:3px;background:var(--border);overflow:hidden;}
+          .perm-batch-progress-fill{height:100%;width:0%;background:var(--gold-bright);border-radius:3px;transition:width .25s ease;}
+          @keyframes permFabIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
           .perm-satuan-list .panel[data-kategori]{display:block;}
           .perm-satuan-list .panel[data-kategori].perm-hidden{display:none;}
           .perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-bottom:14px;}
@@ -1716,19 +1718,23 @@
           </div>
           <div class="perm-global-actions">
             <span class="perm-global-count" data-perm-global-count></span>
-            <div class="perm-batch-progress" data-perm-batch-progress>
-              <div class="perm-batch-progress-bar"><div class="perm-batch-progress-fill" data-perm-batch-fill></div></div>
-              <span data-perm-batch-progress-text>Menyimpan...</span>
-            </div>
             <label class="perm-global-select-all" data-perm-global-select-all>
               <input type="checkbox">
               <span>Pilih Semua Modul</span>
             </label>
-            <button type="button" class="perm-batch-apply" data-perm-batch-apply>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              Terapkan ke Semua
-            </button>
           </div>
+        </div>
+
+        {{-- FAB: Terapkan ke Semua (muncul floating di kanan bawah saat ada perubahan pending) --}}
+        <div class="perm-batch-fab">
+          <div class="perm-batch-progress" data-perm-batch-progress>
+            <div class="perm-batch-progress-bar"><div class="perm-batch-progress-fill" data-perm-batch-fill></div></div>
+            <span data-perm-batch-progress-text>Menyimpan...</span>
+          </div>
+          <button type="button" class="perm-batch-apply" data-perm-batch-apply>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Terapkan ke Semua
+          </button>
         </div>
 
         <div class="perm-satuan-list">
@@ -1771,10 +1777,10 @@
             var globalWrap = panel.querySelector('[data-perm-global-select-all]');
             var globalCb = globalWrap.querySelector('input[type="checkbox"]');
             var globalCountEl = panel.querySelector('[data-perm-global-count]');
-            var batchBtn = panel.querySelector('[data-perm-batch-apply]');
-            var batchProgress = panel.querySelector('[data-perm-batch-progress]');
-            var batchFill = panel.querySelector('[data-perm-batch-fill]');
-            var batchProgressText = panel.querySelector('[data-perm-batch-progress-text]');
+            var batchBtn = document.querySelector('[data-perm-batch-apply]');
+            var batchProgress = document.querySelector('[data-perm-batch-progress]');
+            var batchFill = document.querySelector('[data-perm-batch-fill]');
+            var batchProgressText = document.querySelector('[data-perm-batch-progress-text]');
             var activeFilter = '';
             /* flag: ada perubahan pending yang belum disimpan ke server */
             var hasPendingChanges = false;
