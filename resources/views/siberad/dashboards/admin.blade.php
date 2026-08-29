@@ -512,6 +512,21 @@
   </div>
 </div>
 
+<div class="confirm-overlay" id="resetDataLaporanOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="resetDataLaporanTitle">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
+    </div>
+    <h3 id="resetDataLaporanTitle">Hapus Data Laporan Terpilih?</h3>
+    <p>Kategori berikut akan dihapus permanen dari database dan tidak bisa dikembalikan (kecuali dari backup):</p>
+    <ul id="resetDataLaporanDaftar" style="text-align:left;font-size:12px;font-weight:700;color:var(--text);margin:10px 0 0;padding-left:18px;"></ul>
+    <div class="confirm-actions">
+      <button type="button" class="btn" id="resetDataLaporanBatal">Batal</button>
+      <button type="button" class="btn btn-ghost-red" id="resetDataLaporanYa">Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+
 <div class="confirm-overlay" id="hapusLandingGambarOverlay">
   <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="hapusLandingGambarTitle">
     <div class="confirm-icon">
@@ -698,6 +713,7 @@
           <a href="#" class="side-sub-link" data-tab-link="satlak" title="Data Satuan"><span class="sub-dot"></span>Data Satuan</a>
           <a href="#" class="side-sub-link" data-tab-link="role-akses" title="Hak Akses Pengguna"><span class="sub-dot"></span>Hak Akses Pengguna</a>
           <a href="#" class="side-sub-link" data-tab-link="backup" title="Cadangan Data"><span class="sub-dot"></span>Cadangan Data</a>
+          <a href="#" class="side-sub-link" data-tab-link="reset-data-laporan" title="Reset Data Laporan"><span class="sub-dot"></span>Reset Data Laporan</a>
           <a href="#" class="side-sub-link" data-tab-link="pengaturan-umum" title="Pengaturan Umum"><span class="sub-dot"></span>Pengaturan Umum</a>
         </div></div>
       </div>
@@ -2239,6 +2255,101 @@
           })();
           </script>
         </div>
+      </section>
+
+      {{-- ===== RESET DATA LAPORAN ===== --}}
+      <section class="tab-panel" data-tab-panel="reset-data-laporan">
+        <div class="section-head panel">
+          <h2>Reset Data Laporan</h2>
+          <p>Hapus permanen data laporan (dummy/uji coba) per kategori. Data pengguna (username &amp; password), satuan, dan pengaturan sistem tidak ikut terhapus.</p>
+        </div>
+
+        <style>
+          .reset-data-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+          .reset-data-card{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--panel-alt);cursor:pointer;transition:border-color .15s,background .15s;}
+          .reset-data-card:hover{border-color:var(--border-strong);}
+          .reset-data-card input[type="checkbox"]{margin-top:3px;width:16px;height:16px;accent-color:#e5484d;flex-shrink:0;cursor:pointer;}
+          .reset-data-card-main{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;}
+          .reset-data-card-title{font-size:12.5px;font-weight:700;color:var(--text);}
+          .reset-data-card-count{font-size:11px;color:var(--text-muted);}
+          .reset-data-card.is-checked{border-color:#e5484d;background:rgba(229,72,77,.08);}
+          .reset-data-card.is-checked .reset-data-card-count{color:#e5484d;}
+        </style>
+
+        <div class="panel">
+          <div class="panel-head"><div><h3>Pilih Kategori yang Akan Dihapus</h3><p>Centang satu atau beberapa kategori data laporan. Kategori yang tidak dicentang tetap aman, tidak ikut terhapus.</p></div></div>
+          <form method="POST" action="{{ route('admin.reset-data-laporan.destroy') }}" id="formResetDataLaporan" style="padding:18px 22px;">
+            @csrf @method('DELETE')
+            <div class="reset-data-grid">
+              @foreach($resetDataKategori as $key => $def)
+              <label class="reset-data-card" data-reset-data-card>
+                <input type="checkbox" name="kategori[]" value="{{ $key }}">
+                <span class="reset-data-card-main">
+                  <span class="reset-data-card-title">{{ $def['label'] }}</span>
+                  <span class="reset-data-card-count">{{ number_format($resetDataCounts[$key] ?? 0) }} baris data saat ini</span>
+                </span>
+              </label>
+              @endforeach
+            </div>
+            <button type="button" class="btn btn-ghost-red" id="btnResetDataLaporan" style="margin-top:16px;" disabled>Hapus Data Terpilih</button>
+          </form>
+        </div>
+
+        <script>
+        (function () {
+          var panel = document.querySelector('[data-tab-panel="reset-data-laporan"]');
+          if (!panel) return;
+
+          var form = document.getElementById('formResetDataLaporan');
+          var cards = Array.prototype.slice.call(panel.querySelectorAll('[data-reset-data-card]'));
+          var btn = document.getElementById('btnResetDataLaporan');
+          var overlay = document.getElementById('resetDataLaporanOverlay');
+          var listEl = document.getElementById('resetDataLaporanDaftar');
+
+          function refresh() {
+            var checkedLabels = [];
+            cards.forEach(function (card) {
+              var cb = card.querySelector('input[type="checkbox"]');
+              var checked = cb.checked;
+              card.classList.toggle('is-checked', checked);
+              if (checked) checkedLabels.push(card.querySelector('.reset-data-card-title').textContent.trim());
+            });
+            btn.disabled = checkedLabels.length === 0;
+            return checkedLabels;
+          }
+
+          cards.forEach(function (card) {
+            card.querySelector('input[type="checkbox"]').addEventListener('change', refresh);
+          });
+
+          btn.addEventListener('click', function () {
+            var checkedLabels = refresh();
+            if (checkedLabels.length === 0 || !overlay || !listEl) return;
+            listEl.innerHTML = '';
+            checkedLabels.forEach(function (label) {
+              var li = document.createElement('li');
+              li.textContent = label;
+              listEl.appendChild(li);
+            });
+            overlay.classList.add('open');
+          });
+
+          var batal = document.getElementById('resetDataLaporanBatal');
+          if (batal && overlay) {
+            batal.addEventListener('click', function () { overlay.classList.remove('open'); });
+          }
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && overlay) overlay.classList.remove('open');
+          });
+
+          var ya = document.getElementById('resetDataLaporanYa');
+          if (ya && form) {
+            ya.addEventListener('click', function () { form.submit(); });
+          }
+
+          refresh();
+        })();
+        </script>
       </section>
 
       {{-- ===== DATA LAPORAN ===== --}}
