@@ -1720,7 +1720,7 @@
             <span class="perm-global-count" data-perm-global-count></span>
             <label class="perm-global-select-all" data-perm-global-select-all>
               <input type="checkbox">
-              <span>Pilih Semua Modul</span>
+              <span data-perm-global-select-all-label>Pilih Semua Modul</span>
             </label>
           </div>
         </div>
@@ -1732,8 +1732,7 @@
             <span data-perm-batch-progress-text>Menyimpan...</span>
           </div>
           <button type="button" class="perm-batch-apply" data-perm-batch-apply>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Terapkan ke Semua
+            <span data-perm-batch-apply-label>Terapkan ke Semua</span>
           </button>
         </div>
 
@@ -1776,8 +1775,10 @@
             var filterBtns = Array.prototype.slice.call(panel.querySelectorAll('[data-perm-filter]'));
             var globalWrap = panel.querySelector('[data-perm-global-select-all]');
             var globalCb = globalWrap.querySelector('input[type="checkbox"]');
+            var globalLabelEl = globalWrap.querySelector('[data-perm-global-select-all-label]');
             var globalCountEl = panel.querySelector('[data-perm-global-count]');
             var batchBtn = document.querySelector('[data-perm-batch-apply]');
+            var batchApplyLabelEl = batchBtn.querySelector('[data-perm-batch-apply-label]');
             var batchProgress = document.querySelector('[data-perm-batch-progress]');
             var batchFill = document.querySelector('[data-perm-batch-fill]');
             var batchProgressText = document.querySelector('[data-perm-batch-progress-text]');
@@ -1848,6 +1849,18 @@
               globalCb.checked = total > 0 && checked === total;
               globalCb.indeterminate = userHasInteracted && checked > 0 && checked < total;
               globalWrap.classList.toggle('is-all-active', globalCb.checked);
+              if (globalLabelEl) {
+                globalLabelEl.textContent = globalCb.checked ? 'Semua Modul Aktif' : 'Pilih Semua Modul';
+              }
+              refreshBatchApplyLabel();
+            }
+
+            /* ---- Label tombol "Terapkan ke ..." mengikuti kategori/filter yang
+               sedang aktif, misalnya "Terapkan ke Pimpinan" saat filter Pimpinan
+               dipilih, atau "Terapkan ke Semua" saat tidak ada filter. ---- */
+            function refreshBatchApplyLabel() {
+              if (!batchApplyLabelEl) return;
+              batchApplyLabelEl.textContent = activeFilter ? ('Terapkan ke ' + activeFilter) : 'Terapkan ke Semua';
             }
 
             function setPending(val) {
