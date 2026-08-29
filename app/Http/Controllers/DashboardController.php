@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ResetDataLaporanController;
 use App\Models\ActivityLog;
 use App\Models\Laporan;
 use App\Models\LaporanKendala;
+use App\Models\LaporanKendalaTembusan;
 use App\Models\Pengaturan;
 use App\Models\PermintaanLaporan;
 use App\Models\PermintaanResetPassword;
@@ -338,7 +339,25 @@ class DashboardController
         $kendalaTerkirim = $isKasansi
             ? LaporanKendala::with('tujuanSatuan')->where('satuan_id', $satuan->id)->latest()->get()
             : collect();
+        $kodeTembusanKasansi = Satuan::kodeTembusanKasansi();
+        // Pilihan checkbox "Tembusan ke" di form Kirim Laporan (dropdown 4
+        // Satlak + 4 Sdir), cuma perlu disiapkan buat Kasansi.
+        $satuanTembusanPilihan = $isKasansi
+            ? Satuan::whereIn('kode', $kodeTembusanKasansi)->get()->sortBy($urutkanSatuan)->values()
+            : collect();
 
-        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','kendalaTerkirim') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
+        // ===== Tembusan (CC) laporan kendala Kasansi -> 4 Satlak/4 Sdir =====
+        // SENGAJA terpisah total dari $permintaanLaporan/$laporanTerkirim di
+        // atas (alur Danpus/Wadan <-> satuan pelaksana) -- ini cuma daftar
+        // info/koordinasi read-only, lihat komentar LaporanKendalaTembusan.
+        $isPenerimaTembusan = in_array($kode, $kodeTembusanKasansi, true);
+        $tembusanMasuk = $isPenerimaTembusan
+            ? LaporanKendalaTembusan::with(['laporanKendala.satuan', 'dibacaOleh'])
+                ->where('satuan_id', $satuan->id)
+                ->latest()
+                ->get()
+            : collect();
+
+        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','kendalaTerkirim','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
     }
 }

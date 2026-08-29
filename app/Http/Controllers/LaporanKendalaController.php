@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\LaporanKendala;
+use App\Models\LaporanKendalaTembusan;
 use App\Models\Satuan;
 use App\Models\User;
 use App\Notifications\LaporanKendalaBaruDiterima;
+use App\Notifications\LaporanKendalaTembusanBaru;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -93,6 +96,13 @@ class LaporanKendalaController extends Controller
             'deskripsi' => ['required', 'string', 'max:10000'],
             'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
             'lampiran' => ['required', 'file', 'mimes:pdf', 'max:20480'],
+            // Tembusan (CC) opsional ke 4 Satlak/4 Sdir -- sekadar info
+            // koordinasi, sama sekali bukan tujuan approval kedua. Dibatasi
+            // ketat ke 8 kode yang diizinkan supaya tidak bisa
+            // "menembuskan" ke satuan lain (mis. sesama Kasansi) yang belum
+            // didukung.
+            'tembusan_ke' => ['nullable', 'array'],
+            'tembusan_ke.*' => ['string', 'in:'.implode(',', Satuan::kodeTembusanKasansi())],
         ], [
             'lampiran.required' => 'Lampiran wajib diisi untuk mengirim laporan kendala ke Danpus.',
         ]);
@@ -112,28 +122,55 @@ class LaporanKendalaController extends Controller
             ? $request->file('lampiran')->store('lampiran-kendala', 'public')
             : null;
 
-        $kendala = LaporanKendala::create([
-            'satuan_id' => $satuanAsal->id,
-            'user_id' => $user->id,
-            'tujuan_satuan_id' => $tujuan->id,
-            'perihal' => $validated['perihal'],
-            'deskripsi' => $validated['deskripsi'],
-            'prioritas' => $validated['prioritas'],
-            'lampiran_path' => $lampiranPath,
-            'status' => LaporanKendala::STATUS_MENUNGGU,
-        ]);
+        // Kode -> id satuan tembusan yang dipilih, dedup dan buang yang
+        // ternyata tidak ketemu di database (mis. satuan sudah dihapus).
+        $satuanTembusan = ! empty($validated['tembusan_ke'])
+            ? Satuan::whereIn('kode', array_unique($validated['tembusan_ke']))->get()
+            : collect();
+
+        $kendala = null;
+        DB::transaction(function () use (&$kendala, $satuanAsal, $user, $tujuan, $validated, $lampiranPath, $satuanTembusan) {
+            $kendala = LaporanKendala::create([
+                'satuan_id' => $satuanAsal->id,
+                'user_id' => $user->id,
+                'tujuan_satuan_id' => $tujuan->id,
+                'perihal' => $validated['perihal'],
+                'deskripsi' => $validated['deskripsi'],
+                'prioritas' => $validated['prioritas'],
+                'lampiran_path' => $lampiranPath,
+                'status' => LaporanKendala::STATUS_MENUNGGU,
+            ]);
+
+            foreach ($satuanTembusan as $penerimaTembusan) {
+                LaporanKendalaTembusan::create([
+                    'laporan_kendala_id' => $kendala->id,
+                    'satuan_id' => $penerimaTembusan->id,
+                ]);
+            }
+        });
 
         foreach (User::where('satuan_id', $tujuan->id)->get() as $penerima) {
             $penerima->notify(new LaporanKendalaBaruDiterima($kendala));
+        }
+
+        // Notifikasi TERPISAH ke satuan tujuan tembusan -- pesannya beda
+        // (LaporanKendalaTembusanBaru, bukan LaporanKendalaBaruDiterima)
+        // supaya jelas ini cuma info koordinasi, bukan sesuatu yang perlu
+        // diputuskan seperti punya DANPUS.
+        if ($satuanTembusan->isNotEmpty()) {
+            foreach (User::whereIn('satuan_id', $satuanTembusan->pluck('id'))->get() as $penerimaTembusan) {
+                $penerimaTembusan->notify(new LaporanKendalaTembusanBaru($kendala));
+            }
         }
 
         ActivityLog::catat('laporan-kendala.create', "Mengirim laporan kendala \"{$kendala->perihal}\" ke {$tujuan->nama}.", $user, [
             'laporan_kendala_id' => $kendala->id,
             'tujuan_satuan' => $tujuan->nama,
             'prioritas' => $kendala->prioritas,
+            'tembusan_ke' => $satuanTembusan->pluck('nama')->all(),
         ]);
 
-        return back()->with('status', 'Laporan kendala berhasil dikirim ke '.$tujuan->nama.'.');
+        return back()->with('status', 'Laporan kendala berhasil dikirim ke '.$tujuan->nama.'.'.($satuanTembusan->isNotEmpty() ? ' Tembusan terkirim ke '.$satuanTembusan->count().' satuan.' : ''));
     }
 
     public function updateStatus(Request $request, LaporanKendala $laporanKendala): RedirectResponse

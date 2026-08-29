@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Laporan kendala/rutin yang dikirim satuan Kasansi (21 Sansidam) LANGSUNG
@@ -57,5 +58,16 @@ class LaporanKendala extends Model
     public function confirmedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'confirmed_by');
+    }
+
+    /**
+     * Tembusan (CC) laporan kendala ini ke satuan lain (4 Satlak/4 Sdir) --
+     * sekadar info/koordinasi, sama sekali tidak memengaruhi status
+     * Menunggu/Ditindaklanjuti/Selesai/Ditolak/Dikonfirmasi di atas yang
+     * murni wewenang DANPUS.
+     */
+    public function tembusans(): HasMany
+    {
+        return $this->hasMany(LaporanKendalaTembusan::class);
     }
 }

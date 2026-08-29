@@ -279,6 +279,15 @@ class Satuan extends Model
     }
 
     /**
+     * Tembusan laporan kendala Kasansi yang masuk ke satuan ini (khusus 4
+     * Satlak/4 Sdir) -- lihat LaporanKendalaTembusan.
+     */
+    public function tembusanKendalaMasuk(): HasMany
+    {
+        return $this->hasMany(LaporanKendalaTembusan::class, 'satuan_id');
+    }
+
+    /**
      * Akun media sosial resmi yang dikelola satuan ini (mis. akun Instagram
      * resmi Satuan Pelaksanaan Siber Sosial) — dipakai fitur manajemen & posting konten.
      */
@@ -313,6 +322,17 @@ class Satuan extends Model
      * Kode satuan pembinaan/direktorat (Binfung, Binum, Diklat, Binmat).
      */
     public const KODE_PEMBINAAN = ['BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT'];
+
+    /**
+     * Kode 8 satuan (4 Satlak operasional + 4 Sdir/pembinaan) yang boleh
+     * jadi tujuan TEMBUSAN (CC) laporan kendala Kasansi -- sekadar info
+     * koordinasi, bukan tujuan approval. Tujuan approval laporan kendala
+     * tetap satu-satunya DANPUS, lihat LaporanKendalaController.
+     */
+    public static function kodeTembusanKasansi(): array
+    {
+        return array_merge(self::KODE_SATLAK, self::KODE_PEMBINAAN);
+    }
 
     /**
      * Kode satuan Unsur Pelayanan -- langsung di bawah/melayani Danpus untuk

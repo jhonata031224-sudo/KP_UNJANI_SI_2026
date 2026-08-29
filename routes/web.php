@@ -19,6 +19,7 @@ use App\Http\Controllers\DukunganTeknisController;
 use App\Http\Controllers\JabatanController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\LaporanKendalaController;
+use App\Http\Controllers\LaporanKendalaTembusanController;
 use App\Http\Controllers\LaporanMonitoringController;
 use App\Http\Controllers\LaporanPublikasiController;
 use App\Http\Controllers\LogUjiPengembanganController;
@@ -120,6 +121,12 @@ Route::patch('/laporan-kendala/{laporanKendala}/status', [LaporanKendalaControll
 Route::delete('/laporan-kendala/{laporanKendala}', [LaporanKendalaController::class, 'destroy'])
     ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-kendala.destroy');
+
+// ===== Tembusan laporan kendala Kasansi ke 4 Satlak/4 Sdir (info/koordinasi,
+// bukan approval) -- lihat komentar LaporanKendalaTembusanController =====
+Route::patch('/laporan-kendala-tembusan/{laporanKendalaTembusan}/baca', [LaporanKendalaTembusanController::class, 'tandaiDibaca'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('laporan-kendala-tembusan.baca');
 
 // ===== Laporan Publikasi ke DANPUS (Satuan Pelaksanaan Siber Sosial) =====
 Route::post('/laporan-publikasi', [LaporanPublikasiController::class, 'store'])
