@@ -280,7 +280,7 @@
   .profile-form-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
   .profile-form-field:last-of-type{margin-bottom:0;}
   .profile-form-field label{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--text-dim);text-transform:uppercase;}
-  .profile-form-field input,.profile-form-field textarea{border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:var(--body);font-size:14px;background:var(--bg-deep);color:var(--text);resize:vertical;}
+  .profile-form-field input,.profile-form-field textarea{border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:var(--body);font-size:14px;background:var(--bg-deep);color:var(--text);resize:none;}
   .profile-form-field input:focus,.profile-form-field textarea:focus{outline:none;border-color:var(--gold);}
   .profile-form-field input::placeholder,.profile-form-field textarea::placeholder{color:var(--text-dim);}
   .profile-form-error{font-size:11.5px;color:var(--red);display:none;line-height:1.5;}
@@ -468,6 +468,17 @@
   .form-field small{font-size:11px;line-height:1.5;color:var(--text-dim);}
   .form-hint{font-size:11px;color:var(--text-dim);}
   @media(max-width:640px){.form-grid{grid-template-columns:1fr;}}
+
+  /* Handle resize bawaan browser (garis-garis diagonal di pojok kanan
+     bawah textarea) dimatikan total di SELURUH dashboard -- tinggi
+     textarea sudah diatur lewat "rows"/CSS masing-masing, jadi tanda ini
+     cuma "sampah visual" yang bikin pojok kartu keliatan kurang rapi.
+     Diletakkan di sini (dash-styles, dimuat di semua dashboard) sebagai
+     jaring pengaman generik untuk textarea yang belum punya aturan
+     resize eksplisit; textarea dengan class spesifik (.form-field,
+     .deadline-field, dll) sudah diubah langsung ke resize:none juga di
+     file masing-masing supaya tidak kalah spesifisitas CSS. */
+  textarea{resize:none;}
 
   .notice{background:var(--gold-dim);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:14px 16px;font-size:12.5px;line-height:1.65;margin-bottom:22px;}
   .notice b{color:var(--gold-bright);}
