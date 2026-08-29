@@ -2827,9 +2827,14 @@
 
           /* Field & kartu tambahan yang disuntik lewat admin-landing-editor.js
              (Identitas Brand, Tombol Hero, SEO, Logo, Navigasi, Statistik) --
-             dipisahkan dari field statis di atasnya dengan garis + jarak yang
-             jelas, supaya nggak kelihatan nempel/menyatu jadi satu tumpukan. */
-          .lp-dynamic-section{margin-top:22px;padding-top:22px;border-top:1px dashed var(--border-soft);}
+             dulu dikasih garis putus-putus + jarak ekstra (22px+22px) buat
+             misahin dari field statis di atasnya. Sekarang field statis di
+             tab Beranda SUDAH dibungkus kartu ".lp-card" sendiri-sendiri
+             (Judul & Deskripsi Utama, Gambar Latar Beranda) yang masing-
+             masing sudah punya margin-bottom sendiri -- jadi garis + jarak
+             ekstra itu jadi dobel/kelebaran & keliatan kayak ada garis
+             nyangkut di tengah. Cukup diselarasi normal, tanpa garis. */
+          .lp-dynamic-section{margin-top:0;}
           .lp-dynamic-section .lp-card:last-child{margin-bottom:0;}
 
           /* pengumuman-banner.blade.php men-set .lp-panel{overflow:hidden}
