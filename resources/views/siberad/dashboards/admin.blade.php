@@ -1673,6 +1673,15 @@
           .perm-global-select-all span{font-size:11.5px;font-weight:700;color:var(--text);white-space:nowrap;}
           .perm-global-select-all.is-all-active{border-color:var(--gold-bright);background:var(--gold-dim);}
           .perm-global-select-all.is-all-active span{color:var(--gold-bright);}
+          .perm-batch-apply{display:none;align-items:center;gap:7px;height:30px;padding:0 14px;border:1px solid var(--gold-bright);border-radius:8px;background:var(--gold-bright);color:#000;font-size:11.5px;font-weight:700;cursor:pointer;transition:opacity .15s,transform .15s;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;}
+          .perm-batch-apply:hover{opacity:.85;}
+          .perm-batch-apply:active{transform:scale(.97);}
+          .perm-batch-apply.visible{display:inline-flex;}
+          .perm-batch-apply:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+          .perm-batch-progress{display:none;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--text-dim);}
+          .perm-batch-progress.visible{display:inline-flex;}
+          .perm-batch-progress-bar{width:80px;height:5px;border-radius:3px;background:var(--border);overflow:hidden;}
+          .perm-batch-progress-fill{height:100%;width:0%;background:var(--gold-bright);border-radius:3px;transition:width .2s ease;}
           .perm-satuan-list .panel[data-kategori]{display:block;}
           .perm-satuan-list .panel[data-kategori].perm-hidden{display:none;}
           .perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-bottom:14px;}
@@ -1707,10 +1716,18 @@
           </div>
           <div class="perm-global-actions">
             <span class="perm-global-count" data-perm-global-count></span>
+            <div class="perm-batch-progress" data-perm-batch-progress>
+              <div class="perm-batch-progress-bar"><div class="perm-batch-progress-fill" data-perm-batch-fill></div></div>
+              <span data-perm-batch-progress-text>Menyimpan...</span>
+            </div>
             <label class="perm-global-select-all" data-perm-global-select-all>
               <input type="checkbox">
               <span>Pilih Semua Modul</span>
             </label>
+            <button type="button" class="perm-batch-apply" data-perm-batch-apply>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Terapkan ke Semua
+            </button>
           </div>
         </div>
 
@@ -1754,7 +1771,13 @@
             var globalWrap = panel.querySelector('[data-perm-global-select-all]');
             var globalCb = globalWrap.querySelector('input[type="checkbox"]');
             var globalCountEl = panel.querySelector('[data-perm-global-count]');
+            var batchBtn = panel.querySelector('[data-perm-batch-apply]');
+            var batchProgress = panel.querySelector('[data-perm-batch-progress]');
+            var batchFill = panel.querySelector('[data-perm-batch-fill]');
+            var batchProgressText = panel.querySelector('[data-perm-batch-progress-text]');
             var activeFilter = '';
+            /* flag: ada perubahan pending yang belum disimpan ke server */
+            var hasPendingChanges = false;
 
             function refreshCard(cb) {
               var card = cb.closest('.perm-card');
@@ -1772,6 +1795,16 @@
               return boxes;
             }
 
+            function visibleForms() {
+              var forms = [];
+              satuanPanels.forEach(function (p) {
+                if (p.classList.contains('perm-hidden')) return;
+                var f = p.querySelector('form[method="POST"]');
+                if (f) forms.push(f);
+              });
+              return forms;
+            }
+
             function refreshGlobal() {
               var boxes = visibleCheckboxes();
               var total = boxes.length;
@@ -1782,13 +1815,79 @@
               globalWrap.classList.toggle('is-all-active', globalCb.checked);
             }
 
+            function setPending(val) {
+              hasPendingChanges = val;
+              if (val) {
+                batchBtn.classList.add('visible');
+              } else {
+                batchBtn.classList.remove('visible');
+              }
+            }
+
+            /* ---- Simpan semua form visible via fetch satu per satu ---- */
+            batchBtn.addEventListener('click', function () {
+              var forms = visibleForms();
+              if (!forms.length) return;
+              var total = forms.length;
+              var done = 0;
+
+              batchBtn.disabled = true;
+              batchBtn.classList.remove('visible');
+              batchProgress.classList.add('visible');
+              batchFill.style.width = '0%';
+              batchProgressText.textContent = '0 / ' + total + ' tersimpan';
+
+              function submitNext(i) {
+                if (i >= total) {
+                  /* semua selesai */
+                  batchFill.style.width = '100%';
+                  batchProgressText.textContent = 'Semua tersimpan!';
+                  batchBtn.disabled = false;
+                  setPending(false);
+                  window.setTimeout(function () {
+                    batchProgress.classList.remove('visible');
+                    batchFill.style.width = '0%';
+                  }, 2200);
+                  return;
+                }
+                var form = forms[i];
+                var data = new FormData(form);
+                /* FormData hanya mengambil checkbox yang checked,
+                   tapi kita perlu memastikan field permissions[] ada
+                   meski kosong (semua dicentang off) */
+                if (!data.has('permissions[]')) {
+                  data.append('permissions[]', '');
+                }
+                fetch(form.action, {
+                  method: 'POST',
+                  headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                  body: data,
+                  credentials: 'same-origin'
+                }).then(function () {
+                  done++;
+                  batchFill.style.width = Math.round((done / total) * 100) + '%';
+                  batchProgressText.textContent = done + ' / ' + total + ' tersimpan';
+                  submitNext(i + 1);
+                }).catch(function () {
+                  done++;
+                  batchProgressText.textContent = done + ' / ' + total + ' tersimpan';
+                  submitNext(i + 1);
+                });
+              }
+
+              submitNext(0);
+            });
+
+            /* ---- Checkbox individual → tandai pending ---- */
             panel.querySelectorAll('.perm-grid input[type="checkbox"]').forEach(function (cb) {
               cb.addEventListener('change', function () {
                 refreshCard(cb);
                 refreshGlobal();
+                setPending(true);
               });
             });
 
+            /* ---- "Pilih Semua Modul" checkbox ---- */
             globalCb.addEventListener('change', function () {
               var next = globalCb.checked;
               visibleCheckboxes().forEach(function (cb) {
@@ -1796,8 +1895,10 @@
                 refreshCard(cb);
               });
               refreshGlobal();
+              setPending(true);
             });
 
+            /* ---- Filter kategori ---- */
             filterBtns.forEach(function (btn) {
               btn.addEventListener('click', function () {
                 activeFilter = btn.getAttribute('data-perm-filter') || '';
@@ -1807,6 +1908,9 @@
                   p.classList.toggle('perm-hidden', !match);
                 });
                 refreshGlobal();
+                /* reset pending & tombol saat ganti filter supaya tidak simpan
+                   lintas filter secara tidak sengaja */
+                setPending(false);
               });
             });
 
