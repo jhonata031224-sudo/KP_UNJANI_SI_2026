@@ -107,11 +107,13 @@ class LaporanKendalaController extends Controller
             // koordinasi, sama sekali bukan tujuan approval kedua. Dibatasi
             // ketat ke 8 kode yang diizinkan supaya tidak bisa
             // "menembuskan" ke satuan lain (mis. sesama Kasansi) yang belum
-            // didukung.
-            'tembusan_ke' => ['nullable', 'array'],
+            // didukung, dan dibatasi maksimal 2 satuan per laporan supaya
+            // tembusan tetap fokus/tidak disebar ke semua 8 satuan sekaligus.
+            'tembusan_ke' => ['nullable', 'array', 'max:2'],
             'tembusan_ke.*' => ['string', 'in:'.implode(',', Satuan::kodeTembusanKasansi())],
         ], [
             'lampiran.required' => 'Lampiran wajib diisi untuk mengirim laporan kendala ke Danpus.',
+            'tembusan_ke.max' => 'Tembusan maksimal 2 satuan saja.',
         ]);
 
         $user = $request->user()->load('satuan');
