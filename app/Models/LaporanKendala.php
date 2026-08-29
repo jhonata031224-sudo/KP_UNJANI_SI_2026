@@ -29,6 +29,7 @@ class LaporanKendala extends Model
         'user_id',
         'tujuan_satuan_id',
         'perihal',
+        'kategori',
         'deskripsi',
         'prioritas',
         'lampiran_path',

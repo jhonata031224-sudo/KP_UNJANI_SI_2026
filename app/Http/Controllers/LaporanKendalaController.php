@@ -100,6 +100,7 @@ class LaporanKendalaController extends Controller
         // yang mengirim request langsung tanpa lewat form.
         $validated = $request->validate([
             'perihal' => ['required', 'string', 'max:255'],
+            'kategori' => ['nullable', 'string', 'max:255'],
             'deskripsi' => ['required', 'string', 'max:10000'],
             'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
             'lampiran' => ['required', 'file', 'mimes:pdf', 'max:20480'],
@@ -150,6 +151,7 @@ class LaporanKendalaController extends Controller
                 'user_id' => $user->id,
                 'tujuan_satuan_id' => $tujuan->id,
                 'perihal' => $validated['perihal'],
+                'kategori' => $validated['kategori'] ?? null,
                 'deskripsi' => $validated['deskripsi'],
                 'prioritas' => $validated['prioritas'],
                 'lampiran_path' => $lampiranPath,
