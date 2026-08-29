@@ -13,8 +13,6 @@ use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
-    private const ACCESS_TTL_SECONDS = 900;
-
     public function verifyLandingAccess(Request $request)
     {
         if ($request->input('action') === 'revoke') {
@@ -103,12 +101,16 @@ class SettingController extends Controller
 
     public function updateLanding(Request $request): RedirectResponse
     {
+        // Sengaja TIDAK ada batas waktu (TTL) di sini -- akses berlaku terus
+        // selama sesi verifikasi belum dicabut (revoke), yaitu ketika Admin
+        // pindah dari tab Pengaturan Umum ke tab lain (lihat JS di
+        // admin-pengaturan-access.blade.php). Gerbang password + captcha di
+        // awal sudah dianggap cukup, jadi tidak perlu re-verifikasi berkala.
         $verified = $request->session()->get('pengaturan_umum_terverifikasi', false);
-        $verifiedAt = (int) $request->session()->get('pengaturan_umum_terverifikasi_at', 0);
 
-        if (! $verified || $verifiedAt <= 0 || (now()->timestamp - $verifiedAt) > self::ACCESS_TTL_SECONDS) {
+        if (! $verified) {
             $request->session()->forget(['pengaturan_umum_terverifikasi', 'pengaturan_umum_terverifikasi_at']);
-            return back()->with('error', 'Akses Pengaturan Umum sudah berakhir. Masukkan password dan captcha terlebih dahulu.');
+            return back()->with('error', 'Akses Pengaturan Umum belum diverifikasi. Masukkan password dan captcha terlebih dahulu.');
         }
 
         $validated = $request->validate([
@@ -160,5 +162,31 @@ class SettingController extends Controller
         ActivityLog::catat('pengaturan.landing.update', 'Memperbarui seluruh konten halaman landing (branding, navigasi, beranda, fitur, tentang, kontak, footer).');
 
         return back()->with('status', 'Konten halaman landing berhasil disimpan.');
+    }
+
+    public function deleteLandingImage(Request $request, string $tipe): RedirectResponse
+    {
+        // Guard akses sama persis dengan updateLanding() -- tanpa TTL, cukup
+        // sudah lolos verifikasi password + captcha di awal (lihat komentar
+        // di updateLanding()).
+        $verified = $request->session()->get('pengaturan_umum_terverifikasi', false);
+
+        if (! $verified) {
+            $request->session()->forget(['pengaturan_umum_terverifikasi', 'pengaturan_umum_terverifikasi_at']);
+            return back()->with('error', 'Akses Pengaturan Umum belum diverifikasi. Masukkan password dan captcha terlebih dahulu.');
+        }
+
+        $kolom = $tipe === 'logo' ? 'logo_path' : 'hero_image_path';
+        $label = $tipe === 'logo' ? 'Logo' : 'Gambar latar (BG) beranda';
+
+        $pengaturan = Pengaturan::current();
+
+        if ($pengaturan->{$kolom}) {
+            Storage::disk('public')->delete($pengaturan->{$kolom});
+            $pengaturan->update([$kolom => null]);
+            ActivityLog::catat('pengaturan.landing.image_delete', $label.' landing page dihapus.');
+        }
+
+        return back()->with('status', $label.' berhasil dihapus.');
     }
 }

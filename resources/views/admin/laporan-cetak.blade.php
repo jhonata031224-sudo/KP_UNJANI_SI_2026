@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ $jenis === 'pengguna' ? 'Cetak Laporan Pengguna' : 'Cetak Riwayat Aktivitas' }} — {{ $pengaturan->singkatan ?? 'SIBERAD' }}</title>
+<title>{{ $jenis === 'pengguna' ? 'Cetak Laporan Pengguna' : 'Cetak Riwayat Aktivitas' }} — {{ ($pengaturan->hero_judul_awal ?? '') . ($pengaturan->hero_judul_aksen ?? 'SIBERAD') }}</title>
 <style>
   body{font-family:Georgia,'Times New Roman',serif;color:#111;margin:36px;}
   header{display:flex;align-items:center;gap:14px;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:18px;}

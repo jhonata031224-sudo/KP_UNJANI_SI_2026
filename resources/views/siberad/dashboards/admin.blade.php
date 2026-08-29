@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<title>Admin — SIBERAD</title>
+<title>Admin — {{ ($pengaturan->hero_judul_awal ?? '') . ($pengaturan->hero_judul_aksen ?? 'SIBERAD') }}</title>
 <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-pussiberad.jpg') }}">
 @include('siberad.dashboards.partials.dash-styles')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -506,6 +506,23 @@
       @csrf @method('DELETE')
       <div class="confirm-actions">
         <button type="button" class="btn" id="hapusBackupBatal">Batal</button>
+        <button type="submit" class="btn btn-ghost-red">Ya, Hapus</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="hapusLandingGambarOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="hapusLandingGambarTitle">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
+    </div>
+    <h3 id="hapusLandingGambarTitle">Hapus Gambar?</h3>
+    <p><strong id="hapusLandingGambarNama">Gambar ini</strong> akan dihapus permanen dari server dan tidak bisa dikembalikan.</p>
+    <form id="formHapusLandingGambar" method="POST" action="">
+      @csrf @method('DELETE')
+      <div class="confirm-actions">
+        <button type="button" class="btn" id="hapusLandingGambarBatal">Batal</button>
         <button type="submit" class="btn btn-ghost-red">Ya, Hapus</button>
       </div>
     </form>
@@ -1333,6 +1350,16 @@
         };
         document.getElementById('hapusBackupBatal')?.addEventListener('click', () => document.getElementById('hapusBackupOverlay')?.classList.remove('open'));
         document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusBackupOverlay')?.classList.remove('open'); });
+
+        // Dipakai tombol "Hapus BG" (statis) dan "Hapus Logo" (disuntik oleh
+        // admin-landing-editor.js) di tab Pengaturan Umum -> Beranda.
+        window.bukaHapusLandingGambar = function (btn) {
+          document.getElementById('formHapusLandingGambar').action = btn.dataset.action;
+          document.getElementById('hapusLandingGambarNama').textContent = btn.dataset.nama || 'Gambar ini';
+          document.getElementById('hapusLandingGambarOverlay')?.classList.add('open');
+        };
+        document.getElementById('hapusLandingGambarBatal')?.addEventListener('click', () => document.getElementById('hapusLandingGambarOverlay')?.classList.remove('open'));
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusLandingGambarOverlay')?.classList.remove('open'); });
         (function () {
           var modal = document.getElementById('ubahPenggunaModal');
           var closeBtn = document.getElementById('ubahPenggunaClose');
@@ -1674,7 +1701,7 @@
         <div class="perm-global-toolbar">
           <div class="perm-filter-group" data-perm-filter-group>
             <button type="button" class="perm-filter-btn is-active" data-perm-filter="">Semua</button>
-            @foreach(['Admin','Pimpinan','Unsur Pelayanan','Unsur Pembantu Pimpinan','Direktorat','Satlak','Kasansi'] as $kategoriLabel)
+            @foreach(['Pimpinan','Unsur Pelayanan','Unsur Pembantu Pimpinan','Direktorat','Satlak','Kasansi'] as $kategoriLabel)
             <button type="button" class="perm-filter-btn" data-perm-filter="{{ $kategoriLabel }}">{{ $kategoriLabel }}</button>
             @endforeach
           </div>
@@ -1689,6 +1716,10 @@
 
         <div class="perm-satuan-list">
           @foreach($semuaSatuan as $s)
+          {{-- Admin selalu punya akses penuh ke semua modul dan tidak bisa
+               di-nonaktifkan, jadi kartu hak akses modul untuk kategori
+               Admin tidak perlu ditampilkan di sini. --}}
+          @continue(($s->kategori ?? null) === \App\Models\Satuan::KATEGORI_ADMIN)
           @php $kategoriLabel = $permKategoriMap[$s->kategori ?? ''] ?? 'Satlak'; @endphp
           <div class="panel" data-kategori="{{ $kategoriLabel }}">
             <div class="panel-head"><div><h3>{{ $s->nama }} <span class="badge">{{ $s->kode }}</span></h3><p>{{ $s->deskripsi ?: 'Tidak ada deskripsi.' }}</p></div></div>
@@ -2472,7 +2503,7 @@
               </div>
             </div>
 
-            <form id="landingForm" method="POST" action="{{ route('admin.pengaturan.landing.update') }}" enctype="multipart/form-data">
+            <form id="landingForm" method="POST" action="{{ route('admin.pengaturan.landing.update') }}" enctype="multipart/form-data" data-current-logo="{{ $pengaturan->logo_path ? asset('storage/'.$pengaturan->logo_path) : '' }}" data-logo-delete-url="{{ route('admin.pengaturan.landing.image.destroy', 'logo') }}">
               @csrf @method('PATCH')
 
               <div class="lp-tabs" role="tablist">
@@ -2520,10 +2551,12 @@
                   </div>
                   <div class="form-field full">
                     <label for="lpHeroImage">Gambar Latar Beranda (opsional)</label>
-                    <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image">
-                    @if($pengaturan->hero_image_path)
-                      <img src="{{ asset('storage/'.$pengaturan->hero_image_path) }}" alt="Gambar beranda saat ini" class="lp-current-image">
-                    @endif
+                    <div class="lp-hero-image-row">
+                      <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturan->hero_image_path ? '1' : '0' }}" data-label-existing="Ganti Latar">
+                      <img src="{{ $pengaturan->hero_image_path ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}">
+                      <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturan->hero_image_path ? 'display:none' : '' }}">Belum ada gambar latar belakang</div>
+                      <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Latar Belakang</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2608,7 +2641,9 @@
               </div>
 
               <div class="lp-form-actions">
-                <button class="btn btn-primary" type="submit">Simpan Konten Landing</button>
+                <div class="lp-form-actions-inner">
+                  <button class="btn btn-primary" type="submit">Simpan Konten Landing</button>
+                </div>
               </div>
             </form>
           </div>
@@ -2661,8 +2696,10 @@
         </div>
 
         <style>
-          .lp-layout{display:grid;grid-template-columns:1.3fr 1fr;gap:22px;align-items:start;}
-          @media (max-width:1100px){ .lp-layout{grid-template-columns:1fr;} }
+          /* Layout selalu 1 kolom: editor (tabel/tab) di atas, Pratinjau
+             Langsung tetap di bawah dalam posisi landscape/lebar seperti
+             sekarang -- SENGAJA tidak dibikin sejajar 2 kolom ke samping. */
+          .lp-layout{display:flex;flex-direction:column;gap:22px;}
 
           .lp-panel form{padding:22px;}
 
@@ -2687,7 +2724,34 @@
           .lp-card-compact{padding:12px 16px;}
           .lp-card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
           .lp-card-desc{margin:-4px 0 14px;font-size:11.5px;line-height:1.55;color:var(--text-muted);}
-          .lp-current-image{height:52px;margin-top:10px;border-radius:6px;display:block;border:1px solid var(--border-soft);}
+          .lp-hero-image-row{display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:0;text-align:center;}
+          .lp-hero-image-row .landing-file-picker{align-self:center;flex:0 0 auto;min-width:200px;}
+          /* Tombol "Pilih File", preview gambar, & tombol "Hapus Latar
+             Belakang" semuanya rata tengah (align-items:center di parent
+             .lp-hero-image-row) -- sebelumnya rata kiri lalu preview
+             digeser pakai margin-left, sekarang cukup center semua & margin
+             kiri itu dihapus supaya gak nambah geser dari titik tengah. */
+          .lp-hero-image-row .lp-current-image,
+          .lp-hero-image-row .lp-image-placeholder{align-self:center;margin:0;}
+          .lp-current-image{display:block;border-radius:9px;border:1px solid var(--border-soft);}
+          .lp-image-placeholder{box-sizing:border-box;border-radius:9px;border:1.5px dashed var(--border-soft);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
+          .lp-delete-img-btn{align-self:center;min-height:38px;height:38px;padding:0 16px;font-size:12px;}
+          /* BG (Gambar Latar Beranda): rasio landscape, mengikuti bentuk asli
+             foto latar (bukan kotak seperti logo) -- object-fit:cover supaya
+             foto memenuhi kotak tanpa gepeng/distorsi. Ukuran diperbesar
+             (280x158 -> 460x259, tetap rasio ~16:9) supaya lebih jelas
+             kelihatan. */
+          #lpHeroImagePreviewImg{width:460px;height:259px;object-fit:cover;object-position:center;}
+          #lpHeroImagePreviewPlaceholder{width:460px;height:259px;}
+          @media(max-width:760px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{width:100%;max-width:400px;}}
+          @media(max-width:560px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{max-width:340px;}}
+          /* Logo: kotak & object-fit:contain (bukan cover) supaya lambang/
+             logo utuh terlihat jelas tanpa terpotong, dengan ukuran yang
+             pas -- tidak menyisakan ruang kosong berlebihan seperti kotak
+             landscape BG. */
+          #lpLogoPreviewImg{width:150px;height:150px;object-fit:contain;background:var(--panel);padding:8px;box-sizing:border-box;}
+          #lpLogoPreviewPlaceholder{width:150px;height:150px;}
+          @media(max-width:560px){#lpLogoPreviewImg,#lpLogoPreviewPlaceholder{width:150px;}}
 
           /* Field & kartu tambahan yang disuntik lewat admin-landing-editor.js
              (Identitas Brand, Tombol Hero, SEO, Logo, Navigasi, Statistik) --
@@ -2696,9 +2760,125 @@
           .lp-dynamic-section{margin-top:22px;padding-top:22px;border-top:1px dashed var(--border-soft);}
           .lp-dynamic-section .lp-card:last-child{margin-bottom:0;}
 
-          .lp-form-actions{margin-top:6px;padding-top:18px;border-top:1px solid var(--border-soft);}
+          /* pengumuman-banner.blade.php men-set .lp-panel{overflow:hidden}
+             (buat clipping visual rounded corner) -- tapi overflow selain
+             visible pada ancestor bikin position:sticky di dalamnya (tombol
+             Simpan) tidak berfungsi. Dikembalikan ke visible di sini karena
+             urutan <style> ini di render lebih akhir di halaman. */
+          .lp-panel{overflow:visible;}
 
-          .lp-preview-panel{position:sticky;top:16px;}
+          /* Tombol Simpan pakai position:fixed (BUKAN sticky). Ternyata
+             .content (partials/admin-ui-consistency.blade.php) dikasih
+             overflow-x:hidden supaya chart/grid lain nggak bikin scroll
+             horizontal -- efek sampingnya, begitu overflow-x bukan
+             'visible', browser otomatis bikin overflow-y ikutan jadi
+             'auto' juga (aturan baku CSS box model). .content pun jadi
+             "kotak scroll" sendiri, dan position:sticky di dalamnya jadi
+             dihitung relatif ke kotak itu (yang tingginya persis sama
+             dengan isinya, jadi gak ada jarak buat "nempel") -- bukan ke
+             viewport, makanya tombol kelihatan diam di tempat biasa aja.
+             position:fixed gak kena masalah itu karena selalu relatif ke
+             viewport. Posisi kiri disesuaikan lebar sidebar (256px normal,
+             76px saat diciutkan, 0 saat mobile) supaya gak numpuk sidebar. */
+          /* --lp-bar-h: tinggi bar tombol Simpan (padding 14px atas+bawah + tombol ~38px).
+             Dipakai supaya kotak Keluar di footer sidebar (.side-foot) dibikin
+             SETINGGI bar ini persis -- karena sidebar itu flex-column dgn
+             height:100vh (nav flex:1 + side-foot nempel di dasar), begitu
+             tinggi .side-foot == tinggi bar, garis atas (border-top) keduanya
+             otomatis jatuh di koordinat Y yang sama persis -- lurus, gak
+             "anak tangga". (Pendekatan lama: nambah padding-bottom ke
+             .sidebar -- ini KELIRU, cuma nambah ruang kosong di bawah kotak
+             Keluar tanpa mengubah tinggi kotaknya sendiri, jadi garis
+             atasnya tetap gak ketemu garis atas bar.)
+             Nilai 66px di bawah cuma FALLBACK -- nilai final yang benar-benar
+             dipakai browser diukur & di-set ulang secara akurat oleh JS
+             (lihat "sinkron --lp-bar-h" di <script> bawah), supaya tetap pas
+             piksel-demi-piksel walau tingginya berubah (responsif, font,
+             dll). Jangan andalkan angka statis ini sendirian. */
+          :root{ --lp-bar-h:66px; }
+
+          /* Wrapper luar: fixed full-width dari tepi sidebar ke kanan,
+             tanpa padding horizontal -- supaya border-top dan background
+             melebar penuh sejajar dengan garis topbar dan footer sidebar. */
+          .lp-form-actions{
+            position:fixed;left:var(--sidebar-w);right:0;bottom:0;
+            padding:0;
+            border-top:1px solid var(--border-soft);
+            background:var(--panel);z-index:4;
+            box-shadow:0 -8px 16px -8px rgba(0,0,0,.12);
+            transition:left .25s ease;
+          }
+          /* pengumuman-banner.blade.php (di-include lebih awal di halaman,
+             lihat baris ~912) punya style generic ".lp-form-actions" &
+             ".lp-form-actions .btn" dengan !important (ditujukan utk konteks
+             lain, bar aksi yang menyatu di dalam form -- bukan bar fixed
+             ini) yang tanpa sengaja "bocor" ke sini karena sama-sama pakai
+             class .lp-form-actions. Efeknya: margin-top & padding-top
+             nambah, display berubah jadi flex, dan tombol Simpan dipaksa
+             min-height 42px -- tinggi bar asli jadi membengkak jauh di atas
+             --lp-bar-h (66px), sehingga sidebar (yang cuma reserve 66px
+             lewat padding-bottom) berhenti terlalu cepat & garis
+             pertemuannya jadi "anak tangga" / tidak sejajar dgn bar.
+             Reset di sini (aturan ini render LEBIH AKHIR di halaman jadi
+             menang di !important-vs-!important tie-break) supaya tinggi
+             bar balik ke ukuran desain aslinya. */
+          .lp-form-actions{margin-top:0!important;padding-top:0!important;display:block!important;}
+          .lp-form-actions .btn{min-height:0!important;}
+          /* Wrapper dalam: padding 14px 32px meniru .content{padding:30px 32px}
+             sehingga sisi kiri tombol sejajar lurus dengan tepi kiri panel/
+             tabel di atasnya. flex + justify-content:flex-end supaya tombol
+             "Simpan Konten Landing" nempel ke KANAN (bukan default kiri). */
+          .lp-form-actions-inner{
+            padding:14px 32px;
+            display:flex;
+            justify-content:flex-end;
+          }
+          /* Kotak Keluar (.side-foot) dipindah jadi position:fixed nempel ke
+             dasar viewport, PERSIS kayak bar Simpan (position:fixed;bottom:0)
+             -- dgn tinggi (height, bukan min-height) yg sama-sama pakai var
+             --lp-bar-h. Karena dua-duanya "nempel dasar viewport + tinggi
+             sama", border-top keduanya MESTI jatuh di Y yang sama persis --
+             gak lagi bergantung ke hitungan flex/100vh sidebar yang ternyata
+             masih bisa meleset dikit. width ikut lebar sidebar (256px normal
+             / 76px collapsed) biar nempel pas di bawah nav, dan .side-nav
+             dikasih padding-bottom senilai --lp-bar-h supaya isi nav gak
+             ketutup kotak Keluar yang sekarang fixed. border-right jadi
+             garis vertikal pembatas menerus dgn border-right .sidebar di
+             atasnya (warna & ketebalan sama) -- karena .side-foot sekarang
+             fixed & lepas dari flow .sidebar, garis vertikal .sidebar itu
+             sendiri gak otomatis "nempel" turun ke box ini, jadi digambar
+             ulang di sini. Hanya berlaku saat tab Konten Landing aktif
+             (body punya class lp-active yg ditambah JS). */
+          body.lp-active .side-foot{
+            position:fixed;
+            left:0;bottom:0;
+            width:var(--sidebar-w);
+            height:var(--lp-bar-h);
+            box-sizing:border-box;
+            display:flex;
+            align-items:center;
+            background:var(--panel);
+            border-right:1px solid var(--border-soft);
+            z-index:100011;
+            transition:width .25s ease;
+          }
+          body.lp-active .side-foot form.logout{width:100%;}
+          body.lp-active .side-nav{padding-bottom:var(--lp-bar-h);}
+          body.lp-active .sidebar.collapsed .side-foot{width:76px;}
+          .sidebar.collapsed ~ .main .lp-form-actions{left:76px;}
+          @media(max-width:900px){
+            .lp-form-actions{left:0;}
+            .lp-form-actions-inner{padding:14px 16px;}
+            body.lp-active .side-foot{position:static;width:100%;height:auto;display:block;border-right:none;}
+            body.lp-active .side-nav{padding-bottom:0;}
+          }
+          @media(max-width:600px){
+            .lp-form-actions-inner{padding:12px;}
+          }
+
+          /* Pratinjau tetap di posisi normalnya (bawah editor, landscape) --
+             tidak sticky karena sudah 1 kolom, bukan sejajar ke samping. */
+          .lp-preview-panel{position:static;}
           .lp-preview-panel .panel-head h3{display:flex;align-items:center;gap:9px;}
           .lp-live-dot{width:7px;height:7px;border-radius:50%;background:var(--success-bright);box-shadow:0 0 0 3px var(--success-dim);animation:lpPulse 1.8s ease-in-out infinite;}
           @keyframes lpPulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
@@ -2762,6 +2942,51 @@
           (function(){
             var form = document.getElementById('landingForm');
             if(!form) return;
+
+            // ---------- lp-active body class: kotak Keluar jadi fixed, nempel dasar ----------
+            // Saat tab Pengaturan Umum aktif, body.lp-active bikin .side-foot (kotak Keluar)
+            // position:fixed;bottom:0 dgn tinggi --lp-bar-h -- persis kayak bar Simpan yg juga
+            // fixed;bottom:0 dgn tinggi sama. Border-top keduanya dijamin lurus di Y yang sama.
+            (function(){
+              var pengaturanPanel = document.querySelector('[data-tab-panel="pengaturan-umum"]');
+              var bar = document.querySelector('.lp-form-actions');
+              if(!pengaturanPanel) return;
+
+              // ---- sinkron --lp-bar-h: ukur tinggi ASLI bar Simpan, jangan
+              // percaya angka statis di CSS. Bar ini display:none saat tab
+              // nggak aktif (tinggi kebaca 0), jadi cuma diukur waktu tab
+              // aktif. Dengan ini, --lp-bar-h selalu pas piksel-demi-piksel
+              // dgn tinggi bar yang beneran dirender browser -- kebal dari
+              // style bocor / perubahan CSS di masa depan yang mengubah
+              // tinggi bar tanpa sadar mengubah nomor 66px di CSS. ----
+              function syncBarHeight(){
+                if(!bar || !pengaturanPanel.classList.contains('active')) return;
+                var h = bar.getBoundingClientRect().height;
+                if(h > 0){
+                  document.documentElement.style.setProperty('--lp-bar-h', h + 'px');
+                }
+              }
+              function syncLpActive(){
+                var active = pengaturanPanel.classList.contains('active');
+                document.body.classList.toggle('lp-active', active);
+                if(active){
+                  // rAF: tunggu 1 frame supaya display:block dari .active
+                  // sudah kepakai & tinggi bar bisa diukur dgn benar.
+                  requestAnimationFrame(syncBarHeight);
+                }
+              }
+              syncLpActive(); // cek kondisi awal (sesi tersimpan)
+              var obs = new MutationObserver(syncLpActive);
+              obs.observe(pengaturanPanel, {attributes:true, attributeFilter:['class']});
+
+              window.addEventListener('resize', syncBarHeight);
+              if(bar && window.ResizeObserver){
+                new ResizeObserver(syncBarHeight).observe(bar);
+              }
+              if(document.fonts && document.fonts.ready){
+                document.fonts.ready.then(syncBarHeight);
+              }
+            })();
 
             // ---------- draft autosave (jaga-jaga sesi habis di tengah edit) ----------
             var LP_DRAFT_KEY = 'siberadLandingDraft';
@@ -2894,10 +3119,16 @@
               heroImageInput.addEventListener('change', function(){
                 var file = this.files && this.files[0];
                 var heroEl = document.getElementById('lpPreviewHero');
+                var previewImg = document.getElementById('lpHeroImagePreviewImg');
+                var placeholder = document.getElementById('lpHeroImagePreviewPlaceholder');
                 if(!file){ heroEl.style.backgroundImage = ''; return; }
                 var reader = new FileReader();
                 reader.onload = function(e){
                   heroEl.style.backgroundImage = 'linear-gradient(160deg, color-mix(in srgb, var(--panel-2) 85%, transparent), color-mix(in srgb, var(--bg-deep) 75%, transparent)), url(' + e.target.result + ')';
+                  // Tampilkan pratinjau BG realtime di sebelah tombol pilih file,
+                  // gantikan kotak "belum ada gambar" begitu file dipilih.
+                  if(previewImg){ previewImg.src = e.target.result; previewImg.style.display = 'block'; }
+                  if(placeholder){ placeholder.style.display = 'none'; }
                 };
                 reader.readAsDataURL(file);
               });

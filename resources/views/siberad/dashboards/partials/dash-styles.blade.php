@@ -131,6 +131,11 @@
     transition:background-color .25s ease,border-color .25s ease,color .25s ease,box-shadow .25s ease;
   }
 
+  /* Matikan transisi di isi tabel (bisa ratusan baris data) supaya ganti tema tetap ringan */
+  table,table *{
+    transition:none;
+  }
+
   body::before{
     content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.4;
     background-image:
@@ -586,6 +591,7 @@
   function siberadEnhanceFileInputs(root){
     (root||document).querySelectorAll('input[type="file"]:not([hidden])').forEach(function(input){
       if(input.dataset.siberadEnhanced==='1')return;
+      if(input.dataset.filePickerReady==='1'||input.closest('.landing-file-picker'))return;
       input.dataset.siberadEnhanced='1';
       var wrap=document.createElement('div');
       wrap.className='siberad-file-wrap';
