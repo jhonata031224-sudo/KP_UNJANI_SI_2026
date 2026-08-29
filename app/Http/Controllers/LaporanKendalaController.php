@@ -131,6 +131,11 @@ class LaporanKendalaController extends Controller
         $lampiranPath = $request->hasFile('lampiran')
             ? $request->file('lampiran')->store('lampiran-kendala', 'public')
             : null;
+        abort_if(
+            $request->hasFile('lampiran') && ! $lampiranPath,
+            500,
+            'Gagal menyimpan file lampiran ke server. Coba lagi, atau hubungi Admin kalau masalah berlanjut.'
+        );
 
         // Kode -> id satuan tembusan yang dipilih, dedup dan buang yang
         // ternyata tidak ketemu di database (mis. satuan sudah dihapus).
