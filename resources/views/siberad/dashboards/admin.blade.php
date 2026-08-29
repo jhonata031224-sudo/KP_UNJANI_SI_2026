@@ -1673,7 +1673,7 @@
           .perm-global-select-all span{font-size:11.5px;font-weight:700;color:var(--text);white-space:nowrap;}
           .perm-global-select-all.is-all-active{border-color:var(--gold-bright);background:var(--gold-dim);}
           .perm-global-select-all.is-all-active span{color:var(--gold-bright);}
-          .perm-batch-fab{position:fixed;bottom:28px;right:28px;z-index:900;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none;}
+          .perm-batch-fab{position:fixed;bottom:28px;right:32px;z-index:900;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none;}
           .perm-batch-apply{display:none;align-items:center;gap:8px;padding:11px 20px;border:none;border-radius:12px;background:var(--gold-bright);color:#000;font-family:var(--mono);font-size:11.5px;font-weight:700;cursor:pointer;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.28);transition:opacity .2s,transform .2s,box-shadow .2s;pointer-events:auto;}
           .perm-batch-apply:hover{opacity:.88;box-shadow:0 6px 24px rgba(0,0,0,.36);transform:translateY(-1px);}
           .perm-batch-apply:active{transform:scale(.97);}
@@ -1782,7 +1782,27 @@
             var batchFill = document.querySelector('[data-perm-batch-fill]');
             var batchProgressText = document.querySelector('[data-perm-batch-progress-text]');
             var activeFilter = '';
-            /* flag: ada perubahan pending yang belum disimpan ke server */
+            /* Snapshot state awal tiap checkbox saat halaman load.
+               Dipakai untuk deteksi apakah ada perubahan nyata vs balik ke semula. */
+            var initialSnapshot = {};
+            panel.querySelectorAll('.perm-grid input[type="checkbox"]').forEach(function (cb) {
+              initialSnapshot[cb.name + '||' + cb.value + '||' + cb.closest('.panel[data-kategori]').querySelector('form').action] = cb.checked;
+            });
+
+            function cbKey(cb) {
+              return cb.name + '||' + cb.value + '||' + cb.closest('.panel[data-kategori]').querySelector('form').action;
+            }
+
+            function hasRealChanges() {
+              var boxes = [];
+              satuanPanels.forEach(function (p) {
+                boxes = boxes.concat(Array.prototype.slice.call(p.querySelectorAll('.perm-grid input[type="checkbox"]')));
+              });
+              return boxes.some(function (cb) {
+                return cb.checked !== (initialSnapshot[cbKey(cb)] === true);
+              });
+            }
+
             var hasPendingChanges = false;
 
             function refreshCard(cb) {
@@ -1832,9 +1852,10 @@
 
             function setPending(val) {
               hasPendingChanges = val;
-              if (val) {
+              /* Tampilkan tombol hanya jika benar-benar ada perubahan dari state awal */
+              if (val && hasRealChanges()) {
                 batchBtn.classList.add('visible');
-              } else {
+              } else if (!val || !hasRealChanges()) {
                 batchBtn.classList.remove('visible');
               }
             }
@@ -1858,6 +1879,10 @@
                   batchFill.style.width = '100%';
                   batchProgressText.textContent = 'Semua tersimpan!';
                   batchBtn.disabled = false;
+                  /* Perbarui snapshot agar state saat ini jadi baseline baru */
+                  panel.querySelectorAll('.perm-grid input[type="checkbox"]').forEach(function (cb) {
+                    initialSnapshot[cbKey(cb)] = cb.checked;
+                  });
                   setPending(false);
                   window.setTimeout(function () {
                     batchProgress.classList.remove('visible');
@@ -1899,7 +1924,7 @@
                 userHasInteracted = true;
                 refreshCard(cb);
                 refreshGlobal();
-                setPending(true);
+                setPending(hasRealChanges());
               });
             });
 
@@ -1912,7 +1937,7 @@
                 refreshCard(cb);
               });
               refreshGlobal();
-              setPending(true);
+              setPending(hasRealChanges());
             });
 
             /* ---- Filter kategori ---- */
