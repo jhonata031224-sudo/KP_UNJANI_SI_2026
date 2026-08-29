@@ -2601,18 +2601,33 @@
               {{-- ===== TAB: TENTANG ===== --}}
               <div class="lp-tab-panel" data-lp-tab-panel="tentang">
                 <p class="lp-tab-desc">Profil singkat instansi dan moto yang tampil di bagian "Tentang".</p>
-                <div class="form-grid">
-                  <div class="form-field full">
-                    <label for="lpTentangDeskripsi">Deskripsi Tentang (pisahkan paragraf dengan baris kosong)</label>
-                    <textarea id="lpTentangDeskripsi" name="tentang_deskripsi" rows="5" data-lp="tentang_deskripsi">{{ old('tentang_deskripsi', $pengaturan->tentang_deskripsi) }}</textarea>
+
+                {{-- Sama seperti tab Beranda: field statis dipisah jadi kartu
+                     ".lp-card" sendiri-sendiri (bukan numpuk dalam 1 form-grid
+                     panjang) supaya rapi & konsisten dengan tab Beranda/Fitur. --}}
+                <div class="lp-card">
+                  <div class="lp-card-title">Deskripsi Profil Instansi</div>
+                  <p class="lp-card-desc">Paragraf profil singkat instansi yang tampil di bagian "Tentang" landing page.</p>
+                  <div class="form-grid">
+                    <div class="form-field full">
+                      <label for="lpTentangDeskripsi">Deskripsi Tentang (pisahkan paragraf dengan baris kosong)</label>
+                      <textarea id="lpTentangDeskripsi" name="tentang_deskripsi" rows="5" data-lp="tentang_deskripsi">{{ old('tentang_deskripsi', $pengaturan->tentang_deskripsi) }}</textarea>
+                    </div>
                   </div>
-                  <div class="form-field full">
-                    <label for="lpMotoJudul">Judul Moto</label>
-                    <input id="lpMotoJudul" name="tentang_moto_judul" type="text" value="{{ old('tentang_moto_judul', $pengaturan->tentang_moto_judul) }}" data-lp="tentang_moto_judul">
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpMotoDeskripsi">Deskripsi Moto</label>
-                    <textarea id="lpMotoDeskripsi" name="tentang_moto_deskripsi" rows="3" data-lp="tentang_moto_deskripsi">{{ old('tentang_moto_deskripsi', $pengaturan->tentang_moto_deskripsi) }}</textarea>
+                </div>
+
+                <div class="lp-card">
+                  <div class="lp-card-title">Moto</div>
+                  <p class="lp-card-desc">Judul &amp; penjelasan moto instansi yang tampil di bagian "Tentang" landing page.</p>
+                  <div class="form-grid">
+                    <div class="form-field full">
+                      <label for="lpMotoJudul">Judul Moto</label>
+                      <input id="lpMotoJudul" name="tentang_moto_judul" type="text" value="{{ old('tentang_moto_judul', $pengaturan->tentang_moto_judul) }}" data-lp="tentang_moto_judul">
+                    </div>
+                    <div class="form-field full">
+                      <label for="lpMotoDeskripsi">Deskripsi Moto</label>
+                      <textarea id="lpMotoDeskripsi" name="tentang_moto_deskripsi" rows="3" data-lp="tentang_moto_deskripsi">{{ old('tentang_moto_deskripsi', $pengaturan->tentang_moto_deskripsi) }}</textarea>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2620,26 +2635,34 @@
               {{-- ===== TAB: KONTAK ===== --}}
               <div class="lp-tab-panel" data-lp-tab-panel="kontak">
                 <p class="lp-tab-desc">Informasi kontak &amp; tautan sosial media yang tampil di footer.</p>
-                <div class="form-grid">
-                  <div class="form-field full">
-                    <label for="lpKontakAlamat">Alamat (tampil di footer)</label>
-                    <textarea id="lpKontakAlamat" name="alamat" rows="2" data-lp="alamat">{{ old('alamat', $pengaturan->alamat) }}</textarea>
-                  </div>
-                  <div class="form-field">
-                    <label for="lpKontakEmail">Email Kontak</label>
-                    <input id="lpKontakEmail" name="email_kontak" type="email" value="{{ old('email_kontak', $pengaturan->email_kontak) }}" data-lp="email_kontak">
-                  </div>
-                  <div class="form-field">
-                    <label for="lpKontakTelepon">Telepon Kontak (tampil di footer)</label>
-                    <input id="lpKontakTelepon" name="telepon_kontak" type="text" value="{{ old('telepon_kontak', $pengaturan->telepon_kontak) }}" data-lp="telepon_kontak">
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpWebsite">Website</label>
-                    <input id="lpWebsite" name="website" type="url" value="{{ old('website', $pengaturan->website) }}" data-lp="website" placeholder="https://...">
+
+                {{-- Sama seperti tab Beranda/Tentang: field statis dipisah jadi
+                     kartu ".lp-card" sendiri-sendiri supaya rapi & konsisten. --}}
+                <div class="lp-card">
+                  <div class="lp-card-title">Informasi Kontak</div>
+                  <p class="lp-card-desc">Alamat, email, telepon, dan website yang tampil di bagian footer landing page.</p>
+                  <div class="form-grid">
+                    <div class="form-field full">
+                      <label for="lpKontakAlamat">Alamat (tampil di footer)</label>
+                      <textarea id="lpKontakAlamat" name="alamat" rows="2" data-lp="alamat">{{ old('alamat', $pengaturan->alamat) }}</textarea>
+                    </div>
+                    <div class="form-field">
+                      <label for="lpKontakEmail">Email Kontak</label>
+                      <input id="lpKontakEmail" name="email_kontak" type="email" value="{{ old('email_kontak', $pengaturan->email_kontak) }}" data-lp="email_kontak">
+                    </div>
+                    <div class="form-field">
+                      <label for="lpKontakTelepon">Telepon Kontak (tampil di footer)</label>
+                      <input id="lpKontakTelepon" name="telepon_kontak" type="text" value="{{ old('telepon_kontak', $pengaturan->telepon_kontak) }}" data-lp="telepon_kontak">
+                    </div>
+                    <div class="form-field full">
+                      <label for="lpWebsite">Website</label>
+                      <input id="lpWebsite" name="website" type="url" value="{{ old('website', $pengaturan->website) }}" data-lp="website" placeholder="https://...">
+                    </div>
                   </div>
                 </div>
 
-                <div class="lp-card-title" style="margin-top:18px;">Sosial Media</div>
+                <div class="lp-card-title" style="margin-top:4px;">Sosial Media</div>
+                <p class="lp-card-desc" style="margin-top:-4px;">Label &amp; tautan akun sosial media yang tampil di bagian footer landing page.</p>
                 @foreach ((old('sosial_media') ?? $pengaturan->sosial_media ?? []) as $i => $sosial)
                   <div class="lp-card lp-card-compact">
                     <input type="hidden" name="sosial_media[{{ $i }}][platform]" value="{{ is_array($sosial) ? $sosial['platform'] : '' }}" data-lp="sosial_platform_{{ $i }}">
