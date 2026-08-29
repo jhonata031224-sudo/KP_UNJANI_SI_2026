@@ -313,8 +313,16 @@ class DashboardController
             // whereNull/whereNotNull('confirmed_at'), BUKAN sekadar filter
             // status, supaya laporan yang ditolak pun tetap bisa diarsipkan.
             $danpusSatuanId = Satuan::where('kode', 'DANPUS')->value('id');
+            // Laporan yang masih mampir di tembusan (Menunggu Tembusan)
+            // sengaja DIKECUALIKAN -- baru muncul di sini begitu Kasansi
+            // menekan "Kirim ke Danpus" (LaporanKendalaController::teruskan()).
             $kendalaMasuk = $danpusSatuanId
-                ? LaporanKendala::with('satuan')->where('tujuan_satuan_id', $danpusSatuanId)->whereNull('confirmed_at')->latest()->get()
+                ? LaporanKendala::with('satuan')
+                    ->where('tujuan_satuan_id', $danpusSatuanId)
+                    ->whereNull('confirmed_at')
+                    ->where('status', '!=', LaporanKendala::STATUS_MENUNGGU_TEMBUSAN)
+                    ->latest()
+                    ->get()
                 : collect();
             $kendalaArsip = $danpusSatuanId
                 ? LaporanKendala::with(['satuan', 'confirmedBy'])->where('tujuan_satuan_id', $danpusSatuanId)->whereNotNull('confirmed_at')->latest('confirmed_at')->get()
@@ -337,7 +345,7 @@ class DashboardController
         // atas, jadi TIDAK bercampur dengan dashboard non-pimpinan ini.
         $isKasansi = in_array($kode, Satuan::KODE_KOTAMA, true);
         $kendalaTerkirim = $isKasansi
-            ? LaporanKendala::with('tujuanSatuan')->where('satuan_id', $satuan->id)->latest()->get()
+            ? LaporanKendala::with(['tujuanSatuan', 'tembusans.satuan'])->where('satuan_id', $satuan->id)->latest()->get()
             : collect();
         $kodeTembusanKasansi = Satuan::kodeTembusanKasansi();
         // Pilihan checkbox "Tembusan ke" di form Kirim Laporan (dropdown 4
