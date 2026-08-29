@@ -212,16 +212,24 @@ class LaporanKendalaController extends Controller
             403,
             'Laporan kendala ini bukan milik satuan Anda.'
         );
+        $statusBolehTeruskan = [
+            LaporanKendala::STATUS_MENUNGGU_TEMBUSAN,
+            LaporanKendala::STATUS_DIKONFIRMASI,
+        ];
         abort_unless(
-            $laporanKendala->status === LaporanKendala::STATUS_MENUNGGU_TEMBUSAN,
+            in_array($laporanKendala->status, $statusBolehTeruskan, true),
             422,
-            'Laporan kendala ini tidak sedang menunggu tembusan.'
+            'Laporan kendala ini tidak dapat diteruskan pada status saat ini.'
         );
-        abort_unless(
-            $laporanKendala->tembusans()->whereNotNull('feedback')->exists(),
-            422,
-            'Tunggu feedback dari minimal satu tembusan sebelum meneruskan ke Danpus.'
-        );
+        // Jika masih Menunggu Tembusan, wajib ada feedback dulu dari tembusan.
+        // Jika sudah Dikonfirmasi oleh tembusan, langsung boleh diteruskan.
+        if ($laporanKendala->status === LaporanKendala::STATUS_MENUNGGU_TEMBUSAN) {
+            abort_unless(
+                $laporanKendala->tembusans()->whereNotNull('feedback')->exists(),
+                422,
+                'Tunggu feedback dari minimal satu tembusan sebelum meneruskan ke Danpus.'
+            );
+        }
 
         $laporanKendala->update([
             'status' => LaporanKendala::STATUS_MENUNGGU,
