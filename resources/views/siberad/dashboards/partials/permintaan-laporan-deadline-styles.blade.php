@@ -120,7 +120,14 @@
 .deadline-task-step.done .deadline-task-num{background:var(--green,#16834b);color:#fff}
 @media(max-width:640px){.deadline-task-step{margin-right:0;padding:7px 12px}.deadline-task-step::before{clip-path:none!important;border-radius:8px}}
 
-/* ---- Wizard step (sidebar checklist + form) di dalam #kirimLaporanModal ---- */
+/* ---- Wizard step (topbar horizontal checklist + form) di dalam #kirimLaporanModal ----
+   Rombak total dari desain sebelumnya (sidebar vertikal kiri + garis
+   penghubung antar dot) niru referensiTask2.png: checklist sekarang jadi
+   BAR HORIZONTAL di ATAS form, item-nya cuma icon+teks tanpa garis
+   penghubung sama sekali -- itu sekaligus ngilangin semua masalah "nabrak
+   garis" yang sempat muncul di desain vertikal (highlight/ring/dot gede
+   yang keserempet garis ::after), karena emang gak ada garis lagi buat
+   diserempet. */
 {{-- BUG yang barusan bikin transisi buka modal ini kaku: rule di bawah
      (selector lebih spesifik pakai #id) nimpa TOTAL properti "transition"
      bawaan .report-modal-card (yang aslinya transition:transform, buat efek
@@ -129,36 +136,137 @@
      transform DIIKUTSERTAKAN lagi di list transition yang sama. --}}
 #kirimLaporanModal .report-modal-card{width:min(720px,100%);transition:width .2s ease,transform .2s ease}
 #kirimLaporanModal.wizard-active .report-modal-card{width:min(940px,100%)}
-.kirim-laporan-wizard-body{display:grid;grid-template-columns:1fr;gap:22px;min-width:0}
-.kirim-laporan-wizard-body.has-sidebar{grid-template-columns:220px 1fr}
-{{-- Sidebar wizard -- dulu langsung nongol instan (hidden=false doang,
+.kirim-laporan-wizard-body{display:flex;flex-direction:column;gap:18px;min-width:0}
+{{-- Topbar wizard -- dulu langsung nongol instan (hidden=false doang,
      kaku), sekarang fade+slide dikit kayak modal Detail, dipicu class
-     .wizard-sidebar-visible yang ditambahkan sefetelah frame berikutnya
-     (lihat buildWizardSidebar()), pola yang sama persis kayak .is-visible
+     .wizard-topbar-visible yang ditambahkan sefetelah frame berikutnya
+     (lihat buildWizardTopbar()), pola yang sama persis kayak .is-visible
      di permintaan-laporan-realtime.blade.php. --}}
-.kirim-laporan-wizard-sidebar{border-right:1px solid var(--border-soft);padding-right:18px;max-height:62vh;overflow-y:auto;opacity:0;transform:translateX(-8px);transition:opacity .22s ease,transform .22s ease}
-.kirim-laporan-wizard-sidebar.wizard-sidebar-visible{opacity:1;transform:translateX(0)}
-@media(prefers-reduced-motion:reduce){.kirim-laporan-wizard-sidebar{transition:none}}
-.wizard-sidebar-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:0 0 14px}
-.wizard-step-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-.wizard-step{position:relative;display:flex;align-items:flex-start;gap:10px;padding:0 4px 20px 0;cursor:pointer}
-.wizard-step:last-child{padding-bottom:0}
-.wizard-step::after{content:"";position:absolute;left:11px;top:26px;bottom:2px;width:2px;background:var(--border-soft)}
-.wizard-step:last-child::after{display:none}
-.wizard-step-dot{flex-shrink:0;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;background:var(--panel);border:2px solid var(--border-soft);color:var(--text-muted);z-index:1;transition:background .15s ease,border-color .15s ease,color .15s ease}
+.kirim-laporan-wizard-topbar{display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border-soft);padding-bottom:16px;opacity:0;transform:translateY(-6px);transition:opacity .22s ease,transform .22s ease}
+.kirim-laporan-wizard-topbar.wizard-topbar-visible{opacity:1;transform:translateY(0)}
+@media(prefers-reduced-motion:reduce){.kirim-laporan-wizard-topbar{transition:none}}
+/* referensiTaskDetail2.png (crop lebih jelas dari referensiTask2.png)
+   nunjukin ini SATU bar nyambung -- 1 border rounded di keliling SELURUH
+   list, dipisah garis vertikal tipis antar item di DALAMNYA, BUKAN
+   kotak-kotak lepas yang ada jarak/gap kayak percobaan sebelumnya (itu
+   yang dimaksud "putus" -- bukan sudut rounded-nya glitch, tapi task-nya
+   literally kepisah-pisah gak nyambung). overflow:hidden di sini penting
+   supaya background item pertama/terakhir ke-crop ngikutin border-radius
+   punya list, gak usah diatur manual per item.
+   flex:0 1 auto + min-width:0 sengaja -- biar LEBAR bar ngikutin
+   BANYAKNYA task (dikit task = bar pendek, gak maksa selebar modal),
+   tapi tetap bisa NYUSUT (min-width:0 buka jalan flex-shrink, default
+   flex item nolak nyusut di bawah lebar kontennya sendiri) begitu total
+   lebar task ngelewatin ruang yang ada, baru overflow-x:auto kepake buat
+   scroll horizontal internal-nya. flex-wrap:nowrap + tombol panah
+   sebelumnya/selanjutnya (lihat kirimLaporanWizardPrev/Next + JS
+   refreshWizardTopbarNav) jaga-jaga kalau task-nya kebanyakan sampai gak
+   muat -- SENGAJA bukan wrap ke baris ke-2 (bakal ngerusak tampilan "1
+   bar nyambung rounded" kalau kepotong wrap). */
+.wizard-step-list{list-style:none;margin:0;padding:0;display:flex;flex:0 1 auto;min-width:0;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;border:1px solid var(--border-soft);border-radius:12px;scrollbar-width:none}
+.wizard-step-list::-webkit-scrollbar{display:none}
+.wizard-step{position:relative;display:flex;align-items:center;gap:9px;padding:10px 16px;flex-shrink:0;cursor:pointer;border-right:1px solid var(--border-soft)}
+.wizard-step:last-child{border-right:none}
+.wizard-step-dot{box-sizing:border-box;flex-shrink:0;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;background:var(--panel);border:2px solid var(--border-soft);color:var(--text-muted);transition:background .15s ease,border-color .15s ease,color .15s ease}
 .wizard-step-dot svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-linecap:round;stroke-linejoin:round}
-.wizard-step-body{display:flex;flex-direction:column;gap:2px;padding-top:2px}
-.wizard-step-label{font-size:12.5px;font-weight:700;color:var(--text-muted);line-height:1.4}
-.wizard-step-caption{font-size:10.5px;font-weight:600;color:var(--text-dim,var(--text-muted));line-height:1.3}
+/* 1 baris teks doang (nama task) -- topbar di referensi gak punya
+   caption/sub-teks status kedua kayak desain sidebar vertikal sebelumnya. */
+.wizard-step-label{font-size:12.5px;font-weight:600;color:var(--text);line-height:1.3;white-space:nowrap}
+/* Checkmark SOLID hijau (bukan pastel/light-tint) + teks ikut warna hijau
+   -- niru persis "About"/"Details"/"Application form" di referensi yang
+   teksnya juga kehijauan, bukan hitam polos. */
 .wizard-step-done .wizard-step-dot{background:var(--success,var(--green,#16834b));border-color:var(--success,var(--green,#16834b));color:#fff}
-.wizard-step-done .wizard-step-label{color:var(--text)}
-.wizard-step-done .wizard-step-caption{color:var(--success,var(--green,#16834b))}
-.wizard-step-done::after{background:var(--success,var(--green,#16834b))}
-.wizard-step-active .wizard-step-dot{background:var(--p-accent,var(--gold-bright));border-color:var(--p-accent,var(--gold-bright));color:#fff}
-.wizard-step-active .wizard-step-label{color:var(--text);font-weight:800}
-.wizard-step-active .wizard-step-caption{color:var(--p-accent,var(--gold-bright))}
-.wizard-step-pending{opacity:.55;cursor:not-allowed}
-@media(max-width:760px){.kirim-laporan-wizard-body.has-sidebar{grid-template-columns:1fr}.kirim-laporan-wizard-sidebar{border-right:0;border-bottom:1px solid var(--border-soft);padding-right:0;padding-bottom:14px;max-height:none}.wizard-step-list{flex-direction:row;flex-wrap:wrap;gap:12px 18px}.wizard-step{padding:0;flex:0 0 auto}.wizard-step::after{display:none}}
+.wizard-step-done .wizard-step-label{color:var(--success,var(--green,#16834b))}
+.wizard-step-pending{cursor:not-allowed}
+.wizard-step-pending .wizard-step-label{color:var(--text-muted)}
+/* Task yang lagi berjalan (BUKAN cuma yang "current"/lagi dibuka -- SEMUA
+   step berstatus "active", biar warna oranye "Sedang dikerjakan" kebaca
+   di topbar walau kamu lagi ngedit step LAIN yang sudah "Selesai"). */
+.wizard-step-active .wizard-step-dot{background:var(--p-orange,#ea580c);border-color:var(--p-orange,#ea580c);color:#fff}
+.wizard-step-active .wizard-step-label{color:var(--p-orange,#ea580c)}
+/* Task yang belum selesai TAPI permintaannya udah kepalang lewat deadline
+   (data-terlambat dari $permintaan->isTerlambat(), lihat item.blade.php +
+   buildWizardTopbar()) -- merah, niru warna "Terlambat" yang sudah dipakai
+   di badge/pill status permintaan lain (status-pill.bad, deadline-pill --
+   var(--red)), BUKAN warna asing baru. Diletakkan SESUDAH .wizard-step-active
+   di atas (specificity sama) biar menang kalau task-nya kebetulan active
+   DAN terlambat sekaligus. */
+.wizard-step-late .wizard-step-dot{background:var(--red,#c83b3b);border-color:var(--red,#c83b3b);color:#fff}
+.wizard-step-late .wizard-step-label{color:var(--red,#c83b3b)}
+/* Step yang lagi dibuka form-nya sekarang (BUKAN semua task, cuma yang
+   ini) -- SENGAJA gak nimpa warna dot/label lagi (dulu dipaksa oranye
+   apapun statusnya -- salah, soalnya ngedit step yang sudah "Selesai"
+   jadi keliatan kayak "Sedang dikerjakan"). Warna tetap murni ikut status
+   asli (hijau/oranye/merah dari rule di atas), current cuma nambah teks
+   bold + garis penanda di BAWAH item ini (nempel di border bawah BAR,
+   bottom:-1px, nutupin border abu-abu tapi CUMA selebar item ini -- bukan
+   kotak/card terpisah, biar tetap 1 bar nyambung). Garis defaultnya oranye
+   (kasus paling umum: current = task yang "Sedang dikerjakan"), tapi
+   ke-override hijau/merah kalau current-nya kebetulan step "Selesai"/
+   terlambat -- selector 2-class di bawah spesifisitasnya lebih tinggi
+   jadi otomatis menang tanpa peduli urutan. */
+.wizard-step-current .wizard-step-label{font-weight:800}
+/* Garis penanda TUMBUH dari kosong ke penuh (bukan langsung nongol full)
+   tiap kali pindah task -- transform:scaleX bukan width, biar animasinya
+   pakai GPU (compositor), gak numpuk reflow kalau user klak-klik cepat.
+   Mulai dari scaleX(0) (nempel di kiri, transform-origin:left), baru
+   ditarik ke scaleX(1) begitu class .wizard-step-marker-in nempel (lihat
+   buildWizardTopbar() -- ditambahin 2 frame kemudian lewat double rAF,
+   BUKAN bareng pas elemennya baru dibikin, soalnya elemen yang baru
+   ke-insert langsung nongol di state akhirnya kalau transition-nya gak
+   sempat "kepaint" dulu di state awal). Dot current ikut fade-in bareng,
+   kasih efek "landing" pas mendarat di step baru. Ini SENGAJA beda dari
+   animasi fade topbar (yang cuma sekali pas modal pertama kebuka) --
+   animasi marker+dot ini justru harus muncul ULANG tiap kali pindah
+   task, itu intinya sebagai feedback perpindahan.
+   Easing SENGAJA cubic-bezier(.16,1,.3,1) ("ease-out" halus, plain
+   deceleration) -- percobaan awal pakai kurva "back"/overshoot
+   (cubic-bezier(...,1.56,...), lewatin dikit baru mantul balik ke posisi
+   akhir) itu yang bikin ujung animasinya kerasa "nyentak"/gak mulus,
+   soalnya ada gerakan balik kecil pas mendekati akhir. Kurva ini
+   monoton (gak pernah lewatin nilai akhirnya), jadi berhenti mulus.
+   Dot SENGAJA fade doang (opacity), BUKAN transform:scale lagi kayak
+   percobaan sebelumnya -- scale di elemen yang punya border (dot ini
+   border:2px solid) bikin browser ngerender ulang ketebalan border tiap
+   frame selama transisi (rasterisasi ulang, bukan cuma compositor kayak
+   opacity/transform:translate), keliatan "gerigi"/gak semulus animasi
+   garis penanda yang cuma scaleX polos tanpa border. Opacity SELALU mulus
+   di compositor GPU apapun bentuk elemennya. */
+.wizard-step-current::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--p-orange,#ea580c);transform:scaleX(0);transform-origin:left;transition:transform 1.1s cubic-bezier(.16,1,.3,1)}
+.wizard-step-current.wizard-step-marker-in::after{transform:scaleX(1)}
+.wizard-step-current .wizard-step-dot{position:relative;opacity:.35;transition:background .15s ease,border-color .15s ease,color .15s ease,opacity 1.1s cubic-bezier(.16,1,.3,1)}
+.wizard-step-current.wizard-step-marker-in .wizard-step-dot{opacity:1}
+/* Cincin "ripple" yang meletup keluar dari dot lalu ilang -- efek yang
+   lebih "berkesan" dibanding fade doang, TAPI tetap gak nyentuh transform
+   di dot ASLI-nya (yang punya border, rawan gerigi kalau di-scale, lihat
+   catatan di atas). Ini pseudo-element TERPISAH (::before punya dot-nya,
+   bukan ::after yang udah dipakai buat garis penanda di .wizard-step),
+   lingkaran solid tanpa border jadi scale-nya mulus di compositor. Paint
+   order CSS: background dot dulu, baru ::before (cincin ini), baru
+   konten asli (angka/centang) -- jadi angka/centang tetap kelihatan jelas
+   di ATAS cincin yang sedang meletup, gak ketutup. */
+.wizard-step-current .wizard-step-dot::before{content:"";position:absolute;inset:-5px;border-radius:50%;background:var(--p-orange,#ea580c);opacity:.45;transform:scale(.4);pointer-events:none}
+.wizard-step-current.wizard-step-marker-in .wizard-step-dot::before{opacity:0;transform:scale(1.7);transition:opacity 1.1s cubic-bezier(.16,1,.3,1),transform 1.1s cubic-bezier(.16,1,.3,1)}
+.wizard-step-current.wizard-step-done::after{background:var(--success,var(--green,#16834b))}
+.wizard-step-current.wizard-step-late::after{background:var(--red,#c83b3b)}
+.wizard-step-current.wizard-step-done .wizard-step-dot::before{background:var(--success,var(--green,#16834b))}
+.wizard-step-current.wizard-step-late .wizard-step-dot::before{background:var(--red,#c83b3b)}
+@media(prefers-reduced-motion:reduce){.wizard-step-current .wizard-step-dot::before{display:none}.wizard-step-current::after,.wizard-step-current .wizard-step-dot{transition:none}}
+/* Navigasi panah sebelumnya/selanjutnya -- cuma tampil kalau topbar-nya
+   beneran overflow (di-toggle JS lewat atribut hidden, lihat
+   refreshWizardTopbarNav di permintaan-laporan-deadline.blade.php), jadi
+   gak makan tempat pas task-nya dikit dan muat semua.
+   [hidden] override EKSPLISIT sengaja -- .wizard-topbar-nav punya
+   display:flex sendiri yang MENANG dibanding default browser buat atribut
+   hidden ([hidden]{display:none} cuma aturan user-agent, kalah sama style
+   bawaan halaman biarpun specificity-nya sama, lihat kasus sama persis di
+   .form-field[hidden] pas rombak form Kirim Laporan) -- tanpa ini tombolnya
+   tetap kelihatan padahal hidden=true. */
+.wizard-topbar-nav{flex-shrink:0;width:28px;height:28px;border-radius:50%;border:1px solid var(--border-soft);background:var(--panel);display:flex;align-items:center;justify-content:center;color:var(--text-muted);cursor:pointer;transition:border-color .15s ease,color .15s ease}
+.wizard-topbar-nav[hidden]{display:none}
+.wizard-topbar-nav:hover:not(:disabled){border-color:var(--p-orange,#ea580c);color:var(--p-orange,#ea580c)}
+.wizard-topbar-nav:disabled{opacity:.35;cursor:not-allowed}
+.wizard-topbar-nav svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 
 {{-- Bungkus field-field form (bukan baris tombol aksi di bawahnya) dalam 1
      kartu bertepi -- niru kotak "Gross Earnings NYC Division" di referensi
@@ -169,4 +277,88 @@
      referensi, bukan cuma reuse gap 16px punya .form-grid global). --}}
 #kirimLaporanModal .kirim-laporan-form-card{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:18px 20px;padding:20px;border:1px solid var(--border-soft);border-radius:14px;background:var(--panel-alt)}
 @media(max-width:640px){#kirimLaporanModal .kirim-laporan-form-card{grid-template-columns:1fr;padding:16px}}
+/* .form-field punya display:flex sendiri (lihat <style> global di
+   laporan-role.blade.php) yang menang dibanding default browser buat
+   atribut hidden ([hidden]{display:none} cuma aturan user-agent, KALAH
+   sama style bawaan halaman biarpun specificity-nya sama) -- makanya
+   field yang disembunyikan (Tujuan Laporan/Progres/Prioritas/Kategori/
+   Perihal, lihat kirimLaporanModal di laporan-role.blade.php) tetap
+   kelihatan tanpa override eksplisit ini. */
+#kirimLaporanModal .form-field[hidden]{display:none!important}
+
+/* Header modal (icon badge + judul/subjudul) -- pola "icon + heading" biar
+   modal ini kerasa lebih "berisi", bukan judul teks polos doang. */
+.kirim-laporan-modal-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px}
+.kirim-laporan-modal-icon{flex-shrink:0;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:var(--gold-dim);color:var(--gold-bright)}
+.kirim-laporan-modal-icon svg{width:19px;height:19px}
+
+/* Icon kecil di tiap label field (Isi Laporan/Kendala/Lampiran) -- biar
+   field-nya gampang dibedain sekilas pandang, bukan teks label polos. */
+#kirimLaporanModal .form-field label{display:inline-flex;align-items:center;gap:6px}
+.form-field-icon{width:13px;height:13px;flex-shrink:0;color:var(--text-dim,var(--text-muted))}
+
+/* Isi Laporan & Kendala/Alasan SEKARANG sebelah-sebelahan (dihapus class
+   .full-nya di laporan-role.blade.php) -- card ini kebetulan udah punya
+   slot 2 kolom (dulu kepakai field Tujuan/Progres/Prioritas/Kategori/
+   Perihal yang sekarang semua disembunyikan), mubazir kalau 2 field ini
+   malah ditumpuk ke bawah. Ini yang motong tinggi modal paling
+   signifikan (modal jadi lebar+pendek, bukan sempit+panjang). */
+
+/* Dropzone Lampiran -- upgrade dari tombol "Pilih File" polos bawaan
+   siberadEnhanceFileInputs() (dash-styles.blade.php, dipakai situs-wide)
+   jadi kotak dropzone SENDIRI khusus field ini (input dikasih
+   data-file-picker-ready="1" di HTML biar enhancement global itu skip
+   elemen ini, lihat kondisi skip-nya di fungsi tsb). Input asli jadi
+   overlay TRANSPARAN PENUH SATU KOTAK (bukan disembunyikan clip:rect
+   kayak enhancement global) -- sengaja, supaya drag&drop native browser
+   ke file input nempel di SELURUH kotak, bukan cuma di titik kecil
+   tombol kecil. Visual prompt/chip di baliknya pointer-events:none
+   (biar klik/drop tetap tembus ke input asli di atasnya), KECUALI tombol
+   hapus yang di-pointer-events:auto lagi. */
+/* Niru referensiLampiran2.png: kotak dropzone SATU baris penuh (bukan
+   dibagi 2 kolom lagi), border putus-putus TIPIS+SAMAR, icon cloud-upload
+   outline + kalimat "Tarik & lepas file di sini, atau [Pilih File]" --
+   "Pilih File" cuma teks warna accent inline (bukan tombol pil solid
+   lagi), SEMUANYA pointer-events:none karena cuma dekorasi -- input asli
+   yang transparan di atasnya (.lampiran-dropzone-input) yang beneran
+   nangkep klik/drop di SELURUH kotak, termasuk pas "ngeklik" teks Pilih
+   File itu. Daftar file di bawahnya (.lampiran-file-list) full width
+   juga, ditumpuk vertikal. */
+.lampiran-dropzone{position:relative;border:1.5px dashed var(--border-soft,var(--border));border-radius:12px;padding:22px 16px;background:var(--panel);text-align:center;transition:border-color .15s ease,background-color .15s ease}
+.lampiran-dropzone:hover,.lampiran-dropzone.is-dragover{border-color:var(--gold-bright);background:var(--gold-dim)}
+.lampiran-dropzone-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0}
+.lampiran-dropzone-prompt{display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.lampiran-dropzone-icon{color:var(--gold-bright)}
+.lampiran-dropzone-icon svg{width:22px;height:22px}
+.lampiran-dropzone-text{font-size:12.5px;color:var(--text-muted)}
+/* Kotak daftar file di BAWAH dropzone (bukan disamping lagi) -- niru
+   referensiLampiran2.png: tiap baris badge warna solid berisi teks
+   ekstensi file + nama + ukuran + tombol hapus (icon tempat sampah).
+   Dirender manual lewat JS (lihat renderLampiranFileList di
+   permintaan-laporan-deadline.blade.php), baik lampiran LAMA (sudah
+   tersimpan di server, muncul pas mode edit) maupun yang BARU dipilih/
+   di-drop (belum dikirim). Pesan "Belum ada file yang diupload"
+   nge-declare display:block eksplisit, jadi butuh override [hidden]
+   EKSPLISIT juga (pola sama kayak .form-field[hidden] &
+   .wizard-topbar-nav[hidden] sebelumnya -- style penulis SELALU menang
+   dibanding [hidden]{display:none} bawaan browser, apapun juga value
+   display-nya). */
+.lampiran-file-list{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto}
+.lampiran-file-list-empty{display:block;padding:14px 10px;text-align:center;font-size:12px;color:var(--text-muted);border:1px dashed var(--border-soft,var(--border));border-radius:12px}
+.lampiran-file-list-empty[hidden]{display:none}
+/* [hidden] override EKSPLISIT sengaja -- .btn punya display:inline-flex
+   sendiri (dash-styles.blade.php) yang MENANG dibanding [hidden]{display:
+   none} bawaan browser (pola sama kayak beberapa elemen lain di file ini).
+   Dipakai buat nyembunyiin tombol submit pas mode "Lihat Progres"
+   (setKirimLaporanReadonly di permintaan-laporan-deadline.blade.php). */
+#kirimLaporanSubmitBtn[hidden]{display:none}
+.lampiran-file-row{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:10px;background:var(--panel-alt)}
+.lampiran-file-row-icon{flex-shrink:0;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#d64545;color:#fff;font-size:8.5px;font-weight:800;letter-spacing:.02em}
+.lampiran-file-row-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.lampiran-file-row-name{font-size:12.5px;color:var(--text);font-weight:700;word-break:break-all;text-decoration:none}
+a.lampiran-file-row-name:hover{color:var(--gold-bright);text-decoration:underline}
+.lampiran-file-row-size{font-size:10.5px;color:var(--text-muted)}
+.lampiran-file-row-remove{flex-shrink:0;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--text-muted);border:none;cursor:pointer;transition:background-color .15s ease,color .15s ease}
+.lampiran-file-row-remove:hover{background:var(--gold-dim);color:var(--gold-bright)}
+.lampiran-file-row-remove svg{width:14px;height:14px}
 </style>

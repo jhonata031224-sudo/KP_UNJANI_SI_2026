@@ -73,7 +73,7 @@ function initDanpusArchiveMode(){
        attrs=' role="button" tabindex="0" onclick="openReportDetail(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openReportDetail(this)}"'+
          ' data-pengirim="'+esc(ctx.pengirim)+'" data-tujuan="'+esc(ctx.tujuan)+'" data-perihal="'+esc(lap.perihal)+'" data-prioritas="'+esc(lap.prioritas)+'"'+
          ' data-progres="'+esc(lap.progres)+'" data-kendala="'+esc(lap.kendala||'')+'" data-proyek="'+esc(lap.proyek||'-')+'" data-tanggal="'+esc(lap.tanggal)+'"'+
-         ' data-deskripsi="'+esc(lap.deskripsi)+'" data-lampiran="'+esc(lap.lampiran||'')+'" data-readonly="1"';
+         ' data-deskripsi="'+esc(lap.deskripsi)+'" data-lampiran="'+esc(JSON.stringify(lap.lampiran||[]))+'" data-readonly="1"';
      }
      return '<div class="'+cls+'" title="'+title+'"'+attrs+'><span class="request-task-num">'+num+'</span><span class="request-task-label">'+esc(t.deskripsi)+'</span></div>';
    }).join('');

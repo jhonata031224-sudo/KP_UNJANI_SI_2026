@@ -128,6 +128,7 @@ class DashboardController
         // final) yang ADA lampiran filenya -- samain sama aturan yang
         // sudah dipakai di dashboard Pimpinan (DashboardController::index).
         $laporanRekapDeduped = Laporan::whereIn('satuan_id', Satuan::whereIn('kode', $kodeSatuanPengirim)->pluck('id'))
+            ->with('lampirans')
             ->get()
             ->groupBy(fn ($l) => $l->permintaan_laporan_id ?? 'single-'.$l->id)
             ->flatMap(function ($group) {
@@ -135,7 +136,7 @@ class DashboardController
                 $final = $group->reject(fn ($l) => $l->status === Laporan::STATUS_PROGRES)->sortByDesc('id')->take(1);
                 return $progres->merge($final);
             })
-            ->filter(fn ($l) => filled($l->lampiran_path));
+            ->filter(fn ($l) => $l->semuaLampiran->isNotEmpty());
         $rekapLaporanSatuan = Satuan::whereIn('kode', $kodeSatuanPengirim)->withCount([
             'laporanTerkirim as laporan_disetujui' => fn ($q) => $q->where('status', 'Disetujui DANPUS'),
             'laporanTerkirim as laporan_ditolak' => fn ($q) => $q->where('status', 'Ditolak DANPUS'),
@@ -244,6 +245,7 @@ class DashboardController
             $laporanPimpinanSatlak = Laporan::with([
                     'satuan',
                     'tujuanSatuan',
+                    'lampirans',
                     // Global scope hideArchivedOnPimpinanDashboard (lihat
                     // PermintaanLaporan::booted()) nge-filter permintaan yang
                     // sudah diarsip supaya gak nongol lagi di tab Permintaan
@@ -289,7 +291,7 @@ class DashboardController
                 // riwayat progres tanpa lampiran dianggap sekadar update
                 // angka, bukan "laporan" yang beneran punya berkas.
                 'total' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)
-                    ->filter(fn ($l) => filled($l->lampiran_path))
+                    ->filter(fn ($l) => $l->semuaLampiran->isNotEmpty())
                     ->count(),
                 'menunggu' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->where('status', 'Menunggu')->count(),
                 'diterima' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count(),

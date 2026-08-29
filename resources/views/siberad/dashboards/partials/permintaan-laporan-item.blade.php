@@ -2,6 +2,16 @@
     $statusTampilan = $permintaan->statusTampilan();
     $deadlineClass = $permintaan->isTerlambat() ? 'bad' : ($permintaan->deadline_at->diffInHours(now()) <= 24 ? 'near' : 'normal');
     $latestProgresCheckpoint = $permintaan->laporans->where('status', \App\Models\Laporan::STATUS_PROGRES)->sortByDesc('id')->first();
+    // Permintaan yang sudah final (laporan_id keisi, lagi "Menunggu
+    // pemeriksaan" Pimpinan) -- deadline udah gak relevan lagi ditampilkan
+    // (kerjaan-nya sudah selesai, tinggal nunggu diperiksa), jadi pill
+    // deadline di footer disembunyikan (lihat dcard-footer di bawah).
+    // Checklist + tombol aksi juga jadi read-only, lihat dcard-status-area.
+    $isFinal = (bool) $permintaan->laporan_id;
+    // Terlambat/Dibatalkan: task yang belum diisi jadi silang (✕) & terkunci,
+    // tombol Update Progres/Simpan Perubahan ilang. Balik normal otomatis
+    // kalau deadline diperpanjang Pimpinan (isTerlambat() dihitung live).
+    $isLocked = $permintaan->isTerlambat() || $permintaan->status === \App\Models\PermintaanLaporan::STATUS_DIBATALKAN;
     // Warna kotak ikon ikut warna badge prioritas yang sudah dipakai di
     // seluruh app (.priority-tag.prio-tinggi/sedang/rendah) -- bukan warna
     // acak per kartu, biar konsisten & langsung kebaca prioritasnya dari
@@ -91,15 +101,19 @@
                 {{ $permintaan->kategori ?: 'Prioritas '.$permintaan->prioritas }}
             @endif
         </span>
+        @unless($isFinal)
+        {{-- Deadline udah gak relevan lagi begitu laporan final terkirim &
+             lagi menunggu pemeriksaan Pimpinan -- kerjaannya sendiri sudah
+             kelar, jadi pill-nya disembunyikan (bukan cuma nunjukin sisa
+             waktu yang gak ada gunanya lagi). --}}
         <span class="dcard-deadline-pill {{ $deadlineClass }}" title="{{ $permintaan->deadline_at->translatedFormat('d M Y H:i') }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
             {{ $permintaan->deadline_at->diffForHumans(null, \Carbon\CarbonInterface::DIFF_ABSOLUTE) }}
         </span>
+        @endunless
     </div>
     <div class="dcard-status-area">
-    @if($permintaan->status === \App\Models\PermintaanLaporan::STATUS_DIBATALKAN)
-        <span class="deadline-complete cancelled">✕ Dibatalkan Pimpinan</span>
-    @elseif(!$permintaan->laporan_id)
+        {{-- $isFinal: read-only "Lihat Progres". $isLocked: task kosong jadi ✕. --}}
         @if($permintaan->status !== 'Belum dikerjakan' && $permintaan->tasks->isNotEmpty())
             @php $dtActive = false; @endphp
             {{-- Track chevron horizontal ini sengaja TIDAK ditampilkan lagi di
@@ -107,10 +121,10 @@
                  permintaan-laporan-deadline.blade.php) -- markup & logic PHP-nya
                  dipertahankan PERSIS seperti semula supaya jadi satu-satunya
                  sumber data (state done/active/pending per task, plus semua
-                 data-* checkpoint) yang dipakai JS buat ngerender ulang sidebar
-                 step wizard di dalam modal #kirimLaporanModal (lihat
-                 buildWizardSidebar() di permintaan-laporan-deadline.blade.php).
-                 Klik step di sidebar wizard tinggal proxy .click() ke tombol
+                 data-* checkpoint) yang dipakai JS buat ngerender ulang topbar
+                 step wizard horizontal di dalam modal #kirimLaporanModal (lihat
+                 buildWizardTopbar() di permintaan-laporan-deadline.blade.php).
+                 Klik step di topbar wizard tinggal proxy .click() ke tombol
                  asli di sini, jadi handler initUsePermintaanButtons/
                  initEditProgresButtons yang lama tidak perlu diubah sama sekali. --}}
             <div class="deadline-task-track" data-permintaan-task-track>
@@ -130,6 +144,7 @@
                     @endphp
                     @if($task->selesai && $taskLaporan)
                         <button type="button" class="deadline-task-step done edit-progres-btn" title="{{ $task->deskripsi }}"
+                            data-task-id="{{ $task->id }}"
                             data-update-url="{{ route('laporan.update-progres', $taskLaporan) }}"
                             data-tujuan-satuan-id="{{ $taskLaporan->tujuan_satuan_id }}"
                             data-perihal="{{ e($taskLaporan->perihal) }}"
@@ -137,10 +152,12 @@
                             data-prioritas="{{ e($taskLaporan->prioritas) }}"
                             data-deskripsi="{{ e($taskLaporan->deskripsi) }}"
                             data-kendala="{{ e($taskLaporan->kendala ?? '') }}"
-                            data-lampiran="{{ $taskLaporan->lampiran_path ? e(asset('storage/'.$taskLaporan->lampiran_path)) : '' }}"
-                            data-lampiran-nama="{{ $taskLaporan->lampiran_path ? e($taskLaporan->lampiran_nama_asli ?: basename($taskLaporan->lampiran_path)) : '' }}"
+                            data-lampiran="{{ $taskLaporan->semuaLampiran->map(fn($x) => ['id' => $x->id ?? 'legacy', 'url' => asset('storage/'.$x->path), 'nama' => $x->nama_asli])->values()->toJson() }}"
                             data-progres="{{ $permintaan->progres }}"
-                            data-has-tasks="1">
+                            data-has-tasks="1"
+                            data-readonly="{{ ($isFinal || $isLocked) ? '1' : '0' }}"
+                            data-readonly-reason="{{ $isFinal ? 'final' : ($isLocked ? 'locked' : '') }}"
+                            data-terlambat="{{ $permintaan->isTerlambat() ? '1' : '0' }}">
                             <span class="deadline-task-num">✓</span>
                             <span class="deadline-task-label">{{ $task->deskripsi }}</span>
                         </button>
@@ -152,7 +169,7 @@
                              ditampilkan di form itu SENGAJA progres SAAT INI
                              ($permintaan->progres, sama kayak tombol "Update Progres" biasa),
                              bukan prediksi hasil abis toggle. --}}
-                        <button type="button" class="deadline-task-step {{ $dtState }} {{ $dtState !== 'pending' ? 'use-permintaan' : '' }}" title="{{ $task->deskripsi }}" {{ $dtState === 'pending' ? 'disabled' : '' }}
+                        <button type="button" class="deadline-task-step {{ $isLocked ? 'locked locked-view' : $dtState }} {{ (!$isLocked && $dtState !== 'pending') ? 'use-permintaan' : '' }}" title="{{ $task->deskripsi }}" {{ (!$isLocked && $dtState === 'pending') ? 'disabled' : '' }}
                             data-request-id="{{ $permintaan->id }}"
                             data-target-id="{{ $permintaan->pembuat->satuan_id }}"
                             data-perihal="{{ e($permintaan->perihal) }}"
@@ -163,8 +180,9 @@
                             data-has-tasks="1"
                             data-task-id="{{ $task->id }}"
                             data-task-label="{{ e($task->deskripsi) }}"
-                            data-task-action="selesaikan">
-                            <span class="deadline-task-num">{{ $loop->iteration }}</span>
+                            data-task-action="selesaikan"
+                            data-terlambat="{{ $permintaan->isTerlambat() ? '1' : '0' }}">
+                            <span class="deadline-task-num">{{ $isLocked ? '✕' : $loop->iteration }}</span>
                             <span class="deadline-task-label">{{ $task->deskripsi }}</span>
                         </button>
                     @endif
@@ -182,7 +200,26 @@
                  tombol Konfirmasi di modal itu begitu status-nya udah lewat
                  "Belum dikerjakan", karena gak perlu dikonfirmasi ulang). --}}
             <button type="button" class="deadline-secondary small permintaan-lihat-detail-btn">Lihat Detail</button>
-            @if($permintaan->status === 'Belum dikerjakan')
+            @if($isFinal)
+                {{-- Final: buka modal yang sama, mode Lihat Progres (read-only). --}}
+                @if($permintaan->tasks->isNotEmpty())
+                    <button type="button" class="deadline-primary small deadline-wizard-entry-btn">Lihat Progres</button>
+                @elseif($permintaan->laporan)
+                    <button type="button" class="deadline-primary small edit-progres-btn"
+                        data-update-url="{{ route('laporan.update-progres', $permintaan->laporan) }}"
+                        data-tujuan-satuan-id="{{ $permintaan->laporan->tujuan_satuan_id }}"
+                        data-perihal="{{ e($permintaan->laporan->perihal) }}"
+                        data-proyek="{{ e($permintaan->laporan->proyek ?? '') }}"
+                        data-prioritas="{{ e($permintaan->laporan->prioritas) }}"
+                        data-deskripsi="{{ e($permintaan->laporan->deskripsi) }}"
+                        data-kendala="{{ e($permintaan->laporan->kendala ?? '') }}"
+                        data-lampiran="{{ $permintaan->laporan->semuaLampiran->map(fn($x) => ['id' => $x->id ?? 'legacy', 'url' => asset('storage/'.$x->path), 'nama' => $x->nama_asli])->values()->toJson() }}"
+                        data-progres="{{ $permintaan->progres }}"
+                        data-has-tasks="0"
+                        data-readonly="1"
+                        data-readonly-reason="final">Lihat Progres</button>
+                @endif
+            @elseif($permintaan->status === 'Belum dikerjakan')
                 <button type="button" class="deadline-primary small" disabled title="Konfirmasi dulu lewat &quot;Lihat Detail&quot; sebelum bisa update progres">Update Progres</button>
             @elseif($permintaan->isSedangRevisi())
                 <button type="button" class="deadline-primary small deadline-revisi use-permintaan" data-request-id="{{ $permintaan->id }}" data-target-id="{{ $permintaan->pembuat->satuan_id }}" data-perihal="{{ e($permintaan->perihal) }}" data-kategori="{{ e($permintaan->kategori ?? '') }}" data-prioritas="{{ e($permintaan->prioritas) }}" data-instruksi="{{ e($permintaan->instruksi ?? '') }}" data-progres="{{ $permintaan->progres }}" data-has-tasks="{{ $permintaan->tasks->isNotEmpty() ? '1' : '0' }}">Revisi</button>
@@ -195,9 +232,17 @@
                      klik langsung di task-step (lihat deadline-task-track di atas)
                      yang buka modal Update Progres/Edit-nya, jadi tombol terpisah
                      ini sengaja gak dirender lagi biar gak dobel. --}}
-                <button type="button" class="deadline-primary small use-permintaan" data-request-id="{{ $permintaan->id }}" data-target-id="{{ $permintaan->pembuat->satuan_id }}" data-perihal="{{ e($permintaan->perihal) }}" data-kategori="{{ e($permintaan->kategori ?? '') }}" data-prioritas="{{ e($permintaan->prioritas) }}" data-instruksi="{{ e($permintaan->instruksi ?? '') }}" data-progres="{{ $permintaan->progres }}" data-has-tasks="0">Update Progres</button>
-                @if($latestProgresCheckpoint)
-                    <button type="button" class="deadline-secondary small edit-progres-btn" data-update-url="{{ route('laporan.update-progres', $latestProgresCheckpoint) }}" data-tujuan-satuan-id="{{ $latestProgresCheckpoint->tujuan_satuan_id }}" data-perihal="{{ e($latestProgresCheckpoint->perihal) }}" data-proyek="{{ e($latestProgresCheckpoint->proyek ?? '') }}" data-prioritas="{{ e($latestProgresCheckpoint->prioritas) }}" data-deskripsi="{{ e($latestProgresCheckpoint->deskripsi) }}" data-kendala="{{ e($latestProgresCheckpoint->kendala ?? '') }}" data-lampiran="{{ $latestProgresCheckpoint->lampiran_path ? e(asset('storage/'.$latestProgresCheckpoint->lampiran_path)) : '' }}" data-lampiran-nama="{{ $latestProgresCheckpoint->lampiran_path ? e($latestProgresCheckpoint->lampiran_nama_asli ?: basename($latestProgresCheckpoint->lampiran_path)) : '' }}" data-progres="{{ $permintaan->progres }}" data-has-tasks="0">Edit</button>
+                @if($isLocked)
+                    @if($latestProgresCheckpoint)
+                        <button type="button" class="deadline-secondary small edit-progres-btn" data-update-url="{{ route('laporan.update-progres', $latestProgresCheckpoint) }}" data-tujuan-satuan-id="{{ $latestProgresCheckpoint->tujuan_satuan_id }}" data-perihal="{{ e($latestProgresCheckpoint->perihal) }}" data-proyek="{{ e($latestProgresCheckpoint->proyek ?? '') }}" data-prioritas="{{ e($latestProgresCheckpoint->prioritas) }}" data-deskripsi="{{ e($latestProgresCheckpoint->deskripsi) }}" data-kendala="{{ e($latestProgresCheckpoint->kendala ?? '') }}" data-lampiran="{{ $latestProgresCheckpoint->semuaLampiran->map(fn($x) => ['id' => $x->id ?? 'legacy', 'url' => asset('storage/'.$x->path), 'nama' => $x->nama_asli])->values()->toJson() }}" data-progres="{{ $permintaan->progres }}" data-has-tasks="0" data-readonly="1" data-readonly-reason="locked">Lihat Progres</button>
+                    @else
+                        <button type="button" class="deadline-primary small locked-view" data-request-id="{{ $permintaan->id }}" data-target-id="{{ $permintaan->pembuat->satuan_id }}" data-perihal="{{ e($permintaan->perihal) }}" data-kategori="{{ e($permintaan->kategori ?? '') }}" data-prioritas="{{ e($permintaan->prioritas) }}" data-instruksi="{{ e($permintaan->instruksi ?? '') }}" data-progres="{{ $permintaan->progres }}" data-has-tasks="0">Lihat Progres</button>
+                    @endif
+                @else
+                    <button type="button" class="deadline-primary small use-permintaan" data-request-id="{{ $permintaan->id }}" data-target-id="{{ $permintaan->pembuat->satuan_id }}" data-perihal="{{ e($permintaan->perihal) }}" data-kategori="{{ e($permintaan->kategori ?? '') }}" data-prioritas="{{ e($permintaan->prioritas) }}" data-instruksi="{{ e($permintaan->instruksi ?? '') }}" data-progres="{{ $permintaan->progres }}" data-has-tasks="0">Update Progres</button>
+                    @if($latestProgresCheckpoint)
+                        <button type="button" class="deadline-secondary small edit-progres-btn" data-update-url="{{ route('laporan.update-progres', $latestProgresCheckpoint) }}" data-tujuan-satuan-id="{{ $latestProgresCheckpoint->tujuan_satuan_id }}" data-perihal="{{ e($latestProgresCheckpoint->perihal) }}" data-proyek="{{ e($latestProgresCheckpoint->proyek ?? '') }}" data-prioritas="{{ e($latestProgresCheckpoint->prioritas) }}" data-deskripsi="{{ e($latestProgresCheckpoint->deskripsi) }}" data-kendala="{{ e($latestProgresCheckpoint->kendala ?? '') }}" data-lampiran="{{ $latestProgresCheckpoint->semuaLampiran->map(fn($x) => ['id' => $x->id ?? 'legacy', 'url' => asset('storage/'.$x->path), 'nama' => $x->nama_asli])->values()->toJson() }}" data-progres="{{ $permintaan->progres }}" data-has-tasks="0">Edit</button>
+                    @endif
                 @endif
             @else
                 {{-- Permintaan dengan checklist task, sedang dikerjakan (bukan
@@ -209,11 +254,8 @@
                      tersembunyi lalu manggil .click() ke situ (lihat
                      initWizardEntryButtons di permintaan-laporan-deadline.blade.php)
                      -- BUKAN alur baru, cuma pemicu baru buat alur yang sama persis. --}}
-                <button type="button" class="deadline-primary small deadline-wizard-entry-btn">Update Progres</button>
+                <button type="button" class="deadline-primary small deadline-wizard-entry-btn">{{ $isLocked ? 'Lihat Progres' : 'Update Progres' }}</button>
             @endif
         </div>
-    @else
-        <span class="deadline-complete">✓ Laporan sudah dikirim</span>
-    @endif
     </div>
 </article>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\Laporan;
+use App\Models\LaporanLampiran;
 use App\Models\PermintaanLaporan;
 use App\Models\PermintaanLaporanTask;
 use App\Models\Satuan;
@@ -73,11 +74,11 @@ class LaporanController extends Controller
         $requestsSince = max(0, (int) $request->query('requests_since', 0));
 
         if ($isPelaksana) {
-            $sent = Laporan::with(['satuan', 'tujuanSatuan'])
+            $sent = Laporan::with(['satuan', 'tujuanSatuan', 'lampirans'])
                 ->where('satuan_id', $user->satuan->id)
                 ->latest('id')
                 ->get();
-            $incoming = Laporan::with(['satuan', 'tujuanSatuan'])
+            $incoming = Laporan::with(['satuan', 'tujuanSatuan', 'lampirans'])
                 ->where('tujuan_satuan_id', $user->satuan->id)
                 ->where(function ($query) {
                     $query->where('status', 'Menunggu')
@@ -104,7 +105,7 @@ class LaporanController extends Controller
             $monitoringHtml = null;
             if ($kode === 'SATLAKDUKTEK' && $includeReports) {
                 $satlakIds = Satuan::whereIn('kode', ['SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK'])->pluck('id');
-                $laporanSatlak = Laporan::with(['satuan', 'tujuanSatuan'])
+                $laporanSatlak = Laporan::with(['satuan', 'tujuanSatuan', 'lampirans'])
                     ->whereIn('satuan_id', $satlakIds)
                     ->latest()
                     ->get();
@@ -136,7 +137,7 @@ class LaporanController extends Controller
         $latestId = (int) (Laporan::whereIn('satuan_id', $satuanIds)->max('id') ?? 0);
 
         $items = $includeReports
-            ? Laporan::with(['satuan', 'tujuanSatuan', 'permintaanLaporan'])
+            ? Laporan::with(['satuan', 'tujuanSatuan', 'permintaanLaporan', 'lampirans'])
                 ->whereIn('satuan_id', $satuanIds)
                 ->where('id', '>', $since)
                 ->orderBy('id')
@@ -187,10 +188,10 @@ class LaporanController extends Controller
         $requestsNewHtml = '';
         $requestsFullHtml = '';
         if ($includeRequests) {
-            $withRelations = ['laporan', 'laporans'];
+            $withRelations = ['laporan.lampirans', 'laporans.lampirans'];
             if ($includeNewRequests || $includeRequestsFull) {
                 $withRelations[] = 'tujuanSatuan';
-                $withRelations[] = 'tasks.laporans';
+                $withRelations[] = 'tasks.laporans.lampirans';
             }
             $requests = PermintaanLaporan::with($withRelations)
                 ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS', 'WADAN']))
@@ -308,7 +309,7 @@ class LaporanController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'tujuan_satuan_id' => ['required', 'integer', 'exists:satuans,id'],
@@ -317,7 +318,8 @@ class LaporanController extends Controller
             'perihal' => ['required', 'string', 'max:255'],
             'deskripsi' => ['required', 'string', 'max:10000'],
             'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
-            'lampiran' => ['nullable', 'file', 'mimes:pdf', 'max:20480'],
+            'lampiran' => ['nullable', 'array'],
+            'lampiran.*' => ['file', 'max:10240'],
             'progres' => ['required', 'integer', 'min:0', 'max:100'],
             'kendala' => ['nullable', 'string', 'max:5000'],
             'task_id' => ['nullable', 'integer', 'exists:permintaan_laporan_tasks,id'],
@@ -398,13 +400,6 @@ class LaporanController extends Controller
                     : 'Persentase progres harus lebih besar dari progres terakhir ('.$permintaan->progres.'%).');
             }
 
-            $lampiranPath = $request->hasFile('lampiran')
-                ? $request->file('lampiran')->store('lampiran-laporan', 'public')
-                : null;
-            $lampiranNamaAsli = $request->hasFile('lampiran')
-                ? $request->file('lampiran')->getClientOriginalName()
-                : null;
-
             $statusLaporan = $progresValue < 100 ? Laporan::STATUS_PROGRES : 'Menunggu';
 
             $laporan = Laporan::create([
@@ -419,10 +414,9 @@ class LaporanController extends Controller
                 'kendala' => $validated['kendala'] ?? null,
                 'progres' => $progresValue,
                 'prioritas' => $validated['prioritas'],
-                'lampiran_path' => $lampiranPath,
-                'lampiran_nama_asli' => $lampiranNamaAsli,
                 'status' => $statusLaporan,
             ]);
+            $this->simpanLampiranBaru($request, $laporan);
 
             $permintaan->progres = $progresValue;
             if ($progresValue >= 100) {
@@ -443,19 +437,43 @@ class LaporanController extends Controller
             'prioritas' => $laporan->prioritas,
         ]);
 
-        return back()->with('status', 'Laporan berhasil dikirim ke Pimpinan.');
+        $message = 'Laporan berhasil dikirim ke Pimpinan.';
+
+        // Wizard-topbar (#kirimLaporanModal) minta submit lewat AJAX supaya
+        // modal-nya TETAP TERBUKA (bukan full-page reload yang otomatis
+        // "nutup" modal) dan bisa langsung lanjut ke step task berikutnya --
+        // lihat window.siberadSubmitKirimLaporanForm di
+        // permintaan-laporan-deadline.blade.php. Fallback ke redirect biasa
+        // kalau request-nya BUKAN AJAX (mis. JS gagal load).
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'permintaan_id' => $laporan->permintaan_laporan_id,
+                'item_html' => $this->renderPermintaanItemHtml($laporan->permintaan_laporan_id),
+            ]);
+        }
+
+        return back()->with('status', $message);
     }
 
     // Setiap klik Update Progres untuk laporan yang masih berjalan membuat
     // CHECKPOINT BARU. Row checkpoint lama sengaja tidak diubah agar riwayat
     // progres 20 -> 40 -> 70 -> ... tetap permanen di database dan dapat
     // diterima DANPUS sebagai item realtime baru dalam satu perihal.
-    public function updateProgres(Request $request, Laporan $laporan): RedirectResponse
+    public function updateProgres(Request $request, Laporan $laporan): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'deskripsi' => ['required', 'string', 'max:10000'],
             'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
-            'lampiran' => ['nullable', 'file', 'mimes:pdf', 'max:20480'],
+            'lampiran' => ['nullable', 'array'],
+            'lampiran.*' => ['file', 'max:10240'],
+            // "id" lampiran lama (dari Laporan::semuaLampiran, lihat modelnya)
+            // yang SENGAJA gak mau dibawa lagi ke checkpoint baru ini --
+            // string bukan integer karena lampiran legacy (kolom lama
+            // lampiran_path, sebelum tabel laporan_lampirans ada) gak punya
+            // id asli, ditandai literal "legacy" di sisi form.
+            'removed_lampiran_ids' => ['nullable', 'array'],
+            'removed_lampiran_ids.*' => ['string'],
             'progres' => ['required', 'integer', 'min:0', 'max:100'],
             'kendala' => ['nullable', 'string', 'max:5000'],
         ]);
@@ -491,13 +509,6 @@ class LaporanController extends Controller
                 }
             }
 
-            $lampiranPath = $sumber->lampiran_path;
-            $lampiranNamaAsli = $sumber->lampiran_nama_asli;
-            if ($request->hasFile('lampiran')) {
-                $lampiranPath = $request->file('lampiran')->store('lampiran-laporan', 'public');
-                $lampiranNamaAsli = $request->file('lampiran')->getClientOriginalName();
-            }
-
             $statusLaporan = ($permintaan && $progresValue < 100) ? Laporan::STATUS_PROGRES : 'Menunggu';
 
             $laporanBaru = Laporan::create([
@@ -519,10 +530,29 @@ class LaporanController extends Controller
                 'kendala' => $validated['kendala'] ?? null,
                 'progres' => $progresValue,
                 'prioritas' => $validated['prioritas'],
-                'lampiran_path' => $lampiranPath,
-                'lampiran_nama_asli' => $lampiranNamaAsli,
                 'status' => $statusLaporan,
             ]);
+            // Lampiran lama punya $sumber (baik dari tabel laporan_lampirans
+            // ATAU kolom legacy lampiran_path, lihat Laporan::semuaLampiran)
+            // di-KLONING ke checkpoint baru ini -- row LaporanLampiran BARU
+            // yang nunjuk ke path FISIK yang SAMA (bukan pindah/reassign row
+            // lama), supaya baris $sumber yang udah final itu tetap utuh
+            // riwayat lampirannya sendiri kalau suatu saat ditampilkan lagi.
+            // Kecuali yang id-nya ada di removed_lampiran_ids (user hapus
+            // lewat form sebelum kirim ulang).
+            $dihapus = collect($request->input('removed_lampiran_ids', []))->map(fn ($v) => (string) $v)->all();
+            foreach ($sumber->semuaLampiran as $existing) {
+                $idKey = $existing->id !== null ? (string) $existing->id : 'legacy';
+                if (in_array($idKey, $dihapus, true)) {
+                    continue;
+                }
+                LaporanLampiran::create([
+                    'laporan_id' => $laporanBaru->id,
+                    'path' => $existing->path,
+                    'nama_asli' => $existing->nama_asli,
+                ]);
+            }
+            $this->simpanLampiranBaru($request, $laporanBaru);
 
             if ($permintaan) {
                 $permintaan->progres = max($progresValue, (int) $permintaan->progres);
@@ -541,7 +571,17 @@ class LaporanController extends Controller
             'permintaan_laporan_id' => $laporanBaru->permintaan_laporan_id,
         ]);
 
-        return back()->with('status', 'Checkpoint progres '.$laporanBaru->progres.'% berhasil dikirim.');
+        $message = 'Checkpoint progres '.$laporanBaru->progres.'% berhasil dikirim.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'permintaan_id' => $laporanBaru->permintaan_laporan_id,
+                'item_html' => $this->renderPermintaanItemHtml($laporanBaru->permintaan_laporan_id),
+            ]);
+        }
+
+        return back()->with('status', $message);
     }
 
     public function updateStatus(Request $request, Laporan $laporan): RedirectResponse
@@ -637,6 +677,9 @@ class LaporanController extends Controller
         if ($laporan->lampiran_path) {
             Storage::disk('public')->delete($laporan->lampiran_path);
         }
+        foreach ($laporan->lampirans as $lampiranLama) {
+            Storage::disk('public')->delete($lampiranLama->path);
+        }
         $perihal = $laporan->perihal;
         $laporanId = $laporan->id;
         $laporan->delete();
@@ -646,5 +689,45 @@ class LaporanController extends Controller
         ]);
 
         return back()->with('status', 'Laporan berhasil dihapus dari riwayat penerimaan.');
+    }
+
+    /**
+     * Render ulang 1 kartu <article> permintaan-laporan-item.blade.php buat
+     * dikirim balik ke JS (window.siberadSubmitKirimLaporanForm di
+     * permintaan-laporan-deadline.blade.php), yang bakal nge-replace kartu
+     * lama di DOM dengan versi fresh ini -- checklist task, progres, dan
+     * tombol Edit/Update Progres semuanya kebawa sinkron TANPA reload
+     * halaman, sekaligus jadi acuan buat auto-lanjut ke step berikutnya
+     * (cari .deadline-task-step.active di kartu baru ini).
+     */
+    private function renderPermintaanItemHtml(?int $permintaanLaporanId): ?string
+    {
+        if (! $permintaanLaporanId) {
+            return null;
+        }
+
+        $permintaan = PermintaanLaporan::with(['pembuat.satuan', 'laporan', 'laporans', 'tasks'])->find($permintaanLaporanId);
+
+        if (! $permintaan) {
+            return null;
+        }
+
+        return view('siberad.dashboards.partials.permintaan-laporan-item', ['permintaan' => $permintaan])->render();
+    }
+
+    private function simpanLampiranBaru(Request $request, Laporan $laporan): void
+    {
+        if (! $request->hasFile('lampiran')) {
+            return;
+        }
+
+        /** @var \Illuminate\Http\UploadedFile $file */
+        foreach ($request->file('lampiran') as $file) {
+            LaporanLampiran::create([
+                'laporan_id' => $laporan->id,
+                'path' => $file->store('lampiran-laporan', 'public'),
+                'nama_asli' => $file->getClientOriginalName(),
+            ]);
+        }
     }
 }

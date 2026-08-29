@@ -23,8 +23,20 @@
     //  - create + progres<100 -> checkpoint progres baru ("Update Progres")
     //  - create + progres=100 -> laporan final ("Kirim Laporan Final")
     //  - edit (checkpoint progres lama yang belum final)   ("Edit Update Progres")
-    function computeLaporanTexts(mode,progresVal){
+    function computeLaporanTexts(mode,progresVal,reason){
         var isFinal=progresVal>=100;
+        if(mode==='view'){
+            return {
+                title:'Lihat Progres',
+                desc: reason==='locked'
+                    ? 'Permintaan ini sudah tidak bisa diisi progres baru.'
+                    : 'Checkpoint ini sudah final dan sedang menunggu pemeriksaan Pimpinan.',
+                submit:'',
+                confirmTitle:'',
+                confirmBody:'',
+                confirmYes:''
+            };
+        }
         if(mode==='edit'){
             return isFinal?{
                 title:'Edit & Finalisasi Laporan',
@@ -58,14 +70,27 @@
             confirmYes:'Ya, Kirim'
         };
     }
-    function applyLaporanTexts(mode,progresVal){
-        var t=computeLaporanTexts(mode,parseInt(progresVal,10)||0);
+    function applyLaporanTexts(mode,progresVal,reason){
+        var t=computeLaporanTexts(mode,parseInt(progresVal,10)||0,reason);
         var title=document.getElementById('kirimLaporanTitle'); if(title) title.textContent=t.title;
         var desc=document.getElementById('kirimLaporanDesc'); if(desc) desc.textContent=t.desc;
         var submit=document.getElementById('kirimLaporanSubmitBtn'); if(submit) submit.textContent=t.submit;
         var ct=document.getElementById('konfirmasiKirimTitle'); if(ct) ct.textContent=t.confirmTitle;
         var cb=document.getElementById('konfirmasiKirimBody'); if(cb) cb.textContent=t.confirmBody;
         var cy=document.getElementById('konfirmasiKirimYa'); if(cy) cy.textContent=t.confirmYes;
+    }
+    // "Lihat Progres" (checkpoint permintaan sudah final, menunggu
+    // pemeriksaan Pimpinan) numpang modal #kirimLaporanModal yang sama
+    // persis, cuma di-toggle jadi mode baca-doang: deskripsi/kendala gak
+    // bisa diketik, tombol submit disembunyikan (cuma "Tutup" yang
+    // ketinggalan). Dipanggil dari initEditProgresButtons berdasarkan
+    // data-readonly di tombolnya, dan di-reset balik ke false setiap kali
+    // modal dibuka lewat initUsePermintaanButtons (create) biar gak
+    // "nyangkut" readonly dari sesi Lihat Progres sebelumnya.
+    function setKirimLaporanReadonly(form,readonly){
+        var deskripsi=form.querySelector('[name="deskripsi"]'); if(deskripsi) deskripsi.readOnly=readonly;
+        var kendala=form.querySelector('[name="kendala"]'); if(kendala) kendala.readOnly=readonly;
+        var submitBtn=document.getElementById('kirimLaporanSubmitBtn'); if(submitBtn) submitBtn.hidden=readonly;
     }
     function setFormMethod(form,method){
         var m=form.querySelector('input[name="_method"]');
@@ -79,7 +104,7 @@
         if(!progresInput||progresInput.dataset.textBound==='1') return;
         progresInput.dataset.textBound='1';
         progresInput.addEventListener('input',function(){
-            applyLaporanTexts(form.dataset.mode||'create',progresInput.value);
+            applyLaporanTexts(form.dataset.mode||'create',progresInput.value,form.dataset.readonlyReason);
         });
     }
     // Edit checkpoint progres cuma boleh ubah deskripsi/kendala/progres/
@@ -126,6 +151,12 @@
                 form.dataset.mode='create';
                 if(form.dataset.storeAction) form.action=form.dataset.storeAction;
                 setFormMethod(form,null);
+                // Modal yang sama bisa aja abis dipakai buat "Lihat Progres"
+                // (mode readonly) sebelum ini -- pastikan balik ke mode bisa
+                // diedit lagi, jangan sampai "nyangkut" readonly.
+                setKirimLaporanReadonly(form,false);
+                form.dataset.readonlyReason='';
+                form.dataset.editingTaskId='';
                 lockIdentityFields(form,true);
                 var hidden=form.querySelector('input[name="permintaan_laporan_id"]');
                 if(!hidden){hidden=document.createElement('input');hidden.type='hidden';hidden.name='permintaan_laporan_id';form.appendChild(hidden)}
@@ -147,14 +178,23 @@
                 lockSelectWithShadow(prioritas,true);
                 var deskripsi=form.querySelector('[name="deskripsi"]'); if(deskripsi) deskripsi.value='';
                 var kendala=form.querySelector('[name="kendala"]'); if(kendala) kendala.value='';
-                var lampiran=form.querySelector('[name="lampiran"]'); if(lampiran) lampiran.value='';
-                var lampiranClearBtn=document.getElementById('lampiranClearBtn'); if(lampiranClearBtn) lampiranClearBtn.style.display='none';
                 // Mode create belum punya lampiran apa pun buat ditunjukin --
-                // link "Lampiran saat ini" (dari mode edit) wajib disembunyikan
-                // lagi di sini, jaga-jaga modal yang sama abis dipakai edit.
-                var lampiranExisting=document.getElementById('lampiranExistingLink'); if(lampiranExisting) lampiranExisting.style.display='none';
+                // daftar file (termasuk sisa staged dari mode edit sebelumnya
+                // kalau modal yang sama dipakai ulang) wajib direset ke kosong
+                // di sini.
+                var lampiranZone=document.getElementById('lampiranDropzone'); if(lampiranZone) setLampiranExisting(lampiranZone,[]);
                 var progresInput=form.querySelector('[name="progres"]');
                 var progresHint=document.getElementById('progresHint');
+                var progresField=document.getElementById('progresField');
+                // Permintaan dengan checklist task (mayoritas/semua permintaan
+                // sekarang, lihat PermintaanLaporanController::store yang
+                // mewajibkan minimal 1 task) tidak butuh input Progres manual
+                // sama sekali -- progres-nya SELALU dihitung ulang dari
+                // checklist di server (lihat LaporanController::store), jadi
+                // field ini cuma nyampah di form. Disembunyikan total di sini,
+                // tapi TETAP ditampilkan buat permintaan lama tanpa checklist
+                // (hasTasks==0) yang masih butuh checkpoint manual.
+                if(progresField) progresField.hidden = btn.dataset.hasTasks==='1';
                 if(progresInput){
                     var current=parseInt(btn.dataset.progres||'0',10);
                     if(btn.dataset.hasTasks==='1'){
@@ -209,9 +249,22 @@
                 var form=document.getElementById('kirimLaporanForm');
                 var modal=document.getElementById('kirimLaporanModal');
                 if(!form || !modal || !btn.dataset.updateUrl) return;
-                form.dataset.mode='edit';
+                // Checkpoint yang permintaan-nya udah final ("Menunggu
+                // pemeriksaan" Pimpinan, data-readonly="1" -- lihat
+                // permintaan-laporan-item.blade.php) numpang modal edit yang
+                // sama tapi jadi mode LIHAT SAJA (form.dataset.mode='view'):
+                // field gak bisa diketik, tombol submit disembunyikan.
+                var isReadonly=btn.dataset.readonly==='1';
+                form.dataset.mode=isReadonly?'view':'edit';
+                form.dataset.readonlyReason=btn.dataset.readonlyReason||'';
+                // Dipakai handleWizardSubmitSuccess buat tau task mana yang
+                // lagi diedit -- abis "Simpan Perubahan" berhasil, modal
+                // wajib TETAP di task ini (bukan lompat ke task "active"
+                // berikutnya, itu cuma buat mode create/"Update Progres").
+                form.dataset.editingTaskId=btn.dataset.taskId||'';
                 form.action=btn.dataset.updateUrl;
                 setFormMethod(form,'PATCH');
+                setKirimLaporanReadonly(form,isReadonly);
                 var tujuan=form.querySelector('select[name="tujuan_satuan_id"]'); if(tujuan && btn.dataset.tujuanSatuanId) tujuan.value=btn.dataset.tujuanSatuanId;
                 lockSelectWithShadow(tujuan,false);
                 // Prioritas ikut dikunci di mode edit -- itu nilai dari
@@ -224,23 +277,18 @@
                 var kategori=form.querySelector('[name="proyek"]'); if(kategori) kategori.value=btn.dataset.proyek||'';
                 var deskripsi=form.querySelector('[name="deskripsi"]'); if(deskripsi) deskripsi.value=btn.dataset.deskripsi||'';
                 var kendala=form.querySelector('[name="kendala"]'); if(kendala) kendala.value=btn.dataset.kendala||'';
-                var lampiran=form.querySelector('[name="lampiran"]'); if(lampiran) lampiran.value='';
-                var lampiranClearBtn=document.getElementById('lampiranClearBtn'); if(lampiranClearBtn) lampiranClearBtn.style.display='none';
                 // Riwayat lampiran yang PERNAH dikirim buat checkpoint ini --
                 // input file gak bisa di-prefill (browser gak izinin), jadi
-                // satu-satunya cara nunjukin "ini yang udah ada" adalah link
-                // terpisah. Biarin kosong/tersembunyi kalau checkpoint-nya
-                // memang belum pernah dilampiri apa-apa.
-                var lampiranExisting=document.getElementById('lampiranExistingLink');
-                var lampiranExistingName=document.getElementById('lampiranExistingName');
-                if(lampiranExisting){
-                    if(btn.dataset.lampiran){
-                        lampiranExisting.href=btn.dataset.lampiran;
-                        if(lampiranExistingName) lampiranExistingName.textContent=btn.dataset.lampiranNama||'Lampiran';
-                        lampiranExisting.style.display='inline-flex';
-                    }else{
-                        lampiranExisting.style.display='none';
-                    }
+                // satu-satunya cara nunjukin "ini yang udah ada" adalah render
+                // manual ke kotak daftar file (#lampiranFileList), lengkap
+                // dengan tombol hapus per-item (lihat setLampiranExisting).
+                // Biarin kosong kalau checkpoint-nya memang belum pernah
+                // dilampiri apa-apa.
+                var lampiranZone=document.getElementById('lampiranDropzone');
+                if(lampiranZone){
+                    var existingLampiran=[];
+                    try{ existingLampiran=btn.dataset.lampiran?JSON.parse(btn.dataset.lampiran):[]; }catch(e){ existingLampiran=[]; }
+                    setLampiranExisting(lampiranZone,existingLampiran,isReadonly);
                 }
                 // Mode edit cuma buat ngoreksi teks checkpoint yang sudah
                 // dikirim -- gak pernah nyentuh status task, jadi task_id
@@ -250,6 +298,8 @@
                 if(taskIdHidden) taskIdHidden.value='';
                 var progresInput=form.querySelector('[name="progres"]');
                 var progresHint=document.getElementById('progresHint');
+                var progresField=document.getElementById('progresField');
+                if(progresField) progresField.hidden = btn.dataset.hasTasks==='1';
                 if(progresInput){
                     progresInput.value=btn.dataset.progres||'0';
                     if(btn.dataset.hasTasks==='1'){
@@ -260,57 +310,150 @@
                         progresInput.min=0;
                         if(progresHint) progresHint.textContent='Mengedit checkpoint yang sudah dikirim.';
                     }
+                    // Mode "Lihat Progres" gak pernah boleh diketik ulang,
+                    // apapun juga hasTasks-nya (override 2 cabang di atas).
+                    if(isReadonly) progresInput.readOnly=true;
                 }
                 bindProgresLiveText(form);
-                applyLaporanTexts('edit',progresInput?progresInput.value:0);
+                applyLaporanTexts(isReadonly?'view':'edit',progresInput?progresInput.value:0,btn.dataset.readonlyReason);
                 modal.classList.add('open');
-                deskripsi?.focus();
+                if(!isReadonly) deskripsi?.focus();
             });
         });
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initEditProgresButtons); else initEditProgresButtons();
 
-    // ---- Wizard step sidebar (#kirimLaporanModal) --------------------------
-    // Sidebar vertikal di modal Update Progres/Edit itu BUKAN sumber data
+    // Task/permintaan yang belum pernah diisi SAMA SEKALI tapi udah
+    // Terlambat/Dibatalkan ($isLocked, lihat permintaan-laporan-item.
+    // blade.php) -- gak ada checkpoint buat "diedit", jadi buka modal yang
+    // sama dalam mode LIHAT dengan field KOSONG (bukan create, bukan edit).
+    function initLockedTaskSteps(){
+        document.querySelectorAll('.locked-view').forEach(function(btn){
+            if(btn.dataset.lockedBound === '1') return;
+            btn.dataset.lockedBound = '1';
+            btn.addEventListener('click',function(){
+                var form=document.getElementById('kirimLaporanForm');
+                var modal=document.getElementById('kirimLaporanModal');
+                if(!form || !modal) return;
+                form.dataset.mode='view';
+                form.dataset.readonlyReason='locked';
+                setKirimLaporanReadonly(form,true);
+                lockIdentityFields(form,true);
+                var tujuan=form.querySelector('select[name="tujuan_satuan_id"]'); if(tujuan && btn.dataset.targetId) tujuan.value=btn.dataset.targetId;
+                lockSelectWithShadow(tujuan,true);
+                var prioritas=form.querySelector('select[name="prioritas"]'); if(prioritas) prioritas.value=btn.dataset.prioritas||'';
+                lockSelectWithShadow(prioritas,true);
+                var perihal=form.querySelector('[name="perihal"]'); if(perihal) perihal.value=btn.dataset.perihal||'';
+                var kategori=form.querySelector('[name="proyek"]'); if(kategori) kategori.value=btn.dataset.kategori||'';
+                var deskripsi=form.querySelector('[name="deskripsi"]'); if(deskripsi) deskripsi.value='';
+                var kendala=form.querySelector('[name="kendala"]'); if(kendala) kendala.value='';
+                var lampiranZone=document.getElementById('lampiranDropzone');
+                if(lampiranZone) setLampiranExisting(lampiranZone,[],true);
+                var taskIdHidden=form.querySelector('input[name="task_id"]'); if(taskIdHidden) taskIdHidden.value='';
+                var progresInput=form.querySelector('[name="progres"]');
+                var progresField=document.getElementById('progresField');
+                if(progresField) progresField.hidden = btn.dataset.hasTasks==='1';
+                if(progresInput){ progresInput.value=btn.dataset.progres||'0'; progresInput.readOnly=true; }
+                bindProgresLiveText(form);
+                applyLaporanTexts('view',progresInput?progresInput.value:0,'locked');
+                modal.classList.add('open');
+            });
+        });
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initLockedTaskSteps); else initLockedTaskSteps();
+
+    // ---- Wizard step topbar (#kirimLaporanModal) ----------------------------
+    // Topbar horizontal di modal Update Progres/Edit itu BUKAN sumber data
     // sendiri -- dia cuma "tampilan lain" dari .deadline-task-track yang
     // sudah dihitung PHP persis seperti semula (lihat komentar di
     // permintaan-laporan-item.blade.php), tapi disembunyikan dari kartu.
     // Setiap kali salah satu step/tombol yang membuka modal ini diklik, kita
     // cari track task milik kartu yang sama lalu kloning statenya jadi <li>
-    // di sidebar. Klik satu step di sidebar cuma manggil .click() ke tombol
+    // di topbar. Klik satu step di topbar cuma manggil .click() ke tombol
     // ASLI di track tersembunyi itu -- supaya initUsePermintaanButtons/
     // initEditProgresButtons di atas (yang isi form + buka modal) jalan
     // persis sama, tanpa logic baru yang mesti dijaga sinkron manual.
-    function resetWizardSidebar(){
+    function resetWizardTopbar(){
         var modal=document.getElementById('kirimLaporanModal');
-        var body=document.getElementById('kirimLaporanWizardBody');
-        var sidebar=document.getElementById('kirimLaporanWizardSidebar');
+        var topbar=document.getElementById('kirimLaporanWizardTopbar');
         var stepsList=document.getElementById('kirimLaporanWizardSteps');
+        var prevBtn=document.getElementById('kirimLaporanWizardPrev');
+        var nextBtn=document.getElementById('kirimLaporanWizardNext');
         if(stepsList) stepsList.innerHTML='';
-        if(sidebar){ sidebar.classList.remove('wizard-sidebar-visible'); sidebar.hidden=true; }
-        if(body) body.classList.remove('has-sidebar');
+        if(prevBtn) prevBtn.hidden=true;
+        if(nextBtn) nextBtn.hidden=true;
+        if(topbar){ topbar.classList.remove('wizard-topbar-visible'); topbar.hidden=true; }
         if(modal) modal.classList.remove('wizard-active');
     }
-    function buildWizardSidebar(triggerBtn){
-        var modal=document.getElementById('kirimLaporanModal');
-        var body=document.getElementById('kirimLaporanWizardBody');
-        var sidebar=document.getElementById('kirimLaporanWizardSidebar');
+    // Navigasi panah ("sebelumnya"/"selanjutnya") di topbar checklist --
+    // dipakai kalau task-nya kebanyakan sampai gak muat 1 baris. Sengaja
+    // BUKAN scrollbar drag polos yang gak jelas ada lanjutannya atau
+    // enggak -- tombol ini cuma tampil kalau beneran overflow (lihat
+    // refreshWizardTopbarNav), dan otomatis disabled pas udah mentok ujung.
+    function refreshWizardTopbarNav(){
         var stepsList=document.getElementById('kirimLaporanWizardSteps');
-        if(!modal||!body||!sidebar||!stepsList) return;
+        var prevBtn=document.getElementById('kirimLaporanWizardPrev');
+        var nextBtn=document.getElementById('kirimLaporanWizardNext');
+        if(!stepsList||!prevBtn||!nextBtn) return;
+        var hasOverflow=stepsList.scrollWidth>stepsList.clientWidth+1;
+        prevBtn.hidden=!hasOverflow;
+        nextBtn.hidden=!hasOverflow;
+        if(!hasOverflow) return;
+        prevBtn.disabled=stepsList.scrollLeft<=0;
+        nextBtn.disabled=stepsList.scrollLeft+stepsList.clientWidth>=stepsList.scrollWidth-1;
+    }
+    function initWizardTopbarNav(){
+        var stepsList=document.getElementById('kirimLaporanWizardSteps');
+        var prevBtn=document.getElementById('kirimLaporanWizardPrev');
+        var nextBtn=document.getElementById('kirimLaporanWizardNext');
+        if(!stepsList||!prevBtn||!nextBtn||prevBtn.dataset.navBound==='1') return;
+        prevBtn.dataset.navBound='1';
+        // Geser per "halaman" (lebar tampilan topbar dikurangi sedikit
+        // biar item di tepi kelihatan kepotong dikit -- kasih clue visual
+        // ada lanjutan lagi), bukan geser per-item -- gak perlu tau lebar
+        // tiap item satu-satu (nama task panjang-pendeknya beda-beda).
+        function scrollByPage(dir){
+            stepsList.scrollBy({left:dir*Math.max(stepsList.clientWidth-60,120),behavior:'smooth'});
+        }
+        prevBtn.addEventListener('click',function(){ scrollByPage(-1); });
+        nextBtn.addEventListener('click',function(){ scrollByPage(1); });
+        stepsList.addEventListener('scroll',refreshWizardTopbarNav);
+        window.addEventListener('resize',refreshWizardTopbarNav);
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initWizardTopbarNav); else initWizardTopbarNav();
+    function buildWizardTopbar(triggerBtn){
+        var modal=document.getElementById('kirimLaporanModal');
+        var topbar=document.getElementById('kirimLaporanWizardTopbar');
+        var stepsList=document.getElementById('kirimLaporanWizardSteps');
+        if(!modal||!topbar||!stepsList) return;
+        // Dicatat SEBELUM topbar.hidden diubah -- buat tau ini pertama kali
+        // topbar kebuka (dari kondisi hidden) atau cuma pindah antar step
+        // yang topbar-nya udah kebuka (lihat pemakaiannya di bawah).
+        var wasHidden=topbar.hidden;
         var card=triggerBtn.closest('.deadline-sender-item');
         var track=card?card.querySelector('.deadline-task-track'):null;
         var steps=track?Array.prototype.slice.call(track.querySelectorAll('.deadline-task-step')):[];
         stepsList.innerHTML='';
-        if(!steps.length){ resetWizardSidebar(); return; }
-        // Caption baris kedua di bawah label -- niru pola step wizard di
-        // referensi (tiap step punya judul + sub-teks kecil, bukan cuma 1
-        // baris), teksnya dari state done/active/pending yang SAMA yang
-        // sudah dihitung PHP (bukan data baru).
-        var captions={done:'Selesai',active:'Sedang dikerjakan',pending:'Menunggu giliran'};
+        if(!steps.length){ resetWizardTopbar(); return; }
         steps.forEach(function(step){
             var state=step.classList.contains('done')?'done':(step.classList.contains('active')?'active':'pending');
             var li=document.createElement('li');
             li.className='wizard-step wizard-step-'+state;
+            // Step yang beneran lagi dibuka form-nya sekarang (btn yang
+            // diklik buat munculin modal ini) -- niru tab "Hiring stages" di
+            // referensiTask2.png (card putih terangkat + warna accent),
+            // ditandai TERPISAH dari status done/active/pending asli
+            // (checkmark/nomornya tetap ikut status apa adanya), soalnya
+            // user bisa buka form buat step MANA PUN termasuk ngedit step
+            // yang sudah "Selesai".
+            if(step===triggerBtn) li.classList.add('wizard-step-current');
+            // Task yang belum selesai TAPI permintaannya udah kepalang
+            // lewat deadline (data-terlambat, dihitung PHP dari
+            // $permintaan->isTerlambat(), lihat permintaan-laporan-item.
+            // blade.php) ditandai merah, bukan oranye "Sedang dikerjakan"
+            // biasa -- task yang sudah "Selesai" TETAP hijau apa adanya,
+            // gak ikut jadi merah cuma karena permintaannya sempat telat.
+            if(state!=='done' && step.dataset.terlambat==='1') li.classList.add('wizard-step-late');
             var dot=document.createElement('span');
             dot.className='wizard-step-dot';
             if(state==='done'){
@@ -320,19 +463,15 @@
             }else{
                 dot.textContent=step.querySelector('.deadline-task-num')?step.querySelector('.deadline-task-num').textContent:'';
             }
-            var body=document.createElement('span');
-            body.className='wizard-step-body';
+            // Cuma 1 baris teks (nama task doang) -- niru referensiTask2.png
+            // yang topbar-nya gak punya caption/sub-teks status kedua, beda
+            // dari desain sidebar vertikal sebelumnya.
             var label=document.createElement('span');
             label.className='wizard-step-label';
             var srcLabel=step.querySelector('.deadline-task-label');
             label.textContent=srcLabel?srcLabel.textContent:'';
-            var caption=document.createElement('span');
-            caption.className='wizard-step-caption';
-            caption.textContent=captions[state];
-            body.appendChild(label);
-            body.appendChild(caption);
             li.appendChild(dot);
-            li.appendChild(body);
+            li.appendChild(label);
             if(step.disabled){
                 li.setAttribute('aria-disabled','true');
             }else{
@@ -340,35 +479,68 @@
             }
             stepsList.appendChild(li);
         });
-        sidebar.hidden=false;
-        body.classList.add('has-sidebar');
+        topbar.hidden=false;
         modal.classList.add('wizard-active');
-        // Fade+slide-in sidebar-nya -- dilepas dari class dulu (kalau
-        // kepanggil ulang buat kartu lain) baru dipasang lagi 1 frame
-        // kemudian, biar transition-nya SELALU kepicu ulang (bukan cuma di
-        // klik pertama).
-        sidebar.classList.remove('wizard-sidebar-visible');
-        window.requestAnimationFrame(function(){ sidebar.classList.add('wizard-sidebar-visible'); });
+        initWizardTopbarNav();
+        // Posisikan scroll ke step current SEKARANG JUGA, sinkron (bukan
+        // ditunda ke requestAnimationFrame) -- list barusan dibangun ulang
+        // dari kosong (innerHTML='' di atas) jadi scrollLeft-nya otomatis
+        // 0. Kalau nunggu rAF buat baru mindahin ke posisi current, browser
+        // sempat ngecat 1 frame dengan scroll di posisi 0 (keliatan
+        // "kedip" balik ke step pertama) sebelum lompat ke step yang
+        // beneran diklik -- itu yang kerasa "kaku" tiap pindah task.
+        // Dengan ngerjain ini sebelum ada paint sama sekali, gak ada
+        // frame perantara yang keliatan.
+        refreshWizardTopbarNav();
+        var currentLi=stepsList.querySelector('.wizard-step-current');
+        if(currentLi) currentLi.scrollIntoView({inline:'center',block:'nearest'});
+        // Fade+slide-in topbar-nya CUMA pas pertama kali kebuka (dari
+        // kondisi hidden) -- kalau di-replay ulang tiap kali pindah step
+        // (topbar-nya udah kebuka duluan), transisi 220ms itu yang bikin
+        // kerasa "kaku"/nge-lag tiap klik pindah task, padahal harusnya
+        // instan pindah aja tanpa animasi masuk lagi.
+        if(wasHidden){
+            topbar.classList.remove('wizard-topbar-visible');
+            window.requestAnimationFrame(function(){ topbar.classList.add('wizard-topbar-visible'); });
+        }else{
+            topbar.classList.add('wizard-topbar-visible');
+        }
+        // Garis penanda + dot current TUMBUH dari kosong/kecil ke penuh
+        // (lihat .wizard-step-current::after & .wizard-step-dot di CSS) --
+        // class-nya sengaja BELUM dipasang di forEach di atas, baru
+        // ditambahin di sini 2 frame kemudian (double rAF), supaya browser
+        // sempat ngecat dulu state AWALnya (scaleX(0)/scale(.75)) sebelum
+        // transisi ke state akhir kepicu -- kalau langsung dipasang bareng
+        // pas elemennya baru dibikin, gak ada transisi yang kelihatan
+        // (browser cuma nongolin state akhirnya langsung, gak sempat "dari").
+        // Beda dari animasi fade topbar di atas, ini SENGAJA main ulang
+        // tiap kali pindah task -- itu justru intinya, jadi keliatan jelas
+        // task mana yang baru aja "mendarat" jadi current.
+        if(currentLi){
+            window.requestAnimationFrame(function(){
+                window.requestAnimationFrame(function(){ currentLi.classList.add('wizard-step-marker-in'); });
+            });
+        }
     }
-    function initWizardStepSidebar(){
-        document.querySelectorAll('.use-permintaan, .edit-progres-btn').forEach(function(btn){
-            if(btn.dataset.wizardSidebarBound==='1') return;
-            btn.dataset.wizardSidebarBound='1';
+    function initWizardStepTopbar(){
+        document.querySelectorAll('.use-permintaan, .edit-progres-btn, .locked-view').forEach(function(btn){
+            if(btn.dataset.wizardTopbarBound==='1') return;
+            btn.dataset.wizardTopbarBound='1';
             btn.addEventListener('click',function(){
                 if(btn.classList.contains('deadline-task-step')){
-                    buildWizardSidebar(btn);
+                    buildWizardTopbar(btn);
                 }else{
-                    resetWizardSidebar();
+                    resetWizardTopbar();
                 }
             });
         });
     }
-    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initWizardStepSidebar); else initWizardStepSidebar();
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initWizardStepTopbar); else initWizardStepTopbar();
 
     // Tombol "Update Progres" baru di kartu (permintaan dengan checklist task,
     // bukan revisi) -- proxy klik ke step "active" (atau "done" kalau semua
     // task kebetulan sudah selesai) di track tersembunyi milik kartu yang
-    // sama, supaya modal + sidebar wizard terbuka lewat alur yang sama persis
+    // sama, supaya modal + topbar wizard terbuka lewat alur yang sama persis
     // seperti klik step secara langsung.
     function initWizardEntryButtons(){
         document.querySelectorAll('.deadline-wizard-entry-btn').forEach(function(btn){
@@ -378,7 +550,14 @@
                 var card=btn.closest('.deadline-sender-item');
                 var track=card?card.querySelector('.deadline-task-track'):null;
                 if(!track) return;
-                var target=track.querySelector('.deadline-task-step.active')||track.querySelector('.deadline-task-step.done');
+                // :not([disabled]) -- task "active" yang terkunci
+                // (Terlambat/Dibatalkan, lihat $isLocked di
+                // permintaan-laporan-item.blade.php) gak boleh kepilih di
+                // sini, jatuhkan ke step "done" terakhir buat "Lihat Progres".
+                // Fallback ke step manapun (locked/✕ termasuk) kalau semua
+                // task terkunci & belum ada satu pun yang "done" -- biar
+                // "Lihat Progres" tetap kebuka nampilin checklist ✕ semua.
+                var target=track.querySelector('.deadline-task-step.active:not([disabled])')||track.querySelector('.deadline-task-step.done')||track.querySelector('.deadline-task-step');
                 if(target) target.click();
             });
         });
@@ -429,34 +608,215 @@
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initKirimLaporanValidation); else initKirimLaporanValidation();
 
-    // Tombol silang di sebelah input Lampiran -- muncul begitu ada file
-    // terpilih, klik buat ngosongin input-nya lagi (browser gak ngasih cara
-    // native buat clear file input selain reset value ke '').
-    function initLampiranClear(){
-        var wrap=document.querySelector('.lampiran-input-wrap');
-        var btn=document.getElementById('lampiranClearBtn');
-        if(!wrap||!btn||wrap.dataset.clearBound==='1') return;
-        wrap.dataset.clearBound='1';
-        function bindChange(input){
-            input.addEventListener('change',function(){
-                btn.style.display=(input.files&&input.files.length)?'flex':'none';
-            });
-        }
-        bindChange(document.getElementById('lampiran'));
-        btn.addEventListener('click',function(){
-            // Input ini juga "dipercantik" sama siberadEnhanceFileInputs()
-            // (dash-styles.blade.php) yang bikin tombol "Pilih File" + teks
-            // nama file SENDIRI di luar input aslinya. Reset value doang
-            // nggak nyentuh teks itu -- makanya harus nembak event 'change'
-            // biar listener punya enhancement itu juga ikut update tampilan
-            // balik ke "Tidak ada file yang dipilih".
-            var input=document.getElementById('lampiran');
-            input.value='';
-            input.dispatchEvent(new Event('change',{bubbles:true}));
-            btn.style.display='none';
+    // Dropzone Lampiran -- input aslinya jadi overlay transparan penuh 1
+    // kotak (lihat CSS .lampiran-dropzone-input), jadi klik ATAU drag&drop
+    // file ke mana pun di kotak ini otomatis kena input-nya (perilaku
+    // native browser buat file input, gak butuh JS drop-handler manual).
+    // Kotak daftar file (#lampiranFileList) TERPISAH dari kotak dropzone --
+    // nampilin baris utk tiap lampiran, baik yang LAMA (sudah tersimpan di
+    // server, dari mode edit) maupun yang BARU dipilih/di-drop (belum
+    // dikirim). FileList bawaan browser itu IMMUTABLE (gak bisa hapus 1
+    // item doang), jadi file baru yang dipilih ditampung sendiri di array
+    // JS (state.staged) lalu di-assign ulang ke input.files lewat
+    // DataTransfer tiap kali isinya berubah -- itulah satu-satunya cara
+    // dukung "pilih file lagi" (nambah) maupun "hapus salah satu" tanpa
+    // kehilangan file lain yang sudah dipilih sebelumnya.
+    // Lampiran lama yang dihapus dari daftar (sebelum disubmit) dicatat di
+    // state.removedIds lalu disinkronkan jadi input hidden
+    // removed_lampiran_ids[] -- itu yang dibaca LaporanController::
+    // updateProgres() buat tahu lampiran lama mana yang SENGAJA tidak mau
+    // dibawa lagi ke checkpoint baru.
+    function formatLampiranSize(bytes){
+        if(bytes<1024*1024) return Math.max(1,Math.round(bytes/1024))+' KB';
+        return (bytes/1024/1024).toFixed(1)+' MB';
+    }
+    function lampiranZoneState(zone){
+        if(!zone._lampiranState) zone._lampiranState={ existing:[], removedIds:[], staged:[], stagedUrls:[], readonly:false };
+        return zone._lampiranState;
+    }
+    function lampiranFileExtBadge(nama){
+        var dot=(nama||'').lastIndexOf('.');
+        var ext=dot>-1?nama.slice(dot+1):'';
+        return (ext||'file').toUpperCase().slice(0,4);
+    }
+    function lampiranRowRemoveSvg(){
+        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>';
+    }
+    function syncLampiranRemovedInputs(zone){
+        var form=zone.closest('form');
+        if(!form) return;
+        form.querySelectorAll('input[data-lampiran-removed-input="1"]').forEach(function(el){ el.remove(); });
+        lampiranZoneState(zone).removedIds.forEach(function(id){
+            var el=document.createElement('input');
+            el.type='hidden'; el.name='removed_lampiran_ids[]'; el.value=id;
+            el.setAttribute('data-lampiran-removed-input','1');
+            form.appendChild(el);
         });
     }
-    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initLampiranClear); else initLampiranClear();
+    function syncLampiranInputFiles(zone){
+        var input=zone.querySelector('.lampiran-dropzone-input');
+        if(!input) return;
+        var dt=new DataTransfer();
+        lampiranZoneState(zone).staged.forEach(function(file){ dt.items.add(file); });
+        input.files=dt.files;
+    }
+    function buildLampiranRow(zone,data){
+        var row=document.createElement('div');
+        row.className='lampiran-file-row';
+        var icon=document.createElement('span');
+        icon.className='lampiran-file-row-icon';
+        icon.textContent=lampiranFileExtBadge(data.nama);
+        var info=document.createElement('span');
+        info.className='lampiran-file-row-info';
+        // Nama file selalu jadi link yang bisa diklik buat buka/preview file
+        // aslinya di tab baru -- lampiran LAMA (kind:'existing') pakai URL
+        // asli di server, lampiran BARU yang baru dipilih/di-drop (belum
+        // sempat kekirim ke server) pakai blob: URL sementara dari
+        // URL.createObjectURL() yang dibuat di renderLampiranFileList,
+        // supaya bisa dibuka/dipreview browser TANPA harus disubmit dulu.
+        var name=document.createElement(data.url?'a':'span');
+        name.className='lampiran-file-row-name';
+        name.textContent=data.nama||'Lampiran';
+        if(data.url){ name.href=data.url; name.target='_blank'; name.rel='noopener'; }
+        var size=document.createElement('span');
+        size.className='lampiran-file-row-size';
+        size.textContent=data.kind==='existing'?'Tersimpan':(data.size||'');
+        info.appendChild(name); info.appendChild(size);
+        row.appendChild(icon); row.appendChild(info);
+        // Mode "Lihat Progres" (checkpoint sudah final, lihat
+        // initEditProgresButtons) gak boleh hapus lampiran -- tombol hapus
+        // sengaja gak dirender sama sekali, bukan cuma disembunyikan CSS,
+        // biar gak ada cara nyentuh state via keyboard/devtools juga.
+        if(!lampiranZoneState(zone).readonly){
+            var removeBtn=document.createElement('button');
+            removeBtn.type='button';
+            removeBtn.className='lampiran-file-row-remove';
+            removeBtn.setAttribute('aria-label','Hapus file');
+            removeBtn.innerHTML=lampiranRowRemoveSvg();
+            removeBtn.addEventListener('click',function(){
+                var state=lampiranZoneState(zone);
+                if(data.kind==='existing'){
+                    state.existing=state.existing.filter(function(x){ return x.id!==data.id; });
+                    state.removedIds.push(data.id);
+                    syncLampiranRemovedInputs(zone);
+                }else{
+                    state.staged.splice(data.idx,1);
+                    syncLampiranInputFiles(zone);
+                }
+                renderLampiranFileList(zone);
+            });
+            row.appendChild(removeBtn);
+        }
+        return row;
+    }
+    function renderLampiranFileList(zone){
+        // Kotak daftar file ada di BAWAH kotak dropzone (bukan di dalamnya
+        // lagi -- lihat markup di laporan-role.blade.php), jadi dicari
+        // lewat ID global, bukan relatif dari induk zone.
+        var listBox=document.getElementById('lampiranFileList');
+        if(!listBox) return;
+        var state=lampiranZoneState(zone);
+        listBox.querySelectorAll('.lampiran-file-row').forEach(function(el){ el.remove(); });
+        // blob: URL punya file baru dibuat ULANG tiap render (revoke yang
+        // lama dulu biar gak numpuk/leak) -- lebih simpel daripada nge-track
+        // umur tiap URL satu-satu, karena renderLampiranFileList emang udah
+        // selalu dipanggil ulang tiap kali state.staged berubah (nambah/
+        // hapus file) ATAU modal dibuka lagi (lihat setLampiranExisting).
+        state.stagedUrls.forEach(function(url){ URL.revokeObjectURL(url); });
+        state.stagedUrls=[];
+        var emptyEl=listBox.querySelector('.lampiran-file-list-empty');
+        var total=state.existing.length+state.staged.length;
+        state.existing.forEach(function(item){
+            listBox.appendChild(buildLampiranRow(zone,{ kind:'existing', id:item.id, nama:item.nama, url:item.url }));
+        });
+        state.staged.forEach(function(file,idx){
+            var url=URL.createObjectURL(file);
+            state.stagedUrls.push(url);
+            listBox.appendChild(buildLampiranRow(zone,{ kind:'staged', idx:idx, nama:file.name, size:formatLampiranSize(file.size), url:url }));
+        });
+        if(emptyEl) emptyEl.hidden=total>0;
+    }
+    // Dipanggil tiap kali modal dibuka (create ATAU edit) buat reset daftar
+    // ke kondisi checkpoint yang lagi dibuka -- create selalu [] (belum ada
+    // lampiran apa-apa), edit diisi dari data-lampiran tombolnya (lihat
+    // initEditProgresButtons).
+    // 10 MB, SAMA PERSIS sama batas 'max:10240' (KB) di validasi
+    // LaporanController::store()/updateProgres() -- kalau limitnya diubah,
+    // ubah juga angka di sana biar pesan client-side ini gak bohong.
+    var LAMPIRAN_MAX_BYTES=10*1024*1024;
+    function lampiranSizeErrorEl(zone){
+        var anchor=zone.parentElement;
+        if(!anchor) return null;
+        var msg=anchor.querySelector(':scope > .kirim-laporan-error[data-lampiran-size-error="1"]');
+        if(!msg){
+            msg=document.createElement('span');
+            msg.className='kirim-laporan-error';
+            msg.setAttribute('data-lampiran-size-error','1');
+            msg.style.display='none';
+            zone.insertAdjacentElement('afterend',msg);
+        }
+        return msg;
+    }
+    function setLampiranExisting(zone,list,readonly){
+        var state=lampiranZoneState(zone);
+        state.existing=(list||[]).slice();
+        state.removedIds=[];
+        state.staged=[];
+        state.readonly=!!readonly;
+        var input=zone.querySelector('.lampiran-dropzone-input');
+        if(input) input.value='';
+        // Mode "Lihat Progres" gak boleh nambah file baru sama sekali --
+        // kotak dropzone-nya sendiri disembunyikan, sisain kotak daftar file
+        // doang (baca-baca aja, tombol hapus per-baris juga udah gak
+        // dirender, lihat buildLampiranRow).
+        zone.hidden=!!readonly;
+        var msg=lampiranSizeErrorEl(zone);
+        if(msg) msg.style.display='none';
+        syncLampiranRemovedInputs(zone);
+        renderLampiranFileList(zone);
+    }
+    function initLampiranDropzone(){
+        document.querySelectorAll('.lampiran-dropzone').forEach(function(zone){
+            if(zone.dataset.dzBound==='1') return;
+            zone.dataset.dzBound='1';
+            var input=zone.querySelector('.lampiran-dropzone-input');
+            if(!input) return;
+            input.addEventListener('change',function(){
+                var state=lampiranZoneState(zone);
+                var msg=lampiranSizeErrorEl(zone);
+                var ditolak=[];
+                if(input.files&&input.files.length){
+                    for(var i=0;i<input.files.length;i++){
+                        var file=input.files[i];
+                        // Batas ukuran dicek di SINI (bukan cuma nunggu
+                        // response error dari server abis submit) supaya
+                        // file kegedean langsung ketolak & ketauan alasannya
+                        // saat itu juga, gak baru nyampe pas klik Kirim.
+                        if(file.size>LAMPIRAN_MAX_BYTES){ ditolak.push(file.name); continue; }
+                        state.staged.push(file);
+                    }
+                }
+                if(msg){
+                    if(ditolak.length){
+                        msg.textContent=(ditolak.length===1?('"'+ditolak[0]+'"'):(ditolak.length+' file'))+' melebihi batas 10 MB, tidak ditambahkan.';
+                        msg.style.display='flex';
+                    }else{
+                        msg.style.display='none';
+                    }
+                }
+                syncLampiranInputFiles(zone);
+                renderLampiranFileList(zone);
+            });
+            ['dragenter','dragover'].forEach(function(evt){
+                zone.addEventListener(evt,function(){ zone.classList.add('is-dragover'); });
+            });
+            ['dragleave','drop'].forEach(function(evt){
+                zone.addEventListener(evt,function(){ zone.classList.remove('is-dragover'); });
+            });
+            renderLampiranFileList(zone);
+        });
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initLampiranDropzone); else initLampiranDropzone();
 
     // Tanda manual kartu (checkbox bulat pojok kiri-atas) -- statusnya PURE
     // client-side (localStorage per-browser), karena kita nggak boleh nambah
@@ -546,7 +906,74 @@
     // Dipanggil ulang oleh polling realtime (permintaan-laporan-realtime.blade.php,
     // laporan-role-realtime-sync.blade.php) setiap kali kartu permintaan diganti/
     // ditambah, supaya tombol Update Progres/Revisi/Edit yang baru tetap bisa diklik.
-    window.siberadRebindPermintaanActions=function(){initUsePermintaanButtons();initEditProgresButtons();initWizardStepSidebar();initWizardEntryButtons();initDcardMenus();initDcardPinButtons();window.siberadRefreshPermintaanFilter&&window.siberadRefreshPermintaanFilter();};
+    window.siberadRebindPermintaanActions=function(){initUsePermintaanButtons();initEditProgresButtons();initLockedTaskSteps();initWizardStepTopbar();initWizardEntryButtons();initDcardMenus();initDcardPinButtons();window.siberadRefreshPermintaanFilter&&window.siberadRefreshPermintaanFilter();};
+
+    // Submit #kirimLaporanForm (Update Progres/Edit Progres) lewat AJAX,
+    // BUKAN native form submit -- native submit selalu bikin full-page
+    // reload yang otomatis "menutup" modal (state open cuma class CSS,
+    // ke-reset abis reload). Dipanggil dari tombol "Ya, Kirim" di
+    // laporan-role.blade.php (window.siberadSubmitKirimLaporanForm).
+    function handleWizardSubmitSuccess(data){
+        var modal=document.getElementById('kirimLaporanModal');
+        var form=document.getElementById('kirimLaporanForm');
+        // Simpan SEBELUM kartu diganti/direbind -- "Simpan Perubahan" (edit
+        // checkpoint yang SUDAH ada) wajib tetap di task yang SAMA, BUKAN
+        // lompat ke task "active" berikutnya (itu cuma buat "Update
+        // Progres"/create, nandain task baru selesai).
+        var wasEdit=form&&form.dataset.mode==='edit';
+        var editingTaskId=form?form.dataset.editingTaskId:'';
+        window.siberadShowToast&&window.siberadShowToast('success',data.message||'Berhasil dikirim.');
+        var permintaanId=data.permintaan_id;
+        var oldCard=permintaanId?document.querySelector('.deadline-sender-item[data-realtime-permintaan-id="'+permintaanId+'"]'):null;
+        if(oldCard&&data.item_html){
+            var wrap=document.createElement('div');
+            wrap.innerHTML=data.item_html.trim();
+            var newCard=wrap.firstElementChild;
+            if(newCard) oldCard.replaceWith(newCard);
+        }
+        window.siberadRebindPermintaanActions&&window.siberadRebindPermintaanActions();
+        // Kartu barusan diganti (kalau ada) sudah nyerminin checklist task
+        // TERKINI -- KLIK BENERAN step yang tepat (bukan panggil fungsi isi
+        // form manual) supaya semua listener yang udah ada (isi form,
+        // rebuild topbar wizard) jalan persis kayak user ngeklik sendiri.
+        var freshCard=permintaanId?document.querySelector('.deadline-sender-item[data-realtime-permintaan-id="'+permintaanId+'"]'):null;
+        var nextStep=null;
+        if(wasEdit&&editingTaskId){
+            nextStep=freshCard?freshCard.querySelector('.deadline-task-track .deadline-task-step[data-task-id="'+editingTaskId+'"]'):null;
+        }else{
+            nextStep=freshCard?freshCard.querySelector('.deadline-task-track .deadline-task-step.active:not([disabled])'):null;
+        }
+        if(nextStep){
+            nextStep.click();
+        }else if(modal){
+            modal.classList.remove('open');
+        }
+    }
+    window.siberadSubmitKirimLaporanForm=async function(form){
+        var submitBtn=document.getElementById('kirimLaporanSubmitBtn');
+        if(submitBtn) submitBtn.disabled=true;
+        try{
+            var formData=new FormData(form);
+            var response=await fetch(form.action,{
+                method:'POST',
+                body:formData,
+                headers:{'Accept':'application/json'},
+                credentials:'same-origin'
+            });
+            var data=null;
+            try{ data=await response.json(); }catch(e){}
+            if(response.ok&&data){
+                handleWizardSubmitSuccess(data);
+            }else{
+                var msg=(data&&(data.message||(data.errors&&Object.values(data.errors).flat()[0])))||'Gagal mengirim, coba lagi.';
+                window.siberadShowToast&&window.siberadShowToast('error',msg);
+            }
+        }catch(err){
+            window.siberadShowToast&&window.siberadShowToast('error','Gagal terhubung ke server, coba lagi.');
+        }finally{
+            if(submitBtn) submitBtn.disabled=false;
+        }
+    };
 
     // Pencarian daftar Permintaan Laporan -- reuse gaya .rpt-filter-* yang
     // sama dengan tabel lain (1 sistem), tapi logikanya custom karena isinya

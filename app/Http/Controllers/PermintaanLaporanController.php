@@ -82,7 +82,7 @@ class PermintaanLaporanController extends Controller
         $latestId = (int) (PermintaanLaporan::where('tujuan_satuan_id', $satuan->id)->max('id') ?? 0);
         $since = max(0, (int) $request->query('since', 0));
 
-        $items = PermintaanLaporan::with(['pembuat.satuan', 'laporans', 'tasks'])
+        $items = PermintaanLaporan::with(['pembuat.satuan', 'laporan', 'laporans', 'tasks'])
             ->where('tujuan_satuan_id', $satuan->id)
             ->whereNull('archived_at')
             ->whereIn('status', [
@@ -292,7 +292,10 @@ class PermintaanLaporanController extends Controller
                         'proyek' => $laporan->proyek,
                         'tanggal' => $laporan->created_at?->translatedFormat('d M Y H:i'),
                         'deskripsi' => $laporan->deskripsi,
-                        'lampiran' => $laporan->lampiran_path ? asset('storage/'.$laporan->lampiran_path) : null,
+                        'lampiran' => $laporan->semuaLampiran->map(fn ($x) => [
+                            'url' => asset('storage/'.$x->path),
+                            'nama' => $x->nama_asli,
+                        ])->values(),
                     ] : null,
                 ];
             })->all(),

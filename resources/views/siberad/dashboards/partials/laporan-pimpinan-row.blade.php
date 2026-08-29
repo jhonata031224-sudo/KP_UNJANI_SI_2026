@@ -39,7 +39,7 @@
             data-proyek="{{ e($l->proyek ?? '-') }}"
             data-tanggal="{{ e($l->created_at?->translatedFormat('d M Y H:i')) }}"
             data-deskripsi="{{ e($l->deskripsi) }}"
-            data-lampiran="{{ $l->lampiran_path ? e(asset('storage/'.$l->lampiran_path)) : '' }}"
+            data-lampiran="{{ $l->semuaLampiran->map(fn($x) => ['url' => asset('storage/'.$x->path), 'nama' => $x->nama_asli])->values()->toJson() }}"
             data-readonly="1"
         >Detail</button>
     </td>
