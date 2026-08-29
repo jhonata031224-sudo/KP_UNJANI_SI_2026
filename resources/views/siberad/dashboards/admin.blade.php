@@ -1839,15 +1839,14 @@
               var total = boxes.length;
               var checked = boxes.filter(function (cb) { return cb.checked; }).length;
               globalCountEl.textContent = checked + ' dari ' + total + ' modul aktif' + (activeFilter ? ' (' + activeFilter + ')' : '');
-              /* Indeterminate hanya ditampilkan setelah user berinteraksi,
-                 supaya pada saat awal buka halaman checkbox selalu kosong */
-              if (userHasInteracted) {
-                globalCb.checked = total > 0 && checked === total;
-                globalCb.indeterminate = checked > 0 && checked < total;
-              } else {
-                globalCb.checked = false;
-                globalCb.indeterminate = false;
-              }
+              /* Checkbox global selalu mengikuti kondisi sebenarnya: jika seluruh
+                 modul yang tampil sudah aktif (baik dari awal maupun karena user
+                 mencentang satu-satu), checkbox "Pilih Semua Modul" otomatis ikut
+                 tercentang. Indeterminate (sebagian aktif) hanya ditampilkan
+                 setelah user berinteraksi, supaya tampilan awal halaman tidak
+                 langsung menunjukkan status "sebagian" sebelum disentuh. */
+              globalCb.checked = total > 0 && checked === total;
+              globalCb.indeterminate = userHasInteracted && checked > 0 && checked < total;
               globalWrap.classList.toggle('is-all-active', globalCb.checked);
             }
 
