@@ -1665,7 +1665,7 @@
           .perm-filter-btn{display:inline-flex;align-items:center;height:30px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel-alt);color:var(--text-dim);font-size:11.5px;font-weight:700;cursor:pointer;transition:border-color .15s,background .15s,color .15s;}
           .perm-filter-btn:hover{border-color:var(--border-strong);}
           .perm-filter-btn.is-active{border-color:var(--gold-bright);background:var(--gold-dim);color:var(--gold-bright);}
-          .perm-global-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+          .perm-global-actions{display:flex;align-items:center;gap:12px;flex-wrap:nowrap;}
           .perm-global-count{font-size:11px;font-weight:700;color:var(--text-dim);white-space:nowrap;}
           .perm-global-select-all{display:inline-flex;align-items:center;height:30px;gap:8px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel-alt);cursor:pointer;user-select:none;transition:border-color .15s,background .15s;}
           .perm-global-select-all:hover{border-color:var(--border-strong);}
