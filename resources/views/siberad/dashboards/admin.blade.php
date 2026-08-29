@@ -1782,24 +1782,25 @@
             var batchFill = document.querySelector('[data-perm-batch-fill]');
             var batchProgressText = document.querySelector('[data-perm-batch-progress-text]');
             var activeFilter = '';
-            /* Snapshot state awal tiap checkbox saat halaman load.
-               Dipakai untuk deteksi apakah ada perubahan nyata vs balik ke semula. */
-            var initialSnapshot = {};
+            /* pristineSnapshot: diambil saat halaman load, sebelum user menyentuh apapun.
+               Tombol Terapkan muncul hanya jika state sekarang != pristine. */
+            var pristineSnapshot = {};
             panel.querySelectorAll('.perm-grid input[type="checkbox"]').forEach(function (cb) {
-              initialSnapshot[cb.name + '||' + cb.value + '||' + cb.closest('.panel[data-kategori]').querySelector('form').action] = cb.checked;
+              pristineSnapshot[cb.closest('form').action + '||' + cb.value] = cb.checked;
             });
 
-            function cbKey(cb) {
-              return cb.name + '||' + cb.value + '||' + cb.closest('.panel[data-kategori]').querySelector('form').action;
+            function hasRealChanges() {
+              var changed = false;
+              panel.querySelectorAll('.perm-grid input[type="checkbox"]').forEach(function (cb) {
+                var key = cb.closest('form').action + '||' + cb.value;
+                if (cb.checked !== (pristineSnapshot[key] === true)) changed = true;
+              });
+              return changed;
             }
 
-            function hasRealChanges() {
-              var boxes = [];
-              satuanPanels.forEach(function (p) {
-                boxes = boxes.concat(Array.prototype.slice.call(p.querySelectorAll('.perm-grid input[type="checkbox"]')));
-              });
-              return boxes.some(function (cb) {
-                return cb.checked !== (initialSnapshot[cbKey(cb)] === true);
+            function updatePristine() {
+              panel.querySelectorAll('.perm-grid input[type="checkbox"]').forEach(function (cb) {
+                pristineSnapshot[cb.closest('form').action + '||' + cb.value] = cb.checked;
               });
             }
 
@@ -1879,10 +1880,8 @@
                   batchFill.style.width = '100%';
                   batchProgressText.textContent = 'Semua tersimpan!';
                   batchBtn.disabled = false;
-                  /* Perbarui snapshot agar state saat ini jadi baseline baru */
-                  panel.querySelectorAll('.perm-grid input[type="checkbox"]').forEach(function (cb) {
-                    initialSnapshot[cbKey(cb)] = cb.checked;
-                  });
+                  /* Perbarui pristine agar state saat ini jadi baseline baru */
+                  updatePristine();
                   setPending(false);
                   window.setTimeout(function () {
                     batchProgress.classList.remove('visible');
