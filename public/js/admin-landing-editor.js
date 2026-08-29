@@ -84,7 +84,7 @@
       <p class="lp-card-desc">Satu logo ini otomatis dipakai di header, hero, layar loading, favicon tab browser, dan bagian Tentang -- tidak perlu upload berkali-kali di tempat lain.</p>
       <div class="form-grid">
         <div class="form-field full">
-          <label for="lpManagedLogo">Logo</label>
+          <label for="lpManagedLogo" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Logo</label>
           <div class="lp-hero-image-row">
             <input id="lpManagedLogo" name="logo_file" type="file" accept="image/png,image/jpeg,image/webp" data-has-current="${currentLogo ? '1' : '0'}" data-label-existing="Ganti Logo">
             <img src="${currentLogo}" alt="Logo saat ini" class="lp-current-image" id="lpLogoPreviewImg" style="${currentLogo ? '' : 'display:none'}">

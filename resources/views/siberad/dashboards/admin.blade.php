@@ -2796,7 +2796,7 @@
           .lp-sosmed-row:first-child{padding-top:0;border-top:none;}
           .lp-sosmed-row:last-child{padding-bottom:0;}
           .lp-hero-image-row{display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:0;text-align:center;}
-          .lp-hero-image-row .landing-file-picker{align-self:center;flex:0 0 auto;min-width:200px;}
+          .lp-hero-image-row .landing-file-picker{align-self:center;flex:0 0 auto;min-width:200px;justify-content:center;}
           /* Tombol "Pilih File", preview gambar, & tombol "Hapus Latar
              Belakang" semuanya rata tengah (align-items:center di parent
              .lp-hero-image-row) -- sebelumnya rata kiri lalu preview
