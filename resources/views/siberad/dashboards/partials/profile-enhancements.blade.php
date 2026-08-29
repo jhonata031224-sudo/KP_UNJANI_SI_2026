@@ -427,6 +427,12 @@ else initFormGantiPassword();
   document.addEventListener('click', function(e){
     var detailButton = e.target.closest('.review-actions .detail-btn, .action-row .detail-btn');
     if (!detailButton) return;
+    // Sama seperti di global-shell-enhancements.blade.php: tombol Detail laporan
+    // tembusan udah punya form feedback wajib yang dirakit sendiri di dalam
+    // window.openReportDetail (data-tembusan-feedback). Listener generik ini cuma
+    // ngerti pola form approve/reject/Tandai-Dibaca biasa, jadi kalau dibiarkan
+    // jalan dia nimpa ulang detailActions dan bikin form feedback wajib itu ilang.
+    if (detailButton.dataset.tembusanFeedback === '1') return;
     window.setTimeout(function(){ populateDetailActions(detailButton); }, 0);
   });
 })();
