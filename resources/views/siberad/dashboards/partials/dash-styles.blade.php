@@ -593,6 +593,14 @@
       if(input.dataset.siberadEnhanced==='1')return;
       if(input.dataset.filePickerReady==='1'||input.closest('.landing-file-picker'))return;
       input.dataset.siberadEnhanced='1';
+      // Kalau file ini sudah punya file aktif tersimpan di server (mis. Gambar
+      // Latar Beranda/Logo yang sedang dipakai sistem -- ditandai lewat atribut
+      // data-has-current="1" di elemen <input>), teks tombol diganti dari
+      // "Pilih File" generik jadi lebih spesifik (mis. "Ganti Gambar") lewat
+      // data-label-existing, dan keterangan "Tidak ada file yang dipilih"
+      // disembunyikan karena sebenarnya SUDAH ada file yang terpakai.
+      var hasCurrent=input.dataset.hasCurrent==='1';
+      var labelExisting=input.dataset.labelExisting;
       var wrap=document.createElement('div');
       wrap.className='siberad-file-wrap';
       input.parentNode.insertBefore(wrap,input);
@@ -600,17 +608,17 @@
       var trigger=document.createElement('button');
       trigger.type='button';
       trigger.className='siberad-file-trigger';
-      trigger.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 12 15 15"></polyline></svg><span>Pilih File</span>';
+      trigger.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 12 15 15"></polyline></svg><span>'+((hasCurrent&&labelExisting)?labelExisting:'Pilih File')+'</span>';
       trigger.addEventListener('click',function(){input.click();});
       wrap.appendChild(trigger);
       var nameEl=document.createElement('span');
       nameEl.className='siberad-file-name';
-      nameEl.textContent='Tidak ada file yang dipilih';
+      nameEl.textContent=hasCurrent?'':'Tidak ada file yang dipilih';
       wrap.appendChild(nameEl);
       input.addEventListener('change',function(){
         if(input.files && input.files.length===1){nameEl.textContent=input.files[0].name;}
         else if(input.files && input.files.length>1){nameEl.textContent=input.files.length+' file dipilih';}
-        else{nameEl.textContent='Tidak ada file yang dipilih';}
+        else{nameEl.textContent=hasCurrent?'':'Tidak ada file yang dipilih';}
       });
     });
   }
