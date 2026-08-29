@@ -46,7 +46,7 @@ class LaporanKendala extends Model
         'diteruskan_at' => 'datetime',
     ];
 
-    public const STATUS_MENUNGGU_TEMBUSAN = 'Menunggu Tembusan';
+    public const STATUS_MENUNGGU_TEMBUSAN = 'Menunggu Balasan';
     public const STATUS_MENUNGGU = 'Menunggu';
     public const STATUS_DITINDAKLANJUTI = 'Ditindaklanjuti';
     public const STATUS_SELESAI = 'Selesai';
