@@ -45,11 +45,11 @@ class InjectAdminReportCenter
             return $response;
         }
 
-        $fixAsset = asset('js/admin-report-center-fix.js?v=20260821-2');
+        $fixAsset = asset('js/admin-report-center-fix.js?v=20260828-2');
         $script = '<script src="'.e($fixAsset).'"></script>';
 
         if (! str_contains($html, 'admin-report-center.js')) {
-            $asset = asset('js/admin-report-center.js?v=20260821-2');
+            $asset = asset('js/admin-report-center.js?v=20260828-2');
             $script = '<script src="'.e($asset).'"></script>'.$script;
         }
 

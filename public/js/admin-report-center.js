@@ -66,9 +66,9 @@
       '.siberad-report-filter{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding:0 18px 14px}',
       '.siberad-report-search{position:relative;flex:1 1 260px;min-width:220px}',
       '.siberad-report-search input,.siberad-report-date{width:100%;height:38px;box-sizing:border-box;border:1px solid var(--border);border-radius:9px;background:var(--panel);color:var(--text);font:400 12px var(--body);padding:8px 11px}',
-      '.siberad-report-search input{padding-left:33px}',
+      '.siberad-report-search input{padding-left:35px}',
       '.siberad-report-date{flex:0 0 150px}',
-      '.siberad-report-filter svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;fill:none;stroke:var(--text-dim);pointer-events:none}',
+      '.siberad-report-filter svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:16px;height:16px;fill:none;stroke:var(--text-dim);pointer-events:none}',
       '.siberad-report-count{margin-left:auto;font-size:10.5px;color:var(--text-dim);white-space:nowrap}',
       '.siberad-report-table-wrap{margin:0 18px 18px;border:1px solid var(--border-soft);border-radius:11px;overflow:auto}',
       '.siberad-report-table{width:100%;min-width:760px;border-collapse:collapse}',
@@ -76,7 +76,7 @@
       '.siberad-report-table td{padding:10px 11px;border-bottom:1px solid var(--border-soft);color:var(--text);font:400 11.5px var(--body);vertical-align:top}',
       '.siberad-report-table tr:last-child td{border-bottom:0}',
       '.siberad-report-table td.muted{color:var(--text-muted)}',
-      '.siberad-report-empty,.siberad-report-loading{padding:30px 18px;text-align:center;color:var(--text-muted);font-size:12px}',
+      '.siberad-report-loading{padding:30px 18px;text-align:center;color:var(--text-muted);font-size:12px}',
       '.siberad-report-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 18px 18px;color:var(--text-dim);font-size:10px}',
       '.siberad-report-print{height:36px;border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:9px;padding:0 12px;font:700 11px var(--body);cursor:pointer}',
       '@media(max-width:760px){.siberad-report-head{flex-direction:column}.siberad-report-actions{width:100%}.siberad-report-download{width:100%}.siberad-report-filter{flex-direction:column;align-items:stretch}.siberad-report-count{margin-left:0}.siberad-report-date{width:100%;flex-basis:auto}.siberad-report-table{min-width:680px}}'
@@ -140,8 +140,11 @@
     document.getElementById('siberadReportCount').textContent = rows.length.toLocaleString('id-ID') + ' data ditampilkan';
 
     if (!rows.length) {
-      body.className = 'siberad-report-empty';
-      body.textContent = 'Tidak ada data yang cocok dengan pencarian.';
+      // .empty-state -- kelas "1 sistem" yang sama dipakai empty-state
+      // lain di seluruh dashboard (lihat dash-styles.blade.php), bukan
+      // teks polos custom sendiri lagi biar konsisten persis.
+      body.className = 'empty-state';
+      body.innerHTML = '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada data yang cocok dengan pencarian.</div>';
       return;
     }
 
@@ -188,7 +191,7 @@
       state.loaded = true;
       render();
     }).catch(function () {
-      body.className = 'siberad-report-empty';
+      body.className = 'siberad-report-loading';
       body.textContent = 'Data laporan gagal dimuat. Silakan coba lagi.';
     });
   }

@@ -1,25 +1,14 @@
-<style>
-.deadline-section,.deadline-sender-section{position:relative;overflow:hidden}.deadline-primary,.deadline-secondary{border:1px solid transparent;border-radius:9px;padding:9px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:.15s ease}.deadline-primary{background:var(--p-accent,var(--gold-bright));color:#fff}.deadline-primary:hover{filter:brightness(1.06);transform:translateY(-1px)}.deadline-secondary{background:var(--p-surface-2,var(--panel-alt));border-color:var(--p-border,var(--border));color:var(--p-text,var(--text))}.deadline-secondary:hover{border-color:var(--p-accent,var(--gold-bright));transform:translateY(-1px)}.deadline-primary:active,.deadline-secondary:active{transform:scale(.96)}.deadline-secondary.confirm-btn{background:var(--success,#16834b);border-color:var(--success,#16834b);color:#fff}.deadline-secondary.confirm-btn:hover{filter:brightness(1.1);border-color:var(--success,#16834b)}.deadline-primary.small,.deadline-secondary.small{padding:7px 10px;font-size:10px}.kirim-laporan-btn{letter-spacing:.03em;box-shadow:0 8px 18px -8px rgba(212,175,55,.55)}.kirim-laporan-btn:hover{box-shadow:0 10px 22px -6px rgba(212,175,55,.65)}.deadline-form-wrap{margin:0 0 18px;padding:16px;border:1px solid var(--p-border,var(--border-soft));border-radius:12px;background:var(--p-surface-2,var(--panel-alt))}.deadline-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.deadline-field{display:flex;flex-direction:column;gap:6px}.deadline-field.full{grid-column:1/-1}.deadline-field label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--p-muted,var(--text-muted))}.deadline-field input,.deadline-field select,.deadline-field textarea{width:100%;box-sizing:border-box;border:1px solid var(--p-border,var(--border));border-radius:8px;background:var(--p-surface,var(--panel));color:var(--p-text,var(--text));padding:9px 10px;font:inherit;font-size:12px}.deadline-field textarea{min-height:100px;resize:vertical}.deadline-check-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.deadline-check{display:grid;grid-template-columns:auto 1fr;column-gap:7px;align-items:center;padding:9px;border:1px solid var(--p-border,var(--border));border-radius:9px;background:var(--p-surface,var(--panel));cursor:pointer}.deadline-check input{width:auto}.deadline-check span{font-family:var(--mono);font-size:10px;font-weight:800;color:var(--p-accent,var(--gold-bright))}.deadline-check small{grid-column:2;font-size:9px;color:var(--p-muted,var(--text-muted));line-height:1.35}.deadline-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.deadline-table-wrap{overflow-x:auto}.deadline-table{width:100%;border-collapse:collapse;min-width:720px}.deadline-table th{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--p-muted,var(--text-muted));text-align:left;padding:10px;border-bottom:1px solid var(--p-border,var(--border))}.deadline-table td{padding:11px 10px;border-bottom:1px solid var(--p-border,var(--border));font-size:11px;vertical-align:middle}.deadline-table td strong{display:block}.deadline-table td small{display:block;color:var(--p-muted,var(--text-muted));margin-top:3px;max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.deadline-pill{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:9px;font-weight:800;border:1px solid transparent;white-space:nowrap}.deadline-pill.wait{color:var(--p-orange);background:var(--p-orange-bg);border-color:var(--p-orange-border)}.deadline-pill.ok{color:#16834b;background:rgba(63,194,125,.12);border-color:rgba(63,194,125,.28)}.deadline-pill.bad{color:#c83b3b;background:rgba(181,52,47,.08);border-color:rgba(198,40,40,.28)}.deadline-pill.blue{color:#2476ad;background:rgba(52,152,219,.1);border-color:rgba(52,152,219,.25)}.deadline-pill.revisi{color:var(--gold-solid);background:rgba(217,146,11,.14);border-color:rgba(217,146,11,.4)}.deadline-revisi{background:linear-gradient(135deg,var(--gold-solid-bright),var(--gold-solid))!important;color:var(--on-gold)!important;border-color:transparent!important;box-shadow:0 8px 22px -8px rgba(217,146,11,.5)}.deadline-revisi:hover{color:var(--on-gold)!important;box-shadow:0 10px 26px -6px rgba(217,146,11,.6);filter:none;transform:translateY(-1px)}.deadline-progress-badge{font-family:var(--mono);font-size:10px;font-weight:800;color:var(--text-muted);white-space:nowrap}.deadline-sender-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.deadline-sender-head h3{margin:0 0 4px}.deadline-sender-head p{margin:0;font-size:11px;color:var(--text-muted);line-height:1.5}.deadline-count{font-family:var(--mono);font-size:10px;color:var(--gold-bright);white-space:nowrap}.deadline-sender-list{display:grid;gap:10px}.deadline-sender-item{display:flex;justify-content:space-between;gap:16px;padding:13px;border:1px solid var(--border-soft);border-radius:10px;background:var(--panel-alt)}.deadline-sender-item.near{border-color:rgba(224,168,58,.45)}.deadline-sender-item.bad{border-color:rgba(198,40,40,.35)}.deadline-sender-main{min-width:0}.deadline-sender-title{font-size:13px;font-weight:800}.deadline-sender-meta{font-size:10px;color:var(--text-muted);margin-top:4px}.deadline-sender-instruction{font-size:11px;line-height:1.55;color:var(--text-muted);margin-top:8px;white-space:pre-wrap}.deadline-sender-side{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:8px;flex-shrink:0}.deadline-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end}.deadline-complete{font-size:10px;font-weight:700;color:var(--green)}.deadline-complete.cancelled{color:#c83b3b}
-@media(max-width:850px){.deadline-check-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.deadline-form-grid{grid-template-columns:1fr}.deadline-field.full{grid-column:auto}.deadline-sender-item{flex-direction:column}.deadline-sender-side{align-items:flex-start}.deadline-actions{justify-content:flex-start}}@media(max-width:550px){.deadline-check-grid{grid-template-columns:1fr}.deadline-sender-head{display:block}.deadline-count{display:inline-block;margin-top:8px}}
-.deadline-task-track{padding:14px 18px 16px 34px;background:var(--p-surface-2,var(--panel-alt));border-radius:12px;display:flex;flex-wrap:wrap;row-gap:10px;margin:8px 0;justify-content:flex-end}
-.deadline-task-step{position:relative;display:flex;align-items:center;gap:6px;border:0;background:transparent;appearance:none;-webkit-appearance:none;box-shadow:none;border-radius:0;margin:0;cursor:pointer;padding:7px 20px 7px 18px;margin-right:-11px;font:inherit;font-size:10.5px;font-weight:700;white-space:nowrap;color:var(--p-muted,var(--text-muted));transition:color .15s ease,filter .15s ease;z-index:1}
-.deadline-task-step::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--p-surface-2,var(--panel-alt));clip-path:polygon(0 0,calc(100% - 13px) 0,100% 50%,calc(100% - 13px) 100%,0 100%,13px 50%);transition:background .15s ease}
-.deadline-task-step:first-child::before{clip-path:polygon(0 0,calc(100% - 13px) 0,100% 50%,calc(100% - 13px) 100%,0 100%)}
-.deadline-task-step:last-child::before{clip-path:polygon(0 0,100% 0,100% 100%,0 100%,13px 50%)}
-.deadline-task-step:first-child:last-child::before{clip-path:none;border-radius:8px}
-.deadline-task-step:hover{filter:brightness(1.08)}
-.deadline-task-step:disabled{cursor:not-allowed;opacity:.6;filter:none}
-.deadline-task-step:focus-visible{outline:2px solid var(--gold-bright,#e0a83a);outline-offset:2px}
-.deadline-task-num{flex-shrink:0;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;background:var(--p-surface,var(--panel));color:inherit}
-.deadline-task-label{overflow:hidden;text-overflow:ellipsis;max-width:170px}
-.deadline-task-step.active{color:#1a1206;z-index:2}
-.deadline-task-step.active::before{background:var(--gold-bright,#e0a83a);box-shadow:0 4px 12px -4px rgba(224,168,58,.6)}
-.deadline-task-step.active .deadline-task-num{background:#1a1206;color:var(--gold-bright,#e0a83a)}
-.deadline-task-step.done{color:#8a7245}
-.deadline-task-step.done::before{background:#efe6d2}
-.deadline-task-step.done .deadline-task-num{background:var(--green,#16834b);color:#fff}
-@media(max-width:640px){.deadline-task-step{margin-right:0;padding:7px 12px}.deadline-task-step::before{clip-path:none!important;border-radius:8px}}
-</style>
+{{-- CSS untuk section ini dipindah ke permintaan-laporan-deadline-styles.
+     blade.php (di-include duluan di <head>, lihat laporan-role.blade.php)
+     -- file INI (permintaan-laporan-deadline.blade.php) sebelumnya
+     di-include lewat laporan-role-shell.blade.php SETELAH seluruh halaman
+     utama (termasuk </html>), jadi ada jeda sesaat pas render pertama/
+     refresh di mana kartu udah muncul di DOM tapi CSS-nya (termasuk
+     opacity:0 buat dropdown/sidebar yang HARUSNYA nyembunyiin elemen
+     sebelum dipicu buka) belum kepasang -- flash of unstyled content yang
+     bikin elemen kelihatan "glitch" sesaat abis login/refresh. Script di
+     bawah TETAP di sini (aman di-load belakangan, gak ada FOUC-risk buat
+     JS). --}}
 
 <script>
 (function(){
@@ -281,6 +270,121 @@
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initEditProgresButtons); else initEditProgresButtons();
 
+    // ---- Wizard step sidebar (#kirimLaporanModal) --------------------------
+    // Sidebar vertikal di modal Update Progres/Edit itu BUKAN sumber data
+    // sendiri -- dia cuma "tampilan lain" dari .deadline-task-track yang
+    // sudah dihitung PHP persis seperti semula (lihat komentar di
+    // permintaan-laporan-item.blade.php), tapi disembunyikan dari kartu.
+    // Setiap kali salah satu step/tombol yang membuka modal ini diklik, kita
+    // cari track task milik kartu yang sama lalu kloning statenya jadi <li>
+    // di sidebar. Klik satu step di sidebar cuma manggil .click() ke tombol
+    // ASLI di track tersembunyi itu -- supaya initUsePermintaanButtons/
+    // initEditProgresButtons di atas (yang isi form + buka modal) jalan
+    // persis sama, tanpa logic baru yang mesti dijaga sinkron manual.
+    function resetWizardSidebar(){
+        var modal=document.getElementById('kirimLaporanModal');
+        var body=document.getElementById('kirimLaporanWizardBody');
+        var sidebar=document.getElementById('kirimLaporanWizardSidebar');
+        var stepsList=document.getElementById('kirimLaporanWizardSteps');
+        if(stepsList) stepsList.innerHTML='';
+        if(sidebar){ sidebar.classList.remove('wizard-sidebar-visible'); sidebar.hidden=true; }
+        if(body) body.classList.remove('has-sidebar');
+        if(modal) modal.classList.remove('wizard-active');
+    }
+    function buildWizardSidebar(triggerBtn){
+        var modal=document.getElementById('kirimLaporanModal');
+        var body=document.getElementById('kirimLaporanWizardBody');
+        var sidebar=document.getElementById('kirimLaporanWizardSidebar');
+        var stepsList=document.getElementById('kirimLaporanWizardSteps');
+        if(!modal||!body||!sidebar||!stepsList) return;
+        var card=triggerBtn.closest('.deadline-sender-item');
+        var track=card?card.querySelector('.deadline-task-track'):null;
+        var steps=track?Array.prototype.slice.call(track.querySelectorAll('.deadline-task-step')):[];
+        stepsList.innerHTML='';
+        if(!steps.length){ resetWizardSidebar(); return; }
+        // Caption baris kedua di bawah label -- niru pola step wizard di
+        // referensi (tiap step punya judul + sub-teks kecil, bukan cuma 1
+        // baris), teksnya dari state done/active/pending yang SAMA yang
+        // sudah dihitung PHP (bukan data baru).
+        var captions={done:'Selesai',active:'Sedang dikerjakan',pending:'Menunggu giliran'};
+        steps.forEach(function(step){
+            var state=step.classList.contains('done')?'done':(step.classList.contains('active')?'active':'pending');
+            var li=document.createElement('li');
+            li.className='wizard-step wizard-step-'+state;
+            var dot=document.createElement('span');
+            dot.className='wizard-step-dot';
+            if(state==='done'){
+                // Ikon checkmark SVG (bukan karakter teks "✓") -- niru
+                // referensiTask.png, bentuknya konsisten di semua font/OS.
+                dot.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>';
+            }else{
+                dot.textContent=step.querySelector('.deadline-task-num')?step.querySelector('.deadline-task-num').textContent:'';
+            }
+            var body=document.createElement('span');
+            body.className='wizard-step-body';
+            var label=document.createElement('span');
+            label.className='wizard-step-label';
+            var srcLabel=step.querySelector('.deadline-task-label');
+            label.textContent=srcLabel?srcLabel.textContent:'';
+            var caption=document.createElement('span');
+            caption.className='wizard-step-caption';
+            caption.textContent=captions[state];
+            body.appendChild(label);
+            body.appendChild(caption);
+            li.appendChild(dot);
+            li.appendChild(body);
+            if(step.disabled){
+                li.setAttribute('aria-disabled','true');
+            }else{
+                li.addEventListener('click',function(){ step.click(); });
+            }
+            stepsList.appendChild(li);
+        });
+        sidebar.hidden=false;
+        body.classList.add('has-sidebar');
+        modal.classList.add('wizard-active');
+        // Fade+slide-in sidebar-nya -- dilepas dari class dulu (kalau
+        // kepanggil ulang buat kartu lain) baru dipasang lagi 1 frame
+        // kemudian, biar transition-nya SELALU kepicu ulang (bukan cuma di
+        // klik pertama).
+        sidebar.classList.remove('wizard-sidebar-visible');
+        window.requestAnimationFrame(function(){ sidebar.classList.add('wizard-sidebar-visible'); });
+    }
+    function initWizardStepSidebar(){
+        document.querySelectorAll('.use-permintaan, .edit-progres-btn').forEach(function(btn){
+            if(btn.dataset.wizardSidebarBound==='1') return;
+            btn.dataset.wizardSidebarBound='1';
+            btn.addEventListener('click',function(){
+                if(btn.classList.contains('deadline-task-step')){
+                    buildWizardSidebar(btn);
+                }else{
+                    resetWizardSidebar();
+                }
+            });
+        });
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initWizardStepSidebar); else initWizardStepSidebar();
+
+    // Tombol "Update Progres" baru di kartu (permintaan dengan checklist task,
+    // bukan revisi) -- proxy klik ke step "active" (atau "done" kalau semua
+    // task kebetulan sudah selesai) di track tersembunyi milik kartu yang
+    // sama, supaya modal + sidebar wizard terbuka lewat alur yang sama persis
+    // seperti klik step secara langsung.
+    function initWizardEntryButtons(){
+        document.querySelectorAll('.deadline-wizard-entry-btn').forEach(function(btn){
+            if(btn.dataset.wizardEntryBound==='1') return;
+            btn.dataset.wizardEntryBound='1';
+            btn.addEventListener('click',function(){
+                var card=btn.closest('.deadline-sender-item');
+                var track=card?card.querySelector('.deadline-task-track'):null;
+                if(!track) return;
+                var target=track.querySelector('.deadline-task-step.active')||track.querySelector('.deadline-task-step.done');
+                if(target) target.click();
+            });
+        });
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initWizardEntryButtons); else initWizardEntryButtons();
+
     // Validasi wajib-diisi custom untuk form Update Progres/Kirim Laporan --
     // niru pola yang sama dipakai di modal "Buat Permintaan Laporan" pimpinan:
     // ganti tooltip bawaan browser jadi pesan merah di bawah kolom + border
@@ -354,10 +458,95 @@
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initLampiranClear); else initLampiranClear();
 
+    // Tanda manual kartu (checkbox bulat pojok kiri-atas) -- statusnya PURE
+    // client-side (localStorage per-browser), karena kita nggak boleh nambah
+    // kolom DB baru buat ini. Kartu yang ditandai di-pin paling atas pas
+    // sorting (lihat apply() di bawah), di atas bahkan kartu "Terbaru".
+    var DCARD_PIN_KEY='siberadPermintaanDitandai';
+    function getPinnedIds(){
+        try{ var raw=localStorage.getItem(DCARD_PIN_KEY); return raw?new Set(JSON.parse(raw)):new Set(); }
+        catch(e){ return new Set(); }
+    }
+    function savePinnedIds(set){
+        // BUKAN Array.prototype.slice.call(set) -- Set BUKAN array-like
+        // (gak punya index numerik + .length kayak NodeList/arguments),
+        // itu selalu balikin array kosong diam-diam (gak throw error, jadi
+        // gak ketauan dari try/catch). Array.from() yang bener buat Set.
+        try{ localStorage.setItem(DCARD_PIN_KEY,JSON.stringify(Array.from(set))); }catch(e){}
+    }
+    function applyPinnedState(card,pinned){
+        card.dataset.ditandai=pinned?'1':'0';
+        var btn=card.querySelector('.dcard-pin-btn');
+        if(btn) btn.setAttribute('aria-pressed',pinned?'true':'false');
+    }
+    function initDcardPinButtons(){
+        var pinned=getPinnedIds();
+        document.querySelectorAll('#permintaan-laporan .deadline-sender-item').forEach(function(card){
+            var id=card.getAttribute('data-realtime-permintaan-id');
+            if(id) applyPinnedState(card,pinned.has(id));
+        });
+        document.querySelectorAll('.dcard-pin-btn').forEach(function(btn){
+            if(btn.dataset.pinBound==='1') return;
+            btn.dataset.pinBound='1';
+            btn.addEventListener('click',function(e){
+                e.stopPropagation();
+                var card=btn.closest('.deadline-sender-item');
+                var id=card&&card.getAttribute('data-realtime-permintaan-id');
+                if(!id) return;
+                var set=getPinnedIds();
+                var nowPinned=!set.has(id);
+                if(nowPinned) set.add(id); else set.delete(id);
+                savePinnedIds(set);
+                applyPinnedState(card,nowPinned);
+                window.siberadRefreshPermintaanFilter&&window.siberadRefreshPermintaanFilter();
+            });
+        });
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initDcardPinButtons); else initDcardPinButtons();
+
+    // Menu titik-3 di pojok kartu -- cuma UI dulu (dropdown buka/tutup),
+    // "Arsipkan" belum disambungkan ke route apa pun (fungsinya nanti).
+    function closeAllDcardMenus(except){
+        document.querySelectorAll('.dcard-menu').forEach(function(menu){
+            if(menu===except||!menu.classList.contains('open')) return;
+            menu.classList.remove('open');
+            var btn=menu.previousElementSibling;
+            if(btn&&btn.classList.contains('dcard-menu-toggle')) btn.setAttribute('aria-expanded','false');
+        });
+    }
+    function initDcardMenus(){
+        document.querySelectorAll('.dcard-menu-toggle').forEach(function(btn){
+            if(btn.dataset.menuBound==='1') return;
+            btn.dataset.menuBound='1';
+            btn.addEventListener('click',function(e){
+                e.stopPropagation();
+                var menu=btn.nextElementSibling;
+                if(!menu) return;
+                var willOpen=!menu.classList.contains('open');
+                closeAllDcardMenus();
+                if(willOpen) menu.classList.add('open');
+                btn.setAttribute('aria-expanded',willOpen?'true':'false');
+            });
+        });
+        document.querySelectorAll('.dcard-archive-btn').forEach(function(btn){
+            if(btn.dataset.archiveBound==='1') return;
+            btn.dataset.archiveBound='1';
+            btn.addEventListener('click',function(){
+                // TODO: fungsi Arsipkan menyusul -- belum ada route/aksi di sini.
+                closeAllDcardMenus();
+            });
+        });
+    }
+    if(!window.siberadDcardMenuOutsideBound){
+        window.siberadDcardMenuOutsideBound=true;
+        document.addEventListener('click',function(){ closeAllDcardMenus(); });
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initDcardMenus); else initDcardMenus();
+
     // Dipanggil ulang oleh polling realtime (permintaan-laporan-realtime.blade.php,
     // laporan-role-realtime-sync.blade.php) setiap kali kartu permintaan diganti/
     // ditambah, supaya tombol Update Progres/Revisi/Edit yang baru tetap bisa diklik.
-    window.siberadRebindPermintaanActions=function(){initUsePermintaanButtons();initEditProgresButtons();};
+    window.siberadRebindPermintaanActions=function(){initUsePermintaanButtons();initEditProgresButtons();initWizardStepSidebar();initWizardEntryButtons();initDcardMenus();initDcardPinButtons();window.siberadRefreshPermintaanFilter&&window.siberadRefreshPermintaanFilter();};
 
     // Pencarian daftar Permintaan Laporan -- reuse gaya .rpt-filter-* yang
     // sama dengan tabel lain (1 sistem), tapi logikanya custom karena isinya
@@ -367,25 +556,39 @@
         if(!section||section.dataset.searchReady==='1') return;
         var list=section.querySelector('.deadline-sender-list');
         if(!list) return;
-        var items=Array.prototype.slice.call(list.querySelectorAll(':scope > article.deadline-sender-item'));
-        if(!items.length) return;
+        var initialItems=Array.prototype.slice.call(list.querySelectorAll(':scope > article.deadline-sender-item'));
+        if(!initialItems.length) return;
         section.dataset.searchReady='1';
-
-        // Simpan urutan asli (backend sudah pakai latest(), jadi index 0 =
-        // terbaru) -- sama persis pola sortable di initReportFilter
-        // (danpus-report-table-filter.blade.php), cuma di sini kartu
-        // <article>, bukan baris <tr>.
-        items.forEach(function(item,i){item.dataset.rptOrder=String(i)});
 
         var bar=document.createElement('div');
         bar.className='rpt-filter-bar';
-        bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="Cari perihal..." aria-label="Cari perihal"></div><select class="rpt-filter-select" aria-label="Urutkan"><option value="newest">Terbaru</option><option value="oldest">Terlama</option></select><span class="rpt-filter-count"></span>';
-        list.parentNode.insertBefore(bar,list);
+        // Urutan "Terbaru"/"Terlama" DULU berdasar kapan permintaan-nya
+        // dibuat (created_at) -- membingungkan buat section yang isinya soal
+        // DEADLINE (permintaan lama wajar deadline-nya udah lewat/terlambat,
+        // permintaan baru wajar deadline-nya masih jauh, tapi kelihatannya
+        // kayak "terlambat = terlama" padahal itu cuma korelasi, bukan
+        // urutan yang berguna). Sekarang diganti sort berdasar deadline_at
+        // beneran (data-deadline-at, timestamp) -- "Deadline Terdekat" jadi
+        // default biar permintaan paling mendesak nongol duluan, sesuai
+        // tujuan section ini (nge-track deadline, bukan riwayat pembuatan).
+        bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="Cari perihal..." aria-label="Cari perihal"></div><select class="rpt-filter-select" aria-label="Urutkan"><option value="terdekat">Deadline Terdekat</option><option value="terjauh">Deadline Terjauh</option></select><span class="rpt-filter-count"></span>';
+        // Bar pencarian+sort+hitungan ini bagian dari PANEL judul ("Permintaan
+        // Laporan"), bukan nempel ke grid kartu -- .report-card sekarang cuma
+        // bungkus panel-head (lihat laporan-role.blade.php), grid kartunya
+        // sendiri sudah jadi sibling di luar box itu supaya ngambang bebas.
+        var panel=section.querySelector('.report-card');
+        if(panel){ panel.appendChild(bar); } else { list.parentNode.insertBefore(bar,list); }
 
+        // Pakai .empty-state -- kelas "1 sistem" yang sama dipakai tabel lain
+        // (lihat ensureEmptyRow() di danpus-report-table-filter.blade.php dan
+        // blok fallback grid ini sendiri di laporan-role.blade.php). Sebelumnya
+        // kotak ini pakai kelas rpt-filter-empty yang TIDAK PERNAH ada CSS-nya
+        // sama sekali (typo/bukan kelas asli sistem) -- makanya tampil polos
+        // tanpa kotak dotted/padding/center kayak semua empty-state lain.
         var emptyBox=document.createElement('div');
-        emptyBox.className='rpt-filter-empty';
+        emptyBox.className='empty-state';
         emptyBox.style.display='none';
-        emptyBox.innerHTML='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block;opacity:.7"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>Tidak ada permintaan laporan yang sesuai dengan pencarian.';
+        emptyBox.innerHTML='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada permintaan laporan yang sesuai dengan pencarian.</div>';
         list.parentNode.insertBefore(emptyBox,list.nextSibling);
 
         var input=bar.querySelector('input');
@@ -393,15 +596,77 @@
         var count=bar.querySelector('.rpt-filter-count');
 
         function apply(){
+            // Query ulang LANGSUNG dari DOM tiap dipanggil -- SENGAJA nggak
+            // pakai array yang disimpan di closure. Kartu yang sudah diganti
+            // replaceWith()/dihapus oleh syncRequestList() otomatis nggak
+            // ikut kebawa lagi (beda dari sebelumnya, yang bisa nyeret balik
+            // elemen "yatim" lewat appendChild pas reorder -- itu penyebab
+            // bug kartu kelihatan dobel begitu search/sort dipakai).
+            var items=Array.prototype.slice.call(list.querySelectorAll(':scope > article.deadline-sender-item'));
+            // Sort berdasar data-deadline-at (timestamp, dipasang PHP di
+            // permintaan-laporan-item.blade.php) -- selalu ada & akurat di
+            // SETIAP kartu (baik render awal maupun realtime), jadi gak perlu
+            // lagi nyimpan/nebak "urutan" kayak rptOrder dulu.
+            //
+            // Status "ditandai" DIBACA LANGSUNG dari localStorage di sini
+            // (bukan dari atribut data-ditandai di kartu) -- kartu bisa
+            // diganti node DOM barunya kapan aja lewat beberapa jalur
+            // realtime berbeda (insertItems/syncRequestList), dan menjaga
+            // satu atribut tetap "nempel" konsisten lewat semua jalur itu
+            // ternyata rawan lolos. localStorage jadi satu-satunya sumber
+            // kebenaran yang gak mungkin "lupa" gara-gara DOM diganti.
+            var pinnedIds=getPinnedIds();
             items.sort(function(a,b){
-                var diff=Number(a.dataset.rptOrder)-Number(b.dataset.rptOrder);
-                return sortSelect.value==='oldest'?-diff:diff;
+                // 3 tingkat prioritas urutan: (1) Ditandai manual (tombol
+                // bulat pojok kiri-atas) paling atas duluan, (2) "Terbaru"
+                // (belum dikonfirmasi/dikerjakan) kedua, (3) sisanya. Deadline
+                // Terdekat/Terjauh cuma jadi urutan di DALAM masing-masing
+                // kelompok itu, bukan prioritas utama -- biar permintaan yang
+                // ditandai/belum disentuh nggak kekubur di antara ratusan
+                // data lain cuma karena deadline-nya masih jauh.
+                var aPin=pinnedIds.has(a.getAttribute('data-realtime-permintaan-id'));
+                var bPin=pinnedIds.has(b.getAttribute('data-realtime-permintaan-id'));
+                if(aPin!==bPin) return aPin?-1:1;
+                var aBaru=a.dataset.belumDikerjakan==='1',bBaru=b.dataset.belumDikerjakan==='1';
+                if(aBaru!==bBaru) return aBaru?-1:1;
+                var diff=Number(a.dataset.deadlineAt)-Number(b.dataset.deadlineAt);
+                return sortSelect.value==='terjauh'?-diff:diff;
             });
             // Cuma reorder DOM kalau urutannya beneran berubah -- appendChild
             // tanpa syarat di tiap keystroke boros & berisiko (pola yang sama
             // yang bikin loop di danpus-report-table-filter.blade.php).
             var needsReorder=items.some(function(item,i){return item.nextElementSibling!==(items[i+1]||null)});
-            if(needsReorder)items.forEach(function(item){list.appendChild(item)});
+            if(needsReorder){
+                // FLIP -- sama kayak animasi kartu baru di insertItems()
+                // (permintaan-laporan-realtime.blade.php), supaya reorder
+                // gara-gara search/sort/nandai/realtime JUGA geser mulus,
+                // bukan "loncat" instan kayak sebelumnya (kesannya kaku).
+                // Cuma kartu yang lagi KELIHATAN (bukan display:none dari
+                // filter search) yang dianimasikan -- posisi kartu
+                // tersembunyi gak berarti buat dianimasikan.
+                var reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                var prevRects=reduceMotion?null:new Map();
+                if(prevRects){
+                    items.forEach(function(item){
+                        if(item.style.display!=='none') prevRects.set(item,item.getBoundingClientRect());
+                    });
+                }
+                items.forEach(function(item){list.appendChild(item)});
+                if(prevRects){
+                    items.forEach(function(item){
+                        var prev=prevRects.get(item);if(!prev)return;
+                        var next=item.getBoundingClientRect();
+                        var dx=prev.left-next.left,dy=prev.top-next.top;
+                        if(Math.abs(dx)<1&&Math.abs(dy)<1)return;
+                        item.style.transition='none';
+                        item.style.transform='translate('+dx+'px,'+dy+'px)';
+                        item.getBoundingClientRect();
+                        item.style.transition='transform .35s cubic-bezier(.4,0,.2,1)';
+                        item.style.transform='';
+                        item.addEventListener('transitionend',function handler(e){if(e.propertyName!=='transform')return;item.style.transition='';item.removeEventListener('transitionend',handler);});
+                    });
+                }
+            }
             var q=(input.value||'').trim().toLowerCase();
             var visible=0;
             items.forEach(function(item){
@@ -414,6 +679,11 @@
         }
         input.addEventListener('input',apply);
         sortSelect.addEventListener('change',apply);
+        // Dipanggil lagi dari siberadRebindPermintaanActions setiap kali
+        // polling realtime nambah/ganti/hapus kartu -- biar filter & hitungan
+        // "x dari x data" ikut nyegerin diri sendiri tanpa nunggu user ngetik
+        // ulang di kolom cari.
+        window.siberadRefreshPermintaanFilter=apply;
         apply();
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initPermintaanSearch); else initPermintaanSearch();

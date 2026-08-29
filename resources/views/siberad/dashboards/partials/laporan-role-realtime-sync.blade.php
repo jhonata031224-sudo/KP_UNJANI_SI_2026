@@ -169,7 +169,18 @@
                 const list=document.querySelector('#permintaan-laporan .deadline-sender-list');if(!list||typeof data.items_html!=='string')return;
                 const incoming=document.createElement('div');incoming.innerHTML=data.items_html;
                 const fresh=[...incoming.children];const freshById=new Map(fresh.map(el=>[String(el.dataset.realtimePermintaanId||''),el]));const existing=[...list.querySelectorAll('[data-realtime-permintaan-id]')];
-                existing.forEach(function(item){const id=String(item.dataset.realtimePermintaanId||'');const replacement=freshById.get(id);if(replacement){item.replaceWith(replacement);}else if(id)item.remove();});
+                existing.forEach(function(item){const id=String(item.dataset.realtimePermintaanId||'');const replacement=freshById.get(id);if(replacement){
+                    // replaceWith() di sini SELALU jalan tiap siklus (nggak
+                    // ada diff-check) -- kartu ganti jadi node DOM BARU tiap
+                    // ~6 detik walau isinya sama aja, jadi data-ditandai
+                    // (tombol tanda manual, dipasang initDcardPinButtons di
+                    // permintaan-laporan-deadline.blade.php dari localStorage)
+                    // ikut "lupa" balik ke default "0" kalau nggak dibawa
+                    // manual ke node barunya -- itu sebabnya kartu yang baru
+                    // ditandai kelihatan kereset lagi abis beberapa detik.
+                    if(item.dataset.ditandai!==undefined) replacement.dataset.ditandai=item.dataset.ditandai;
+                    item.replaceWith(replacement);
+                }else if(id)item.remove();});
                 window.siberadBindPermintaanDetailButtons&&window.siberadBindPermintaanDetailButtons();
                 window.siberadRebindPermintaanActions&&window.siberadRebindPermintaanActions();
             }).catch(function(){});

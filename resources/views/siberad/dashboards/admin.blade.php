@@ -58,10 +58,10 @@
      nempel pojok kanan lewat margin-left:auto -- 1 sistem, bukan style sendiri2. */
   .table-toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
   .table-search-wrap{position:relative;flex:1 1 240px;min-width:200px;max-width:360px;}
-  .table-search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--text-dim);pointer-events:none;}
+  .table-search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--text-dim);pointer-events:none;}
   .table-search{
     width:100%;box-sizing:border-box;height:38px;background:var(--panel);border:1px solid var(--border);color:var(--text);
-    font-family:var(--body);font-size:13px;border-radius:9px;padding:8px 12px 8px 34px;
+    font-family:var(--body);font-size:12px;border-radius:9px;padding:8px 11px 8px 35px;
   }
   .table-search::placeholder{color:var(--text-dim);}
   .table-search:focus{outline:none;border-color:var(--gold);}
@@ -2152,7 +2152,7 @@
                     <td style="white-space:nowrap;" data-tanggal="{{ $p->created_at?->format('Y-m-d') }}">{{ $p->created_at?->format('d/m/Y H:i') }}</td>
                   </tr>
                   @empty
-                  <tr><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Belum ada pengguna</div></div></td></tr>
+                  <tr><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Belum ada pengguna</div></div></td></tr>
                   @endforelse
                 </tbody>
               </table>
@@ -2235,7 +2235,7 @@
                     <td style="color:var(--text-dim);">{{ $l->ip_address }}</td>
                   </tr>
                   @empty
-                  <tr><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada aktivitas tercatat</div></div></td></tr>
+                  <tr><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada aktivitas tercatat</div></div></td></tr>
                   @endforelse
                 </tbody>
               </table>
@@ -2283,10 +2283,30 @@
         function dlHitungTampil(tableId) {
           var table = document.getElementById(tableId);
           var countEl = document.querySelector('[data-dl-count="' + tableId + '"]');
-          if (!table || !countEl) return;
-          var visible = Array.prototype.slice.call(table.querySelectorAll('tbody tr'))
-            .filter(function (tr) { return tr.style.display !== 'none' && tr.hasAttribute('data-search-value'); });
-          countEl.textContent = visible.length + ' data ditampilkan';
+          if (!table) return;
+          var rows = Array.prototype.slice.call(table.querySelectorAll('tbody tr[data-search-value]'));
+          var visible = rows.filter(function (tr) { return tr.style.display !== 'none'; });
+          if (countEl) countEl.textContent = visible.length + ' data ditampilkan';
+
+          // Tabel ini gak punya baris ".empty-state" buat kasus "ada data tapi
+          // kefilter jadi 0" (beda dari baris fallback forelse statis yang cuma
+          // dirender kalau memang belum ada data sama sekali) -- makanya dulu search yang
+          // gak nemu apa-apa cuma bikin tabel kelihatan kosong polos, tanpa
+          // pesan/kotak apapun (cuma angka "0 data ditampilkan" yang berubah).
+          // Sama kayak pola ensureEmptyRow() di danpus-report-table-filter.blade.php.
+          var emptyRow = table.querySelector('tbody > tr.dl-filter-empty-row');
+          if (rows.length && !visible.length) {
+            if (!emptyRow) {
+              var colCount = table.querySelectorAll('thead th').length || 1;
+              emptyRow = document.createElement('tr');
+              emptyRow.className = 'dl-filter-empty-row';
+              emptyRow.innerHTML = '<td colspan="' + colCount + '"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada data yang cocok dengan pencarian/filter.</div></div></td>';
+              table.querySelector('tbody').appendChild(emptyRow);
+            }
+            emptyRow.style.display = '';
+          } else if (emptyRow) {
+            emptyRow.style.display = 'none';
+          }
         }
 
         function dlSaring(tableId) {
@@ -3739,7 +3759,7 @@
       tr.className = 'table-empty-row';
       var td = document.createElement('td');
       td.colSpan = colCount;
-      td.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada data yang cocok</div><div class="empty-state-sub">Coba ubah kata kunci pencarian atau filter-nya.</div></div>';
+      td.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada data yang cocok</div><div class="empty-state-sub">Coba ubah kata kunci pencarian atau filter-nya.</div></div>';
       tr.appendChild(td);
       return tr;
     }

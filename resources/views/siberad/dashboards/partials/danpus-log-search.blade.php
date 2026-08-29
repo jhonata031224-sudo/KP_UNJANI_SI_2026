@@ -12,7 +12,6 @@
    bukan widget kustom sendiri lagi. */
 .danpus-log-search .styled-select-wrap{width:auto;min-width:130px;flex-shrink:0}
 .danpus-log-search .search-count{font-size:10px;color:var(--p-muted);white-space:nowrap;margin-left:auto}
-.danpus-log-empty{display:none;text-align:center;padding:22px 12px;color:var(--p-muted);font-size:12px;border:2px dotted var(--p-border);border-radius:10px;margin-top:2px}
 @media(max-width:700px){.danpus-log-search{display:flex;flex-wrap:wrap}.danpus-log-search-box{width:100%}.danpus-log-search .styled-select-wrap{flex:0 0 auto}.danpus-log-search .search-count{margin-left:auto;align-self:center}}
 </style>
 <script>
@@ -50,9 +49,13 @@
       var sortSelect=searchWrap.querySelector('select');
       var count=searchWrap.querySelector('.search-count');
       var sortValue='newest';
+      // .empty-state -- kelas "1 sistem" yang sama dipakai empty-state
+      // lain di seluruh dashboard (lihat dash-styles.blade.php), bukan
+      // kotak dotted custom sendiri lagi biar konsisten persis.
       var empty=document.createElement('div');
-      empty.className='danpus-log-empty';
-      empty.innerHTML='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block;opacity:.7"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>Tidak ada perihal laporan yang sesuai dengan pencarian.';
+      empty.className='empty-state';
+      empty.style.display='none';
+      empty.innerHTML='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada perihal laporan yang sesuai dengan pencarian.</div>';
       list.insertAdjacentElement('afterend',empty);
 
       function filterAndSort(){
