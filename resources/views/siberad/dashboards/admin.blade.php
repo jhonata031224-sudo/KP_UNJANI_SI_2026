@@ -1811,13 +1811,22 @@
               return forms;
             }
 
+            var userHasInteracted = false;
+
             function refreshGlobal() {
               var boxes = visibleCheckboxes();
               var total = boxes.length;
               var checked = boxes.filter(function (cb) { return cb.checked; }).length;
               globalCountEl.textContent = checked + ' dari ' + total + ' modul aktif' + (activeFilter ? ' (' + activeFilter + ')' : '');
-              globalCb.checked = total > 0 && checked === total;
-              globalCb.indeterminate = checked > 0 && checked < total;
+              /* Indeterminate hanya ditampilkan setelah user berinteraksi,
+                 supaya pada saat awal buka halaman checkbox selalu kosong */
+              if (userHasInteracted) {
+                globalCb.checked = total > 0 && checked === total;
+                globalCb.indeterminate = checked > 0 && checked < total;
+              } else {
+                globalCb.checked = false;
+                globalCb.indeterminate = false;
+              }
               globalWrap.classList.toggle('is-all-active', globalCb.checked);
             }
 
@@ -1887,6 +1896,7 @@
             /* ---- Checkbox individual → tandai pending ---- */
             panel.querySelectorAll('.perm-grid input[type="checkbox"]').forEach(function (cb) {
               cb.addEventListener('change', function () {
+                userHasInteracted = true;
                 refreshCard(cb);
                 refreshGlobal();
                 setPending(true);
@@ -1895,6 +1905,7 @@
 
             /* ---- "Pilih Semua Modul" checkbox ---- */
             globalCb.addEventListener('change', function () {
+              userHasInteracted = true;
               var next = globalCb.checked;
               visibleCheckboxes().forEach(function (cb) {
                 cb.checked = next;
