@@ -110,11 +110,11 @@ class LaporanKendalaController extends Controller
             // "menembuskan" ke satuan lain (mis. sesama Kasansi) yang belum
             // didukung, dan dibatasi maksimal 2 satuan per laporan supaya
             // tembusan tetap fokus/tidak disebar ke semua 8 satuan sekaligus.
-            'tembusan_ke' => ['nullable', 'array', 'max:2'],
+            'tembusan_ke' => ['nullable', 'array', 'max:1'],
             'tembusan_ke.*' => ['string', 'in:'.implode(',', Satuan::kodeTembusanKasansi())],
         ], [
             'lampiran.required' => 'Lampiran wajib diisi untuk mengirim laporan kendala ke Danpus.',
-            'tembusan_ke.max' => 'Tembusan maksimal 2 satuan saja.',
+            'tembusan_ke.max' => 'Tembusan maksimal 1 satuan saja.',
         ]);
 
         $user = $request->user()->load('satuan');
