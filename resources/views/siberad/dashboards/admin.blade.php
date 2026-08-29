@@ -2528,34 +2528,51 @@
               {{-- ===== TAB: BERANDA ===== --}}
               <div class="lp-tab-panel active" data-lp-tab-panel="beranda">
                 <p class="lp-tab-desc">Bagian paling atas landing page — yang pertama kali dilihat pengunjung.</p>
-                <div class="form-grid">
-                  <div class="form-field full">
-                    <label for="lpEyebrow">Label Kecil di Atas Judul</label>
-                    <input id="lpEyebrow" name="hero_eyebrow" type="text" value="{{ old('hero_eyebrow', $pengaturan->hero_eyebrow) }}" data-lp="hero_eyebrow">
+
+                {{-- Sebelumnya semua field statis di bawah numpuk jadi 1 form-grid
+                     panjang tanpa pengelompokan (beda sama kartu-kartu dinamis
+                     Fitur/Identitas Brand/dll yang sudah dibungkus .lp-card
+                     masing-masing) -- sekarang dipisah jadi 2 kartu senada:
+                     "Judul & Deskripsi Utama" dan "Gambar Latar Beranda". --}}
+                <div class="lp-card">
+                  <div class="lp-card-title">Judul &amp; Deskripsi Utama</div>
+                  <p class="lp-card-desc">Teks utama yang tampil di bagian paling atas (hero) landing page.</p>
+                  <div class="form-grid">
+                    <div class="form-field full">
+                      <label for="lpEyebrow">Label Kecil di Atas Judul</label>
+                      <input id="lpEyebrow" name="hero_eyebrow" type="text" value="{{ old('hero_eyebrow', $pengaturan->hero_eyebrow) }}" data-lp="hero_eyebrow">
+                    </div>
+                    <div class="form-field">
+                      <label for="lpJudulAwal">Judul (bagian 1) — juga jadi nama sistem di logo &amp; sidebar semua pengguna</label>
+                      <input id="lpJudulAwal" name="hero_judul_awal" type="text" value="{{ old('hero_judul_awal', $pengaturan->hero_judul_awal) }}" data-lp="hero_judul_awal">
+                    </div>
+                    <div class="form-field">
+                      <label for="lpJudulAksen">Judul (bagian 2, warna emas) — juga ikut di logo &amp; sidebar semua pengguna</label>
+                      <input id="lpJudulAksen" name="hero_judul_aksen" type="text" value="{{ old('hero_judul_aksen', $pengaturan->hero_judul_aksen) }}" data-lp="hero_judul_aksen">
+                    </div>
+                    <div class="form-field full">
+                      <label for="lpSubjudul">Sub Judul</label>
+                      <input id="lpSubjudul" name="hero_subjudul" type="text" value="{{ old('hero_subjudul', $pengaturan->hero_subjudul) }}" data-lp="hero_subjudul">
+                    </div>
+                    <div class="form-field full">
+                      <label for="lpDeskripsi">Deskripsi</label>
+                      <textarea id="lpDeskripsi" name="hero_deskripsi" rows="3" data-lp="hero_deskripsi">{{ old('hero_deskripsi', $pengaturan->hero_deskripsi) }}</textarea>
+                    </div>
                   </div>
-                  <div class="form-field">
-                    <label for="lpJudulAwal">Judul (bagian 1) — juga jadi nama sistem di logo &amp; sidebar semua pengguna</label>
-                    <input id="lpJudulAwal" name="hero_judul_awal" type="text" value="{{ old('hero_judul_awal', $pengaturan->hero_judul_awal) }}" data-lp="hero_judul_awal">
-                  </div>
-                  <div class="form-field">
-                    <label for="lpJudulAksen">Judul (bagian 2, warna emas) — juga ikut di logo &amp; sidebar semua pengguna</label>
-                    <input id="lpJudulAksen" name="hero_judul_aksen" type="text" value="{{ old('hero_judul_aksen', $pengaturan->hero_judul_aksen) }}" data-lp="hero_judul_aksen">
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpSubjudul">Sub Judul</label>
-                    <input id="lpSubjudul" name="hero_subjudul" type="text" value="{{ old('hero_subjudul', $pengaturan->hero_subjudul) }}" data-lp="hero_subjudul">
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpDeskripsi">Deskripsi</label>
-                    <textarea id="lpDeskripsi" name="hero_deskripsi" rows="3" data-lp="hero_deskripsi">{{ old('hero_deskripsi', $pengaturan->hero_deskripsi) }}</textarea>
-                  </div>
-                  <div class="form-field full">
-                    <label for="lpHeroImage">Gambar Latar Beranda (opsional)</label>
-                    <div class="lp-hero-image-row">
-                      <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturan->hero_image_path ? '1' : '0' }}" data-label-existing="Ganti Latar">
-                      <img src="{{ $pengaturan->hero_image_path ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}">
-                      <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturan->hero_image_path ? 'display:none' : '' }}">Belum ada gambar latar belakang</div>
-                      <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Latar Belakang</button>
+                </div>
+
+                <div class="lp-card">
+                  <div class="lp-card-title">Gambar Latar Beranda</div>
+                  <p class="lp-card-desc">Foto latar belakang bagian hero (opsional) — kosongkan kalau tidak mau pakai gambar.</p>
+                  <div class="form-grid">
+                    <div class="form-field full">
+                      <label for="lpHeroImage">Gambar Latar Beranda (opsional)</label>
+                      <div class="lp-hero-image-row">
+                        <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturan->hero_image_path ? '1' : '0' }}" data-label-existing="Ganti Latar">
+                        <img src="{{ $pengaturan->hero_image_path ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}">
+                        <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturan->hero_image_path ? 'display:none' : '' }}">Belum ada gambar latar belakang</div>
+                        <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Latar Belakang</button>
+                      </div>
                     </div>
                   </div>
                 </div>
