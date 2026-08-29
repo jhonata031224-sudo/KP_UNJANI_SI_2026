@@ -2720,7 +2720,36 @@
           @keyframes lpFadeIn{ from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:none;} }
           .lp-tab-desc{font-size:12.5px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;}
 
-          .lp-card{background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:10px;padding:16px;margin-bottom:14px;}
+          /* Backdrop blur hitam di BELAKANG tiap kartu (bukan mengubah warna
+             kartu itu sendiri -- kartu tetap terang/var(--panel-alt) seperti
+             semula) supaya kartu-kartu yang sebelumnya cuma dipisahkan garis
+             tipis + margin kecil sekarang kelihatan jelas terpisah satu sama
+             lain sebagai panel yang "melayang". position:relative + isolation
+             wajib di parent supaya ::before (z-index:-1) cuma nyembunyi di
+             belakang kartu ini sendiri, bukan ketiban ke bawah kartu lain di
+             atasnya lewat stacking context global. Jarak antar kartu (margin-
+             bottom) diperbesar dari 14px -> 26px supaya "halo" blur tiap
+             kartu kelihatan penuh & gak kepotong/numpuk sama kartu di
+             bawahnya. */
+          .lp-card{
+            position:relative;
+            isolation:isolate;
+            background:var(--panel-alt);
+            border:1px solid var(--border-soft);
+            border-radius:10px;
+            padding:16px;
+            margin-bottom:26px;
+          }
+          .lp-card::before{
+            content:'';
+            position:absolute;
+            inset:-14px;
+            background:rgba(0,0,0,.55);
+            filter:blur(24px);
+            border-radius:20px;
+            z-index:-1;
+            pointer-events:none;
+          }
           .lp-card-compact{padding:12px 16px;}
           .lp-card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
           .lp-card-desc{margin:-4px 0 14px;font-size:11.5px;line-height:1.55;color:var(--text-muted);}
