@@ -257,5 +257,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/permintaan-reset-password/realtime', [AdminPermintaanResetPasswordController::class, 'realtime'])->name('permintaan-reset-password.realtime');
     Route::patch('/permintaan-reset-password/{permintaanResetPassword}/setujui', [AdminPermintaanResetPasswordController::class, 'setujui'])->name('permintaan-reset-password.setujui');
     Route::patch('/permintaan-reset-password/{permintaanResetPassword}/tolak', [AdminPermintaanResetPasswordController::class, 'tolak'])->name('permintaan-reset-password.tolak');
+    Route::delete('/permintaan-reset-password/riwayat', [AdminPermintaanResetPasswordController::class, 'hapusRiwayat'])->name('permintaan-reset-password.hapus-riwayat');
     Route::delete('/reset-data-laporan', [ResetDataLaporanController::class, 'destroy'])->name('reset-data-laporan.destroy');
 });

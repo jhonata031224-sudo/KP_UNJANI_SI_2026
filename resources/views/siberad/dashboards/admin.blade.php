@@ -3487,7 +3487,13 @@
       {{-- ===== PERMINTAAN RESET PASSWORD ===== --}}
       <section class="tab-panel" data-tab-panel="reset-password">
         <div class="panel">
-          <div class="panel-head"><div><h2>Permintaan Ganti Password</h2><p>Permintaan ganti kata sandi yang dikirim pengguna lewat menu "Pengaturan Akun".</p></div></div>
+          <div class="panel-head">
+            <div><h2>Permintaan Ganti Password</h2><p>Permintaan ganti kata sandi yang dikirim pengguna lewat menu "Pengaturan Akun".</p></div>
+            <button type="button" class="btn btn-ghost-red btn-sm" id="btnHapusRiwayatResetPassword">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
+              Hapus Riwayat
+            </button>
+          </div>
           <div class="table-toolbar">
             <div class="table-search-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
@@ -3707,6 +3713,28 @@
           </form>
         </div>
       </div>
+      {{-- ===== KONFIRMASI HAPUS RIWAYAT PERMINTAAN GANTI PASSWORD ===== --}}
+      <div class="confirm-overlay" id="hapusRiwayatResetPasswordOverlay">
+        <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="hapusRiwayatResetPasswordTitle">
+          <div class="confirm-icon">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
+          </div>
+          <h3 id="hapusRiwayatResetPasswordTitle">Hapus Riwayat Permintaan Ganti Password?</h3>
+          <p>Semua permintaan yang sudah <strong>Disetujui</strong> atau <strong>Ditolak</strong> akan dihapus permanen. Permintaan yang masih menunggu keputusan tidak akan ikut terhapus.</p>
+          <form id="formHapusRiwayatResetPassword" method="POST" action="{{ route('admin.permintaan-reset-password.hapus-riwayat') }}">
+            @csrf @method('DELETE')
+            <div class="confirm-actions">
+              <button type="button" class="btn" id="hapusRiwayatResetPasswordBatal">Batal</button>
+              <button type="submit" class="btn btn-ghost-red">Ya, Hapus</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <script>
+        document.getElementById('btnHapusRiwayatResetPassword')?.addEventListener('click', () => document.getElementById('hapusRiwayatResetPasswordOverlay')?.classList.add('open'));
+        document.getElementById('hapusRiwayatResetPasswordBatal')?.addEventListener('click', () => document.getElementById('hapusRiwayatResetPasswordOverlay')?.classList.remove('open'));
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusRiwayatResetPasswordOverlay')?.classList.remove('open'); });
+      </script>
       <script>
         function bukaSetujuiResetPassword(button) {
           var id = button.dataset.id, nama = button.dataset.nama;
