@@ -2720,35 +2720,22 @@
           @keyframes lpFadeIn{ from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:none;} }
           .lp-tab-desc{font-size:12.5px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;}
 
-          /* Backdrop blur hitam di BELAKANG tiap kartu (bukan mengubah warna
-             kartu itu sendiri -- kartu tetap terang/var(--panel-alt) seperti
-             semula) supaya kartu-kartu yang sebelumnya cuma dipisahkan garis
-             tipis + margin kecil sekarang kelihatan jelas terpisah satu sama
-             lain sebagai panel yang "melayang". position:relative + isolation
-             wajib di parent supaya ::before (z-index:-1) cuma nyembunyi di
-             belakang kartu ini sendiri, bukan ketiban ke bawah kartu lain di
-             atasnya lewat stacking context global. Jarak antar kartu (margin-
-             bottom) diperbesar dari 14px -> 26px supaya "halo" blur tiap
-             kartu kelihatan penuh & gak kepotong/numpuk sama kartu di
-             bawahnya. */
+          /* Percobaan pertama pakai backdrop blur hitam (::before blur+inset
+             negatif) ternyata malah bikin kartu-kartu yang berdempetan
+             "numpuk" jadi abu-abu kotor -- bukan kelihatan terpisah rapi.
+             Diganti ke pola yang SAMA persis dengan ".panel" (dipakai di
+             semua kartu Cadangan Data / Buat Cadangan Baru / Riwayat Backup
+             -- lihat dash-styles.blade.php): kartu solid var(--panel) +
+             box-shadow biasa (bukan blur melayang di belakang), supaya
+             gaya pemisahan antar kartu konsisten di seluruh dashboard, bukan
+             cuma di tab Konten Landing ini. */
           .lp-card{
-            position:relative;
-            isolation:isolate;
-            background:var(--panel-alt);
+            background:linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--panel);
             border:1px solid var(--border-soft);
-            border-radius:10px;
-            padding:16px;
-            margin-bottom:26px;
-          }
-          .lp-card::before{
-            content:'';
-            position:absolute;
-            inset:-14px;
-            background:rgba(0,0,0,.55);
-            filter:blur(24px);
-            border-radius:20px;
-            z-index:-1;
-            pointer-events:none;
+            border-radius:12px;
+            box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 10px 30px rgba(0,0,0,.25);
+            padding:18px;
+            margin-bottom:20px;
           }
           .lp-card-compact{padding:12px 16px;}
           .lp-card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
