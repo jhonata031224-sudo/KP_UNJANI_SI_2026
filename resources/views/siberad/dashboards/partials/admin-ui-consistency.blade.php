@@ -70,7 +70,7 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
 .main .content [data-tab-panel="backup"] .backup-extra-actions > form > button{ min-width:74px !important;box-sizing:border-box !important;text-align:center !important;justify-content:center !important; }
 .main .content [data-tab-panel="backup"] .backup-upload-panel{display:none !important;}
 .main .content [data-tab-panel="backup"] .backup-history-head{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:14px !important;}
-.main .content [data-tab-panel="backup"] .backup-upload-trigger{flex-shrink:0;}
+.main .content [data-tab-panel="backup"] .backup-upload-trigger{flex-shrink:0;font-weight:700!important;}
 @media(max-width:640px){
   .main .content [data-tab-panel="backup"] .backup-extra-actions{gap:6px !important;}
   .main .content [data-tab-panel="backup"] .backup-extra-actions > a,
@@ -89,7 +89,7 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
 .siberad-backup-upload-drop{border:1px dashed var(--border-strong);border-radius:11px;padding:18px;background:var(--panel-alt);}
 .siberad-backup-upload-drop input[type="file"]{width:100%;box-sizing:border-box;color:var(--text);font-size:12px;}
 .siberad-backup-upload-meta{margin-top:9px;font-size:11px;color:var(--text-dim);line-height:1.5;}
-.siberad-backup-upload-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px;}
+.siberad-backup-upload-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px;}.siberad-backup-upload-actions .btn{font-weight:700!important;}
 @media(max-width:600px){.siberad-backup-upload-modal{padding:14px;}.siberad-backup-upload-card{padding:18px;}.siberad-backup-upload-actions{flex-direction:column-reverse;}.siberad-backup-upload-actions .btn{width:100%;}}
 </style>
 

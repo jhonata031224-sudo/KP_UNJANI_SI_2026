@@ -592,7 +592,7 @@
      bawah -- input asli disembunyikan visual tapi tetap berfungsi. ===== */
   .siberad-file-wrap{display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:100%;}
   .siberad-file-wrap input[type="file"]{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
-  .siberad-file-trigger{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-weight:600;font-size:11px;letter-spacing:.03em;text-transform:uppercase;padding:9px 15px;border-radius:8px;border:1px solid var(--border);background:var(--panel-alt);color:var(--text);cursor:pointer;transition:border-color .15s ease,background-color .15s ease,color .15s ease;flex-shrink:0;}
+  .siberad-file-trigger{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-weight:700;font-size:11px;letter-spacing:.03em;text-transform:uppercase;padding:9px 15px;border-radius:8px;border:1px solid var(--border);background:var(--panel-alt);color:var(--text);cursor:pointer;transition:border-color .15s ease,background-color .15s ease,color .15s ease;flex-shrink:0;}
   .siberad-file-trigger svg{width:14px;height:14px;stroke:currentColor;flex-shrink:0;}
   .siberad-file-trigger:hover{border-color:var(--gold-bright);background:var(--panel);}
   .siberad-file-trigger:active{transform:scale(.97);}
