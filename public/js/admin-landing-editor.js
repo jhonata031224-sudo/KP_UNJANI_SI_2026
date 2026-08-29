@@ -146,12 +146,12 @@
       style.textContent = `
         .landing-file-picker{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:0;min-height:42px}
         .landing-file-picker input[type=file]{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;overflow:hidden!important;pointer-events:none!important}
-        .landing-file-button{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;border:1px solid var(--border-strong,#cbd5e1);background:var(--panel,#fff);color:var(--text,#17212b);min-width:128px!important;height:40px!important;box-sizing:border-box!important;margin:0!important;border-radius:9px;padding:0 14px;font:600 12px/40px var(--body,inherit);cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.04);transition:.15s ease}
+        .landing-file-button{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;border:1px solid var(--border-strong,#cbd5e1);background:var(--panel,#fff);color:var(--text,#17212b);min-width:112px!important;height:34px!important;box-sizing:border-box!important;margin:0!important;border-radius:8px;padding:0 12px;font:600 11.5px/34px var(--body,inherit);cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.04);transition:.15s ease}
         .landing-file-button:hover{border-color:var(--gold,#c97a00);color:var(--gold,#c97a00);background:var(--gold-dim,rgba(201,122,0,.08))}
         .landing-file-button:focus-visible{outline:3px solid rgba(201,122,0,.16);outline-offset:2px}
-        .landing-file-button svg{display:block!important;width:16px!important;height:16px!important;flex:0 0 16px!important;margin:0!important;vertical-align:middle!important}
-        .landing-file-button span{display:block!important;height:16px!important;line-height:16px!important;margin:0!important;padding:0!important;white-space:nowrap!important;vertical-align:middle!important}
-        .landing-file-name{display:inline-flex!important;align-items:center!important;height:40px!important;min-height:40px!important;margin:0!important;padding:0!important;color:var(--text-muted,#64748b);font-size:11.5px;min-width:0;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .landing-file-button svg{display:block!important;width:14px!important;height:14px!important;flex:0 0 14px!important;margin:0!important;vertical-align:middle!important}
+        .landing-file-button span{display:block!important;height:14px!important;line-height:14px!important;margin:0!important;padding:0!important;white-space:nowrap!important;vertical-align:middle!important}
+        .landing-file-name{display:inline-flex!important;align-items:center!important;height:34px!important;min-height:34px!important;margin:0!important;padding:0!important;color:var(--text-muted,#64748b);font-size:11px;min-width:0;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       `;
       document.head.appendChild(style);
     }
@@ -188,12 +188,23 @@
       // server (hasCurrent) dan belum ada file baru yang dipilih user,
       // keterangan "Belum ada file dipilih" disembunyikan -- soalnya
       // sebenarnya SUDAH ada file yang terpakai, cuma belum diganti.
-      name.textContent = input.files && input.files[0] ? input.files[0].name : (hasCurrent ? '' : 'Belum ada file dipilih');
+      const updateName = () => {
+        const text = input.files && input.files[0] ? input.files[0].name : (hasCurrent ? '' : 'Belum ada file dipilih');
+        name.textContent = text;
+        // Kalau teksnya kosong, span ini HARUS benar-benar dihapus dari
+        // flow (bukan cuma dikosongkan) -- soalnya .landing-file-picker
+        // pakai `gap` antar child, jadi span kosong tetap makan lebar
+        // semu (gap) di sisi kanan tombol & bikin tombol kelihatan
+        // "nempel kiri" alih-alih benar-benar center.
+        // .landing-file-name punya display:inline-flex!important di CSS
+        // injeksi di atas, jadi override-nya juga wajib pakai !important
+        // lewat setProperty -- style.display biasa akan kalah/diabaikan.
+        name.style.setProperty('display', text ? 'inline-flex' : 'none', 'important');
+      };
+      updateName();
       wrap.appendChild(name);
 
-      input.addEventListener('change', () => {
-        name.textContent = input.files && input.files[0] ? input.files[0].name : (hasCurrent ? '' : 'Belum ada file dipilih');
-      });
+      input.addEventListener('change', updateName);
     });
   }
 

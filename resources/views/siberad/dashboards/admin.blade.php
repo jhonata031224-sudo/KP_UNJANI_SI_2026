@@ -2807,7 +2807,7 @@
           .lp-current-image{display:block;border-radius:9px;border:1px solid var(--border-soft);}
           .lp-image-placeholder{box-sizing:border-box;border-radius:12px;border:2px dashed var(--border-strong);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:14px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
           .lp-image-placeholder svg{display:block;flex-shrink:0;}
-          .lp-delete-img-btn{align-self:center;min-height:38px;height:38px;padding:0 16px;font-size:12px;}
+          .lp-delete-img-btn{align-self:center;min-height:32px;height:32px;padding:0 13px;font-size:11px;}
           /* BG (Gambar Latar Beranda): rasio landscape, mengikuti bentuk asli
              foto latar (bukan kotak seperti logo) -- object-fit:cover supaya
              foto memenuhi kotak tanpa gepeng/distorsi. Ukuran diperbesar
