@@ -2611,7 +2611,7 @@
                   <div class="form-grid">
                     <div class="form-field full">
                       <label for="lpTentangDeskripsi">Deskripsi Tentang (pisahkan paragraf dengan baris kosong)</label>
-                      <textarea id="lpTentangDeskripsi" name="tentang_deskripsi" rows="5" data-lp="tentang_deskripsi">{{ old('tentang_deskripsi', $pengaturan->tentang_deskripsi) }}</textarea>
+                      <textarea id="lpTentangDeskripsi" name="tentang_deskripsi" rows="10" data-lp="tentang_deskripsi">{{ old('tentang_deskripsi', $pengaturan->tentang_deskripsi) }}</textarea>
                     </div>
                   </div>
                 </div>
@@ -2661,23 +2661,27 @@
                   </div>
                 </div>
 
-                <div class="lp-card-title" style="margin-top:4px;">Sosial Media</div>
-                <p class="lp-card-desc" style="margin-top:-4px;">Label &amp; tautan akun sosial media yang tampil di bagian footer landing page.</p>
-                @foreach ((old('sosial_media') ?? $pengaturan->sosial_media ?? []) as $i => $sosial)
-                  <div class="lp-card lp-card-compact">
-                    <input type="hidden" name="sosial_media[{{ $i }}][platform]" value="{{ is_array($sosial) ? $sosial['platform'] : '' }}" data-lp="sosial_platform_{{ $i }}">
-                    <div class="form-grid">
-                      <div class="form-field">
-                        <label>Label ({{ ucfirst(is_array($sosial) ? $sosial['platform'] : '') }})</label>
-                        <input name="sosial_media[{{ $i }}][label]" type="text" value="{{ is_array($sosial) ? $sosial['label'] : '' }}" data-lp="sosial_label_{{ $i }}">
+                <div class="lp-card">
+                  <div class="lp-card-title">Sosial Media</div>
+                  <p class="lp-card-desc">Label &amp; tautan akun sosial media yang tampil di bagian footer landing page.</p>
+                  <div class="lp-sosmed-list">
+                    @foreach ((old('sosial_media') ?? $pengaturan->sosial_media ?? []) as $i => $sosial)
+                      <div class="lp-sosmed-row">
+                        <input type="hidden" name="sosial_media[{{ $i }}][platform]" value="{{ is_array($sosial) ? $sosial['platform'] : '' }}" data-lp="sosial_platform_{{ $i }}">
+                        <div class="form-grid">
+                          <div class="form-field">
+                            <label>Label ({{ ucfirst(is_array($sosial) ? $sosial['platform'] : '') }})</label>
+                            <input name="sosial_media[{{ $i }}][label]" type="text" value="{{ is_array($sosial) ? $sosial['label'] : '' }}" data-lp="sosial_label_{{ $i }}">
+                          </div>
+                          <div class="form-field">
+                            <label>URL</label>
+                            <input name="sosial_media[{{ $i }}][url]" type="url" value="{{ is_array($sosial) ? $sosial['url'] : '' }}" placeholder="https://..." data-lp="sosial_url_{{ $i }}">
+                          </div>
+                        </div>
                       </div>
-                      <div class="form-field">
-                        <label>URL</label>
-                        <input name="sosial_media[{{ $i }}][url]" type="url" value="{{ is_array($sosial) ? $sosial['url'] : '' }}" placeholder="https://..." data-lp="sosial_url_{{ $i }}">
-                      </div>
-                    </div>
+                    @endforeach
                   </div>
-                @endforeach
+                </div>
               </div>
 
               <div class="lp-form-actions">
@@ -2780,6 +2784,14 @@
           .lp-card-compact{padding:12px 16px;}
           .lp-card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
           .lp-card-desc{margin:-4px 0 14px;font-size:11.5px;line-height:1.55;color:var(--text-muted);}
+          /* Sosial Media: dulu tiap platform (Instagram/TikTok/dst) jadi
+             kartu ".lp-card" terpisah sendiri-sendiri (numpuk banyak kartu
+             kecil) -- sekarang digabung jadi SATU kartu "Sosial Media" berisi
+             beberapa baris yang cuma dipisahkan garis tipis, bukan kotak
+             kartu masing-masing. */
+          .lp-sosmed-row{padding:16px 0;border-top:1px solid var(--border-soft);}
+          .lp-sosmed-row:first-child{padding-top:0;border-top:none;}
+          .lp-sosmed-row:last-child{padding-bottom:0;}
           .lp-hero-image-row{display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:0;text-align:center;}
           .lp-hero-image-row .landing-file-picker{align-self:center;flex:0 0 auto;min-width:200px;}
           /* Tombol "Pilih File", preview gambar, & tombol "Hapus Latar
