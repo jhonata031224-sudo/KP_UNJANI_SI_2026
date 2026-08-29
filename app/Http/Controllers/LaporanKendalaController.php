@@ -328,10 +328,23 @@ class LaporanKendalaController extends Controller
 
     public function destroy(Request $request, LaporanKendala $laporanKendala): RedirectResponse
     {
-        $user = $request->user()->load('satuan');
-        $satuan = $user->satuan;
+        $user       = $request->user()->load('satuan');
+        $satuan     = $user->satuan;
+        $kodeSatuan = strtoupper($satuan->kode ?? '');
+        $isDanpus   = $kodeSatuan === 'DANPUS';
         abort_unless($satuan, 403);
-        abort_unless((int) $laporanKendala->satuan_id === (int) $satuan->id, 403);
+
+        if ($isDanpus) {
+            // Danpus hanya boleh menghapus arsip (status Dikonfirmasi).
+            abort_unless(
+                $laporanKendala->status === LaporanKendala::STATUS_DIKONFIRMASI,
+                403,
+                'Danpus hanya dapat menghapus kendala yang sudah diarsipkan.'
+            );
+        } else {
+            // Kasansi hanya boleh menghapus miliknya sendiri.
+            abort_unless((int) $laporanKendala->satuan_id === (int) $satuan->id, 403);
+        }
 
         if ($laporanKendala->lampiran_path) {
             Storage::disk('public')->delete($laporanKendala->lampiran_path);
@@ -339,7 +352,11 @@ class LaporanKendalaController extends Controller
         $perihal = $laporanKendala->perihal;
         $laporanKendala->delete();
 
-        ActivityLog::catat('laporan-kendala.delete', "Menghapus laporan kendala \"{$perihal}\" dari riwayat.", $user, [
+        $catatan = $isDanpus
+            ? "Danpus menghapus arsip kendala \"{$perihal}\" dari riwayat."
+            : "Menghapus laporan kendala \"{$perihal}\" dari riwayat.";
+
+        ActivityLog::catat('laporan-kendala.delete', $catatan, $user, [
             'laporan_kendala_id' => $laporanKendala->id,
         ]);
 
