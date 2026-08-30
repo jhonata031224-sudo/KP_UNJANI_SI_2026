@@ -346,9 +346,16 @@ class DashboardController
         // lanjuti (Danpus/Wadan) sudah ditangani di cabang $modePimpinan di
         // atas, jadi TIDAK bercampur dengan dashboard non-pimpinan ini.
         $isKasansi = in_array($kode, Satuan::KODE_KOTAMA, true);
-        $kendalaTerkirim = $isKasansi
+        // Dipisah 2: yang masih aktif (belum dikonfirmasi Danpus) tetap di
+        // tab "Kirim Laporan", sedangkan yang statusnya sudah Dikonfirmasi
+        // otomatis pindah ke tab "Arsip Kendala" -- SENGAJA dipisah dari
+        // $laporanTerkirim/tab "Riwayat Laporan" di bawah karena itu untuk
+        // model Laporan biasa, bukan LaporanKendala.
+        $kendalaTerkirimSemua = $isKasansi
             ? LaporanKendala::with(['tujuanSatuan', 'tembusans.satuan'])->where('satuan_id', $satuan->id)->latest()->get()
             : collect();
+        $kendalaTerkirim = $kendalaTerkirimSemua->where('status', '!=', LaporanKendala::STATUS_DIKONFIRMASI)->values();
+        $kendalaArsip = $kendalaTerkirimSemua->where('status', LaporanKendala::STATUS_DIKONFIRMASI)->values();
         $kodeTembusanKasansi = Satuan::kodeTembusanKasansi();
         // Pilihan checkbox "Tembusan ke" di form Kirim Laporan (dropdown 4
         // Satlak + 4 Sdir), cuma perlu disiapkan buat Kasansi.
@@ -368,6 +375,6 @@ class DashboardController
                 ->get()
             : collect();
 
-        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','kendalaTerkirim','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
+        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','kendalaTerkirim','kendalaArsip','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
     }
 }
