@@ -14,6 +14,9 @@
 @include('siberad.dashboards.partials.responsive-content-alignment')
 @include('siberad.dashboards.partials.sidebar-header-surface')
 @include('siberad.dashboards.partials.danpus-permintaan-arsip-mode')
-@include('siberad.dashboards.partials.danpus-history-detail-fix')
-@include('siberad.dashboards.partials.danpus-history-status-filter-match')
+{{-- danpus-history-detail-fix & danpus-history-status-filter-match DIHAPUS:
+     keduanya khusus struktur TABEL Riwayat lama (#status .clean-table /
+     #riwayat .dtbl). Riwayat Pimpinan sekarang kartu (#riwayat, lihat
+     danpus-permintaan-arsip-mode -> initRiwayatCardFilter/syncRiwayatCards),
+     jadi kedua partial itu inert / malah bikin konflik <select> filter. --}}
 @include('siberad.dashboards.partials.danpus-kendala-kasansi-realtime')

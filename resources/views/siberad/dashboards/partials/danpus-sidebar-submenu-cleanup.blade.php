@@ -149,7 +149,11 @@
       var isRejectedFinal=isFinal&&decided&&finalStatus==='ditolak';
       var isApprovedFinal=isFinal&&decided&&finalStatus==='selesai';
       var isCancelledStage=isDibatalkan&&index>=progress;
-      var isLateStage=isTerlambat&&index===progress;
+      // Terlambat = keadaan TERMINAL (deadline lewat, laporan gak pernah
+      // masuk) -- cat merah/silang X-nya diterusin dari tahap berjalan
+      // sampai "Laporan Selesai", sama kayak Dibatalkan (index>=progress),
+      // bukan cuma nandain 1 tahap terus sisanya keliatan "Menunggu".
+      var isLateStage=isTerlambat&&index>=progress;
       var isRevisiStage=index===progress&&isPendingRevisi&&!isCancelledStage&&!isLateStage;
       var isMenungguStage=index===progress&&finalRow&&!decided&&!isPendingRevisi&&!isCancelledStage&&!isLateStage;
       if(index<progress&&!isFinal)item.classList.add('is-done');
@@ -178,8 +182,8 @@
       }else if(isLateStage){
         state.textContent='Terlambat';
       }else if(isFinal){
-        if(decided&&finalStatus==='selesai') state.textContent='Selesai · Disetujui';
-        else if(decided&&finalStatus==='ditolak') state.textContent='Selesai · Ditolak';
+        if(decided&&finalStatus==='selesai') state.textContent='Disetujui';
+        else if(decided&&finalStatus==='ditolak') state.textContent='Ditolak';
         else state.textContent='Menunggu';
       }else if(index===progress&&finalRow&&!decided){
         state.textContent=isPendingRevisi?'Revisi':'Menunggu';
@@ -209,7 +213,11 @@
     stages.forEach(function(stage,index){
       var item=document.createElement('article');item.className='danpus-activity-item';
       var isCancelledStage=isDibatalkan&&index>=progress;
-      var isLateStage=isTerlambat&&index===progress;
+      // Terlambat = keadaan TERMINAL (deadline lewat, laporan gak pernah
+      // masuk) -- cat merah/silang X-nya diterusin dari tahap berjalan
+      // sampai "Laporan Selesai", sama kayak Dibatalkan (index>=progress),
+      // bukan cuma nandain 1 tahap terus sisanya keliatan "Menunggu".
+      var isLateStage=isTerlambat&&index>=progress;
       if(index<progress)item.classList.add('is-done');
       if(index===progress&&!isCancelledStage&&!isLateStage)item.classList.add('is-current');
       if(isCancelledStage||isLateStage)item.classList.add('is-rejected');

@@ -563,6 +563,10 @@
   .toast.error{border-color:rgba(198,40,40,.35);}
   .toast.error .toast-icon{background:var(--red-dim);color:var(--red);}
   .toast.error .toast-bar{background:var(--red);}
+  .toast.info{border-color:rgba(183,121,0,.4);}
+  .toast.info .toast-icon{background:var(--amber-dim,rgba(183,121,0,.14));color:var(--amber,#b77900);}
+  .toast.info .toast-bar{background:var(--amber,#b77900);}
+  .toast.info .toast-label{color:var(--amber,#b77900);}
   .toast-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .toast-icon svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.4;}
   .toast-body{display:flex;flex-direction:column;gap:2px;min-width:0;}
@@ -646,7 +650,7 @@
     var icon = type==='success'
       ? '<path d="M20 6L9 17l-5-5"></path>'
       : '<line x1="12" y1="8" x2="12" y2="13"></line><circle cx="12" cy="16.5" r=".6" fill="currentColor" stroke="none"></circle><circle cx="12" cy="12" r="9.3"></circle>';
-    var label = type==='success' ? 'Berhasil' : 'Gagal';
+    var label = type==='success' ? 'Berhasil' : (type==='info' ? 'Info' : 'Gagal');
     toast.innerHTML = '<span class="toast-icon"><svg viewBox="0 0 24 24">'+icon+'</svg></span><span class="toast-body"><span class="toast-label"></span><span class="toast-text"></span></span><span class="toast-bar"></span>';
     toast.querySelector('.toast-label').textContent = label;
     toast.querySelector('.toast-text').textContent = message;

@@ -202,15 +202,11 @@
       sectionId:'masuk',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari pengirim atau perihal...',emptyText:'Tidak ada laporan masuk yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan masuk.',
       filters:[{label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]}],sortable:true
     });
-    initReportFilter({
-      sectionId:'status',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari satuan atau perihal...',emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan.',
-      filters:[{label:'Filter status',attr:'reportStatus',options:[{value:'all',label:'Semua Status'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'}]}],sortable:true,
-      prepareRow:function(row){
-        var raw=(row.querySelector('td:nth-child(4)')?.textContent||'').trim().toLowerCase();
-        var isSelesai=raw.includes('selesai');
-        row.dataset.reportStatus=raw.includes('terl')?'Terlambat':raw.includes('batal')?'Dibatalkan':raw.includes('tolak')?(isSelesai?'Selesai · Ditolak':'Ditolak'):(raw.includes('setuj')||raw.includes('diterima'))?(isSelesai?'Selesai · Disetujui':'Disetujui'):''
-      }
-    });
+    // Riwayat Laporan Pimpinan dulu section #status berupa <table class="clean-table">.
+    // Sekarang sudah jadi #riwayat berupa grid KARTU (lihat laporan-pimpinan.blade.php)
+    // -- search + filter status + sort-nya ditangani initRiwayatCardFilter() di
+    // danpus-permintaan-arsip-mode.blade.php (numpang gaya .rpt-filter-* yang sama).
+    // initReportFilter di sini cuma jalan buat <table>, jadi blok lama dibuang.
     initReportFilter({
       sectionId:'kendala-kasansi',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari satuan atau perihal...',emptyText:'Tidak ada laporan kendala yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan kendala.',
       filters:[
@@ -219,21 +215,23 @@
       ],sortable:true,
       prepareRow:function(row){row.dataset.kendalaStatus=(row.querySelector('td:nth-child(4)')?.textContent||'').trim();}
     });
-    initReportFilter({
-      sectionId:'permintaan-laporan',tableSelector:'.request-table',anchorSelector:'.request-head',searchPlaceholder:'Cari perihal atau satuan tujuan...',emptyText:'Tidak ada permintaan laporan yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada permintaan laporan.',showEmpty:false,
-      filters:[{label:'Filter status',attr:'status',options:[{value:'all',label:'Semua Status'},{value:'Sedang diproses',label:'Sedang diproses'},{value:'Menunggu',label:'Menunggu'},{value:'Revisi',label:'Revisi'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'}]}],sortable:true
-    });
+    // "Permintaan Laporan" milik Pimpinan sudah bukan <table> lagi (sekarang
+    // grid kartu, lihat laporan-pimpinan.blade.php) -- initReportFilter di
+    // sini cuma jalan buat struktur <table>, jadi search+filter+sort-nya
+    // sekarang ditangani initCardFilter() sendiri di
+    // danpus-permintaan-arsip-mode.blade.php (numpang gaya .rpt-filter-*
+    // yang sama biar tetap "1 sistem").
 
     var filterPrioritas=[{label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]}];
     initReportFilter({
       sectionId:'riwayat',tableSelector:'.dtbl',anchorSelector:'.panel-head',searchPlaceholder:'Cari perihal atau tujuan...',emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan.',
       filters:[
-        {label:'Filter status',attr:'reportStatus',options:[{value:'all',label:'Semua Status'},{value:'Sedang diproses',label:'Sedang diproses'},{value:'Menunggu',label:'Menunggu'},{value:'Revisi',label:'Revisi'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Selesai · Ditolak',label:'Selesai · Ditolak'},{value:'Selesai · Disetujui',label:'Selesai · Disetujui'}]},
+        {label:'Filter status',attr:'reportStatus',options:[{value:'all',label:'Semua Status'},{value:'Sedang diproses',label:'Sedang diproses'},{value:'Menunggu',label:'Menunggu'},{value:'Revisi',label:'Revisi'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Ditolak',label:'Ditolak'},{value:'Disetujui',label:'Disetujui'}]},
         filterPrioritas[0]
       ],sortable:true,
       prepareRow:function(row){
         var raw=(row.querySelector('td:nth-child(4)')?.textContent||'').trim().toLowerCase();
-        row.dataset.reportStatus=raw.includes('terl')?'Terlambat':raw.includes('batal')?'Dibatalkan':raw.includes('tolak')?'Selesai · Ditolak':(raw.includes('setuj')||raw.includes('diterima'))?'Selesai · Disetujui':raw.includes('revisi')?'Revisi':raw.includes('menunggu')?'Menunggu':(raw.includes('progres')||raw.includes('proses'))?'Sedang diproses':'Sedang diproses';
+        row.dataset.reportStatus=raw.includes('terl')?'Terlambat':raw.includes('batal')?'Dibatalkan':raw.includes('tolak')?'Ditolak':(raw.includes('setuj')||raw.includes('diterima'))?'Disetujui':raw.includes('revisi')?'Revisi':raw.includes('menunggu')?'Menunggu':(raw.includes('progres')||raw.includes('proses'))?'Sedang diproses':'Sedang diproses';
       }
     });
     initReportFilter({

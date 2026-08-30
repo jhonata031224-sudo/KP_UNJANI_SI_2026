@@ -215,8 +215,51 @@ class DashboardController
                 ->get()
             : PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan','laporans','tasks'])
                 ->where('tujuan_satuan_id', $satuan->id)
-                ->whereIn('status', [PermintaanLaporan::STATUS_BELUM, PermintaanLaporan::STATUS_DIKERJAKAN, PermintaanLaporan::STATUS_PEMERIKSAAN])
+                // STATUS_DIBATALKAN ikut supaya kartu yang dibatalkan Pimpinan
+                // TETAP kelihatan satuan (read-only/locked), bukan ilang gitu
+                // aja -- sejajar dengan dashboard Pimpinan yang juga masih
+                // nampilin Dibatalkan di daftar aktif (bisa dibuka lagi lewat
+                // Edit Deadline). Baru pindah ke Riwayat kalau Pimpinan
+                // arsipkan manual (archived_at keisi).
+                ->whereIn('status', [PermintaanLaporan::STATUS_BELUM, PermintaanLaporan::STATUS_DIKERJAKAN, PermintaanLaporan::STATUS_PEMERIKSAAN, PermintaanLaporan::STATUS_DIBATALKAN])
+                // Terlambat yang sudah diarsipkan Pimpinan (lihat
+                // $riwayatLaporan di bawah) sengaja gak dobel nongol di sini
+                // lagi -- raw status-nya bisa aja masih "Sedang dikerjakan"
+                // (isTerlambat() dihitung live, bukan status tersimpan).
+                ->whereNull('archived_at')
                 ->latest('deadline_at')
+                ->get();
+        // Riwayat Laporan Pimpinan (#riwayat) -- KARTU read-only (partial
+        // permintaan-laporan-pimpinan-card mode riwayatMode), sejajar dengan
+        // Riwayat Laporan Satuan. Isinya SEMUA permintaan Danpus/Wadan yang
+        // sudah diarsipkan: keputusan akhir Disetujui/Ditolak (archived_at
+        // keisi otomatis di LaporanController::updateStatus) + Terlambat/
+        // Dibatalkan yang diarsipkan manual. Global scope hideArchivedOn...
+        // di-bypass di sini (kalau tidak, whereNotNull('archived_at') selalu
+        // kosong pas request /dashboard). Realtime-nya lewat endpoint
+        // permintaan-laporan.realtime?history=1.
+        $riwayatLaporanPimpinan = $modePimpinan
+            ? PermintaanLaporan::withoutGlobalScope('hideArchivedOnPimpinanDashboard')
+                ->with(['pembuat.satuan','tujuanSatuan','laporan','laporans','tasks.laporans'])
+                ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS','WADAN']))
+                ->whereNotNull('archived_at')
+                ->latest('archived_at')
+                ->get()
+            : collect();
+        // Riwayat Laporan (satuan) -- tampilannya SAMA persis kartu Permintaan
+        // Laporan (lihat permintaan-laporan-item.blade.php, yang otomatis
+        // render mode read-only "Lihat Progres" begitu laporan_id keisi ATAU
+        // Terlambat/Dibatalkan) -- isinya SEMUA permintaan yang sudah
+        // diarsipkan: (1) Selesai (Disetujui/Ditolak Pimpinan, archived_at
+        // keisi otomatis di LaporanController::updateStatus()), (2) Terlambat/
+        // Dibatalkan yang SENGAJA diarsipkan Pimpinan (bukan diperpanjang
+        // deadline-nya) lewat PermintaanLaporanController::archive().
+        $riwayatLaporan = $modePimpinan
+            ? collect()
+            : PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan','laporans','tasks'])
+                ->where('tujuan_satuan_id', $satuan->id)
+                ->whereNotNull('archived_at')
+                ->latest('archived_at')
                 ->get();
         $satuanPermintaanLaporan = $modePimpinan
             ? Satuan::whereIn('kode', $kodeSatuanPelaksanaUrut)->get()
@@ -330,7 +373,7 @@ class DashboardController
                 ? LaporanKendala::with(['satuan', 'confirmedBy'])->where('tujuan_satuan_id', $danpusSatuanId)->whereNotNull('confirmed_at')->latest('confirmed_at')->get()
                 : collect();
 
-            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk','kendalaArsip') + ['pengaturan' => Pengaturan::current()]);
+            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporanPimpinan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk','kendalaArsip') + ['pengaturan' => Pengaturan::current()]);
         }
         // Terlambat/Dibatalkan dihitung dari SELURUH permintaan laporan yang
         // ditujukan ke satuan ini, bukan $permintaanLaporan (yang sengaja
@@ -368,6 +411,6 @@ class DashboardController
                 ->get()
             : collect();
 
-        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','kendalaTerkirim','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
+        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','kendalaTerkirim','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
     }
 }

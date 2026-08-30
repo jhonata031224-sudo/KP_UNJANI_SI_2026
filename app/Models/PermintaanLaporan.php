@@ -158,11 +158,31 @@ class PermintaanLaporan extends Model
      */
     public function isSedangRevisi(): bool
     {
-        $terakhir = $this->laporanTerakhir();
+        if ($this->status !== self::STATUS_DIKERJAKAN) {
+            return false;
+        }
 
-        return $this->status === self::STATUS_DIKERJAKAN
-            && $terakhir
-            && str_contains(strtolower($terakhir->status), 'revisi');
+        $terakhir = $this->laporanTerakhir();
+        if (! $terakhir) {
+            return false;
+        }
+
+        $statusTerakhir = strtolower((string) $terakhir->status);
+
+        // Dua jalur yang sama-sama berarti "laporan lagi diulang satuan":
+        // (a) keputusan "Revisi" eksplisit dari Pimpinan (LaporanController::
+        //     updateStatus) -- status laporan terakhir mengandung "revisi".
+        // (b) laporan final DITOLAK, lalu permintaan dibuka lagi dari Riwayat
+        //     (revisiDariRiwayat -> status balik Sedang dikerjakan + laporan_id
+        //     direset null). Status laporannya bisa jadi masih "Ditolak" kalau
+        //     revisi-nya dilakukan sebelum flip status ditambahkan -- makanya
+        //     tetap dihitung revisi di sini asal laporan_id sudah null.
+        // Checkpoint progres di tengah jalan (STATUS_PROGRES) TIDAK dihitung --
+        // itu alur "lanjut selesaikan task", bukan "kirim ulang laporan".
+        return str_contains($statusTerakhir, 'revisi')
+            || ($this->laporan_id === null
+                && $terakhir->status !== Laporan::STATUS_PROGRES
+                && str_contains($statusTerakhir, 'tolak'));
     }
 
     public function statusTampilan(): string

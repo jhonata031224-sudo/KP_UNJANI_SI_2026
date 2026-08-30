@@ -58,17 +58,85 @@ class PermintaanLaporanController extends Controller
         // sehingga fitur baru tidak perlu menambah route baru yang berisiko
         // bertabrakan dengan alur realtime penerima yang sudah ada.
         if ($this->isPimpinan($request) && $request->boolean('history')) {
-            $items = PermintaanLaporan::with(['pembuat.satuan', 'tujuanSatuan', 'laporan', 'tasks.laporans'])
+            // Riwayat Laporan Pimpinan (#riwayat) sekarang berupa KARTU (sama
+            // seperti Riwayat Satuan) -- dirender di server pakai partial kartu
+            // Pimpinan mode read-only, bukan lagi array buat renderArchivedItem()
+            // (tabel lama). `archived_ids` tetap dikirim supaya
+            // removeArchivedRows() di klien bisa menyingkirkan kartu yang baru
+            // saja diputuskan dari daftar Permintaan Laporan yang masih aktif.
+            $items = PermintaanLaporan::with(['pembuat.satuan', 'tujuanSatuan', 'laporan', 'laporans', 'tasks.laporans'])
                 ->whereNotNull('archived_at')
                 ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS', 'WADAN']))
                 ->latest('archived_at')
-                ->get()
-                ->map(fn (PermintaanLaporan $item) => $this->arsipItemData($item))
-                ->values();
+                ->get();
 
             return response()->json([
-                'items' => $items,
+                'items_html' => view('siberad.dashboards.partials.permintaan-laporan-pimpinan-riwayat-items', [
+                    'permintaanLaporan' => $items,
+                ])->render(),
+                'archived_ids' => $items->pluck('id')->values(),
+                'server_time' => now()->toIso8601String(),
                 'pimpinan_satuan_nama' => $request->user()->satuan?->nama ?: 'DANPUS',
+            ], 200, [
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            ]);
+        }
+
+        // Kartu Permintaan Laporan versi Pimpinan yang MASIH AKTIF (belum
+        // diarsip) -- dikirim sebagai HTML supaya klien tinggal replaceWith()
+        // per kartu tiap siklus poll (status/progres/tugas/tombol ikut
+        // ke-refresh), pola sama dengan sisi satuan (laporan-role-realtime-
+        // sync.blade.php). Penghapusan kartu (diarsip/diputuskan) tetap
+        // ditangani jalur ?history=1 di atas. Incremental: cuma kirim kartu
+        // yang berubah sejak `since` (jam server), plus kartu baru.
+        if ($this->isPimpinan($request) && $request->boolean('pimpinan')) {
+            $sinceRaw = trim((string) $request->query('since', '0'));
+
+            try {
+                $since = ($sinceRaw !== '' && $sinceRaw !== '0')
+                    ? \Illuminate\Support\Carbon::parse($sinceRaw)
+                    : null;
+            } catch (\Throwable $e) {
+                $since = null;
+            }
+
+            $query = PermintaanLaporan::with(['pembuat.satuan', 'tujuanSatuan', 'laporan', 'laporans', 'tasks.laporans'])
+                ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS', 'WADAN']))
+                ->whereNull('archived_at');
+
+            if ($since) {
+                $now = now();
+                $query->where(function ($q) use ($since, $now) {
+                    $q->where('updated_at', '>', $since)
+                        ->orWhereHas('tasks', fn ($t) => $t->where('updated_at', '>', $since))
+                        ->orWhereHas('laporans', fn ($l) => $l->where('updated_at', '>', $since))
+                        // Permintaan yang BARU lewat deadline sejak poll terakhir
+                        // (jadi "Terlambat"). Statusnya properti terhitung
+                        // (deadline_at vs now), updated_at gak berubah -- jadi
+                        // harus dikirim eksplisit di sini biar kartu + modal
+                        // "Lihat Progres" yang lagi kebuka ikut nyusut ke
+                        // tampilan Terlambat tanpa perlu tutup-buka modal.
+                        ->orWhere(function ($t) use ($since, $now) {
+                            $t->whereNull('laporan_id')
+                                ->whereNotIn('status', [
+                                    PermintaanLaporan::STATUS_SELESAI,
+                                    PermintaanLaporan::STATUS_PEMERIKSAAN,
+                                    PermintaanLaporan::STATUS_DIBATALKAN,
+                                ])
+                                ->where('deadline_at', '>', $since)
+                                ->where('deadline_at', '<=', $now);
+                        });
+                });
+            }
+
+            $items = $query->latest('id')->get();
+
+            return response()->json([
+                'items_html' => view('siberad.dashboards.partials.permintaan-laporan-pimpinan-realtime-items', [
+                    'permintaanLaporan' => $items,
+                    'satuan' => $request->user()->loadMissing('satuan')->satuan,
+                ])->render(),
+                'server_time' => now()->toIso8601String(),
             ], 200, [
                 'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             ]);
@@ -85,10 +153,13 @@ class PermintaanLaporanController extends Controller
         $items = PermintaanLaporan::with(['pembuat.satuan', 'laporan', 'laporans', 'tasks'])
             ->where('tujuan_satuan_id', $satuan->id)
             ->whereNull('archived_at')
+            // STATUS_DIBATALKAN ikut -- lihat komentar di DashboardController
+            // (kartu dibatalkan tetap kelihatan satuan, read-only, tidak ilang).
             ->whereIn('status', [
                 PermintaanLaporan::STATUS_BELUM,
                 PermintaanLaporan::STATUS_DIKERJAKAN,
                 PermintaanLaporan::STATUS_PEMERIKSAAN,
+                PermintaanLaporan::STATUS_DIBATALKAN,
             ])
             ->where('id', '>', $since)
             ->orderBy('id')
@@ -116,10 +187,24 @@ class PermintaanLaporanController extends Controller
 
         $laporanMasukCount = max($permintaanMasukCount, $laporanMasukCount);
 
+        // Riwayat Laporan (kartu status disetujui/ditolak/terlambat/dibatalkan)
+        // ikut dikirim di endpoint yang sama supaya cuma butuh 1 fetch per
+        // siklus poll -- daftarnya selalu FULL (bukan pakai since) karena
+        // isinya perlu di-diff penuh: item bisa hilang lagi dari sini kalau
+        // Pimpinan perpanjang deadline-nya (archived_at balik null).
+        $riwayatItems = PermintaanLaporan::with(['pembuat.satuan', 'laporan', 'laporans', 'tasks'])
+            ->where('tujuan_satuan_id', $satuan->id)
+            ->whereNotNull('archived_at')
+            ->latest('archived_at')
+            ->get();
+
         return response()->json([
             'latest_id' => $latestId,
             'items_html' => view('siberad.dashboards.partials.permintaan-laporan-realtime-items', [
                 'permintaanLaporan' => $items,
+            ])->render(),
+            'riwayat_items_html' => view('siberad.dashboards.partials.permintaan-laporan-realtime-items', [
+                'permintaanLaporan' => $riwayatItems,
             ])->render(),
             'laporan_masuk_count' => $laporanMasukCount,
         ], 200, [
@@ -241,11 +326,13 @@ class PermintaanLaporanController extends Controller
             ['permintaan_laporan_ids' => $items->pluck('id')->all()]
         );
 
+        // Riwayat Laporan Pimpinan sekarang kartu -- klien cukup tahu id mana
+        // yang barusan diarsipkan (buat animasi keluar dari daftar aktif), lalu
+        // tarik ulang kartu Riwayat lewat syncRiwayatCards(). Tidak perlu lagi
+        // kirim payload arsipItemData() buat renderArchivedItem() tabel lama.
         return response()->json([
             'message' => $items->count().' permintaan laporan berhasil dipindahkan ke Riwayat Laporan.',
             'archived_ids' => $items->pluck('id')->values(),
-            'items' => $items->map(fn (PermintaanLaporan $item) => $this->arsipItemData($item))->values(),
-            'pimpinan_satuan_nama' => $request->user()->satuan?->nama ?: 'DANPUS',
         ]);
     }
 
@@ -257,9 +344,9 @@ class PermintaanLaporanController extends Controller
             : ($item->status === PermintaanLaporan::STATUS_DIBATALKAN
                 ? 'Dibatalkan'
                 : (str_contains($finalStatus, 'tolak')
-                    ? 'Selesai · Ditolak'
+                    ? 'Ditolak'
                     : (str_contains($finalStatus, 'setuj') || str_contains($finalStatus, 'diterima')
-                        ? 'Selesai · Disetujui'
+                        ? 'Disetujui'
                         : $item->status)));
 
         return [
@@ -267,6 +354,10 @@ class PermintaanLaporanController extends Controller
             'tujuan' => $item->tujuanSatuan?->kode ?: ($item->tujuanSatuan?->nama ?: '-'),
             'tujuan_nama' => $item->tujuanSatuan?->nama ?: '-',
             'tujuan_satuan_id' => $item->tujuan_satuan_id,
+            // Dipakai menu titik-3 "Revisi" di baris Riwayat/Status yang statusnya
+            // "Ditolak" (danpus-permintaan-arsip-mode.blade.php) -- POST ke
+            // /laporan/{id}/status status=Revisi buat buka lagi permintaannya.
+            'laporan_id' => $item->laporan_id,
             'perihal' => $item->perihal,
             'kategori' => $item->kategori ?: '-',
             'prioritas' => $item->prioritas ?: '-',
@@ -324,7 +415,7 @@ class PermintaanLaporanController extends Controller
         return back()->with('status', 'Permintaan laporan ditandai sedang dikerjakan.');
     }
 
-    public function batal(Request $request, PermintaanLaporan $permintaanLaporan): RedirectResponse
+    public function batal(Request $request, PermintaanLaporan $permintaanLaporan): RedirectResponse|JsonResponse
     {
         abort_unless($this->isPimpinan($request), 403);
         abort_unless($permintaanLaporan->isDapatDibatalkan(), 422, 'Permintaan ini sudah tidak dapat dibatalkan.');
@@ -339,10 +430,16 @@ class PermintaanLaporanController extends Controller
             'permintaan_laporan_id' => $permintaanLaporan->id,
         ]);
 
+        // Dipanggil AJAX dari modal "Lihat Progres" (biar modalnya nggak ketutup
+        // sama reload) -> balikin JSON, klien yang nyegerin kartu + isi modal.
+        if ($request->expectsJson()) {
+            return response()->json(['status' => 'Permintaan laporan telah dibatalkan.']);
+        }
+
         return back()->with('status', 'Permintaan laporan telah dibatalkan.');
     }
 
-    public function editDeadline(Request $request, PermintaanLaporan $permintaanLaporan): RedirectResponse
+    public function editDeadline(Request $request, PermintaanLaporan $permintaanLaporan): RedirectResponse|JsonResponse
     {
         abort_unless($this->isPimpinan($request), 403);
         $permintaanLaporan->loadMissing('laporan');
@@ -371,6 +468,82 @@ class PermintaanLaporanController extends Controller
             'permintaan_laporan_id' => $permintaanLaporan->id,
         ]);
 
+        if ($request->expectsJson()) {
+            return response()->json(['status' => 'Deadline permintaan laporan berhasil diperbarui.']);
+        }
+
         return back()->with('status', 'Deadline permintaan laporan berhasil diperbarui.');
+    }
+
+    /**
+     * "Revisi" dari kartu Riwayat Laporan Pimpinan (menu titik-3). Berlaku
+     * untuk permintaan yang SUDAH di-arsip dengan status akhir Ditolak /
+     * Terlambat / Dibatalkan (pokoknya selain Disetujui) -- Pimpinan kasih
+     * deadline baru, lalu permintaannya keluar dari Riwayat & aktif lagi buat
+     * satuan (status "Sedang dikerjakan"). Sengaja dipisah dari editDeadline()
+     * yang justru MEMBLOKIR item ber-archived_at.
+     */
+    public function revisiDariRiwayat(Request $request, PermintaanLaporan $permintaanLaporan): RedirectResponse|JsonResponse
+    {
+        abort_unless($this->isPimpinan($request), 403);
+        abort_unless($permintaanLaporan->archived_at, 422, 'Permintaan ini tidak ada di Riwayat Laporan.');
+
+        $permintaanLaporan->loadMissing('laporan');
+        $laporanStatus = strtolower((string) $permintaanLaporan->laporan?->status);
+        abort_if(
+            str_contains($laporanStatus, 'setuj') || str_contains($laporanStatus, 'diterima'),
+            422,
+            'Laporan yang sudah disetujui tidak dapat dikirim ulang untuk revisi.'
+        );
+
+        $validated = $request->validate([
+            'deadline_at' => ['required', 'date', 'after:now'],
+        ], [
+            'deadline_at.after' => 'Deadline baru harus lebih besar dari waktu sekarang.',
+        ]);
+
+        // Laporan final TERAKHIR (yang barusan ditolak / masih menunggu) ditandai
+        // "Revisi" -- persis efek keputusan "Revisi" lewat LaporanController::
+        // updateStatus. Tanpa ini PermintaanLaporan::isSedangRevisi() tetap
+        // false (dia cek str_contains(status_laporan_terakhir, 'revisi')), jadi
+        // kartu satuan salah render: tombol "Edit & Kirim Final" yang nembak
+        // updateProgres() -> ketolak "Hanya checkpoint progres yang belum final
+        // yang dapat diperbarui", bukan tombol "Revisi" yang lewat store()
+        // (kirim laporan baru). Checkpoint progres di tengah jalan (belum ada
+        // laporan final) SENGAJA dibiarkan supaya checklist task tetap jalan.
+        $laporanTerakhir = $permintaanLaporan->laporans()->latest('id')->first();
+        if (
+            $laporanTerakhir
+            && $laporanTerakhir->status !== Laporan::STATUS_PROGRES
+            && ! str_contains(strtolower((string) $laporanTerakhir->status), 'revisi')
+        ) {
+            $kodePimpinan = strtoupper((string) $request->user()->satuan?->kode);
+            $laporanTerakhir->update([
+                'status' => match ($kodePimpinan) {
+                    'DANPUS' => 'Revisi DANPUS',
+                    'WADAN' => 'Revisi WADAN',
+                    default => 'Revisi',
+                },
+            ]);
+        }
+
+        $permintaanLaporan->update([
+            'deadline_at' => $validated['deadline_at'],
+            'status' => PermintaanLaporan::STATUS_DIKERJAKAN,
+            'laporan_id' => null,
+            'dibatalkan_at' => null,
+            'selesai_at' => null,
+            'archived_at' => null,
+        ]);
+
+        ActivityLog::catat('permintaan-laporan.revisi', "Mengirim ulang permintaan laporan \"{$permintaanLaporan->perihal}\" untuk {$permintaanLaporan->tujuanSatuan->nama} dengan deadline baru.", $request->user(), [
+            'permintaan_laporan_id' => $permintaanLaporan->id,
+        ]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['status' => 'Permintaan laporan dikirim ulang untuk revisi dengan deadline baru.']);
+        }
+
+        return back()->with('status', 'Permintaan laporan dikirim ulang untuk revisi dengan deadline baru.');
     }
 }

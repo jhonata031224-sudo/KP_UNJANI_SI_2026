@@ -7,6 +7,12 @@
 @keyframes siberadRowUpdate{0%{background:var(--gold-dim)}100%{background:transparent}}
 .siberad-row-in{animation:siberadRowIn .35s ease}
 .siberad-row-updated{animation:siberadRowUpdate 1.2s ease}
+/* Kartu Permintaan Laporan yang hilang dari daftar aktif (selesai/dibatalkan)
+   -- fade-out halus, bukan lenyap mendadak. Perubahan nilai (progres/angka/
+   status) dianimasikan langsung di elemennya, lihat animateCardDelta(). */
+@keyframes siberadCardOut{to{opacity:0;transform:translateY(-6px) scale(.97)}}
+#permintaan-laporan .deadline-sender-item.siberad-card-leaving,#riwayat .deadline-sender-item.siberad-card-leaving{animation:siberadCardOut .3s ease forwards;pointer-events:none}
+@media(prefers-reduced-motion:reduce){#permintaan-laporan .deadline-sender-item.siberad-card-leaving,#riwayat .deadline-sender-item.siberad-card-leaving{animation:none!important}}
 </style>
 <script>
 (function(){
@@ -22,35 +28,14 @@
     // ikut kedip pas dashboard baru dibuka.
     let animateSync=false;
 
-    window.siberadOpenEditProgres=function(btn){
-        const form=document.getElementById('kirimLaporanForm');
-        const modal=document.getElementById('kirimLaporanModal');
-        if(!form||!modal||!btn?.dataset.updateUrl)return;
-        form.dataset.mode='edit';
-        form.action=btn.dataset.updateUrl;
-        let method=form.querySelector('input[name="_method"]');
-        if(!method){method=document.createElement('input');method.type='hidden';method.name='_method';form.appendChild(method);}
-        method.value='PATCH';
-        ['perihal','proyek'].forEach(function(name){const el=form.querySelector('[name="'+name+'"]');if(el)el.readOnly=true;});
-        const tujuan=form.querySelector('[name="tujuan_satuan_id"]');if(tujuan){tujuan.value=btn.dataset.tujuanSatuanId||'';tujuan.disabled=true;}
-        const set=(name,value)=>{const el=form.querySelector('[name="'+name+'"]');if(el)el.value=value??'';};
-        set('perihal',btn.dataset.perihal);set('proyek',btn.dataset.proyek);set('prioritas',btn.dataset.prioritas);set('deskripsi',btn.dataset.deskripsi);set('kendala',btn.dataset.kendala);set('lampiran','');set('progres',btn.dataset.progres||'0');
-        const progres=form.querySelector('[name="progres"]');if(progres)progres.min='0';
-        const hint=document.getElementById('progresHint');if(hint)hint.textContent='Mengedit checkpoint progres yang sudah dikirim. Perihal, kategori, dan tujuan tidak bisa diubah lewat form ini.';
-        const title=document.getElementById('kirimLaporanTitle');if(title)title.textContent='Edit Update Progres';
-        const desc=document.getElementById('kirimLaporanDesc');if(desc)desc.textContent='Perbarui data checkpoint progres yang sudah kamu kirim.';
-        const submit=document.getElementById('kirimLaporanSubmitBtn');if(submit)submit.textContent='Simpan Perubahan';
-        modal.classList.add('open');
-    };
-
-    function bindInitialEditButtons(){
-        document.querySelectorAll('#riwayat .edit-progres-btn').forEach(function(btn){
-            if(btn.getAttribute('onclick'))return;
-            if(btn.dataset.editInitBound==='1')return;
-            btn.dataset.editInitBound='1';
-            btn.addEventListener('click',function(){window.siberadOpenEditProgres(btn);});
-        });
-    }
+    // window.siberadOpenEditProgres/bindInitialEditButtons yang dulu di sini
+    // SUDAH DIHAPUS -- #riwayat sekarang kartu (permintaan-laporan-item.
+    // blade.php, sama kayak #permintaan-laporan), tombol Edit/Lihat
+    // Progres-nya udah ditangani lengkap oleh initEditProgresButtons/
+    // initLockedTaskSteps (permintaan-laporan-deadline.blade.php, dipanggil
+    // ulang lewat window.siberadRebindPermintaanActions di bawah). Fungsi
+    // lama itu gak tau soal mode readonly/locked -- kalau tetap dipanggil,
+    // dia bakal ikut masang listener KEDUA yang bentrok di tombol yang sama.
 
     function stat(label,value){
         document.querySelectorAll('#dashboard .stat-card .lbl').forEach(function(el){
@@ -143,10 +128,13 @@
     }
 
     function syncReports(data){
-        if(data.sent_html!==undefined)syncBody('#riwayat .dtbl tbody',data.sent_html);
+        // #riwayat BUKAN tabel .dtbl lagi (sekarang kartu, sama kayak
+        // #permintaan-laporan) -- sent_html dari endpoint ini sengaja gak
+        // dipakai lagi di sini, Riwayat Laporan cukup nyegerin diri sendiri
+        // pas halaman di-reload (kejadiannya jarang: cuma pas Pimpinan
+        // putuskan/arsipkan sesuatu).
         if(data.incoming_html!==undefined)syncBody('#masuk .dtbl tbody',data.incoming_html);
         if(data.monitoring_html)syncBody('#monitoring .dtbl tbody',data.monitoring_html);
-        bindInitialEditButtons();
         const stats=data.role_stats||{};
         stat('Laporan Masuk',stats.masuk);stat('Disetujui',stats.disetujui);stat('Ditolak',stats.ditolak);stat('Terlambat',stats.terlambat);stat('Dibatalkan',stats.dibatalkan);syncChart(stats);
         animateSync=true;
@@ -162,27 +150,115 @@
     // menyegarkan (update konten) & menghapus (kalau sudah tidak lagi masuk
     // hasil query aktif, misal permintaannya selesai/dibatalkan) item yang
     // SUDAH ada di DOM.
+    // ── Helper animasi delta kartu (sama persis dengan sisi Pimpinan,
+    //    danpus-permintaan-arsip-mode.blade.php) -- progres bar keisi
+    //    perlahan, angka % & "x/y tugas" nge-count, status pill crossfade. ──
+    function plReduce(){return window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
+    function cardSig(el){
+        const c=el.cloneNode(true);
+        c.removeAttribute('style');c.removeAttribute('data-ditandai');
+        c.classList.remove('siberad-card-leaving','siberad-row-in','siberad-row-updated');
+        c.querySelectorAll('.dcard-pin-btn[aria-pressed]').forEach(function(n){n.setAttribute('aria-pressed','false');});
+        c.querySelectorAll('.dcard-menu.open').forEach(function(n){n.classList.remove('open');});
+        c.querySelectorAll('[aria-expanded="true"]').forEach(function(n){n.setAttribute('aria-expanded','false');});
+        // Buang SEMUA atribut flag "*bound*" (dipasang JS saat bind listener,
+        // bukan dari server) supaya signature gak beda gara-gara itu.
+        c.querySelectorAll('*').forEach(function(n){
+            Array.prototype.slice.call(n.attributes||[]).forEach(function(a){if(/bound/i.test(a.name))n.removeAttribute(a.name);});
+        });
+        c.querySelectorAll('[style]').forEach(function(n){
+            ['transition','-webkit-transition','opacity','transform'].forEach(function(p){n.style.removeProperty(p);});
+            const cs=n.style.cssText;if(cs)n.setAttribute('style',cs);else n.removeAttribute('style');
+        });
+        return c.outerHTML.replace(/>\s+/g,'>').replace(/\s+</g,'<');
+    }
+    function cardSnap(card){
+        const val=card.querySelector('.dcard-progress-value');
+        const fill=card.querySelector('.dcard-progress-fill');
+        const tasks=card.querySelector('.dcard-tasks-summary');
+        const pill=card.querySelector('.dcard-status-pill');
+        const tt=tasks?tasks.textContent.replace(/\s+/g,' ').trim():'';
+        return {pct:val?(parseInt((val.textContent||'').replace(/\D/g,''),10)||0):null,fillW:fill?(fill.style.width||''):null,tasksText:tt,tasksNums:tt.match(/^(\d+)\s*\/\s*(\d+)/),statusText:pill?pill.textContent.replace(/\s+/g,' ').trim():null,statusClass:pill?pill.className:null};
+    }
+    function tweenNum(from,to,ms,onStep){from=Number(from)||0;to=Number(to)||0;if(from===to){onStep(to);return;}const t0=performance.now();(function frame(now){const p=Math.min(1,(now-t0)/ms);const e=1-Math.pow(1-p,3);onStep(p>=1?to:(from+(to-from)*e));if(p<1)requestAnimationFrame(frame);})(performance.now());}
+    function setTasksText(el,text){Array.prototype.slice.call(el.childNodes).forEach(function(n){if(n.nodeType===3)n.remove();});el.appendChild(document.createTextNode(text));}
+    function crossfadeText(el,oldText,newText,isTasks){isTasks?setTasksText(el,oldText):(el.textContent=oldText);el.style.transition='none';el.style.opacity='1';void el.offsetWidth;el.style.transition='opacity .16s ease';el.style.opacity='0';setTimeout(function(){isTasks?setTasksText(el,newText):(el.textContent=newText);el.style.opacity='0';void el.offsetWidth;el.style.opacity='1';setTimeout(function(){el.style.transition='';el.style.opacity='';},200);},170);}
+    function animateCardDelta(freshCard,old){
+        if(plReduce())return;
+        const fill=freshCard.querySelector('.dcard-progress-fill');
+        const val=freshCard.querySelector('.dcard-progress-value');
+        const tasks=freshCard.querySelector('.dcard-tasks-summary');
+        const pill=freshCard.querySelector('.dcard-status-pill');
+        if(fill&&old.fillW!=null){const target=fill.style.width||'';if(target!==old.fillW){fill.style.transition='none';fill.style.width=old.fillW;void fill.offsetWidth;fill.style.transition='width .7s cubic-bezier(.4,0,.2,1)';requestAnimationFrame(function(){fill.style.width=target;});setTimeout(function(){fill.style.transition='';},820);}}
+        if(val&&old.pct!=null){const target=parseInt((val.textContent||'').replace(/\D/g,''),10)||0;if(target!==old.pct)tweenNum(old.pct,target,700,function(v){val.textContent=Math.round(v)+'%';});}
+        if(tasks&&old.tasksText){const now=tasks.textContent.replace(/\s+/g,' ').trim();if(now!==old.tasksText){const m=now.match(/^(\d+)\s*\/\s*(\d+)/);if(m&&old.tasksNums&&m[2]===old.tasksNums[2]){const y=m[2];tweenNum(parseInt(old.tasksNums[1],10),parseInt(m[1],10),700,function(v){setTasksText(tasks,Math.round(v)+'/'+y+' tugas selesai');});}else{crossfadeText(tasks,old.tasksText,now,true);}}}
+        if(pill&&old.statusText!=null){const newText=pill.textContent.replace(/\s+/g,' ').trim();const newClass=pill.className;if(newText!==old.statusText||newClass!==old.statusClass){pill.textContent=old.statusText;pill.className=old.statusClass;pill.style.transition='none';pill.style.opacity='1';pill.style.transform='none';void pill.offsetWidth;pill.style.transition='opacity .17s ease,transform .17s ease';pill.style.opacity='0';pill.style.transform='translateY(-3px)';setTimeout(function(){pill.textContent=newText;pill.className=newClass;pill.style.opacity='0';pill.style.transform='translateY(3px)';void pill.offsetWidth;pill.style.opacity='1';pill.style.transform='none';setTimeout(function(){pill.style.transition='';pill.style.transform='';pill.style.opacity='';},240);},180);}}
+    }
+
     function syncRequestList(){
         fetch(requestEndpoint+'?since=0&_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}})
             .then(r=>r.ok?r.json():null).then(data=>{
                 if(!data)return;
                 const list=document.querySelector('#permintaan-laporan .deadline-sender-list');if(!list||typeof data.items_html!=='string')return;
                 const incoming=document.createElement('div');incoming.innerHTML=data.items_html;
-                const fresh=[...incoming.children];const freshById=new Map(fresh.map(el=>[String(el.dataset.realtimePermintaanId||''),el]));const existing=[...list.querySelectorAll('[data-realtime-permintaan-id]')];
-                existing.forEach(function(item){const id=String(item.dataset.realtimePermintaanId||'');const replacement=freshById.get(id);if(replacement){
-                    // replaceWith() di sini SELALU jalan tiap siklus (nggak
-                    // ada diff-check) -- kartu ganti jadi node DOM BARU tiap
-                    // ~6 detik walau isinya sama aja, jadi data-ditandai
-                    // (tombol tanda manual, dipasang initDcardPinButtons di
-                    // permintaan-laporan-deadline.blade.php dari localStorage)
-                    // ikut "lupa" balik ke default "0" kalau nggak dibawa
-                    // manual ke node barunya -- itu sebabnya kartu yang baru
-                    // ditandai kelihatan kereset lagi abis beberapa detik.
-                    if(item.dataset.ditandai!==undefined) replacement.dataset.ditandai=item.dataset.ditandai;
-                    item.replaceWith(replacement);
-                }else if(id)item.remove();});
-                window.siberadBindPermintaanDetailButtons&&window.siberadBindPermintaanDetailButtons();
-                window.siberadRebindPermintaanActions&&window.siberadRebindPermintaanActions();
+                const fresh=[...incoming.querySelectorAll(':scope > article.deadline-sender-item')];
+                const freshById=new Map(fresh.map(el=>[String(el.dataset.realtimePermintaanId||''),el]));
+                const existing=[...list.querySelectorAll(':scope > article[data-realtime-permintaan-id]')];
+                const existingIds=new Set(existing.map(el=>String(el.dataset.realtimePermintaanId||'')));
+                const reduce=plReduce();
+                let touched=false;
+                existing.forEach(function(item){
+                    const id=String(item.dataset.realtimePermintaanId||'');
+                    const replacement=freshById.get(id);
+                    if(replacement){
+                        // Diff-check dulu -- cuma replace kalau data server-nya
+                        // beneran beda, biar gak bikin node baru tiap 6 dtk
+                        // (dulu selalu replace -> reset state transient tiap siklus).
+                        if(cardSig(item)===cardSig(replacement))return;
+                        // data-ditandai (tanda manual, localStorage) dibawa manual
+                        // ke node baru supaya tidak "lupa" balik ke "0".
+                        if(item.dataset.ditandai!==undefined) replacement.dataset.ditandai=item.dataset.ditandai;
+                        const snap=cardSnap(item);
+                        item.replaceWith(replacement);
+                        animateCardDelta(replacement,snap);
+                        touched=true;
+                    }else if(id){
+                        if(reduce||item.dataset.leaving==='1'){item.remove();touched=true;return;}
+                        item.dataset.leaving='1';
+                        const fin=function(){clearTimeout(t);item.remove();window.siberadBindPermintaanDetailButtons&&window.siberadBindPermintaanDetailButtons();window.siberadRebindPermintaanActions&&window.siberadRebindPermintaanActions();};
+                        const t=setTimeout(fin,340);
+                        item.addEventListener('animationend',fin,{once:true});
+                        item.classList.add('siberad-card-leaving');
+                        touched=true;
+                    }
+                });
+                // Kartu yang MUNCUL LAGI di daftar aktif tapi belum ada di DOM --
+                // mis. permintaan yang tadinya Selesai/Terlambat/Dibatalkan-
+                // terarsip lalu dibuka ulang Pimpinan (Revisi dari Riwayat / Edit
+                // Deadline). id-nya lama, jadi gak kejaring poll incremental
+                // (?since=lastSeen) di permintaan-laporan-realtime.blade.php --
+                // syncRequestList (?since=0) yang harus nyisipin.
+                fresh.forEach(function(fEl){
+                    const id=String(fEl.dataset.realtimePermintaanId||'');
+                    if(!id||existingIds.has(id))return;
+                    list.insertBefore(fEl,list.firstChild);
+                    if(!reduce){
+                        fEl.classList.add('dcard-enter');
+                        fEl.addEventListener('animationend',function h(){fEl.classList.remove('dcard-enter');fEl.removeEventListener('animationend',h);});
+                    }
+                    existingIds.add(id);
+                    touched=true;
+                });
+                if(touched){
+                    const emptyNode=list.querySelector(':scope > .empty-state');
+                    if(emptyNode)emptyNode.style.display=list.querySelector(':scope > article[data-realtime-permintaan-id]')?'none':'';
+                    window.siberadBindPermintaanDetailButtons&&window.siberadBindPermintaanDetailButtons();
+                    window.siberadRebindPermintaanActions&&window.siberadRebindPermintaanActions();
+                    // Wizard #kirimLaporanModal yang lagi kebuka -> bangun ulang
+                    // strip step-nya dari kartu fresh (mis. baru jadi Terlambat
+                    // -> step belum selesai jadi merah), tanpa tutup-buka modal.
+                    window.siberadRefreshWizardTopbar&&window.siberadRefreshWizardTopbar();
+                }
             }).catch(function(){});
     }
 
@@ -194,7 +270,6 @@
 
     function start(){
         if(!document.getElementById('riwayat')&&!document.getElementById('masuk'))return;
-        bindInitialEditButtons();
         poll();timer=window.setInterval(poll,2500);
         // syncRequestList() sengaja DIPISAH dari siklus poll() 2500ms di atas
         // (dulu dipanggil bareng di situ) -- endpoint yang sama JUGA sudah

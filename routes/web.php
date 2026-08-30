@@ -107,6 +107,9 @@ Route::patch('/permintaan-laporan/{permintaanLaporan}/batal', [PermintaanLaporan
 Route::patch('/permintaan-laporan/{permintaanLaporan}/deadline', [PermintaanLaporanController::class, 'editDeadline'])
     ->middleware(['auth', 'modul:laporan'])
     ->name('permintaan-laporan.edit-deadline');
+Route::patch('/permintaan-laporan/{permintaanLaporan}/revisi', [PermintaanLaporanController::class, 'revisiDariRiwayat'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('permintaan-laporan.revisi');
 
 // ===== Laporan Kendala Kasansi (21 Sansidam) langsung ke Danpus =====
 Route::post('/laporan-kendala', [LaporanKendalaController::class, 'store'])

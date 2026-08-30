@@ -1,155 +1,697 @@
 <style>
-/* Tombol Arsip sekarang pakai kelas .btn/.btn-primary global (sama kayak
-   tombol "Buat Permintaan"), style di sini cuma nambahin yang belum ada di situ. */
-#permintaan-laporan .danpus-archive-toggle.is-busy{opacity:.72;pointer-events:none}
-#permintaan-laporan .danpus-archive-actions{display:inline-flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto;flex-wrap:wrap}
-@media(max-width:700px){
-  #permintaan-laporan .danpus-archive-actions{display:flex;flex-wrap:wrap;width:100%;justify-content:flex-start}
-  #permintaan-laporan #danpusOpenRequestForm{margin-top:0}
-}
-#permintaan-laporan .danpus-archive-icon{width:18px;height:18px;flex:0 0 18px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-#permintaan-laporan .danpus-archive-count{display:none;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:var(--gold-dim);border:1px solid var(--border);color:var(--gold-bright);font-family:var(--mono);font-size:10px;font-weight:800}
-#permintaan-laporan .danpus-archive-count.is-visible{display:inline-flex}
-#permintaan-laporan .danpus-archive-head-cell,#permintaan-laporan .danpus-archive-row-cell,#permintaan-laporan .danpus-archive-row-content,#permintaan-laporan .danpus-archive-head-label{display:contents}
-/* Ruang buat checkbox disediakan PERMANEN (bukan cuma pas mode Arsip aktif),
-   supaya posisi badge satuan tidak geser saat mode Arsip dinyalakan/dimatikan --
-   checkbox-nya sendiri baru muncul saat mode aktif, tapi ruangnya sudah ada dari awal. */
-#permintaan-laporan .request-table thead tr th:first-child,#permintaan-laporan .request-table tbody tr td:first-child{padding-left:31px;position:relative}
-#permintaan-laporan .danpus-archive-checkbox{width:13px;height:13px;margin:0;padding:0;accent-color:var(--gold-solid-bright,#c97a00);cursor:pointer;position:absolute;left:12px;top:50%;transform:translateY(-50%)}
-#permintaan-laporan .request-table tbody tr td:first-child .satuan-pill{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle}
-#permintaan-laporan .request-table tbody tr.danpus-archive-selected td{background:color-mix(in srgb,var(--gold-solid-bright,#c97a00) 5%,transparent)}
-#permintaan-laporan .request-table tbody tr.danpus-archive-selected td:first-child{box-shadow:none}
-/* Arsip pada Riwayat/Status memakai layout tabel yang SAMA persis dengan baris laporan biasa. */
-#status .archive-request-row td{vertical-align:middle}
-#status .archive-request-row .archive-request-unit,#status .archive-request-row .archive-request-target{text-align:center}
-#status .archive-request-row .archive-request-sub{margin-top:3px;font-size:10px;color:var(--p-muted)}
-#status .archive-request-row .archive-request-date{justify-content:center}
-#status .archive-request-row .archive-request-status{white-space:nowrap}
-@media(max-width:700px){#status .archive-request-row .archive-request-status{white-space:normal}}
+/* Animasi realtime kartu Permintaan Laporan & Riwayat Laporan Pimpinan --
+   kartu baru masuk halus (slide-in), kartu hilang fade-out. Perubahan nilai
+   (progres/angka/status) dianimasikan langsung di elemennya, tanpa kilau
+   kartu. Hormati prefers-reduced-motion. */
+@keyframes siberadPimpinanCardIn{from{opacity:0;transform:translateY(-10px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes siberadPimpinanCardOut{to{opacity:0;transform:translateY(-6px) scale(.96)}}
+#permintaan-laporan .deadline-sender-item.siberad-pimpinan-card-in,#riwayat .deadline-sender-item.siberad-pimpinan-card-in{animation:siberadPimpinanCardIn .42s cubic-bezier(.2,.82,.2,1)}
+#permintaan-laporan .deadline-sender-item.siberad-pimpinan-card-out,#riwayat .deadline-sender-item.siberad-pimpinan-card-out{animation:siberadPimpinanCardOut .3s ease forwards;pointer-events:none}
+@media(prefers-reduced-motion:reduce){#permintaan-laporan .deadline-sender-item.siberad-pimpinan-card-in,#permintaan-laporan .deadline-sender-item.siberad-pimpinan-card-out,#riwayat .deadline-sender-item.siberad-pimpinan-card-in,#riwayat .deadline-sender-item.siberad-pimpinan-card-out{animation:none!important}}
 </style>
 <script>
 (function(){
 'use strict';
 function initDanpusArchiveMode(){
  const panel=document.getElementById('permintaan-laporan');if(!panel||panel.dataset.danpusArchiveModeBound==='1')return;
- const head=panel.querySelector('.request-head'),table=panel.querySelector('.request-table'),tbody=table?.querySelector('tbody');if(!head||!table||!tbody)return;
- panel.dataset.danpusArchiveModeBound='1';let active=false,busy=false,refreshQueued=false;const selectedIds=new Set();
+ const list=panel.querySelector('.deadline-sender-list');if(!list)return;
+ panel.dataset.danpusArchiveModeBound='1';let busy=false;
  const archiveEndpoint='{{ route('permintaan-laporan.store') }}';const historyEndpoint='{{ route('permintaan-laporan.realtime') }}?history=1&_=';
- const eligibleStatus=status=>{const n=String(status||'').replace(/\s+/g,' ').trim().toLowerCase();return n==='terlambat'||n==='dibatalkan'||n==='selesai · disetujui'||n==='selesai · ditolak'};
- const rowStatus=row=>row?.dataset?.status||'';const rowId=row=>String(row?.querySelector('[data-permintaan-id]')?.dataset?.permintaanId||'');const eligibleRows=()=>Array.from(tbody.querySelectorAll('tr[data-status]')).filter(r=>eligibleStatus(rowStatus(r)));
- const createButton=head.querySelector('#danpusOpenRequestForm');if(!createButton)return;let actions=head.querySelector('.danpus-archive-actions');
- if(!actions){actions=document.createElement('div');actions.className='danpus-archive-actions';createButton.parentNode?.insertBefore(actions,createButton);actions.appendChild(createButton)}
- const archiveButton=document.createElement('button');archiveButton.type='button';archiveButton.className='btn danpus-archive-toggle';archiveButton.id='danpusArchiveToggle';archiveButton.setAttribute('aria-pressed','false');archiveButton.title='Mode Arsip / Arsipkan permintaan terpilih';
- archiveButton.innerHTML='<svg class="danpus-archive-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M4.5 14.5V27h23V14.5"></path><path d="M3.5 13h25"></path><path d="M6 13V8.5h20V13"></path><path d="M8 8.5V5.5h17l2 3"></path><path d="M10 13l7 5.5h9V13"></path><path d="M17 18.5h9v7.5a4 4 0 0 1-4 4H10a5.5 5.5 0 0 1-5.5-5.5V14.5"></path><path d="M16 19h7"></path><path d="M18 23h5"></path></svg><span>Arsip</span>';actions.insertBefore(archiveButton,createButton);
- const countBadge=document.createElement('span');countBadge.className='danpus-archive-count';countBadge.id='danpusArchiveSelectedCount';countBadge.setAttribute('aria-live','polite');countBadge.textContent='0';actions.insertBefore(countBadge,archiveButton);
  function csrf(){return document.querySelector('input[name="_token"]')?.value||document.querySelector('meta[name="csrf-token"]')?.content||''}
- function historyBodies(){return Array.from(document.querySelectorAll('#riwayat .dtbl tbody,#riwayat .clean-table tbody,#status .clean-table tbody,#status .dtbl tbody')).filter(Boolean)}
- function esc(v){return String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]))}
- function normalizeStatus(status){return String(status||'').replace(/\s+/g,' ').trim()}
- function archiveStatusClass(status){const n=normalizeStatus(status).toLowerCase();if(n.includes('setuj')||n.includes('diterima'))return'ok';if(n.includes('tolak')||n.includes('batal')||n.includes('terlambat'))return'bad';return'wait'}
- function archiveStatusLabel(status){const n=normalizeStatus(status);if(!n)return'Arsip';if(n==='Dibatalkan')return'Dibatalkan';if(n==='Terlambat')return'Terlambat';if(n==='Selesai · Disetujui')return'Selesai · Disetujui';if(n==='Selesai · Ditolak')return'Selesai · Ditolak';return n}
- function isHistoryStatusTable(table){const headers=Array.from(table?.querySelectorAll('thead th')||[]).map(h=>h.textContent.trim().toLowerCase());return headers.length===6&&(headers[0]==='unit'||headers[0]==='satlak')&&headers[1]==='perihal'&&headers[2]==='tujuan'&&headers[3]==='status'&&headers[4]==='tanggal'&&headers[5]==='aksi'}
- // Checklist task ikut dibawa ke Riwayat Laporan pas diarsipkan, dirender
- // pakai class .request-task-* yang SAMA dengan tab Permintaan Laporan
- // (sudah ke-load dari laporan-pimpinan.blade.php di shell yang sama) --
- // biar datanya (dan tampilannya) konsisten antara kedua tab.
- function buildArchiveTaskTrack(tasks,ctx){
-   if(!tasks||!tasks.length)return '<div class="request-muted">Tidak ada task untuk permintaan ini.</div>';
-   let activeAssigned=false;
-   const steps=tasks.map(function(t,i){
-     var state;
-     if(t.selesai){state='done'}else if(!activeAssigned){state='active';activeAssigned=true}else{state='pending'}
-     var title=esc(t.deskripsi)+(t.selesai_at?' · Selesai '+esc(t.selesai_at):'');
-     var num=t.selesai?'✓':(i+1);
-     var lap=t.laporan;
-     var cls='request-task-step '+state;
-     var attrs='';
-     // Task yang udah ada laporannya bisa diklik buat buka modal "Detail
-     // Aktivitas Laporan" yang sama persis kayak di tab Permintaan Laporan
-     // (lihat onclick="openReportDetail(this)" di request-task-step versi
-     // Blade-nya) -- data-readonly="1" soalnya arsip cuma buat dilihat.
-     if(lap){
-       cls+=' clickable';
-       attrs=' role="button" tabindex="0" onclick="openReportDetail(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openReportDetail(this)}"'+
-         ' data-pengirim="'+esc(ctx.pengirim)+'" data-tujuan="'+esc(ctx.tujuan)+'" data-perihal="'+esc(lap.perihal)+'" data-prioritas="'+esc(lap.prioritas)+'"'+
-         ' data-progres="'+esc(lap.progres)+'" data-kendala="'+esc(lap.kendala||'')+'" data-proyek="'+esc(lap.proyek||'-')+'" data-tanggal="'+esc(lap.tanggal)+'"'+
-         ' data-deskripsi="'+esc(lap.deskripsi)+'" data-lampiran="'+esc(JSON.stringify(lap.lampiran||[]))+'" data-readonly="1"';
+ // ══════════════════════════════════════════════════════════════════════
+ // Riwayat Laporan Pimpinan (#riwayat) -- KARTU read-only (bukan tabel lagi).
+ // Sejajar dengan Riwayat Laporan Satuan: kartu dari
+ // permintaan-laporan-pimpinan-card (riwayatMode), realtime full-diff dari
+ // endpoint ?history=1 (items_html), plus search + filter status + sort.
+ // ══════════════════════════════════════════════════════════════════════
+ const riwayatPanel=document.getElementById('riwayat');
+ const riwayatList=riwayatPanel&&riwayatPanel.querySelector('.deadline-sender-list');
+
+ function syncRiwayatEmptyState(){
+   if(!riwayatList)return;
+   const hasItems=!!riwayatList.querySelector(':scope > article[data-realtime-permintaan-id]');
+   const emptyNode=riwayatList.querySelector(':scope > .empty-state');
+   if(!emptyNode)return;
+   emptyNode.style.display=hasItems?'none':'';
+   emptyNode.setAttribute('aria-hidden',hasItems?'true':'false');
+ }
+
+ // Menu titik-3 kartu Riwayat: cuma "Revisi" (status Ditolak/Terlambat/
+ // Dibatalkan). Klik -> modal Edit Deadline mode "revisi" (deadline baru) ->
+ // revisiDariRiwayat() reset archived_at + status. Numpang mekanisme
+ // .dcard-menu-toggle yang sama; closeAllMenus() di bawah dibikin sadar
+ // #riwayat juga.
+ function bindRiwayatMenus(){
+   if(!riwayatList)return;
+   riwayatList.querySelectorAll('.dcard-menu-toggle').forEach(function(btn){
+     if(btn.dataset.menuBound==='1')return;
+     btn.dataset.menuBound='1';
+     btn.addEventListener('click',function(e){
+       e.stopPropagation();
+       const menu=btn.nextElementSibling;if(!menu)return;
+       const willOpen=!menu.classList.contains('open');
+       closeAllMenus();
+       if(willOpen){menu.classList.add('open');btn.setAttribute('aria-expanded','true');}
+     });
+   });
+   riwayatList.querySelectorAll('.dcard-riwayat-revisi-btn').forEach(function(btn){
+     if(btn.dataset.riwayatBound==='1')return;
+     btn.dataset.riwayatBound='1';
+     btn.addEventListener('click',function(e){e.stopPropagation();closeAllMenus();window.bukaEditDeadlinePermintaan&&window.bukaEditDeadlinePermintaan(btn);});
+   });
+ }
+
+ // Tanda manual (pin) kartu Riwayat -- kembar bindPinButtons() daftar aktif,
+ // cuma scope-nya riwayatList & refresh filter Riwayat.
+ function bindRiwayatPinButtons(){
+   if(!riwayatList)return;
+   const pinned=getPinnedIds();
+   riwayatList.querySelectorAll(':scope > article.deadline-sender-item').forEach(function(card){
+     const id=card.getAttribute('data-realtime-permintaan-id');
+     if(id)applyPinnedState(card,pinned.has(id));
+   });
+   riwayatList.querySelectorAll('.dcard-pin-btn').forEach(function(btn){
+     if(btn.dataset.pinBound==='1')return;
+     btn.dataset.pinBound='1';
+     btn.addEventListener('click',function(e){
+       e.stopPropagation();
+       const card=btn.closest('.deadline-sender-item');
+       const id=card&&card.getAttribute('data-realtime-permintaan-id');
+       if(!id)return;
+       const set=getPinnedIds();
+       const nowPinned=!set.has(id);
+       if(nowPinned)set.add(id);else set.delete(id);
+       savePinnedIds(set);
+       applyPinnedState(card,nowPinned);
+       window.siberadRefreshPimpinanRiwayatFilter&&window.siberadRefreshPimpinanRiwayatFilter();
+     });
+   });
+ }
+
+ // Search + filter status + sort untuk #riwayat -- kembar initCardFilter()
+ // (daftar aktif) tapi sort-nya "Arsip Terbaru/Terlama" (data-archived-at) &
+ // opsi status hanya yang relevan buat riwayat.
+ function initRiwayatCardFilter(){
+   if(!riwayatPanel||!riwayatList||riwayatPanel.dataset.riwayatFilterReady==='1')return;
+   if(!riwayatList.querySelector(':scope > article.deadline-sender-item'))return;
+   riwayatPanel.dataset.riwayatFilterReady='1';
+
+   const bar=document.createElement('div');bar.className='rpt-filter-bar';
+   bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="Cari perihal atau satuan tujuan..." aria-label="Cari perihal atau satuan tujuan..."></div><select class="rpt-filter-select" aria-label="Filter status"><option value="all">Semua Status</option><option value="Disetujui">Disetujui</option><option value="Ditolak">Ditolak</option><option value="Terlambat">Terlambat</option><option value="Dibatalkan">Dibatalkan</option></select><select class="rpt-filter-select" aria-label="Urutkan"><option value="terbaru">Arsip Terbaru</option><option value="terlama">Arsip Terlama</option></select><span class="rpt-filter-count"></span>';
+   // Sisipin bar tepat setelah .request-head (di DALAM .danpus-request-panel),
+   // pola sama persis dengan initCardFilter() daftar aktif.
+   const head=riwayatPanel.querySelector('.request-head');
+   if(head){head.insertAdjacentElement('afterend',bar);}else{riwayatList.parentNode.insertBefore(bar,riwayatList);}
+
+   const emptyBox=document.createElement('div');
+   emptyBox.className='empty-state';emptyBox.style.display='none';
+   emptyBox.innerHTML='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada riwayat laporan yang sesuai dengan pencarian/filter.</div>';
+   riwayatList.parentNode.insertBefore(emptyBox,riwayatList.nextSibling);
+
+   const input=bar.querySelector('input');
+   const selects=bar.querySelectorAll('select');
+   const statusSelect=selects[0],sortSelect=selects[1];
+   const count=bar.querySelector('.rpt-filter-count');
+
+   function apply(){
+     // Kartu yang lagi fade-out (data-removing) DIKECUALIKAN -- kalau ikut
+     // diproses di sini dia bisa kena display:none atau ke-FLIP-reorder di
+     // tengah animasi keluarnya -> kelihatan "kaku"/loncat pas hilang dari
+     // Riwayat (mis. Pimpinan klik Revisi). Count juga jadi salah hitung.
+     const items=Array.prototype.slice.call(riwayatList.querySelectorAll(':scope > article.deadline-sender-item'))
+       .filter(function(el){return el.dataset.removing!=='1';});
+     const pinnedIds=getPinnedIds();
+     items.sort(function(a,b){
+       const aPin=pinnedIds.has(a.getAttribute('data-realtime-permintaan-id'));
+       const bPin=pinnedIds.has(b.getAttribute('data-realtime-permintaan-id'));
+       if(aPin!==bPin)return aPin?-1:1;
+       const diff=Number(a.dataset.archivedAt)-Number(b.dataset.archivedAt);
+       return sortSelect.value==='terlama'?diff:-diff;
+     });
+     const needsReorder=items.some(function(item,i){return item.nextElementSibling!==(items[i+1]||null)});
+     if(needsReorder){
+       const reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+       const prevRects=reduceMotion?null:new Map();
+       if(prevRects){items.forEach(function(item){if(item.style.display!=='none')prevRects.set(item,item.getBoundingClientRect());});}
+       items.forEach(function(item){riwayatList.appendChild(item);});
+       if(prevRects){
+         items.forEach(function(item){
+           const prev=prevRects.get(item);if(!prev)return;
+           const next=item.getBoundingClientRect();
+           const dx=prev.left-next.left,dy=prev.top-next.top;
+           if(Math.abs(dx)<1&&Math.abs(dy)<1)return;
+           item.style.transition='none';item.style.transform='translate('+dx+'px,'+dy+'px)';
+           item.getBoundingClientRect();
+           // dua rAF -- state "dari" wajib kepaint dulu sebelum transisi ke
+           // "ke" dipicu, biar geser-nya nggak ke-skip/kepotong di akhir.
+           (function(el){requestAnimationFrame(function(){requestAnimationFrame(function(){
+             el.style.transition='transform .58s cubic-bezier(.16,1,.3,1)';el.style.transform='';
+           });});})(item);
+           item.addEventListener('transitionend',function handler(e){if(e.propertyName!=='transform')return;item.style.transition='';item.removeEventListener('transitionend',handler);});
+         });
+       }
      }
-     return '<div class="'+cls+'" title="'+title+'"'+attrs+'><span class="request-task-num">'+num+'</span><span class="request-task-label">'+esc(t.deskripsi)+'</span></div>';
-   }).join('');
-   return '<div class="request-task-track">'+steps+'</div>';
- }
- function renderArchivedItem(tb,item,pimpinanNama){
-   const key='archive-'+item.id;if(tb.querySelector('[data-archive-key="'+key+'"]'))return;
-   const table=tb.closest('table');
-   if(isHistoryStatusTable(table)){
-     const status=archiveStatusLabel(item.status);
-     const statusClass=archiveStatusClass(status);
-     const unit=item.tujuan||item.tujuan_nama||'-';
-     const unitNama=item.tujuan_nama||unit;
-     const subject=item.perihal||'-';
-     const target=item.pengirim||item.pembuat_nama||'DANPUS';
-     const date=item.archived_at||item.created_at||'-';
-     const tr=document.createElement('tr');
-     tr.className='archive-request-row';
-     tr.style.cursor='pointer';
-     tr.setAttribute('onclick','danpusToggleTaskRow(this,event)');
-     tr.dataset.archiveKey=key;
-     tr.dataset.search=(String(unit)+' '+String(subject)+' '+String(target)).toLowerCase();
-     tr.dataset.outcome=status.toLowerCase().includes('setuj')||status.toLowerCase().includes('diterima')?'disetujui':status.toLowerCase().includes('tolak')?'ditolak':'';
-     tr.innerHTML='<td class="archive-request-unit" style="text-align:center"><span class="request-row-caret" aria-hidden="true">▸</span><span class="satuan-pill">'+esc(unit)+'</span></td>'+
-       '<td class="subject"><div>'+esc(subject)+'</div><div class="archive-request-sub">Arsip permintaan laporan</div></td>'+
-       '<td class="archive-request-target" style="text-align:center"><span class="satuan-pill">'+esc(target)+'</span></td>'+
-       '<td style="text-align:center"><span class="status-pill archive-request-status '+statusClass+'">'+esc(status)+'</span></td>'+
-       '<td style="text-align:center"><div class="request-deadline archive-request-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>'+esc(date)+'</div></td>'+
-       // "Lihat" di sini sama persis kayak tombol "Lihat" tab Permintaan
-       // Laporan (window.danpusLihatAktivitas, didefinisikan di
-       // laporan-pimpinan.blade.php) -- bawa ke Log Aktivitas satuan tujuan
-       // & sorot baris laporannya, bukan modal arsip generik kayak sebelumnya.
-       '<td style="text-align:center"><button type="button" class="detail-btn" onclick="window.danpusLihatAktivitas&&window.danpusLihatAktivitas(this)" data-satuan-id="'+esc(item.tujuan_satuan_id||'')+'" data-permintaan-id="'+esc(item.id)+'">Lihat</button></td>';
-     tb.prepend(tr);
-     const taskTr=document.createElement('tr');
-     taskTr.className='request-task-row rpt-filter-detail-row';
-     taskTr.hidden=true;
-     taskTr.dataset.archiveKey=key+'-tasks';
-     const taskTd=document.createElement('td');
-     taskTd.colSpan=6;
-     taskTd.innerHTML=buildArchiveTaskTrack(item.tasks,{pengirim:unitNama,tujuan:pimpinanNama||'DANPUS'});
-     taskTr.appendChild(taskTd);
-     tr.after(taskTr);
-     return;
+     const q=(input.value||'').trim().toLowerCase();
+     const statusFilter=statusSelect.value;
+     let visible=0;
+     items.forEach(function(item){
+       const matchesSearch=!q||(item.dataset.search||'').indexOf(q)!==-1;
+       const matchesStatus=statusFilter==='all'||item.dataset.status===statusFilter;
+       const match=matchesSearch&&matchesStatus;
+       item.style.display=match?'':'none';
+       if(match)visible++;
+     });
+     count.textContent=visible+' dari '+items.length+' data';
+     emptyBox.style.display=visible===0?'block':'none';
    }
-   /* Tabel lain dipertahankan apa adanya; arsip hanya ditambahkan jika tabel memang cocok dengan struktur history. */
+   input.addEventListener('input',apply);
+   statusSelect.addEventListener('change',apply);
+   sortSelect.addEventListener('change',apply);
+   window.siberadRefreshPimpinanRiwayatFilter=apply;
+   apply();
  }
- // items dari backend udah terurut TERBARU dulu (->latest('archived_at')),
- // tapi renderArchivedItem prepend tiap baris ke ATAS satu-satu -- kalau
- // di-iterate apa adanya (terbaru dulu), baris terbaru itu keprepend duluan
- // lalu ketimpa ke bawah sama baris-baris berikutnya yang di-prepend
- // belakangan, hasil akhirnya malah kebalik (terlama di atas, terbaru di
- // bawah). Di-reverse dulu biar prepend TERAKHIR (yang beneran nempel
- // paling atas) jatuh ke item TERBARU.
- // Bersihin baris "kosong" (empty-state) SEKALI per tabel per siklus sync --
- // sebelumnya ini dilakuin di dalam renderArchivedItem() (jadi nge-scan ULANG
- // SEMUA baris tabel, tiap ITEM, di tiap tabel) yang berat kalau arsipnya
- // sudah menumpuk banyak. Cukup jalan sekali sebelum item-nya dirender.
- function syncHistory(items,pimpinanNama){historyBodies().forEach(tb=>{tb.querySelectorAll('tr').forEach(r=>{if(r.querySelector('.empty-state'))r.remove()});items.slice().reverse().forEach(item=>renderArchivedItem(tb,item,pimpinanNama))})}
- async function loadHistory(){try{const r=await fetch(historyEndpoint+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}});if(!r.ok)return;const data=await r.json();const items=Array.isArray(data.items)?data.items:[];syncHistory(items,data.pimpinan_satuan_nama);removeArchivedRows(items.map(i=>i.id));}catch(e){}}
- function removeArchivedRows(ids){const set=new Set((ids||[]).map(String));Array.from(tbody.querySelectorAll('tr[data-status]')).forEach(row=>{if(set.has(rowId(row)))row.remove()});selectedIds.forEach(id=>{if(set.has(String(id)))selectedIds.delete(id)});syncRows()}
- function ensureHeaderCheckbox(){const th=table.querySelector('thead tr th:first-child');if(!th)return null;let wrap=th.querySelector('.danpus-archive-head-cell');if(!wrap){const label=document.createElement('span');label.className='danpus-archive-head-label';while(th.firstChild)label.appendChild(th.firstChild);wrap=document.createElement('span');wrap.className='danpus-archive-head-cell';wrap.appendChild(label);th.appendChild(wrap)}let cb=wrap.querySelector('.danpus-archive-select-all');if(!cb){cb=document.createElement('input');cb.type='checkbox';cb.className='danpus-archive-checkbox danpus-archive-select-all';cb.setAttribute('aria-label','Pilih semua baris yang dapat diarsipkan');wrap.insertBefore(cb,wrap.firstChild);cb.addEventListener('change',()=>{eligibleRows().forEach(row=>{const id=rowId(row);if(!id)return;cb.checked?selectedIds.add(id):selectedIds.delete(id)});syncRows();syncHeaderCheckbox()})}return cb}
- function ensureRowCheckbox(row){const td=row.querySelector('td:first-child');if(!td)return null;let wrap=td.querySelector('.danpus-archive-row-cell');if(!wrap){const content=document.createElement('span');content.className='danpus-archive-row-content';while(td.firstChild)content.appendChild(td.firstChild);wrap=document.createElement('span');wrap.className='danpus-archive-row-cell';wrap.appendChild(content);td.appendChild(wrap)}let cb=wrap.querySelector('.danpus-archive-row-checkbox');if(!cb){cb=document.createElement('input');cb.type='checkbox';cb.className='danpus-archive-checkbox danpus-archive-row-checkbox';cb.setAttribute('aria-label','Pilih permintaan laporan ini untuk diarsipkan');const id=rowId(row);cb.dataset.permintaanId=id;wrap.insertBefore(cb,wrap.firstChild);cb.addEventListener('click',e=>e.stopPropagation());cb.addEventListener('change',()=>{if(id)(cb.checked?selectedIds.add(id):selectedIds.delete(id));row.classList.toggle('danpus-archive-selected',cb.checked);syncHeaderCheckbox();syncCount()})}return cb}
- function removeRowArchiveUI(row){row.classList.remove('danpus-archive-eligible-row','danpus-archive-selected');const wrap=row.querySelector('.danpus-archive-row-cell');if(!wrap)return;const content=wrap.querySelector('.danpus-archive-row-content'),td=row.querySelector('td:first-child');if(content&&td)while(content.firstChild)td.appendChild(content.firstChild);wrap.remove()}
- function removeHeaderArchiveUI(){const wrap=table.querySelector('thead tr th:first-child .danpus-archive-head-cell');if(!wrap)return;const label=wrap.querySelector('.danpus-archive-head-label'),th=wrap.closest('th');if(label&&th)while(label.firstChild)th.appendChild(label.firstChild);wrap.remove()}
- function syncRows(){Array.from(tbody.querySelectorAll('tr[data-status]')).forEach(row=>{if(!active||!eligibleStatus(rowStatus(row))){removeRowArchiveUI(row);return}row.classList.add('danpus-archive-eligible-row');const cb=ensureRowCheckbox(row),id=rowId(row);if(cb){cb.checked=!!(id&&selectedIds.has(id));row.classList.toggle('danpus-archive-selected',cb.checked)}});if(active)ensureHeaderCheckbox();else removeHeaderArchiveUI();syncHeaderCheckbox();syncCount()}
- function syncHeaderCheckbox(){const cb=table.querySelector('thead .danpus-archive-select-all');if(!cb)return;const boxes=eligibleRows().map(r=>r.querySelector('.danpus-archive-row-checkbox')).filter(Boolean);const all=boxes.length>0&&boxes.every(b=>b.checked);cb.checked=all;cb.indeterminate=!all&&boxes.some(b=>b.checked);cb.disabled=boxes.length===0}
- function syncCount(){for(const id of Array.from(selectedIds))if(!eligibleRows().some(r=>rowId(r)===id))selectedIds.delete(id);countBadge.textContent=String(selectedIds.size);countBadge.classList.toggle('is-visible',active&&selectedIds.size>0)}
- function setMode(next){active=!!next;panel.classList.toggle('danpus-archive-mode',active);archiveButton.classList.toggle('is-active',active);archiveButton.classList.toggle('btn-primary',active);archiveButton.setAttribute('aria-pressed',active?'true':'false');if(!active)selectedIds.clear();syncRows()}
- async function archiveSelected(){if(busy||selectedIds.size===0)return;busy=true;archiveButton.classList.add('is-busy');try{const form=new FormData();form.append('archive_mode','1');selectedIds.forEach(id=>form.append('permintaan_laporan_ids[]',id));const token=csrf();const r=await fetch(archiveEndpoint,{method:'POST',credentials:'same-origin',body:form,headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest',...(token?{'X-CSRF-TOKEN':token}:{})}});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.message||'Permintaan gagal diarsipkan.');const items=Array.isArray(data.items)?data.items:[];syncHistory(items,data.pimpinan_satuan_nama);removeArchivedRows(data.archived_ids||items.map(i=>i.id));selectedIds.clear();setMode(false);window.siberadShowToast?.('success',data.message||'Permintaan berhasil dipindahkan ke Riwayat Laporan.')}catch(error){window.siberadShowToast?.('error',error.message||'Permintaan gagal diarsipkan.')}finally{busy=false;archiveButton.classList.remove('is-busy');syncRows()}}
- function ensureArchiveConfirm(){let overlay=document.getElementById('danpusArchiveConfirmOverlay');if(overlay)return overlay;overlay=document.createElement('div');overlay.className='confirm-overlay';overlay.id='danpusArchiveConfirmOverlay';overlay.innerHTML='<div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="danpusArchiveConfirmTitle"><div class="confirm-icon"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4.5 14.5V27h23V14.5"></path><path d="M3.5 13h25"></path><path d="M6 13V8.5h20V13"></path><path d="M8 8.5V5.5h17l2 3"></path><path d="M10 13l7 5.5h9V13"></path><path d="M17 18.5h9v7.5a4 4 0 0 1-4 4H10a5.5 5.5 0 0 1-5.5-5.5V14.5"></path><path d="M16 19h7"></path><path d="M18 23h5"></path></svg></div><h3 id="danpusArchiveConfirmTitle">Arsipkan Permintaan Terpilih?</h3><p id="danpusArchiveConfirmText"></p><div class="confirm-actions"><button type="button" class="btn" id="danpusArchiveConfirmBatal">Batal</button><button type="button" class="btn btn-primary" id="danpusArchiveConfirmYa">Ya, Arsipkan</button></div></div>';document.body.appendChild(overlay);overlay.addEventListener('click',e=>{if(e.target===overlay)closeArchiveConfirm()});overlay.querySelector('#danpusArchiveConfirmBatal').addEventListener('click',closeArchiveConfirm);overlay.querySelector('#danpusArchiveConfirmYa').addEventListener('click',()=>{closeArchiveConfirm();archiveSelected()});return overlay}
- function openArchiveConfirm(){const overlay=ensureArchiveConfirm();const n=selectedIds.size;overlay.querySelector('#danpusArchiveConfirmText').textContent=n+' permintaan laporan yang dipilih akan dipindahkan ke Riwayat Laporan.';overlay.classList.add('open')}
- function closeArchiveConfirm(){document.getElementById('danpusArchiveConfirmOverlay')?.classList.remove('open')}
- document.addEventListener('keydown',e=>{if(e.key==='Escape')closeArchiveConfirm()});
- archiveButton.addEventListener('click',()=>{if(active&&selectedIds.size>0){openArchiveConfirm();return}setMode(!active)});
- const scheduleRefresh=()=>{if(refreshQueued)return;refreshQueued=true;requestAnimationFrame(()=>{refreshQueued=false;syncRows()})};new MutationObserver(scheduleRefresh).observe(tbody,{childList:true,subtree:true});syncRows();loadHistory();window.setInterval(()=>{if(!document.hidden&&!busy)loadHistory()},5000)
+
+ // Full-diff kartu #riwayat dari HTML server. Kembar syncPimpinanCards() tapi:
+ // (a) full-diff (hapus yg hilang), bukan incremental; (b) tanpa tween nilai
+ // (kartu final gak berubah nilainya); (c) target #riwayat.
+ function syncRiwayatCards(itemsHtml){
+   if(!riwayatList||typeof itemsHtml!=='string')return;
+   if(riwayatList.querySelector('.dcard-menu.open'))return;
+   const holder=document.createElement('div');holder.innerHTML=itemsHtml.trim();
+   const fresh=Array.prototype.slice.call(holder.querySelectorAll(':scope > article.deadline-sender-item'));
+   const freshIds={};fresh.forEach(function(c){const id=c.getAttribute('data-realtime-permintaan-id');if(id)freshIds[id]=true;});
+   const pinned=getPinnedIds();
+   const reduce=prefersReduce();
+   let changed=false;
+   Array.prototype.slice.call(riwayatList.querySelectorAll(':scope > article[data-realtime-permintaan-id]')).forEach(function(card){
+     const id=card.dataset.realtimePermintaanId;
+     if(freshIds[id])return;
+     changed=true;
+     if(reduce){card.remove();return;}
+     if(card.dataset.removing==='1')return;
+     card.dataset.removing='1';
+     const fin=function(){card.remove();clearTimeout(t);syncRiwayatEmptyState();window.siberadRefreshPimpinanRiwayatFilter&&window.siberadRefreshPimpinanRiwayatFilter();};
+     const t=setTimeout(fin,380);
+     card.addEventListener('animationend',fin,{once:true});
+     card.classList.add('siberad-pimpinan-card-out');
+   });
+   fresh.forEach(function(freshCard){
+     const id=freshCard.getAttribute('data-realtime-permintaan-id');if(!id)return;
+     const current=riwayatList.querySelector(':scope > article[data-realtime-permintaan-id="'+id+'"]');
+     if(current){
+       if(cardSignature(current)===cardSignature(freshCard))return;
+       const wasHidden=current.style.display==='none';
+       current.replaceWith(freshCard);
+       applyPinnedState(freshCard,pinned.has(id));
+       if(wasHidden)freshCard.style.display='none';
+       changed=true;
+     }else{
+       riwayatList.insertBefore(freshCard,riwayatList.firstChild);
+       applyPinnedState(freshCard,pinned.has(id));
+       if(!reduce)enterCard(freshCard);
+       changed=true;
+     }
+   });
+   if(changed){
+     bindRiwayatMenus();
+     bindRiwayatPinButtons();
+     syncRiwayatEmptyState();
+     if(riwayatPanel.dataset.riwayatFilterReady!=='1')initRiwayatCardFilter();
+     window.siberadRefreshPimpinanRiwayatFilter&&window.siberadRefreshPimpinanRiwayatFilter();
+   }
+ }
+
+ // ?history=1 sekarang balikin { items_html, archived_ids }. items_html ->
+ // kartu Riwayat (#riwayat); archived_ids -> singkirkan kartu yang barusan
+ // diputuskan dari daftar Permintaan Laporan yang masih aktif (tanpa reload).
+ async function loadHistory(){
+   try{
+     const r=await fetch(historyEndpoint+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}});
+     if(!r.ok)return;
+     const data=await r.json();
+     syncRiwayatCards(data.items_html);
+     removeArchivedRows(Array.isArray(data.archived_ids)?data.archived_ids:[]);
+   }catch(e){}
+ }
+ function removeArchivedRows(ids){
+   const set=new Set((ids||[]).map(String));
+   const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+   Array.from(list.querySelectorAll(':scope > article[data-realtime-permintaan-id]')).forEach(function(card){
+     if(!set.has(String(card.dataset.realtimePermintaanId)))return;
+     if(reduce){card.remove();return;}
+     if(card.dataset.removing==='1')return;
+     card.dataset.removing='1';
+     const fin=function(){
+       card.remove();clearTimeout(t);
+       syncEmptyState();
+       window.siberadRefreshPimpinanPermintaanFilter&&window.siberadRefreshPimpinanPermintaanFilter();
+     };
+     const t=setTimeout(fin,380);
+     card.addEventListener('animationend',fin,{once:true});
+     card.classList.add('siberad-pimpinan-card-out');
+   });
+   syncEmptyState();
+   window.siberadRefreshPimpinanPermintaanFilter&&window.siberadRefreshPimpinanPermintaanFilter();
+ }
+ function syncEmptyState(){
+   const hasItems=!!list.querySelector(':scope > article[data-realtime-permintaan-id]');
+   const emptyNode=list.querySelector(':scope > .empty-state');
+   if(!emptyNode)return;
+   emptyNode.style.display=hasItems?'none':'';
+   emptyNode.setAttribute('aria-hidden',hasItems?'true':'false');
+ }
+
+ // Tanda manual kartu (tombol bulat pojok kiri-atas) -- mekanisme & key
+ // localStorage SAMA PERSIS dengan initDcardPinButtons() di
+ // permintaan-laporan-deadline.blade.php (satuan), cuma diduplikasi di sini
+ // karena file itu gak dimuat di halaman Pimpinan. Kartu yang ditandai
+ // di-pin paling atas pas sorting, lihat apply() di initCardFilter().
+ const DCARD_PIN_KEY='siberadPermintaanDitandai';
+ function getPinnedIds(){
+   try{ const raw=localStorage.getItem(DCARD_PIN_KEY); return raw?new Set(JSON.parse(raw)):new Set(); }
+   catch(e){ return new Set(); }
+ }
+ function savePinnedIds(set){
+   try{ localStorage.setItem(DCARD_PIN_KEY,JSON.stringify(Array.from(set))); }catch(e){}
+ }
+ function applyPinnedState(card,pinned){
+   card.dataset.ditandai=pinned?'1':'0';
+   const btn=card.querySelector('.dcard-pin-btn');
+   if(btn)btn.setAttribute('aria-pressed',pinned?'true':'false');
+ }
+ function bindPinButtons(){
+   const pinned=getPinnedIds();
+   list.querySelectorAll(':scope > article.deadline-sender-item').forEach(function(card){
+     const id=card.getAttribute('data-realtime-permintaan-id');
+     if(id)applyPinnedState(card,pinned.has(id));
+   });
+   list.querySelectorAll('.dcard-pin-btn').forEach(function(btn){
+     if(btn.dataset.pinBound==='1')return;
+     btn.dataset.pinBound='1';
+     btn.addEventListener('click',function(e){
+       e.stopPropagation();
+       const card=btn.closest('.deadline-sender-item');
+       const id=card&&card.getAttribute('data-realtime-permintaan-id');
+       if(!id)return;
+       const set=getPinnedIds();
+       const nowPinned=!set.has(id);
+       if(nowPinned)set.add(id);else set.delete(id);
+       savePinnedIds(set);
+       applyPinnedState(card,nowPinned);
+       window.siberadRefreshPimpinanPermintaanFilter&&window.siberadRefreshPimpinanPermintaanFilter();
+     });
+   });
+ }
+
+ // Menu titik-3 di pojok kartu -- daftar aktif (#permintaan-laporan) nampung
+ // "Arsipkan", Riwayat (#riwayat) nampung "Lihat Aktivitas" + "Revisi".
+ // closeAllMenus() menyapu KEDUA list biar klik di luar nutup menu mana pun.
+ function closeAllMenus(except){
+   const scopes=[list];if(riwayatList)scopes.push(riwayatList);
+   scopes.forEach(function(sc){
+     sc.querySelectorAll('.dcard-menu').forEach(function(menu){
+       if(menu===except||!menu.classList.contains('open'))return;
+       menu.classList.remove('open');
+       const btn=menu.previousElementSibling;
+       if(btn)btn.setAttribute('aria-expanded','false');
+     });
+   });
+ }
+ function bindMenus(){
+   list.querySelectorAll('.dcard-menu-toggle').forEach(function(btn){
+     if(btn.dataset.menuBound==='1')return;
+     btn.dataset.menuBound='1';
+     btn.addEventListener('click',function(e){
+       e.stopPropagation();
+       const menu=btn.nextElementSibling;if(!menu)return;
+       const willOpen=!menu.classList.contains('open');
+       closeAllMenus();
+       if(willOpen){menu.classList.add('open');btn.setAttribute('aria-expanded','true');}
+     });
+   });
+ }
+ document.addEventListener('click',function(){closeAllMenus();});
+
+ // Konfirmasi arsip SATU permintaan sekaligus (bukan bulk-select kayak
+ // sebelumnya) -- "gapapa harus satu-satu juga" per instruksi user, ganti
+ // checkbox+tombol toolbar dengan aksi per-kartu lewat menu titik-3.
+ function ensureArchiveConfirm(){
+   let overlay=document.getElementById('danpusArchiveConfirmOverlay');if(overlay)return overlay;
+   overlay=document.createElement('div');overlay.className='confirm-overlay';overlay.id='danpusArchiveConfirmOverlay';
+   overlay.innerHTML='<div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="danpusArchiveConfirmTitle"><div class="confirm-icon"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4.5 14.5V27h23V14.5"></path><path d="M3.5 13h25"></path><path d="M6 13V8.5h20V13"></path><path d="M8 8.5V5.5h17l2 3"></path><path d="M10 13l7 5.5h9V13"></path><path d="M17 18.5h9v7.5a4 4 0 0 1-4 4H10a5.5 5.5 0 0 1-5.5-5.5V14.5"></path><path d="M16 19h7"></path><path d="M18 23h5"></path></svg></div><h3 id="danpusArchiveConfirmTitle">Arsipkan Permintaan Ini?</h3><p id="danpusArchiveConfirmText"></p><div class="confirm-actions"><button type="button" class="btn" id="danpusArchiveConfirmBatal">Batal</button><button type="button" class="btn btn-primary" id="danpusArchiveConfirmYa">Ya, Arsipkan</button></div></div>';
+   document.body.appendChild(overlay);
+   overlay.addEventListener('click',function(e){if(e.target===overlay)closeArchiveConfirm();});
+   overlay.querySelector('#danpusArchiveConfirmBatal').addEventListener('click',closeArchiveConfirm);
+   return overlay;
+ }
+ function openArchiveConfirm(id,perihal){
+   const overlay=ensureArchiveConfirm();
+   overlay.querySelector('#danpusArchiveConfirmText').textContent=(perihal?'"'+perihal+'"':'Permintaan ini')+' akan dipindahkan ke Riwayat Laporan.';
+   // Ganti tombol "Ya" dengan clone baru tiap buka -- biar listener lama
+   // (nempel ke ID permintaan SEBELUMNYA) gak ikut kebawa & numpuk.
+   const yaBtn=overlay.querySelector('#danpusArchiveConfirmYa');
+   const freshYa=yaBtn.cloneNode(true);
+   yaBtn.replaceWith(freshYa);
+   freshYa.addEventListener('click',function(){closeArchiveConfirm();archiveOne(id);});
+   overlay.classList.add('open');
+ }
+ function closeArchiveConfirm(){document.getElementById('danpusArchiveConfirmOverlay')?.classList.remove('open');}
+ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeArchiveConfirm();});
+
+ async function archiveOne(id){
+   if(busy||!id)return;busy=true;
+   const btn=list.querySelector('.dcard-archive-btn[data-permintaan-id="'+id+'"]');
+   if(btn)btn.disabled=true;
+   try{
+     const form=new FormData();form.append('archive_mode','1');form.append('permintaan_laporan_ids[]',id);
+     const token=csrf();
+     const r=await fetch(archiveEndpoint,{method:'POST',credentials:'same-origin',body:form,headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest',...(token?{'X-CSRF-TOKEN':token}:{})}});
+     const data=await r.json().catch(()=>({}));
+     if(!r.ok)throw new Error(data.message||'Permintaan gagal diarsipkan.');
+     // archive() sekarang cuma balikin archived_ids -- kartu ilang dari daftar
+     // aktif via animasi, lalu kartu Riwayat ditarik ulang lewat loadHistory().
+     removeArchivedRows(Array.isArray(data.archived_ids)?data.archived_ids:[]);
+     loadHistory();
+     window.siberadShowToast?.('success',data.message||'Permintaan berhasil dipindahkan ke Riwayat Laporan.');
+   }catch(error){
+     window.siberadShowToast?.('error',error.message||'Permintaan gagal diarsipkan.');
+     if(btn)btn.disabled=false;
+   }finally{
+     busy=false;
+   }
+ }
+ function bindArchiveButtons(){
+   list.querySelectorAll('.dcard-archive-btn').forEach(function(btn){
+     if(btn.dataset.archiveBound==='1')return;
+     btn.dataset.archiveBound='1';
+     btn.addEventListener('click',function(){
+       closeAllMenus();
+       const id=btn.dataset.permintaanId,perihal=btn.dataset.perihal||'';
+       if(!id)return;
+       openArchiveConfirm(id,perihal);
+     });
+   });
+ }
+
+ // Pencarian+filter status+sort kartu -- pengganti initReportFilter({
+ // sectionId:'permintaan-laporan', tableSelector:'.request-table', ...})
+ // di danpus-report-table-filter.blade.php yang otomatis berhenti kerja
+ // (no-op) begitu tabelnya diganti jadi grid kartu ini.
+ function initCardFilter(){
+   if(panel.dataset.cardFilterReady==='1')return;
+   const initialItems=Array.prototype.slice.call(list.querySelectorAll(':scope > article.deadline-sender-item'));
+   if(!initialItems.length)return;
+   panel.dataset.cardFilterReady='1';
+
+   const bar=document.createElement('div');bar.className='rpt-filter-bar';
+   bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="Cari perihal atau satuan tujuan..." aria-label="Cari perihal atau satuan tujuan..."></div><select class="rpt-filter-select" aria-label="Filter status"><option value="all">Semua Status</option><option value="Terbaru">Terbaru</option><option value="Sedang diproses">Sedang diproses</option><option value="Menunggu">Menunggu</option><option value="Revisi">Revisi</option><option value="Terlambat">Terlambat</option><option value="Dibatalkan">Dibatalkan</option><option value="Ditolak">Ditolak</option><option value="Disetujui">Disetujui</option></select><select class="rpt-filter-select" aria-label="Urutkan"><option value="terdekat">Deadline Terdekat</option><option value="terjauh">Deadline Terjauh</option></select><span class="rpt-filter-count"></span>';
+   const head=panel.querySelector('.request-head');
+   if(head){head.insertAdjacentElement('afterend',bar);}else{list.parentNode.insertBefore(bar,list);}
+
+   const emptyBox=document.createElement('div');
+   emptyBox.className='empty-state';emptyBox.style.display='none';
+   emptyBox.innerHTML='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada permintaan laporan yang sesuai dengan pencarian/filter.</div>';
+   list.parentNode.insertBefore(emptyBox,list.nextSibling);
+
+   const input=bar.querySelector('input');
+   const selects=bar.querySelectorAll('select');
+   const statusSelect=selects[0],sortSelect=selects[1];
+   const count=bar.querySelector('.rpt-filter-count');
+
+   function apply(){
+     // Kartu yang lagi fade-out (data-removing) dikecualikan biar animasi
+     // keluarnya nggak keganggu display:none / FLIP-reorder (lihat catatan
+     // sama di apply() Riwayat).
+     const items=Array.prototype.slice.call(list.querySelectorAll(':scope > article.deadline-sender-item'))
+       .filter(function(el){return el.dataset.removing!=='1';});
+     const pinnedIds=getPinnedIds();
+     items.sort(function(a,b){
+       const aPin=pinnedIds.has(a.getAttribute('data-realtime-permintaan-id'));
+       const bPin=pinnedIds.has(b.getAttribute('data-realtime-permintaan-id'));
+       if(aPin!==bPin)return aPin?-1:1;
+       // "Terbaru" (belum dikonfirmasi satuan) nyembul ke atas -- sejajar sama
+       // prioritas sort di kartu satuan (apply() di permintaan-laporan-deadline.blade.php).
+       const aBaru=a.dataset.status==='Terbaru',bBaru=b.dataset.status==='Terbaru';
+       if(aBaru!==bBaru)return aBaru?-1:1;
+       const diff=Number(a.dataset.deadlineAt)-Number(b.dataset.deadlineAt);
+       return sortSelect.value==='terjauh'?-diff:diff;
+     });
+     const needsReorder=items.some(function(item,i){return item.nextElementSibling!==(items[i+1]||null)});
+     if(needsReorder){
+       const reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+       const prevRects=reduceMotion?null:new Map();
+       if(prevRects){items.forEach(function(item){if(item.style.display!=='none')prevRects.set(item,item.getBoundingClientRect());});}
+       items.forEach(function(item){list.appendChild(item);});
+       if(prevRects){
+         items.forEach(function(item){
+           const prev=prevRects.get(item);if(!prev)return;
+           const next=item.getBoundingClientRect();
+           const dx=prev.left-next.left,dy=prev.top-next.top;
+           if(Math.abs(dx)<1&&Math.abs(dy)<1)return;
+           item.style.transition='none';item.style.transform='translate('+dx+'px,'+dy+'px)';
+           item.getBoundingClientRect();
+           // dua rAF -- state "dari" wajib kepaint dulu sebelum transisi ke
+           // "ke" dipicu, biar geser-nya nggak ke-skip/kepotong di akhir.
+           (function(el){requestAnimationFrame(function(){requestAnimationFrame(function(){
+             el.style.transition='transform .58s cubic-bezier(.16,1,.3,1)';el.style.transform='';
+           });});})(item);
+           item.addEventListener('transitionend',function handler(e){if(e.propertyName!=='transform')return;item.style.transition='';item.removeEventListener('transitionend',handler);});
+         });
+       }
+     }
+     const q=(input.value||'').trim().toLowerCase();
+     const statusFilter=statusSelect.value;
+     let visible=0;
+     items.forEach(function(item){
+       const matchesSearch=!q||(item.dataset.search||'').indexOf(q)!==-1;
+       const matchesStatus=statusFilter==='all'||item.dataset.status===statusFilter;
+       const match=matchesSearch&&matchesStatus;
+       item.style.display=match?'':'none';
+       if(match)visible++;
+     });
+     count.textContent=visible+' dari '+items.length+' data';
+     emptyBox.style.display=visible===0?'block':'none';
+   }
+   input.addEventListener('input',apply);
+   statusSelect.addEventListener('change',apply);
+   sortSelect.addEventListener('change',apply);
+   window.siberadRefreshPimpinanPermintaanFilter=apply;
+   apply();
+ }
+
+ function rebind(){bindMenus();bindArchiveButtons();bindPinButtons();}
+
+ // ── Realtime kartu (status / progres bar / "x/y tugas selesai" / tombol) ──
+ // Kartu Pimpinan dulu cuma di-render server sekali. Di sini kita poll
+ // perubahan tiap 4 dtk: kartu yang datanya berubah di-replaceWith() HTML
+ // fresh dari server, kartu baru disisipin, semua dengan animasi halus.
+ // Pola sama dengan sisi satuan (laporan-role-realtime-sync.blade.php).
+ // Kartu yang HILANG (diarsip/diputuskan) tetap ditangani loadHistory().
+ const cardsEndpoint='{{ route('permintaan-laporan.realtime') }}?pimpinan=1';
+ let cardsSince='0',cardsBusy=false;
+ function prefersReduce(){return window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
+ // Bandingkan kartu tanpa atribut/kelas yang dikelola klien (pin, menu
+ // kebuka, flag *-bound, style sisa FLIP, kelas animasi) -- biar cuma
+ // ke-replace kalau data server-nya yang beneran beda.
+ function cardSignature(el){
+   const c=el.cloneNode(true);
+   c.removeAttribute('style');c.removeAttribute('data-ditandai');
+   c.classList.remove('siberad-pimpinan-card-in','siberad-pimpinan-card-out');
+   c.querySelectorAll('[data-menu-bound],[data-archive-bound],[data-pin-bound],[data-riwayat-bound]').forEach(function(n){n.removeAttribute('data-menu-bound');n.removeAttribute('data-archive-bound');n.removeAttribute('data-pin-bound');n.removeAttribute('data-riwayat-bound');});
+   c.querySelectorAll('.dcard-pin-btn[aria-pressed]').forEach(function(n){n.setAttribute('aria-pressed','false');});
+   c.querySelectorAll('.dcard-menu.open').forEach(function(n){n.classList.remove('open');});
+   c.querySelectorAll('[aria-expanded="true"]').forEach(function(n){n.setAttribute('aria-expanded','false');});
+   // Buang style transient sisa animasi (transition/opacity/transform), lalu
+   // NORMALISASI serialisasi style yang tersisa (mis. width:X% -> "width: X%;")
+   // biar sama antara kartu yang habis dianimasikan & HTML fresh dari server.
+   c.querySelectorAll('[style]').forEach(function(n){
+     ['transition','-webkit-transition','opacity','transform'].forEach(function(p){n.style.removeProperty(p);});
+     const cs=n.style.cssText;
+     if(cs)n.setAttribute('style',cs);else n.removeAttribute('style');
+   });
+   // Rapikan whitespace text-node di sekitar tag (indentasi Blade) supaya
+   // teks yang di-set via JS (tanpa indentasi) tetap kebandingin sama.
+   return c.outerHTML.replace(/>\s+/g,'>').replace(/\s+</g,'<');
+ }
+ function playOnce(card,cls,ms){
+   card.classList.add(cls);
+   const done=function(){card.classList.remove(cls);card.removeEventListener('animationend',done);clearTimeout(t);};
+   // animationend + fallback timeout -- kalau kartu lagi di tab tersembunyi,
+   // animasinya gak jalan & animationend gak pernah nembak.
+   const t=setTimeout(done,ms);
+   card.addEventListener('animationend',done);
+ }
+ function enterCard(card){
+   if(prefersReduce())return;
+   playOnce(card,'siberad-pimpinan-card-in',700);
+ }
+
+ // ── Animasi DELTA nilai kartu (progres bar / % / "x/y tugas" / status) ──
+ // replaceWith() bikin nilai baru "nyeplak" karena elemennya benar-benar
+ // baru. Jadi: rekam nilai LAMA sebelum replace, lalu seed nilai lama ke
+ // kartu baru & animasikan naik/berubah perlahan ke nilai barunya.
+ function cardSnapshot(card){
+   const val=card.querySelector('.dcard-progress-value');
+   const fill=card.querySelector('.dcard-progress-fill');
+   const tasks=card.querySelector('.dcard-tasks-summary');
+   const pill=card.querySelector('.dcard-status-pill');
+   const tasksText=tasks?tasks.textContent.replace(/\s+/g,' ').trim():'';
+   return {
+     pct: val?(parseInt((val.textContent||'').replace(/\D/g,''),10)||0):null,
+     fillW: fill?(fill.style.width||''):null,
+     tasksText: tasksText,
+     tasksNums: tasksText.match(/^(\d+)\s*\/\s*(\d+)/),
+     statusText: pill?pill.textContent.replace(/\s+/g,' ').trim():null,
+     statusClass: pill?pill.className:null
+   };
+ }
+ function tweenNum(from,to,ms,onStep){
+   from=Number(from)||0;to=Number(to)||0;
+   if(from===to){onStep(to);return;}
+   const t0=performance.now();
+   (function frame(now){
+     const p=Math.min(1,(now-t0)/ms);
+     const e=1-Math.pow(1-p,3);
+     onStep(p>=1?to:(from+(to-from)*e));
+     if(p<1)requestAnimationFrame(frame);
+   })(performance.now());
+ }
+ function setTasksText(el,text){
+   Array.prototype.slice.call(el.childNodes).forEach(function(n){if(n.nodeType===3)n.remove();});
+   el.appendChild(document.createTextNode(text));
+ }
+ function crossfadeText(el,oldText,newText,isTasks){
+   isTasks?setTasksText(el,oldText):(el.textContent=oldText);
+   el.style.transition='none';el.style.opacity='1';
+   void el.offsetWidth;
+   el.style.transition='opacity .16s ease';
+   el.style.opacity='0';
+   setTimeout(function(){
+     isTasks?setTasksText(el,newText):(el.textContent=newText);
+     el.style.opacity='0';void el.offsetWidth;el.style.opacity='1';
+     setTimeout(function(){el.style.transition='';el.style.opacity='';},200);
+   },170);
+ }
+ function animateCardDelta(freshCard,old){
+   if(prefersReduce())return;
+   const fill=freshCard.querySelector('.dcard-progress-fill');
+   const val=freshCard.querySelector('.dcard-progress-value');
+   const tasks=freshCard.querySelector('.dcard-tasks-summary');
+   const pill=freshCard.querySelector('.dcard-status-pill');
+   // Progres bar: seed lebar lama -> transisi mulus ke lebar baru.
+   if(fill&&old.fillW!=null){
+     const target=fill.style.width||'';
+     if(target!==old.fillW){
+       fill.style.transition='none';fill.style.width=old.fillW;
+       void fill.offsetWidth;
+       fill.style.transition='width .7s cubic-bezier(.4,0,.2,1)';
+       requestAnimationFrame(function(){fill.style.width=target;});
+       setTimeout(function(){fill.style.transition='';},820);
+     }
+   }
+   // Angka persen: hitung naik/turun perlahan.
+   if(val&&old.pct!=null){
+     const target=parseInt((val.textContent||'').replace(/\D/g,''),10)||0;
+     if(target!==old.pct)tweenNum(old.pct,target,700,function(v){val.textContent=Math.round(v)+'%';});
+   }
+   // "x/y tugas selesai": tween angka X kalau Y sama, selain itu crossfade.
+   if(tasks&&old.tasksText){
+     const now=tasks.textContent.replace(/\s+/g,' ').trim();
+     if(now!==old.tasksText){
+       const m=now.match(/^(\d+)\s*\/\s*(\d+)/);
+       if(m&&old.tasksNums&&m[2]===old.tasksNums[2]){
+         const y=m[2];
+         tweenNum(parseInt(old.tasksNums[1],10),parseInt(m[1],10),700,function(v){setTasksText(tasks,Math.round(v)+'/'+y+' tugas selesai');});
+       }else{
+         crossfadeText(tasks,old.tasksText,now,true);
+       }
+     }
+   }
+   // Status pill: crossfade teks + ganti kelas warna (naik lalu turun).
+   if(pill&&old.statusText!=null){
+     const newText=pill.textContent.replace(/\s+/g,' ').trim();
+     const newClass=pill.className;
+     if(newText!==old.statusText||newClass!==old.statusClass){
+       pill.textContent=old.statusText;pill.className=old.statusClass;
+       pill.style.transition='none';pill.style.opacity='1';pill.style.transform='none';
+       void pill.offsetWidth;
+       pill.style.transition='opacity .17s ease,transform .17s ease';
+       pill.style.opacity='0';pill.style.transform='translateY(-3px)';
+       setTimeout(function(){
+         pill.textContent=newText;pill.className=newClass;
+         pill.style.opacity='0';pill.style.transform='translateY(3px)';
+         void pill.offsetWidth;
+         pill.style.opacity='1';pill.style.transform='none';
+         setTimeout(function(){pill.style.transition='';pill.style.transform='';pill.style.opacity='';},240);
+       },180);
+     }
+   }
+ }
+ async function syncPimpinanCards(){
+   if(cardsBusy||busy||document.hidden)return;
+   if(list.querySelector('.dcard-menu.open'))return; // jangan ganggu menu titik-3 yang lagi kebuka
+   cardsBusy=true;
+   try{
+     const r=await fetch(cardsEndpoint+'&since='+encodeURIComponent(cardsSince)+'&_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest','Cache-Control':'no-cache'}});
+     if(!r.ok)return;
+     const data=await r.json();
+     if(data&&data.server_time)cardsSince=data.server_time;
+     if(typeof data.items_html!=='string')return;
+     const holder=document.createElement('div');holder.innerHTML=data.items_html.trim();
+     const fresh=Array.prototype.slice.call(holder.querySelectorAll(':scope > article.deadline-sender-item'));
+     if(!fresh.length)return;
+     const pinned=getPinnedIds();
+     let changed=false,insertedAny=false;
+     fresh.forEach(function(freshCard){
+       const id=freshCard.getAttribute('data-realtime-permintaan-id');if(!id)return;
+       const current=list.querySelector(':scope > article[data-realtime-permintaan-id="'+id+'"]');
+       if(current){
+         if(cardSignature(current)===cardSignature(freshCard))return;
+         const wasHidden=current.style.display==='none';
+         const snap=cardSnapshot(current);
+         current.replaceWith(freshCard);
+         applyPinnedState(freshCard,pinned.has(id));
+         if(wasHidden)freshCard.style.display='none';
+         animateCardDelta(freshCard,snap);
+         // Kalau modal "Lihat Progres" lagi kebuka buat permintaan ini,
+         // checklist-nya ikut ke-refresh live (bukan cuma pas dibuka ulang).
+         window.siberadRefreshPimpinanProgres&&window.siberadRefreshPimpinanProgres(freshCard);
+         changed=true;
+       }else{
+         list.insertBefore(freshCard,list.firstChild);
+         applyPinnedState(freshCard,pinned.has(id));
+         enterCard(freshCard);
+         changed=true;insertedAny=true;
+       }
+     });
+     if(changed){
+       rebind();
+       syncEmptyState();
+       if(insertedAny&&panel.dataset.cardFilterReady!=='1')initCardFilter();
+       window.siberadRefreshPimpinanPermintaanFilter&&window.siberadRefreshPimpinanPermintaanFilter();
+     }
+   }catch(e){}
+   finally{cardsBusy=false;}
+ }
+
+ new MutationObserver(rebind).observe(list,{childList:true});
+ rebind();syncEmptyState();initCardFilter();
+
+ // Riwayat Laporan (#riwayat) -- kartu awal dari server: bind menu/pin + filter,
+ // lalu ikut disegarkan tiap siklus loadHistory() (interval 5 dtk di bawah).
+ if(riwayatList){
+   bindRiwayatMenus();bindRiwayatPinButtons();initRiwayatCardFilter();syncRiwayatEmptyState();
+   new MutationObserver(function(){bindRiwayatMenus();bindRiwayatPinButtons();}).observe(riwayatList,{childList:true});
+ }
+
+ loadHistory();window.setInterval(()=>{if(!document.hidden&&!busy)loadHistory()},5000);
+ syncPimpinanCards();window.setInterval(syncPimpinanCards,4000);
+ document.addEventListener('visibilitychange',function(){if(!document.hidden)syncPimpinanCards();});
+
+ // Dipakai setelah aksi AJAX (Batalkan / Edit Deadline dari modal Lihat
+ // Progres) buat nyegerin kartu + isi modal SEGERA, tanpa nunggu poll 4-5 dtk.
+ window.siberadSyncPimpinanCardsNow=function(){cardsSince='0';syncPimpinanCards();setTimeout(syncPimpinanCards,500);};
+ window.siberadLoadHistoryNow=loadHistory;
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initDanpusArchiveMode,{once:true});else initDanpusArchiveMode();
 })();

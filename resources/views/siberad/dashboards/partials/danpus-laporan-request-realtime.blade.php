@@ -127,8 +127,8 @@
             current=3;
         }else if(status==='Selesai'){
             current=4;
-            if(latestStatus.includes('tolak')){finalKind='rejected';finalText='Selesai · Ditolak';}
-            else {finalKind='approved';finalText='Selesai · Disetujui';}
+            if(latestStatus.includes('tolak')){finalKind='rejected';finalText='Ditolak';}
+            else {finalKind='approved';finalText='Disetujui';}
         }else if(cancelled){
             current=s.ditinjau_at?2:1;
         }
@@ -146,7 +146,10 @@
         items.forEach(function(item,index){
             const isFinal=index===items.length-1;
             if(cancelled && index>=current){setItemState(item,'rejected','Dibatalkan');return;}
-            if(late && index===current){setItemState(item,'rejected','Terlambat');return;}
+            // Terlambat = terminal (deadline lewat, laporan gak masuk) -> cat
+            // merah/silang X-nya diterusin sampai tahap "Laporan Selesai",
+            // konsisten sama Dibatalkan (index>=current), bukan cuma 1 tahap.
+            if(late && index>=current){setItemState(item,'rejected','Terlambat');return;}
             if(finalKind&&isFinal){setItemState(item,finalKind,finalText);return;}
             if(index<current){setItemState(item,'done','Selesai');return;}
             if(index===current){

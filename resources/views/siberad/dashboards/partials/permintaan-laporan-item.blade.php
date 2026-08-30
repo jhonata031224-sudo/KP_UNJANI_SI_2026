@@ -3,11 +3,17 @@
     $deadlineClass = $permintaan->isTerlambat() ? 'bad' : ($permintaan->deadline_at->diffInHours(now()) <= 24 ? 'near' : 'normal');
     $latestProgresCheckpoint = $permintaan->laporans->where('status', \App\Models\Laporan::STATUS_PROGRES)->sortByDesc('id')->first();
     // Permintaan yang sudah final (laporan_id keisi, lagi "Menunggu
-    // pemeriksaan" Pimpinan) -- deadline udah gak relevan lagi ditampilkan
-    // (kerjaan-nya sudah selesai, tinggal nunggu diperiksa), jadi pill
-    // deadline di footer disembunyikan (lihat dcard-footer di bawah).
-    // Checklist + tombol aksi juga jadi read-only, lihat dcard-status-area.
+    // pemeriksaan" Pimpinan) -- checklist + tombol aksi jadi read-only,
+    // lihat dcard-status-area.
     $isFinal = (bool) $permintaan->laporan_id;
+    // Pill deadline di footer DISEMBUNYIKAN buat status yang bikin hitungan
+    // mundur udah gak relevan -- semua KECUALI yang deadline-nya masih patokan
+    // hidup ("Belum dikerjakan" / "Sedang dikerjakan" / "Revisi") atau alarm
+    // aktif ("Terlambat"). "Revisi" IKUT nampilin pill: Pimpinan ngasih
+    // deadline baru pas klik Revisi (revisiDariRiwayat), jadi satuan perlu
+    // liat sisa waktu buat kirim ulang. Jadi Menunggu pemeriksaan, Dibatalkan,
+    // Selesai -> pill deadline hilang total.
+    $deadlineHidden = !in_array($statusTampilan, ['Belum dikerjakan', 'Sedang dikerjakan', 'Terlambat', 'Revisi'], true);
     // Terlambat/Dibatalkan: task yang belum diisi jadi silang (✕) & terkunci,
     // tombol Update Progres/Simpan Perubahan ilang. Balik normal otomatis
     // kalau deadline diperpanjang Pimpinan (isTerlambat() dihitung live).
@@ -33,18 +39,46 @@
     // biar permintaan yang udah kepalang terlambat tetap kebaca "Terlambat"
     // (merah, mendesak), bukan "Terbaru" yang kesannya adem-adem aja.
     $statusIsBaru = $statusTampilan === 'Belum dikerjakan';
-    $statusDisplay = $statusIsBaru ? 'Terbaru' : $statusTampilan;
+    // Laporan final ditolak? -- dipakai buat pecah "Selesai" jadi label
+    // "Disetujui"/"Ditolak" (+ warna), sama kayak kartu Pimpinan
+    // (permintaan-laporan-pimpinan-card.blade.php).
+    $hasilAkhirDitolak = $statusTampilan === 'Selesai'
+        && str_contains(strtolower($permintaan->laporan?->status ?? ''), 'tolak');
+    // Catatan/keterangan penolakan yang ditulis Pimpinan waktu klik "Tolak"
+    // (LaporanController::updateStatus -> laporans.catatan). Sampai sekarang
+    // nilai ini gak pernah muncul di UI satuan sama sekali -- ditarik dari
+    // laporan DITOLAK paling baru yang punya catatan, jadi kebaca juga pas
+    // status permintaan udah balik "Revisi" (laporan_id direset null, tapi
+    // $permintaan->laporans historis tetap simpan yang ditolak + catatannya).
+    // Ikut cocokin status "revisi": pas Pimpinan klik Revisi dari Riwayat
+    // (PermintaanLaporanController::revisiDariRiwayat) status laporan terakhir
+    // di-flip dari "Ditolak" -> "Revisi", tapi teks catatannya TETAP nempel.
+    $laporanDitolakTerakhir = $permintaan->laporans
+        ->filter(fn ($l) => (str_contains(strtolower((string) $l->status), 'tolak') || str_contains(strtolower((string) $l->status), 'revisi')) && trim((string) $l->catatan) !== '')
+        ->sortByDesc('id')
+        ->first();
+    $catatanPenolakan = trim((string) ($laporanDitolakTerakhir?->catatan ?? ''));
+    // Label pill disamakan dengan kartu Pimpinan: "Menunggu" (bukan "Menunggu
+    // pemeriksaan"), "Sedang diproses" (bukan "Sedang dikerjakan"), "Disetujui"/
+    // "Ditolak" (bukan "Selesai"). "Terbaru" tetap ada di sisi satuan.
+    $statusDisplay = match(true) {
+        $statusIsBaru => 'Terbaru',
+        $statusTampilan === 'Menunggu pemeriksaan' => 'Menunggu',
+        $statusTampilan === 'Sedang dikerjakan' => 'Sedang diproses',
+        $statusTampilan === 'Selesai' => $hasilAkhirDitolak ? 'Ditolak' : 'Disetujui',
+        default => $statusTampilan,
+    };
     $statusPillClass = match(true) {
         $statusTampilan === 'Dibatalkan' => 'bad',
         $statusTampilan === 'Terlambat' => 'bad',
         $statusTampilan === 'Revisi' => 'revisi',
         $statusTampilan === 'Menunggu pemeriksaan' => 'blue',
-        $statusTampilan === 'Selesai' => 'ok',
+        $statusTampilan === 'Selesai' => $hasilAkhirDitolak ? 'bad' : 'ok',
         $statusIsBaru => 'new',
         default => 'wait',
     };
 @endphp
-<article class="deadline-sender-item {{ $deadlineClass }}" data-realtime-permintaan-id="{{ $permintaan->id }}" data-search="{{ strtolower($permintaan->perihal) }}" data-kategori="{{ e($permintaan->kategori ?? '') }}" data-prioritas="{{ e($permintaan->prioritas) }}" data-belum-dikerjakan="{{ $belumDikerjakanMentah ? '1' : '0' }}" data-pengirim-kode="{{ e($permintaan->pembuat->satuan->kode ?? '') }}" data-deadline-at="{{ $permintaan->deadline_at->timestamp }}" data-ditandai="0">
+<article class="deadline-sender-item {{ $deadlineClass }}" data-realtime-permintaan-id="{{ $permintaan->id }}" data-search="{{ strtolower($permintaan->perihal) }}" data-kategori="{{ e($permintaan->kategori ?? '') }}" data-prioritas="{{ e($permintaan->prioritas) }}" data-belum-dikerjakan="{{ $belumDikerjakanMentah ? '1' : '0' }}" data-pengirim-kode="{{ e($permintaan->pembuat->satuan->kode ?? '') }}" data-catatan-penolakan="{{ e($catatanPenolakan) }}" data-deadline-at="{{ $permintaan->deadline_at->timestamp }}" data-archived-at="{{ $permintaan->archived_at?->timestamp ?? 0 }}" data-ditandai="0">
     {{-- Tombol tanda manual (checkbox bulat) di pojok kiri-atas -- status
          "ditandai"-nya PURE client-side (localStorage, lihat initDcardPinButtons
          di permintaan-laporan-deadline.blade.php), karena kita nggak boleh
@@ -53,18 +87,9 @@
     <button type="button" class="dcard-pin-btn" aria-pressed="false" aria-label="Tandai permintaan ini">
         <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
-    <div class="dcard-menu-wrap">
-        <button type="button" class="dcard-menu-btn dcard-menu-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Menu kartu">
-            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="12" cy="19" r="1.8"></circle></svg>
-        </button>
-        <div class="dcard-menu">
-            {{-- Arsipkan: UI dulu, fungsinya belum diaktifkan -- nunggu instruksi lanjutan sebelum disambungkan ke route apa pun. --}}
-            <button type="button" class="dcard-menu-item dcard-archive-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"></rect><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"></path><path d="M10 12h4"></path></svg>
-                Arsipkan
-            </button>
-        </div>
-    </div>
+    {{-- Menu titik-3 "Arsipkan" SENGAJA cuma ada di kartu Pimpinan
+         (permintaan-laporan-pimpinan-card.blade.php) -- hak arsip permintaan
+         laporan ada di Pimpinan, bukan satuan. --}}
     <div class="dcard-head">
         <div class="dcard-icon {{ $dcardPrioClass }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="m9 14 2 2 4-4"></path></svg>
@@ -101,11 +126,10 @@
                 {{ $permintaan->kategori ?: 'Prioritas '.$permintaan->prioritas }}
             @endif
         </span>
-        @unless($isFinal)
-        {{-- Deadline udah gak relevan lagi begitu laporan final terkirim &
-             lagi menunggu pemeriksaan Pimpinan -- kerjaannya sendiri sudah
-             kelar, jadi pill-nya disembunyikan (bukan cuma nunjukin sisa
-             waktu yang gak ada gunanya lagi). --}}
+        {{-- Deadline disembunyikan buat status terminal (lihat $deadlineHidden
+             di atas) -- persis pola kartu Pimpinan
+             (permintaan-laporan-pimpinan-card.blade.php). --}}
+        @unless($deadlineHidden)
         <span class="dcard-deadline-pill {{ $deadlineClass }}" title="{{ $permintaan->deadline_at->translatedFormat('d M Y H:i') }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
             {{ $permintaan->deadline_at->diffForHumans(null, \Carbon\CarbonInterface::DIFF_ABSOLUTE) }}
@@ -221,8 +245,12 @@
                 @endif
             @elseif($permintaan->status === 'Belum dikerjakan')
                 <button type="button" class="deadline-primary small" disabled title="Konfirmasi dulu lewat &quot;Lihat Detail&quot; sebelum bisa update progres">Update Progres</button>
-            @elseif($permintaan->isSedangRevisi())
-                <button type="button" class="deadline-primary small deadline-revisi use-permintaan" data-request-id="{{ $permintaan->id }}" data-target-id="{{ $permintaan->pembuat->satuan_id }}" data-perihal="{{ e($permintaan->perihal) }}" data-kategori="{{ e($permintaan->kategori ?? '') }}" data-prioritas="{{ e($permintaan->prioritas) }}" data-instruksi="{{ e($permintaan->instruksi ?? '') }}" data-progres="{{ $permintaan->progres }}" data-has-tasks="{{ $permintaan->tasks->isNotEmpty() ? '1' : '0' }}">Revisi</button>
+            {{-- Permintaan "Revisi" (laporan final dikembalikan Pimpinan lewat
+                 revisiDariRiwayat) SENGAJA gak punya cabang/tombol khusus lagi
+                 -- dia jatuh ke alur "Update Progres" biasa di bawah persis
+                 kayak permintaan "Sedang dikerjakan". Checkpoint task final yang
+                 tadi ditolak boleh diedit ulang lewat wizard yang sama (guard di
+                 LaporanController::updateProgres dilonggarin buat kasus ini). --}}
             @elseif($permintaan->tasks->isEmpty())
                 {{-- Permintaan tanpa task (dibuat sebelum fitur checklist task ada)
                      gak punya apa pun buat diklik di deadline-task-track (yang malah

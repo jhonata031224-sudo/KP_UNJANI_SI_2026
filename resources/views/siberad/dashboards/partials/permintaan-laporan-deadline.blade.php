@@ -447,13 +447,13 @@
             // user bisa buka form buat step MANA PUN termasuk ngedit step
             // yang sudah "Selesai".
             if(step===triggerBtn) li.classList.add('wizard-step-current');
-            // Task yang belum selesai TAPI permintaannya udah kepalang
-            // lewat deadline (data-terlambat, dihitung PHP dari
-            // $permintaan->isTerlambat(), lihat permintaan-laporan-item.
-            // blade.php) ditandai merah, bukan oranye "Sedang dikerjakan"
-            // biasa -- task yang sudah "Selesai" TETAP hijau apa adanya,
-            // gak ikut jadi merah cuma karena permintaannya sempat telat.
-            if(state!=='done' && step.dataset.terlambat==='1') li.classList.add('wizard-step-late');
+            // Task yang belum selesai TAPI permintaannya udah "mati" -- entah
+            // lewat deadline (data-terlambat, dari $permintaan->isTerlambat())
+            // ATAU dibatalkan Pimpinan (class .locked, dari $isLocked di
+            // permintaan-laporan-item.blade.php) -- ditandai MERAH, bukan
+            // oranye "Sedang dikerjakan" biasa. Task yang sudah "Selesai"
+            // TETAP hijau apa adanya.
+            if(state!=='done' && (step.dataset.terlambat==='1' || step.classList.contains('locked'))) li.classList.add('wizard-step-late');
             var dot=document.createElement('span');
             dot.className='wizard-step-dot';
             if(state==='done'){
@@ -537,6 +537,85 @@
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initWizardStepTopbar); else initWizardStepTopbar();
 
+    // Dipanggil realtime (laporan-role-realtime-sync.blade.php) tiap kartu
+    // di-replace -- kalau wizard #kirimLaporanModal lagi kebuka buat permintaan
+    // itu, topbar step-nya DIBANGUN ULANG dari kartu FRESH biar state-nya ikut
+    // update tanpa tutup-buka: task belum selesai + permintaan lewat deadline
+    // -> merah (wizard-step-late), dst. Isi form (deskripsi/kendala/lampiran)
+    // gak disentuh -- cuma strip step-nya.
+    window.siberadRefreshWizardTopbar=function(){
+        var modal=document.getElementById('kirimLaporanModal');
+        var form=document.getElementById('kirimLaporanForm');
+        if(!modal||!form||!modal.classList.contains('open')||!modal.classList.contains('wizard-active')) return;
+        var pidEl=form.querySelector('input[name="permintaan_laporan_id"]');
+        var tidEl=form.querySelector('input[name="task_id"]');
+        var pid=pidEl?String(pidEl.value||''):'';
+        if(!pid) return;
+        var card=document.querySelector('#permintaan-laporan .deadline-sender-item[data-realtime-permintaan-id="'+pid+'"], #riwayat .deadline-sender-item[data-realtime-permintaan-id="'+pid+'"]');
+        if(!card) return;
+        var track=card.querySelector('.deadline-task-track');
+        var steps=track?Array.prototype.slice.call(track.querySelectorAll('.deadline-task-step')):[];
+        if(!steps.length) return;
+        var tid=tidEl?String(tidEl.value||''):'';
+        var target=null;
+        if(tid) target=steps.filter(function(s){return String(s.dataset.taskId||'')===tid;})[0]||null;
+        if(!target){
+            var lis=Array.prototype.slice.call(document.querySelectorAll('#kirimLaporanWizardSteps .wizard-step'));
+            var curIdx=lis.findIndex(function(li){return li.classList.contains('wizard-step-current');});
+            if(curIdx>=0 && steps[curIdx]) target=steps[curIdx];
+        }
+        target=target||steps[0];
+        buildWizardTopbar(target);
+
+        // Kartu barusan jadi "mati" (Terlambat/Dibatalkan -> step .locked-view)
+        // sementara wizard lagi mode create/edit -> alihin ke mode VIEW
+        // read-only, SAMA kayak initLockedTaskSteps(): textarea readonly,
+        // tombol "Kirim Laporan" disembunyiin, dropzone lampiran ditutup.
+        // Teks yang udah diketik user SENGAJA gak dihapus (biar bisa disalin),
+        // cuma dikunci.
+        //
+        // Penanda "wizard lagi terkunci" pakai form.dataset.readonlyReason===
+        // 'locked' (BUKAN form.dataset.mode!=='view') supaya transisinya kebaca
+        // 2 arah: pas Pimpinan buka lagi permintaannya (Edit Deadline / kasih
+        // deadline baru), step kartu balik non-locked -> reason di-reset ke ''
+        // -> kalau nanti Terlambat/Dibatalkan LAGI, blok kunci di bawah nyala
+        // lagi & toast-nya muncul lagi (dulu nyangkut: sekali kekunci,
+        // form.dataset.mode 'view' selamanya -> toast cuma sekali seumur modal).
+        var stepLocked=target.classList.contains('locked-view');
+        var wizardLocked=form.dataset.readonlyReason==='locked';
+        if(stepLocked && !wizardLocked){
+            form.dataset.mode='view';
+            form.dataset.readonlyReason='locked';
+            setKirimLaporanReadonly(form,true);
+            var lampiranZone=document.getElementById('lampiranDropzone');
+            if(lampiranZone) setLampiranExisting(lampiranZone,[],true);
+            var progresInput=form.querySelector('[name="progres"]');
+            applyLaporanTexts('view',progresInput?progresInput.value:0,'locked');
+            var alasan=target.dataset.terlambat==='1'
+                ? 'Batas waktu permintaan ini sudah lewat.'
+                : 'Permintaan ini dibatalkan oleh Pimpinan.';
+            window.siberadShowToast&&window.siberadShowToast('info',alasan+' Formulir dikunci, laporan tidak bisa dikirim lagi.');
+        }else if(!stepLocked && wizardLocked){
+            // Pimpinan buka lagi permintaan ini -> lepas kunci wizard, balikin
+            // ke mode isi (default "create"/Update Progres -- jalur paling umum
+            // buat permintaan aktif), tanpa perlu tutup-buka modal. Teks yang
+            // tadi keketik TETAP dibiarin, cuma dibuka lagi supaya bisa diedit.
+            form.dataset.mode='create';
+            form.dataset.readonlyReason='';
+            form.dataset.editingTaskId='';
+            if(form.dataset.storeAction) form.action=form.dataset.storeAction;
+            setFormMethod(form,null);
+            setKirimLaporanReadonly(form,false);
+            var taskIdReopen=form.querySelector('input[name="task_id"]');
+            if(taskIdReopen) taskIdReopen.value=target.dataset.taskId||'';
+            var lampiranZoneReopen=document.getElementById('lampiranDropzone');
+            if(lampiranZoneReopen) setLampiranExisting(lampiranZoneReopen,[],false);
+            var progresReopen=form.querySelector('[name="progres"]');
+            applyLaporanTexts('create',progresReopen?progresReopen.value:0);
+            window.siberadShowToast&&window.siberadShowToast('success','Permintaan laporan ini dibuka lagi oleh Pimpinan. Kamu bisa lanjut isi laporannya.');
+        }
+    };
+
     // Tombol "Update Progres" baru di kartu (permintaan dengan checklist task,
     // bukan revisi) -- proxy klik ke step "active" (atau "done" kalau semua
     // task kebetulan sudah selesai) di track tersembunyi milik kartu yang
@@ -553,11 +632,16 @@
                 // :not([disabled]) -- task "active" yang terkunci
                 // (Terlambat/Dibatalkan, lihat $isLocked di
                 // permintaan-laporan-item.blade.php) gak boleh kepilih di
-                // sini, jatuhkan ke step "done" terakhir buat "Lihat Progres".
+                // sini, jatuhkan ke step "done" TERAKHIR (bukan pertama) --
+                // itu checkpoint paling relevan: buat "Lihat Progres" biasa
+                // maupun buat "Update Progres" permintaan yang lagi Revisi
+                // (semua task udah "done", yang perlu dibenerin & dikirim
+                // ulang ya laporan final di step terakhir).
                 // Fallback ke step manapun (locked/✕ termasuk) kalau semua
                 // task terkunci & belum ada satu pun yang "done" -- biar
                 // "Lihat Progres" tetap kebuka nampilin checklist ✕ semua.
-                var target=track.querySelector('.deadline-task-step.active:not([disabled])')||track.querySelector('.deadline-task-step.done')||track.querySelector('.deadline-task-step');
+                var doneSteps=track.querySelectorAll('.deadline-task-step.done');
+                var target=track.querySelector('.deadline-task-step.active:not([disabled])')||doneSteps[doneSteps.length-1]||track.querySelector('.deadline-task-step');
                 if(target) target.click();
             });
         });
@@ -664,8 +748,9 @@
         var row=document.createElement('div');
         row.className='lampiran-file-row';
         var icon=document.createElement('span');
-        icon.className='lampiran-file-row-icon';
-        icon.textContent=lampiranFileExtBadge(data.nama);
+        var extBadge=(window.siberadLampiranBadge&&window.siberadLampiranBadge(data.nama))||{text:lampiranFileExtBadge(data.nama),cls:'lfx-other'};
+        icon.className='lampiran-file-row-icon '+extBadge.cls;
+        icon.textContent=extBadge.text;
         var info=document.createElement('span');
         info.className='lampiran-file-row-info';
         // Nama file selalu jadi link yang bisa diklik buat buka/preview file
@@ -841,7 +926,7 @@
     }
     function initDcardPinButtons(){
         var pinned=getPinnedIds();
-        document.querySelectorAll('#permintaan-laporan .deadline-sender-item').forEach(function(card){
+        document.querySelectorAll('#permintaan-laporan .deadline-sender-item, #riwayat .deadline-sender-item').forEach(function(card){
             var id=card.getAttribute('data-realtime-permintaan-id');
             if(id) applyPinnedState(card,pinned.has(id));
         });
@@ -858,7 +943,18 @@
                 if(nowPinned) set.add(id); else set.delete(id);
                 savePinnedIds(set);
                 applyPinnedState(card,nowPinned);
-                window.siberadRefreshPermintaanFilter&&window.siberadRefreshPermintaanFilter();
+                // Refresh HANYA filter list tempat kartu ini berada -- persis
+                // pola Pimpinan (bindPinButtons vs bindRiwayatPinButtons yang
+                // scoped, masing-masing manggil 1 filter). Dulu handler ini cuma
+                // manggil filter #permintaan-laporan, jadi pin di kartu Riwayat
+                // baru pindah pas poll 3 dtk berikutnya ("lemot"); sempat diganti
+                // manggil DUA-DUANYA sekaligus, tapi apply() #permintaan-laporan
+                // (beda tab) jalan duluan bikin reorder Riwayat kerasa "loncat".
+                if(card.closest('#riwayat')){
+                    window.siberadRefreshRiwayatFilter&&window.siberadRefreshRiwayatFilter();
+                }else{
+                    window.siberadRefreshPermintaanFilter&&window.siberadRefreshPermintaanFilter();
+                }
             });
         });
     }
@@ -906,7 +1002,7 @@
     // Dipanggil ulang oleh polling realtime (permintaan-laporan-realtime.blade.php,
     // laporan-role-realtime-sync.blade.php) setiap kali kartu permintaan diganti/
     // ditambah, supaya tombol Update Progres/Revisi/Edit yang baru tetap bisa diklik.
-    window.siberadRebindPermintaanActions=function(){initUsePermintaanButtons();initEditProgresButtons();initLockedTaskSteps();initWizardStepTopbar();initWizardEntryButtons();initDcardMenus();initDcardPinButtons();window.siberadRefreshPermintaanFilter&&window.siberadRefreshPermintaanFilter();};
+    window.siberadRebindPermintaanActions=function(){initUsePermintaanButtons();initEditProgresButtons();initLockedTaskSteps();initWizardStepTopbar();initWizardEntryButtons();initDcardMenus();initDcardPinButtons();initPermintaanSearch();window.siberadRefreshPermintaanFilter&&window.siberadRefreshPermintaanFilter();window.siberadRefreshRiwayatFilter&&window.siberadRefreshRiwayatFilter();};
 
     // Submit #kirimLaporanForm (Update Progres/Edit Progres) lewat AJAX,
     // BUKAN native form submit -- native submit selalu bikin full-page
@@ -975,11 +1071,12 @@
         }
     };
 
-    // Pencarian daftar Permintaan Laporan -- reuse gaya .rpt-filter-* yang
-    // sama dengan tabel lain (1 sistem), tapi logikanya custom karena isinya
-    // kartu <article> bukan baris <tr>.
-    function initPermintaanSearch(){
-        var section=document.getElementById('permintaan-laporan');
+    // Pencarian+sort kartu -- reuse gaya .rpt-filter-* yang sama dengan
+    // tabel lain (1 sistem), tapi logikanya custom karena isinya kartu
+    // <article> bukan baris <tr>. Dipakai bareng buat Permintaan Laporan &
+    // Riwayat Laporan lewat config.sectionId/sortField/ascValue yang beda.
+    function initCardSearch(config){
+        var section=document.getElementById(config.sectionId);
         if(!section||section.dataset.searchReady==='1') return;
         var list=section.querySelector('.deadline-sender-list');
         if(!list) return;
@@ -989,16 +1086,11 @@
 
         var bar=document.createElement('div');
         bar.className='rpt-filter-bar';
-        // Urutan "Terbaru"/"Terlama" DULU berdasar kapan permintaan-nya
-        // dibuat (created_at) -- membingungkan buat section yang isinya soal
-        // DEADLINE (permintaan lama wajar deadline-nya udah lewat/terlambat,
-        // permintaan baru wajar deadline-nya masih jauh, tapi kelihatannya
-        // kayak "terlambat = terlama" padahal itu cuma korelasi, bukan
-        // urutan yang berguna). Sekarang diganti sort berdasar deadline_at
-        // beneran (data-deadline-at, timestamp) -- "Deadline Terdekat" jadi
-        // default biar permintaan paling mendesak nongol duluan, sesuai
-        // tujuan section ini (nge-track deadline, bukan riwayat pembuatan).
-        bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="Cari perihal..." aria-label="Cari perihal"></div><select class="rpt-filter-select" aria-label="Urutkan"><option value="terdekat">Deadline Terdekat</option><option value="terjauh">Deadline Terjauh</option></select><span class="rpt-filter-count"></span>';
+        // Dropdown sort beda per section: "Deadline Terdekat/Terjauh"
+        // (data-deadline-at) buat Permintaan, "Arsip Terbaru/Terlama"
+        // (data-archived-at) buat Riwayat -- lihat initPermintaanSearch()
+        // di bawah buat config lengkapnya per section.
+        bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="Cari perihal..." aria-label="Cari perihal"></div><select class="rpt-filter-select" aria-label="Urutkan">'+config.sortOptionsHtml+'</select><span class="rpt-filter-count"></span>';
         // Bar pencarian+sort+hitungan ini bagian dari PANEL judul ("Permintaan
         // Laporan"), bukan nempel ke grid kartu -- .report-card sekarang cuma
         // bungkus panel-head (lihat laporan-role.blade.php), grid kartunya
@@ -1015,7 +1107,7 @@
         var emptyBox=document.createElement('div');
         emptyBox.className='empty-state';
         emptyBox.style.display='none';
-        emptyBox.innerHTML='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada permintaan laporan yang sesuai dengan pencarian.</div>';
+        emptyBox.innerHTML='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">'+config.emptyText+'</div>';
         list.parentNode.insertBefore(emptyBox,list.nextSibling);
 
         var input=bar.querySelector('input');
@@ -1056,8 +1148,8 @@
                 if(aPin!==bPin) return aPin?-1:1;
                 var aBaru=a.dataset.belumDikerjakan==='1',bBaru=b.dataset.belumDikerjakan==='1';
                 if(aBaru!==bBaru) return aBaru?-1:1;
-                var diff=Number(a.dataset.deadlineAt)-Number(b.dataset.deadlineAt);
-                return sortSelect.value==='terjauh'?-diff:diff;
+                var diff=Number(a.dataset[config.sortField])-Number(b.dataset[config.sortField]);
+                return sortSelect.value===config.ascValue?diff:-diff;
             });
             // Cuma reorder DOM kalau urutannya beneran berubah -- appendChild
             // tanpa syarat di tiap keystroke boros & berisiko (pola yang sama
@@ -1088,8 +1180,17 @@
                         item.style.transition='none';
                         item.style.transform='translate('+dx+'px,'+dy+'px)';
                         item.getBoundingClientRect();
-                        item.style.transition='transform .35s cubic-bezier(.4,0,.2,1)';
-                        item.style.transform='';
+                        // dua rAF -- pastikan state "dari" (transform di atas)
+                        // benar-benar kepaint dulu sebelum transisi ke "ke"
+                        // dipicu, biar geser-nya nggak ke-skip / kepotong di
+                        // akhir (kesannya "ngebut pas berhenti"). Easing halus
+                        // + deselerasi panjang: cubic-bezier(.16,1,.3,1).
+                        (function(el){
+                            requestAnimationFrame(function(){requestAnimationFrame(function(){
+                                el.style.transition='transform .58s cubic-bezier(.16,1,.3,1)';
+                                el.style.transform='';
+                            });});
+                        })(item);
                         item.addEventListener('transitionend',function handler(e){if(e.propertyName!=='transform')return;item.style.transition='';item.removeEventListener('transitionend',handler);});
                     });
                 }
@@ -1110,8 +1211,28 @@
         // polling realtime nambah/ganti/hapus kartu -- biar filter & hitungan
         // "x dari x data" ikut nyegerin diri sendiri tanpa nunggu user ngetik
         // ulang di kolom cari.
-        window.siberadRefreshPermintaanFilter=apply;
+        window[config.refreshGlobalName]=apply;
         apply();
+    }
+    function initPermintaanSearch(){
+        initCardSearch({
+            sectionId:'permintaan-laporan',
+            sortField:'deadlineAt',
+            ascValue:'terdekat',
+            sortOptionsHtml:'<option value="terdekat">Deadline Terdekat</option><option value="terjauh">Deadline Terjauh</option>',
+            emptyText:'Tidak ada permintaan laporan yang sesuai dengan pencarian.',
+            refreshGlobalName:'siberadRefreshPermintaanFilter'
+        });
+        // Riwayat: sort berdasar data-archived-at, arsip terbaru duluan
+        // sebagai default (senada sama urutan query di DashboardController).
+        initCardSearch({
+            sectionId:'riwayat',
+            sortField:'archivedAt',
+            ascValue:'terlama',
+            sortOptionsHtml:'<option value="terbaru">Arsip Terbaru</option><option value="terlama">Arsip Terlama</option>',
+            emptyText:'Tidak ada riwayat laporan yang sesuai dengan pencarian.',
+            refreshGlobalName:'siberadRefreshRiwayatFilter'
+        });
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initPermintaanSearch); else initPermintaanSearch();
 })();

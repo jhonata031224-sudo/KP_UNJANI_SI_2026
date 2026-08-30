@@ -15,9 +15,16 @@
      kalau baris kartunya kebetulan cuma 1 (section-nya jadi mepet pas di
      bawah baris itu). Dimatikan khusus di section ini, nggak sentuh
      .deadline-section (dipakai konteks lain) yang masih butuh overflow:hidden. --}}
-#permintaan-laporan.deadline-sender-section{overflow:visible}
-#permintaan-laporan.deadline-sender-section > .report-card{margin-bottom:40px}
+.deadline-sender-section{overflow:visible}
+.deadline-sender-section > .report-card{margin-bottom:40px}
 .deadline-sender-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));column-gap:18px;row-gap:64px}
+/* .empty-state jadi satu-satunya isi .deadline-sender-list pas daftarnya
+   kosong (lihat forelse-empty di laporan-role.blade.php) -- tanpa
+   grid-column:1/-1, dia cuma numpang 1 kolom grid (~280px, ikut minmax di
+   atas) kayak kartu biasa, jadi keliatan sempit/nempel kiri, beda sama
+   empty-state versi tabel (td colspan, lihat Laporan Tembusan) yang
+   otomatis selebar panel. */
+.deadline-sender-list > .empty-state{grid-column:1/-1}
 {{-- Animasi kartu baru (zoom-in) + kartu lama yang kegeser (FLIP, lihat
      insertItems() di permintaan-laporan-realtime.blade.php) pas ada
      permintaan baru masuk lewat polling realtime. --}}
@@ -97,7 +104,13 @@
 .dcard-deadline-pill svg{width:12px;height:12px;flex-shrink:0}
 .dcard-deadline-pill.near{color:var(--amber,#b77900);background:var(--amber-dim,rgba(183,121,0,.14));border-color:rgba(224,168,58,.4)}
 .dcard-deadline-pill.bad{color:var(--red,#c83b3b);background:var(--red-dim,rgba(200,59,59,.12));border-color:rgba(198,40,40,.3)}
-.dcard-status-area{margin-top:2px}
+/* margin-top:auto -- .deadline-sender-item flex-column, .deadline-sender-list
+   grid nyeragamin TINGGI semua kartu dalam 1 baris (default align-items:
+   stretch), tapi isi di atasnya (judul, task-track, deadline pill) panjangnya
+   beda-beda tiap kartu -- tanpa auto, baris tombol jadi nempel abis konten
+   TERPENDEK-nya sendiri, bukan nempel di dasar kartu, jadi ga sejajar sama
+   kartu sebelah yang kontennya lebih panjang. */
+.dcard-status-area{margin-top:auto;padding-top:2px}
 .deadline-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 @media(max-width:650px){.deadline-sender-list{grid-template-columns:1fr}}
 
@@ -353,7 +366,17 @@
    (setKirimLaporanReadonly di permintaan-laporan-deadline.blade.php). */
 #kirimLaporanSubmitBtn[hidden]{display:none}
 .lampiran-file-row{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:10px;background:var(--panel-alt)}
-.lampiran-file-row-icon{flex-shrink:0;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#d64545;color:#fff;font-size:8.5px;font-weight:800;letter-spacing:.02em}
+.lampiran-file-row-icon{flex-shrink:0;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#64748b;color:#fff;font-size:8.5px;font-weight:800;letter-spacing:.02em}
+/* Warna badge ikut format file -- konvensi umum: PDF merah, Word biru,
+   Excel hijau, PowerPoint oranye, gambar ungu, arsip amber, teks abu-tua. */
+.lampiran-file-row-icon.lfx-pdf{background:#d64545}
+.lampiran-file-row-icon.lfx-doc{background:#2b579a}
+.lampiran-file-row-icon.lfx-xls{background:#217346}
+.lampiran-file-row-icon.lfx-ppt{background:#c43e1c}
+.lampiran-file-row-icon.lfx-img{background:#7c3aed}
+.lampiran-file-row-icon.lfx-zip{background:#d97706}
+.lampiran-file-row-icon.lfx-txt{background:#475569}
+.lampiran-file-row-icon.lfx-other{background:#64748b}
 .lampiran-file-row-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
 .lampiran-file-row-name{font-size:12.5px;color:var(--text);font-weight:700;word-break:break-all;text-decoration:none}
 a.lampiran-file-row-name:hover{color:var(--gold-bright);text-decoration:underline}
@@ -362,3 +385,25 @@ a.lampiran-file-row-name:hover{color:var(--gold-bright);text-decoration:underlin
 .lampiran-file-row-remove:hover{background:var(--gold-dim);color:var(--gold-bright)}
 .lampiran-file-row-remove svg{width:14px;height:14px}
 </style>
+<script>
+/* Teks + kelas warna badge lampiran berdasarkan ekstensi file (konvensi
+   umum). Dipakai openPimpinanProgres() di laporan-pimpinan.blade.php &
+   buildLampiranRow() di permintaan-laporan-deadline.blade.php. Partial ini
+   ke-load di head kedua halaman jadi helper-nya siap sebelum dipakai. */
+window.siberadLampiranBadge=function(nameOrUrl){
+  var s=String(nameOrUrl||''),q=s.search(/[?#]/);
+  if(q>-1)s=s.slice(0,q);
+  var dot=s.lastIndexOf('.'),ext=dot>-1?s.slice(dot+1).toLowerCase():'';
+  var m={
+    pdf:['PDF','lfx-pdf'],
+    doc:['DOC','lfx-doc'],docx:['DOCX','lfx-doc'],rtf:['RTF','lfx-doc'],odt:['ODT','lfx-doc'],
+    xls:['XLS','lfx-xls'],xlsx:['XLSX','lfx-xls'],csv:['CSV','lfx-xls'],ods:['ODS','lfx-xls'],
+    ppt:['PPT','lfx-ppt'],pptx:['PPTX','lfx-ppt'],odp:['ODP','lfx-ppt'],
+    jpg:['JPG','lfx-img'],jpeg:['JPG','lfx-img'],png:['PNG','lfx-img'],gif:['GIF','lfx-img'],webp:['WEBP','lfx-img'],bmp:['BMP','lfx-img'],svg:['SVG','lfx-img'],heic:['HEIC','lfx-img'],
+    zip:['ZIP','lfx-zip'],rar:['RAR','lfx-zip'],'7z':['7Z','lfx-zip'],tar:['TAR','lfx-zip'],gz:['GZ','lfx-zip'],
+    txt:['TXT','lfx-txt'],md:['MD','lfx-txt'],log:['LOG','lfx-txt']
+  };
+  if(m[ext])return {text:m[ext][0],cls:m[ext][1]};
+  return {text:ext?ext.toUpperCase().slice(0,4):'FILE',cls:'lfx-other'};
+};
+</script>

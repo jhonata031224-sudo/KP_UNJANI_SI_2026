@@ -482,14 +482,42 @@ class LaporanController extends Controller
         $satuanAsal = $user->satuan;
         abort_unless($satuanAsal, 403, 'Akun ini belum terhubung ke satuan manapun.');
         abort_unless((int) $laporan->satuan_id === (int) $satuanAsal->id, 403, 'Anda tidak berhak mengedit laporan ini.');
-        abort_unless($laporan->status === Laporan::STATUS_PROGRES, 422, 'Hanya checkpoint progres yang belum final yang dapat diperbarui.');
+
+        // Checkpoint progres yang belum final SELALU boleh diedit. Selain itu,
+        // laporan FINAL yang dikembalikan Pimpinan buat direvisi juga boleh --
+        // permintaan-nya dibuka lagi (laporan_id null + status "Sedang
+        // dikerjakan", lihat PermintaanLaporanController::revisiDariRiwayat) dan
+        // laporan terakhirnya berstatus ditolak/revisi. Dengan begini alur
+        // "Revisi" satuan gak butuh tombol/modal khusus -- cukup wizard "Update
+        // Progres" yang sama, edit checkpoint task-nya lalu kirim ulang.
+        $bolehRevisiResubmit = static function (Laporan $l): bool {
+            $p = $l->permintaanLaporan;
+
+            return $p
+                && $p->laporan_id === null
+                && $p->status === PermintaanLaporan::STATUS_DIKERJAKAN
+                && (str_contains(strtolower((string) $l->status), 'tolak')
+                    || str_contains(strtolower((string) $l->status), 'revisi'));
+        };
+        $laporan->loadMissing('permintaanLaporan');
+        abort_unless(
+            $laporan->status === Laporan::STATUS_PROGRES || $bolehRevisiResubmit($laporan),
+            422,
+            'Hanya checkpoint progres yang belum final yang dapat diperbarui.'
+        );
 
         $progresValue = (int) $validated['progres'];
         $laporanBaru = null;
 
-        DB::transaction(function () use (&$laporanBaru, $laporan, $progresValue, $validated, $request, $user, $satuanAsal) {
+        DB::transaction(function () use (&$laporanBaru, $laporan, $progresValue, $validated, $request, $user, $satuanAsal, $bolehRevisiResubmit) {
             $sumber = Laporan::whereKey($laporan->id)->lockForUpdate()->first();
-            abort_unless($sumber && $sumber->status === Laporan::STATUS_PROGRES, 422, 'Checkpoint ini sudah final dan tidak dapat diperbarui.');
+            abort_unless($sumber, 422, 'Checkpoint ini sudah final dan tidak dapat diperbarui.');
+            $sumber->loadMissing('permintaanLaporan');
+            abort_unless(
+                $sumber->status === Laporan::STATUS_PROGRES || $bolehRevisiResubmit($sumber),
+                422,
+                'Checkpoint ini sudah final dan tidak dapat diperbarui.'
+            );
 
             $permintaan = $sumber->permintaan_laporan_id
                 ? PermintaanLaporan::whereKey($sumber->permintaan_laporan_id)->lockForUpdate()->first()
@@ -648,7 +676,12 @@ class LaporanController extends Controller
                 // PermintaanLaporanController::batal(), Terlambat itu
                 // properti terhitung dari deadline lewat, bukan status
                 // eksplisit -- jadi archived_at keduanya tetap manual).
-                'archived_at' => $isSelesai ? now() : $permintaan->archived_at,
+                // Revisi = kebalikannya: permintaan yang sudah ditolak (dan
+                // otomatis ke-arsip) dibuka kembali lewat menu titik-3 "Revisi"
+                // di Riwayat/Status -> archived_at wajib direset null biar
+                // kartunya balik ke daftar Permintaan Laporan aktif (Pimpinan
+                // & satuan) supaya satuan bisa kirim ulang laporannya.
+                'archived_at' => $isRevisi ? null : ($isSelesai ? now() : $permintaan->archived_at),
             ]);
         }
 
