@@ -382,6 +382,10 @@ else initFormGantiPassword();
     actions.innerHTML = '';
 
     if (!forms.length) {
+      // Modal Detail Laporan Kendala (Kasansi/Danpus/Tembusan) sengaja tidak
+      // pakai catatan "Mode pemantauan..." di bagian bawah -- lihat
+      // data-kendala-report pada partial kendala-*.
+      if (detailButton.dataset.kendalaReport === '1') return;
       var note = document.createElement('span');
       note.className = 'detail-action-note';
       note.textContent = detailButton.dataset.readonly === '1'

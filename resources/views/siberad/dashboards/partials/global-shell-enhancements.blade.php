@@ -193,6 +193,10 @@
       actions.innerHTML = '';
 
       if (!forms.length || detailButton.dataset.readonly === '1') {
+        // Modal Detail Laporan Kendala (Kasansi/Danpus/Tembusan) sengaja tidak
+        // pakai catatan "Mode pemantauan..." di bagian bawah -- lihat
+        // data-kendala-report pada partial kendala-*.
+        if (detailButton.dataset.kendalaReport === '1') return;
         var readonly = document.createElement('span');
         readonly.className = 'report-detail-note';
         readonly.textContent = detailButton.dataset.readonly === '1'
