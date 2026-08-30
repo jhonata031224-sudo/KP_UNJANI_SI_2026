@@ -193,6 +193,10 @@
       actions.innerHTML = '';
 
       if (!forms.length || detailButton.dataset.readonly === '1') {
+        // Modal Detail Laporan Kendala (Kasansi/Danpus/Tembusan) sengaja tidak
+        // pakai catatan "Mode pemantauan..." di bagian bawah -- lihat
+        // data-kendala-report pada partial kendala-*.
+        if (detailButton.dataset.kendalaReport === '1') return;
         var readonly = document.createElement('span');
         readonly.className = 'report-detail-note';
         readonly.textContent = detailButton.dataset.readonly === '1'
@@ -278,6 +282,12 @@
     document.addEventListener('click', function(e){
       var detailButton = e.target.closest('.review-actions .detail-btn, .action-row .detail-btn');
       if (!detailButton) return;
+      // Tombol Detail laporan tembusan punya form feedback-nya sendiri yang
+      // dirakit langsung di dalam window.openReportDetail (lihat data-tembusan-feedback
+      // di laporan-kendala-tembusan-row.blade.php). Delegation generik di bawah ini
+      // cuma ngerti pola form approve/reject/revisi biasa, jadi kalau dibiarkan jalan
+      // dia bakal nimpa ulang detailActions dan bikin form feedback ilang. Skip di sini.
+      if (detailButton.dataset.tembusanFeedback === '1') return;
       // .action-row juga dipakai buat tombol lain yang gak ada hubungannya
       // (mis. tombol "Batal" permintaan) -- itu bukan tombol Detail beneran,
       // cuma kebetulan sama-sama pakai class .detail-btn di dalam wrapper

@@ -100,6 +100,7 @@ class LaporanKendalaController extends Controller
         // yang mengirim request langsung tanpa lewat form.
         $validated = $request->validate([
             'perihal' => ['required', 'string', 'max:255'],
+            'kategori' => ['nullable', 'string', 'max:255'],
             'deskripsi' => ['required', 'string', 'max:10000'],
             'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
             'lampiran' => ['required', 'file', 'mimes:pdf', 'max:20480'],
@@ -107,11 +108,13 @@ class LaporanKendalaController extends Controller
             // koordinasi, sama sekali bukan tujuan approval kedua. Dibatasi
             // ketat ke 8 kode yang diizinkan supaya tidak bisa
             // "menembuskan" ke satuan lain (mis. sesama Kasansi) yang belum
-            // didukung.
-            'tembusan_ke' => ['nullable', 'array'],
+            // didukung, dan dibatasi maksimal 2 satuan per laporan supaya
+            // tembusan tetap fokus/tidak disebar ke semua 8 satuan sekaligus.
+            'tembusan_ke' => ['nullable', 'array', 'max:1'],
             'tembusan_ke.*' => ['string', 'in:'.implode(',', Satuan::kodeTembusanKasansi())],
         ], [
             'lampiran.required' => 'Lampiran wajib diisi untuk mengirim laporan kendala ke Danpus.',
+            'tembusan_ke.max' => 'Tembusan maksimal 1 satuan saja.',
         ]);
 
         $user = $request->user()->load('satuan');
@@ -128,6 +131,11 @@ class LaporanKendalaController extends Controller
         $lampiranPath = $request->hasFile('lampiran')
             ? $request->file('lampiran')->store('lampiran-kendala', 'public')
             : null;
+        abort_if(
+            $request->hasFile('lampiran') && ! $lampiranPath,
+            500,
+            'Gagal menyimpan file lampiran ke server. Coba lagi, atau hubungi Admin kalau masalah berlanjut.'
+        );
 
         // Kode -> id satuan tembusan yang dipilih, dedup dan buang yang
         // ternyata tidak ketemu di database (mis. satuan sudah dihapus).
@@ -148,6 +156,7 @@ class LaporanKendalaController extends Controller
                 'user_id' => $user->id,
                 'tujuan_satuan_id' => $tujuan->id,
                 'perihal' => $validated['perihal'],
+                'kategori' => $validated['kategori'] ?? null,
                 'deskripsi' => $validated['deskripsi'],
                 'prioritas' => $validated['prioritas'],
                 'lampiran_path' => $lampiranPath,
@@ -318,10 +327,23 @@ class LaporanKendalaController extends Controller
 
     public function destroy(Request $request, LaporanKendala $laporanKendala): RedirectResponse
     {
-        $user = $request->user()->load('satuan');
-        $satuan = $user->satuan;
+        $user       = $request->user()->load('satuan');
+        $satuan     = $user->satuan;
+        $kodeSatuan = strtoupper($satuan->kode ?? '');
+        $isDanpus   = $kodeSatuan === 'DANPUS';
         abort_unless($satuan, 403);
-        abort_unless((int) $laporanKendala->satuan_id === (int) $satuan->id, 403);
+
+        if ($isDanpus) {
+            // Danpus hanya boleh menghapus arsip (status Dikonfirmasi).
+            abort_unless(
+                $laporanKendala->status === LaporanKendala::STATUS_DIKONFIRMASI,
+                403,
+                'Danpus hanya dapat menghapus kendala yang sudah diarsipkan.'
+            );
+        } else {
+            // Kasansi hanya boleh menghapus miliknya sendiri.
+            abort_unless((int) $laporanKendala->satuan_id === (int) $satuan->id, 403);
+        }
 
         if ($laporanKendala->lampiran_path) {
             Storage::disk('public')->delete($laporanKendala->lampiran_path);
@@ -329,7 +351,11 @@ class LaporanKendalaController extends Controller
         $perihal = $laporanKendala->perihal;
         $laporanKendala->delete();
 
-        ActivityLog::catat('laporan-kendala.delete', "Menghapus laporan kendala \"{$perihal}\" dari riwayat.", $user, [
+        $catatan = $isDanpus
+            ? "Danpus menghapus arsip kendala \"{$perihal}\" dari riwayat."
+            : "Menghapus laporan kendala \"{$perihal}\" dari riwayat.";
+
+        ActivityLog::catat('laporan-kendala.delete', $catatan, $user, [
             'laporan_kendala_id' => $laporanKendala->id,
         ]);
 
