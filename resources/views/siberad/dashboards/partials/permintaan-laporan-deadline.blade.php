@@ -1230,7 +1230,7 @@
             sortField:'archivedAt',
             ascValue:'terlama',
             sortOptionsHtml:'<option value="terbaru">Arsip Terbaru</option><option value="terlama">Arsip Terlama</option>',
-            emptyText:'Tidak ada riwayat laporan yang sesuai dengan pencarian.',
+            emptyText:'Tidak ada arsip laporan yang sesuai dengan pencarian.',
             refreshGlobalName:'siberadRefreshRiwayatFilter'
         });
     }

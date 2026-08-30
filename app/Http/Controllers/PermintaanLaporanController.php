@@ -331,7 +331,7 @@ class PermintaanLaporanController extends Controller
         // tarik ulang kartu Riwayat lewat syncRiwayatCards(). Tidak perlu lagi
         // kirim payload arsipItemData() buat renderArchivedItem() tabel lama.
         return response()->json([
-            'message' => $items->count().' permintaan laporan berhasil dipindahkan ke Riwayat Laporan.',
+            'message' => $items->count().' permintaan laporan berhasil dipindahkan ke Arsip Laporan.',
             'archived_ids' => $items->pluck('id')->values(),
         ]);
     }
@@ -401,7 +401,7 @@ class PermintaanLaporanController extends Controller
         abort_unless(in_array(strtoupper((string) $user->satuan->kode), self::pengirimKode(), true), 403);
         abort_if($permintaanLaporan->laporan_id, 422, 'Permintaan ini sudah memiliki laporan.');
         abort_if($permintaanLaporan->status === PermintaanLaporan::STATUS_DIBATALKAN, 422, 'Permintaan ini sudah dibatalkan oleh Pimpinan.');
-        abort_if($permintaanLaporan->archived_at, 422, 'Permintaan ini sudah masuk Riwayat Laporan.');
+        abort_if($permintaanLaporan->archived_at, 422, 'Permintaan ini sudah masuk Arsip Laporan.');
 
         $permintaanLaporan->update([
             'status' => PermintaanLaporan::STATUS_DIKERJAKAN,
@@ -419,7 +419,7 @@ class PermintaanLaporanController extends Controller
     {
         abort_unless($this->isPimpinan($request), 403);
         abort_unless($permintaanLaporan->isDapatDibatalkan(), 422, 'Permintaan ini sudah tidak dapat dibatalkan.');
-        abort_if($permintaanLaporan->archived_at, 422, 'Permintaan ini sudah masuk Riwayat Laporan.');
+        abort_if($permintaanLaporan->archived_at, 422, 'Permintaan ini sudah masuk Arsip Laporan.');
 
         $permintaanLaporan->update([
             'status' => PermintaanLaporan::STATUS_DIBATALKAN,
@@ -444,7 +444,7 @@ class PermintaanLaporanController extends Controller
         abort_unless($this->isPimpinan($request), 403);
         $permintaanLaporan->loadMissing('laporan');
         abort_unless($permintaanLaporan->isDapatEditDeadline(), 422, $permintaanLaporan->alasanTidakBisaEditDeadline());
-        abort_if($permintaanLaporan->archived_at, 422, 'Permintaan ini sudah masuk Riwayat Laporan.');
+        abort_if($permintaanLaporan->archived_at, 422, 'Permintaan ini sudah masuk Arsip Laporan.');
 
         $validated = $request->validate([
             'deadline_at' => ['required', 'date', 'after:now'],
@@ -486,7 +486,7 @@ class PermintaanLaporanController extends Controller
     public function revisiDariRiwayat(Request $request, PermintaanLaporan $permintaanLaporan): RedirectResponse|JsonResponse
     {
         abort_unless($this->isPimpinan($request), 403);
-        abort_unless($permintaanLaporan->archived_at, 422, 'Permintaan ini tidak ada di Riwayat Laporan.');
+        abort_unless($permintaanLaporan->archived_at, 422, 'Permintaan ini tidak ada di Arsip Laporan.');
 
         $permintaanLaporan->loadMissing('laporan');
         $laporanStatus = strtolower((string) $permintaanLaporan->laporan?->status);

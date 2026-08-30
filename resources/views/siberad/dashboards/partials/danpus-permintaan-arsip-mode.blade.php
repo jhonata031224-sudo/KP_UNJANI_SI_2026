@@ -105,7 +105,7 @@ function initDanpusArchiveMode(){
 
    const emptyBox=document.createElement('div');
    emptyBox.className='empty-state';emptyBox.style.display='none';
-   emptyBox.innerHTML='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada riwayat laporan yang sesuai dengan pencarian/filter.</div>';
+   emptyBox.innerHTML='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada arsip laporan yang sesuai dengan pencarian/filter.</div>';
    riwayatList.parentNode.insertBefore(emptyBox,riwayatList.nextSibling);
 
    const input=bar.querySelector('input');
@@ -346,7 +346,7 @@ function initDanpusArchiveMode(){
  }
  function openArchiveConfirm(id,perihal){
    const overlay=ensureArchiveConfirm();
-   overlay.querySelector('#danpusArchiveConfirmText').textContent=(perihal?'"'+perihal+'"':'Permintaan ini')+' akan dipindahkan ke Riwayat Laporan.';
+   overlay.querySelector('#danpusArchiveConfirmText').textContent=(perihal?'"'+perihal+'"':'Permintaan ini')+' akan dipindahkan ke Arsip Laporan.';
    // Ganti tombol "Ya" dengan clone baru tiap buka -- biar listener lama
    // (nempel ke ID permintaan SEBELUMNYA) gak ikut kebawa & numpuk.
    const yaBtn=overlay.querySelector('#danpusArchiveConfirmYa');
@@ -372,7 +372,7 @@ function initDanpusArchiveMode(){
      // aktif via animasi, lalu kartu Riwayat ditarik ulang lewat loadHistory().
      removeArchivedRows(Array.isArray(data.archived_ids)?data.archived_ids:[]);
      loadHistory();
-     window.siberadShowToast?.('success',data.message||'Permintaan berhasil dipindahkan ke Riwayat Laporan.');
+     window.siberadShowToast?.('success',data.message||'Permintaan berhasil dipindahkan ke Arsip Laporan.');
    }catch(error){
      window.siberadShowToast?.('error',error.message||'Permintaan gagal diarsipkan.');
      if(btn)btn.disabled=false;
