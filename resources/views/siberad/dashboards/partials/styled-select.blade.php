@@ -54,17 +54,13 @@
    inner, pojok lengkung outer yang jadi "cetakan" clip buat scrollbar-nya
    juga -- jadi scrollbar ketutup pas di area lengkungan.*/
 .styled-select-menu-inner{max-height:260px;overflow-y:auto;padding:6px}
-.styled-select-menu-inner::-webkit-scrollbar{width:6px}
-.styled-select-menu-inner::-webkit-scrollbar-track{background:transparent}
-/* border-top/bottom transparan + background-clip:padding-box = trik bikin
-   thumb selalu punya jarak TETAP dari ujung atas/bawah track, walaupun
-   posisi scroll lagi mentok max-atas atau max-bawah sekalipun -- beda
-   sama cuma ngasih margin biasa (yang nggak ngaruh ke thumb bawaan
-   browser). Border-nya transparan (nggak keliatan), cuma numpang makan
-   tempat; warna abu beneran cuma keisi area padding-box di tengahnya. */
-.styled-select-menu-inner::-webkit-scrollbar-thumb{background:var(--p-border,var(--border));border-radius:8px;border-top:6px solid transparent;border-bottom:6px solid transparent;background-clip:padding-box}
-.styled-select-menu-inner::-webkit-scrollbar-thumb:hover{background:#c97a00;background-clip:padding-box}
-.styled-select-menu-inner{scrollbar-width:thin;scrollbar-color:var(--p-border,var(--border)) transparent}
+/* Scrollbar-nya DISEMBUNYIIN total (bukan cuma dikecilin) -- list-nya
+   tetap bisa discroll normal (mouse wheel, drag, touch, keyboard), cuma
+   nggak ada bar/thumb yang keliatan sama sekali. width:0 buat Chrome/
+   Edge/Safari, scrollbar-width:none buat Firefox, -ms-overflow-style
+   buat Edge lama. */
+.styled-select-menu-inner::-webkit-scrollbar{width:0;height:0}
+.styled-select-menu-inner{scrollbar-width:none;-ms-overflow-style:none}
 .styled-select-option{width:100%;border:0;background:transparent;color:var(--p-text,var(--text));border-radius:8px;padding:9px 11px;display:flex;align-items:center;gap:8px;font:inherit;font-size:12px;line-height:1.35;cursor:pointer;text-align:left;transition:background .15s ease,color .15s ease}
 .styled-select-option:hover{background:var(--p-surface-2,var(--panel-alt))}
 .styled-select-option.active{background:rgba(201,122,0,.10);color:#b56d00;font-weight:700}
