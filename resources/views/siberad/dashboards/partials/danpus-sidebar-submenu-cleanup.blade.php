@@ -1,7 +1,7 @@
 <style>
   .side-nav-group .side-dropdown-menu{padding:0!important;margin:0!important}
-  .side-nav-group .side-sub-link{display:flex!important;align-items:flex-start!important;gap:10px!important;margin:0!important;padding:9px 12px 9px 17px!important;min-height:0!important;height:auto!important;box-sizing:border-box!important;text-transform:none!important;line-height:1.4!important}
-  .side-nav-group .side-sub-link .sub-dot{margin-top:4px!important;flex-shrink:0!important}
+  .side-nav-group .side-sub-link{display:flex!important;align-items:center!important;gap:10px!important;margin:0!important;padding:9px 12px 9px 17px!important;min-height:0!important;height:auto!important;box-sizing:border-box!important;text-transform:none!important;line-height:1.4!important}
+  .side-nav-group .side-sub-link .sub-dot{flex-shrink:0!important}
   .side-nav-group .side-dropdown-menu .side-sub-link:before,.side-nav-group .side-dropdown-menu .side-sub-link:after{display:none!important;content:none!important}
 
   /* Log aktivitas Danpus -- warna per status: hijau = tahap selesai/
