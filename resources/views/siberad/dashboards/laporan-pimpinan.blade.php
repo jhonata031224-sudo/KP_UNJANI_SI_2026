@@ -104,10 +104,18 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
    positionGroupFlyout()) karena .side-nav punya overflow-x:hidden yang
    akan memotong flyout kalau cuma pakai position:absolute biasa. */
 .sidebar.collapsed .side-subnav{display:none;}
-.sidebar.collapsed .side-nav-group.open .side-subnav{display:block;position:fixed;min-width:216px;background:var(--p-surface);border:1px solid var(--p-border);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);padding:8px;z-index:100020;max-height:min(420px,calc(100vh - 80px));overflow-y:auto;overflow-x:hidden;}
-.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar{width:4px;}
-.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-thumb{background:var(--p-border);border-radius:99px;}
-.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-track{background:transparent;}
+/* overflow:hidden (bukan overflow-y:auto) di popup luar ini -- radius 12px
+   & scroll-nya SENGAJA dipisah, taruh scroll di anak (.side-subnav>div)
+   biar radius si popup jadi "cetakan" yang beneran motong scrollbar,
+   bukan malah nembus keluar lengkungan pojok (bug lama: radius+overflow-y
+   auto nempel di elemen yang sama bikin scrollbar native Chrome/Edge gak
+   ke-clip rapi). */
+.sidebar.collapsed .side-nav-group.open .side-subnav{display:block;position:fixed;min-width:216px;background:var(--p-surface);border:1px solid var(--p-border);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);padding:0;z-index:100020;overflow:hidden;}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div{max-height:min(420px,calc(100vh - 80px));overflow-y:auto;overflow-x:hidden;padding:8px;box-sizing:border-box;}
+/* Scrollbar-nya disembunyiin total (bukan cuma dirapiin) -- tetap bisa
+   discroll normal, cuma bar-nya nggak keliatan sama sekali. */
+.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar{width:0;height:0;}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div{scrollbar-width:none;-ms-overflow-style:none;}
 /* Preferensi "sidebar ciutkan" disimpan di localStorage dan tetap kepasang
    walau jendela sekarang sudah sempit (sidebar berubah jadi off-canvas via
    hamburger, .collapsed itu fitur desktop doang) -- tanpa override ini,
@@ -119,8 +127,9 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
    ini, apapun status .collapsed-nya. */
 @media(max-width:900px){
   .sidebar.collapsed .side-subnav{display:grid}
-  .sidebar.collapsed .side-nav-group.open .side-subnav{position:static;top:auto!important;left:auto!important;min-width:0;background:none;border:0;box-shadow:none;padding:0;z-index:auto}
+  .sidebar.collapsed .side-nav-group.open .side-subnav{position:static;top:auto!important;left:auto!important;min-width:0;background:none;border:0;box-shadow:none;padding:0;z-index:auto;overflow:visible}
   .sidebar.collapsed .side-subnav>div{margin-left:18px;border-left:1px solid var(--p-border,var(--border-soft));padding:3px 0;display:flex;flex-direction:column;gap:2px}
+  .sidebar.collapsed .side-nav-group.open .side-subnav>div{max-height:none;overflow:visible}
   .sidebar.collapsed .side-subnav-label{display:none}
 }
 .sidebar.collapsed .side-subnav>div{margin-left:0;border-left:none;padding:0;}
