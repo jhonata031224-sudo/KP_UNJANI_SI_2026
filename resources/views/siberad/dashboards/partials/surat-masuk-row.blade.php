@@ -6,7 +6,7 @@
         <span class="status-badge {{ $s->badgeClass() }}">{{ $s->labelStatus() }}</span>
     </td>
     <td style="text-align:center">{{ $s->created_at->translatedFormat('d M Y H:i') }}</td>
-    <td>
+    <td style="text-align:center">
         <div class="review-actions" style="justify-content:center;flex-wrap:wrap;gap:4px">
             <button type="button" class="detail-btn"
                 onclick="openReportDetail(this)"
