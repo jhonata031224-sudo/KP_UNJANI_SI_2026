@@ -243,6 +243,12 @@
     initReportFilter({
       sectionId:'arsip-kendala-kasansi',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari pengirim atau perihal...',emptyText:'Tidak ada arsip kendala yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada kendala yang diarsipkan.',filters:filterPrioritas
     });
+    initReportFilter({
+      sectionId:'arsip-surat',tableSelector:'.dtbl',anchorSelector:'.panel-head',searchPlaceholder:'Cari perihal atau tujuan...',emptyText:'Tidak ada surat yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada surat yang diarsipkan.',filters:filterPrioritas
+    });
+    initReportFilter({
+      sectionId:'surat-masuk',tableSelector:'.dtbl',anchorSelector:'.panel-head',searchPlaceholder:'Cari pengirim atau perihal...',emptyText:'Tidak ada surat masuk yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada surat masuk.',filters:filterPrioritas
+    });
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();

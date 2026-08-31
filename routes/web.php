@@ -20,6 +20,7 @@ use App\Http\Controllers\JabatanController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\LaporanKendalaController;
 use App\Http\Controllers\LaporanKendalaTembusanController;
+use App\Http\Controllers\LaporanSuratController;
 use App\Http\Controllers\LaporanMonitoringController;
 use App\Http\Controllers\LaporanPublikasiController;
 use App\Http\Controllers\LogUjiPengembanganController;
@@ -127,6 +128,17 @@ Route::patch('/laporan-kendala/{laporanKendala}/teruskan', [LaporanKendalaContro
 Route::delete('/laporan-kendala/{laporanKendala}', [LaporanKendalaController::class, 'destroy'])
     ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-kendala.destroy');
+
+// ===== Surat Kasansi (21 Sansidam) ke SATU tujuan bebas, tanpa tembusan & tanpa progres =====
+Route::post('/laporan-surat', [LaporanSuratController::class, 'store'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('laporan-surat.store');
+Route::get('/laporan-surat/realtime', [LaporanSuratController::class, 'realtime'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('laporan-surat.realtime');
+Route::delete('/laporan-surat/{laporanSurat}', [LaporanSuratController::class, 'destroy'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('laporan-surat.destroy');
 
 // ===== Tembusan laporan kendala Kasansi ke 4 Satlak/4 Sdir (info/koordinasi
 // + feedback balik ke Kasansi -- lihat komentar LaporanKendalaTembusanController) =====
