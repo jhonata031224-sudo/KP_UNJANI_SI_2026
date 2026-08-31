@@ -13,29 +13,25 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Alur "Kirim Surat" khusus 21 Kasansi (Kotama): kirim surat ke SATU satuan
- * tujuan bebas (dipilih sendiri dari seluruh satuan lain di sistem), TANPA
- * tembusan dan TANPA status/progres apa pun -- lihat komentar migration
- * create_laporan_surats_table & model LaporanSurat. Berbeda dari
- * LaporanKendalaController yang tujuannya tetap DANPUS dan masih punya
- * alur status Menunggu/Ditindaklanjuti/dst.
- *
- * Karena tidak ada progres, begitu surat dikirim langsung tercatat final:
- * sisi pengirim (Kasansi) melihatnya di Arsip Surat, sisi tujuan (satuan
- * mana pun) melihatnya di Surat Masuk.
+ * Alur "Kirim Surat" khusus 21 Kasansi (Kotama):
+ *   - Pengirim (Kasansi) mengirim surat ke SATU satuan tujuan.
+ *   - Surat awalnya berstatus 'menunggu_konfirmasi' dan tampil di tabel
+ *     Kirim Surat (bukan Arsip Surat) sisi pengirim.
+ *   - Penerima melihat surat di Surat Masuk (dalam grup menu Surat) dan
+ *     dapat mengkonfirmasi surat.
+ *   - Setelah dikonfirmasi, surat pindah ke Arsip Surat sisi pengirim.
  */
 class LaporanSuratController extends Controller
 {
     /**
-     * Realtime surat, dipoll dari JS (bukan WebSocket) -- pola sama seperti
-     * LaporanKendalaController::realtime(). Setiap satuan bisa jadi
-     * penerima Surat Masuk (butuh item BARU sejak `since`), sedangkan
-     * khusus Kasansi juga butuh snapshot penuh surat yang dia kirim sendiri
-     * untuk tab Arsip Surat.
+     * Realtime poll dari JS -- pola sama dengan LaporanKendalaController.
+     * Sisi penerima: item baru di Surat Masuk sejak `since`.
+     * Sisi Kasansi: snapshot penuh terpisah antara suratTerkirim
+     *               (menunggu_konfirmasi) dan suratArsip (dikonfirmasi).
      */
     public function realtime(Request $request): JsonResponse
     {
-        $user = $request->user()->load('satuan');
+        $user   = $request->user()->load('satuan');
         $satuan = $user->satuan;
         abort_unless($satuan, 403, 'Akun belum terhubung ke satuan.');
 
@@ -48,14 +44,35 @@ class LaporanSuratController extends Controller
             ->get();
 
         $payload = [
-            'latest_id' => (int) (LaporanSurat::where('tujuan_satuan_id', $satuan->id)->max('id') ?? 0),
-            'masuk_items_html' => $suratMasukBaru->map(fn (LaporanSurat $s) => view('siberad.dashboards.partials.surat-masuk-row', ['s' => $s])->render())->implode(''),
+            'latest_id'        => (int) (LaporanSurat::where('tujuan_satuan_id', $satuan->id)->max('id') ?? 0),
+            'masuk_items_html' => $suratMasukBaru->map(
+                fn (LaporanSurat $s) => view('siberad.dashboards.partials.surat-masuk-row', ['s' => $s])->render()
+            )->implode(''),
         ];
 
         $isKasansi = in_array(strtoupper((string) $satuan->kode), Satuan::KODE_KOTAMA, true);
         if ($isKasansi) {
-            $terkirim = LaporanSurat::with('tujuanSatuan')->where('satuan_id', $satuan->id)->latest()->get();
-            $payload['terkirim_items_html'] = $terkirim->map(fn (LaporanSurat $s) => view('siberad.dashboards.partials.surat-terkirim-row', ['s' => $s, 'satuan' => $satuan])->render())->implode('');
+            // Kirim Surat: hanya yang masih menunggu konfirmasi
+            $terkirim = LaporanSurat::with('tujuanSatuan')
+                ->where('satuan_id', $satuan->id)
+                ->where('status', LaporanSurat::STATUS_MENUNGGU)
+                ->latest()
+                ->get();
+
+            // Arsip Surat: hanya yang sudah dikonfirmasi
+            $arsip = LaporanSurat::with('tujuanSatuan')
+                ->where('satuan_id', $satuan->id)
+                ->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
+                ->latest()
+                ->get();
+
+            $payload['terkirim_items_html'] = $terkirim->map(
+                fn (LaporanSurat $s) => view('siberad.dashboards.partials.surat-terkirim-row', ['s' => $s, 'satuan' => $satuan])->render()
+            )->implode('');
+
+            $payload['arsip_items_html'] = $arsip->map(
+                fn (LaporanSurat $s) => view('siberad.dashboards.partials.surat-arsip-row', ['s' => $s, 'satuan' => $satuan])->render()
+            )->implode('');
         }
 
         return response()->json($payload, 200, [
@@ -65,7 +82,7 @@ class LaporanSuratController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $user = $request->user()->load('satuan');
+        $user       = $request->user()->load('satuan');
         $satuanAsal = $user->satuan;
         abort_unless($satuanAsal, 403, 'Akun ini belum terhubung ke satuan manapun.');
         abort_unless(
@@ -76,18 +93,16 @@ class LaporanSuratController extends Controller
 
         $validated = $request->validate([
             'tujuan_satuan_id' => ['required', 'integer', 'exists:satuans,id'],
-            'perihal' => ['required', 'string', 'max:255'],
-            'kategori' => ['nullable', 'string', 'max:255'],
-            'deskripsi' => ['required', 'string', 'max:10000'],
-            'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
-            'lampiran' => ['required', 'file', 'mimes:pdf', 'max:20480'],
+            'perihal'          => ['required', 'string', 'max:255'],
+            'kategori'         => ['nullable', 'string', 'max:255'],
+            'deskripsi'        => ['required', 'string', 'max:10000'],
+            'prioritas'        => ['required', 'in:Tinggi,Sedang,Rendah'],
+            'lampiran'         => ['required', 'file', 'mimes:pdf', 'max:20480'],
         ], [
             'tujuan_satuan_id.required' => 'Tujuan surat wajib dipilih.',
-            'lampiran.required' => 'Lampiran wajib diisi untuk mengirim Surat.',
+            'lampiran.required'         => 'Lampiran wajib diisi untuk mengirim Surat.',
         ]);
 
-        // Tujuan tidak boleh satuan sendiri -- divalidasi manual (bukan
-        // lewat rule "different") karena satuan asal bukan input form.
         abort_if(
             (int) $validated['tujuan_satuan_id'] === (int) $satuanAsal->id,
             422,
@@ -97,17 +112,18 @@ class LaporanSuratController extends Controller
         $tujuan = Satuan::findOrFail($validated['tujuan_satuan_id']);
 
         $lampiranPath = $request->file('lampiran')->store('lampiran-surat', 'public');
-        abort_if(! $lampiranPath, 500, 'Gagal menyimpan file lampiran ke server. Coba lagi, atau hubungi Admin kalau masalah berlanjut.');
+        abort_if(! $lampiranPath, 500, 'Gagal menyimpan file lampiran ke server.');
 
         $surat = LaporanSurat::create([
-            'satuan_id' => $satuanAsal->id,
-            'user_id' => $user->id,
+            'satuan_id'        => $satuanAsal->id,
+            'user_id'          => $user->id,
             'tujuan_satuan_id' => $tujuan->id,
-            'perihal' => $validated['perihal'],
-            'kategori' => $validated['kategori'] ?? null,
-            'deskripsi' => $validated['deskripsi'],
-            'prioritas' => $validated['prioritas'],
-            'lampiran_path' => $lampiranPath,
+            'perihal'          => $validated['perihal'],
+            'kategori'         => $validated['kategori'] ?? null,
+            'deskripsi'        => $validated['deskripsi'],
+            'prioritas'        => $validated['prioritas'],
+            'lampiran_path'    => $lampiranPath,
+            'status'           => LaporanSurat::STATUS_MENUNGGU,
         ]);
 
         foreach (User::where('satuan_id', $tujuan->id)->get() as $penerima) {
@@ -116,21 +132,49 @@ class LaporanSuratController extends Controller
 
         ActivityLog::catat('laporan-surat.create', "Mengirim surat \"{$surat->perihal}\" ke {$tujuan->nama}.", $user, [
             'laporan_surat_id' => $surat->id,
-            'tujuan_satuan' => $tujuan->nama,
-            'prioritas' => $surat->prioritas,
+            'tujuan_satuan'    => $tujuan->nama,
+            'prioritas'        => $surat->prioritas,
         ]);
 
-        return back()->with('status', 'Surat berhasil dikirim ke '.$tujuan->nama.'.');
+        return back()->with('status', 'Surat berhasil dikirim ke '.$tujuan->nama.'. Menunggu konfirmasi dari penerima.');
+    }
+
+    /**
+     * Konfirmasi surat oleh penerima.
+     * Hanya satuan tujuan yang boleh mengkonfirmasi.
+     * Setelah dikonfirmasi, surat pindah dari Kirim Surat ke Arsip Surat
+     * di sisi pengirim.
+     */
+    public function konfirmasi(Request $request, LaporanSurat $laporanSurat): RedirectResponse
+    {
+        $user   = $request->user()->load('satuan');
+        $satuan = $user->satuan;
+        abort_unless($satuan, 403);
+
+        // Hanya penerima (tujuan_satuan_id) yang boleh konfirmasi
+        abort_unless((int) $laporanSurat->tujuan_satuan_id === (int) $satuan->id, 403, 'Hanya penerima yang dapat mengkonfirmasi surat ini.');
+        abort_if($laporanSurat->isDikonfirmasi(), 422, 'Surat ini sudah dikonfirmasi sebelumnya.');
+
+        $laporanSurat->update([
+            'status'            => LaporanSurat::STATUS_DIKONFIRMASI,
+            'dikonfirmasi_at'   => now(),
+            'dikonfirmasi_oleh' => $user->id,
+        ]);
+
+        ActivityLog::catat('laporan-surat.konfirmasi', "Mengkonfirmasi surat \"{$laporanSurat->perihal}\" dari {$laporanSurat->satuan->nama}.", $user, [
+            'laporan_surat_id' => $laporanSurat->id,
+            'pengirim_satuan'  => $laporanSurat->satuan->nama,
+        ]);
+
+        return back()->with('status', 'Surat "'.$laporanSurat->perihal.'" berhasil dikonfirmasi.');
     }
 
     public function destroy(Request $request, LaporanSurat $laporanSurat): RedirectResponse
     {
-        $user = $request->user()->load('satuan');
+        $user   = $request->user()->load('satuan');
         $satuan = $user->satuan;
         abort_unless($satuan, 403);
-        // Surat cuma boleh dihapus dari Arsip Surat milik satuan pengirim
-        // sendiri -- satuan tujuan cukup melihat di Surat Masuk, tanpa hak
-        // menghapus punya orang lain.
+        // Hanya pengirim (satuan asal) yang boleh menghapus dari Arsip Surat
         abort_unless((int) $laporanSurat->satuan_id === (int) $satuan->id, 403);
 
         if ($laporanSurat->lampiran_path) {

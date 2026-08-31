@@ -129,13 +129,18 @@ Route::delete('/laporan-kendala/{laporanKendala}', [LaporanKendalaController::cl
     ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-kendala.destroy');
 
-// ===== Surat Kasansi (21 Sansidam) ke SATU tujuan bebas, tanpa tembusan & tanpa progres =====
+// ===== Surat Kasansi (21 Sansidam) ke SATU tujuan bebas =====
+// Status: menunggu_konfirmasi -> dikonfirmasi (oleh penerima).
+// Surat masuk Arsip Surat pengirim hanya setelah dikonfirmasi.
 Route::post('/laporan-surat', [LaporanSuratController::class, 'store'])
     ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-surat.store');
 Route::get('/laporan-surat/realtime', [LaporanSuratController::class, 'realtime'])
     ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-surat.realtime');
+Route::patch('/laporan-surat/{laporanSurat}/konfirmasi', [LaporanSuratController::class, 'konfirmasi'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('laporan-surat.konfirmasi');
 Route::delete('/laporan-surat/{laporanSurat}', [LaporanSuratController::class, 'destroy'])
     ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-surat.destroy');
