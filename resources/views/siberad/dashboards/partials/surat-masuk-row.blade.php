@@ -20,15 +20,15 @@
                 data-deskripsi-label="Isi Surat"
                 data-lampiran="{{ $s->lampiran_path ? collect([['url' => asset('storage/'.$s->lampiran_path), 'nama' => basename($s->lampiran_path)]])->toJson() : '[]' }}"
                 data-kendala-report="1"
+                data-surat-masuk="1"
                 data-readonly="1"
-                data-readonly-text="Surat dari {{ e($s->satuan->nama ?? '-') }}{{ $s->isDikonfirmasi() ? ' -- sudah Anda konfirmasi pada '.$s->dikonfirmasi_at?->translatedFormat('d M Y H:i').'.' : ' -- belum dikonfirmasi.' }}">Detail</button>
-            @if(! $s->isDikonfirmasi())
-                <form method="POST" action="{{ route('laporan-surat.konfirmasi', $s) }}"
-                    onsubmit="return confirm('Konfirmasi surat ini dari {{ addslashes($s->satuan->nama ?? '') }}? Pengirim akan mengetahui bahwa surat sudah diterima.')">
-                    @csrf @method('PATCH')
-                    <button type="submit" class="detail-btn" style="background:var(--clr-accent,#1a7a4a);color:#fff;border-color:var(--clr-accent,#1a7a4a)">Konfirmasi</button>
-                </form>
-            @endif
+                data-readonly-text="Surat dari {{ e($s->satuan->nama ?? '-') }}{{ $s->isDikonfirmasi() ? ' -- sudah Anda konfirmasi pada '.$s->dikonfirmasi_at?->translatedFormat('d M Y H:i').'.' : ' -- belum dikonfirmasi.' }}"
+                @if(! $s->isDikonfirmasi())
+                data-konfirmasi-action="{{ route('laporan-surat.konfirmasi', $s) }}"
+                data-konfirmasi-token="{{ csrf_token() }}"
+                data-konfirmasi-pengirim="{{ e($s->satuan->nama ?? '-') }}"
+                @endif
+                >Detail</button>
         </div>
     </td>
 </tr>

@@ -380,7 +380,25 @@ class DashboardController
             // satu tujuan surat, sama seperti satuan lain manapun.
             $suratMasuk = LaporanSurat::with('satuan')->where('tujuan_satuan_id', $satuan->id)->latest()->get();
 
-            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporanPimpinan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk','kendalaArsip','suratMasuk') + ['pengaturan' => Pengaturan::current()]);
+            // ===== Menu Surat Danpus/Wadan: FULL sama seperti Kasansi --
+            // Danpus/Wadan juga bisa Kirim Surat (bukan cuma terima),
+            // lihat LaporanSuratController::store() yang sudah
+            // mengizinkan $kodeAsal DANPUS/WADAN selain KODE_KOTAMA.
+            $suratTerkirim = LaporanSurat::with('tujuanSatuan')
+                ->where('satuan_id', $satuan->id)
+                ->where('status', LaporanSurat::STATUS_MENUNGGU)
+                ->latest()
+                ->get();
+            $suratArsip = LaporanSurat::with('tujuanSatuan')
+                ->where('satuan_id', $satuan->id)
+                ->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
+                ->latest()
+                ->get();
+            // Pilihan tujuan di form Kirim Surat: seluruh satuan lain di
+            // sistem selain diri sendiri dan ADMIN (sama seperti Kasansi).
+            $satuanSuratTujuanPilihan = Satuan::where('id', '!=', $satuan->id)->where('kode', '!=', 'ADMIN')->get()->sortBy($urutkanSatuan)->values();
+
+            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporanPimpinan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk','kendalaArsip','suratMasuk','suratTerkirim','suratArsip','satuanSuratTujuanPilihan') + ['pengaturan' => Pengaturan::current()]);
         }
         // Terlambat/Dibatalkan dihitung dari SELURUH permintaan laporan yang
         // ditujukan ke satuan ini, bukan $permintaanLaporan (yang sengaja
