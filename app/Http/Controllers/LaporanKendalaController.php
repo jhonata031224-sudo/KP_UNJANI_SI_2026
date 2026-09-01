@@ -84,8 +84,17 @@ class LaporanKendalaController extends Controller
             ->latest()
             ->get();
 
+        // Dipisah sama seperti $kendalaTerkirim/$kendalaArsip di
+        // DashboardController: begitu Danpus menekan Konfirmasi & Arsipkan,
+        // kendala harus pindah dari tab "Kirim Kendala" ke "Arsip Kendala"
+        // di sisi Kasansi TANPA perlu reload halaman -- lihat
+        // kendala-terkirim-realtime.blade.php yang mengonsumsi kedua key ini.
+        $terkirim = $items->where('status', '!=', LaporanKendala::STATUS_DIKONFIRMASI)->values();
+        $arsip = $items->where('status', LaporanKendala::STATUS_DIKONFIRMASI)->values();
+
         return response()->json([
-            'items_html' => $items->map(fn (LaporanKendala $k) => view('siberad.dashboards.partials.kendala-terkirim-row', ['k' => $k, 'satuan' => $satuan])->render())->implode(''),
+            'terkirim_items_html' => $terkirim->map(fn (LaporanKendala $k) => view('siberad.dashboards.partials.kendala-terkirim-row', ['k' => $k, 'satuan' => $satuan])->render())->implode(''),
+            'arsip_items_html' => $arsip->map(fn (LaporanKendala $k) => view('siberad.dashboards.partials.kendala-terkirim-row', ['k' => $k, 'satuan' => $satuan])->render())->implode(''),
         ], 200, [
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
         ]);
