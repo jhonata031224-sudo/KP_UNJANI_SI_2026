@@ -380,7 +380,25 @@ class DashboardController
             // satu tujuan surat, sama seperti satuan lain manapun.
             $suratMasuk = LaporanSurat::with('satuan')->where('tujuan_satuan_id', $satuan->id)->latest()->get();
 
-            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporanPimpinan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk','kendalaArsip','suratMasuk') + ['pengaturan' => Pengaturan::current()]);
+            // ===== Menu Surat Danpus/Wadan: FULL sama seperti Kasansi --
+            // Danpus/Wadan juga bisa Kirim Surat (bukan cuma terima),
+            // lihat LaporanSuratController::store() yang sudah
+            // mengizinkan $kodeAsal DANPUS/WADAN selain KODE_KOTAMA.
+            $suratTerkirim = LaporanSurat::with('tujuanSatuan')
+                ->where('satuan_id', $satuan->id)
+                ->where('status', LaporanSurat::STATUS_MENUNGGU)
+                ->latest()
+                ->get();
+            $suratArsip = LaporanSurat::with('tujuanSatuan')
+                ->where('satuan_id', $satuan->id)
+                ->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
+                ->latest()
+                ->get();
+            // Pilihan tujuan di form Kirim Surat: seluruh satuan lain di
+            // sistem selain diri sendiri dan ADMIN (sama seperti Kasansi).
+            $satuanSuratTujuanPilihan = Satuan::where('id', '!=', $satuan->id)->where('kode', '!=', 'ADMIN')->get()->sortBy($urutkanSatuan)->values();
+
+            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporanPimpinan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk','kendalaArsip','suratMasuk','suratTerkirim','suratArsip','satuanSuratTujuanPilihan') + ['pengaturan' => Pengaturan::current()]);
         }
         // Terlambat/Dibatalkan dihitung dari SELURUH permintaan laporan yang
         // ditujukan ke satuan ini, bukan $permintaanLaporan (yang sengaja
@@ -425,23 +443,32 @@ class DashboardController
                 ->get()
             : collect();
 
-        // ===== Surat: khusus Kasansi kirim ke SATU tujuan bebas (dipilih
-        // sendiri dari seluruh satuan lain), TANPA tembusan & TANPA
-        // status/progres -- lihat komentar LaporanSuratController. Berbeda
-        // dari LaporanKendala yang tujuannya tetap DANPUS.
+        // ===== Surat: khusus Kasansi kirim ke SATU tujuan bebas.
+        // Surat berstatus 'menunggu_konfirmasi' tetap di Kirim Surat.
+        // Surat berstatus 'dikonfirmasi' pindah ke Arsip Surat.
         $suratTerkirim = $isKasansi
-            ? LaporanSurat::with('tujuanSatuan')->where('satuan_id', $satuan->id)->latest()->get()
+            ? LaporanSurat::with('tujuanSatuan')
+                ->where('satuan_id', $satuan->id)
+                ->where('status', \App\Models\LaporanSurat::STATUS_MENUNGGU)
+                ->latest()
+                ->get()
+            : collect();
+        $suratArsip = $isKasansi
+            ? LaporanSurat::with('tujuanSatuan')
+                ->where('satuan_id', $satuan->id)
+                ->where('status', \App\Models\LaporanSurat::STATUS_DIKONFIRMASI)
+                ->latest()
+                ->get()
             : collect();
         // Pilihan tujuan di form Kirim Surat: seluruh satuan lain di
-        // sistem selain diri sendiri dan ADMIN (ADMIN bukan penerima
-        // korespondensi operasional).
+        // sistem selain diri sendiri dan ADMIN.
         $satuanSuratTujuanPilihan = $isKasansi
             ? Satuan::where('id', '!=', $satuan->id)->where('kode', '!=', 'ADMIN')->get()->sortBy($urutkanSatuan)->values()
             : collect();
-        // Surat Masuk: satuan APAPUN bisa jadi tujuan surat Kasansi (bukan
-        // cuma Danpus), jadi selalu disiapkan buat semua role di sini.
+        // Surat Masuk: satuan APAPUN bisa jadi tujuan surat Kasansi,
+        // jadi selalu disiapkan buat semua role.
         $suratMasuk = LaporanSurat::with('satuan')->where('tujuan_satuan_id', $satuan->id)->latest()->get();
 
-        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','kendalaTerkirim','kendalaArsip','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk','suratTerkirim','satuanSuratTujuanPilihan','suratMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
+        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','kendalaTerkirim','kendalaArsip','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
     }
 }

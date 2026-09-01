@@ -437,6 +437,13 @@ else initFormGantiPassword();
     // ngerti pola form approve/reject/Tandai-Dibaca biasa, jadi kalau dibiarkan
     // jalan dia nimpa ulang detailActions dan bikin form feedback wajib itu ilang.
     if (detailButton.dataset.tembusanFeedback === '1') return;
+    // Sama halnya tombol Detail Surat Masuk (data-surat-masuk) sudah dirakit
+    // sendiri di window.openReportDetail (tombol Konfirmasi). Container-nya
+    // gak punya <form> approve/reject biasa, jadi kalau delegation ini tetap
+    // jalan, dia bakal ngosongin detailActions dan bikin tombol Konfirmasi
+    // ilang. Skip di sini kalau containernya emang gak ada form sama sekali.
+    var container = detailButton.closest('.review-actions, .action-row');
+    if (!container || !container.querySelector('form')) return;
     window.setTimeout(function(){ populateDetailActions(detailButton); }, 0);
   });
 })();

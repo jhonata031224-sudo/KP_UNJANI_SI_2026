@@ -39,17 +39,32 @@
    fixed, jadi tetap ke-crop sama overflow-y:auto punya modal. Pindah ke body
    beneran ngilangin masalah itu. left/top/min-width/max-height semua di-set
    lewat JS tiap kali dibuka (lihat positionMenu/applyMaxHeight). */
-.styled-select-menu{position:fixed;width:max-content;max-width:320px;max-height:260px;overflow-y:auto;padding:6px;background:var(--p-surface,var(--panel));border:1px solid var(--p-border,var(--border));border-radius:12px;box-shadow:0 14px 32px rgba(0,0,0,.28);z-index:100060;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-4px);transition:opacity .15s ease,transform .15s ease,visibility .15s ease}
+.styled-select-menu{position:fixed;width:max-content;max-width:320px;overflow:hidden;padding:0;background:var(--p-surface,var(--panel));border:1px solid var(--p-border,var(--border));border-radius:12px;box-shadow:0 14px 32px rgba(0,0,0,.28);z-index:100060;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-4px);transition:opacity .15s ease,transform .15s ease,visibility .15s ease}
 /* Menu-nya dipindah jadi anak <body> (bukan lagi anak .styled-select-wrap),
    jadi status buka/tutupnya nggak bisa lagi dibaca lewat selector turunan
    ".wrap.open .menu" -- makanya class "open" dipasang langsung ke menu-nya
    sendiri lewat JS, bukan cuma ke wrap. */
 .styled-select-menu.open{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
-.styled-select-menu::-webkit-scrollbar{width:6px}
-.styled-select-menu::-webkit-scrollbar-track{background:transparent}
-.styled-select-menu::-webkit-scrollbar-thumb{background:var(--p-border,var(--border));border-radius:8px}
-.styled-select-menu::-webkit-scrollbar-thumb:hover{background:#c97a00}
-.styled-select-menu{scrollbar-width:thin;scrollbar-color:var(--p-border,var(--border)) transparent}
+/* Scroll-nya SENGAJA dipindah ke elemen anak (.styled-select-menu-inner),
+   bukan langsung di .styled-select-menu -- soalnya overflow-y:auto barengan
+   sama border-radius di elemen YANG SAMA bikin scrollbar native (terutama
+   di Chrome/Edge) nggak ke-clip rapi ngikutin lengkungan pojok, jadi
+   keliatan "nembus"/offside keluar dari popup pas listnya discroll. Dengan
+   outer cuma overflow:hidden (radius+shadow+posisi) dan scroll beneran di
+   inner, pojok lengkung outer yang jadi "cetakan" clip buat scrollbar-nya
+   juga -- jadi scrollbar ketutup pas di area lengkungan.*/
+.styled-select-menu-inner{max-height:260px;overflow-y:auto;padding:6px}
+.styled-select-menu-inner::-webkit-scrollbar{width:6px}
+.styled-select-menu-inner::-webkit-scrollbar-track{background:transparent}
+/* border-top/bottom transparan + background-clip:padding-box = trik bikin
+   thumb selalu punya jarak TETAP dari ujung atas/bawah track, walaupun
+   posisi scroll lagi mentok max-atas atau max-bawah sekalipun -- beda
+   sama cuma ngasih margin biasa (yang nggak ngaruh ke thumb bawaan
+   browser). Border-nya transparan (nggak keliatan), cuma numpang makan
+   tempat; warna abu beneran cuma keisi area padding-box di tengahnya. */
+.styled-select-menu-inner::-webkit-scrollbar-thumb{background:var(--p-border,var(--border));border-radius:8px;border-top:6px solid transparent;border-bottom:6px solid transparent;background-clip:padding-box}
+.styled-select-menu-inner::-webkit-scrollbar-thumb:hover{background:#c97a00;background-clip:padding-box}
+.styled-select-menu-inner{scrollbar-width:thin;scrollbar-color:var(--p-border,var(--border)) transparent}
 .styled-select-option{width:100%;border:0;background:transparent;color:var(--p-text,var(--text));border-radius:8px;padding:9px 11px;display:flex;align-items:center;gap:8px;font:inherit;font-size:12px;line-height:1.35;cursor:pointer;text-align:left;transition:background .15s ease,color .15s ease}
 .styled-select-option:hover{background:var(--p-surface-2,var(--panel-alt))}
 .styled-select-option.active{background:rgba(201,122,0,.10);color:#b56d00;font-weight:700}
@@ -105,6 +120,10 @@
     menu.className='styled-select-menu';
     menu.setAttribute('role','listbox');
 
+    var menuInner=document.createElement('div');
+    menuInner.className='styled-select-menu-inner';
+    menu.appendChild(menuInner);
+
     select.parentNode.insertBefore(wrap,select);
     wrap.appendChild(select);
     select.classList.add('styled-select-native');
@@ -114,7 +133,7 @@
     wrap.__ssMenu=menu;
 
     function rebuildMenu(){
-      menu.innerHTML='';
+      menuInner.innerHTML='';
       Array.prototype.forEach.call(select.options,function(opt){
         var item=document.createElement('button');
         item.type='button';
@@ -138,14 +157,14 @@
           sync();
           close();
         });
-        menu.appendChild(item);
+        menuInner.appendChild(item);
       });
     }
 
     function sync(){
       var selected=select.options[select.selectedIndex];
       label.textContent=selected?selected.text:'';
-      Array.prototype.forEach.call(menu.children,function(child,i){
+      Array.prototype.forEach.call(menuInner.children,function(child,i){
         child.classList.toggle('active',select.options[i]&&select.options[i].value===select.value);
       });
       trigger.classList.toggle('disabled',select.disabled);
@@ -156,12 +175,14 @@
       // perlu scroll sama sekali, opsi ke-5 baru munculin scroll. Diukur dari
       // tinggi opsi yang beneran di-render (bukan angka px ditebak) supaya
       // konsisten walau isi teksnya beda panjang antar select/tabel/modal.
-      var first=menu.querySelector('.styled-select-option');
+      // Diset ke .styled-select-menu-inner (bukan outer menu-nya) karena
+      // scroll-nya sekarang di situ -- lihat catatan di CSS.
+      var first=menuInner.querySelector('.styled-select-option');
       if(!first)return;
       var itemH=first.getBoundingClientRect().height;
-      var cs=getComputedStyle(menu);
-      var extra=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom)+parseFloat(cs.borderTopWidth)+parseFloat(cs.borderBottomWidth);
-      menu.style.maxHeight=(itemH*4+extra)+'px';
+      var cs=getComputedStyle(menuInner);
+      var extra=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom);
+      menuInner.style.maxHeight=(itemH*4+extra)+'px';
     }
 
     function positionMenu(){

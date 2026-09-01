@@ -2,7 +2,7 @@
     <td>{{ $s->perihal }}</td>
     <td style="text-align:center"><span class="satuan-pill">{{ $s->tujuanSatuan->kode ?? $s->tujuanSatuan->nama ?? '-' }}</span></td>
     <td><span class="priority-tag prio-{{ strtolower($s->prioritas) }}">{{ $s->prioritas }}</span></td>
-    <td style="text-align:center"><span class="status-badge status-menunggu">Menunggu Konfirmasi</span></td>
+    <td style="text-align:center"><span class="status-badge status-dikonfirmasi">Dikonfirmasi</span></td>
     <td style="text-align:center">{{ $s->created_at->translatedFormat('d M Y H:i') }}</td>
     <td>
         <div class="review-actions" style="justify-content:center;flex-wrap:wrap">
@@ -19,7 +19,12 @@
                 data-lampiran="{{ $s->lampiran_path ? collect([['url' => asset('storage/'.$s->lampiran_path), 'nama' => basename($s->lampiran_path)]])->toJson() : '[]' }}"
                 data-kendala-report="1"
                 data-readonly="1"
-                data-readonly-text="Surat ini sudah Anda kirim ke {{ e($s->tujuanSatuan->nama ?? '-') }} pada {{ e($s->created_at->translatedFormat('d M Y H:i')) }}. Menunggu konfirmasi dari penerima.">Detail</button>
+                data-readonly-text="Surat ini sudah dikonfirmasi oleh penerima ({{ e($s->tujuanSatuan->nama ?? '-') }}) pada {{ e($s->dikonfirmasi_at?->translatedFormat('d M Y H:i') ?? '-') }}.">Detail</button>
+            <form method="POST" action="{{ route('laporan-surat.destroy', $s) }}"
+                onsubmit="return confirm('Hapus surat ini dari Arsip Surat? Tindakan ini tidak dapat dibatalkan.')">
+                @csrf @method('DELETE')
+                <button type="submit" class="reject">Hapus</button>
+            </form>
         </div>
     </td>
 </tr>
