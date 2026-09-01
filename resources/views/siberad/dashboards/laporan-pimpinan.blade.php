@@ -136,7 +136,6 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 .sidebar.collapsed .side-nav-group.open .side-subnav>div{margin-left:0;border-left:none;padding:0 12px 0 0;gap:2px;}
 .sidebar.collapsed .side-nav-group.open .side-sub-link{padding:9px 10px;border-radius:8px;gap:10px;font-size:13px;font-weight:500;color:var(--p-text);}
 .sidebar.collapsed .side-nav-group.open .side-sub-link .sub-dot{width:5px;height:5px;opacity:.5;}
-.sidebar.collapsed .side-nav-group.open .side-sub-link.active:before{display:none;}
 .sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar{width:14px;}
 .sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-track{background:transparent;}
 .sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-thumb{background-color:#94a3b8;border-radius:12px;border:4px solid var(--p-surface);background-clip:padding-box;min-height:56px;}
