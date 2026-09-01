@@ -151,15 +151,15 @@ class Satuan extends Model
     /**
      * Unsur Pelayanan -- satuan yang langsung di bawah/melayani Danpus untuk
      * urusan dalam (Urdal), tidak masuk kelompok Direktorat
-     * (Sdir/Binfung/Binum/dst), Satlak, maupun Pimpinan. Lapor langsung ke
-     * DANPUS (lihat kodeTujuanUntuk()).
+     * (Sdir/Binfung/Binum/dst), Satlak, maupun Pimpinan. Lapor ke
+     * DANPUS/WADAN (lihat kodeTujuanUntuk()).
      */
     public const KATEGORI_UNSUR_PELAYANAN = 'unsur_pelayanan';
     /**
      * Unsur Pembantu Pimpinan -- satuan yang langsung di bawah/melayani
      * Danpus untuk analisis dan kajian (Pok Analis), tidak masuk kelompok
-     * Direktorat (Sdir/Binfung/Binum/dst), Satlak, maupun Pimpinan. Lapor
-     * langsung ke DANPUS (lihat kodeTujuanUntuk()).
+     * Direktorat (Sdir/Binfung/Binum/dst), Satlak, maupun Pimpinan. Lapor ke
+     * DANPUS/WADAN (lihat kodeTujuanUntuk()).
      */
     public const KATEGORI_UNSUR_PEMBANTU_PIMPINAN = 'unsur_pembantu_pimpinan';
     /**
@@ -367,9 +367,13 @@ class Satuan extends Model
      * Alur tujuan laporan resmi (hierarki komando):
      * - Satlak hanya boleh lapor ke DANPUS/WADAN (tujuan utama).
      *   Satlak tidak boleh saling kirim ke sesama Satlak maupun ke satuan pembinaan.
-     * - Satuan pembinaan (Binmat, Binfung, Binum, Diklat) langsung lapor ke DANPUS.
-     * - Satuan Unsur Pelayanan (Urdal) dan Unsur Pembantu Pimpinan (Pok
-     *   Analis) juga langsung lapor ke DANPUS.
+     * - Satuan pembinaan (Binmat, Binfung, Binum, Diklat), Unsur Pelayanan
+     *   (Urdal), Unsur Pembantu Pimpinan (Pok Analis), dan 21 Sansidam
+     *   (Kotama) lapor ke DANPUS/WADAN -- sama seperti Satlak. WADAN ikut
+     *   diizinkan karena WADAN juga boleh MEMBUAT Permintaan Laporan untuk
+     *   semua kategori satuan itu (lihat PermintaanLaporanController::
+     *   pengirimKode()); tanpa WADAN di sini, unit yang dapat permintaan dari
+     *   WADAN tidak punya tujuan yang valid untuk mengirim balik progresnya.
      * - Satuan lain (mis. WADAN) tidak dibatasi di sini (kembalikan null).
      *
      * @return string[]|null Daftar kode satuan tujuan yang diizinkan, atau null jika tidak dibatasi.
@@ -385,14 +389,13 @@ class Satuan extends Model
         if (in_array($kodeAsal, self::KODE_PEMBINAAN, true)
             || in_array($kodeAsal, self::KODE_UNSUR_PELAYANAN, true)
             || in_array($kodeAsal, self::KODE_UNSUR_PEMBANTU_PIMPINAN, true)) {
-            return ['DANPUS'];
+            return ['DANPUS', 'WADAN'];
         }
 
-        // 21 Sansidam (kategori Kotama) lapor langsung ke DANPUS,
-        // sama seperti satuan pembinaan, Unsur Pelayanan, dan Unsur
-        // Pembantu Pimpinan.
+        // 21 Sansidam (kategori Kotama) lapor ke DANPUS/WADAN, sama seperti
+        // satuan pembinaan, Unsur Pelayanan, dan Unsur Pembantu Pimpinan.
         if (in_array($kodeAsal, self::KODE_KOTAMA, true)) {
-            return ['DANPUS'];
+            return ['DANPUS', 'WADAN'];
         }
 
         return null;
