@@ -129,10 +129,15 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
    positionGroupFlyout()) karena .side-nav punya overflow-x:hidden yang
    akan memotong flyout kalau cuma pakai position:absolute biasa. */
 .sidebar.collapsed .side-subnav{display:none;}
-.sidebar.collapsed .side-nav-group.open .side-subnav{display:block;position:fixed;min-width:216px;background:var(--p-surface);border:1px solid var(--p-border);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);padding:8px;z-index:100020;max-height:min(420px,calc(100vh - 80px));overflow-y:auto;overflow-x:hidden;}
-.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar{width:4px;}
-.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-thumb{background:var(--p-border,var(--border-soft));border-radius:99px;}
-.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-track{background:transparent;}
+.sidebar.collapsed .side-nav-group.open .side-subnav{display:block;position:fixed;min-width:216px;background:var(--p-surface);border:1px solid var(--p-border);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);padding:8px;z-index:100020;max-height:min(420px,calc(100vh - 80px));overflow:hidden;}
+/* Scroll dipindah ke <div> di dalamnya (bukan di .side-subnav langsung) supaya
+   scrollbar tidak "menabrak" sudut kanan-atas/kanan-bawah kartu -- kalau
+   overflow-y:auto dipasang langsung di elemen yang punya border-radius,
+   scrollbar-nya kepotong lurus dan bikin sudut itu keliatan siku, bukan bulat. */
+.sidebar.collapsed .side-nav-group.open .side-subnav>div{max-height:calc(min(420px,calc(100vh - 80px)) - 16px);overflow-y:auto;overflow-x:hidden;}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar{width:8px;}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-thumb{background:var(--p-muted,var(--border-soft));border-radius:99px;border:2px solid var(--p-surface);background-clip:padding-box;}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-track{background:var(--hover-tint,rgba(0,0,0,.05));border-radius:99px;margin:4px 2px;}
 /* Preferensi "sidebar ciutkan" disimpan di localStorage dan tetap kepasang
    walau jendela sekarang sudah sempit (sidebar berubah jadi off-canvas via
    hamburger, .collapsed itu fitur desktop doang) -- tanpa override ini,
