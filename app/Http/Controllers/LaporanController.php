@@ -209,6 +209,12 @@ class LaporanController extends Controller
                     'ditinjau_at' => $permintaan->dikerjakan_at?->translatedFormat('d M Y H:i'),
                     'dibatalkan_at' => $permintaan->dibatalkan_at?->translatedFormat('d M Y H:i'),
                     'terlambat' => $permintaan->isTerlambat(),
+                    // Tanggal acuan laporan (created_at laporan terbaru) -- dipakai
+                    // sisi client (danpus-laporan-request-realtime.blade.php) buat
+                    // ngisi teks tanggal tahap "Laporan Dibuat/Terkirim/Selesai"
+                    // secara realtime. Sama persis dengan $laporanDate di
+                    // buildProcessLog (kolom "Tanggal" baris laporan acuan).
+                    'laporan_at' => $latestReport?->created_at?->translatedFormat('d M Y H:i'),
                 ];
             }
 

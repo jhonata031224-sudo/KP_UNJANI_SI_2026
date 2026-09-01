@@ -159,6 +159,21 @@
             const date=items[current]?.querySelector('.danpus-activity-date');
             if(date)date.textContent=s.dibatalkan_at;
         }
+        // Tanggal tahap "Laporan Dibuat" (2) / "Laporan Terkirim" (3) /
+        // "Laporan Selesai" (4) -- dulu cuma tahap 1 yang di-update di sini,
+        // sisanya stale sampai reload. Semua pakai satu tanggal acuan
+        // (s.laporan_at = created_at laporan terbaru), persis kayak
+        // $laporanDate di buildProcessLog. Kondisi tampil di-mirror dari sana:
+        // tahap 3 = ada laporan final & bukan lagi nunggu revisi; tahap 4 =
+        // sudah ada keputusan. Cancelled/late diurus blok di atas + render
+        // ulang, jadi di-skip di sini.
+        if(!cancelled && !late){
+            const laporanAt=s.laporan_at||'';
+            const setDate=(idx,val)=>{const el=items[idx]?.querySelector('.danpus-activity-date');if(el)el.textContent=val;};
+            setDate(2,laporanAt);                          // Laporan Dibuat: selalu tanggal acuan (kosong kalau belum ada laporan)
+            setDate(3,(current>=3)?laporanAt:'');          // Laporan Terkirim: status >= "Menunggu pemeriksaan" (revisi balik ke current=2 -> kosong lagi)
+            setDate(4,finalKind?laporanAt:'');             // Laporan Selesai: cuma kalau sudah ada keputusan
+        }
 
         if(shouldAnimate)animateTransition(log,items,previousIndex,current);
         log.dataset.realtimeSignature=transitionSignature;
