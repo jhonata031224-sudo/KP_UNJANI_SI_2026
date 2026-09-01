@@ -11,10 +11,17 @@
   .danpus-activity-project{font-size:13px;font-weight:800;color:var(--p-text);margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--p-border)}
   .danpus-activity-item{position:relative;display:grid;grid-template-columns:22px minmax(0,1fr);column-gap:14px;padding:0 0 18px}
   .danpus-activity-item:last-child{padding-bottom:0}
-  .danpus-activity-line{position:absolute;left:9px;top:28px;bottom:6px;width:0;border-left:4px dotted var(--p-border);transition:border-color .3s ease}
-  .danpus-activity-item.is-done .danpus-activity-line,.danpus-activity-item.is-approved .danpus-activity-line{border-color:var(--p-green)}
-  .danpus-activity-item.is-rejected .danpus-activity-line{border-color:var(--p-red)}
+  .danpus-activity-line{position:absolute;left:9px;top:28px;bottom:6px;width:0;border-left:4px dotted var(--p-border)}
+  /* Isian konektor: overlay titik-titik (bukan garis solid) yang TUMBUH dari
+     atas ke bawah lewat height 0 -> 100%. Karena border-left-nya juga "dotted",
+     pas tingginya nambah, titik-titiknya keisi satu per satu -- persis "ngisi
+     titik-titik". Base .danpus-activity-line tetap abu-abu di belakangnya.
+     left:-4px biar border-left overlay pas nindih border-left base. */
+  .danpus-activity-line::after{content:"";position:absolute;left:-4px;top:0;width:0;height:0;border-left:4px dotted var(--p-green);transition:height .55s cubic-bezier(.22,1,.36,1)}
+  .danpus-activity-item.is-done .danpus-activity-line::after,.danpus-activity-item.is-approved .danpus-activity-line::after{height:100%}
+  .danpus-activity-item.is-rejected .danpus-activity-line::after{height:100%;border-left-color:var(--p-red)}
   .danpus-activity-item:last-child .danpus-activity-line{display:none}
+  @media(prefers-reduced-motion:reduce){.danpus-activity-line::after{transition:none}}
   .danpus-activity-dot{position:relative;z-index:2;width:22px;height:22px;border-radius:50%;background:var(--p-surface);border:2px solid var(--p-border);box-sizing:border-box;display:flex;align-items:center;justify-content:center;transition:background .25s ease,border-color .25s ease}
   .danpus-activity-dot svg{width:11px;height:11px;stroke:#fff;stroke-width:3;fill:none;opacity:0;transform:scale(.6);transition:opacity .2s ease,transform .2s ease}
   .danpus-activity-item.is-done .danpus-activity-dot,.danpus-activity-item.is-approved .danpus-activity-dot{background:var(--p-green);border-color:var(--p-green)}

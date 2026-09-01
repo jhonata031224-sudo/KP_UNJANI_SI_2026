@@ -4,12 +4,10 @@
 .danpus-activity-item.realtime-state-enter{animation:danpusActivityStepIn .65s cubic-bezier(.2,.82,.2,1)}
 .danpus-activity-item.realtime-state-current .danpus-activity-dot{animation:danpusActivityDotPulse .8s ease-out 2}
 .danpus-activity-item.realtime-state-current .danpus-activity-state{animation:danpusActivityStatePulse .65s ease-out}
-.danpus-realtime-flow{position:absolute;z-index:20;width:3px;border-radius:999px;pointer-events:none;background:linear-gradient(180deg,transparent 0%,var(--p-green,#16834b) 18%,var(--p-green,#16834b) 82%,transparent 100%);box-shadow:0 0 7px color-mix(in srgb,var(--p-green,#16834b) 55%,transparent);transform-origin:top center;animation:danpusRealtimeFlow .65s cubic-bezier(.2,.8,.2,1) forwards}
 @keyframes danpusActivityStepIn{0%{transform:translateX(-10px);opacity:.35}55%{transform:translateX(2px);opacity:1}100%{transform:translateX(0);opacity:1}}
 @keyframes danpusActivityDotPulse{0%{transform:scale(.72);box-shadow:0 0 0 0 color-mix(in srgb,var(--p-green,#16834b) 40%,transparent)}55%{transform:scale(1.16);box-shadow:0 0 0 9px transparent}100%{transform:scale(1);box-shadow:none}}
 @keyframes danpusActivityStatePulse{0%{opacity:.45;transform:translateY(4px)}100%{opacity:1;transform:translateY(0)}}
-@keyframes danpusRealtimeFlow{0%{transform:scaleY(0);opacity:.2}15%{opacity:1}100%{transform:scaleY(1);opacity:1}}
-@media(prefers-reduced-motion:reduce){.danpus-activity-item.realtime-state-enter,.danpus-activity-item.realtime-state-current .danpus-activity-dot,.danpus-activity-item.realtime-state-current .danpus-activity-state,.danpus-realtime-flow{animation:none!important}}
+@media(prefers-reduced-motion:reduce){.danpus-activity-item.realtime-state-enter,.danpus-activity-item.realtime-state-current .danpus-activity-dot,.danpus-activity-item.realtime-state-current .danpus-activity-state{animation:none!important}}
 </style>
 <script>
 (function(){
@@ -49,26 +47,30 @@
         if(rejected)item.classList.add('is-rejected');
         if(approved)item.classList.add('is-approved');
         if(dot){
-            dot.innerHTML=rejected
-                ?'<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>'
-                :'<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>';
+            // Cuma tulis ulang <svg> kalau ikonnya BENERAN ganti. Dulu di-set
+            // ulang tiap poll (1,2 dtk) -> tiap kali elemen <svg> baru mulai
+            // dari opacity:0/scale(.6) lalu transisi masuk lagi = ceklis
+            // "kedip"/re-pop tiap 1,2 detik. Ikon selalu ada (check disembunyiin
+            // CSS sampai .is-done), jadi transisi fade-in-nya tetap kepicu pas
+            // .is-done ditambah -- cuma nggak dibikin ulang tiap siklus.
+            var icon=rejected?'cross':'check';
+            if(dot.dataset.icon!==icon){
+                dot.dataset.icon=icon;
+                dot.innerHTML=rejected
+                    ?'<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>'
+                    :'<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>';
+            }
         }
-        if(state)state.textContent=stateText;
-    }
-
-    function clearFlow(log){
-        log.querySelectorAll('.danpus-realtime-flow').forEach(el=>el.remove());
+        if(state && state.textContent!==stateText)state.textContent=stateText;
     }
 
     function animateTransition(log,items,previousIndex,currentIndex){
         if(previousIndex<0 || previousIndex===currentIndex || !items.length)return;
-        const fromIndex=Math.min(previousIndex,currentIndex);
-        const toIndex=Math.max(previousIndex,currentIndex);
-        const from=items[fromIndex]?.querySelector('.danpus-activity-dot');
-        const to=items[toIndex]?.querySelector('.danpus-activity-dot');
-        if(!from||!to)return;
-
-        clearFlow(log);
+        // Isian titik-titik hijau di konektor dijalanin CSS
+        // (.danpus-activity-line::after height 0 -> 100%) otomatis dari
+        // perubahan class .is-done di setItemState. Di sini cuma kasih pulse
+        // singkat ke tahap yang baru jadi "current" -- TANPA bar garis solid
+        // (.danpus-realtime-flow lama sudah dihapus).
         log.classList.add('realtime-state-changing');
         items.forEach(item=>item.classList.remove('realtime-state-enter','realtime-state-current'));
         const target=items[currentIndex];
@@ -76,20 +78,7 @@
             target.classList.add('realtime-state-enter','realtime-state-current');
             window.setTimeout(()=>target.classList.remove('realtime-state-enter','realtime-state-current'),850);
         }
-
-        const logRect=log.getBoundingClientRect();
-        const fromRect=from.getBoundingClientRect();
-        const toRect=to.getBoundingClientRect();
-        const x=((fromRect.left+fromRect.width/2)-logRect.left)-1.5;
-        const start=Math.min(fromRect.top+fromRect.height/2,toRect.top+toRect.height/2)-logRect.top;
-        const end=Math.max(fromRect.top+fromRect.height/2,toRect.top+toRect.height/2)-logRect.top;
-        const flow=document.createElement('span');
-        flow.className='danpus-realtime-flow';
-        flow.style.left=x+'px';
-        flow.style.top=start+'px';
-        flow.style.height=Math.max(18,end-start)+'px';
-        log.appendChild(flow);
-        window.setTimeout(()=>{flow.remove();log.classList.remove('realtime-state-changing');},900);
+        window.setTimeout(()=>log.classList.remove('realtime-state-changing'),900);
     }
 
     function syncOne(s,dropdownIndex){
