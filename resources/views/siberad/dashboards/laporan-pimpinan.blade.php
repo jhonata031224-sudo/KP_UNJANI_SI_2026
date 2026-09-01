@@ -134,10 +134,16 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
    scrollbar tidak "menabrak" sudut kanan-atas/kanan-bawah kartu -- kalau
    overflow-y:auto dipasang langsung di elemen yang punya border-radius,
    scrollbar-nya kepotong lurus dan bikin sudut itu keliatan siku, bukan bulat. */
-.sidebar.collapsed .side-nav-group.open .side-subnav>div{max-height:calc(min(420px,calc(100vh - 80px)) - 16px);overflow-y:auto;overflow-x:hidden;}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div{max-height:calc(min(420px,calc(100vh - 80px)) - 16px);overflow-y:auto;overflow-x:hidden;gap:7px;}
 .sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar{width:8px;}
 .sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-thumb{background:var(--p-muted,var(--border-soft));border-radius:99px;border:2px solid var(--p-surface);background-clip:padding-box;}
 .sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-track{background:var(--hover-tint,rgba(0,0,0,.05));border-radius:99px;margin:4px 2px;}
+/* Aksen kotak di sisi kiri titik untuk item aktif -- persis meniru
+   .side-sub-link.active:before bawaan mode sidebar terbuka (width, radius,
+   inset atas/bawah, dan warna var(--p-accent) sama persis), cuma posisi
+   "left" disesuaikan karena padding link di flyout simetris (9px 10px),
+   bukan berindentasi 17px kayak mode terbuka. */
+.sidebar.collapsed .side-nav-group.open .side-sub-link.active:before{left:2px;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--p-accent);}
 /* Preferensi "sidebar ciutkan" disimpan di localStorage dan tetap kepasang
    walau jendela sekarang sudah sempit (sidebar berubah jadi off-canvas via
    hamburger, .collapsed itu fitur desktop doang) -- tanpa override ini,
