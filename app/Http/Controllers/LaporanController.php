@@ -318,11 +318,14 @@ class LaporanController extends Controller
             'perihal' => ['required', 'string', 'max:255'],
             'deskripsi' => ['required', 'string', 'max:10000'],
             'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
-            'lampiran' => ['nullable', 'array'],
+            'lampiran' => ['required', 'array', 'min:1'],
             'lampiran.*' => ['file', 'max:10240'],
             'progres' => ['required', 'integer', 'min:0', 'max:100'],
             'kendala' => ['nullable', 'string', 'max:5000'],
             'task_id' => ['nullable', 'integer', 'exists:permintaan_laporan_tasks,id'],
+        ], [
+            'lampiran.required' => 'Lampiran wajib diisi, minimal 1 file.',
+            'lampiran.min' => 'Lampiran wajib diisi, minimal 1 file.',
         ]);
 
         $user = $request->user()->load('satuan');
@@ -505,6 +508,19 @@ class LaporanController extends Controller
             422,
             'Hanya checkpoint progres yang belum final yang dapat diperbarui.'
         );
+
+        // Lampiran WAJIB minimal 1 file setelah operasi ini -- boleh dari
+        // lampiran lama yang DIPERTAHANKAN (tidak ada di removed_lampiran_ids)
+        // atau file baru yang di-upload. Beda dari store() yang bisa langsung
+        // pakai rule 'required' karena mode edit sah kalau cuma menyisakan
+        // lampiran lama tanpa upload baru.
+        $laporan->loadMissing('lampirans');
+        $removedIds = collect($request->input('removed_lampiran_ids', []))->map(fn ($v) => (string) $v);
+        $lampiranDipertahankan = $laporan->semuaLampiran
+            ->reject(fn ($x) => $removedIds->contains((string) ($x->id ?? 'legacy')))
+            ->count();
+        $lampiranBaru = collect($request->file('lampiran', []))->filter()->count();
+        abort_if($lampiranDipertahankan + $lampiranBaru < 1, 422, 'Lampiran wajib diisi, minimal 1 file.');
 
         $progresValue = (int) $validated['progres'];
         $laporanBaru = null;

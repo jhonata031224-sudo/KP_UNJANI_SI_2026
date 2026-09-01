@@ -176,6 +176,7 @@
                             data-prioritas="{{ e($taskLaporan->prioritas) }}"
                             data-deskripsi="{{ e($taskLaporan->deskripsi) }}"
                             data-kendala="{{ e($taskLaporan->kendala ?? '') }}"
+                            data-task-detail="{{ e($task->detail ?? '') }}"
                             data-lampiran="{{ $taskLaporan->semuaLampiran->map(fn($x) => ['id' => $x->id ?? 'legacy', 'url' => asset('storage/'.$x->path), 'nama' => $x->nama_asli])->values()->toJson() }}"
                             data-progres="{{ $permintaan->progres }}"
                             data-has-tasks="1"
@@ -204,6 +205,7 @@
                             data-has-tasks="1"
                             data-task-id="{{ $task->id }}"
                             data-task-label="{{ e($task->deskripsi) }}"
+                            data-task-detail="{{ e($task->detail ?? '') }}"
                             data-task-action="selesaikan"
                             data-terlambat="{{ $permintaan->isTerlambat() ? '1' : '0' }}">
                             <span class="deadline-task-num">{{ $isLocked ? '✕' : $loop->iteration }}</span>

@@ -230,7 +230,18 @@ class PermintaanLaporanController extends Controller
             'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
             'tasks' => ['required', 'array', 'min:1'],
             'tasks.*' => ['required', 'string', 'max:255'],
+            'task_details' => ['required', 'array', 'min:1'],
+            'task_details.*' => ['required', 'string', 'max:2000'],
         ]);
+
+        // task_details[] dikirim paralel dengan tasks[] (indeks ke-i = detail
+        // buat task ke-i). Jumlahnya harus sama persis, kalau tidak berarti
+        // form dikirim dalam keadaan tidak konsisten.
+        abort_if(
+            count($validated['tasks']) !== count($validated['task_details']),
+            422,
+            'Jumlah detail task tidak cocok dengan jumlah task.'
+        );
 
         $tujuan = Satuan::whereIn('id', $validated['tujuan_satuan_ids'])
             ->whereIn('kode', self::pengirimKode())
@@ -257,9 +268,11 @@ class PermintaanLaporanController extends Controller
                 ]);
                 $created->push($permintaan);
 
+                $taskDetails = array_values($validated['task_details']);
                 foreach (array_values($validated['tasks']) as $urutan => $deskripsi) {
                     $permintaan->tasks()->create([
                         'deskripsi' => $deskripsi,
+                        'detail' => $taskDetails[$urutan] ?? null,
                         'urutan' => $urutan,
                     ]);
                 }
@@ -373,6 +386,7 @@ class PermintaanLaporanController extends Controller
 
                 return [
                     'deskripsi' => $task->deskripsi,
+                    'detail' => $task->detail,
                     'selesai' => (bool) $task->selesai,
                     'selesai_at' => $task->selesai_at?->translatedFormat('d M Y H:i'),
                     'laporan' => $laporan ? [

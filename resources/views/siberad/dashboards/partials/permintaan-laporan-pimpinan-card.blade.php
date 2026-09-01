@@ -72,6 +72,7 @@
         $taskLaporan = $task->laporans->sortByDesc('id')->first();
         return [
             'deskripsi' => $task->deskripsi,
+            'detail' => $task->detail,
             'selesai' => (bool) $task->selesai,
             'selesai_at' => $task->selesai_at?->translatedFormat('d M Y H:i'),
             'laporan' => $taskLaporan ? [

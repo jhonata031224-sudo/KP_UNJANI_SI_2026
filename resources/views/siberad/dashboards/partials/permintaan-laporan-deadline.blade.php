@@ -140,6 +140,110 @@
             shadow.removeAttribute('name');
         }
     }
+    // "Detail Task" di modal Update Progres: tombol di pojok kanan header
+    // (#taskDetailBtn) yang buka sub-modal #taskDetailModal berisi instruksi
+    // rinci task dari Pimpinan. Isinya diambil dari data-task-detail tombol
+    // step task (lihat permintaan-laporan-item.blade.php). Tombol disembunyikan
+    // buat permintaan lama yang task-nya belum punya detail (kolom nullable).
+    function applyTaskDetail(btn){
+        var btnEl=document.getElementById('taskDetailBtn');
+        var body=document.getElementById('taskDetailModalBody');
+        var val=(btn&&btn.dataset.taskDetail)||'';
+        if(body) body.textContent=val||'Detail task tidak tersedia.';
+        if(btnEl) btnEl.hidden=!val;
+        // Pindah task / buka modal ulang -> pastikan sub-modal detail ketutup.
+        var m=document.getElementById('taskDetailModal');
+        if(m) m.classList.remove('open');
+    }
+    function initTaskDetailModal(){
+        var m=document.getElementById('taskDetailModal');
+        if(!m||m.dataset.bound==='1') return;
+        m.dataset.bound='1';
+        var openBtn=document.getElementById('taskDetailBtn');
+        var closeBtn=document.getElementById('taskDetailModalClose');
+        function close(){ m.classList.remove('open'); }
+        openBtn&&openBtn.addEventListener('click',function(){ m.classList.add('open'); });
+        closeBtn&&closeBtn.addEventListener('click',close);
+        // Klik area luar (backdrop) SENGAJA tidak menutup -- konsisten dengan
+        // modal lain di app ini. Tutup lewat tombol "Tutup" / Esc saja.
+        document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&m.classList.contains('open')) close(); });
+        // Kalau wizard-nya ditutup sementara sub-modal detail masih kebuka,
+        // ikut tutup biar nggak nyangkut ngambang di atas halaman.
+        var wizardCancel=document.getElementById('kirimLaporanCancel');
+        wizardCancel&&wizardCancel.addEventListener('click',close);
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initTaskDetailModal); else initTaskDetailModal();
+
+    // ---- Draft per-task (isi laporan / kendala / lampiran yang BELUM disubmit) ----
+    // Form #kirimLaporanForm cuma SATU dipakai ulang buat semua step task.
+    // Tanpa ini, tiap klik step (pindah task ATAU balik ke task yang sama)
+    // nge-reset field ke kosong -> ketikan & lampiran user hilang. Draft
+    // disimpan di memori (bukan localStorage, karena ada File object), dikunci
+    // per task_id, dan dibuang begitu checkpoint task itu berhasil dikirim.
+    var kirimLaporanDrafts={};
+    function captureCurrentDraft(){
+        var form=document.getElementById('kirimLaporanForm');
+        if(!form)return;
+        var tid=form.dataset.draftTaskId||'';
+        if(!tid)return;
+        if(form.dataset.mode==='view')return; // "Lihat Progres" -- read-only, gak ada yang diketik
+        var de=form.querySelector('[name="deskripsi"]');
+        var ke=form.querySelector('[name="kendala"]');
+        var zone=document.getElementById('lampiranDropzone');
+        var staged=(zone&&typeof lampiranZoneState==='function')?lampiranZoneState(zone).staged.slice():[];
+        var deskripsi=de?de.value:'';
+        var kendala=ke?ke.value:'';
+        if(!deskripsi && !kendala && !staged.length){ delete kirimLaporanDrafts[tid]; return; }
+        kirimLaporanDrafts[tid]={deskripsi:deskripsi,kendala:kendala,staged:staged};
+    }
+    function restoreDraftFor(taskId){
+        var d=taskId?kirimLaporanDrafts[taskId]:null;
+        if(!d)return false;
+        var form=document.getElementById('kirimLaporanForm');
+        if(!form)return false;
+        var de=form.querySelector('[name="deskripsi"]');
+        var ke=form.querySelector('[name="kendala"]');
+        if(de) de.value=d.deskripsi||'';
+        if(ke) ke.value=d.kendala||'';
+        if(d.staged && d.staged.length){
+            var zone=document.getElementById('lampiranDropzone');
+            if(zone && typeof lampiranZoneState==='function'){
+                lampiranZoneState(zone).staged=d.staged.slice();
+                syncLampiranInputFiles(zone);
+                renderLampiranFileList(zone);
+            }
+        }
+        return true;
+    }
+    function clearDraftFor(taskId){ if(taskId) delete kirimLaporanDrafts[taskId]; }
+    // Tutup modal (tombol "Tutup" / Esc) = batal keluar dari wizard, BUKAN
+    // pindah checkpoint -> BUANG semua draft yang belum disubmit. Jadi pas
+    // modal dibuka lagi field balik kosong (mode create) atau balik ke data
+    // tersimpan dari server (mode edit). Pindah antar checkpoint (klik step /
+    // Prev / Next) tetap nyimpen draft lewat captureCurrentDraft() -- itu
+    // gestur yang beda.
+    function discardAllDrafts(){
+        kirimLaporanDrafts={};
+        // WAJIB kosongkan draftTaskId juga. Modal ditutup TANPA nge-reset DOM
+        // form-nya, jadi teks yang tadi diketik masih nyangkut di <textarea>
+        // & draftTaskId masih nunjuk ke task terakhir. Tanpa baris ini,
+        // captureCurrentDraft() yang jalan di baris awal handler buka-modal
+        // berikutnya nangkep teks sisa itu jadi draft baru -- cuma kejadian
+        // di checkpoint yang isinya non-kosong (yang kosong ke-skip guard di
+        // captureCurrentDraft), makanya "yang kosong kereset, yang ada isinya
+        // nggak". Field DOM-nya sendiri selalu ditimpa ulang oleh handler
+        // buka-modal (create -> '', edit -> data server), jadi cukup putus
+        // rantai re-capture-nya di sini.
+        var form=document.getElementById('kirimLaporanForm');
+        if(form) form.dataset.draftTaskId='';
+    }
+    document.getElementById('kirimLaporanCancel')?.addEventListener('click',discardAllDrafts);
+    document.addEventListener('keydown',function(e){
+        if(e.key!=='Escape')return;
+        var m=document.getElementById('kirimLaporanModal');
+        if(m&&m.classList.contains('open')) discardAllDrafts();
+    },true);
+
     function initUsePermintaanButtons(){
         document.querySelectorAll('.use-permintaan').forEach(function(btn){
             if(btn.dataset.useBound === '1') return;
@@ -148,6 +252,7 @@
                 var form=document.getElementById('kirimLaporanForm');
                 var modal=document.getElementById('kirimLaporanModal');
                 if(!form || !modal) return;
+                captureCurrentDraft(); // simpan isian task yang lagi dibuka SEBELUM di-reset
                 form.dataset.mode='create';
                 if(form.dataset.storeAction) form.action=form.dataset.storeAction;
                 setFormMethod(form,null);
@@ -178,6 +283,7 @@
                 lockSelectWithShadow(prioritas,true);
                 var deskripsi=form.querySelector('[name="deskripsi"]'); if(deskripsi) deskripsi.value='';
                 var kendala=form.querySelector('[name="kendala"]'); if(kendala) kendala.value='';
+                applyTaskDetail(btn);
                 // Mode create belum punya lampiran apa pun buat ditunjukin --
                 // daftar file (termasuk sisa staged dari mode edit sebelumnya
                 // kalau modal yang sama dipakai ulang) wajib direset ke kosong
@@ -229,6 +335,10 @@
                 }
                 bindProgresLiveText(form);
                 applyLaporanTexts('create',progresInput?progresInput.value:0);
+                // Kembalikan isian yang belum disubmit buat task ini (kalau ada)
+                // -- ditaruh SETELAH semua reset di atas biar nggak ketimpa lagi.
+                form.dataset.draftTaskId=btn.dataset.taskId||'';
+                restoreDraftFor(btn.dataset.taskId||'');
                 modal.classList.add('open');
                 deskripsi?.focus();
             });
@@ -249,6 +359,7 @@
                 var form=document.getElementById('kirimLaporanForm');
                 var modal=document.getElementById('kirimLaporanModal');
                 if(!form || !modal || !btn.dataset.updateUrl) return;
+                captureCurrentDraft(); // simpan isian task yang lagi dibuka SEBELUM di-reset/prefill
                 // Checkpoint yang permintaan-nya udah final ("Menunggu
                 // pemeriksaan" Pimpinan, data-readonly="1" -- lihat
                 // permintaan-laporan-item.blade.php) numpang modal edit yang
@@ -277,6 +388,7 @@
                 var kategori=form.querySelector('[name="proyek"]'); if(kategori) kategori.value=btn.dataset.proyek||'';
                 var deskripsi=form.querySelector('[name="deskripsi"]'); if(deskripsi) deskripsi.value=btn.dataset.deskripsi||'';
                 var kendala=form.querySelector('[name="kendala"]'); if(kendala) kendala.value=btn.dataset.kendala||'';
+                applyTaskDetail(btn);
                 // Riwayat lampiran yang PERNAH dikirim buat checkpoint ini --
                 // input file gak bisa di-prefill (browser gak izinin), jadi
                 // satu-satunya cara nunjukin "ini yang udah ada" adalah render
@@ -316,6 +428,15 @@
                 }
                 bindProgresLiveText(form);
                 applyLaporanTexts(isReadonly?'view':'edit',progresInput?progresInput.value:0,btn.dataset.readonlyReason);
+                // Mode edit (bukan "Lihat Progres" read-only): kembalikan isian
+                // yang belum disubmit buat task ini kalau ada, override prefill
+                // dari server. Mode view SENGAJA tidak (form read-only).
+                if(!isReadonly){
+                    form.dataset.draftTaskId=btn.dataset.taskId||'';
+                    restoreDraftFor(btn.dataset.taskId||'');
+                }else{
+                    form.dataset.draftTaskId='';
+                }
                 modal.classList.add('open');
                 if(!isReadonly) deskripsi?.focus();
             });
@@ -335,7 +456,9 @@
                 var form=document.getElementById('kirimLaporanForm');
                 var modal=document.getElementById('kirimLaporanModal');
                 if(!form || !modal) return;
+                captureCurrentDraft(); // simpan isian task sebelumnya sebelum pindah ke view terkunci
                 form.dataset.mode='view';
+                form.dataset.draftTaskId='';
                 form.dataset.readonlyReason='locked';
                 setKirimLaporanReadonly(form,true);
                 lockIdentityFields(form,true);
@@ -347,6 +470,7 @@
                 var kategori=form.querySelector('[name="proyek"]'); if(kategori) kategori.value=btn.dataset.kategori||'';
                 var deskripsi=form.querySelector('[name="deskripsi"]'); if(deskripsi) deskripsi.value='';
                 var kendala=form.querySelector('[name="kendala"]'); if(kendala) kendala.value='';
+                applyTaskDetail(btn);
                 var lampiranZone=document.getElementById('lampiranDropzone');
                 if(lampiranZone) setLampiranExisting(lampiranZone,[],true);
                 var taskIdHidden=form.querySelector('input[name="task_id"]'); if(taskIdHidden) taskIdHidden.value='';
@@ -689,6 +813,36 @@
             input.addEventListener('input',clearInvalid);
             input.addEventListener('change',clearInvalid);
         });
+
+        // Lampiran WAJIB (min. 1 file) untuk setiap kirim/update checkpoint --
+        // kecuali mode "Lihat Progres" (data-mode="view"). Input file-nya
+        // di-drive dropzone kustom (state.existing + state.staged), jadi
+        // atribut `required` bawaan HTML sengaja TIDAK dipasang (bakal salah
+        // nolak mode edit yang cuma mempertahankan lampiran lama tanpa upload
+        // baru). Dicek di sini saat submit: capture phase + stopImmediate-
+        // Propagation supaya overlay konfirmasi "Kirim Laporan?" di
+        // laporan-role.blade.php TIDAK kebuka kalau lampiran masih kosong.
+        // Native constraint validation (field `required` lain) sudah jalan
+        // lebih dulu -- kalau ada yang kosong, event 'submit' ini tidak
+        // pernah nembak, jadi urutannya aman.
+        form.addEventListener('submit',function(e){
+            if(form.dataset.mode==='view') return;
+            var zone=document.getElementById('lampiranDropzone');
+            if(!zone) return;
+            var st=(typeof lampiranZoneState==='function')?lampiranZoneState(zone):null;
+            var count=st?(st.existing.length+st.staged.length):0;
+            var errEl=lampiranRequiredErrorEl(zone);
+            if(count>0){
+                if(errEl) errEl.style.display='none';
+                zone.classList.remove('field-invalid');
+                return;
+            }
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            zone.classList.add('field-invalid');
+            if(errEl){ errEl.textContent='Lampiran wajib diisi, minimal 1 file.'; errEl.style.display='flex'; }
+            zone.scrollIntoView({block:'center',behavior:'smooth'});
+        },true);
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initKirimLaporanValidation); else initKirimLaporanValidation();
 
@@ -820,6 +974,30 @@
             listBox.appendChild(buildLampiranRow(zone,{ kind:'staged', idx:idx, nama:file.name, size:formatLampiranSize(file.size), url:url }));
         });
         if(emptyEl) emptyEl.hidden=total>0;
+        // Lampiran WAJIB: begitu ada minimal 1 file, hapus penanda error yang
+        // sempat muncul dari percobaan submit sebelumnya. Error-nya cuma
+        // DIMUNCULKAN oleh guard submit (di initKirimLaporanValidation), nggak
+        // dari sini -- biar nggak nongol duluan pas modal baru kebuka & masih
+        // kosong wajar.
+        if(total>0){
+            var reqEl=document.querySelector('.kirim-laporan-error[data-lampiran-required-error="1"]');
+            if(reqEl) reqEl.style.display='none';
+            var dz=document.getElementById('lampiranDropzone');
+            if(dz) dz.classList.remove('field-invalid');
+        }
+    }
+    function lampiranRequiredErrorEl(zone){
+        var anchor=zone.parentElement;
+        if(!anchor) return null;
+        var msg=anchor.querySelector(':scope > .kirim-laporan-error[data-lampiran-required-error="1"]');
+        if(!msg){
+            msg=document.createElement('span');
+            msg.className='kirim-laporan-error';
+            msg.setAttribute('data-lampiran-required-error','1');
+            msg.style.display='none';
+            zone.insertAdjacentElement('afterend',msg);
+        }
+        return msg;
     }
     // Dipanggil tiap kali modal dibuka (create ATAU edit) buat reset daftar
     // ke kondisi checkpoint yang lagi dibuka -- create selalu [] (belum ada
@@ -1018,6 +1196,14 @@
         // Progres"/create, nandain task baru selesai).
         var wasEdit=form&&form.dataset.mode==='edit';
         var editingTaskId=form?form.dataset.editingTaskId:'';
+        // Checkpoint task ini sukses terkirim -> buang draft-nya + kosongkan
+        // penanda, biar nextStep.click() di bawah nggak nyeret balik isian yang
+        // barusan disubmit sebagai "draft" task itu.
+        if(form){
+            clearDraftFor(form.dataset.draftTaskId||'');
+            clearDraftFor(editingTaskId||'');
+            form.dataset.draftTaskId='';
+        }
         window.siberadShowToast&&window.siberadShowToast('success',data.message||'Berhasil dikirim.');
         var permintaanId=data.permintaan_id;
         var oldCard=permintaanId?document.querySelector('.deadline-sender-item[data-realtime-permintaan-id="'+permintaanId+'"]'):null;
@@ -1122,6 +1308,27 @@
             // elemen "yatim" lewat appendChild pas reorder -- itu penyebab
             // bug kartu kelihatan dobel begitu search/sort dipakai).
             var items=Array.prototype.slice.call(list.querySelectorAll(':scope > article.deadline-sender-item'));
+            // Section KOSONG (nol kartu) -- sembunyikan bar cari/filter/hitungan
+            // & tampilkan empty-state "Belum ada ..." biar keterangannya SAMA
+            // dgn sisi Pimpinan, bukan bar pencarian + "tidak ada yang sesuai
+            // pencarian". Terjadi pas data habis dihapus lalu list dikosongkan
+            // realtime TANPA reload -- kalau reload, initCardSearch() sudah bail
+            // sebelum bikin bar (initialItems.length === 0).
+            var srvEmpty=list.querySelector(':scope > .empty-state');
+            if(items.length===0){
+                bar.style.display='none';
+                emptyBox.style.display='none';
+                if(!srvEmpty){
+                    srvEmpty=document.createElement('div');
+                    srvEmpty.className='empty-state';
+                    srvEmpty.innerHTML='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">'+(config.emptyTextNone||'Belum ada data')+'</div>';
+                    list.appendChild(srvEmpty);
+                }
+                srvEmpty.style.display='';
+                return;
+            }
+            bar.style.display='';
+            if(srvEmpty) srvEmpty.style.display='none';
             // Sort berdasar data-deadline-at (timestamp, dipasang PHP di
             // permintaan-laporan-item.blade.php) -- selalu ada & akurat di
             // SETIAP kartu (baik render awal maupun realtime), jadi gak perlu
@@ -1221,6 +1428,7 @@
             ascValue:'terdekat',
             sortOptionsHtml:'<option value="terdekat">Deadline Terdekat</option><option value="terjauh">Deadline Terjauh</option>',
             emptyText:'Tidak ada permintaan laporan yang sesuai dengan pencarian.',
+            emptyTextNone:'Belum ada permintaan laporan',
             refreshGlobalName:'siberadRefreshPermintaanFilter'
         });
         // Riwayat: sort berdasar data-archived-at, arsip terbaru duluan
@@ -1231,6 +1439,7 @@
             ascValue:'terlama',
             sortOptionsHtml:'<option value="terbaru">Arsip Terbaru</option><option value="terlama">Arsip Terlama</option>',
             emptyText:'Tidak ada arsip laporan yang sesuai dengan pencarian.',
+            emptyTextNone:'Belum ada arsip laporan',
             refreshGlobalName:'siberadRefreshRiwayatFilter'
         });
     }

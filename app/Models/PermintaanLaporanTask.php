@@ -11,6 +11,7 @@ class PermintaanLaporanTask extends Model
     protected $fillable = [
         'permintaan_laporan_id',
         'deskripsi',
+        'detail',
         'selesai',
         'selesai_at',
         'urutan',
