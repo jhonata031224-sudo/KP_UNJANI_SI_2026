@@ -1351,18 +1351,27 @@
             // kebenaran yang gak mungkin "lupa" gara-gara DOM diganti.
             var pinnedIds=getPinnedIds();
             items.sort(function(a,b){
-                // 3 tingkat prioritas urutan: (1) Ditandai manual (tombol
-                // bulat pojok kiri-atas) paling atas duluan, (2) "Terbaru"
-                // (belum dikonfirmasi/dikerjakan) kedua, (3) sisanya. Deadline
-                // Terdekat/Terjauh cuma jadi urutan di DALAM masing-masing
-                // kelompok itu, bukan prioritas utama -- biar permintaan yang
-                // ditandai/belum disentuh nggak kekubur di antara ratusan
-                // data lain cuma karena deadline-nya masih jauh.
+                // Prioritas urutan: (1) Ditandai manual (tombol bulat pojok
+                // kiri-atas) paling atas. (2) Kalau config.statusTier ada
+                // (#permintaan-laporan aktif) -> tier per-status dari sudut
+                // pandang SATUAN: yang butuh aksi satuan dulu (Revisi -> benerin
+                // & kirim ulang, "Terbaru" -> konfirmasi/mulai, "Sedang
+                // diproses" -> lagi jalan), lalu "Menunggu" (nunggu Pimpinan,
+                // no aksi), lalu grup mandek (Terlambat + Dibatalkan). Selaras
+                // sama comparator Pimpinan (danpus-permintaan-arsip-mode.blade.php)
+                // tapi urutannya beda karena aksinya kebalik. (3) #riwayat tetap
+                // pakai bump "belum dikerjakan" lama (praktis no-op di situ).
+                // Deadline Terdekat/Terjauh cuma jadi urutan di DALAM tiap tier.
                 var aPin=pinnedIds.has(a.getAttribute('data-realtime-permintaan-id'));
                 var bPin=pinnedIds.has(b.getAttribute('data-realtime-permintaan-id'));
                 if(aPin!==bPin) return aPin?-1:1;
-                var aBaru=a.dataset.belumDikerjakan==='1',bBaru=b.dataset.belumDikerjakan==='1';
-                if(aBaru!==bBaru) return aBaru?-1:1;
+                if(typeof config.statusTier==='function'){
+                    var at=config.statusTier(a.dataset.status),bt=config.statusTier(b.dataset.status);
+                    if(at!==bt) return at-bt;
+                }else{
+                    var aBaru=a.dataset.belumDikerjakan==='1',bBaru=b.dataset.belumDikerjakan==='1';
+                    if(aBaru!==bBaru) return aBaru?-1:1;
+                }
                 var diff=Number(a.dataset[config.sortField])-Number(b.dataset[config.sortField]);
                 return sortSelect.value===config.ascValue?diff:-diff;
             });
@@ -1437,6 +1446,27 @@
             sortOptionsHtml:'<option value="terdekat">Deadline Terdekat</option><option value="terjauh">Deadline Terjauh</option>',
             emptyText:'Tidak ada permintaan laporan yang sesuai dengan pencarian.',
             emptyTextNone:'Belum ada permintaan laporan',
+            // Tier per-status (sudut pandang SATUAN). Deadline cuma urutan di
+            // DALAM tiap tier. Disepakati sama user, selaras sama comparator
+            // Pimpinan (danpus-permintaan-arsip-mode.blade.php) -- cuma
+            // urutannya beda karena aksi satuan vs Pimpinan kebalik:
+            //   Ditandai > Revisi > Terbaru > Sedang diproses > Menunggu
+            //   > Terlambat > Dibatalkan > Disetujui/Ditolak
+            // (label dari $statusDisplay di permintaan-laporan-item.blade.php,
+            // "Terbaru" = raw status "Belum dikerjakan").
+            statusTier:function(s){
+                switch(s){
+                    case 'Revisi': return 1;           // benerin & kirim ulang -- paling mendesak buat satuan
+                    case 'Terbaru': return 2;          // konfirmasi/mulai kerjain
+                    case 'Sedang diproses': return 3;  // lagi jalan (+ fallback status tak dikenal)
+                    case 'Menunggu': return 4;         // nunggu keputusan Pimpinan, no aksi satuan
+                    case 'Terlambat': return 5;        // mandek/terkunci, archive-eligible
+                    case 'Dibatalkan': return 6;       // parkir/terkunci
+                    case 'Disetujui':
+                    case 'Ditolak': return 7;          // selesai (biasanya sudah di Arsip Laporan)
+                    default: return 3;
+                }
+            },
             refreshGlobalName:'siberadRefreshPermintaanFilter'
         });
         // Riwayat: sort berdasar data-archived-at, arsip terbaru duluan
