@@ -425,14 +425,38 @@ function initDanpusArchiveMode(){
      const items=Array.prototype.slice.call(list.querySelectorAll(':scope > article.deadline-sender-item'))
        .filter(function(el){return el.dataset.removing!=='1';});
      const pinnedIds=getPinnedIds();
+     // Prioritas urutan kartu (tier). Deadline (Terdekat/Terjauh) cuma jadi
+     // urutan DI DALAM tiap tier -- bukan penentu utama -- biar kartu yang
+     // butuh perhatian Pimpinan nggak ke-kubur cuma gara-gara deadline-nya
+     // masih jauh (pill deadline sebagian status ini malah disembunyiin, jadi
+     // alasan urutannya nggak keliatan). Urutan disepakati sama user: yang
+     // butuh perhatian Pimpinan dulu, lalu yang lagi jalan di satuan, lalu
+     // grup "mandek" (Terlambat + Dibatalkan -- dua-duanya archive-eligible &
+     // nggak ada progres), lalu yang selesai:
+     //   Ditandai > Menunggu > Terbaru > Revisi > Sedang diproses > Terlambat
+     //   > Dibatalkan > Disetujui/Ditolak
+     // KHUSUS sisi Pimpinan -- di satuan "Menunggu pemeriksaan" justru nggak
+     // ada aksi, comparator-nya (permintaan-laporan-deadline.blade.php) sengaja
+     // beda (Ditandai > belum-dikerjakan > deadline).
+     const statusTier=function(s){
+       switch(s){
+         case 'Menunggu': return 1;         // laporan masuk, nunggu Terima/Tolak Pimpinan
+         case 'Terbaru': return 2;          // baru dibuat, biar request baru nggak kekubur
+         case 'Revisi': return 3;           // ditolak-untuk-revisi, masih hidup, bola di satuan
+         case 'Sedang diproses': return 4;  // satuan lagi kerja, no aksi Pimpinan
+         case 'Terlambat': return 5;        // deadline jebol, laporan nggak masuk -- mandek, archive-eligible
+         case 'Dibatalkan': return 6;       // dibatalin Pimpinan sendiri, parkir, archive-eligible
+         case 'Disetujui':
+         case 'Ditolak': return 7;          // selesai (biasanya sudah pindah ke Arsip)
+         default: return 4;
+       }
+     };
      items.sort(function(a,b){
        const aPin=pinnedIds.has(a.getAttribute('data-realtime-permintaan-id'));
        const bPin=pinnedIds.has(b.getAttribute('data-realtime-permintaan-id'));
        if(aPin!==bPin)return aPin?-1:1;
-       // "Terbaru" (belum dikonfirmasi satuan) nyembul ke atas -- sejajar sama
-       // prioritas sort di kartu satuan (apply() di permintaan-laporan-deadline.blade.php).
-       const aBaru=a.dataset.status==='Terbaru',bBaru=b.dataset.status==='Terbaru';
-       if(aBaru!==bBaru)return aBaru?-1:1;
+       const at=statusTier(a.dataset.status),bt=statusTier(b.dataset.status);
+       if(at!==bt)return at-bt;
        const diff=Number(a.dataset.deadlineAt)-Number(b.dataset.deadlineAt);
        return sortSelect.value==='terjauh'?-diff:diff;
      });
