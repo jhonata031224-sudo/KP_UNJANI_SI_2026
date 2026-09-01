@@ -130,6 +130,21 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
    akan memotong flyout kalau cuma pakai position:absolute biasa. */
 .sidebar.collapsed .side-subnav{display:none;}
 .sidebar.collapsed .side-nav-group.open .side-subnav{display:block;position:fixed;min-width:216px;background:var(--p-surface);border:1px solid var(--p-border);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);padding:8px;z-index:100020;max-height:min(420px,calc(100vh - 80px));overflow-y:auto;overflow-x:hidden;}
+@media(min-width:901px){
+.sidebar.collapsed .side-nav-group.open .side-subnav{min-width:246px;border-radius:18px;padding:20px 6px 20px 20px;}
+.sidebar.collapsed .side-nav-group.open .side-subnav-label{padding:0 12px 16px 4px;font-size:11px;font-weight:700;letter-spacing:.14em;}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div{margin-left:0;border-left:none;padding:0 12px 0 0;gap:12px;}
+.sidebar.collapsed .side-nav-group.open .side-sub-link{padding:2px 4px;border-radius:8px;gap:13px;font-size:14.5px;font-weight:600;color:var(--p-text);}
+.sidebar.collapsed .side-nav-group.open .side-sub-link .sub-dot{width:7px;height:7px;opacity:.55;}
+.sidebar.collapsed .side-nav-group.open .side-sub-link.active:before{display:none;}
+.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar{width:14px;}
+.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-track{background:transparent;}
+.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-thumb{background-color:#94a3b8;border-radius:12px;border:4px solid var(--p-surface);background-clip:padding-box;min-height:56px;}
+.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-thumb:hover{background-color:#7c8ba0;}
+.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-button:vertical:start:decrement{display:block;height:20px;background-color:transparent;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpolygon points='5,0 10,6 0,6' fill='%2394a3b8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:9px 6px;}
+.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-button:vertical:end:increment{display:block;height:20px;background-color:transparent;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpolygon points='0,0 10,0 5,6' fill='%2394a3b8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:9px 6px;}
+.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-button:vertical:start:increment,.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-button:vertical:end:decrement{display:none;}
+}
 /* Preferensi "sidebar ciutkan" disimpan di localStorage dan tetap kepasang
    walau jendela sekarang sudah sempit (sidebar berubah jadi off-canvas via
    hamburger, .collapsed itu fitur desktop doang) -- tanpa override ini,
