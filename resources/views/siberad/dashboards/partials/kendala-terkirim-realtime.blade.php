@@ -25,12 +25,18 @@
     return (first && !first.hasAttribute(idAttr)) ? first.outerHTML : '';
   }
 
+  // Parsing lewat <table><tbody> (bukan <tbody> berdiri sendiri) supaya
+  // konteks parsing whitespace-nya identik dengan tabel aslinya di halaman
+  // -- lihat catatan sama di surat-terkirim-realtime.blade.php. Dibandingkan
+  // dalam bentuk whitespace-dirapikan sebagai jaga-jaga ganda.
+  function norm(html){ return html.replace(/>\s+</g,'><').trim(); }
+
   function syncTable(tbody,freshHtml,emptyMarkup){
     if(!tbody)return;
     var currentRows=Array.prototype.slice.call(tbody.querySelectorAll('['+idAttr+']'));
 
-    var temp=document.createElement('tbody');temp.innerHTML=freshHtml;
-    var freshRows=Array.prototype.slice.call(temp.children);
+    var temp=document.createElement('table');temp.innerHTML='<tbody>'+freshHtml+'</tbody>';
+    var freshRows=Array.prototype.slice.call(temp.querySelector('tbody').children);
 
     if(freshRows.length===0){
       // Kalau memang sudah tidak ada data untuk tabel ini, kosongkan (kembali
@@ -58,7 +64,7 @@
       var id=fresh.getAttribute(idAttr);
       var existing=tbody.querySelector('['+idAttr+'="'+id+'"]');
       if(existing){
-        if(existing.outerHTML!==fresh.outerHTML){
+        if(norm(existing.outerHTML)!==norm(fresh.outerHTML)){
           fresh.classList.add('siberad-row-updated');
           existing.replaceWith(fresh);
         }

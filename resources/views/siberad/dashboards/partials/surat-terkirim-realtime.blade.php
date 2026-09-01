@@ -15,12 +15,22 @@
     return (first && !first.hasAttribute(idAttr)) ? first.outerHTML : '';
   }
 
+  // Baris partial ini (surat-terkirim-row.blade.php) ditulis multi-baris,
+  // beda dari kendala yang satu baris. Kalau di-parsing ke <tbody> yang
+  // berdiri sendiri (tanpa <table> pembungkus), browser bisa memperlakukan
+  // whitespace antar-tag beda dari saat halaman asli dirender di dalam
+  // tabel sungguhan -- akibatnya baris dianggap "berubah" terus tiap poll
+  // walau datanya sama persis, jadi kelihatan kedip-kedip. Parsing lewat
+  // <table><tbody> supaya konteksnya identik dengan tabel aslinya, plus
+  // dibandingkan dalam bentuk whitespace-dirapikan sebagai jaga-jaga ganda.
+  function norm(html){ return html.replace(/>\s+</g,'><').trim(); }
+
   function syncTable(tbody,freshHtml,emptyMarkup){
     if(!tbody)return;
     var currentRows=Array.prototype.slice.call(tbody.querySelectorAll('['+idAttr+']'));
 
-    var temp=document.createElement('tbody');temp.innerHTML=freshHtml;
-    var freshRows=Array.prototype.slice.call(temp.children);
+    var temp=document.createElement('table');temp.innerHTML='<tbody>'+freshHtml+'</tbody>';
+    var freshRows=Array.prototype.slice.call(temp.querySelector('tbody').children);
 
     if(freshRows.length===0){
       if(currentRows.length>0) tbody.innerHTML=emptyMarkup||'';
@@ -41,7 +51,7 @@
       var id=fresh.getAttribute(idAttr);
       var existing=tbody.querySelector('['+idAttr+'="'+id+'"]');
       if(existing){
-        if(existing.outerHTML!==fresh.outerHTML){
+        if(norm(existing.outerHTML)!==norm(fresh.outerHTML)){
           fresh.classList.add('siberad-row-updated');
           existing.replaceWith(fresh);
         }
