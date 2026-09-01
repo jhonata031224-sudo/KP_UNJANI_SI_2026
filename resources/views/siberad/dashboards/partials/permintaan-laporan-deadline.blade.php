@@ -1284,7 +1284,11 @@
         // (data-deadline-at) buat Permintaan, "Arsip Terbaru/Terlama"
         // (data-archived-at) buat Riwayat -- lihat initPermintaanSearch()
         // di bawah buat config lengkapnya per section.
-        bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="Cari perihal..." aria-label="Cari perihal"></div><select class="rpt-filter-select" aria-label="Urutkan">'+config.sortOptionsHtml+'</select><span class="rpt-filter-count"></span>';
+        // Dropdown filter status OPSIONAL -- cuma dipasang kalau
+        // config.statusFilterHtml ada (dipakai #riwayat/Arsip Laporan, disamain
+        // sama Arsip Laporan Pimpinan). #permintaan-laporan aktif nggak punya
+        // (urutannya udah pakai statusTier per-status).
+        bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="Cari perihal..." aria-label="Cari perihal"></div>'+(config.statusFilterHtml?'<select class="rpt-filter-select" aria-label="Filter status">'+config.statusFilterHtml+'</select>':'')+'<select class="rpt-filter-select" aria-label="Urutkan">'+config.sortOptionsHtml+'</select><span class="rpt-filter-count"></span>';
         // Bar pencarian+sort+hitungan ini bagian dari PANEL judul ("Permintaan
         // Laporan"), bukan nempel ke grid kartu -- .report-card sekarang cuma
         // bungkus panel-head (lihat laporan-role.blade.php), grid kartunya
@@ -1305,7 +1309,9 @@
         list.parentNode.insertBefore(emptyBox,list.nextSibling);
 
         var input=bar.querySelector('input');
-        var sortSelect=bar.querySelector('select');
+        var allSelects=bar.querySelectorAll('select');
+        var statusSelect=config.statusFilterHtml?allSelects[0]:null;
+        var sortSelect=config.statusFilterHtml?allSelects[1]:allSelects[0];
         var count=bar.querySelector('.rpt-filter-count');
 
         function apply(){
@@ -1420,9 +1426,12 @@
                 }
             }
             var q=(input.value||'').trim().toLowerCase();
+            var statusFilter=statusSelect?statusSelect.value:'all';
             var visible=0;
             items.forEach(function(item){
-                var match=!q||(item.dataset.search||'').indexOf(q)!==-1;
+                var matchesSearch=!q||(item.dataset.search||'').indexOf(q)!==-1;
+                var matchesStatus=statusFilter==='all'||item.dataset.status===statusFilter;
+                var match=matchesSearch&&matchesStatus;
                 item.style.display=match?'':'none';
                 if(match)visible++;
             });
@@ -1430,6 +1439,7 @@
             emptyBox.style.display=visible===0?'block':'none';
         }
         input.addEventListener('input',apply);
+        if(statusSelect)statusSelect.addEventListener('change',apply);
         sortSelect.addEventListener('change',apply);
         // Dipanggil lagi dari siberadRebindPermintaanActions setiap kali
         // polling realtime nambah/ganti/hapus kartu -- biar filter & hitungan
@@ -1476,7 +1486,13 @@
             sortField:'archivedAt',
             ascValue:'terlama',
             sortOptionsHtml:'<option value="terbaru">Arsip Terbaru</option><option value="terlama">Arsip Terlama</option>',
-            emptyText:'Tidak ada arsip laporan yang sesuai dengan pencarian.',
+            // Filter status Arsip Laporan -- disamain sama Arsip Pimpinan
+            // (initRiwayatCardFilter di danpus-permintaan-arsip-mode.blade.php).
+            // Cuma 4 status akhir yang bisa masuk Arsip. Value dicocokin
+            // exact-match ke data-status (= $statusDisplay) di
+            // permintaan-laporan-item.blade.php.
+            statusFilterHtml:'<option value="all">Semua Status</option><option value="Disetujui">Disetujui</option><option value="Ditolak">Ditolak</option><option value="Terlambat">Terlambat</option><option value="Dibatalkan">Dibatalkan</option>',
+            emptyText:'Tidak ada arsip laporan yang sesuai dengan pencarian/filter.',
             emptyTextNone:'Belum ada arsip laporan',
             refreshGlobalName:'siberadRefreshRiwayatFilter'
         });
