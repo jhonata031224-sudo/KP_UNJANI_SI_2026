@@ -130,10 +130,6 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
    akan memotong flyout kalau cuma pakai position:absolute biasa. */
 .sidebar.collapsed .side-subnav{display:none;}
 .sidebar.collapsed .side-nav-group.open .side-subnav{display:block;position:fixed;min-width:216px;background:var(--p-surface);border:1px solid var(--p-border);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);padding:8px;z-index:100020;max-height:min(420px,calc(100vh - 80px));overflow-y:auto;overflow-x:hidden;}
-.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar{width:7px;}
-.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-track{background:transparent;}
-.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-thumb{background:var(--p-border);border-radius:99px;}
-.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-thumb:hover{background:var(--p-accent);}
 /* Preferensi "sidebar ciutkan" disimpan di localStorage dan tetap kepasang
    walau jendela sekarang sudah sempit (sidebar berubah jadi off-canvas via
    hamburger, .collapsed itu fitur desktop doang) -- tanpa override ini,
