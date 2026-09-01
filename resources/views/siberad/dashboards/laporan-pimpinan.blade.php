@@ -119,6 +119,9 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 .danpus-section-desc{margin:3px 0 0;font-size:11.5px;color:var(--p-muted);line-height:1.4}
 .danpus-section-body{display:flex;flex-direction:column;gap:12px}
 .danpus-section-empty{margin:0;font-size:11.5px;color:var(--p-muted)}
+.danpus-request-field .danpus-request-check{font-weight:400;text-transform:none;letter-spacing:normal;color:var(--p-text)}
+.danpus-request-field .danpus-request-check .check-label{font-weight:400;font-size:11.5px;text-transform:none}
+.danpus-request-satuan-group-title{font-weight:800}
 #danpusStepNext{display:inline-flex;align-items:center;gap:6px}
 #danpusStepNext svg{width:14px;height:14px}
 @media(max-width:700px){
