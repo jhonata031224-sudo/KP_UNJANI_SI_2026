@@ -101,15 +101,6 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 .danpus-modal-icon{flex-shrink:0;width:44px;height:44px;border-radius:12px;background:color-mix(in srgb,var(--gold-solid-bright) 16%,transparent);color:var(--gold-solid-bright);display:flex;align-items:center;justify-content:center}
 .danpus-modal-icon svg{width:21px;height:21px}
 .danpus-request-form-head h3{font-size:19px}
-.danpus-wizard-indicator{gap:0}
-.danpus-wizard-line{display:none}
-.danpus-wizard-step-item{flex-direction:row;align-items:flex-start;gap:10px;flex:1 1 0;padding-bottom:12px;border-bottom:3px solid var(--p-border);text-align:left;min-width:0}
-.danpus-wizard-step-item.is-active,.danpus-wizard-step-item.is-done{border-bottom-color:var(--gold-solid-bright)}
-.danpus-wizard-circle{width:32px;height:32px;font-size:13px}
-.danpus-wizard-step-text{display:flex;flex-direction:column;gap:2px;min-width:0}
-.danpus-wizard-step-title{font-size:12.5px;font-weight:800;color:var(--p-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.danpus-wizard-step-desc{font-size:10.5px;color:var(--p-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.danpus-wizard-step-item.is-active .danpus-wizard-step-title,.danpus-wizard-step-item.is-done .danpus-wizard-step-title{color:var(--gold-solid-bright)}
 .danpus-section-panel{border:1px solid var(--p-border);border-radius:14px;background:var(--p-surface-2);padding:16px;display:flex;flex-direction:column;gap:13px}
 .danpus-step .danpus-section-panel+.danpus-section-panel{margin-top:14px}
 .danpus-section-head{display:flex;align-items:flex-start;gap:12px}
