@@ -705,9 +705,17 @@
         // -> kalau nanti Terlambat/Dibatalkan LAGI, blok kunci di bawah nyala
         // lagi & toast-nya muncul lagi (dulu nyangkut: sekali kekunci,
         // form.dataset.mode 'view' selamanya -> toast cuma sekali seumur modal).
-        var stepLocked=target.classList.contains('locked-view');
+        // "Terkunci" = SELURUH permintaan-nya mati (Terlambat / Dibatalkan
+        // Pimpinan). Dibaca dari <article data-locked> di kartu, BUKAN dari
+        // kelas .locked-view di satu step: step yang sudah "done"
+        // (edit-progres-btn) TIDAK pernah dapat kelas .locked-view walau
+        // permintaan-nya dibatalkan (lihat permintaan-laporan-item.blade.php).
+        // Jadi kalau step yang lagi dibuka kebetulan "done", target.classList
+        // salah baca "nggak terkunci" -> toast "dibuka lagi" nongol sendiri &
+        // lock/unlock modal nggak sinkron sama state Pimpinan.
+        var lockedNow=card.dataset.locked==='1';
         var wizardLocked=form.dataset.readonlyReason==='locked';
-        if(stepLocked && !wizardLocked){
+        if(lockedNow && !wizardLocked){
             form.dataset.mode='view';
             form.dataset.readonlyReason='locked';
             setKirimLaporanReadonly(form,true);
@@ -715,11 +723,11 @@
             if(lampiranZone) setLampiranExisting(lampiranZone,[],true);
             var progresInput=form.querySelector('[name="progres"]');
             applyLaporanTexts('view',progresInput?progresInput.value:0,'locked');
-            var alasan=target.dataset.terlambat==='1'
+            var alasan=card.dataset.terlambat==='1'
                 ? 'Batas waktu permintaan ini sudah lewat.'
                 : 'Permintaan ini dibatalkan oleh Pimpinan.';
             window.siberadShowToast&&window.siberadShowToast('info',alasan+' Formulir dikunci, laporan tidak bisa dikirim lagi.');
-        }else if(!stepLocked && wizardLocked){
+        }else if(!lockedNow && wizardLocked){
             // Pimpinan buka lagi permintaan ini -> lepas kunci wizard, balikin
             // ke mode isi (default "create"/Update Progres -- jalur paling umum
             // buat permintaan aktif), tanpa perlu tutup-buka modal. Teks yang

@@ -78,7 +78,7 @@
         default => 'wait',
     };
 @endphp
-<article class="deadline-sender-item {{ $deadlineClass }}" data-realtime-permintaan-id="{{ $permintaan->id }}" data-search="{{ strtolower($permintaan->perihal) }}" data-kategori="{{ e($permintaan->kategori ?? '') }}" data-prioritas="{{ e($permintaan->prioritas) }}" data-belum-dikerjakan="{{ $belumDikerjakanMentah ? '1' : '0' }}" data-pengirim-kode="{{ e($permintaan->pembuat->satuan->kode ?? '') }}" data-catatan-penolakan="{{ e($catatanPenolakan) }}" data-deadline-at="{{ $permintaan->deadline_at->timestamp }}" data-archived-at="{{ $permintaan->archived_at?->timestamp ?? 0 }}" data-ditandai="0">
+<article class="deadline-sender-item {{ $deadlineClass }}" data-realtime-permintaan-id="{{ $permintaan->id }}" data-search="{{ strtolower($permintaan->perihal) }}" data-kategori="{{ e($permintaan->kategori ?? '') }}" data-prioritas="{{ e($permintaan->prioritas) }}" data-belum-dikerjakan="{{ $belumDikerjakanMentah ? '1' : '0' }}" data-locked="{{ $isLocked ? '1' : '0' }}" data-terlambat="{{ $permintaan->isTerlambat() ? '1' : '0' }}" data-pengirim-kode="{{ e($permintaan->pembuat->satuan->kode ?? '') }}" data-catatan-penolakan="{{ e($catatanPenolakan) }}" data-deadline-at="{{ $permintaan->deadline_at->timestamp }}" data-archived-at="{{ $permintaan->archived_at?->timestamp ?? 0 }}" data-ditandai="0">
     {{-- Tombol tanda manual (checkbox bulat) di pojok kiri-atas -- status
          "ditandai"-nya PURE client-side (localStorage, lihat initDcardPinButtons
          di permintaan-laporan-deadline.blade.php), karena kita nggak boleh
