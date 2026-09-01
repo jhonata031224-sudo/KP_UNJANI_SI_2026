@@ -13,9 +13,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Alur "Kirim Surat" -- boleh dipakai oleh 21 Kasansi (Kotama) MAUPUN
- * Danpus/Wadan (lihat $bisaKirimSurat di realtime() & pengecekan $kodeAsal
- * di store()):
+ * Alur "Kirim Surat" -- boleh dipakai oleh:
+ *   - 21 Kasansi (Kotama)
+ *   - 4 Satlak (SATLAKKAL, SATLAKSISOS, SATLAKDAK, SATLAKDUKTEK)
+ *   - 4 Sdir/Pembinaan (BINFUNG, BINUM, DIKLAT, BINMAT)
+ *   - Urdal (URDAL)
+ *   - Pok Analis (POKANALIS)
+ *   - Danpus/Wadan
+ * (lihat $bisaKirimSurat di realtime() & pengecekan $kodeAsal di store()):
  *   - Pengirim mengirim surat ke SATU satuan tujuan.
  *   - Surat awalnya berstatus 'menunggu_konfirmasi' dan tampil di tabel
  *     Kirim Surat (bukan Arsip Surat) sisi pengirim.
@@ -55,7 +60,12 @@ class LaporanSuratController extends Controller
         ];
 
         $kodeSatuan     = strtoupper((string) $satuan->kode);
-        $bisaKirimSurat = in_array($kodeSatuan, Satuan::KODE_KOTAMA, true) || in_array($kodeSatuan, ['DANPUS', 'WADAN'], true);
+        $bisaKirimSurat = in_array($kodeSatuan, Satuan::KODE_KOTAMA, true)
+            || in_array($kodeSatuan, Satuan::KODE_SATLAK, true)
+            || in_array($kodeSatuan, Satuan::KODE_PEMBINAAN, true)
+            || in_array($kodeSatuan, Satuan::KODE_UNSUR_PELAYANAN, true)
+            || in_array($kodeSatuan, Satuan::KODE_UNSUR_PEMBANTU_PIMPINAN, true)
+            || in_array($kodeSatuan, ['DANPUS', 'WADAN'], true);
         if ($bisaKirimSurat) {
             // Kirim Surat: hanya yang masih menunggu konfirmasi
             $terkirim = LaporanSurat::with('tujuanSatuan')
@@ -92,9 +102,14 @@ class LaporanSuratController extends Controller
         abort_unless($satuanAsal, 403, 'Akun ini belum terhubung ke satuan manapun.');
         $kodeAsal = strtoupper((string) $satuanAsal->kode);
         abort_unless(
-            in_array($kodeAsal, Satuan::KODE_KOTAMA, true) || in_array($kodeAsal, ['DANPUS', 'WADAN'], true),
+            in_array($kodeAsal, Satuan::KODE_KOTAMA, true)
+                || in_array($kodeAsal, Satuan::KODE_SATLAK, true)
+                || in_array($kodeAsal, Satuan::KODE_PEMBINAAN, true)
+                || in_array($kodeAsal, Satuan::KODE_UNSUR_PELAYANAN, true)
+                || in_array($kodeAsal, Satuan::KODE_UNSUR_PEMBANTU_PIMPINAN, true)
+                || in_array($kodeAsal, ['DANPUS', 'WADAN'], true),
             403,
-            'Hanya Kasansi atau Danpus/Wadan yang dapat mengirim Surat.'
+            'Hanya Kasansi, Satlak, Sdir, Urdal, Pok Analis, atau Danpus/Wadan yang dapat mengirim Surat.'
         );
 
         $validated = $request->validate([

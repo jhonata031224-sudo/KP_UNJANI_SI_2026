@@ -443,17 +443,25 @@ class DashboardController
                 ->get()
             : collect();
 
-        // ===== Surat: khusus Kasansi kirim ke SATU tujuan bebas.
+        // ===== Surat: Kasansi (21 Sansidam), 4 Satlak, 4 Sdir (Pembinaan),
+        // Urdal, dan Pok Analis semuanya bisa Kirim Surat ke SATU tujuan bebas.
+        // $bisaKirimSurat sengaja DIPISAH dari $isKasansi agar logika Kendala
+        // (hanya Kasansi) tidak ikut terpengaruh.
         // Surat berstatus 'menunggu_konfirmasi' tetap di Kirim Surat.
         // Surat berstatus 'dikonfirmasi' pindah ke Arsip Surat.
-        $suratTerkirim = $isKasansi
+        $bisaKirimSurat = $isKasansi
+            || in_array($kode, Satuan::KODE_SATLAK, true)
+            || in_array($kode, Satuan::KODE_PEMBINAAN, true)
+            || in_array($kode, Satuan::KODE_UNSUR_PELAYANAN, true)
+            || in_array($kode, Satuan::KODE_UNSUR_PEMBANTU_PIMPINAN, true);
+        $suratTerkirim = $bisaKirimSurat
             ? LaporanSurat::with('tujuanSatuan')
                 ->where('satuan_id', $satuan->id)
                 ->where('status', \App\Models\LaporanSurat::STATUS_MENUNGGU)
                 ->latest()
                 ->get()
             : collect();
-        $suratArsip = $isKasansi
+        $suratArsip = $bisaKirimSurat
             ? LaporanSurat::with('tujuanSatuan')
                 ->where('satuan_id', $satuan->id)
                 ->where('status', \App\Models\LaporanSurat::STATUS_DIKONFIRMASI)
@@ -462,13 +470,13 @@ class DashboardController
             : collect();
         // Pilihan tujuan di form Kirim Surat: seluruh satuan lain di
         // sistem selain diri sendiri dan ADMIN.
-        $satuanSuratTujuanPilihan = $isKasansi
+        $satuanSuratTujuanPilihan = $bisaKirimSurat
             ? Satuan::where('id', '!=', $satuan->id)->where('kode', '!=', 'ADMIN')->get()->sortBy($urutkanSatuan)->values()
             : collect();
-        // Surat Masuk: satuan APAPUN bisa jadi tujuan surat Kasansi,
+        // Surat Masuk: satuan APAPUN bisa jadi tujuan surat,
         // jadi selalu disiapkan buat semua role.
         $suratMasuk = LaporanSurat::with('satuan')->where('tujuan_satuan_id', $satuan->id)->latest()->get();
 
-        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','kendalaTerkirim','kendalaArsip','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
+        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
     }
 }
