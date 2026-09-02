@@ -32,14 +32,39 @@
         fresh.forEach(function (el) { var id = el.getAttribute('data-session-id'); if (id) freshById[id] = el; });
         var seen = {};
 
+        // "Terakhir Aktif" (kolom .js-terakhir-aktif) pakai teks relatif
+        // ("1 detik yang lalu") yang bergeser tiap detik semata karena
+        // waktu jalan -- BUKAN berarti datanya beneran berubah. Kalau ini
+        // ikut dibandingkan mentah-mentah lewat outerHTML, baris akan
+        // "kelihatan beda" tiap poll (tiap 4 detik) SELAMANYA, bikin baris
+        // kedip kuning terus-menerus walau tidak ada login/logout baru.
+        // signature() nge-strip teks kolom itu dulu sebelum dibandingkan,
+        // supaya animasi cuma nyala kalau ada perubahan beneran (nama,
+        // IP, perangkat, atau sesi baru/hilang).
+        function signature(el) {
+          var clone = el.cloneNode(true);
+          var cell = clone.querySelector('.js-terakhir-aktif');
+          if (cell) cell.textContent = '';
+          return clone.outerHTML;
+        }
+
         Array.prototype.slice.call(tbody.querySelectorAll('[data-session-id]')).forEach(function (row) {
           var id = row.getAttribute('data-session-id');
           var replacement = freshById[id];
           if (replacement) {
             seen[id] = true;
-            if (replacement.outerHTML !== row.outerHTML) {
+            if (signature(replacement) !== signature(row)) {
               if (animate) replacement.classList.add('siberad-row-updated');
               row.replaceWith(replacement);
+            } else {
+              // Cuma teks "Terakhir Aktif" yang bergeser -- update di
+              // tempat aja (biar tetap live), tanpa replace node & tanpa
+              // animasi kedip.
+              var oldCell = row.querySelector('.js-terakhir-aktif');
+              var newCell = replacement.querySelector('.js-terakhir-aktif');
+              if (oldCell && newCell && oldCell.textContent !== newCell.textContent) {
+                oldCell.textContent = newCell.textContent;
+              }
             }
           } else {
             row.remove();
