@@ -15,12 +15,49 @@
         document.documentElement.classList.add('siberad-sidebar-collapsing');
       }
     } catch (e) {}
+    // Ganti tema instan di SELURUH halaman (semua role: Admin, Pimpinan,
+    // Satuan): daripada hapus transition satu-satu di tiap komponen (tombol,
+    // link sidebar, badge, modal, dst -- jumlahnya puluhan dan tersebar di
+    // banyak file), begitu atribut data-theme di <html> berubah -- dari
+    // mana pun perubahan itu dipicu (tiap dashboard punya handler toggle
+    // tema sendiri-sendiri) -- kelas "theme-switching" langsung ditempel
+    // ke <html>. Selama kelas itu ada, CSS di bawah memaksa transition:none
+    // di semua elemen, jadi warnanya "satset" langsung berubah tanpa efek
+    // fade. Kelas itu dilepas lagi 2 frame kemudian supaya transisi hover,
+    // buka/tutup menu, dsb di luar momen ganti tema tetap jalan normal.
+    try {
+      var themeRoot = document.documentElement;
+      var themeFreezeTimer = null;
+      var freezeTransitions = function(){
+        themeRoot.classList.add('theme-switching');
+        if (themeFreezeTimer) cancelAnimationFrame(themeFreezeTimer);
+        themeFreezeTimer = requestAnimationFrame(function(){
+          requestAnimationFrame(function(){
+            themeRoot.classList.remove('theme-switching');
+          });
+        });
+      };
+      new MutationObserver(function(mutations){
+        for (var i = 0; i < mutations.length; i++) {
+          if (mutations[i].attributeName === 'data-theme') { freezeTransitions(); break; }
+        }
+      }).observe(themeRoot, { attributes: true, attributeFilter: ['data-theme'] });
+    } catch (e) {}
   })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* Dipasang bareng MutationObserver di <script> atas: selama <html> punya
+     kelas "theme-switching" (aktif sesaat tiap kali ganti tema), SEMUA
+     transition di halaman dipaksa mati supaya perubahan warna terlihat
+     instan/satset -- terlepas dari berapa banyak komponen (tombol, sidebar,
+     badge, modal, dst) yang masing-masing punya transition warna sendiri. */
+  html.theme-switching,html.theme-switching *,html.theme-switching *::before,html.theme-switching *::after{
+    transition:none!important;
+  }
+
   :root{
     --bg:#06090C;
     --bg-deep:#04070A;
