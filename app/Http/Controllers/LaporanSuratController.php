@@ -115,10 +115,10 @@ class LaporanSuratController extends Controller
         $validated = $request->validate([
             'tujuan_satuan_id' => ['required', 'integer', 'exists:satuans,id'],
             'perihal'          => ['required', 'string', 'max:255'],
-            'kategori'         => ['nullable', 'string', 'max:255'],
+            'kategori'         => ['required', 'string', 'max:255'],
             'deskripsi'        => ['required', 'string', 'max:10000'],
             'prioritas'        => ['required', 'in:Tinggi,Sedang,Rendah'],
-            'lampiran'         => ['required', 'file', 'mimes:pdf', 'max:20480'],
+            'lampiran'         => ['required', 'file', 'max:10240'],
         ], [
             'tujuan_satuan_id.required' => 'Tujuan surat wajib dipilih.',
             'lampiran.required'         => 'Lampiran wajib diisi untuk mengirim Surat.',

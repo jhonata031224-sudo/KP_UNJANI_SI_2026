@@ -20,8 +20,8 @@
 .report-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}.report-grid .stat-card .lbl{font-weight:800;}.report-grid .stat-card .val{font-family:var(--mono);}.report-layout{display:grid;grid-template-columns:1fr;gap:18px}.report-card{background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;padding:20px;min-width:0}.report-card h3{font-family:var(--display);font-size:16px;margin:0 0 4px}.report-card p{font-size:12px;color:var(--text-muted);line-height:1.5}.chart-legend{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px 14px;margin-top:14px}.chart-legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--text-muted);white-space:nowrap;cursor:pointer;user-select:none}.chart-legend-item.is-hidden{text-decoration:line-through;opacity:.5}.chart-legend-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.form-field{display:flex;flex-direction:column;gap:7px}.form-field.full{grid-column:1/-1}.form-field label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}.form-field input,.form-field select,.form-field textarea{width:100%;box-sizing:border-box;background:var(--panel-alt);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:10px 11px;font:inherit;font-size:13px}.form-field textarea{resize:none;min-height:120px}.form-hint{font-size:11px;color:var(--text-dim);line-height:1.5}.monitor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}.monitor-card{padding:14px;border:1px solid var(--border-soft);border-radius:9px;background:var(--panel-alt)}.monitor-card .name{font-weight:700;font-size:13px}.monitor-card .num{font-family:var(--mono);font-size:24px;margin-top:7px}.monitor-card .sub{font-size:11px;color:var(--text-muted);margin-top:3px}.review-actions{display:flex;gap:7px;flex-wrap:wrap}.review-actions form{display:inline-flex}.review-actions button,.monitor-detail-btn{border:1px solid var(--border);background:var(--panel-alt);color:var(--text);border-radius:6px;padding:6px 9px;font-size:11px;cursor:pointer}.review-actions .approve{border-color:var(--success);color:var(--success)}
 .approve:hover{background:var(--success-dim);transform:translateY(-1px)}.review-actions .reject{border-color:var(--red);color:var(--red)}
 .reject:hover{background:var(--red-dim);transform:translateY(-1px)}.detail-btn{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:8px;padding:7px 10px;font-size:10px;font-weight:700;cursor:pointer}.detail-btn:hover{border-color:var(--gold-bright);background:var(--panel-alt)}.monitor-detail-btn{border-color:var(--border)!important;color:var(--text)!important}.status-dot.green{color:var(--success-bright)!important}.status-dot.green::before{animation:none!important}.status-dot.amber{color:var(--amber)!important}.status-dot.bad{color:var(--red)!important}.status-dot.blue{color:var(--p-orange)!important}.satuan-pill{display:inline-flex;align-items:center;border-radius:8px;padding:4px 9px;font-size:10px;font-weight:800;letter-spacing:.03em;color:var(--gold-bright);background:rgba(201,122,0,.1);border:1px solid rgba(201,122,0,.22);white-space:nowrap}.priority-tag{display:inline-flex;align-items:center;border-radius:999px;padding:5px 10px;font-size:10px;font-weight:800;border:1px solid transparent;white-space:nowrap}.priority-tag.prio-tinggi{color:var(--red);background:rgba(181,52,47,.12);border-color:rgba(198,40,40,.3)}.priority-tag.prio-sedang{color:var(--amber);background:rgba(224,168,58,.12);border-color:rgba(224,168,58,.35)}.priority-tag.prio-rendah{color:var(--text-muted);background:var(--panel);border-color:var(--border)}.status-badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 10px;font-size:10px;font-weight:800;border:1px solid transparent;white-space:nowrap;letter-spacing:.02em}.status-badge.status-menunggu{color:var(--amber);background:rgba(224,168,58,.13);border-color:rgba(224,168,58,.35)}.status-badge.status-dikonfirmasi{color:var(--success-bright,#3dba7e);background:rgba(61,186,126,.12);border-color:rgba(61,186,126,.35)}.request-deadline{display:inline-flex;align-items:center;gap:5px;font-weight:700}.request-deadline svg{width:13px;height:13px;flex-shrink:0;opacity:.75}.report-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:1000;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s ease}.report-modal.open{opacity:1;visibility:visible;pointer-events:auto}.report-modal-card{width:min(720px,100%);max-height:90vh;overflow-y:auto;overflow-x:hidden;background:var(--panel);border:1px solid var(--border-soft);border-radius:20px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25);box-sizing:border-box;transform:translateY(14px) scale(.97);transition:transform .2s ease;-webkit-mask-image:radial-gradient(white,white);mask-image:radial-gradient(white,white)}#kirimKendalaModal .satuan-pill-tujuan{display:inline-flex;width:auto;max-width:fit-content}.report-modal.open .report-modal-card{transform:translateY(0) scale(1)}.report-modal-head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:16px}.report-modal-head h3{margin:0;font-family:var(--display)}.report-modal-close{flex-shrink:0;width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;transition:border-color .2s ease,color .2s ease,transform .2s ease}.report-modal-close:hover{border-color:var(--red);color:var(--red);transform:rotate(90deg);}.report-modal-close svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.detail-item{padding:11px;border:1px solid var(--border-soft);border-radius:8px;background:var(--panel-alt)}.detail-item.full{grid-column:1/-1}.detail-label{font-size:10px;text-transform:uppercase;color:var(--text-muted);font-weight:700;letter-spacing:.05em;margin-bottom:5px}.detail-value{font-size:13px;line-height:1.6;white-space:pre-wrap}.lampiran-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid color-mix(in srgb,var(--gold-bright) 45%,var(--border));background:color-mix(in srgb,var(--gold-bright) 10%,var(--panel-alt));color:var(--gold-bright);border-radius:8px;padding:8px 12px;font-size:11.5px;font-weight:700;text-decoration:none;cursor:pointer;transition:background .15s ease,transform .15s ease;margin-bottom:6px}.lampiran-btn:last-child{margin-bottom:0}.lampiran-btn:hover{background:color-mix(in srgb,var(--gold-bright) 20%,var(--panel-alt));transform:translateY(-1px)}.lampiran-btn svg{width:15px;height:15px;flex-shrink:0}.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}#kirimLaporanModal select{appearance:none;-webkit-appearance:none;-moz-appearance:none;cursor:pointer;padding-right:34px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center;background-size:14px;transition:border-color .15s ease,box-shadow .15s ease}#kirimLaporanModal select:hover{border-color:var(--gold)}#kirimLaporanModal .form-field input:focus,#kirimLaporanModal .form-field select:focus,#kirimLaporanModal .form-field textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim)}#kirimLaporanModal .form-field input[readonly],#kirimLaporanModal .form-field select:disabled{opacity:.6;cursor:not-allowed;background:var(--panel-2)}#kirimLaporanModal select:disabled{background-image:none!important;padding-right:11px;appearance:none;-webkit-appearance:none;-moz-appearance:none;}
-#kirimLaporanModal .field-invalid,#kirimKendalaModal .field-invalid{border-color:var(--red)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 15%,transparent)}
-#kirimLaporanModal .kirim-laporan-error,#kirimKendalaModal .kirim-laporan-error{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--red)}
+#kirimLaporanModal .field-invalid,#kirimKendalaModal .field-invalid,#kirimSuratModal .field-invalid{border-color:var(--red)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 15%,transparent)}
+#kirimLaporanModal .kirim-laporan-error,#kirimKendalaModal .kirim-laporan-error,#kirimSuratModal .kirim-laporan-error{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--red)}
 #kirimLaporanModal .lampiran-dropzone.field-invalid{border-color:var(--red)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 15%,transparent)}
 #kirimLaporanModal .kirim-laporan-modal-head{align-items:center}
 #kirimLaporanModal .task-detail-btn{margin-left:auto;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;border:1px solid color-mix(in srgb,var(--gold-bright) 45%,var(--border));background:color-mix(in srgb,var(--gold-bright) 10%,var(--panel-alt));color:var(--gold-bright);border-radius:9px;padding:8px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s ease,transform .15s ease,border-color .15s ease}
@@ -36,6 +36,42 @@
 .lampiran-clear-btn{flex-shrink:0;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;transition:border-color .15s ease,color .15s ease}
 .lampiran-clear-btn:hover{border-color:var(--red);color:var(--red)}
 .lampiran-clear-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.surat-modal-icon{flex-shrink:0;width:44px;height:44px;border-radius:12px;background:color-mix(in srgb,var(--gold-solid-bright) 16%,transparent);color:var(--gold-solid-bright);display:flex;align-items:center;justify-content:center}
+.surat-modal-icon svg{width:21px;height:21px}
+#kirimSuratModal .report-modal-head{margin-bottom:28px}
+#kirimSuratModal .modal-actions{border-top:1px solid var(--border-soft);padding-top:18px;margin-top:24px}
+.surat-combobox{position:relative;width:100%}
+.surat-combobox input[type="text"]{width:100%;box-sizing:border-box}
+.surat-form-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:0 26px}
+.surat-form-col{display:flex;flex-direction:column;gap:14px}
+.surat-form-col-lampiran{border-left:1px solid var(--border-soft);padding-left:26px}
+.surat-section-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);font-weight:700}
+.priority-toggle{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.priority-option{position:relative;display:flex;align-items:center;justify-content:center;border:1px solid var(--p-border,var(--border));border-radius:10px;padding:9px 6px;font-size:11px;font-weight:700;color:var(--p-muted,var(--text-muted));background:var(--p-surface-2,var(--panel-alt));cursor:pointer;transition:border-color .15s ease,background .15s ease,color .15s ease}
+.priority-option input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.priority-option.prio-rendah:hover{border-color:#8b5cf6;color:#8b5cf6}
+.priority-option.prio-sedang:hover{border-color:#a855f7;color:#a855f7}
+.priority-option.prio-tinggi:hover{border-color:#6d28d9;color:#6d28d9}
+.priority-option.prio-rendah:has(input:checked){border-color:#8b5cf6;background:#8b5cf6;color:#fff}
+.priority-option.prio-sedang:has(input:checked){border-color:#a855f7;background:#a855f7;color:#fff}
+.priority-option.prio-tinggi:has(input:checked){border-color:#6d28d9;background:#6d28d9;color:#fff}
+.surat-lampiran-zone{position:relative;border:1.5px dashed var(--border-soft,var(--border));border-radius:12px;padding:26px 16px;background:var(--panel);text-align:center;transition:border-color .15s ease,background-color .15s ease}
+.surat-lampiran-zone:hover,.surat-lampiran-zone.is-dragover{border-color:var(--gold-bright);background:var(--gold-dim)}
+.surat-lampiran-zone-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0}
+.surat-lampiran-zone-prompt{display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.surat-lampiran-zone-icon{color:var(--gold-bright)}
+.surat-lampiran-zone-icon svg{width:24px;height:24px}
+.surat-lampiran-zone-text{display:flex;flex-direction:column;gap:8px}
+.surat-lampiran-zone-text-main{font-size:13px;font-weight:700;color:var(--text)}
+.surat-lampiran-zone-text-sub{font-size:11.5px;color:var(--text-muted)}
+.surat-lampiran-preview{margin-top:10px;flex:1;min-height:0;display:flex}
+.surat-lampiran-preview[hidden]{display:none}
+.surat-lampiran-preview-frame{position:relative;width:100%;flex:1;min-height:90px;border-radius:9px;overflow:hidden;border:1px solid var(--border-soft);background:var(--panel-alt);display:flex;align-items:center;justify-content:center}
+.surat-lampiran-preview-frame img{width:100%;height:100%;object-fit:cover;display:block}
+.surat-lampiran-preview-fallback{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text-muted);padding:10px;height:100%;box-sizing:border-box}
+.surat-lampiran-preview-fallback-badge{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;letter-spacing:.02em;color:#fff}
+.surat-lampiran-preview-fallback-text{font-size:10.5px;text-align:center;line-height:1.4}
+@media(max-width:640px){.surat-form-grid{grid-template-columns:1fr}.surat-form-col-lampiran{border-left:none;padding-left:0;border-top:1px solid var(--border-soft);padding-top:16px;margin-top:2px}.surat-lampiran-preview{flex:none;height:170px}.surat-lampiran-preview-frame{flex:none;height:100%}}
 @media(max-width:980px){.report-grid{grid-template-columns:1fr 1fr}.report-layout{grid-template-columns:1fr}.monitor-grid{grid-template-columns:1fr 1fr}}@media(max-width:650px){.report-grid,.form-grid,.monitor-grid,.detail-grid{grid-template-columns:1fr}.form-field.full,.detail-item.full{grid-column:auto}}
 .side-nav-group{margin:0}.side-nav-group-title{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;margin:2px 0;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--text-muted);font-family:var(--body);font-size:13.5px;font-weight:500;cursor:pointer;text-align:left;box-sizing:border-box;transition:background .15s ease,color .15s ease}.side-nav-group-title:hover{background:var(--hover-tint);color:var(--text)}.side-nav-group.open .side-nav-group-title{color:var(--text)}.side-nav-group-title .side-text{flex:1}.side-nav-group-title .chevron{margin-left:auto;width:15px;height:15px;flex-shrink:0;opacity:.6;transition:transform .25s cubic-bezier(.4,0,.2,1),opacity .2s ease}.side-nav-group.open .chevron{transform:rotate(180deg);opacity:1}.side-subnav{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;overflow:hidden}.side-subnav>div{min-height:0;padding:3px 0;margin-left:18px;border-left:1px solid var(--border-soft)}.side-nav-group.open .side-subnav{grid-template-rows:1fr;opacity:1}.side-sub-link{position:relative;display:flex;align-items:center;gap:10px;padding:9px 12px 9px 17px;border-radius:0 9px 9px 0;color:var(--text-muted);font-family:var(--body);font-size:13px;font-weight:500;text-decoration:none;margin:1px 0;box-sizing:border-box;transition:background .15s ease,color .15s ease}.side-sub-link:hover{background:var(--hover-tint);color:var(--text)}.side-sub-link .sub-dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5;flex:0 0 auto;transition:opacity .15s ease,background .15s ease,box-shadow .15s ease}.side-sub-link.active{background:var(--gold-dim);color:var(--gold-bright);font-weight:600}.side-sub-link.active:before{content:"";position:absolute;left:-1px;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--gold-bright)}.side-sub-link.active .sub-dot{background:var(--gold-bright);opacity:1;box-shadow:0 0 0 3px rgba(201,122,0,.15)}.side-subnav-label{display:none}
 .sidebar.collapsed .side-subnav{display:none}.sidebar.collapsed .side-nav-group.open .side-subnav{display:block;position:fixed;min-width:216px;background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);padding:8px;z-index:100020;max-height:min(420px,calc(100vh - 80px));overflow-y:auto;overflow-x:hidden}.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar{width:4px}.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-thumb{background:var(--border-soft);border-radius:99px}.sidebar.collapsed .side-nav-group.open .side-subnav::-webkit-scrollbar-track{background:transparent}.sidebar.collapsed .side-subnav>div{margin-left:0;border-left:none;padding:0}.sidebar.collapsed .side-subnav-label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);padding:4px 10px 8px}.sidebar.collapsed .side-sub-link{padding:9px 10px;border-radius:8px}.sidebar.collapsed .side-nav-group.has-active-child .side-nav-group-title{color:var(--gold-bright);background:var(--gold-dim)}
@@ -45,7 +81,7 @@
 <body>
 <div class="profile-modal-overlay" id="profileModalOverlay"><div class="profile-modal-card" id="profileModalCard" role="dialog" aria-modal="true" aria-label="Detail profil"><button type="button" class="profile-modal-close" id="profileModalCloseBtn" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button><div class="profile-dropdown-view" id="profileSettingsView" style="display:none;"><div class="profile-modal-title">Pengaturan Akun</div><div class="profile-subtabs" role="tablist"><button type="button" class="profile-subtab-btn active" data-subtab-target="profilePhotoView" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1-2h7l1 2h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5Z"></path><circle cx="12" cy="13" r="3.4"></circle></svg>Foto Profil</button><button type="button" class="profile-subtab-btn" data-subtab-target="profilePasswordView" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2.2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Ganti Password</button></div><div class="profile-subtab-panel active" id="profilePhotoView" role="tabpanel"><div class="profile-dropdown-head-lg"><div class="profile-dropdown-avatar-lg"><span class="profile-initial" id="profileInitialLarge" style="display:{{ $user->foto_path ? 'none' : '' }};">{{ strtoupper(mb_substr($user->name ?? 'U',0,1)) }}</span><img class="profile-photo" id="profilePhotoLarge" alt="Foto profil {{ $user->name }}" @if($user->foto_path) src="{{ asset('storage/'.$user->foto_path) }}" style="display:block;" @endif></div><div class="profile-dropdown-name">{{ $user->name }}</div><div class="profile-dropdown-role">{{ $user->jabatan ?? 'Pengguna' }}</div></div><div class="profile-photo-actions"><form method="POST" action="{{ route('profil-foto.update') }}" enctype="multipart/form-data" id="formGantiFoto">@csrf<button type="button" class="profile-btn profile-btn-primary" id="gantiFotoBtn"><span id="gantiFotoLabel">Ganti Foto</span></button><input type="file" name="foto" id="fotoProfilInput" accept="image/png,image/jpeg,image/webp" hidden></form><button type="button" class="profile-btn profile-btn-outline" id="hapusFotoBtn" style="display:{{ $user->foto_path ? '' : 'none' }};"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>Hapus</button></div><p class="profile-photo-hint">Format JPG, PNG, atau WEBP — ukuran maksimal 10 MB.</p></div><div class="profile-subtab-panel" id="profilePasswordView" role="tabpanel">@if($permintaanGantiPasswordPending)<div class="profile-pending-state"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg><h4>Permintaan Sedang Diproses</h4><p>Permintaan ganti password kamu sudah diajukan pada {{ $permintaanGantiPasswordPending->created_at->translatedFormat('d M Y H:i') }}. Silakan tunggu keputusan Admin -- kamu bisa mengajukan permintaan baru setelah ini diputuskan.</p></div>@else<div class="profile-form-notice">Perubahan kata sandi tidak langsung berlaku. Permintaan akan dikirim ke <b>Admin</b> untuk diverifikasi terlebih dahulu.</div><form class="profile-form" id="formGantiPassword" method="POST" action="{{ route('permintaan-reset-password.store') }}">@csrf<div class="profile-form-field"><label for="passBaru">Kata Sandi Baru</label><div class="profile-field-toggle-wrap"><input type="password" id="passBaru" name="password_baru" required placeholder="Kata sandi baru"><button class="field-toggle" type="button" data-target="passBaru" aria-label="Tampilkan Password"><svg class="icon-eye" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"></path><circle cx="12" cy="12" r="3.2"></circle></svg><svg class="icon-eye-off" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c7 0 10.5 7 10.5 7a13.6 13.6 0 0 1-3.2 4.1M6.6 6.6C3.5 8.5 1.5 12 1.5 12s3.5 7 10.5 7a10.6 10.6 0 0 0 4.2-.85"></path><path d="M9.5 9.7a3.2 3.2 0 0 0 4.5 4.5"></path></svg></button></div></div><div class="profile-form-field"><label for="passKonfirmasi">Konfirmasi Kata Sandi Baru</label><div class="profile-field-toggle-wrap"><input type="password" id="passKonfirmasi" name="password_baru_confirmation" required placeholder="Ulangi kata sandi baru"><button class="field-toggle" type="button" data-target="passKonfirmasi" aria-label="Tampilkan Password"><svg class="icon-eye" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"></path><circle cx="12" cy="12" r="3.2"></circle></svg><svg class="icon-eye-off" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c7 0 10.5 7 10.5 7a13.6 13.6 0 0 1-3.2 4.1M6.6 6.6C3.5 8.5 1.5 12 1.5 12s3.5 7 10.5 7a10.6 10.6 0 0 0 4.2-.85"></path><path d="M9.5 9.7a3.2 3.2 0 0 0 4.5 4.5"></path></svg></button></div></div><div class="profile-form-field"><label for="passCatatan">Catatan untuk Admin (opsional)</label><textarea id="passCatatan" name="catatan" rows="2" placeholder="Contoh: lupa kata sandi lama"></textarea></div><button type="submit" class="btn btn-primary">Kirim Permintaan ke Admin</button></form>@endif</div></div><div class="profile-dropdown-view" id="profileHelpView" style="display:none;"><div class="profile-modal-title">Bantuan &amp; Panduan</div><p class="help-intro">Ringkasan singkat menu utama di dashboard ini.</p><div class="help-topics">@if($canSend)<div class="help-topic"><div class="help-topic-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"></path><path d="M22 2 15 22 11 13 2 9 22 2Z"></path></svg></div><div class="help-topic-body"><div class="help-topic-title">Kirim Laporan</div><div class="help-topic-desc">Sampaikan kegiatan, kondisi, temuan, atau hasil pekerjaan kepada satuan tujuan, lengkap dengan lampiran PDF jika diperlukan.</div></div></div>@endif<div class="help-topic"><div class="help-topic-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3.5 3.5"></path></svg></div><div class="help-topic-body"><div class="help-topic-title">Arsip Laporan</div><div class="help-topic-desc">Pantau status setiap laporan yang sudah dikirim — menunggu, disetujui, revisi, atau ditolak.</div></div></div>@if(! in_array(strtoupper($satuan->kode ?? ''), ['ADMIN','DANPUS','WADAN'], true))<div class="help-topic"><div class="help-topic-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg></div><div class="help-topic-body"><div class="help-topic-title">Permintaan Laporan</div><div class="help-topic-desc">Kerjakan tugas pelaporan yang diberikan Danpus/Wadan sebelum batas waktu (deadline) yang ditentukan.</div></div></div>@endif @if($mode === 'duktek')<div class="help-topic"><div class="help-topic-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div><div class="help-topic-body"><div class="help-topic-title">Monitoring 3 Satlak</div><div class="help-topic-desc">Pantau aktivitas laporan dari Penangkalan, Siber Sosial, dan Penindakan.</div></div></div>@endif</div><div class="help-footer"><div class="help-footer-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 6-10 7L2 6"></path></svg></div><p>Butuh bantuan lebih lanjut? Hubungi <b>Admin Pussiberad</b> melalui jalur koordinasi internal.</p></div></div></div></div>
 <div class="report-modal" id="reportDetailModal"><div class="report-modal-card"><div class="report-modal-head"><h3>Detail Aktivitas Laporan</h3><button type="button" class="report-modal-close" id="reportDetailClose" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div><div class="detail-grid"><div class="detail-item"><div class="detail-label">Pengirim</div><div class="detail-value" id="detailPengirim">-</div></div><div class="detail-item"><div class="detail-label">Tujuan</div><div class="detail-value" id="detailTujuan">-</div></div><div class="detail-item"><div class="detail-label">Perihal</div><div class="detail-value" id="detailPerihal">-</div></div><div class="detail-item"><div class="detail-label">Prioritas</div><div class="detail-value" id="detailPrioritas">-</div></div><div class="detail-item" id="detailProgresWrap" style="display:none"><div class="detail-label">Progres</div><div class="detail-value" id="detailProgres">-</div></div><div class="detail-item"><div class="detail-label">Kategori/Kegiatan</div><div class="detail-value" id="detailProyek">-</div></div><div class="detail-item"><div class="detail-label">Tanggal</div><div class="detail-value" id="detailTanggal">-</div></div><div class="detail-item full"><div class="detail-label" id="detailDeskripsiLabel">Isi Laporan</div><div class="detail-value" id="detailDeskripsi">-</div></div><div class="detail-item full" id="detailKendalaWrap" style="display:none"><div class="detail-label">Kendala/Alasan</div><div class="detail-value" id="detailKendala">-</div></div><div class="detail-item full" id="detailLampiranWrap" style="display:none"><div class="detail-label">Lampiran</div><div class="detail-value" id="detailLampiran"></div></div><div class="detail-item full" id="detailTembusanWrap" style="display:none"><div class="detail-label">Tembusan &amp; Balasan</div><div class="detail-value" id="detailTembusanBalasan"></div></div></div><div class="modal-actions" id="detailActions"></div></div></div>
-@if($canSend)<div class="report-modal" id="kirimLaporanModal"><div class="report-modal-card"><div class="kirim-laporan-wizard-body" id="kirimLaporanWizardBody"><div class="kirim-laporan-wizard-topbar" id="kirimLaporanWizardTopbar" hidden><button type="button" class="wizard-topbar-nav wizard-topbar-nav-prev" id="kirimLaporanWizardPrev" aria-label="Task sebelumnya" hidden><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg></button><ol class="wizard-step-list" id="kirimLaporanWizardSteps"></ol><button type="button" class="wizard-topbar-nav wizard-topbar-nav-next" id="kirimLaporanWizardNext" aria-label="Task selanjutnya" hidden><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg></button></div><div class="kirim-laporan-wizard-panel"><div class="kirim-laporan-modal-head"><span class="kirim-laporan-modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="m9 14 2 2 4-4"></path></svg></span><span><h3 id="kirimLaporanTitle" style="margin:0 0 4px;">Kirim Laporan</h3><p id="kirimLaporanDesc" style="margin:0;font-size:12px;color:var(--text-muted);line-height:1.5;">Sampaikan laporan kepada pimpinan</p></span><button type="button" id="taskDetailBtn" class="task-detail-btn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>Detail Task</button></div><form class="form-grid" method="POST" action="{{ route('laporan.store') }}" data-store-action="{{ route('laporan.store') }}" data-mode="create" enctype="multipart/form-data" id="kirimLaporanForm">@csrf<div class="kirim-laporan-form-card"><div class="form-field" id="tujuanSatuanField" hidden><label for="tujuan_satuan_id">Tujuan Laporan</label><select id="tujuan_satuan_id" name="tujuan_satuan_id" required>@foreach($tujuan as $t)<option value="{{ $t->id }}" @selected($defaultTujuanId == $t->id)>{{ $t->nama }}</option>@endforeach</select></div><div class="form-field full" id="progresField" hidden><label for="progres">Progres (%)</label><input id="progres" type="number" name="progres" min="0" max="100" required placeholder="0-100"><span class="form-hint" id="progresHint"></span></div><div class="form-field" id="prioritasField" hidden><label for="prioritas">Prioritas</label><select id="prioritas" name="prioritas" required><option>Rendah</option><option selected>Sedang</option><option>Tinggi</option></select></div><div class="form-field" id="kategoriField" hidden><label for="proyek">Kategori</label><input id="proyek" name="proyek" maxlength="255" placeholder="Contoh: kegiatan, koordinasi, temuan"></div><div class="form-field" id="perihalField" hidden><label for="perihal">Perihal</label><input id="perihal" name="perihal" maxlength="255" required placeholder="Judul singkat laporan"></div><div class="form-field"><label for="deskripsi"><svg class="form-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Isi Laporan</label><textarea id="deskripsi" name="deskripsi" required placeholder="Jelaskan progres atau hasil pekerjaan untuk permintaan ini..."></textarea></div><div class="form-field"><label for="kendala"><svg class="form-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Kendala/Alasan (opsional)</label><textarea id="kendala" name="kendala" maxlength="5000" placeholder="Jelaskan kendala yang membuat progres tertunda, kalau ada..."></textarea></div><div class="form-field full"><label for="lampiran"><svg class="form-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>Lampiran</label><div class="lampiran-dropzone" id="lampiranDropzone"><input id="lampiran" type="file" class="lampiran-dropzone-input" name="lampiran[]" data-file-picker-ready="1" multiple><div class="lampiran-dropzone-prompt" id="lampiranDropzonePrompt"><span class="lampiran-dropzone-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17l4-4 4 4"></path><path d="M12 13v9"></path><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg></span><span class="lampiran-dropzone-text">Tarik &amp; lepas file di sini, atau <span class="lampiran-dropzone-browse-btn">Pilih File</span></span></div></div><div class="lampiran-file-list" id="lampiranFileList"><div class="lampiran-file-list-empty" id="lampiranFileListEmpty">Belum ada file yang diupload</div></div><span class="form-hint">Maksimal 10 MB per file.</span></div></div><div class="form-field full" style="display:flex;flex-direction:row;justify-content:flex-end;gap:8px;margin-top:4px;"><button type="button" class="btn" id="kirimLaporanCancel">Tutup</button><button class="btn btn-primary" type="submit" id="kirimLaporanSubmitBtn">Kirim Laporan</button></div></form></div></div></div></div>
+@if($canSend)<div class="report-modal" id="kirimLaporanModal"><div class="report-modal-card"><div class="kirim-laporan-wizard-body" id="kirimLaporanWizardBody"><div class="kirim-laporan-wizard-topbar" id="kirimLaporanWizardTopbar" hidden><button type="button" class="wizard-topbar-nav wizard-topbar-nav-prev" id="kirimLaporanWizardPrev" aria-label="Task sebelumnya" hidden><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg></button><ol class="wizard-step-list" id="kirimLaporanWizardSteps"></ol><button type="button" class="wizard-topbar-nav wizard-topbar-nav-next" id="kirimLaporanWizardNext" aria-label="Task selanjutnya" hidden><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg></button></div><div class="kirim-laporan-wizard-panel"><div class="kirim-laporan-modal-head"><span class="kirim-laporan-modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="m9 14 2 2 4-4"></path></svg></span><span><h3 id="kirimLaporanTitle" style="margin:0 0 4px;">Kirim Laporan</h3><p id="kirimLaporanDesc" style="margin:0;font-size:12px;color:var(--text-muted);line-height:1.5;">Sampaikan laporan kepada pimpinan</p></span><button type="button" id="taskDetailBtn" class="task-detail-btn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>Detail Task</button></div><form class="form-grid" method="POST" action="{{ route('laporan.store') }}" data-store-action="{{ route('laporan.store') }}" data-mode="create" enctype="multipart/form-data" id="kirimLaporanForm">@csrf<div class="kirim-laporan-form-card"><div class="form-field" id="tujuanSatuanField" hidden><label for="tujuan_satuan_id">Tujuan Laporan</label><select id="tujuan_satuan_id" name="tujuan_satuan_id" required>@foreach($tujuan as $t)<option value="{{ $t->id }}" @selected($defaultTujuanId == $t->id)>{{ $t->nama }}</option>@endforeach</select></div><div class="form-field full" id="progresField" hidden><label for="progres">Progres (%)</label><input id="progres" type="number" name="progres" min="0" max="100" required placeholder="0-100"><span class="form-hint" id="progresHint"></span></div><div class="form-field" id="prioritasField" hidden><label for="prioritas">Prioritas</label><select id="prioritas" name="prioritas" required><option>Rendah</option><option selected>Sedang</option><option>Tinggi</option></select></div><div class="form-field" id="kategoriField" hidden><label for="proyek">Kategori</label><input id="proyek" name="proyek" maxlength="255" placeholder="Contoh: kegiatan, koordinasi, temuan"></div><div class="form-field" id="perihalField" hidden><label for="perihal">Perihal</label><input id="perihal" name="perihal" maxlength="255" required placeholder="Judul singkat laporan"></div><div class="form-field"><label for="deskripsi"><svg class="form-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Isi Laporan</label><textarea id="deskripsi" name="deskripsi" required placeholder="Jelaskan progres atau hasil pekerjaan untuk permintaan ini..."></textarea></div><div class="form-field"><label for="kendala"><svg class="form-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Kendala/Alasan (opsional)</label><textarea id="kendala" name="kendala" maxlength="5000" placeholder="Jelaskan kendala yang membuat progres tertunda, kalau ada..."></textarea></div><div class="form-field full"><label for="lampiran"><svg class="form-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>Lampiran</label><div class="lampiran-dropzone" id="lampiranDropzone"><input id="lampiran" type="file" class="lampiran-dropzone-input" name="lampiran[]" data-file-picker-ready="1" multiple><div class="lampiran-dropzone-prompt" id="lampiranDropzonePrompt"><span class="lampiran-dropzone-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17l4-4 4 4"></path><path d="M12 13v9"></path><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg></span><span class="lampiran-dropzone-text"><span class="lampiran-dropzone-text-main">Tarik &amp; lepas file di sini, atau <span class="lampiran-dropzone-browse-btn">Pilih File</span></span><span class="lampiran-dropzone-text-sub">Maksimal 10 MB per file.</span></span></div></div><div class="lampiran-file-list" id="lampiranFileList"><div class="lampiran-file-list-empty" id="lampiranFileListEmpty">Belum ada file yang diupload</div></div></div></div><div class="form-field full" style="display:flex;flex-direction:row;justify-content:flex-end;gap:8px;margin-top:4px;"><button type="button" class="btn" id="kirimLaporanCancel">Tutup</button><button class="btn btn-primary" type="submit" id="kirimLaporanSubmitBtn">Kirim Laporan</button></div></form></div></div></div></div>
 {{-- Sub-modal "Detail Task": dibuka dari tombol #taskDetailBtn di pojok kanan
      header modal Update Progres. Isi teksnya di-set applyTaskDetail() di
      permintaan-laporan-deadline.blade.php dari data-task-detail step task. --}}
@@ -53,7 +89,7 @@
 @if($canSend)<div class="confirm-overlay" id="konfirmasiKirimOverlay"><div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="konfirmasiKirimTitle"><div class="confirm-icon" style="background:var(--gold-dim);color:var(--gold-bright)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg></div><h3 id="konfirmasiKirimTitle">Kirim Laporan?</h3><p id="konfirmasiKirimBody">Pastikan data yang kamu isi sudah benar. Laporan yang sudah terkirim tidak dapat diedit lagi.</p><div class="confirm-actions"><button type="button" class="btn" id="konfirmasiKirimBatal">Batal</button><button type="button" class="btn btn-primary" id="konfirmasiKirimYa">Ya, Kirim</button></div></div></div>@endif
 @if($isKasansi)<div class="report-modal" id="kirimKendalaModal"><div class="report-modal-card"><div class="report-modal-head"><h3>Kirim Kendala</h3><button type="button" class="report-modal-close" id="kirimKendalaClose" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div><p style="margin:-8px 0 16px;font-size:12px;color:var(--text-muted);line-height:1.5;">Sampaikan kendala {{ $satuan->nama }} langsung kepada Danpus.</p><form class="form-grid" method="POST" action="{{ route('laporan-kendala.store') }}" enctype="multipart/form-data" id="kirimKendalaForm">@csrf<div class="form-field full"><label>Tujuan</label><div style="display:flex"><div class="satuan-pill">DANPUS</div></div></div><div class="form-field"><label for="kendala_prioritas">Prioritas</label><select id="kendala_prioritas" name="prioritas" required><option>Rendah</option><option selected>Sedang</option><option>Tinggi</option></select></div><div class="form-field"><label for="kendala_perihal">Perihal</label><input id="kendala_perihal" name="perihal" maxlength="255" required placeholder="Judul singkat kendala"></div><div class="form-field full"><label for="kendala_kategori">Kategori <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim);font-size:10px">(opsional)</span></label><input id="kendala_kategori" name="kategori" maxlength="255" placeholder="Contoh: SDM, Sarana, Operasional, Anggaran"></div><div class="form-field full"><label for="kendala_deskripsi">Isi Kendala</label><textarea id="kendala_deskripsi" name="deskripsi" required placeholder="Jelaskan kendala yang ingin disampaikan ke Danpus..."></textarea></div><div class="form-field full"><label>Tembusan ke (opsional, maksimal 1)</label><div class="form-hint" style="margin-bottom:6px">Satuan lain hanya menerima info koordinasi, tidak ikut memutuskan laporan ini. Pilih maksimal 1 satuan.</div><div id="tembusanKeGroup" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px">@foreach($satuanTembusanPilihan as $st)<label style="display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;cursor:pointer"><input type="checkbox" name="tembusan_ke[]" value="{{ $st->kode }}" class="tembusan-ke-checkbox" style="width:auto">{{ $st->nama_singkat }}</label>@endforeach</div></div><div class="form-field full"><label for="kendala_lampiran">Lampiran (wajib)</label><div class="lampiran-input-wrap"><input id="kendala_lampiran" type="file" class="siberad-file-input" name="lampiran" accept="application/pdf,.pdf"><button type="button" class="lampiran-clear-btn" id="kendalaLampiranClearBtn" aria-label="Hapus file" style="display:none;"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div><span class="form-hint">Wajib dilampirkan sebagai bukti pendukung kendala. Format PDF, maksimal 20 MB.</span></div><div class="form-field full" style="display:flex;flex-direction:row;justify-content:flex-end;gap:8px;margin-top:4px;"><button type="button" class="btn" id="kirimKendalaCancel">Batal</button><button class="btn btn-primary" type="submit" id="kirimKendalaSubmitBtn">Kirim Kendala</button></div></form></div></div>
 @endif
-@if($bisaKirimSurat)<div class="report-modal" id="kirimSuratModal"><div class="report-modal-card"><div class="report-modal-head"><h3>Kirim Surat</h3><button type="button" class="report-modal-close" id="kirimSuratClose" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div><p style="margin:-8px 0 16px;font-size:12px;color:var(--text-muted);line-height:1.5;">Kirim surat dari {{ $satuan->nama }} ke satu satuan tujuan. Surat akan berstatus <em>Menunggu Konfirmasi</em> hingga penerima mengkonfirmasi -- setelah dikonfirmasi, surat otomatis masuk ke Arsip Surat.</p><form class="form-grid" method="POST" action="{{ route('laporan-surat.store') }}" enctype="multipart/form-data" id="kirimSuratForm">@csrf<div class="form-field full"><label for="surat_tujuan">Tujuan</label><select id="surat_tujuan" name="tujuan_satuan_id" required><option value="" disabled selected>Pilih satuan tujuan...</option>@foreach($satuanSuratTujuanPilihan as $st)<option value="{{ $st->id }}">{{ $st->nama }}</option>@endforeach</select></div><div class="form-field"><label for="surat_prioritas">Prioritas</label><select id="surat_prioritas" name="prioritas" required><option>Rendah</option><option selected>Sedang</option><option>Tinggi</option></select></div><div class="form-field"><label for="surat_perihal">Perihal</label><input id="surat_perihal" name="perihal" maxlength="255" required placeholder="Judul singkat surat"></div><div class="form-field full"><label for="surat_kategori">Kategori <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim);font-size:10px">(opsional)</span></label><input id="surat_kategori" name="kategori" maxlength="255" placeholder="Contoh: Undangan, Pemberitahuan, Koordinasi"></div><div class="form-field full"><label for="surat_deskripsi">Isi Surat</label><textarea id="surat_deskripsi" name="deskripsi" required placeholder="Tuliskan isi surat yang ingin disampaikan..."></textarea></div><div class="form-field full"><label for="surat_lampiran">Lampiran (wajib)</label><div class="lampiran-input-wrap"><input id="surat_lampiran" type="file" class="siberad-file-input" name="lampiran" accept="application/pdf,.pdf"><button type="button" class="lampiran-clear-btn" id="suratLampiranClearBtn" aria-label="Hapus file" style="display:none;"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div><span class="form-hint">Wajib dilampirkan sebagai bukti pendukung surat. Format PDF, maksimal 20 MB.</span></div><div class="form-field full" style="display:flex;flex-direction:row;justify-content:flex-end;gap:8px;margin-top:4px;"><button type="button" class="btn" id="kirimSuratCancel">Batal</button><button class="btn btn-primary" type="submit" id="kirimSuratSubmitBtn">Kirim Surat</button></div></form></div></div>
+@if($bisaKirimSurat)<div class="report-modal" id="kirimSuratModal"><div class="report-modal-card" style="width:min(860px,100%)"><div class="report-modal-head"><div style="display:flex;align-items:flex-start;gap:12px;min-width:0"><span class="surat-modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path><path d="M12 12v6"></path><path d="M9 15h6"></path></svg></span><span style="min-width:0"><h3 style="margin:0 0 4px">Buat Surat Baru</h3><p style="margin:0;font-size:12px;color:var(--text-muted)">Dari {{ $satuan->nama }}</p></span></div><button type="button" class="report-modal-close" id="kirimSuratClose" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div><form method="POST" action="{{ route('laporan-surat.store') }}" enctype="multipart/form-data" id="kirimSuratForm">@csrf<div class="surat-form-grid"><div class="surat-form-col"><div class="surat-section-label">Informasi Surat</div><div class="form-field full"><label for="surat_tujuan_search">Tujuan</label><div class="surat-combobox" id="suratTujuanCombobox"><input type="hidden" id="surat_tujuan" name="tujuan_satuan_id"><input type="text" id="surat_tujuan_search" autocomplete="off" placeholder="Ketik nama atau satuan tujuan..."></div><script>window.__suratTujuanOptions=@json($satuanSuratTujuanPilihan->map(fn($st)=>['id'=>(string)$st->id,'name'=>$st->nama,'kode'=>$st->kode])->values());</script></div><div class="form-field full"><label for="surat_perihal">Perihal</label><input id="surat_perihal" name="perihal" maxlength="255" required autocomplete="off" placeholder="Judul singkat surat"></div><div class="form-field full"><label for="surat_kategori">Kategori</label><input id="surat_kategori" name="kategori" maxlength="255" required autocomplete="off" placeholder="Contoh: Undangan, Pemberitahuan, Koordinasi"></div><div class="form-field full"><label>Prioritas</label><div class="priority-toggle"><label class="priority-option prio-rendah"><input type="radio" name="prioritas" value="Rendah" required><span>Rendah</span></label><label class="priority-option prio-sedang"><input type="radio" name="prioritas" value="Sedang" required><span>Sedang</span></label><label class="priority-option prio-tinggi"><input type="radio" name="prioritas" value="Tinggi" required><span>Tinggi</span></label></div></div><div class="form-field full"><label for="surat_deskripsi">Isi Ringkasan Surat</label><textarea id="surat_deskripsi" name="deskripsi" required placeholder="Tuliskan isi surat yang ingin disampaikan..."></textarea></div></div><div class="surat-form-col surat-form-col-lampiran"><div class="surat-section-label">Lampiran</div><div class="surat-lampiran-zone" id="suratLampiranZone"><input id="surat_lampiran" type="file" class="surat-lampiran-zone-input" name="lampiran" data-file-picker-ready="1"><div class="surat-lampiran-zone-prompt"><span class="surat-lampiran-zone-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17l4-4 4 4"></path><path d="M12 13v9"></path><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg></span><span class="surat-lampiran-zone-text"><span class="surat-lampiran-zone-text-main">Klik untuk pilih file atau drag &amp; drop</span><span class="surat-lampiran-zone-text-sub">Maksimal 10 MB</span></span></div></div><div class="lampiran-file-list" id="suratLampiranFileList"><div class="lampiran-file-list-empty" id="suratLampiranFileListEmpty">Belum ada file dipilih</div></div><div class="surat-lampiran-preview" id="suratLampiranPreview" hidden></div><span class="kirim-laporan-error" id="suratLampiranError" style="display:none"></span></div></div><div class="modal-actions"><button type="button" class="btn" id="kirimSuratCancel">Batal</button><button class="btn btn-primary" type="submit" id="kirimSuratSubmitBtn">Buat Surat</button></div></form></div></div>
 <div class="confirm-overlay" id="konfirmasiKendalaOverlay"><div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="konfirmasiKendalaTitle"><div class="confirm-icon" style="background:var(--gold-dim);color:var(--gold-bright)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg></div><h3 id="konfirmasiKendalaTitle">Kirim Laporan Kendala?</h3><p>Pastikan data yang kamu isi sudah benar. Laporan kendala yang sudah terkirim tidak dapat diedit lagi.</p><div class="confirm-actions"><button type="button" class="btn" id="konfirmasiKendalaBatal">Batal</button><button type="button" class="btn btn-primary" id="konfirmasiKendalaYa">Ya, Kirim</button></div></div></div>
 <div class="confirm-overlay" id="konfirmasiTeruskanOverlay"><div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="konfirmasiTeruskanTitle"><div class="confirm-icon" style="background:rgba(34,197,94,.12);color:#16a34a"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M22 2 11 13"></path><path d="M22 2 15 22 11 13 2 9 22 2Z"></path></svg></div><h3 id="konfirmasiTeruskanTitle">Kirim ke Danpus?</h3><p id="konfirmasiTeruskanBody">Laporan ini akan langsung diteruskan ke Danpus. Tindakan ini tidak dapat dibatalkan.</p><div class="confirm-actions"><button type="button" class="btn" id="konfirmasiTeruskanBatal">Batal</button><button type="button" class="btn btn-primary" id="konfirmasiTeruskanYa">Ya, Kirim ke Danpus</button></div></div></div>
 <form method="POST" id="formTeruskanKeDanpus" style="display:none"><input type="hidden" name="_token" id="formTeruskanToken"><input type="hidden" name="_method" value="PATCH"></form>
@@ -164,12 +200,323 @@ document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>document
   btn.addEventListener('click',function(){input.value='';input.dispatchEvent(new Event('change',{bubbles:true}));btn.style.display='none'});
 })();
 (function(){
-  const wrap=document.querySelector('#kirimSuratModal .lampiran-input-wrap');
-  const btn=document.getElementById('suratLampiranClearBtn');
+  // Tujuan surat: input teks + saran otomatis (autocomplete), niru tampilan
+  // floating-menu yang sama dipakai .styled-select-menu (dropdown lain di
+  // sistem ini) -- input hidden #surat_tujuan nyimpen ID satuan yang BENERAN
+  // kepilih dari daftar; ngetik doang tanpa milih dari saran nggak dianggap
+  // valid (hidden value dikosongin lagi tiap ngetik), jadi backend selalu
+  // nerima ID satuan yang valid, bukan teks bebas.
+  const wrap=document.getElementById('suratTujuanCombobox');
+  const search=document.getElementById('surat_tujuan_search');
+  const hidden=document.getElementById('surat_tujuan');
+  const options=window.__suratTujuanOptions||[];
+  if(!wrap||!search||!hidden)return;
+  const menu=document.createElement('div');
+  menu.className='styled-select-menu';
+  const inner=document.createElement('div');
+  inner.className='styled-select-menu-inner';
+  menu.appendChild(inner);
+  document.body.appendChild(menu);
+  function clearInvalid(){
+    search.classList.remove('field-invalid');
+    const anchor=search.closest('.form-field');
+    const msg=anchor&&anchor.querySelector(':scope > .kirim-laporan-error');
+    if(msg)msg.style.display='none';
+  }
+  function renderOptions(){
+    inner.innerHTML='';
+    const q=search.value.trim().toLowerCase();
+    const filtered=options.filter(function(o){return !q||o.name.toLowerCase().indexOf(q)>-1||(o.kode&&o.kode.toLowerCase().indexOf(q)>-1)});
+    if(!filtered.length){
+      const empty=document.createElement('div');
+      empty.className='styled-select-option';
+      empty.style.cssText='cursor:default;opacity:.6';
+      empty.textContent='Tidak ada satuan yang cocok.';
+      inner.appendChild(empty);
+      return;
+    }
+    filtered.forEach(function(o){
+      const item=document.createElement('button');
+      item.type='button';
+      item.className='styled-select-option'+(hidden.value===o.id?' active':'');
+      const txt=document.createElement('span');
+      txt.className='ss-opt-text';
+      txt.textContent=o.name;
+      item.appendChild(txt);
+      item.addEventListener('mousedown',function(e){
+        e.preventDefault();
+        hidden.value=o.id;
+        search.value=o.name;
+        clearInvalid();
+        hidden.dispatchEvent(new Event('change',{bubbles:true}));
+        close();
+      });
+      inner.appendChild(item);
+    });
+  }
+  function position(){
+    const r=search.getBoundingClientRect();
+    menu.style.minWidth=r.width+'px';
+    let left=r.left,top=r.bottom+6;
+    const vw=window.innerWidth;
+    menu.style.left=left+'px';
+    menu.style.top=top+'px';
+    const mr=menu.getBoundingClientRect();
+    if(mr.right>vw-8)left=Math.max(8,vw-8-mr.width);
+    menu.style.left=left+'px';
+  }
+  function close(){
+    menu.classList.remove('open');
+  }
+  search.addEventListener('input',function(){
+    hidden.value='';
+    if(!search.value.trim()){close();return}
+    renderOptions();
+    position();
+    menu.classList.add('open');
+  });
+  document.addEventListener('click',function(e){
+    if(!wrap.contains(e.target)&&!menu.contains(e.target))close();
+  });
+  window.addEventListener('scroll',function(e){
+    if(menu.contains(e.target))return;
+    if(menu.classList.contains('open'))close();
+  },true);
+  // Reposisi ulang pas viewport berubah ukuran -- termasuk keyboard HP
+  // muncul/hilang yang ngubah window.innerHeight di sebagian besar browser
+  // mobile, biar menu nggak "ketinggalan" posisi lama.
+  window.addEventListener('resize',function(){
+    if(menu.classList.contains('open'))position();
+  });
+})();
+(function(){
+  const zone=document.getElementById('suratLampiranZone');
   const input=document.getElementById('surat_lampiran');
-  if(!wrap||!btn||!input)return;
-  input.addEventListener('change',function(){btn.style.display=(input.files&&input.files.length)?'flex':'none'});
-  btn.addEventListener('click',function(){input.value='';input.dispatchEvent(new Event('change',{bubbles:true}));btn.style.display='none'});
+  const list=document.getElementById('suratLampiranFileList');
+  const emptyEl=document.getElementById('suratLampiranFileListEmpty');
+  const errEl=document.getElementById('suratLampiranError');
+  const previewEl=document.getElementById('suratLampiranPreview');
+  const form=document.getElementById('kirimSuratForm');
+  const LAMPIRAN_MAX_BYTES=10*1024*1024;
+  let fileObjectUrl=null;
+  let previewGeneration=0;
+  if(!zone||!input||!list)return;
+  // PDF-nya di-render jadi bitmap <canvas> (halaman 1 doang, discale biar
+  // pas selebar frame lalu dipotong ke tinggi frame -- efeknya kayak
+  // "cover" majalah) pakai pdf.js, BUKAN <embed type="application/pdf">.
+  // <embed> sempat dicoba duluan tapi PDF viewer bawaan Chrome nampilin
+  // toolbar/scrollbar/letterbox abu-gelap sendiri yang nggak bisa
+  // dihilangin total lewat parameter URL -- kelihatan kayak "ada lapisan
+  // hitam" & scrollbar nyempil di kotak kecil. Canvas murni gak punya
+  // chrome UI apa pun jadi bersih.
+  function loadPdfJs(){
+    if(!window.__pdfjsLibPromise){
+      window.__pdfjsLibPromise=import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.3.289/pdf.min.mjs').then(function(lib){
+        lib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.3.289/pdf.worker.min.mjs';
+        return lib;
+      });
+    }
+    return window.__pdfjsLibPromise;
+  }
+  function renderPdfPreview(file,frame,gen){
+    const canvas=document.createElement('canvas');
+    canvas.style.cssText='position:absolute;top:0;left:0;width:100%;height:auto;display:block';
+    loadPdfJs().then(function(lib){
+      return file.arrayBuffer().then(function(buf){
+        return lib.getDocument({data:buf}).promise;
+      });
+    }).then(function(pdf){
+      return pdf.getPage(1);
+    }).then(function(page){
+      if(gen!==previewGeneration)return;
+      const frameWidth=frame.clientWidth||96;
+      const dpr=window.devicePixelRatio||1;
+      const unscaled=page.getViewport({scale:1});
+      // Render dibikin lebih tinggi resolusinya (dikali dpr) daripada ukuran
+      // tampil di layar (frameWidth CSS px) -- canvas cuma di-downscale
+      // lewat CSS, bukan browser yang upscale bitmap kasar -- biar tajam
+      // di layar high-DPI (retina/HP kebanyakan), gak pecah/blur.
+      const viewport=page.getViewport({scale:(frameWidth/unscaled.width)*dpr});
+      canvas.width=Math.ceil(viewport.width);
+      canvas.height=Math.ceil(viewport.height);
+      canvas.style.width=frameWidth+'px';
+      return page.render({canvasContext:canvas.getContext('2d'),viewport:viewport}).promise;
+    }).then(function(){
+      if(gen!==previewGeneration)return;
+      frame.appendChild(canvas);
+    }).catch(function(){
+      if(gen!==previewGeneration)return;
+      renderFallback(file,frame);
+    });
+  }
+  function renderFallback(file,frame){
+    frame.innerHTML='';
+    const badge=(window.siberadLampiranBadge&&window.siberadLampiranBadge(file.name))||{text:'FILE',cls:'lfx-other'};
+    const fb=document.createElement('div');
+    fb.className='surat-lampiran-preview-fallback';
+    const box=document.createElement('span');
+    box.className='surat-lampiran-preview-fallback-badge lampiran-file-row-icon '+badge.cls;
+    box.textContent=badge.text;
+    const txt=document.createElement('span');
+    txt.className='surat-lampiran-preview-fallback-text';
+    txt.textContent='Tanpa pratinjau';
+    fb.appendChild(box);fb.appendChild(txt);
+    frame.appendChild(fb);
+  }
+  function renderPreview(file,fileUrl){
+    if(!previewEl)return;
+    previewGeneration++;
+    previewEl.innerHTML='';
+    if(!file){previewEl.hidden=true;return}
+    previewEl.hidden=false;
+    const frame=document.createElement('div');
+    frame.className='surat-lampiran-preview-frame';
+    const isImage=file.type.indexOf('image/')===0;
+    const isPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name);
+    if(isImage){
+      const img=document.createElement('img');
+      img.src=fileUrl;
+      img.alt=file.name;
+      frame.appendChild(img);
+    }else if(isPdf){
+      renderPdfPreview(file,frame,previewGeneration);
+    }else{
+      renderFallback(file,frame);
+    }
+    previewEl.appendChild(frame);
+  }
+  function showLampiranError(text){
+    zone.classList.add('field-invalid');
+    if(errEl){errEl.textContent=text;errEl.style.display='flex';}
+  }
+  function clearLampiranError(){
+    zone.classList.remove('field-invalid');
+    if(errEl)errEl.style.display='none';
+  }
+  function formatSize(bytes){
+    if(bytes<1024*1024) return Math.max(1,Math.round(bytes/1024))+' KB';
+    return (bytes/1024/1024).toFixed(1)+' MB';
+  }
+  function render(){
+    list.querySelectorAll('.lampiran-file-row').forEach(function(el){el.remove()});
+    if(fileObjectUrl){URL.revokeObjectURL(fileObjectUrl);fileObjectUrl=null;}
+    const file=input.files&&input.files[0];
+    if(!file){if(emptyEl)emptyEl.hidden=false;renderPreview(null);return}
+    if(emptyEl)emptyEl.hidden=true;
+    fileObjectUrl=URL.createObjectURL(file);
+    renderPreview(file,fileObjectUrl);
+    const badge=(window.siberadLampiranBadge&&window.siberadLampiranBadge(file.name))||{text:'PDF',cls:'lfx-pdf'};
+    const row=document.createElement('div');
+    row.className='lampiran-file-row';
+    const icon=document.createElement('span');
+    icon.className='lampiran-file-row-icon '+badge.cls;
+    icon.textContent=badge.text;
+    const info=document.createElement('span');
+    info.className='lampiran-file-row-info';
+    const name=document.createElement('a');
+    name.className='lampiran-file-row-name';
+    name.href=fileObjectUrl;
+    name.target='_blank';
+    name.rel='noopener';
+    name.textContent=file.name;
+    const size=document.createElement('span');
+    size.className='lampiran-file-row-size';
+    size.textContent=formatSize(file.size);
+    info.appendChild(name);info.appendChild(size);
+    const removeBtn=document.createElement('button');
+    removeBtn.type='button';
+    removeBtn.className='lampiran-file-row-remove';
+    removeBtn.setAttribute('aria-label','Hapus file');
+    removeBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>';
+    removeBtn.addEventListener('click',function(){input.value='';render()});
+    row.appendChild(icon);row.appendChild(info);row.appendChild(removeBtn);
+    list.appendChild(row);
+  }
+  input.addEventListener('change',function(){
+    const file=input.files&&input.files[0];
+    if(file&&file.size>LAMPIRAN_MAX_BYTES){
+      input.value='';
+      showLampiranError('Ukuran file melebihi 10 MB, tidak bisa dipilih.');
+      render();
+      return;
+    }
+    if(file)clearLampiranError();
+    render();
+  });
+  ['dragenter','dragover'].forEach(function(evt){zone.addEventListener(evt,function(){zone.classList.add('is-dragover')})});
+  ['dragleave','drop'].forEach(function(evt){zone.addEventListener(evt,function(){zone.classList.remove('is-dragover')})});
+  if(form)form.addEventListener('submit',function(e){
+    if(!input.files||input.files.length===0){
+      e.preventDefault();
+      showLampiranError('Lampiran wajib diisi.');
+      zone.scrollIntoView({block:'center',behavior:'smooth'});
+    }
+  });
+  render();
+})();
+(function(){
+  // Validasi wajib-diisi custom untuk form Buat Surat -- niru persis pola
+  // yang sama dipakai di form Kirim Kendala: ganti tooltip bawaan browser
+  // (Bahasa Inggris) jadi pesan Bahasa Indonesia + border merah di bawah
+  // kolom, otomatis ke-reset begitu field-nya diisi/diubah lagi.
+  const form=document.getElementById('kirimSuratForm');
+  if(!form)return;
+  const suratMessages={
+    tujuan_satuan_id:'Tujuan surat wajib dipilih.',
+    perihal:'Perihal wajib diisi.',
+    kategori:'Kategori wajib diisi.',
+    prioritas:'Pilih salah satu prioritas.',
+    deskripsi:'Isi ringkasan surat wajib diisi.'
+  };
+  form.querySelectorAll('select[required],input[required],textarea[required]').forEach(function(input){
+    var anchor=input.closest('.form-field')||input;
+    var msg=anchor.querySelector(':scope > .kirim-laporan-error');
+    if(!msg){
+      msg=document.createElement('span');
+      msg.className='kirim-laporan-error';
+      msg.style.display='none';
+      anchor.appendChild(msg);
+    }
+    input.addEventListener('invalid',function(e){
+      e.preventDefault();
+      input.classList.add('field-invalid');
+      msg.textContent=suratMessages[input.name]||'Kolom ini wajib diisi.';
+      msg.style.display='flex';
+    });
+    function clearInvalid(){
+      input.classList.remove('field-invalid');
+      msg.style.display='none';
+    }
+    input.addEventListener('input',clearInvalid);
+    input.addEventListener('change',clearInvalid);
+  });
+  // Tujuan sekarang input teks+hidden (bukan <select required> lagi), jadi
+  // wajib-diisinya dicek manual pas submit -- niru pola guard yang sama
+  // dipakai buat cek Lampiran wajib.
+  const tujuanSearch=document.getElementById('surat_tujuan_search');
+  const tujuanHidden=document.getElementById('surat_tujuan');
+  if(tujuanSearch&&tujuanHidden){
+    form.addEventListener('submit',function(e){
+      if(tujuanHidden.value)return;
+      e.preventDefault();
+      var anchor=tujuanSearch.closest('.form-field');
+      var msg=anchor&&anchor.querySelector(':scope > .kirim-laporan-error');
+      if(!msg&&anchor){
+        msg=document.createElement('span');
+        msg.className='kirim-laporan-error';
+        anchor.appendChild(msg);
+      }
+      tujuanSearch.classList.add('field-invalid');
+      if(msg){msg.textContent=suratMessages.tujuan_satuan_id;msg.style.display='flex';}
+      tujuanSearch.scrollIntoView({block:'center',behavior:'smooth'});
+    });
+    tujuanSearch.addEventListener('input',function(){
+      tujuanSearch.classList.remove('field-invalid');
+      var anchor=tujuanSearch.closest('.form-field');
+      var msg=anchor&&anchor.querySelector(':scope > .kirim-laporan-error');
+      if(msg)msg.style.display='none';
+    });
+  }
 })();
 (function(){
   const form=document.getElementById('kirimLaporanForm');

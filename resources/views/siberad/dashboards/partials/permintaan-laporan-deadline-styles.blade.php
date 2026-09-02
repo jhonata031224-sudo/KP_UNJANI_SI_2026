@@ -343,7 +343,9 @@
 .lampiran-dropzone-prompt{display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
 .lampiran-dropzone-icon{color:var(--gold-bright)}
 .lampiran-dropzone-icon svg{width:22px;height:22px}
-.lampiran-dropzone-text{font-size:12.5px;color:var(--text-muted)}
+.lampiran-dropzone-text{display:flex;flex-direction:column;gap:8px}
+.lampiran-dropzone-text-main{font-size:13px;font-weight:700;color:var(--text)}
+.lampiran-dropzone-text-sub{font-size:11.5px;color:var(--text-muted)}
 /* Kotak daftar file di BAWAH dropzone (bukan disamping lagi) -- niru
    referensiLampiran2.png: tiap baris badge warna solid berisi teks
    ekstensi file + nama + ukuran + tombol hapus (icon tempat sampah).
