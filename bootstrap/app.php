@@ -36,6 +36,7 @@ use App\Http\Middleware\InjectAdminReportCenter;
 use App\Http\Middleware\InjectDashboardUi;
 use App\Http\Middleware\InjectPengaturanAccessUi;
 use App\Http\Middleware\InjectWebPushUi;
+use App\Http\Middleware\NormalizeClientIpFromEdge;
 use App\Http\Middleware\RemoveDecorativeSeparators;
 use App\Models\Pengaturan;
 use Illuminate\Foundation\Application;
@@ -70,6 +71,9 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Wajib di-prepend (jalan PALING AWAL, sebelum TrustProxies bawaan
+        // di bawah ini) -- lihat komentar di NormalizeClientIpFromEdge.
+        $middleware->prepend(NormalizeClientIpFromEdge::class);
         $middleware->trustProxies(at: '*');
         $middleware->append(RemoveDecorativeSeparators::class);
         $middleware->append(InjectDashboardUi::class);
