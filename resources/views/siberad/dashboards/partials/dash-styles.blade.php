@@ -144,7 +144,7 @@
   .hud-panel::before{content:"";position:absolute;top:0;left:14px;right:14px;height:1px;background:linear-gradient(90deg, transparent, var(--border-strong), transparent);}
 
   .shell{display:flex;min-height:100vh;position:relative;z-index:1;}
-  .sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);backdrop-filter:blur(12px);border-right:1px solid var(--border-soft);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;transition:transform .25s ease,background-color .25s ease,border-color .25s ease;z-index:100010;}
+  .sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);backdrop-filter:blur(12px);border-right:1px solid var(--border-soft);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;transition:transform .25s ease;z-index:100010;}
   .side-brand{height:82px;padding:0 22px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;gap:13px;box-sizing:border-box;background:var(--surface);flex-shrink:0;position:relative;}
   .side-brand img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:1px solid var(--border-strong);box-shadow:0 0 0 3px rgba(217,146,11,.08);flex-shrink:0;}
   .side-brand .logo{font-family:var(--display);font-weight:700;font-size:15px;line-height:1.2;letter-spacing:.015em;text-transform:uppercase;flex:1;min-width:0;}
@@ -174,7 +174,7 @@
   .side-avatar{width:34px;height:34px;border-radius:50%;background:var(--gold-dim);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:13px;flex-shrink:0;border:1px solid var(--border);}
   .side-user .n{font-size:13px;font-weight:600;line-height:1.3;color:var(--text);}
   .side-user .j{font-size:11.5px;color:var(--text-muted);}
-  form.logout button{width:100%;font-family:var(--mono);font-size:11.5px;border:1px solid var(--border);background:transparent;padding:9px 12px;border-radius:8px;cursor:pointer;color:var(--text-muted);letter-spacing:.04em;text-transform:uppercase;transition:border-color .2s ease,color .2s ease;display:flex;align-items:center;gap:10px;text-align:left;box-sizing:border-box;}
+  form.logout button{width:100%;font-family:var(--mono);font-size:11.5px;border:1px solid var(--border);background:transparent;padding:9px 12px;border-radius:8px;cursor:pointer;color:var(--text-muted);letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:10px;text-align:left;box-sizing:border-box;}
   form.logout button:hover{border-color:var(--red);color:var(--red);}
   .side-icon{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:.85;}
   .side-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;}
@@ -183,7 +183,7 @@
 
   .main{flex:1;min-width:0;}
   .topbar{background:var(--surface);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-soft);height:82px;padding:0 32px;box-sizing:border-box;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:30;gap:16px;}
-  .menu-btn{display:none;align-items:center;justify-content:center;width:42px;height:42px;flex-shrink:0;box-sizing:border-box;font-size:18px;line-height:1;background:transparent;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text);position:relative;z-index:41;touch-action:manipulation;-webkit-tap-highlight-color:rgba(212,175,55,.25);transition:border-color .2s ease,color .2s ease,transform .2s ease;}
+  .menu-btn{display:none;align-items:center;justify-content:center;width:42px;height:42px;flex-shrink:0;box-sizing:border-box;font-size:18px;line-height:1;background:transparent;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text);position:relative;z-index:41;touch-action:manipulation;-webkit-tap-highlight-color:rgba(212,175,55,.25);transition:transform .2s ease;}
   .menu-btn:hover{border-color:var(--gold);color:var(--gold-bright);transform:translateY(-2px);}
   .menu-btn:active{transform:translateY(0);}
   .topbar-title{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:.01em;}
@@ -344,7 +344,7 @@
   @media (max-width:560px){.profile-modal-card{width:100%;padding:24px 20px 22px;}.profile-modal-close{top:16px;right:12px;}}
 
   .content{padding:30px 32px 64px;max-width:1180px;position:relative;z-index:1;}
-  .side-collapse-btn{position:absolute;right:-1px;top:50%;transform:translateY(-50%);background:var(--panel,var(--surface));border:1px solid var(--border-strong,var(--border-soft));border-radius:8px;width:16px;height:52px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);box-shadow:0 2px 8px rgba(0,0,0,.3);z-index:6;transition:right .3s cubic-bezier(.4,0,.2,1),background .15s ease,color .15s ease,border-color .15s ease;}
+  .side-collapse-btn{position:absolute;right:-1px;top:50%;transform:translateY(-50%);background:var(--panel,var(--surface));border:1px solid var(--border-strong,var(--border-soft));border-radius:8px;width:16px;height:52px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);box-shadow:0 2px 8px rgba(0,0,0,.3);z-index:6;transition:right .3s cubic-bezier(.4,0,.2,1);}
   .side-collapse-btn:hover{background:var(--gold-dim);color:var(--gold-bright);border-color:var(--gold,var(--border-strong));}
   .side-collapse-btn svg{width:11px;height:11px;transition:transform .25s ease;}
   .sidebar.collapsed{width:76px;}
@@ -354,7 +354,7 @@
   .sidebar.collapsed .side-brand .logo{display:none;}
   .sidebar.collapsed .side-nav-label,.sidebar.collapsed .side-text,.sidebar.collapsed .chevron,.sidebar.collapsed .side-subnav{display:none;}
   .sidebar.collapsed .side-link,.sidebar.collapsed .side-nav-group-title{justify-content:center;padding:10px;gap:0;}
-  .sidebar{transition:width .25s cubic-bezier(.4,0,.2,1),transform .28s cubic-bezier(.4,0,.2,1),background-color .25s ease,border-color .25s ease;}
+  .sidebar{transition:width .25s cubic-bezier(.4,0,.2,1),transform .28s cubic-bezier(.4,0,.2,1);}
   .tab-panel{display:none;}
   .tab-panel.active{display:block;animation:fadeIn .25s ease;}
   @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
