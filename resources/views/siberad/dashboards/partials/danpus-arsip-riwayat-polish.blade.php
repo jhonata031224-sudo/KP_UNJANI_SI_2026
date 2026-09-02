@@ -23,13 +23,13 @@
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.08));
 }
 #permintaan-laporan .danpus-archive-toggle:hover{
-  border-color:var(--gold-solid-bright,#EEB341);
+  border-color:var(--gold-solid-bright,#EEA23A);
   box-shadow:0 8px 18px -10px rgba(201,122,0,.7);
   transform:translateY(-1px);
 }
 #permintaan-laporan .danpus-archive-toggle.is-active{
-  background:linear-gradient(135deg,#EEB341,#EEB341);
-  border-color:#EEB341;
+  background:linear-gradient(135deg,#EEA23A,#EEA23A);
+  border-color:#EEA23A;
   color:#fff;
   box-shadow:0 9px 20px -10px rgba(201,122,0,.85);
 }

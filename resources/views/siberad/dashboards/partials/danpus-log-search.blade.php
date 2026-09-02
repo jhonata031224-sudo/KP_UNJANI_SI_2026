@@ -4,7 +4,7 @@
 .danpus-log-search-box{position:relative;width:330px;max-width:100%}
 .danpus-log-search .search-icon{position:absolute;left:11px;top:50%;width:16px;height:16px;transform:translateY(-50%);color:var(--p-muted);pointer-events:none}
 .danpus-log-search input{box-sizing:border-box;width:100%;height:38px;border:1px solid var(--p-border);border-radius:9px;outline:0;background:var(--p-surface-2);color:var(--p-text);font:inherit;font-size:12px;padding:8px 11px 8px 35px}
-.danpus-log-search input:focus{border-color:#EEB341;box-shadow:0 0 0 3px rgba(201,122,0,.10)}
+.danpus-log-search input:focus{border-color:#EEA23A;box-shadow:0 0 0 3px rgba(201,122,0,.10)}
 .danpus-log-search input::placeholder{color:var(--p-muted)}
 /* Dropdown "Terbaru/Terlama"-nya sekarang <select> asli yang di-enhance
    otomatis sama styled-select.blade.php -- biar konsisten (posisi menu,

@@ -67,12 +67,12 @@
     --border:rgba(217,146,11,.22);
     --border-soft:rgba(217,146,11,.13);
     --border-strong:rgba(217,146,11,.42);
-    --gold:#EEB341;
-    --gold-bright:#EEB341;
-    --gold-dim:rgba(238,179,65,.14);
-    --green:#EEB341;
-    --green-bright:#EEB341;
-    --green-dim:rgba(238,179,65,.14);
+    --gold:#EEA23A;
+    --gold-bright:#EEA23A;
+    --gold-dim:rgba(238,162,58,.14);
+    --green:#EEA23A;
+    --green-bright:#EEA23A;
+    --green-dim:rgba(238,162,58,.14);
     /* Hijau "asli" khusus notifikasi sukses -- var(--green*) di atas sengaja
        disamakan dengan gold (aksen hijau dihilangkan dari elemen dashboard
        lain), tapi notifikasi sukses (toast) harus tetap hijau seperti
@@ -98,8 +98,8 @@
     --body:'Inter', sans-serif;
     --sidebar-w:256px;
 
-    --gold-solid:#EEB341;
-    --gold-solid-bright:#EEB341;
+    --gold-solid:#EEA23A;
+    --gold-solid-bright:#EEA23A;
     --on-gold:#241a05;
 
     --surface:rgba(6,9,12,.92);
@@ -117,9 +117,9 @@
     --border:rgba(150,110,10,.25);
     --border-soft:rgba(150,110,10,.15);
     --border-strong:rgba(150,110,10,.4);
-    --gold:#EEB341;
-    --gold-bright:#EEB341;
-    --gold-dim:rgba(238,179,65,.16);
+    --gold:#EEA23A;
+    --gold-bright:#EEA23A;
+    --gold-dim:rgba(238,162,58,.16);
     --green:#1f7a49;
     --green-bright:#166138;
     --green-dim:rgba(31,122,73,.12);
