@@ -136,8 +136,8 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
    scrollbar-nya kepotong lurus dan bikin sudut itu keliatan siku, bukan bulat. */
 .sidebar.collapsed .side-nav-group.open .side-subnav>div{max-height:calc(min(420px,calc(100vh - 80px)) - 16px);overflow-y:auto;overflow-x:hidden;}
 @media(min-width:901px){
-.sidebar.collapsed .side-nav-group.open .side-subnav>div{padding:4px 0;border-left-width:2px;gap:12px;}
-.sidebar.collapsed .side-sub-link.active:before{top:2px;bottom:2px;width:5px;border-radius:3px;}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div{border-left:none;margin-left:0;padding:0;}
+.sidebar.collapsed .side-sub-link{padding:9px 10px;border-radius:8px;}
 }
 .sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar{width:8px;}
 .sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-thumb{background:var(--p-muted,var(--border-soft));border-radius:99px;border:2px solid var(--p-surface);background-clip:padding-box;}
