@@ -790,7 +790,7 @@
       </div>
       <div class="mark-plate">@if ($lpLogoUrl)<img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">@endif</div>
     </div>
-    <div class="loader-caption">Memverifikasi Sistem&hellip;</div>
+    <div class="loader-caption">{{ $lp['loader']['caption'] }}</div>
   </div>
 
   <!-- ================= NAV ================= -->
@@ -819,7 +819,7 @@
               <path d="M12 2.5v2.4M12 19.1v2.4M4.4 4.4l1.7 1.7M17.9 17.9l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.4 19.6l1.7-1.7M17.9 6.1l1.7-1.7"></path>
             </svg>
           </button>
-          <a class="btn btn-primary btn-nav" href="#login">Masuk</a>
+          <a class="btn btn-primary btn-nav" href="#login">{{ $lp['login']['nav_label'] }}</a>
         </div>
       </nav>
     </div>
@@ -830,8 +830,8 @@
     <div class="login-card hud-panel" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
       <button class="login-close" id="loginClose" type="button" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
       <div class="login-crest">@if ($lpLogoUrl)<img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">@endif</div>
-      <h3 id="loginTitle" class="login-title">Masuk</h3>
-      <p class="login-sub">Masuk menggunakan akun personel yang terdaftar.</p>
+      <h3 id="loginTitle" class="login-title">{{ $lp['login']['title'] }}</h3>
+      <p class="login-sub">{{ $lp['login']['subtitle'] }}</p>
       <form class="login-form" id="loginForm" method="POST" action="{{ route('login') }}" autocomplete="off">
         @csrf
         <label class="login-label" for="loginUser">NRP / Username</label>
@@ -852,11 +852,11 @@
           </button>
           <input class="login-input captcha-input" id="loginCaptcha" name="captcha" type="text" autocomplete="off" placeholder="Masukan Captcha" required>
         </div>
-        <button class="btn btn-primary login-submit" type="submit">Masuk</button>
+        <button class="btn btn-primary login-submit" type="submit">{{ $lp['login']['submit_label'] }}</button>
       </form>
       <div class="login-foot">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 3v6c0 5-3.4 8.4-8 11-4.6-2.6-8-6-8-11V5l8-3z"/></svg>
-        Akses hanya untuk personel resmi PUSSIBERAD
+        {{ $lp['login']['footer_note'] }}
       </div>
     </div>
   </div>
@@ -960,18 +960,18 @@
           </div>
         </div>
 
-        <div class="about-grid" data-reveal>
+        <div class="about-grid" id="tentangIdentitasGrid" data-reveal>
           <div class="about-card hud-panel">
             <div class="about-label">Nama Resmi</div>
-            <div class="about-value">Pusat Siber Angkatan Darat (Pussiberad)</div>
+            <div class="about-value">{{ $pengaturan->tentang_nama_resmi }}</div>
           </div>
           <div class="about-card hud-panel">
             <div class="about-label">Nama Lama</div>
-            <div class="about-value">Pusat Sandi dan Siber TNI Angkatan Darat (Pussansiad)</div>
+            <div class="about-value">{{ $pengaturan->tentang_nama_lama }}</div>
           </div>
           <div class="about-card hud-panel">
             <div class="about-label">Fungsi Utama</div>
-            <div class="about-value">Pertahanan siber, sandi, serta penanganan insiden keamanan informasi di lingkungan TNI AD.</div>
+            <div class="about-value">{{ $pengaturan->tentang_fungsi_utama }}</div>
           </div>
         </div>
 
@@ -984,18 +984,12 @@
         </div>
 
         <div class="about-grid" data-reveal>
-          <div class="about-card hud-panel">
-            <div class="about-label">Satria</div>
-            <div class="about-value">Kesatria atau pejuang yang gagah berani, jujur, dan membela kebenaran.</div>
-          </div>
-          <div class="about-card hud-panel">
-            <div class="about-label">Yudha</div>
-            <div class="about-value">Perang atau perjuangan — kini diwujudkan sebagai pertempuran di ruang siber (cyber warfare) melawan peretasan, spionase, dan ancaman digital.</div>
-          </div>
-          <div class="about-card hud-panel">
-            <div class="about-label">Waskita</div>
-            <div class="about-value">Tajam penglihatan, waspada, dan bijaksana — dasar kemampuan mendeteksi dan menangkal ancaman siber sejak dini sebelum merusak sistem pertahanan negara.</div>
-          </div>
+          @foreach (($lp['about_section']['items'] ?? []) as $item)
+            <div class="about-card hud-panel">
+              <div class="about-label">{{ $item['label'] ?? '' }}</div>
+              <div class="about-value">{{ $item['description'] ?? '' }}</div>
+            </div>
+          @endforeach
         </div>
 
       </div>
@@ -1011,17 +1005,17 @@
             <span class="footer-crest">@if ($lpLogoUrl)<img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">@endif</span>
             <div class="footer-brand">
               <b>{{ $pengaturan->hero_judul_awal }}<span style="display:inline;color:var(--gold-bright);">{{ $pengaturan->hero_judul_aksen }}</span></b>
-              <span>Pusat Siber Angkatan Darat</span>
+              <span>{{ $lp['footer']['brand_subtitle'] }}</span>
             </div>
           </div>
           <p class="footer-desc">{{ $lp['footer']['description'] }}</p>
         </div>
         <div>
-          <div class="footer-col-title">Navigasi</div>
+          <div class="footer-col-title">{{ $lp['footer']['nav_title'] }}</div>
           <ul class="footer-links">
-            <li><a href="#tentang">Beranda</a></li>
-            <li><a href="#fitur">Fitur</a></li>
-            <li><a href="#tentang-pussiberad">Tentang Pussiberad</a></li>
+            @foreach (array_slice($lp['nav'] ?? [], 0, 3) as $navItem)
+              <li><a href="{{ $navItem['url'] }}">{{ $navItem['label'] }}</a></li>
+            @endforeach
           </ul>
         </div>
         @php
@@ -1035,7 +1029,7 @@
           ];
         @endphp
         <div>
-          <div class="footer-col-title">Terhubung</div>
+          <div class="footer-col-title">{{ $lp['footer']['social_title'] }}</div>
           <ul class="footer-links">
             @foreach (($pengaturan->sosial_media ?? []) as $sosial)
               @if (!empty($sosial['url']))
@@ -1045,8 +1039,8 @@
           </ul>
         </div>
         <div>
-          <div class="footer-col-title">Mabesad</div>
-          <p class="footer-desc" style="margin-bottom:14px;">Markas Besar TNI Angkatan Darat — pusat kendali dan pimpinan utama TNI AD, dipimpin oleh Kepala Staf Angkatan Darat (Kasad).</p>
+          <div class="footer-col-title">{{ $lp['footer']['mabesad_title'] }}</div>
+          <p class="footer-desc" style="margin-bottom:14px;">{{ $lp['footer']['mabesad_description'] }}</p>
           <ul class="footer-links">
             @if ($pengaturan->alamat)<li>{{ $pengaturan->alamat }}</li>@endif
             @if ($pengaturan->telepon_kontak)<li>{{ $pengaturan->telepon_kontak }}</li>@endif
@@ -1056,7 +1050,7 @@
       </div>
       <div class="footer-bottom">
         <span>{{ $lp['footer']['copyright'] }}</span>
-        <span>Satria &middot; Yudha &middot; Waskita</span>
+        <span>{{ $lp['footer']['bottom_tagline'] }}</span>
       </div>
     </div>
   </footer>

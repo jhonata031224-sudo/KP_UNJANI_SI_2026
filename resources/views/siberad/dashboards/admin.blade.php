@@ -2888,6 +2888,25 @@
                 </div>
 
                 <div class="lp-card">
+                  <div class="lp-card-title">Identitas Instansi</div>
+                  <p class="lp-card-desc">Tiga kartu identitas (Nama Resmi, Nama Lama, Fungsi Utama) yang tampil di bagian "Tentang" landing page.</p>
+                  <div class="form-grid">
+                    <div class="form-field">
+                      <label for="lpNamaResmi">Nama Resmi</label>
+                      <input id="lpNamaResmi" name="tentang_nama_resmi" type="text" value="{{ old('tentang_nama_resmi', $pengaturan->tentang_nama_resmi) }}" data-lp="tentang_nama_resmi">
+                    </div>
+                    <div class="form-field">
+                      <label for="lpNamaLama">Nama Lama</label>
+                      <input id="lpNamaLama" name="tentang_nama_lama" type="text" value="{{ old('tentang_nama_lama', $pengaturan->tentang_nama_lama) }}" data-lp="tentang_nama_lama">
+                    </div>
+                    <div class="form-field full">
+                      <label for="lpFungsiUtama">Fungsi Utama</label>
+                      <textarea id="lpFungsiUtama" name="tentang_fungsi_utama" rows="3" data-lp="tentang_fungsi_utama">{{ old('tentang_fungsi_utama', $pengaturan->tentang_fungsi_utama) }}</textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="lp-card">
                   <div class="lp-card-title">Moto</div>
                   <p class="lp-card-desc">Judul &amp; penjelasan moto instansi yang tampil di bagian "Tentang" landing page.</p>
                   <div class="form-grid">

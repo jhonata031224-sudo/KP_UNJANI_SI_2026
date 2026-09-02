@@ -9,7 +9,8 @@ class Pengaturan extends Model
     protected $fillable = [
         'nama_instansi','singkatan','logo_path','alamat','email_kontak','telepon_kontak',
         'hero_eyebrow','hero_judul_awal','hero_judul_aksen','hero_subjudul','hero_deskripsi','hero_image_path',
-        'fitur','tentang_deskripsi','tentang_moto_judul','tentang_moto_deskripsi','website','sosial_media','landing_content',
+        'fitur','tentang_deskripsi','tentang_nama_resmi','tentang_nama_lama','tentang_fungsi_utama',
+        'tentang_moto_judul','tentang_moto_deskripsi','website','sosial_media','landing_content',
     ];
 
     protected $casts = ['fitur' => 'array','sosial_media' => 'array','landing_content' => 'array'];
@@ -32,6 +33,9 @@ class Pengaturan extends Model
                 ['judul'=>'Aman & Terkontrol','deskripsi'=>'Akses terhadap laporan diatur sesuai peran pengguna, sehingga hanya pihak berwenang yang dapat melihat atau mengubah.'],
             ],
             'tentang_deskripsi' => "Pussiberad bukan sebuah perusahaan komersial, melainkan satuan resmi di bawah TNI Angkatan Darat yang dibentuk untuk menyelenggarakan pembinaan personel serta fungsi sandi dan siber dalam rangka membantu tugas TNI-AD. Satuan ini bernama Pusat Siber Angkatan Darat (Pussiberad), sebelumnya bernama Pusat Sandi dan Siber TNI Angkatan Darat (Pussansiad).\n\nPembentukan satuan ini merupakan hasil pengembangan Organisasi dan Tugas (Orgas) baru di lingkungan TNI-AD, sesuai Peraturan KASAD Nomor 26 Tahun 2019 tanggal 26 Desember 2019 tentang Organisasi dan Tugas Markas Besar TNI Angkatan Darat, Bab IV Tugas dan Tanggung Jawab, Pasal 35 Pussansiad.",
+            'tentang_nama_resmi' => 'Pusat Siber Angkatan Darat (Pussiberad)',
+            'tentang_nama_lama' => 'Pusat Sandi dan Siber TNI Angkatan Darat (Pussansiad)',
+            'tentang_fungsi_utama' => 'Pertahanan siber, sandi, serta penanganan insiden keamanan informasi di lingkungan TNI AD.',
             'tentang_moto_judul'=>'Satria Yudha Waskita',
             'tentang_moto_deskripsi'=>'Semboyan resmi Pussansiad/Pussiberad ini diambil dari bahasa Sanskerta/Jawa Kuno, yang secara harfiah berarti "prajurit perang yang ahli, bijaksana, dan waspada" — menggambarkan identitas serta tugas utama prajurit siber TNI AD sebagai garda terdepan pertahanan digital bangsa.',
             'website'=>'https://tni-ad.mil.id/',
@@ -56,8 +60,29 @@ class Pengaturan extends Model
             'hero'=>['button_label'=>'Selengkapnya','button_url'=>'#fitur','crest_caption'=>'Pusat Siber Angkatan Darat','crest_motto'=>''],
             'stats'=>[['number'=>'12','label'=>'Akun Terdaftar'],['number'=>'24/7','label'=>'Layanan Aktif'],['number'=>'100%','label'=>'Transparan & Real-Time'],['number'=>'1','label'=>'Sistem Pelaporan Digital']],
             'features_section'=>['eyebrow'=>'Keunggulan','title'=>'Kenapa Memakai Sistem Ini','description'=>'Membantu proses pelaporan dan persetujuan agar lebih tertata dan mudah dipantau.'],
-            'about_section'=>['eyebrow'=>'Tentang','title'=>'Pussiberad'],
-            'footer'=>['description'=>'Sistem Informasi Berbasis Elektronik Angkatan Darat, mendigitalisasi alur pelaporan seluruh Satuan Pelaksana Pussiberad.','copyright'=>'DT-PHATRAM-2639 · Pussiberad · TNI AD'],
+            'about_section'=>[
+                'eyebrow'=>'Tentang','title'=>'Pussiberad',
+                'items'=>[
+                    ['label'=>'Satria','description'=>'Kesatria atau pejuang yang gagah berani, jujur, dan membela kebenaran.'],
+                    ['label'=>'Yudha','description'=>'Perang atau perjuangan — kini diwujudkan sebagai pertempuran di ruang siber (cyber warfare) melawan peretasan, spionase, dan ancaman digital.'],
+                    ['label'=>'Waskita','description'=>'Tajam penglihatan, waspada, dan bijaksana — dasar kemampuan mendeteksi dan menangkal ancaman siber sejak dini sebelum merusak sistem pertahanan negara.'],
+                ],
+            ],
+            'login'=>[
+                'nav_label'=>'Masuk','title'=>'Masuk','subtitle'=>'Masuk menggunakan akun personel yang terdaftar.',
+                'submit_label'=>'Masuk','footer_note'=>'Akses hanya untuk personel resmi PUSSIBERAD',
+            ],
+            'loader'=>['caption'=>'Memverifikasi Sistem…'],
+            'footer'=>[
+                'description'=>'Sistem Informasi Berbasis Elektronik Angkatan Darat, mendigitalisasi alur pelaporan seluruh Satuan Pelaksana Pussiberad.',
+                'copyright'=>'DT-PHATRAM-2639 · Pussiberad · TNI AD',
+                'brand_subtitle'=>'Pusat Siber Angkatan Darat',
+                'nav_title'=>'Navigasi',
+                'social_title'=>'Terhubung',
+                'mabesad_title'=>'Mabesad',
+                'mabesad_description'=>'Markas Besar TNI Angkatan Darat — pusat kendali dan pimpinan utama TNI AD, dipimpin oleh Kepala Staf Angkatan Darat (Kasad).',
+                'bottom_tagline'=>'Satria · Yudha · Waskita',
+            ],
         ];
     }
 

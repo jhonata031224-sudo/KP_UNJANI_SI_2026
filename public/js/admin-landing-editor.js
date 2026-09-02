@@ -128,6 +128,36 @@
     card.appendChild(grid);
   }
 
+  function addLoginFields(panel) {
+    addCard(panel, 'Modal Login', [
+      ['login.nav_label', 'Teks Tombol "Masuk" di Header', 'text', { full: false }, 'Masuk'],
+      ['login.submit_label', 'Teks Tombol Kirim di Form Login', 'text', { full: false }, 'Masuk'],
+      ['login.title', 'Judul Modal Login', 'text', {}, 'Masuk'],
+      ['login.subtitle', 'Sub Judul Modal Login', 'text', {}, 'Masuk menggunakan akun personel yang terdaftar.'],
+      ['login.footer_note', 'Catatan Kecil di Bawah Form Login', 'text', {}, 'Akses hanya untuk personel resmi PUSSIBERAD'],
+    ], 'Teks-teks yang tampil di tombol header dan jendela pop-up (modal) login.');
+  }
+
+  function addLoaderFields(panel) {
+    addCard(panel, 'Layar Loading', [
+      ['loader.caption', 'Teks Layar Loading', 'text', {}, 'Memverifikasi Sistem…'],
+    ], 'Teks yang tampil sesaat di layar loading sebelum landing page terbuka.');
+  }
+
+  function addAboutItemsFields(panel) {
+    const card = addCardHtml(panel, `
+      <div class="lp-card-title">Nilai/Semboyan (Satria · Yudha · Waskita)</div>
+      <p class="lp-card-desc">3 kartu nilai/semboyan yang tampil di bawah bagian Moto pada section Tentang.</p>
+    `);
+    const grid = document.createElement('div');
+    grid.className = 'form-grid';
+    for (let i = 0; i < 3; i++) {
+      addField(grid, `Kartu ${i + 1} — Judul`, `about_section.items.${i}.label`, get(config, `about_section.items.${i}.label`), 'text', { full: false });
+      addField(grid, `Kartu ${i + 1} — Deskripsi`, `about_section.items.${i}.description`, get(config, `about_section.items.${i}.description`), 'textarea', { rows: 2 });
+    }
+    card.appendChild(grid);
+  }
+
   // Helper kecil buat kartu yang headernya campuran teks statis (innerHTML)
   // -- dipakai addLogoField/addNavFields/addStatsFields supaya nggak perlu
   // menulis ulang boilerplate className tiap kali.
@@ -288,8 +318,44 @@
     setText(doc, '#fitur .section-head p', get(c, 'features_section.description'));
     setText(doc, '#tentang-pussiberad .eyebrow', get(c, 'about_section.eyebrow'));
     setText(doc, '#tentang-pussiberad .about-top h3', get(c, 'about_section.title'));
+
+    const aboutItems = get(c, 'about_section.items', []);
+    doc.querySelectorAll('#tentang-pussiberad .about-grid').forEach((grid, gridIdx) => {
+      // Grid pertama = kartu Nama Resmi/Nama Lama/Fungsi Utama (dari kolom
+      // DB, disinkronkan terpisah lewat dash-script.blade.php) -- HANYA
+      // grid KEDUA (index 1) yang berisi kartu Satria/Yudha/Waskita dari
+      // landing_content JSON, jadi cuma itu yang disentuh di sini.
+      if (gridIdx !== 1) return;
+      grid.querySelectorAll('.about-card').forEach((el, i) => {
+        const item = aboutItems[i];
+        if (!item) return;
+        setText(el.querySelector('.about-label'), item.label);
+        setText(el.querySelector('.about-value'), item.description);
+      });
+    });
+
+    const loginNavBtn = doc.querySelector('.nav-cta .btn-nav');
+    if (loginNavBtn) loginNavBtn.textContent = get(c, 'login.nav_label') || 'Masuk';
+    setText(doc, '#loginTitle', get(c, 'login.title') || 'Masuk');
+    setText(doc, '.login-sub', get(c, 'login.subtitle'));
+    const loginSubmitBtn = doc.querySelector('.login-submit');
+    if (loginSubmitBtn) loginSubmitBtn.textContent = get(c, 'login.submit_label') || 'Masuk';
+    const loginFoot = doc.querySelector('.login-foot');
+    if (loginFoot) {
+      const lastNode = loginFoot.childNodes[loginFoot.childNodes.length - 1];
+      if (lastNode && lastNode.nodeType === 3) lastNode.nodeValue = get(c, 'login.footer_note') || '';
+    }
+    setText(doc, '.loader-caption', get(c, 'loader.caption'));
+
+    setText(doc, 'footer .footer-brand span:last-child', get(c, 'footer.brand_subtitle'));
     setText(doc, 'footer .footer-desc', get(c, 'footer.description'));
+    const footerColTitles = doc.querySelectorAll('footer .footer-col-title');
+    if (footerColTitles[0]) footerColTitles[0].textContent = get(c, 'footer.nav_title') || 'Navigasi';
+    if (footerColTitles[1]) footerColTitles[1].textContent = get(c, 'footer.social_title') || 'Terhubung';
+    if (footerColTitles[2]) footerColTitles[2].textContent = get(c, 'footer.mabesad_title') || 'Mabesad';
+    setText(doc, 'footer .footer-grid > div:nth-child(4) .footer-desc', get(c, 'footer.mabesad_description'));
     setText(doc, 'footer .footer-bottom span:first-child', get(c, 'footer.copyright'));
+    setText(doc, 'footer .footer-bottom span:last-child', get(c, 'footer.bottom_tagline'));
   }
 
   function bindLivePreview() {
@@ -374,6 +440,8 @@
     addLogoField(dynamicWrap);
     addNavFields(dynamicWrap);
     addStatsFields(dynamicWrap);
+    addLoginFields(dynamicWrap);
+    addLoaderFields(dynamicWrap);
 
     // ----- Tab Fitur / Tentang / Kontak: cukup 1 kartu tambahan tiap tab,
     // sudah otomatis rapi karena setiap ".lp-card" statis maupun dinamis
@@ -388,9 +456,16 @@
       ['about_section.eyebrow', 'Label kecil section'],
       ['about_section.title', 'Judul section'],
     ], 'Judul & label yang tampil di atas bagian Tentang pada landing page.');
+    addAboutItemsFields(tentang);
 
     addCard(kontak, 'Footer Landing Page', [
       ['footer.description', 'Deskripsi footer', 'textarea', { rows: 3 }],
+      ['footer.brand_subtitle', 'Sub-teks di bawah nama brand (footer)', 'text', { full: false }],
+      ['footer.bottom_tagline', 'Tagline baris paling bawah footer', 'text', { full: false }],
+      ['footer.nav_title', 'Judul kolom "Navigasi"', 'text', { full: false }],
+      ['footer.social_title', 'Judul kolom "Terhubung"', 'text', { full: false }],
+      ['footer.mabesad_title', 'Judul kolom "Mabesad"', 'text', { full: false }],
+      ['footer.mabesad_description', 'Deskripsi kolom "Mabesad"', 'textarea', { rows: 3 }],
       ['footer.copyright', 'Teks copyright / footer bawah'],
     ], 'Teks yang tampil di bagian paling bawah (footer) landing page.');
 
