@@ -13,7 +13,7 @@
   :root[data-theme="light"]{
     --bg:#f5f7f9;--bg-deep:#ffffff;--panel:#ffffff;--panel-2:#f8fafc;--panel-alt:#f8fafc;
     --border:#e2e8f0;--border-soft:#e2e8f0;--border-strong:#cbd5e1;
-    --gold:#c97a00;--gold-bright:#c97a00;--gold-dim:rgba(201,122,0,.12);
+    --gold:#EEB341;--gold-bright:#c97a00;--gold-dim:rgba(238,179,65,.12);
     --green:#16834b;--green-bright:#16834b;--green-dim:rgba(22,131,75,.12);
     --amber:#b77900;--amber-dim:rgba(183,121,0,.14);
     --red:#c83b3b;--red-dim:rgba(200,59,59,.12);

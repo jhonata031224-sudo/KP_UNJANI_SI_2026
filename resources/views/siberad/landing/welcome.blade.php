@@ -35,9 +35,9 @@
     --border:rgba(212,175,55,.22);
     --border-soft:rgba(212,175,55,.13);
     --border-strong:rgba(212,175,55,.42);
-    --gold:#d4af37;
+    --gold:#EEB341;
     --gold-bright:#f3cd5c;
-    --gold-dim:rgba(212,175,55,.14);
+    --gold-dim:rgba(238,179,65,.14);
     --green:#2f9e63;
     --green-bright:#3fc27d;
     --green-dim:rgba(63,194,125,.14);
@@ -75,9 +75,9 @@
     --border:rgba(150,110,20,.28);
     --border-soft:rgba(150,110,20,.16);
     --border-strong:rgba(150,110,20,.48);
-    --gold:#e0900d;
+    --gold:#EEB341;
     --gold-bright:#c4720a;
-    --gold-dim:rgba(224,144,13,.16);
+    --gold-dim:rgba(238,179,65,.16);
     --green:#1f7a48;
     --green-bright:#166238;
     --green-dim:rgba(31,122,72,.14);

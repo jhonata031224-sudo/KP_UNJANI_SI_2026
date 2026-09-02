@@ -67,9 +67,9 @@
     --border:rgba(217,146,11,.22);
     --border-soft:rgba(217,146,11,.13);
     --border-strong:rgba(217,146,11,.42);
-    --gold:#D9920B;
+    --gold:#EEB341;
     --gold-bright:#F2B94B;
-    --gold-dim:rgba(217,146,11,.14);
+    --gold-dim:rgba(238,179,65,.14);
     --green:#D9920B;
     --green-bright:#F2B94B;
     --green-dim:rgba(217,146,11,.14);
@@ -98,7 +98,7 @@
     --body:'Inter', sans-serif;
     --sidebar-w:256px;
 
-    --gold-solid:#D9920B;
+    --gold-solid:#EEB341;
     --gold-solid-bright:#F2B94B;
     --on-gold:#241a05;
 
@@ -117,9 +117,9 @@
     --border:rgba(150,110,10,.25);
     --border-soft:rgba(150,110,10,.15);
     --border-strong:rgba(150,110,10,.4);
-    --gold:#e0900d;
+    --gold:#EEB341;
     --gold-bright:#c4720a;
-    --gold-dim:rgba(224,144,13,.16);
+    --gold-dim:rgba(238,179,65,.16);
     --green:#1f7a49;
     --green-bright:#166138;
     --green-dim:rgba(31,122,73,.12);
