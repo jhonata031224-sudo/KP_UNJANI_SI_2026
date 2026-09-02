@@ -15,7 +15,7 @@
   input,button,a.btn{font-family:inherit;font-size:12.5px;}
   input{background:#111a17;border:1px solid #24352d;color:#e7efe9;border-radius:6px;padding:8px 10px;}
   .btn{display:inline-flex;align-items:center;gap:6px;background:#1c2c25;border:1px solid #2c4438;color:#e7efe9;border-radius:6px;padding:8px 14px;text-decoration:none;cursor:pointer;}
-  .btn.primary{background:#d4a94f;color:#1a1206;border-color:#d4a94f;font-weight:600;}
+  .btn.primary{background:#EEB341;color:#1a1206;border-color:#EEB341;font-weight:600;}
   table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12.5px;}
   th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #202f27;}
   th{color:#9fb0a6;font-weight:600;text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;}

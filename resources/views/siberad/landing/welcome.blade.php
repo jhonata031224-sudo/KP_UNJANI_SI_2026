@@ -36,7 +36,7 @@
     --border-soft:rgba(212,175,55,.13);
     --border-strong:rgba(212,175,55,.42);
     --gold:#EEB341;
-    --gold-bright:#f3cd5c;
+    --gold-bright:#EEB341;
     --gold-dim:rgba(238,179,65,.14);
     --green:#2f9e63;
     --green-bright:#3fc27d;
@@ -76,7 +76,7 @@
     --border-soft:rgba(150,110,20,.16);
     --border-strong:rgba(150,110,20,.48);
     --gold:#EEB341;
-    --gold-bright:#c4720a;
+    --gold-bright:#EEB341;
     --gold-dim:rgba(238,179,65,.16);
     --green:#1f7a48;
     --green-bright:#166238;

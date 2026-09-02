@@ -74,7 +74,7 @@
      pas ditandai, biar beda jelas dari teal badge "Terbaru". --}}
 .dcard-pin-btn{position:absolute;top:14px;left:14px;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border-strong,var(--border-soft));background:var(--panel);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5;padding:0;transition:background .15s ease,border-color .15s ease,transform .15s ease}
 .dcard-pin-btn svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;opacity:0;transition:opacity .15s ease}
-.dcard-pin-btn:hover{border-color:var(--gold-solid-bright,#F2B94B);transform:scale(1.08)}
+.dcard-pin-btn:hover{border-color:var(--gold-solid-bright,#EEB341);transform:scale(1.08)}
 .dcard-pin-btn[aria-pressed="true"]{background:linear-gradient(135deg,var(--gold-solid-bright),var(--gold-solid));border-color:transparent;box-shadow:0 4px 10px -3px rgba(217,146,11,.6)}
 .dcard-pin-btn[aria-pressed="true"] svg{opacity:1}
 .dcard-menu-wrap{position:absolute;top:14px;right:14px;width:26px;z-index:5}

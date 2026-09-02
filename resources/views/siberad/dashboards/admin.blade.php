@@ -13,7 +13,7 @@
   :root[data-theme="light"]{
     --bg:#f5f7f9;--bg-deep:#ffffff;--panel:#ffffff;--panel-2:#f8fafc;--panel-alt:#f8fafc;
     --border:#e2e8f0;--border-soft:#e2e8f0;--border-strong:#cbd5e1;
-    --gold:#EEB341;--gold-bright:#c97a00;--gold-dim:rgba(238,179,65,.12);
+    --gold:#EEB341;--gold-bright:#EEB341;--gold-dim:rgba(238,179,65,.12);
     --green:#16834b;--green-bright:#16834b;--green-dim:rgba(22,131,75,.12);
     --amber:#b77900;--amber-dim:rgba(183,121,0,.14);
     --red:#c83b3b;--red-dim:rgba(200,59,59,.12);
@@ -4044,7 +4044,7 @@
     if (typeof Chart === 'undefined') return;
 
     var root = getComputedStyle(document.documentElement);
-    var cGold = root.getPropertyValue('--gold-bright').trim() || '#f3cd5c';
+    var cGold = root.getPropertyValue('--gold-bright').trim() || '#EEB341';
     var cGreen = root.getPropertyValue('--green-bright').trim() || '#3fc27d';
     var cAmber = root.getPropertyValue('--amber').trim() || '#e0a83a';
     var cRed = root.getPropertyValue('--red').trim() || '#c62828';

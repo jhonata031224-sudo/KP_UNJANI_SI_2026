@@ -2,10 +2,10 @@
 .admin-report-center{display:none;margin-top:20px;border:1px solid var(--border-soft);border-radius:14px;background:var(--panel);box-shadow:0 10px 28px rgba(15,23,42,.07);overflow:hidden}
 .admin-report-center.open{display:block}
 .admin-report-tabs{display:flex;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border-soft);background:var(--panel-alt);align-items:center}
-.admin-report-tab{border:1px solid #c97a00;background:#d99a23;color:#111827;padding:10px 18px;border-radius:10px;font-family:var(--body);font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-height:40px;box-shadow:0 4px 10px rgba(201,122,0,.14);transition:background .15s ease,border-color .15s ease,box-shadow .15s ease,transform .15s ease,color .15s ease}
+.admin-report-tab{border:1px solid #EEB341;background:#EEB341;color:#111827;padding:10px 18px;border-radius:10px;font-family:var(--body);font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-height:40px;box-shadow:0 4px 10px rgba(201,122,0,.14);transition:background .15s ease,border-color .15s ease,box-shadow .15s ease,transform .15s ease,color .15s ease}
 .admin-report-tab:hover{background:#cd8f1d;border-color:#cd8f1d;color:#111827;box-shadow:0 5px 13px rgba(201,122,0,.18)}
 .admin-report-tab:active{transform:scale(.98)}
-.admin-report-tab.active{background:#d99a23;color:#111827;border-color:#c97a00;box-shadow:0 5px 14px rgba(201,122,0,.18)}
+.admin-report-tab.active{background:#EEB341;color:#111827;border-color:#EEB341;box-shadow:0 5px 14px rgba(201,122,0,.18)}
 .admin-report-head{padding:17px 18px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
 .admin-report-head-title h3{margin:0;font-family:var(--display);font-size:17px;font-weight:700;color:var(--text)}
 .admin-report-head-title p{margin:4px 0 0;font-size:11.5px;color:var(--text-muted);line-height:1.5}
