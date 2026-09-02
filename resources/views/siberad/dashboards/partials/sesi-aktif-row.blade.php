@@ -7,7 +7,7 @@
   </td>
   <td>{{ $s->ip_address ?? '-' }}</td>
   <td style="color:var(--text-muted);max-width:260px;">{{ \Illuminate\Support\Str::limit($s->user_agent, 60) }}</td>
-  <td>{{ \Carbon\Carbon::createFromTimestamp($s->last_activity)->diffForHumans() }}</td>
+  <td class="js-terakhir-aktif">{{ \Carbon\Carbon::createFromTimestamp($s->last_activity)->diffForHumans() }}</td>
   <td>
     @if($s->id !== $sesiSayaId)
     <button class="btn btn-ghost-red btn-sm" type="button" onclick="bukaPaksaLogout(this)"
