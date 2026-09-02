@@ -18,6 +18,12 @@
       <span style="display:block;font-size:12px;color:var(--text-muted);margin-top:2px;">
         {{ $uap->os() }} &middot; {{ $uap->browser() }}
       </span>
+      @if($uap->isUaReduced())
+        <span style="display:block;font-size:11px;color:var(--text-dim);margin-top:2px;"
+              title="Chrome versi baru menyembunyikan info device & versi Android demi privasi (UA Reduction)">
+          ⚠️ Info terbatas (Chrome baru)
+        </span>
+      @endif
     @else
       <span style="color:var(--text-dim);">-</span>
     @endif

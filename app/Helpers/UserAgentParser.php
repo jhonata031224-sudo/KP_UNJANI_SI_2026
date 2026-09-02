@@ -4,7 +4,14 @@ namespace App\Helpers;
 
 /**
  * Parser user agent ringan tanpa library eksternal.
- * Mengembalikan info browser, OS, versi, dan nama perangkat spesifik.
+ *
+ * CATATAN PENTING — Chrome UA Reduction (Chrome 110+):
+ * Sejak Chrome versi 110, browser Chrome di Android SENGAJA
+ * menyembunyikan versi Android asli dan nama device demi privasi.
+ * UA yang dikirim selalu berbentuk: "Android 10; K" — bukan versi
+ * atau device yang sebenarnya. Ini kebijakan Google, bukan bug.
+ * Untuk mendapatkan info asli diperlukan Client Hints (header
+ * Sec-CH-UA-*) yang hanya bekerja via HTTPS + server-side header.
  */
 class UserAgentParser
 {
@@ -16,7 +23,17 @@ class UserAgentParser
     }
 
     // ------------------------------------------------------------------ //
-    //  Jenis perangkat (generik)
+    //  Deteksi apakah Chrome UA Reduction aktif
+    //  (Android 10; K) = placeholder, info asli disembunyikan Chrome
+    // ------------------------------------------------------------------ //
+
+    public function isUaReduced(): bool
+    {
+        return (bool) preg_match('/Android\s[\d.]+;\s*K[\s;)]/i', $this->ua);
+    }
+
+    // ------------------------------------------------------------------ //
+    //  Jenis & nama perangkat
     // ------------------------------------------------------------------ //
 
     public function device(): string
@@ -37,21 +54,29 @@ class UserAgentParser
     }
 
     // ------------------------------------------------------------------ //
-    //  Model HP Android spesifik
+    //  Model Android
     // ------------------------------------------------------------------ //
 
     private function androidModel(): string
     {
-        $ua = $this->ua;
+        // Chrome 110+ UA Reduction: info device disembunyikan Google
+        if ($this->isUaReduced()) {
+            return 'HP Android';   // tidak bisa tahu mereknya
+        }
 
-        // Ambil kode model dari UA: "Android X.X; <model>)"
-        if (!preg_match('/Android[\s\/][\d.]+;\s*([^;)]+)/i', $ua, $m)) {
+        // Ambil kode model: "Android X.X; <model> [Build/...])"
+        if (!preg_match('/Android[\s\/][\d.]+;\s*([^;)]+)/i', $this->ua, $m)) {
             return 'HP Android';
         }
 
-        $raw = trim($m[1]);
+        // Buang suffix "Build/..." jika ada
+        $raw = trim(preg_replace('/\s+Build\/.+$/i', '', $m[1]));
 
-        // Jika sudah nama yang bisa dibaca (mengandung spasi & huruf)
+        if ($raw === '' || $raw === 'K') {
+            return 'HP Android';
+        }
+
+        // Nama yang sudah bisa dibaca (mengandung spasi + huruf)
         if (preg_match('/^[A-Za-z].*\s/u', $raw)) {
             return $raw;
         }
@@ -61,7 +86,7 @@ class UserAgentParser
             return $this->resolveSamsungModel($raw);
         }
 
-        // Kode numerik Xiaomi/Redmi (contoh: 2312DRA50G, 22111317G, 23049RAD8G)
+        // Kode numerik Xiaomi/Redmi (contoh: 2312DRA50G, 22111317G)
         if (preg_match('/^\d{4}[A-Z0-9]+$/i', $raw)) {
             return "Xiaomi/Redmi ({$raw})";
         }
@@ -81,17 +106,16 @@ class UserAgentParser
             return "vivo ({$raw})";
         }
 
-        // Huawei (ELS, VOG, ANE, dll)
+        // Huawei
         if (preg_match('/^(ELS|VOG|ANE|CLT|HMA|JNY|STK|NEN|LYA|BRQ)-/i', $raw)) {
             return "Huawei ({$raw})";
         }
 
-        // Fallback: tampilkan kode apa adanya
         return "Android ({$raw})";
     }
 
     // ------------------------------------------------------------------ //
-    //  Map kode Samsung ke nama marketing
+    //  Map kode Samsung → nama marketing
     // ------------------------------------------------------------------ //
 
     private function resolveSamsungModel(string $raw): string
@@ -99,23 +123,23 @@ class UserAgentParser
         $code = strtoupper($raw);
 
         $map = [
-            // Galaxy S24 series
+            // S24 series
             'SM-S928' => 'Samsung Galaxy S24 Ultra',
             'SM-S926' => 'Samsung Galaxy S24+',
             'SM-S921' => 'Samsung Galaxy S24',
-            // Galaxy S23 series
+            // S23 series
             'SM-S918' => 'Samsung Galaxy S23 Ultra',
             'SM-S916' => 'Samsung Galaxy S23+',
             'SM-S911' => 'Samsung Galaxy S23',
-            // Galaxy S22 series
+            // S22 series
             'SM-S908' => 'Samsung Galaxy S22 Ultra',
             'SM-S906' => 'Samsung Galaxy S22+',
             'SM-S901' => 'Samsung Galaxy S22',
-            // Galaxy S21 series
+            // S21 series
             'SM-G998' => 'Samsung Galaxy S21 Ultra',
             'SM-G996' => 'Samsung Galaxy S21+',
             'SM-G991' => 'Samsung Galaxy S21',
-            // Galaxy A series
+            // A series
             'SM-A736' => 'Samsung Galaxy A73',
             'SM-A725' => 'Samsung Galaxy A72',
             'SM-A715' => 'Samsung Galaxy A71',
@@ -138,19 +162,19 @@ class UserAgentParser
             'SM-A057' => 'Samsung Galaxy A05s',
             'SM-A045' => 'Samsung Galaxy A04',
             'SM-A037' => 'Samsung Galaxy A03s',
-            // Galaxy Note
+            // Note
             'SM-N986' => 'Samsung Galaxy Note 20 Ultra',
             'SM-N981' => 'Samsung Galaxy Note 20',
             'SM-N976' => 'Samsung Galaxy Note 10+',
             'SM-N970' => 'Samsung Galaxy Note 10',
-            // Galaxy Z series
+            // Z series
             'SM-F946' => 'Samsung Galaxy Z Fold5',
             'SM-F936' => 'Samsung Galaxy Z Fold4',
             'SM-F926' => 'Samsung Galaxy Z Fold3',
             'SM-F731' => 'Samsung Galaxy Z Flip5',
             'SM-F721' => 'Samsung Galaxy Z Flip4',
             'SM-F711' => 'Samsung Galaxy Z Flip3',
-            // Galaxy M series
+            // M series
             'SM-M546' => 'Samsung Galaxy M54',
             'SM-M536' => 'Samsung Galaxy M53',
             'SM-M346' => 'Samsung Galaxy M34',
@@ -163,12 +187,11 @@ class UserAgentParser
             }
         }
 
-        // Tidak ada di map — tampilkan kode apa adanya
         return "Samsung ({$raw})";
     }
 
     // ------------------------------------------------------------------ //
-    //  Model iPhone dari versi iOS
+    //  Model iPhone (perkiraan dari versi iOS)
     // ------------------------------------------------------------------ //
 
     private function iphoneModel(): string
@@ -177,11 +200,9 @@ class UserAgentParser
             return 'iPhone';
         }
 
-        $ver = str_replace('_', '.', $m[1]);
-        $major = (int) explode('.', $ver)[0];
+        $major = (int) explode('.', str_replace('_', '.', $m[1]))[0];
 
-        // Perkiraan iPhone dari versi iOS (tidak 100% akurat karena user bisa update)
-        $guess = match (true) {
+        return match (true) {
             $major >= 18 => 'iPhone 16 / 17',
             $major === 17 => 'iPhone 15 / 16',
             $major === 16 => 'iPhone 14 / 15',
@@ -190,12 +211,63 @@ class UserAgentParser
             $major === 13 => 'iPhone 11 / 12',
             default       => 'iPhone',
         };
-
-        return $guess;
     }
 
     // ------------------------------------------------------------------ //
-    //  Nama & versi browser
+    //  OS + versi
+    // ------------------------------------------------------------------ //
+
+    public function os(): string
+    {
+        $ua = $this->ua;
+
+        // iOS
+        if (preg_match('/iPhone OS ([\d_]+)/i', $ua, $m))
+            return 'iOS ' . str_replace('_', '.', $m[1]);
+
+        // iPadOS
+        if (preg_match('/iPad.*OS ([\d_]+)/i', $ua, $m))
+            return 'iPadOS ' . str_replace('_', '.', $m[1]);
+
+        // Android — jika UA Reduction aktif, versi yang tertera (10) bukan versi asli
+        if (preg_match('/Android ([\d.]+)/i', $ua, $m)) {
+            if ($this->isUaReduced()) {
+                // Jangan tampilkan "Android 10" yang menyesatkan
+                return 'Android';
+            }
+            return 'Android ' . $m[1];
+        }
+
+        // Windows
+        if (preg_match('/Windows NT ([\d.]+)/i', $ua, $m)) {
+            return match ($m[1]) {
+                '10.0' => 'Windows 10/11',
+                '6.3'  => 'Windows 8.1',
+                '6.2'  => 'Windows 8',
+                '6.1'  => 'Windows 7',
+                '6.0'  => 'Windows Vista',
+                '5.1', '5.2' => 'Windows XP',
+                default => 'Windows NT ' . $m[1],
+            };
+        }
+
+        // macOS
+        if (preg_match('/Mac OS X ([\d_.]+)/i', $ua, $m))
+            return 'macOS ' . str_replace('_', '.', $m[1]);
+
+        // ChromeOS
+        if (preg_match('/CrOS/i', $ua))
+            return 'ChromeOS';
+
+        // Linux
+        if (preg_match('/Linux/i', $ua))
+            return 'Linux';
+
+        return 'OS Tidak Dikenal';
+    }
+
+    // ------------------------------------------------------------------ //
+    //  Browser + versi
     // ------------------------------------------------------------------ //
 
     public function browser(): string
@@ -245,54 +317,6 @@ class UserAgentParser
     }
 
     // ------------------------------------------------------------------ //
-    //  Nama & versi OS
-    // ------------------------------------------------------------------ //
-
-    public function os(): string
-    {
-        $ua = $this->ua;
-
-        // iOS
-        if (preg_match('/iPhone OS ([\d_]+)/i', $ua, $m))
-            return 'iOS ' . str_replace('_', '.', $m[1]);
-
-        // iPadOS
-        if (preg_match('/iPad.*OS ([\d_]+)/i', $ua, $m))
-            return 'iPadOS ' . str_replace('_', '.', $m[1]);
-
-        // Android — ambil versi penuh
-        if (preg_match('/Android ([\d.]+)/i', $ua, $m))
-            return 'Android ' . $m[1];
-
-        // Windows
-        if (preg_match('/Windows NT ([\d.]+)/i', $ua, $m)) {
-            return match ($m[1]) {
-                '10.0' => 'Windows 10/11',
-                '6.3'  => 'Windows 8.1',
-                '6.2'  => 'Windows 8',
-                '6.1'  => 'Windows 7',
-                '6.0'  => 'Windows Vista',
-                '5.1', '5.2' => 'Windows XP',
-                default => 'Windows NT ' . $m[1],
-            };
-        }
-
-        // macOS
-        if (preg_match('/Mac OS X ([\d_.]+)/i', $ua, $m))
-            return 'macOS ' . str_replace('_', '.', $m[1]);
-
-        // ChromeOS
-        if (preg_match('/CrOS/i', $ua))
-            return 'ChromeOS';
-
-        // Linux
-        if (preg_match('/Linux/i', $ua))
-            return 'Linux';
-
-        return 'OS Tidak Dikenal';
-    }
-
-    // ------------------------------------------------------------------ //
     //  Emoji icon
     // ------------------------------------------------------------------ //
 
@@ -300,15 +324,15 @@ class UserAgentParser
     {
         $ua = $this->ua;
 
-        if (preg_match('/iPad/i', $ua))                        return '📲';
-        if (preg_match('/Android.*(Tab|Tablet)/i', $ua))       return '📲';
-        if (preg_match('/iPhone/i', $ua))                      return '📱';
-        if (preg_match('/Android/i', $ua))                     return '📱';
-        if (preg_match('/Mobile/i', $ua))                      return '📱';
-        if (preg_match('/Macintosh|Mac OS X/i', $ua))          return '💻';
-        if (preg_match('/CrOS/i', $ua))                        return '💻';
-        if (preg_match('/Windows/i', $ua))                     return '🖥️';
-        if (preg_match('/Linux/i', $ua))                       return '🖥️';
+        if (preg_match('/iPad/i', $ua))           return '📲';
+        if (preg_match('/Android.*(Tab)/i', $ua)) return '📲';
+        if (preg_match('/iPhone/i', $ua))         return '📱';
+        if (preg_match('/Android/i', $ua))        return '📱';
+        if (preg_match('/Mobile/i', $ua))         return '📱';
+        if (preg_match('/Macintosh/i', $ua))      return '💻';
+        if (preg_match('/CrOS/i', $ua))           return '💻';
+        if (preg_match('/Windows/i', $ua))        return '🖥️';
+        if (preg_match('/Linux/i', $ua))          return '🖥️';
 
         return '❓';
     }
