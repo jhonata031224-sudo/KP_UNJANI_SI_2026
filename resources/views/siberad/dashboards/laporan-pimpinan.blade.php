@@ -139,18 +139,49 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 @media(min-width:901px){
 .sidebar.collapsed .side-nav-group.open .side-subnav>div{border-left:none;margin-left:0;padding:0;}
 .sidebar.collapsed .side-sub-link{padding:9px 10px;border-radius:8px;}
-/* Flyout Riwayat Aktivitas (#monitorGroup) dikecualikan dari reset di atas --
-   selector di-scope pakai ID biar cuma grup ini yang balik reuse persis
-   style .side-subnav>div / .side-sub-link yang sama dengan submenu saat
-   sidebar terbuka (lihat definisi base-nya beberapa baris di atas). Grup
-   lain (Pelaporan/Surat/Kendala Kasansi) TIDAK disentuh dan tetap pakai
-   reset padding:0/border-radius:8px seperti semula. */
-#monitorGroup.side-nav-group.open .side-subnav>div{border-left:1px solid var(--p-border,var(--border-soft));margin-left:18px;padding:3px 0;}
-#monitorGroup .side-sub-link{padding:9px 12px 9px 17px;border-radius:0 9px 9px 0;}
+/* ===== Flyout Riwayat Aktivitas (#monitorGroup) -- DIROMBAK TOTAL =====
+   Dulu cuma "dikecualikan" dari reset umum di atas. Sekarang seluruh
+   tampilan baris submenu-nya didefinisikan ulang secara eksplisit &
+   mandiri di sini (bukan sekadar mewarisi), supaya dijamin SAMA PERSIS
+   dengan tampilan menu/submenu saat sidebar terbuka: ukuran font, warna,
+   ketebalan+warna aksen item aktif, dan spasi antar baris. Grup lain
+   (Pelaporan/Surat/Kendala Kasansi) TIDAK disentuh, tetap pakai reset
+   padding:0/border-radius:8px seperti semula. */
+#monitorGroup.side-nav-group.open .side-subnav>div{
+  border-left:1px solid var(--p-border,var(--border-soft)); /* garis pemandu kiri, sama seperti sidebar terbuka */
+  margin-left:18px;
+  padding:3px 0;
+  display:flex;
+  flex-direction:column;
+  gap:2px; /* jarak antar baris submenu -- identik dengan sidebar terbuka */
 }
-.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar{width:8px;}
-.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-thumb{background:var(--p-muted,var(--border-soft));border-radius:99px;border:2px solid var(--p-surface);background-clip:padding-box;}
-.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-track{background:var(--hover-tint,rgba(0,0,0,.05));border-radius:99px;margin:4px 2px;}
+#monitorGroup .side-sub-link{
+  padding:9px 12px 9px 17px;
+  border-radius:0 9px 9px 0;
+  font-family:var(--body);
+  font-size:13px;       /* identik dengan submenu sidebar terbuka */
+  font-weight:500;
+  line-height:1.4;
+  color:var(--text-muted);
+}
+#monitorGroup .side-sub-link:hover{background:var(--hover-tint);color:var(--text);}
+#monitorGroup .side-sub-link .sub-dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5;}
+#monitorGroup .side-sub-link.active{background:var(--gold-dim,rgba(201,122,0,.1));color:var(--p-accent);font-weight:600;}
+#monitorGroup .side-sub-link.active:before{content:"";position:absolute;left:-1px;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--p-accent);} /* aksen: tebal 2px, warna gold -- sama seperti sidebar terbuka */
+#monitorGroup .side-sub-link.active .sub-dot{background:var(--p-accent);opacity:1;box-shadow:0 0 0 3px rgba(201,122,0,.15);}
+}
+/* Scrollbar flyout -- thumb custom + tombol panah naik/turun di ujung atas & bawah */
+.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar{width:11px;}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-track{background:var(--hover-tint,rgba(0,0,0,.05));border-radius:99px;margin:14px 1px;}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-thumb{background:var(--p-muted,var(--border-soft));border-radius:99px;border:3px solid var(--p-surface);background-clip:padding-box;}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-thumb:hover{background:var(--p-accent);}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-button{display:block;height:14px;background-color:transparent;background-repeat:no-repeat;background-position:center;background-size:9px 9px;transition:background-color .15s ease;}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-button:vertical:start:increment,
+.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-button:vertical:end:decrement{display:none;}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-button:vertical:start:decrement{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 15 12 9 18 15'/%3E%3C/svg%3E");}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-button:vertical:end:increment{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-button:vertical:start:decrement:hover{background-color:var(--hover-tint);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FF9800' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 15 12 9 18 15'/%3E%3C/svg%3E");}
+.sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-button:vertical:end:increment:hover{background-color:var(--hover-tint);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FF9800' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");}
 /* Preferensi "sidebar ciutkan" disimpan di localStorage dan tetap kepasang
    walau jendela sekarang sudah sempit (sidebar berubah jadi off-canvas via
    hamburger, .collapsed itu fitur desktop doang) -- tanpa override ini,
