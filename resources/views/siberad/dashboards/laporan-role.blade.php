@@ -88,7 +88,7 @@
      permintaan-laporan-deadline.blade.php dari data-task-detail step task. --}}
 <div class="report-modal" id="taskDetailModal" style="z-index:100300"><div class="report-modal-card"><div class="report-modal-head"><h3>Detail Task</h3></div><p class="task-detail-modal-sub">Instruksi rinci dari Pimpinan untuk task yang sedang kamu kerjakan.</p><div class="task-detail-modal-body" id="taskDetailModalBody">-</div><div class="modal-actions"><button type="button" class="btn" id="taskDetailModalClose">Tutup</button></div></div></div>@endif
 @if($canSend)<div class="confirm-overlay" id="konfirmasiKirimOverlay"><div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="konfirmasiKirimTitle"><div class="confirm-icon" style="background:var(--gold-dim);color:var(--gold-bright)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg></div><h3 id="konfirmasiKirimTitle">Kirim Laporan?</h3><p id="konfirmasiKirimBody">Pastikan data yang kamu isi sudah benar. Laporan yang sudah terkirim tidak dapat diedit lagi.</p><div class="confirm-actions"><button type="button" class="btn" id="konfirmasiKirimBatal">Batal</button><button type="button" class="btn btn-primary" id="konfirmasiKirimYa">Ya, Kirim</button></div></div></div>@endif
-@if($isKasansi)<div class="report-modal" id="kirimKendalaModal"><div class="report-modal-card"><div class="report-modal-head"><h3>Kirim Kendala</h3><button type="button" class="report-modal-close" id="kirimKendalaClose" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div><p style="margin:-8px 0 16px;font-size:12px;color:var(--text-muted);line-height:1.5;">Sampaikan kendala {{ $satuan->nama }} langsung kepada Danpus.</p><form class="form-grid" method="POST" action="{{ route('laporan-kendala.store') }}" enctype="multipart/form-data" id="kirimKendalaForm">@csrf<div class="form-field full"><label>Tujuan</label><div style="display:flex"><div class="satuan-pill">DANPUS</div></div></div><div class="form-field"><label for="kendala_prioritas">Prioritas</label><select id="kendala_prioritas" name="prioritas" required><option>Rendah</option><option selected>Sedang</option><option>Tinggi</option></select></div><div class="form-field"><label for="kendala_perihal">Perihal</label><input id="kendala_perihal" name="perihal" maxlength="255" required placeholder="Judul singkat kendala"></div><div class="form-field full"><label for="kendala_kategori">Kategori <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim);font-size:10px">(opsional)</span></label><input id="kendala_kategori" name="kategori" maxlength="255" placeholder="Contoh: SDM, Sarana, Operasional, Anggaran"></div><div class="form-field full"><label for="kendala_deskripsi">Isi Kendala</label><textarea id="kendala_deskripsi" name="deskripsi" required placeholder="Jelaskan kendala yang ingin disampaikan ke Danpus..."></textarea></div><div class="form-field full"><label>Tembusan ke (opsional, maksimal 1)</label><div class="form-hint" style="margin-bottom:6px">Satuan lain hanya menerima info koordinasi, tidak ikut memutuskan laporan ini. Pilih maksimal 1 satuan.</div><div id="tembusanKeGroup" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px">@foreach($satuanTembusanPilihan as $st)<label style="display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;cursor:pointer"><input type="checkbox" name="tembusan_ke[]" value="{{ $st->kode }}" class="tembusan-ke-checkbox" style="width:auto">{{ $st->nama_singkat }}</label>@endforeach</div></div><div class="form-field full"><label for="kendala_lampiran">Lampiran (wajib)</label><div class="lampiran-input-wrap"><input id="kendala_lampiran" type="file" class="siberad-file-input" name="lampiran" accept="application/pdf,.pdf"><button type="button" class="lampiran-clear-btn" id="kendalaLampiranClearBtn" aria-label="Hapus file" style="display:none;"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div><span class="form-hint">Wajib dilampirkan sebagai bukti pendukung kendala. Format PDF, maksimal 20 MB.</span></div><div class="form-field full" style="display:flex;flex-direction:row;justify-content:flex-end;gap:8px;margin-top:4px;"><button type="button" class="btn" id="kirimKendalaCancel">Batal</button><button class="btn btn-primary" type="submit" id="kirimKendalaSubmitBtn">Kirim Kendala</button></div></form></div></div>
+@if($isKasansi)<div class="report-modal" id="kirimKendalaModal"><div class="report-modal-card"><div class="report-modal-head"><h3>Kirim Kendala</h3><button type="button" class="report-modal-close" id="kirimKendalaClose" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div><p style="margin:-8px 0 16px;font-size:12px;color:var(--text-muted);line-height:1.5;">Sampaikan kendala {{ $satuan->nama }} langsung kepada Danpus.</p><form class="form-grid" method="POST" action="{{ route('laporan-kendala.store') }}" enctype="multipart/form-data" id="kirimKendalaForm">@csrf<div class="form-field full"><label>Tujuan</label><div style="display:flex"><div class="satuan-pill">DANPUS</div></div></div><div class="form-field"><label for="kendala_prioritas">Prioritas</label><select id="kendala_prioritas" name="prioritas" required><option>Rendah</option><option selected>Sedang</option><option>Tinggi</option></select></div><div class="form-field"><label for="kendala_perihal">Perihal</label><input id="kendala_perihal" name="perihal" maxlength="255" required placeholder="Judul singkat kendala"></div><div class="form-field full"><label for="kendala_kategori">Kategori <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim);font-size:10px">(opsional)</span></label><input id="kendala_kategori" name="kategori" maxlength="255" placeholder="Contoh: SDM, Sarana, Operasional, Anggaran"></div><div class="form-field full"><label for="kendala_deskripsi">Isi Kendala</label><textarea id="kendala_deskripsi" name="deskripsi" required placeholder="Jelaskan kendala yang ingin disampaikan ke Danpus..."></textarea></div><div class="form-field full"><label>Tembusan ke (opsional, maksimal 1)</label><div class="form-hint" style="margin-bottom:6px">Satuan lain hanya menerima info koordinasi, tidak ikut memutuskan laporan ini. Pilih maksimal 1 satuan.</div><div id="tembusanKeGroup" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px">@foreach($satuanTembusanPilihan as $st)<label style="display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;cursor:pointer"><input type="checkbox" name="tembusan_ke[]" value="{{ $st->kode }}" class="tembusan-ke-checkbox" style="width:auto">{{ $st->nama_singkat }}</label>@endforeach</div></div><div class="form-field full"><label for="kendala_lampiran">Lampiran (wajib)</label><div class="lampiran-dropzone" id="kendalaLampiranDropzone"><input id="kendala_lampiran" type="file" class="lampiran-dropzone-input" name="lampiran[]" multiple><div class="lampiran-dropzone-prompt"><span class="lampiran-dropzone-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17l4-4 4 4"></path><path d="M12 13v9"></path><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg></span><span class="lampiran-dropzone-text"><span class="lampiran-dropzone-text-main">Tarik &amp; lepas file di sini, atau <span class="lampiran-dropzone-browse-btn">Pilih File</span></span><span class="lampiran-dropzone-text-sub">Bisa lebih dari 1 file, semua format, total maksimal 10 MB.</span></span></div></div><div class="lampiran-file-list" id="kendalaLampiranFileList"><div class="lampiran-file-list-empty" id="kendalaLampiranFileListEmpty">Belum ada file dipilih</div></div><span class="kirim-laporan-error" id="kendalaLampiranError" style="display:none"></span><span class="form-hint">Wajib dilampirkan sebagai bukti pendukung kendala. Bisa lebih dari 1 file (PDF, Excel, Word, gambar, dll), total ukuran maksimal 10 MB.</span></div><div class="form-field full" style="display:flex;flex-direction:row;justify-content:flex-end;gap:8px;margin-top:4px;"><button type="button" class="btn" id="kirimKendalaCancel">Batal</button><button class="btn btn-primary" type="submit" id="kirimKendalaSubmitBtn">Kirim Kendala</button></div></form></div></div>
 @endif
 @if($bisaKirimSurat)<div class="report-modal" id="kirimSuratModal"><div class="report-modal-card" style="width:min(860px,100%)"><div class="report-modal-head"><div style="display:flex;align-items:flex-start;gap:12px;min-width:0"><span class="surat-modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path><path d="M12 12v6"></path><path d="M9 15h6"></path></svg></span><span style="min-width:0"><h3 style="margin:0 0 4px">Buat Surat Baru</h3><p style="margin:0;font-size:12px;color:var(--text-muted)">Dari {{ $satuan->nama }}</p></span></div><button type="button" class="report-modal-close" id="kirimSuratClose" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div><form method="POST" action="{{ route('laporan-surat.store') }}" enctype="multipart/form-data" id="kirimSuratForm">@csrf<div class="surat-form-grid"><div class="surat-form-col"><div class="surat-section-label">Informasi Surat</div><div class="form-field full"><label for="surat_tujuan_search">Tujuan</label><div class="surat-combobox" id="suratTujuanCombobox"><input type="hidden" id="surat_tujuan" name="tujuan_satuan_id"><input type="text" id="surat_tujuan_search" autocomplete="off" placeholder="Ketik nama atau satuan tujuan..."></div><script>window.__suratTujuanOptions=@json($satuanSuratTujuanPilihan->map(fn($st)=>['id'=>(string)$st->id,'name'=>$st->nama,'kode'=>$st->kode])->values());</script></div><div class="form-field full"><label for="surat_perihal">Perihal</label><input id="surat_perihal" name="perihal" maxlength="255" required autocomplete="off" placeholder="Judul singkat surat"></div><div class="form-field full"><label for="surat_kategori">Kategori</label><input id="surat_kategori" name="kategori" maxlength="255" required autocomplete="off" placeholder="Contoh: Undangan, Pemberitahuan, Koordinasi"></div><div class="form-field full"><label>Prioritas</label><div class="priority-toggle"><label class="priority-option prio-rendah"><input type="radio" name="prioritas" value="Rendah" required><span>Rendah</span></label><label class="priority-option prio-sedang"><input type="radio" name="prioritas" value="Sedang" required><span>Sedang</span></label><label class="priority-option prio-tinggi"><input type="radio" name="prioritas" value="Tinggi" required><span>Tinggi</span></label></div></div><div class="form-field full"><label for="surat_deskripsi">Isi Ringkasan Surat</label><textarea id="surat_deskripsi" name="deskripsi" required placeholder="Tuliskan isi surat yang ingin disampaikan..."></textarea></div></div><div class="surat-form-col surat-form-col-lampiran"><div class="surat-section-label">Lampiran</div><div class="surat-lampiran-zone" id="suratLampiranZone"><input id="surat_lampiran" type="file" class="surat-lampiran-zone-input" name="lampiran" data-file-picker-ready="1"><div class="surat-lampiran-zone-prompt"><span class="surat-lampiran-zone-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17l4-4 4 4"></path><path d="M12 13v9"></path><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg></span><span class="surat-lampiran-zone-text"><span class="surat-lampiran-zone-text-main">Klik untuk pilih file atau drag &amp; drop</span><span class="surat-lampiran-zone-text-sub">Maksimal 10 MB</span></span></div></div><div class="lampiran-file-list" id="suratLampiranFileList"><div class="lampiran-file-list-empty" id="suratLampiranFileListEmpty">Belum ada file dipilih</div></div><div class="surat-lampiran-preview" id="suratLampiranPreview" hidden></div><span class="kirim-laporan-error" id="suratLampiranError" style="display:none"></span></div></div><div class="modal-actions"><button type="button" class="btn" id="kirimSuratCancel">Batal</button><button class="btn btn-primary" type="submit" id="kirimSuratSubmitBtn">Buat Surat</button></div></form></div></div><div class="confirm-overlay" id="konfirmasiBuatSuratOverlay"><div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="konfirmasiBuatSuratTitle"><div class="confirm-icon" style="background:var(--gold-dim);color:var(--gold-bright)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg></div><h3 id="konfirmasiBuatSuratTitle">Kirim Surat Baru?</h3><p>Pastikan data yang kamu isi sudah benar. Surat yang sudah dikirim tidak dapat diedit lagi.</p><div class="confirm-actions"><button type="button" class="btn" id="konfirmasiBuatSuratBatal">Batal</button><button type="button" class="btn btn-primary" id="konfirmasiBuatSuratYa">Ya, Kirim</button></div></div></div>
 @include('siberad.dashboards.partials.surat-detail-modal')
@@ -194,12 +194,96 @@ document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>{const m
   });
 })();
 (function(){
-  const wrap=document.querySelector('#kirimKendalaModal .lampiran-input-wrap');
-  const btn=document.getElementById('kendalaLampiranClearBtn');
+  // Dropzone multi-file utk lampiran Kendala Kasansi -> Danpus: boleh lebih
+  // dari 1 file, SEMUA format (bukan cuma PDF lagi), dibatasi TOTAL 10 MB
+  // gabungan seluruh file (bukan per-file) -- beda dari dropzone
+  // #lampiranDropzone punya modal "Kirim Laporan" (yang IDnya global/unik
+  // 1 per halaman), makanya di sini dibikin sendiri pakai ID terpisah
+  // (kendalaLampiranDropzone/kendalaLampiranFileList) biar kedua modal bisa
+  // hidup berdampingan di 1 halaman tanpa rebutan ID.
+  const zone=document.getElementById('kendalaLampiranDropzone');
   const input=document.getElementById('kendala_lampiran');
-  if(!wrap||!btn||!input)return;
-  input.addEventListener('change',function(){btn.style.display=(input.files&&input.files.length)?'flex':'none'});
-  btn.addEventListener('click',function(){input.value='';input.dispatchEvent(new Event('change',{bubbles:true}));btn.style.display='none'});
+  const list=document.getElementById('kendalaLampiranFileList');
+  const emptyEl=document.getElementById('kendalaLampiranFileListEmpty');
+  const errEl=document.getElementById('kendalaLampiranError');
+  if(!zone||!input||!list)return;
+  const LAMPIRAN_TOTAL_MAX_BYTES=10*1024*1024;
+  let staged=[];
+  let stagedUrls=[];
+  function formatSize(bytes){
+    if(bytes<1024*1024) return Math.max(1,Math.round(bytes/1024))+' KB';
+    return (bytes/1024/1024).toFixed(1)+' MB';
+  }
+  function syncInputFiles(){
+    const dt=new DataTransfer();
+    staged.forEach(function(f){dt.items.add(f)});
+    input.files=dt.files;
+  }
+  function showError(text){
+    zone.classList.add('field-invalid');
+    if(errEl){errEl.textContent=text;errEl.style.display='flex';}
+  }
+  function clearError(){
+    zone.classList.remove('field-invalid');
+    if(errEl)errEl.style.display='none';
+  }
+  function render(){
+    list.querySelectorAll('.lampiran-file-row').forEach(function(el){el.remove()});
+    stagedUrls.forEach(function(url){URL.revokeObjectURL(url)});
+    stagedUrls=[];
+    staged.forEach(function(file,idx){
+      const url=URL.createObjectURL(file);
+      stagedUrls.push(url);
+      const badge=(window.siberadLampiranBadge&&window.siberadLampiranBadge(file.name))||{text:'FILE',cls:'lfx-other'};
+      const row=document.createElement('div');
+      row.className='lampiran-file-row';
+      const icon=document.createElement('span');
+      icon.className='lampiran-file-row-icon '+badge.cls;
+      icon.textContent=badge.text;
+      const info=document.createElement('span');
+      info.className='lampiran-file-row-info';
+      const name=document.createElement('a');
+      name.className='lampiran-file-row-name';
+      name.href=url;name.target='_blank';name.rel='noopener';
+      name.textContent=file.name;
+      const size=document.createElement('span');
+      size.className='lampiran-file-row-size';
+      size.textContent=formatSize(file.size);
+      info.appendChild(name);info.appendChild(size);
+      const removeBtn=document.createElement('button');
+      removeBtn.type='button';
+      removeBtn.className='lampiran-file-row-remove';
+      removeBtn.setAttribute('aria-label','Hapus file');
+      removeBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>';
+      removeBtn.addEventListener('click',function(){
+        staged.splice(idx,1);
+        syncInputFiles();
+        render();
+      });
+      row.appendChild(icon);row.appendChild(info);row.appendChild(removeBtn);
+      list.appendChild(row);
+    });
+    if(emptyEl)emptyEl.hidden=staged.length>0;
+    if(staged.length>0)clearError();
+  }
+  input.addEventListener('change',function(){
+    const picked=Array.from(input.files||[]);
+    if(!picked.length)return;
+    const gabungan=staged.concat(picked);
+    const total=gabungan.reduce(function(sum,f){return sum+f.size},0);
+    if(total>LAMPIRAN_TOTAL_MAX_BYTES){
+      showError('Total ukuran seluruh lampiran melebihi 10 MB. Kurangi jumlah/ukuran file lalu pilih ulang.');
+      syncInputFiles();
+      zone.scrollIntoView({block:'center',behavior:'smooth'});
+      return;
+    }
+    staged=gabungan;
+    syncInputFiles();
+    render();
+  });
+  ['dragenter','dragover'].forEach(function(evt){zone.addEventListener(evt,function(){zone.classList.add('is-dragover')})});
+  ['dragleave','drop'].forEach(function(evt){zone.addEventListener(evt,function(){zone.classList.remove('is-dragover')})});
+  render();
 })();
 (function(){
   // Tujuan surat: input teks + saran otomatis (autocomplete), niru tampilan

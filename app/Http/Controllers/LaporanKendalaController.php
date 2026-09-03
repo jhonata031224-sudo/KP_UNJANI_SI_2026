@@ -55,7 +55,7 @@ class LaporanKendalaController extends Controller
             // laporan yang masih mampir di tembusan -- baru muncul di sini
             // begitu Kasansi menekan "Kirim ke Danpus" lewat teruskan().
             $items = $danpusId
-                ? LaporanKendala::with('satuan')
+                ? LaporanKendala::with(['satuan', 'lampirans'])
                     ->where('tujuan_satuan_id', $danpusId)
                     ->whereNull('confirmed_at')
                     ->where('status', '!=', LaporanKendala::STATUS_MENUNGGU_TEMBUSAN)
@@ -79,7 +79,7 @@ class LaporanKendalaController extends Controller
             ]);
         }
 
-        $items = LaporanKendala::with(['tujuanSatuan', 'tembusans.satuan'])
+        $items = LaporanKendala::with(['tujuanSatuan', 'tembusans.satuan', 'lampirans'])
             ->where('satuan_id', $satuan->id)
             ->latest()
             ->get();
@@ -100,6 +100,16 @@ class LaporanKendalaController extends Controller
         ]);
     }
 
+    /**
+     * Total gabungan seluruh lampiran kendala dibatasi 10 MB (BEDA dari
+     * batas per-file 10 MB di aturan validasi 'lampiran.*' -- itu cuma
+     * jaring pengaman per-file, batas yang sebenarnya berlaku buat pengguna
+     * adalah TOTAL di sini). Kasansi boleh melampirkan lebih dari 1 file
+     * (PDF, Excel, Word, gambar, dll -- semua format) asal jumlahnya masih
+     * di bawah batas ini.
+     */
+    private const LAMPIRAN_TOTAL_MAX_BYTES = 10 * 1024 * 1024;
+
     public function store(Request $request): RedirectResponse
     {
         // Lampiran WAJIB untuk laporan kendala Kasansi -> Danpus (beda dari
@@ -112,7 +122,13 @@ class LaporanKendalaController extends Controller
             'kategori' => ['nullable', 'string', 'max:255'],
             'deskripsi' => ['required', 'string', 'max:10000'],
             'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
-            'lampiran' => ['required', 'file', 'mimes:pdf', 'max:20480'],
+            // Semua format file diterima (bukan cuma PDF lagi) dan boleh
+            // lebih dari 1 file -- batas 10240 KB per file di sini sekadar
+            // jaring pengaman, batas TOTAL 10 MB gabungan semua file
+            // divalidasi manual di bawah (Validator bawaan Laravel tidak
+            // punya aturan "jumlah ukuran array file").
+            'lampiran' => ['required', 'array', 'min:1'],
+            'lampiran.*' => ['file', 'max:10240'],
             // Tembusan (CC) opsional ke 4 Satlak/4 Sdir -- sekadar info
             // koordinasi, sama sekali bukan tujuan approval kedua. Dibatasi
             // ketat ke 8 kode yang diizinkan supaya tidak bisa
@@ -123,8 +139,16 @@ class LaporanKendalaController extends Controller
             'tembusan_ke.*' => ['string', 'in:'.implode(',', Satuan::kodeTembusanKasansi())],
         ], [
             'lampiran.required' => 'Lampiran wajib diisi untuk mengirim laporan kendala ke Danpus.',
+            'lampiran.min' => 'Lampiran wajib diisi untuk mengirim laporan kendala ke Danpus.',
             'tembusan_ke.max' => 'Tembusan maksimal 1 satuan saja.',
         ]);
+
+        $totalLampiranBytes = collect($request->file('lampiran', []))->filter()->sum(fn ($file) => $file->getSize());
+        abort_if(
+            $totalLampiranBytes > self::LAMPIRAN_TOTAL_MAX_BYTES,
+            422,
+            'Total ukuran seluruh lampiran melebihi 10 MB. Kurangi jumlah/ukuran file lalu coba lagi.'
+        );
 
         $user = $request->user()->load('satuan');
         $satuanAsal = $user->satuan;
@@ -137,14 +161,19 @@ class LaporanKendalaController extends Controller
 
         $tujuan = Satuan::where('kode', 'DANPUS')->firstOrFail();
 
-        $lampiranPath = $request->hasFile('lampiran')
-            ? $request->file('lampiran')->store('lampiran-kendala', 'public')
-            : null;
-        abort_if(
-            $request->hasFile('lampiran') && ! $lampiranPath,
-            500,
-            'Gagal menyimpan file lampiran ke server. Coba lagi, atau hubungi Admin kalau masalah berlanjut.'
-        );
+        // Simpan SEMUA file lampiran yang dikirim (bukan cuma 1 lagi) --
+        // masing-masing jadi 1 baris di tabel laporan_kendala_lampirans,
+        // path fisiknya tetap di disk 'lampiran-kendala' yang sama seperti
+        // sebelumnya supaya tidak perlu migrasi file lama.
+        $lampiranDisimpan = collect($request->file('lampiran', []))->filter()->map(function ($file) {
+            $path = $file->store('lampiran-kendala', 'public');
+            abort_if(! $path, 500, 'Gagal menyimpan file lampiran ke server. Coba lagi, atau hubungi Admin kalau masalah berlanjut.');
+
+            return [
+                'path' => $path,
+                'nama_asli' => $file->getClientOriginalName(),
+            ];
+        });
 
         // Kode -> id satuan tembusan yang dipilih, dedup dan buang yang
         // ternyata tidak ketemu di database (mis. satuan sudah dihapus).
@@ -159,7 +188,7 @@ class LaporanKendalaController extends Controller
         $adaTembusan = $satuanTembusan->isNotEmpty();
 
         $kendala = null;
-        DB::transaction(function () use (&$kendala, $satuanAsal, $user, $tujuan, $validated, $lampiranPath, $satuanTembusan, $adaTembusan) {
+        DB::transaction(function () use (&$kendala, $satuanAsal, $user, $tujuan, $validated, $lampiranDisimpan, $satuanTembusan, $adaTembusan) {
             $kendala = LaporanKendala::create([
                 'satuan_id' => $satuanAsal->id,
                 'user_id' => $user->id,
@@ -168,9 +197,12 @@ class LaporanKendalaController extends Controller
                 'kategori' => $validated['kategori'] ?? null,
                 'deskripsi' => $validated['deskripsi'],
                 'prioritas' => $validated['prioritas'],
-                'lampiran_path' => $lampiranPath,
                 'status' => $adaTembusan ? LaporanKendala::STATUS_MENUNGGU_TEMBUSAN : LaporanKendala::STATUS_MENUNGGU,
             ]);
+
+            foreach ($lampiranDisimpan as $lampiran) {
+                $kendala->lampirans()->create($lampiran);
+            }
 
             foreach ($satuanTembusan as $penerimaTembusan) {
                 LaporanKendalaTembusan::create([
@@ -356,6 +388,9 @@ class LaporanKendalaController extends Controller
 
         if ($laporanKendala->lampiran_path) {
             Storage::disk('public')->delete($laporanKendala->lampiran_path);
+        }
+        foreach ($laporanKendala->lampirans as $lampiranLama) {
+            Storage::disk('public')->delete($lampiranLama->path);
         }
         $perihal = $laporanKendala->perihal;
         $laporanKendala->delete();

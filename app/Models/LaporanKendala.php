@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 /**
  * Laporan kendala/rutin yang dikirim satuan Kasansi (21 Sansidam) ke DANPUS.
@@ -90,6 +91,39 @@ class LaporanKendala extends Model
     public function tembusans(): HasMany
     {
         return $this->hasMany(LaporanKendalaTembusan::class);
+    }
+
+    public function lampirans(): HasMany
+    {
+        return $this->hasMany(LaporanKendalaLampiran::class);
+    }
+
+    /**
+     * Daftar SEMUA lampiran kendala ini, apapun sumbernya -- lampiran_path
+     * lama (1 file, sebelum fitur multi-lampiran ada) ATAU baris-baris baru
+     * di tabel laporan_kendala_lampirans (banyak file, semua format). Dipakai
+     * SEMUA view yang nampilin lampiran kendala biar gak perlu tau bedanya
+     * kendala lama vs baru -- tinggal loop 1 daftar ini, tiap item punya
+     * ->path dan ->nama_asli. SENGAJA prioritasin laporan_kendala_lampirans
+     * (kalau ada isinya) daripada lampiran_path lama, sama seperti
+     * Laporan::getSemuaLampiranAttribute().
+     */
+    public function getSemuaLampiranAttribute(): Collection
+    {
+        $baru = $this->relationLoaded('lampirans') ? $this->lampirans : $this->lampirans()->get();
+        if ($baru->isNotEmpty()) {
+            return $baru;
+        }
+
+        if ($this->lampiran_path) {
+            return collect([(object) [
+                'id' => null,
+                'path' => $this->lampiran_path,
+                'nama_asli' => basename($this->lampiran_path),
+            ]]);
+        }
+
+        return collect();
     }
 
     /**

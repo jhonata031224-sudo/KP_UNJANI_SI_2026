@@ -32,7 +32,7 @@
         data-tanggal="{{ e($k->created_at->translatedFormat('d M Y H:i')) }}"
         data-deskripsi="{{ e($k->deskripsi) }}"
         data-kendala="{{ e($k->catatan ?? '') }}"
-        data-lampiran="{{ $k->lampiran_path ? collect([['url' => asset('storage/'.$k->lampiran_path), 'nama' => basename($k->lampiran_path)]])->toJson() : '[]' }}"
+        data-lampiran="{{ $k->semuaLampiran->map(fn($x) => ['url' => asset('storage/'.$x->path), 'nama' => $x->nama_asli])->values()->toJson() }}"
         data-kendala-report="1"
         data-readonly="{{ $kendalaAdaAksi ? '0' : '1' }}"
         @if(! $kendalaAdaAksi) data-readonly-text="Kendala ini sudah ditindaklanjuti — status: {{ $k->status }}." @endif>

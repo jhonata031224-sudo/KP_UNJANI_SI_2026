@@ -46,7 +46,7 @@
         data-deskripsi="{{ e($k->deskripsi) }}"
         data-deskripsi-label="Isi Balasan"
         data-kendala="{{ e($k->catatan ?? '') }}"
-        data-lampiran="{{ $k->lampiran_path ? collect([['url' => asset('storage/'.$k->lampiran_path), 'nama' => basename($k->lampiran_path)]])->toJson() : '[]' }}"
+        data-lampiran="{{ $k->semuaLampiran->map(fn($x) => ['url' => asset('storage/'.$x->path), 'nama' => $x->nama_asli])->values()->toJson() }}"
         data-tembusan-balasan="{{ $k->tembusans->map(fn($t) => ['satuan' => $t->satuan->nama ?? $t->satuan->kode ?? '-', 'feedback' => $t->feedback])->values()->toJson() }}"
         data-kendala-report="1"
         data-readonly="1"

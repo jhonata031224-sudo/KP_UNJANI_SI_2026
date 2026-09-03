@@ -370,7 +370,7 @@ class DashboardController
             // sengaja DIKECUALIKAN -- baru muncul di sini begitu Kasansi
             // menekan "Kirim ke Danpus" (LaporanKendalaController::teruskan()).
             $kendalaMasuk = $danpusSatuanId
-                ? LaporanKendala::with('satuan')
+                ? LaporanKendala::with(['satuan', 'lampirans'])
                     ->where('tujuan_satuan_id', $danpusSatuanId)
                     ->whereNull('confirmed_at')
                     ->where('status', '!=', LaporanKendala::STATUS_MENUNGGU_TEMBUSAN)
@@ -378,7 +378,7 @@ class DashboardController
                     ->get()
                 : collect();
             $kendalaArsip = $danpusSatuanId
-                ? LaporanKendala::with(['satuan', 'confirmedBy'])->where('tujuan_satuan_id', $danpusSatuanId)->whereNotNull('confirmed_at')->latest('confirmed_at')->get()
+                ? LaporanKendala::with(['satuan', 'confirmedBy', 'lampirans'])->where('tujuan_satuan_id', $danpusSatuanId)->whereNotNull('confirmed_at')->latest('confirmed_at')->get()
                 : collect();
 
             // ===== Surat Masuk: surat dari Kasansi ke SATU tujuan bebas,
@@ -427,7 +427,7 @@ class DashboardController
         // $laporanTerkirim/tab "Riwayat Laporan" di bawah karena itu untuk
         // model Laporan biasa, bukan LaporanKendala.
         $kendalaTerkirimSemua = $isKasansi
-            ? LaporanKendala::with(['tujuanSatuan', 'tembusans.satuan'])->where('satuan_id', $satuan->id)->latest()->get()
+            ? LaporanKendala::with(['tujuanSatuan', 'tembusans.satuan', 'lampirans'])->where('satuan_id', $satuan->id)->latest()->get()
             : collect();
         $kendalaTerkirim = $kendalaTerkirimSemua->where('status', '!=', LaporanKendala::STATUS_DIKONFIRMASI)->values();
         $kendalaArsip = $kendalaTerkirimSemua->where('status', LaporanKendala::STATUS_DIKONFIRMASI)->values();
@@ -444,7 +444,7 @@ class DashboardController
         // info/koordinasi read-only, lihat komentar LaporanKendalaTembusan.
         $isPenerimaTembusan = in_array($kode, $kodeTembusanKasansi, true);
         $tembusanMasuk = $isPenerimaTembusan
-            ? LaporanKendalaTembusan::with(['laporanKendala.satuan', 'dibacaOleh'])
+            ? LaporanKendalaTembusan::with(['laporanKendala.satuan', 'laporanKendala.lampirans', 'dibacaOleh'])
                 ->where('satuan_id', $satuan->id)
                 ->latest()
                 ->get()
