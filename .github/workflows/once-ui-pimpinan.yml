@@ -1,3 +1,4 @@
+# temporary one-shot patch; intentionally removed by the job after applying the scoped UI change
 name: Once UI Pimpinan
 on:
   push:
