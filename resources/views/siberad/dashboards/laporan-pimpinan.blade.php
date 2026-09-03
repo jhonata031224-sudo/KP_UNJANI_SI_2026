@@ -237,18 +237,19 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 
 /* ─── KCARD: Card-based Kendala Kasansi (sisi penerima / pimpinan) ────── */
 .kcard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;padding:4px 0 12px;}
-.kcard{background:var(--p-surface);border:1px solid var(--p-border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;}
+.kcard{background:var(--p-surface);border:1px solid var(--p-border);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:16px;min-height:200px;transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;}
 .kcard:hover{border-color:var(--p-accent,#c97a00);box-shadow:0 4px 20px rgba(0,0,0,.1);transform:translateY(-2px);}
 .kcard-header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
 .kcard-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-.kcard-body{display:flex;flex-direction:column;gap:4px;}
+.kcard-body{display:flex;flex-direction:column;gap:4px;flex:1;justify-content:center;}
+.kcard-icon{width:42px;height:42px;border-radius:12px;}
 .kcard-sender{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--p-muted);}
-.kcard-perihal{font-size:14px;font-weight:800;color:var(--p-text);line-height:1.35;}
+.kcard-perihal{font-size:16px;font-weight:800;color:var(--p-text);line-height:1.4;}
 .kcard-kategori{font-size:11px;color:var(--p-muted);font-style:italic;}
 .kcard-confirm-info{display:flex;align-items:flex-start;gap:7px;font-size:11px;color:var(--p-muted);background:var(--p-surface-2,var(--p-surface));border:1px solid var(--p-border);border-radius:9px;padding:8px 11px;line-height:1.4;}
 .kcard-confirm-info svg{width:13px;height:13px;flex-shrink:0;margin-top:1px;stroke:var(--p-green,#16834b);}
 .kcard-confirm-info strong{color:var(--p-text);font-weight:700;}
-.kcard-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:2px;padding-top:10px;border-top:1px solid var(--p-border);}
+.kcard-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:2px;padding-top:14px;border-top:1px solid var(--p-border);}
 .kcard-date{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--p-muted);white-space:nowrap;}
 .kcard-date svg{width:12px;height:12px;flex-shrink:0;opacity:.7;}
 .kcard-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
