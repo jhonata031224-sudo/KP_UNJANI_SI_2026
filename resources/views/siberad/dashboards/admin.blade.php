@@ -13,7 +13,7 @@
   :root[data-theme="light"]{
     --bg:#f5f7f9;--bg-deep:#ffffff;--panel:#ffffff;--panel-2:#f8fafc;--panel-alt:#f8fafc;
     --border:#e2e8f0;--border-soft:#e2e8f0;--border-strong:#cbd5e1;
-    --gold:#c97a00;--gold-bright:#c97a00;--gold-dim:rgba(201,122,0,.12);
+    --gold:#FF9800;--gold-bright:#FF9800;--gold-dim:rgba(255,152,0,.12);
     --green:#16834b;--green-bright:#16834b;--green-dim:rgba(22,131,75,.12);
     --amber:#b77900;--amber-dim:rgba(183,121,0,.14);
     --red:#c83b3b;--red-dim:rgba(200,59,59,.12);
@@ -2888,6 +2888,25 @@
                 </div>
 
                 <div class="lp-card">
+                  <div class="lp-card-title">Identitas Instansi</div>
+                  <p class="lp-card-desc">Tiga kartu identitas (Nama Resmi, Nama Lama, Fungsi Utama) yang tampil di bagian "Tentang" landing page.</p>
+                  <div class="form-grid">
+                    <div class="form-field">
+                      <label for="lpNamaResmi">Nama Resmi</label>
+                      <input id="lpNamaResmi" name="tentang_nama_resmi" type="text" value="{{ old('tentang_nama_resmi', $pengaturan->tentang_nama_resmi) }}" data-lp="tentang_nama_resmi">
+                    </div>
+                    <div class="form-field">
+                      <label for="lpNamaLama">Nama Lama</label>
+                      <input id="lpNamaLama" name="tentang_nama_lama" type="text" value="{{ old('tentang_nama_lama', $pengaturan->tentang_nama_lama) }}" data-lp="tentang_nama_lama">
+                    </div>
+                    <div class="form-field full">
+                      <label for="lpFungsiUtama">Fungsi Utama</label>
+                      <textarea id="lpFungsiUtama" name="tentang_fungsi_utama" rows="3" data-lp="tentang_fungsi_utama">{{ old('tentang_fungsi_utama', $pengaturan->tentang_fungsi_utama) }}</textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="lp-card">
                   <div class="lp-card-title">Moto</div>
                   <p class="lp-card-desc">Judul &amp; penjelasan moto instansi yang tampil di bagian "Tentang" landing page.</p>
                   <div class="form-grid">
@@ -4025,7 +4044,7 @@
     if (typeof Chart === 'undefined') return;
 
     var root = getComputedStyle(document.documentElement);
-    var cGold = root.getPropertyValue('--gold-bright').trim() || '#f3cd5c';
+    var cGold = root.getPropertyValue('--gold-bright').trim() || '#FF9800';
     var cGreen = root.getPropertyValue('--green-bright').trim() || '#3fc27d';
     var cAmber = root.getPropertyValue('--amber').trim() || '#e0a83a';
     var cRed = root.getPropertyValue('--red').trim() || '#c62828';

@@ -7,7 +7,7 @@
 .admin-access-close{position:absolute;top:16px;right:16px;width:40px;height:40px;border:1px solid #dbe3ec;border-radius:10px;background:#fff;color:#64748b;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s ease,border-color .2s ease,color .2s ease}
 .admin-access-close:hover{transform:rotate(90deg);border-color:#cbd5e1;color:#17212b}
 .admin-access-close svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.admin-access-icon{width:58px;height:58px;border-radius:15px;background:#fff3dc;color:#c4720a;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.admin-access-icon{width:58px;height:58px;border-radius:15px;background:#fff3dc;color:#FF9800;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
 .admin-access-icon svg{width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .admin-access-title{margin:0 42px 8px 0;font-family:var(--display);font-size:22px;line-height:1.2;font-weight:700;color:#17212b}
 .admin-access-desc{margin:0 10px 18px 0;font-family:var(--body);font-size:13px;line-height:1.55;color:#64748b}
@@ -15,7 +15,7 @@
 .admin-access-label{display:block;margin:0 0 8px;font-family:var(--body);font-size:12px;font-weight:800;letter-spacing:.045em;text-transform:uppercase;color:#17212b}
 .admin-access-input-wrap{position:relative}
 .admin-access-input{width:100%;height:54px;box-sizing:border-box;border:1px solid #dbe3ec;border-radius:11px;background:#f8fafc;color:#17212b;font-family:var(--body);font-size:15px;padding:0 48px 0 14px;outline:none;transition:border-color .2s ease,box-shadow .2s ease}
-.admin-access-input:focus{border-color:#c97a00;box-shadow:0 0 0 3px rgba(201,122,0,.12);background:#fff}
+.admin-access-input:focus{border-color:#FF9800;box-shadow:0 0 0 3px rgba(201,122,0,.12);background:#fff}
 .admin-access-input::placeholder{color:#8a97a6;opacity:1;white-space:nowrap;overflow:visible;text-overflow:clip}
 .admin-access-input::-ms-reveal,.admin-access-input::-ms-clear{display:none!important}
 .admin-access-input:-webkit-autofill,.admin-access-input:-webkit-autofill:hover,.admin-access-input:-webkit-autofill:focus{-webkit-text-fill-color:#17212b;-webkit-box-shadow:0 0 0 1000px #f8fafc inset;transition:background-color 9999s ease-in-out 0s}
@@ -26,7 +26,7 @@
 .admin-access-captcha-row{display:grid;grid-template-columns:minmax(0,1fr) 50px minmax(0,1.1fr);gap:8px;align-items:center}
 .admin-access-captcha-image{width:100%;height:54px;display:block;object-fit:cover;border-radius:11px;border:1px solid #dbe3ec;background:#071b12}
 .admin-access-refresh{width:50px;height:54px;border-radius:11px;border:1px solid #dbe3ec;background:#fff;color:#64748b;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s ease,border-color .2s ease,color .2s ease,background .2s ease}
-.admin-access-refresh:hover{border-color:#c97a00;color:#c97a00;background:#fffaf1}
+.admin-access-refresh:hover{border-color:#FF9800;color:#FF9800;background:#fffaf1}
 .admin-access-refresh.spinning svg{animation:admin-access-spin .5s ease}
 .admin-access-refresh svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 @keyframes admin-access-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
@@ -39,7 +39,7 @@
 .admin-access-btn:active{transform:scale(.98)}
 .admin-access-btn.cancel{border:1px solid #dbe3ec;background:#fff;color:#64748b;min-width:86px}
 .admin-access-btn.cancel:hover{border-color:#cbd5e1;background:#f8fafc;color:#17212b}
-.admin-access-btn.submit{border:1px solid #c97a00;background:#d99a23;color:#111827;min-width:176px;box-shadow:0 5px 14px rgba(201,122,0,.18)}
+.admin-access-btn.submit{border:1px solid #FF9800;background:#FF9800;color:#111827;min-width:176px;box-shadow:0 5px 14px rgba(201,122,0,.18)}
 .admin-access-btn.submit:hover{background:#cd8f1d;border-color:#cd8f1d}
 .admin-access-btn.submit[disabled]{opacity:.65;cursor:not-allowed}
 .admin-access-btn.submit svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}

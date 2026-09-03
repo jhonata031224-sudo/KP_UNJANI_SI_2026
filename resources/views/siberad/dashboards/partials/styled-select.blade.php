@@ -16,7 +16,7 @@
    kalau nggak ada (Admin/Satlak), otomatis jatuh ke token global biasa.
 
    Warna AKSEN (border pas hover/kebuka, opsi yang lagi aktif) sengaja di-
-   hardcode #c97a00/#b56d00 -- persis nilai yang dipakai dropdown sort Log
+   hardcode #FF9800/#b56d00 -- persis nilai yang dipakai dropdown sort Log
    Aktivitas asli (danpus-log-search.blade.php). Punya dropdown itu emang
    nggak ikut var(--gold) sama sekali, jadi kalau kita ikutin var(--p-accent)
    punya kita sendiri (yang di mode gelap jadi --gold-bright, kuning pucat
@@ -25,8 +25,8 @@
 .styled-select-wrap{position:relative;display:inline-block;width:100%}
 .styled-select-native{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .styled-select-trigger{width:100%;box-sizing:border-box;height:38px;display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--p-border,var(--border));border-radius:9px;background:var(--p-surface-2,var(--panel-alt));color:var(--p-text,var(--text));font:inherit;font-size:12px;padding:0 11px;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease,background .15s ease}
-.styled-select-trigger:hover,.styled-select-wrap.open .styled-select-trigger{border-color:#c97a00;background:var(--p-surface,var(--panel));box-shadow:0 3px 12px rgba(15,23,42,.06)}
-.styled-select-trigger:focus-visible{outline:none;border-color:#c97a00;box-shadow:0 0 0 3px rgba(201,122,0,.10)}
+.styled-select-trigger:hover,.styled-select-wrap.open .styled-select-trigger{border-color:#FF9800;background:var(--p-surface,var(--panel));box-shadow:0 3px 12px rgba(15,23,42,.06)}
+.styled-select-trigger:focus-visible{outline:none;border-color:#FF9800;box-shadow:0 0 0 3px rgba(201,122,0,.10)}
 .styled-select-trigger.disabled{opacity:.55;cursor:not-allowed}
 .styled-select-trigger.disabled .ss-chevron{display:none}
 .styled-select-trigger .ss-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;flex:1;min-width:0}
@@ -63,7 +63,7 @@
    browser). Border-nya transparan (nggak keliatan), cuma numpang makan
    tempat; warna abu beneran cuma keisi area padding-box di tengahnya. */
 .styled-select-menu-inner::-webkit-scrollbar-thumb{background:var(--p-border,var(--border));border-radius:8px;border-top:6px solid transparent;border-bottom:6px solid transparent;background-clip:padding-box}
-.styled-select-menu-inner::-webkit-scrollbar-thumb:hover{background:#c97a00;background-clip:padding-box}
+.styled-select-menu-inner::-webkit-scrollbar-thumb:hover{background:#FF9800;background-clip:padding-box}
 .styled-select-menu-inner{scrollbar-width:thin;scrollbar-color:var(--p-border,var(--border)) transparent}
 .styled-select-option{width:100%;border:0;background:transparent;color:var(--p-text,var(--text));border-radius:8px;padding:9px 11px;display:flex;align-items:center;gap:8px;font:inherit;font-size:12px;line-height:1.35;cursor:pointer;text-align:left;transition:background .15s ease,color .15s ease}
 .styled-select-option:hover{background:var(--p-surface-2,var(--panel-alt))}

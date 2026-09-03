@@ -1,3 +1,7 @@
+@php
+    use App\Helpers\UserAgentParser;
+    $uap = new UserAgentParser($s->user_agent ?? '');
+@endphp
 <tr data-session-id="{{ $s->id }}">
   <td>
     {{ $s->user_name ?? 'Tamu (belum login)' }}
@@ -6,7 +10,24 @@
     @endif
   </td>
   <td>{{ $s->ip_address ?? '-' }}</td>
-  <td style="color:var(--text-muted);max-width:260px;">{{ \Illuminate\Support\Str::limit($s->user_agent, 60) }}</td>
+  <td style="max-width:300px;">
+    @if($s->user_agent)
+      <span style="display:block;font-size:13px;color:var(--text-body);">
+        {{ $uap->icon() }} <strong>{{ $uap->device() }}</strong>
+      </span>
+      <span style="display:block;font-size:12px;color:var(--text-muted);margin-top:2px;">
+        {{ $uap->os() }} &middot; {{ $uap->browser() }}
+      </span>
+      @if($uap->isUaReduced())
+        <span style="display:block;font-size:11px;color:var(--text-dim);margin-top:2px;"
+              title="Chrome versi baru menyembunyikan info device & versi Android demi privasi (UA Reduction)">
+          ⚠️ Info terbatas (Chrome baru)
+        </span>
+      @endif
+    @else
+      <span style="color:var(--text-dim);">-</span>
+    @endif
+  </td>
   <td class="js-terakhir-aktif">{{ \Carbon\Carbon::createFromTimestamp($s->last_activity)->diffForHumans() }}</td>
   <td>
     @if($s->id !== $sesiSayaId)

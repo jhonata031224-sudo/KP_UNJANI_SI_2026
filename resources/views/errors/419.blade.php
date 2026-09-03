@@ -9,7 +9,7 @@
   :root{
     --bg:#06090C; --bg-deep:#04070A; --panel:#11181F; --panel-alt:#0D141A;
     --border:rgba(217,146,11,.22); --border-strong:rgba(217,146,11,.42);
-    --gold:#D9920B; --gold-bright:#F2B94B;
+    --gold:#FF9800; --gold-bright:#FF9800;
     --text:#F5F1E8; --text-muted:#A9A39A;
     --display:'Rajdhani', sans-serif; --body:'Inter', sans-serif;
   }
