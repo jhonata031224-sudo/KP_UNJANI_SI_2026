@@ -87,38 +87,41 @@
     });
     if(placeholder && freshCards.length>0) placeholder.remove();
 
-    // Update card yang berubah + sisipkan card baru.
-    // Server mengirim freshCards urutan DESC (terbaru duluan via .latest()).
-    // Supaya card terbaru tetap di posisi PALING KIRI/ATAS di grid, iterasi
-    // dilakukan dari yang TERLAMA dulu (reverse) -- card terlama masuk
-    // pertama ke firstChild, lalu card berikutnya diinsert setelahnya,
-    // sehingga card terbaru (yang diproses terakhir) akhirnya "mendorong"
-    // semua card ke kanan dan dia sendiri mendarat di firstChild (paling kiri).
-    var prevEl=null;
-    freshCards.slice().reverse().forEach(function(fresh){
+    // Kumpulkan ID card yang saat ini sudah ada di DOM (sebelum di-replace),
+    // untuk mendeteksi mana yang benar-benar "baru" dan perlu animasi masuk.
+    var existingIds={};
+    currentCards.forEach(function(c){ existingIds[c.getAttribute(idAttr)]=true; });
+
+    // Tandai card yang benar-benar baru (belum ada di DOM sebelumnya)
+    // dengan kelas animasi SEBELUM di-insert, supaya animasi jalan begitu
+    // card tampil di layar.
+    if(animateSync){
+      freshCards.forEach(function(fresh){
+        var id=fresh.getAttribute(idAttr);
+        if(!existingIds[id]) fresh.classList.add('siberad-card-in');
+      });
+    }
+
+    // Deteksi card yang datanya berubah (status, catatan, dsb) lalu tandai
+    // dengan animasi glow -- dilakukan sebelum innerHTML di-replace.
+    freshCards.forEach(function(fresh){
       var id=fresh.getAttribute(idAttr);
       var freshSig=normalize(fresh.outerHTML);
-      var existing=container.querySelector('['+idAttr+'="'+id+'"]');
-      if(existing){
-        var prevSig=lastFreshHtml[id];
-        // undefined = ID ini baru pertama kali kelihatan di siklus fresh
-        // (mis. baru saja disisipkan sebagai card baru di siklus
-        // sebelumnya) -- jangan dianggap "berubah" & jangan ikut kena
-        // animasi glow, cukup catat baseline-nya dulu.
-        if(prevSig!==undefined && prevSig!==freshSig){
-          if(animateSync) fresh.classList.add('siberad-card-updated');
-          existing.replaceWith(fresh);
-        }
-        prevEl=container.querySelector('['+idAttr+'="'+id+'"]');
-      }else{
-        if(animateSync) fresh.classList.add('siberad-card-in');
-        if(prevEl && prevEl.nextSibling) container.insertBefore(fresh,prevEl.nextSibling);
-        else if(prevEl) container.appendChild(fresh);
-        else container.insertBefore(fresh,container.firstChild);
-        prevEl=fresh;
+      var prevSig=lastFreshHtml[id];
+      if(animateSync && prevSig!==undefined && prevSig!==freshSig && existingIds[id]){
+        fresh.classList.add('siberad-card-updated');
       }
       lastFreshHtml[id]=freshSig;
     });
+
+    // Ganti seluruh isi container sekaligus dengan freshHtml dari server.
+    // Server sudah mengirim data dalam urutan DESC (.latest()) -- terbaru
+    // di index 0 = paling kiri di grid. Dengan mengganti innerHTML sekaligus,
+    // urutan selalu 100% sesuai server tanpa bisa salah oleh logika insert
+    // manual. Ini jauh lebih aman daripada insert card satu-satu dengan
+    // prevEl yang rawan bug posisi ketika ada campuran existing + card baru.
+    container.innerHTML='';
+    freshCards.forEach(function(fresh){ container.appendChild(fresh); });
   }
 
   function poll(gridTerkirim,gridArsip,emptyTerkirim,emptyArsip){
