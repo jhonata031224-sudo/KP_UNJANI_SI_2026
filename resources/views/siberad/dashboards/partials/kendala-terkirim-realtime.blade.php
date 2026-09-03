@@ -63,6 +63,13 @@
 
     var freshIds=freshCards.map(function(c){return c.getAttribute(idAttr);});
 
+    // Sanity-check: kalau ada elemen di freshCards yang tidak punya
+    // data-kendala-id sama sekali, berarti server kirim HTML malformed
+    // (mis. partial error, atau wrapper div ikut terparsing). Jangan
+    // lanjut -- card yang sudah ada di DOM jangan sampai ikut dihapus
+    // hanya karena satu siklus polling hasilnya tidak valid.
+    if(freshIds.some(function(id){return !id;})) return;
+
     // Hapus card yang sudah tidak ada (pindah ke arsip atau dihapus)
     currentCards.forEach(function(card){
       if(freshIds.indexOf(card.getAttribute(idAttr))===-1) card.remove();

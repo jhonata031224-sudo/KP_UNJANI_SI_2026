@@ -31,4 +31,16 @@ php artisan storage:link || true
 # --no-reload flag" di php artisan serve). Tanpa worker lebih dari 1, request
 # yang ditahan lama (mis. long-polling) bisa nge-block SELURUH situs karena
 # cuma ada 1 proses yang gantian ngelayani semua orang.
-php artisan serve --host=0.0.0.0 --port="${PORT:-8000}" --no-reload
+#
+# -d upload_max_filesize & post_max_size: PHP built-in server (php artisan serve)
+# defaultnya ikut php.ini sistem yang bisa saja hanya 2MB atau 8MB -- jauh di
+# bawah batas 10 MB yang kita izinkan di validasi Laravel. Akibatnya file yang
+# ukurannya di antara batas PHP dan batas Laravel dianggap "gagal upload" oleh
+# PHP SEBELUM request bahkan sampai ke controller, sehingga Laravel melempar
+# error "The lampiran.0 failed to upload." bukan pesan validasi yang bermakna.
+# Solusi: paksa batas PHP sama dengan batas aplikasi (12M sedikit di atas 10MB
+# supaya ada ruang untuk multipart boundary & header form lainnya).
+php artisan serve --host=0.0.0.0 --port="${PORT:-8000}" --no-reload \
+  -d upload_max_filesize=12M \
+  -d post_max_size=32M \
+  -d memory_limit=256M
