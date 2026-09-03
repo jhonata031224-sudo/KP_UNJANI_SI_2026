@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ "main", "refactor-fokus-laporan" ]
 
-permissions:
-  contents: write
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -16,90 +13,6 @@ jobs:
     steps:
       - name: Checkout kode
         uses: actions/checkout@v4
-
-      - name: Patch UI popup Riwayat Aktivitas Pimpinan sekali jalan
-        if: github.event_name == 'push' && github.ref == 'refs/heads/refactor-fokus-laporan' && github.event.head_commit.message == 'chore: jalankan patch UI riwayat pimpinan sekali jalan'
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          path = Path('resources/views/siberad/dashboards/laporan-pimpinan.blade.php')
-          text = path.read_text(encoding='utf-8')
-
-          old = '''@media(min-width:901px){
-          .sidebar.collapsed .side-nav-group.open .side-subnav>div{border-left:none;margin-left:0;padding:0;}
-          .sidebar.collapsed .side-sub-link{padding:9px 10px;border-radius:8px;}
-          }'''
-
-          new = '''@media(min-width:901px){
-          .sidebar.collapsed .side-nav-group.open .side-subnav>div{border-left:none;margin-left:0;padding:0;}
-          .sidebar.collapsed .side-sub-link{padding:9px 10px;border-radius:8px;}
-
-          /* Khusus popup Riwayat Aktivitas Pimpinan saat sidebar ciutkan:
-             samakan style item submenu dengan submenu saat sidebar terbuka.
-             Selector sengaja dibatasi ke #monitorGroup agar Pelaporan, Surat,
-             dan Kendala Kasansi tidak ikut berubah. */
-          .sidebar.collapsed #monitorGroup.open .side-subnav>div{gap:2px!important;}
-          .sidebar.collapsed #monitorGroup.open .side-sub-link{
-            gap:10px!important;
-            padding:9px 12px 9px 17px!important;
-            border-radius:0 9px 9px 0!important;
-            color:var(--text-muted)!important;
-            font-family:var(--body)!important;
-            font-size:13px!important;
-            font-weight:500!important;
-            line-height:1.4!important;
-            text-decoration:none!important;
-          }
-          .sidebar.collapsed #monitorGroup.open .side-sub-link:hover{
-            background:var(--hover-tint)!important;
-            color:var(--text)!important;
-          }
-          .sidebar.collapsed #monitorGroup.open .side-sub-link.active{
-            background:var(--gold-dim,rgba(201,122,0,.1))!important;
-            color:var(--p-accent)!important;
-            font-weight:600!important;
-          }
-          .sidebar.collapsed #monitorGroup.open .side-sub-link.active:before{
-            left:-1px;
-            top:8px;
-            bottom:8px;
-            width:2px;
-            border-radius:2px;
-            background:var(--p-accent);
-          }
-          .sidebar.collapsed #monitorGroup.open .side-sub-link .sub-dot{
-            width:5px;
-            height:5px;
-            border-radius:50%;
-            opacity:.5;
-            background:currentColor;
-          }
-          .sidebar.collapsed #monitorGroup.open .side-sub-link.active .sub-dot{
-            background:var(--p-accent)!important;
-            opacity:1!important;
-            box-shadow:0 0 0 3px rgba(201,122,0,.15)!important;
-          }
-          }'''
-
-          if old not in text:
-              raise SystemExit('Target CSS block tidak ditemukan; patch dibatalkan tanpa menyentuh file.')
-          if '#monitorGroup.open .side-sub-link' in text:
-              raise SystemExit('Patch sudah ada; tidak melakukan perubahan tambahan.')
-          path.write_text(text.replace(old, new, 1), encoding='utf-8')
-          PY
-
-          git show HEAD^:.github/workflows/laravel.yml > .github/workflows/laravel.yml
-          git add resources/views/siberad/dashboards/laporan-pimpinan.blade.php .github/workflows/laravel.yml
-          git rm .github/workflows/one-shot-pimpinan-riwayat-ui-fix.yml
-          if git diff --cached --quiet; then
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "fix(ui): samakan popup Riwayat Aktivitas Pimpinan"
-          git push origin HEAD:refactor-fokus-laporan
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
