@@ -632,6 +632,69 @@
   .siberad-file-trigger:hover{border-color:var(--gold-bright);background:var(--panel);}
   .siberad-file-trigger:active{transform:scale(.97);}
   .siberad-file-name{font-family:var(--body);font-size:11.5px;color:var(--text-muted);word-break:break-all;}
+
+  /* ─── KCARD: Card-based Kendala Kasansi (pengirim & penerima) ─────────── */
+  .kcard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;padding:4px 0 8px;}
+  .kcard{background:var(--panel);border:1px solid var(--border-soft);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;}
+  .kcard:hover{border-color:var(--gold-bright);box-shadow:0 4px 20px rgba(0,0,0,.12);transform:translateY(-2px);}
+
+  /* Header */
+  .kcard-header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+  .kcard-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+
+  /* Body */
+  .kcard-body{display:flex;flex-direction:column;gap:4px;}
+  .kcard-sender{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);}
+  .kcard-perihal{font-size:14px;font-weight:800;color:var(--text);line-height:1.35;}
+  .kcard-kategori{font-size:11px;color:var(--text-muted);font-style:italic;}
+
+  /* Tembusan */
+  .kcard-tembusan{background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:9px;padding:9px 11px;display:flex;flex-direction:column;gap:5px;}
+  .kcard-tembusan-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);margin-bottom:2px;}
+  .kcard-tembusan-item{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .kcard-tembusan-status{font-size:10.5px;font-weight:700;}
+  .kcard-tembusan-status.replied{color:var(--success-bright);}
+  .kcard-tembusan-status.waiting{color:var(--text-dim);font-style:italic;}
+
+  /* Confirm info (arsip pimpinan) */
+  .kcard-confirm-info{display:flex;align-items:flex-start;gap:7px;font-size:11px;color:var(--text-muted);background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:9px;padding:8px 11px;line-height:1.4;}
+  .kcard-confirm-info svg{width:13px;height:13px;flex-shrink:0;margin-top:1px;stroke:var(--success-bright);}
+  .kcard-confirm-info strong{color:var(--text);font-weight:700;}
+
+  /* Footer */
+  .kcard-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:2px;padding-top:10px;border-top:1px solid var(--border-soft);}
+  .kcard-date{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text-dim);white-space:nowrap;}
+  .kcard-date svg{width:12px;height:12px;flex-shrink:0;opacity:.7;}
+  .kcard-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+
+  /* Buttons */
+  .kcard-btn{display:inline-flex;align-items:center;gap:5px;border-radius:8px;padding:7px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;border:1px solid var(--border);background:var(--panel-alt);color:var(--text);transition:border-color .15s ease,background .15s ease,transform .12s ease;}
+  .kcard-btn svg{width:13px;height:13px;flex-shrink:0;}
+  .kcard-btn:hover{transform:translateY(-1px);}
+  .kcard-btn:active{transform:translateY(0) scale(.97);}
+  .kcard-btn-detail:hover{border-color:var(--gold-bright);background:var(--panel);color:var(--gold-bright);}
+  .kcard-btn-approve{border-color:var(--success);color:var(--success);}
+  .kcard-btn-approve:hover{background:var(--success-dim);}
+  .kcard-btn-reject{border-color:var(--red);color:var(--red);}
+  .kcard-btn-reject:hover{background:var(--red-dim,rgba(181,52,47,.1));}
+  .kcard-btn-archive{border-color:var(--gold-bright);color:var(--gold-bright);}
+  .kcard-btn-archive:hover{background:var(--gold-dim);}
+
+  /* Empty state */
+  .kcard-empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:48px 20px;text-align:center;color:var(--text-dim);}
+  .kcard-empty-title{font-size:14px;font-weight:700;color:var(--text-muted);}
+  .kcard-empty-sub{font-size:12px;color:var(--text-dim);line-height:1.5;max-width:320px;}
+
+  /* status-dot khusus kcard */
+  .kcard .status-dot{font-size:11.5px;}
+
+  /* Responsive: 1 kolom di layar sempit */
+  @media(max-width:640px){
+    .kcard-grid{grid-template-columns:1fr;}
+    .kcard-footer{flex-direction:column;align-items:flex-start;}
+    .kcard-actions{width:100%;}
+    .kcard-btn{flex:1;justify-content:center;}
+  }
 </style>
 <script>
   function siberadEnhanceFileInputs(root){

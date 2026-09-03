@@ -14,13 +14,13 @@
       .then(function(r){return r.ok?r.json():null;})
       .then(function(data){
         if(!data)return;
-        var tbody=document.querySelector('#kendala-kasansi .clean-table tbody');
+        var tbody=document.getElementById('kcard-grid-masuk');
         var inserted=0;
         if(tbody&&typeof data.items_html==='string'&&data.items_html){
           var temp=document.createElement('tbody');temp.innerHTML=data.items_html;
           var rows=Array.prototype.slice.call(temp.children);
           if(rows.length){
-            Array.prototype.slice.call(tbody.querySelectorAll('tr')).forEach(function(r){if(r.querySelector('.empty-state'))r.remove();});
+            Array.prototype.slice.call(tbody.querySelectorAll('.kcard-empty,.empty-state')).forEach(function(r){r.remove();});
             rows.reverse().forEach(function(row){
               var id=row.getAttribute('data-kendala-id');
               if(!id||tbody.querySelector('[data-kendala-id="'+id+'"]'))return;
@@ -37,7 +37,7 @@
         initial=false;
       }).catch(function(){}).finally(function(){polling=false;});
   }
-  function start(){ if(!document.getElementById('kendala-kasansi'))return; poll(); window.setInterval(poll,3000); }
+  function start(){ if(!document.getElementById('kcard-grid-masuk'))return; poll(); window.setInterval(poll,3000); }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
 </script>
