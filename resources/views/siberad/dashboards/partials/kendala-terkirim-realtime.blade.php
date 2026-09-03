@@ -87,9 +87,15 @@
     });
     if(placeholder && freshCards.length>0) placeholder.remove();
 
-    // Update card yang berubah + sisipkan card baru
+    // Update card yang berubah + sisipkan card baru.
+    // Server mengirim freshCards urutan DESC (terbaru duluan via .latest()).
+    // Supaya card terbaru tetap di posisi PALING KIRI/ATAS di grid, iterasi
+    // dilakukan dari yang TERLAMA dulu (reverse) -- card terlama masuk
+    // pertama ke firstChild, lalu card berikutnya diinsert setelahnya,
+    // sehingga card terbaru (yang diproses terakhir) akhirnya "mendorong"
+    // semua card ke kanan dan dia sendiri mendarat di firstChild (paling kiri).
     var prevEl=null;
-    freshCards.forEach(function(fresh){
+    freshCards.slice().reverse().forEach(function(fresh){
       var id=fresh.getAttribute(idAttr);
       var freshSig=normalize(fresh.outerHTML);
       var existing=container.querySelector('['+idAttr+'="'+id+'"]');
