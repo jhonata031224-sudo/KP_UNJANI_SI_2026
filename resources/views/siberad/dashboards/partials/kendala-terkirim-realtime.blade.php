@@ -68,8 +68,23 @@
       if(freshIds.indexOf(card.getAttribute(idAttr))===-1) card.remove();
     });
 
-    // Buang empty-state jika sekarang ada data
-    var placeholder=container.querySelector(':not(['+idAttr+'])');
+    // Buang empty-state jika sekarang ada data.
+    // PENTING: harus dicari cuma di ANAK LANGSUNG container, bukan lewat
+    // container.querySelector(':not([idAttr])') -- selector itu mencari ke
+    // SEMUA turunan (bukan cuma anak langsung), dan karena isi tiap kartu
+    // (.kcard-header, .kcard-body, .kcard-tembusan, dst) juga sama-sama
+    // tidak punya atribut data-kendala-id (cuma .kcard paling luar yang
+    // punya), querySelector itu jatuhnya nemu elemen PALING ATAS di dalam
+    // kartu PERTAMA, bukan placeholder-nya -- lalu elemen itu ikut
+    // dihapus. Tiap polling (3 detik) elemen "tanpa atribut" paling atas
+    // berikutnya berpindah ke elemen selanjutnya di kartu yang sama, jadi
+    // kartu pertama kepotong isinya sedikit demi sedikit dari atas ke
+    // bawah tiap siklus polling. Fix: cek anak langsung saja.
+    var placeholder=null;
+    Array.prototype.slice.call(container.children).some(function(child){
+      if(!child.hasAttribute(idAttr)){ placeholder=child; return true; }
+      return false;
+    });
     if(placeholder && freshCards.length>0) placeholder.remove();
 
     // Update card yang berubah + sisipkan card baru
