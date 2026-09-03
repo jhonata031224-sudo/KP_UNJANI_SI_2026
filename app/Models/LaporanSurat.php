@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Surat yang dikirim satuan Kasansi (21 Sansidam) ke SATU satuan tujuan
@@ -35,6 +36,7 @@ class LaporanSurat extends Model
         'deskripsi',
         'prioritas',
         'lampiran_path',
+        'lampiran_nama_asli',
         'status',
         'dikonfirmasi_at',
         'dikonfirmasi_oleh',
@@ -83,5 +85,23 @@ class LaporanSurat extends Model
             self::STATUS_DIKONFIRMASI => 'status-dikonfirmasi',
             default                   => 'status-menunggu',
         };
+    }
+
+    /**
+     * Ukuran file lampiran, sudah diformat (mis. "256 KB") -- dipakai kartu
+     * & modal detail Surat buat nampilin ukuran dokumen tanpa nyimpen kolom
+     * baru, tinggal hitung dari file aslinya di storage tiap dibutuhkan.
+     */
+    public function getLampiranSizeAttribute(): ?string
+    {
+        if (! $this->lampiran_path || ! Storage::disk('public')->exists($this->lampiran_path)) {
+            return null;
+        }
+
+        $bytes = Storage::disk('public')->size($this->lampiran_path);
+
+        return $bytes < 1024 * 1024
+            ? max(1, round($bytes / 1024)) . ' KB'
+            : round($bytes / 1024 / 1024, 1) . ' MB';
     }
 }

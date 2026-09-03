@@ -7,6 +7,7 @@
 <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-pussiberad.jpg') }}">
 @include('siberad.dashboards.partials.dash-styles')
 @include('siberad.dashboards.partials.permintaan-laporan-deadline-styles')
+@include('siberad.dashboards.partials.surat-card-styles')
 {{-- Tema terang bawaan dash-styles.blade.php krem (cream) -- kartu Permintaan
      Laporan (deadline-sender-item/dcard-*) numpang variabel warna generik itu
      (--panel-alt dkk), bukan token --p-* punya Pimpinan sendiri, jadi warnanya
@@ -293,8 +294,41 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 #pimpinanProgresModal .pl-progres-reject{background:var(--p-red);border-color:transparent;color:#fff;box-shadow:0 6px 16px -6px rgba(200,59,59,.5)}
 #pimpinanProgresModal .pl-progres-approve{background:var(--p-green);border-color:transparent;color:#fff;box-shadow:0 6px 16px -6px rgba(22,131,75,.5)}
 #pimpinanProgresModal .pl-progres-reject:hover,#pimpinanProgresModal .pl-progres-approve:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.surat-modal-icon{flex-shrink:0;width:44px;height:44px;border-radius:12px;background:color-mix(in srgb,var(--gold-solid-bright) 16%,transparent);color:var(--gold-solid-bright);display:flex;align-items:center;justify-content:center}
+.surat-modal-icon svg{width:21px;height:21px}
+#kirimSuratModal .field-invalid{border-color:var(--red)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 15%,transparent)}
+#kirimSuratModal .kirim-laporan-error{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--red)}
+#kirimSuratModal .form-field label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
+#kirimSuratModal .form-field input,#kirimSuratModal .form-field select,#kirimSuratModal .form-field textarea{width:100%;box-sizing:border-box;background:var(--panel-alt);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:10px 11px;font:inherit;font-size:13px}
+#kirimSuratModal .form-field textarea{min-height:120px}
+#kirimSuratModal .report-modal-head{margin-bottom:28px}
+#kirimSuratModal .report-modal-head h3{font-size:19px}
+#kirimSuratModal .modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;border-top:1px solid var(--border-soft);padding-top:18px;margin-top:24px}
+.surat-combobox{position:relative;width:100%}
+.surat-combobox input[type="text"]{width:100%;box-sizing:border-box}
+.surat-form-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:0 26px}
+.surat-form-col{display:flex;flex-direction:column;gap:14px}
+.surat-form-col-lampiran{border-left:1px solid var(--border-soft);padding-left:26px}
+.surat-section-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);font-weight:700}
+.surat-lampiran-zone{position:relative;border:1.5px dashed var(--border-soft,var(--border));border-radius:12px;padding:26px 16px;background:var(--panel);text-align:center;transition:border-color .15s ease,background-color .15s ease}
+.surat-lampiran-zone:hover,.surat-lampiran-zone.is-dragover{border-color:var(--gold-bright);background:var(--gold-dim)}
+.surat-lampiran-zone-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0}
+.surat-lampiran-zone-prompt{display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.surat-lampiran-zone-icon{color:var(--gold-bright)}
+.surat-lampiran-zone-icon svg{width:24px;height:24px}
+.surat-lampiran-zone-text{display:flex;flex-direction:column;gap:8px}
+.surat-lampiran-zone-text-main{font-size:13px;font-weight:700;color:var(--text)}
+.surat-lampiran-zone-text-sub{font-size:11.5px;color:var(--text-muted)}
+.surat-lampiran-preview{margin-top:10px;flex:1;min-height:0;display:flex}
+.surat-lampiran-preview[hidden]{display:none}
+.surat-lampiran-preview-frame{position:relative;width:100%;flex:1;min-height:90px;border-radius:9px;overflow:hidden;border:1px solid var(--border-soft);background:var(--panel-alt);display:flex;align-items:center;justify-content:center}
+.surat-lampiran-preview-fallback{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text-muted);padding:10px;height:100%;box-sizing:border-box}
+.surat-lampiran-preview-fallback-badge{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;letter-spacing:.02em;color:#fff}
+.surat-lampiran-preview-fallback-text{font-size:10.5px;text-align:center;line-height:1.4}
+@media(max-width:640px){.surat-form-grid{grid-template-columns:1fr}.surat-form-col-lampiran{border-left:none;padding-left:0;border-top:1px solid var(--border-soft);padding-top:16px;margin-top:2px}.surat-lampiran-preview{flex:none;height:170px}.surat-lampiran-preview-frame{flex:none;height:100%}}
 </style>
-<div class="report-modal" id="kirimSuratModal"><div class="report-modal-card"><div class="report-modal-head"><h3>Kirim Surat</h3><button type="button" class="report-modal-close" id="kirimSuratClose" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div><p style="margin:-8px 0 16px;font-size:12px;color:var(--p-muted);line-height:1.5;">Kirim surat dari {{ $satuan->nama }} ke satu satuan tujuan. Surat akan berstatus <em>Menunggu Konfirmasi</em> hingga penerima mengkonfirmasi -- setelah dikonfirmasi, surat otomatis masuk ke Arsip Surat.</p><form class="form-grid" method="POST" action="{{ route('laporan-surat.store') }}" enctype="multipart/form-data" id="kirimSuratForm">@csrf<div class="form-field full"><label for="surat_tujuan">Tujuan</label><select id="surat_tujuan" name="tujuan_satuan_id" required><option value="" disabled selected>Pilih satuan tujuan...</option>@foreach($satuanSuratTujuanPilihan as $st)<option value="{{ $st->id }}">{{ $st->nama }}</option>@endforeach</select></div><div class="form-field"><label for="surat_prioritas">Prioritas</label><select id="surat_prioritas" name="prioritas" required><option>Rendah</option><option selected>Sedang</option><option>Tinggi</option></select></div><div class="form-field"><label for="surat_perihal">Perihal</label><input id="surat_perihal" name="perihal" maxlength="255" required placeholder="Judul singkat surat"></div><div class="form-field full"><label for="surat_kategori">Kategori <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--p-muted);font-size:10px">(opsional)</span></label><input id="surat_kategori" name="kategori" maxlength="255" placeholder="Contoh: Undangan, Pemberitahuan, Koordinasi"></div><div class="form-field full"><label for="surat_deskripsi">Isi Surat</label><textarea id="surat_deskripsi" name="deskripsi" required placeholder="Tuliskan isi surat yang ingin disampaikan..."></textarea></div><div class="form-field full"><label for="surat_lampiran">Lampiran (wajib)</label><div class="lampiran-input-wrap"><input id="surat_lampiran" type="file" class="siberad-file-input" name="lampiran" accept="application/pdf,.pdf"><button type="button" class="lampiran-clear-btn" id="suratLampiranClearBtn" aria-label="Hapus file" style="display:none;"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div><span class="form-hint">Wajib dilampirkan sebagai bukti pendukung surat. Format PDF, maksimal 20 MB.</span></div><div class="form-field full" style="display:flex;flex-direction:row;justify-content:flex-end;gap:8px;margin-top:4px;"><button type="button" class="btn" id="kirimSuratCancel">Batal</button><button class="btn btn-primary" type="submit" id="kirimSuratSubmitBtn">Kirim Surat</button></div></form></div></div>
+<div class="report-modal" id="kirimSuratModal"><div class="report-modal-card" style="width:min(860px,100%)"><div class="report-modal-head"><div style="display:flex;align-items:flex-start;gap:12px;min-width:0"><span class="surat-modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path><path d="M12 12v6"></path><path d="M9 15h6"></path></svg></span><span style="min-width:0"><h3 style="margin:0 0 4px">Buat Surat Baru</h3><p style="margin:0;font-size:12px;color:var(--text-muted)">Dari {{ $satuan->nama }}</p></span></div><button type="button" class="report-modal-close" id="kirimSuratClose" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div><form method="POST" action="{{ route('laporan-surat.store') }}" enctype="multipart/form-data" id="kirimSuratForm">@csrf<div class="surat-form-grid"><div class="surat-form-col"><div class="surat-section-label">Informasi Surat</div><div class="form-field full"><label for="surat_tujuan_search">Tujuan</label><div class="surat-combobox" id="suratTujuanCombobox"><input type="hidden" id="surat_tujuan" name="tujuan_satuan_id"><input type="text" id="surat_tujuan_search" autocomplete="off" placeholder="Ketik nama atau satuan tujuan..."></div><script>window.__suratTujuanOptions=@json($satuanSuratTujuanPilihan->map(fn($st)=>['id'=>(string)$st->id,'name'=>$st->nama,'kode'=>$st->kode])->values());</script></div><div class="form-field full"><label for="surat_perihal">Perihal</label><input id="surat_perihal" name="perihal" maxlength="255" required autocomplete="off" placeholder="Judul singkat surat"></div><div class="form-field full"><label for="surat_kategori">Kategori</label><input id="surat_kategori" name="kategori" maxlength="255" required autocomplete="off" placeholder="Contoh: Undangan, Pemberitahuan, Koordinasi"></div><div class="form-field full"><label>Prioritas</label><div class="priority-toggle"><label class="priority-option prio-rendah"><input type="radio" name="prioritas" value="Rendah" required><span>Rendah</span></label><label class="priority-option prio-sedang"><input type="radio" name="prioritas" value="Sedang" required><span>Sedang</span></label><label class="priority-option prio-tinggi"><input type="radio" name="prioritas" value="Tinggi" required><span>Tinggi</span></label></div></div><div class="form-field full"><label for="surat_deskripsi">Isi Ringkasan Surat</label><textarea id="surat_deskripsi" name="deskripsi" required placeholder="Tuliskan isi surat yang ingin disampaikan..."></textarea></div></div><div class="surat-form-col surat-form-col-lampiran"><div class="surat-section-label">Lampiran</div><div class="surat-lampiran-zone" id="suratLampiranZone"><input id="surat_lampiran" type="file" class="surat-lampiran-zone-input" name="lampiran" data-file-picker-ready="1"><div class="surat-lampiran-zone-prompt"><span class="surat-lampiran-zone-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17l4-4 4 4"></path><path d="M12 13v9"></path><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg></span><span class="surat-lampiran-zone-text"><span class="surat-lampiran-zone-text-main">Klik untuk pilih file atau drag &amp; drop</span><span class="surat-lampiran-zone-text-sub">Maksimal 10 MB</span></span></div></div><div class="lampiran-file-list" id="suratLampiranFileList"><div class="lampiran-file-list-empty" id="suratLampiranFileListEmpty">Belum ada file dipilih</div></div><div class="surat-lampiran-preview" id="suratLampiranPreview" hidden></div><span class="kirim-laporan-error" id="suratLampiranError" style="display:none"></span></div></div><div class="modal-actions"><button type="button" class="btn" id="kirimSuratCancel">Batal</button><button class="btn btn-primary" type="submit" id="kirimSuratSubmitBtn">Buat Surat</button></div></form></div></div>
+@include('siberad.dashboards.partials.surat-detail-modal')
 <div class="report-modal" id="pimpinanProgresModal"><div class="report-modal-card"><div class="kirim-laporan-wizard-body"><div class="kirim-laporan-wizard-topbar wizard-topbar-visible"><button type="button" class="wizard-topbar-nav wizard-topbar-nav-prev" id="pimpinanProgresPrev" aria-label="Task sebelumnya" hidden><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg></button><ol class="wizard-step-list" id="pimpinanProgresSteps"></ol><button type="button" class="wizard-topbar-nav wizard-topbar-nav-next" id="pimpinanProgresNext" aria-label="Task selanjutnya" hidden><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg></button></div><div class="kirim-laporan-wizard-panel"><div class="kirim-laporan-modal-head"><span class="kirim-laporan-modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="m9 14 2 2 4-4"></path></svg></span><span><h3 id="pimpinanProgresTitle" style="margin:0 0 4px;">Lihat Progres</h3><p id="pimpinanProgresDesc" style="margin:0;font-size:12px;color:var(--p-muted);line-height:1.5;">Checklist tugas untuk permintaan ini.</p></span><button type="button" id="pimpinanTaskDetailBtn" class="task-detail-btn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>Detail Task</button></div><div class="form-grid"><div class="kirim-laporan-form-card"><div class="form-field"><label><svg class="form-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Isi Laporan</label><textarea id="pimpinanProgresDeskripsi" readonly></textarea></div><div class="form-field"><label><svg class="form-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Kendala/Alasan</label><textarea id="pimpinanProgresKendala" readonly></textarea></div><div class="form-field full"><label><svg class="form-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>Lampiran</label><div class="lampiran-file-list" id="pimpinanProgresLampiran"><div class="lampiran-file-list-empty">Belum ada file yang diupload</div></div></div></div><div class="form-field full" id="pimpinanProgresActions" style="display:flex;flex-direction:row;justify-content:flex-end;gap:8px;margin-top:4px;"><button type="button" class="btn" id="pimpinanProgresTutupBtn">Tutup</button></div></div></div></div></div></div>
 {{-- Sub-modal "Detail Task" (Pimpinan): dibuka dari #pimpinanTaskDetailBtn di
      pojok kanan header modal "Lihat Progres". Isi teksnya di-set showTask() di
@@ -352,7 +386,7 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 @foreach($monitoringPimpinanSatlak as $m)<section id="satlak-{{ $m['id'] }}" class="tab-panel"><div class="section-block"><div class="section-head-clean"><div><h2>Aktivitas {{ $m['nama'] }}</h2><p>Daftar laporan yang dibuat satuan ini. Data bersifat view-only untuk pimpinan.</p></div></div><div class="clean-table-wrap" data-pending-permintaan="{{ $permintaanLaporan->where('tujuan_satuan_id',$m['id'])->whereNull('laporan_id')->filter(fn($p) => $p->laporans->isEmpty())->concat($riwayatLaporanPimpinan->where('tujuan_satuan_id',$m['id'])->whereNull('laporan_id')->filter(fn($p) => $p->laporans->isEmpty()))->map(fn($p) => ['id' => $p->id, 'subject' => $p->perihal, 'created' => $p->created_at?->translatedFormat('d M Y H:i'), 'ditinjau' => $p->dikerjakan_at?->translatedFormat('d M Y H:i'), 'dibatalkan' => $p->status === \App\Models\PermintaanLaporan::STATUS_DIBATALKAN, 'dibatalkanAt' => $p->dibatalkan_at?->translatedFormat('d M Y H:i'), 'terlambat' => $p->isTerlambat()])->values()->toJson() }}"><table class="clean-table"><thead><tr><th>Perihal</th><th>Tujuan</th><th>Prioritas</th><th>Status</th><th>Tanggal</th><th>Aksi</th></tr></thead><tbody>@forelse($laporanPimpinanSatlak->where('satuan_id',$m['id']) as $l)<tr data-permintaan-created="{{ $l->permintaanLaporan?->created_at?->translatedFormat('d M Y H:i') }}" data-permintaan-ditinjau="{{ $l->permintaanLaporan?->dikerjakan_at?->translatedFormat('d M Y H:i') }}" data-permintaan-status="{{ $l->permintaanLaporan?->status }}" data-permintaan-dibatalkan="{{ $l->permintaanLaporan?->dibatalkan_at?->translatedFormat('d M Y H:i') }}" data-permintaan-terlambat="{{ $l->permintaanLaporan?->isTerlambat() ? '1' : '' }}" data-progres="{{ $l->progres }}" data-updated="{{ $l->updated_at->translatedFormat('d M Y H:i') }}" data-kendala="{{ e($l->kendala ?? '') }}" data-permintaan-id="{{ $l->permintaan_laporan_id }}" data-laporan-id="{{ $l->id }}" data-laporan-status="{{ e($l->status) }}"><td><div class="subject">{{ $l->perihal }}</div><div class="muted">{{ $l->proyek ?? 'Laporan kegiatan' }}</div></td><td>{{ $l->tujuanSatuan->nama ?? '-' }}</td><td>{{ $l->prioritas }}</td><td><span class="status-pill {{ $l->status === \App\Models\Laporan::STATUS_PROGRES ? 'blue' : (str_contains(strtolower($l->status),'tolak') ? 'bad' : ((str_contains(strtolower($l->status),'setuj') || str_contains(strtolower($l->status),'diterima')) ? 'ok' : ((str_contains(strtolower($l->status),'revisi')) ? 'revisi' : 'wait'))) }}">{{ $l->status === \App\Models\Laporan::STATUS_PROGRES ? 'Progres · '.$l->progres.'%' : $l->status }}</span></td><td>{{ $l->created_at->translatedFormat('d M Y H:i') }}</td><td><button type="button" class="detail-btn" onclick="openReportDetail(this)" data-pengirim="{{ e($l->satuan->nama ?? '-') }}" data-tujuan="{{ e($l->tujuanSatuan->nama ?? '-') }}" data-perihal="{{ e($l->perihal) }}" data-prioritas="{{ e($l->prioritas) }}" data-progres="{{ $l->progres }}" data-kendala="{{ e($l->kendala ?? '') }}" data-proyek="{{ e($l->proyek ?? '-') }}" data-tanggal="{{ e($l->created_at->translatedFormat('d M Y H:i')) }}" data-deskripsi="{{ e($l->deskripsi) }}" data-lampiran="{{ $l->semuaLampiran->map(fn($x) => ['url' => asset('storage/'.$x->path), 'nama' => $x->nama_asli])->values()->toJson() }}" data-readonly="1">Detail</button></td></tr>@empty<tr><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada laporan dari satuan ini</div></div></td></tr>@endforelse</tbody></table></div></div></section>@endforeach
 <section id="kendala-kasansi" class="tab-panel"><div class="section-block"><div class="section-head-clean"><div><h2>Kendala Kasansi</h2><p>Laporan rutin/kendala yang dikirim langsung oleh satuan Kasansi (21 Sansidam) kepada Danpus, tanpa lewat Permintaan Laporan.</p></div></div><div class="clean-table-wrap"><table class="clean-table"><thead><tr><th>Dari</th><th>Perihal</th><th>Prioritas</th><th>Status</th><th>Tanggal</th><th>Aksi</th></tr></thead><tbody>@forelse($kendalaMasuk as $k)@include('siberad.dashboards.partials.kendala-kasansi-row', ['k' => $k])@empty<tr><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada laporan kendala</div><div class="empty-state-sub">Kendala dari satuan Kasansi akan muncul di sini.</div></div></td></tr>@endforelse</tbody></table></div></div></section>
 <section id="arsip-kendala-kasansi" class="tab-panel"><div class="section-block"><div class="section-head-clean"><div><h2>Arsip Kendala Kasansi</h2><p>Laporan kendala Kasansi yang sudah dikonfirmasi Danpus dan diarsipkan -- tidak lagi tampil di daftar Kendala Kasansi yang masih aktif.</p></div></div><div class="clean-table-wrap"><table class="clean-table"><thead><tr><th>Dari</th><th>Perihal</th><th>Prioritas</th><th>Status Akhir</th><th>Dikonfirmasi</th><th>Aksi</th></tr></thead><tbody>@forelse($kendalaArsip as $k)<tr data-search="{{ strtolower(($k->satuan->nama ?? '').' '.$k->perihal) }}" data-prioritas="{{ $k->prioritas }}"><td><div class="sender">{{ $k->satuan->nama ?? '-' }}</div></td><td><div class="subject">{{ $k->perihal }}</div></td><td>{{ $k->prioritas }}</td><td><span class="status-pill ok">Dikonfirmasi</span></td><td>{{ $k->confirmed_at?->translatedFormat('d M Y H:i') ?? '-' }}<div class="muted">oleh {{ $k->confirmedBy->name ?? '-' }}</div></td><td><div class="action-row"><button type="button" class="detail-btn" onclick="openReportDetail(this)" data-pengirim="{{ e($k->satuan->nama ?? '-') }}" data-tujuan="{{ e($satuan->nama) }}" data-perihal="{{ e($k->perihal) }}" data-prioritas="{{ e($k->prioritas) }}" data-proyek="{{ e($k->kategori ?? '-') }}" data-tanggal="{{ e($k->created_at->translatedFormat('d M Y H:i')) }}" data-deskripsi="{{ e($k->deskripsi) }}" data-kendala="{{ e($k->catatan ?? '') }}" data-lampiran="{{ $k->lampiran_path ? collect([['url' => asset('storage/'.$k->lampiran_path), 'nama' => basename($k->lampiran_path)]])->toJson() : '[]' }}" data-kendala-report="1" data-readonly="1" data-readonly-text="Kendala ini sudah dikonfirmasi &amp; diarsipkan pada {{ e($k->confirmed_at?->translatedFormat('d M Y H:i')) }}.">Detail</button><button type="button" class="reject" style="font-size:10px;padding:7px 10px;" onclick="bukaHapusArsipKendala('{{ route('laporan-kendala.destroy', $k) }}','{{ csrf_token() }}','{{ e($k->perihal) }}')">Hapus</button></div></td></tr>@empty<tr><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada kendala yang diarsipkan</div><div class="empty-state-sub">Kendala Kasansi yang sudah dikonfirmasi Danpus akan muncul di sini.</div></div></td></tr>@endforelse</tbody></table></div></div></section>
-<section id="kirim-surat" class="tab-panel"><div class="panel"><div class="panel-head"><div><h2>Buat Surat</h2><p>Surat yang sudah dikirim dan <strong>belum dikonfirmasi</strong> oleh penerima. Setelah dikonfirmasi, surat otomatis pindah ke Arsip Surat.</p></div><button type="button" class="detail-btn kirim-laporan-btn" id="kirimSuratOpen" style="white-space:nowrap">Buat Surat</button></div><div class="tbl-wrap"><table class="dtbl"><thead><tr><th>Perihal</th><th style="text-align:center">Tujuan</th><th>Prioritas</th><th style="text-align:center">Status</th><th style="text-align:center">Tanggal</th><th style="text-align:center">Aksi</th></tr></thead><tbody id="suratTerkirimBody">@forelse($suratTerkirim as $s)@include('siberad.dashboards.partials.surat-terkirim-row', ['s' => $s, 'satuan' => $satuan])@empty<tr><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Tidak ada surat yang menunggu konfirmasi</div><div class="empty-state-sub">Semua surat yang terkirim sudah dikonfirmasi penerima dan masuk ke Arsip Surat.</div></div></td></tr>@endforelse</tbody></table></div></div></section>
+<section id="kirim-surat" class="tab-panel"><div class="panel"><div class="panel-head"><div><h2>Buat Surat</h2><p>Surat yang sudah dikirim dan <strong>belum dikonfirmasi</strong> oleh penerima. Setelah dikonfirmasi, surat otomatis pindah ke Arsip Surat.</p></div><button type="button" class="btn btn-primary" id="kirimSuratOpen">Buat Surat</button></div></div><div class="surat-file-grid" id="suratTerkirimGrid">@forelse($suratTerkirim as $s)@include('siberad.dashboards.partials.surat-terkirim-row', ['s' => $s, 'satuan' => $satuan])@empty<div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Tidak ada surat yang menunggu konfirmasi</div><div class="empty-state-sub">Semua surat yang terkirim sudah dikonfirmasi penerima dan masuk ke Arsip Surat.</div></div>@endforelse</div></section>
 <section id="arsip-surat" class="tab-panel"><div class="panel"><div class="panel-head"><div><h2>Arsip Surat</h2><p>Riwayat surat yang sudah <strong>dikonfirmasi</strong> penerima. Surat yang belum dikonfirmasi masih ada di tabel Kirim Surat.</p></div></div><div class="tbl-wrap"><table class="dtbl"><thead><tr><th>Perihal</th><th style="text-align:center">Tujuan</th><th>Prioritas</th><th style="text-align:center">Status</th><th style="text-align:center">Tanggal</th><th style="text-align:center">Aksi</th></tr></thead><tbody id="suratArsipBody">@forelse($suratArsip as $s)@include('siberad.dashboards.partials.surat-arsip-row', ['s' => $s, 'satuan' => $satuan])@empty<tr><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada surat yang diarsipkan</div><div class="empty-state-sub">Surat masuk ke arsip setelah dikonfirmasi oleh penerima.</div></div></td></tr>@endforelse</tbody></table></div></div></section>
 <section id="surat-masuk" class="tab-panel"><div class="panel"><div class="panel-head"><div><h2>Surat Masuk</h2><p>Surat yang ditujukan kepada {{ $satuan->nama }}. Klik <strong>Konfirmasi</strong> untuk memberi tanda bahwa surat sudah diterima.</p></div></div><div class="tbl-wrap"><table class="dtbl"><thead><tr><th>Dari</th><th>Perihal</th><th>Prioritas</th><th style="text-align:center">Status</th><th style="text-align:center">Tanggal</th><th style="text-align:center">Aksi</th></tr></thead><tbody id="suratMasukBody">@forelse($suratMasuk as $s)@include('siberad.dashboards.partials.surat-masuk-row', ['s' => $s])@empty<tr><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada surat masuk</div><div class="empty-state-sub">Surat yang ditujukan ke {{ $satuan->nama }} akan muncul di sini.</div></div></td></tr>@endforelse</tbody></table></div></div></section>
 <section id="riwayat" class="tab-panel deadline-sender-section"><div class="danpus-request-panel"><div class="request-head"><div><h2>Arsip Laporan</h2><p>Permintaan laporan dari seluruh satuan yang sudah mendapat keputusan akhir (disetujui/ditolak) atau diarsipkan (Terlambat/Dibatalkan).</p></div></div></div><div class="deadline-sender-list">@forelse($riwayatLaporanPimpinan as $item)@include('siberad.dashboards.partials.permintaan-laporan-pimpinan-card', ['item' => $item, 'riwayatMode' => true])@empty<div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada arsip laporan</div><div class="empty-state-sub">Permintaan yang sudah diputuskan atau diarsipkan akan muncul di sini.</div></div>@endforelse</div></section><section id="permintaan-laporan" class="tab-panel deadline-sender-section" aria-label="Permintaan Laporan"><div class="danpus-request-panel"><div class="request-head"><div><h2>Permintaan Laporan</h2><p>Berikan tugas pelaporan kepada satu atau beberapa satuan, lengkap dengan instruksi dan batas waktu.</p></div><button class="btn btn-primary" type="button" id="danpusOpenRequestForm">Buat Permintaan</button></div></div><div class="deadline-sender-list">@forelse($permintaanLaporan as $item)@include('siberad.dashboards.partials.permintaan-laporan-pimpinan-card', ['item' => $item])@empty<div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada permintaan laporan</div><div class="empty-state-sub">Klik <strong>+ Buat Permintaan</strong> untuk memberikan tugas pelaporan kepada satuan.</div></div>@endforelse</div></section></div></div></main></div><div class="danpus-request-modal" id="danpusRequestModal"><div class="danpus-picker-backdrop" id="danpusPickerBackdrop"></div><div class="danpus-request-form-card"><div class="danpus-request-form-head"><div class="danpus-request-form-head-main"><div class="danpus-modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path><path d="M12 12v6"></path><path d="M9 15h6"></path></svg></div><div><h3>Permintaan Laporan</h3><p>Ajukan permintaan laporan kepada satuan terkait dengan mudah dan terstruktur.</p></div></div><button type="button" class="danpus-request-close" id="danpusCloseRequestForm" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div><form method="POST" action="{{ route('permintaan-laporan.store') }}" novalidate>@csrf<div class="danpus-request-form-grid">@php $danpusSatuanKategoriMap=[\App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN=>'Unsur Pelayanan',\App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN=>'Unsur Pembantu Pimpinan',\App\Models\Satuan::KATEGORI_DIREKTORAT=>'Direktorat',\App\Models\Satuan::KATEGORI_SATLAK=>'Satlak',\App\Models\Satuan::KATEGORI_KOTAMA=>'Kasansi']; $danpusSatuanByKategori=$satuanPermintaanLaporan->groupBy('kategori'); $danpusKategoriIconPaths=[\App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN=>'<path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3ZM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3Z"></path>',\App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN=>'<rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>',\App\Models\Satuan::KATEGORI_DIREKTORAT=>'<rect x="4" y="2" width="16" height="20" rx="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path><path d="M8 14h.01"></path><path d="M16 14h.01"></path>',\App\Models\Satuan::KATEGORI_SATLAK=>'<path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6Z"></path>',\App\Models\Satuan::KATEGORI_KOTAMA=>'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1Z"></path><line x1="4" y1="22" x2="4" y2="15"></line>']; $danpusKategoriIcon=function($key)use($danpusKategoriIconPaths){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'.($danpusKategoriIconPaths[$key]??'<circle cx="12" cy="12" r="9"></circle>').'</svg>';}; @endphp<div class="danpus-wizard-indicator" id="danpusWizardIndicator"><div class="danpus-wizard-step-item" data-step-indicator="1"><div class="danpus-wizard-circle"><span class="danpus-wizard-num">1</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div><div class="danpus-wizard-step-text"><span class="danpus-wizard-step-title">Satuan &amp; Tujuan</span><span class="danpus-wizard-step-desc">Pilih satuan tujuan dan bagian terkait.</span></div></div><div class="danpus-wizard-line"></div><div class="danpus-wizard-step-item" data-step-indicator="2"><div class="danpus-wizard-circle"><span class="danpus-wizard-num">2</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div><div class="danpus-wizard-step-text"><span class="danpus-wizard-step-title">Detail Permintaan</span><span class="danpus-wizard-step-desc">Lengkapi informasi permintaan laporan.</span></div></div><div class="danpus-wizard-line"></div><div class="danpus-wizard-step-item" data-step-indicator="3"><div class="danpus-wizard-circle"><span class="danpus-wizard-num">3</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div><div class="danpus-wizard-step-text"><span class="danpus-wizard-step-title">Daftar Task</span><span class="danpus-wizard-step-desc">Pilih task untuk satuan.</span></div></div></div><div class="danpus-request-form-body"><div class="danpus-step is-active" data-step="1"><div class="danpus-section-panel"><div class="danpus-section-head"><div class="danpus-section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="21" x2="21" y2="21"></line><path d="M4 21V9l8-5 8 5v12"></path><line x1="9" y1="21" x2="9" y2="13"></line><line x1="15" y1="21" x2="15" y2="13"></line></svg></div><div><h4 class="danpus-section-title">Satuan &amp; Tujuan</h4><p class="danpus-section-desc">Tentukan satuan tujuan dan bagian yang akan menerima laporan.</p></div></div><div class="danpus-section-body"><div class="danpus-request-field full"><div class="danpus-request-field-headrow"><label>Satuan Tujuan</label><button type="button" class="danpus-request-selectall" id="danpusSelectAllSatuan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span class="danpus-request-selectall-label">Pilih Semua</span></button></div><div class="danpus-request-kategori-quickselect">@foreach($danpusSatuanKategoriMap as $kategoriKey=>$kategoriLabel)@continue($danpusSatuanByKategori->get($kategoriKey,collect())->isEmpty())<button type="button" class="danpus-request-kategori-chip" data-kategori="{{ $kategoriKey }}"><span class="danpus-request-cat-icon">{!! $danpusKategoriIcon($kategoriKey) !!}</span><span>{{ $kategoriLabel }}</span></button>@endforeach</div><div class="danpus-request-satuan-groups">@php $danpusPairKategori=array_slice($danpusSatuanKategoriMap,0,2,true); $danpusRestKategori=array_slice($danpusSatuanKategoriMap,2,null,true); @endphp<div class="danpus-request-satuan-row">@foreach($danpusPairKategori as $kategoriKey=>$kategoriLabel)@continue($danpusSatuanByKategori->get($kategoriKey,collect())->isEmpty())<div class="danpus-request-satuan-group"><div class="danpus-request-satuan-group-head"><span class="danpus-request-cat-icon">{!! $danpusKategoriIcon($kategoriKey) !!}</span><span class="danpus-request-satuan-group-title">{{ $kategoriLabel }}</span></div><div class="danpus-request-check-grid">@foreach($danpusSatuanByKategori->get($kategoriKey) as $tujuan)<label class="danpus-request-check"><input type="checkbox" name="tujuan_satuan_ids[]" value="{{ $tujuan->id }}" data-kategori="{{ $kategoriKey }}"><span class="check-icon">{!! $danpusKategoriIcon($kategoriKey) !!}</span><span class="check-label">{{ $tujuan->nama }}</span><span class="check-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span></label>@endforeach</div></div>@endforeach</div>@foreach($danpusRestKategori as $kategoriKey=>$kategoriLabel)@continue($danpusSatuanByKategori->get($kategoriKey,collect())->isEmpty())<div class="danpus-request-satuan-group"><div class="danpus-request-satuan-group-head"><span class="danpus-request-cat-icon">{!! $danpusKategoriIcon($kategoriKey) !!}</span><span class="danpus-request-satuan-group-title">{{ $kategoriLabel }}</span></div><div class="danpus-request-check-grid">@foreach($danpusSatuanByKategori->get($kategoriKey) as $tujuan)<label class="danpus-request-check"><input type="checkbox" name="tujuan_satuan_ids[]" value="{{ $tujuan->id }}" data-kategori="{{ $kategoriKey }}"><span class="check-icon">{!! $danpusKategoriIcon($kategoriKey) !!}</span><span class="check-label">{{ $tujuan->nama }}</span><span class="check-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span></label>@endforeach</div></div>@endforeach
@@ -603,11 +637,301 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 
   window.openReportDetail=function(button){const modal=document.getElementById('reportDetailModal');document.getElementById('detailPengirim').textContent=button.dataset.pengirim||'-';document.getElementById('detailTujuan').textContent=button.dataset.tujuan||'-';document.getElementById('detailPerihal').textContent=button.dataset.perihal||'-';document.getElementById('detailPrioritas').textContent=button.dataset.prioritas||'-';document.getElementById('detailProgres').textContent=button.dataset.progres?button.dataset.progres+'%':'-';const progresWrap=document.getElementById('detailProgresWrap');if(progresWrap)progresWrap.style.display=button.dataset.kendalaReport==='1'?'none':'block';document.getElementById('detailProyek').textContent=button.dataset.proyek||'-';document.getElementById('detailTanggal').textContent=button.dataset.tanggal||'-';document.getElementById('detailDeskripsi').textContent=button.dataset.deskripsi||'-';const kendala=button.dataset.kendala||'',kendalaWrap=document.getElementById('detailKendalaWrap');if(kendala){document.getElementById('detailKendala').textContent=kendala;kendalaWrap.style.display='block'}else{kendalaWrap.style.display='none'}const wrap=document.getElementById('detailLampiranWrap');const linkBox=document.getElementById('detailLampiran');let daftarLampiran=[];try{daftarLampiran=button.dataset.lampiran?JSON.parse(button.dataset.lampiran):[]}catch(e){daftarLampiran=[]}linkBox.innerHTML='';if(daftarLampiran.length){daftarLampiran.forEach(function(x,i){const a=document.createElement('a');a.href=x.url;a.target='_blank';a.rel='noopener';a.className='lampiran-btn';a.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg><span>'+(daftarLampiran.length>1?(x.nama||'Lihat Lampiran '+(i+1)):'Lihat Lampiran')+'</span>';linkBox.appendChild(a)});wrap.style.display='block'}else{wrap.style.display='none'}const actionsEl=document.getElementById('detailActions')||modal?.querySelector('.modal-actions');if(actionsEl){if(button.dataset.suratMasuk==='1'){actionsEl.innerHTML='';const note=document.createElement('span');note.style.cssText='font-size:11px;color:var(--p-muted);margin-right:auto';note.textContent=button.dataset.readonlyText||'-';actionsEl.appendChild(note);if(button.dataset.konfirmasiAction){const kbtn=document.createElement('button');kbtn.type='button';kbtn.className='detail-btn';kbtn.style.cssText='background:var(--clr-accent,#1a7a4a);color:#fff;border-color:var(--clr-accent,#1a7a4a)';kbtn.textContent='Konfirmasi';kbtn.onclick=function(){if(typeof window.bukaKonfirmasiSurat==='function')window.bukaKonfirmasiSurat(button.dataset.konfirmasiAction,button.dataset.konfirmasiToken,button.dataset.konfirmasiPengirim)};actionsEl.appendChild(kbtn)}}else if(button.dataset.pimpinanReview==='1'){const lid=button.dataset.laporanId||'';actionsEl.innerHTML='<div class="action-row"><button type="button" class="btn reject" onclick="bukaTolakLaporanPimpinan(\''+lid+'\')">Tolak</button><button type="button" class="btn approve" onclick="bukaTerimaLaporanPimpinan(\''+lid+'\')">Terima</button></div>'}else if(button.dataset.deletable==='1'){actionsEl.innerHTML='<div class="action-row"><button type="button" class="reject" onclick="bukaHapusRiwayatPimpinan(\''+(button.dataset.id||'')+'\')">Hapus dari Riwayat</button></div>'}else if(button.dataset.kendalaReport==='1'){actionsEl.innerHTML=''}else if(button.dataset.readonly==='1'){actionsEl.innerHTML='<span class="report-detail-note" style="margin-right:auto;font-size:11px;color:var(--p-muted);">'+(button.dataset.readonlyText||'Mode pimpinan: aktivitas Satlak bersifat view-only.')+'</span>'}else{actionsEl.innerHTML='<span class="readonly-note">Mode pimpinan: aktivitas Satlak bersifat view-only.</span>'}}modal?.classList.add('open')};
   document.getElementById('reportDetailClose')?.addEventListener('click',()=>document.getElementById('reportDetailModal')?.classList.remove('open'));
-  document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>document.getElementById('kirimSuratModal')?.classList.add('open'));
+  document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>{const m=document.getElementById('kirimSuratModal');if(!m)return;void m.offsetHeight;m.classList.add('open');});
   document.getElementById('kirimSuratClose')?.addEventListener('click',()=>document.getElementById('kirimSuratModal')?.classList.remove('open'));
   document.getElementById('kirimSuratCancel')?.addEventListener('click',()=>document.getElementById('kirimSuratModal')?.classList.remove('open'));
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('kirimSuratModal')?.classList.contains('open'))document.getElementById('kirimSuratModal').classList.remove('open')});
-  (function(){const wrap=document.querySelector('#kirimSuratModal .lampiran-input-wrap');const btn=document.getElementById('suratLampiranClearBtn');const input=document.getElementById('surat_lampiran');if(!wrap||!btn||!input)return;input.addEventListener('change',function(){btn.style.display=(input.files&&input.files.length)?'flex':'none'});btn.addEventListener('click',function(){input.value='';input.dispatchEvent(new Event('change',{bubbles:true}));btn.style.display='none'});})();
+  (function(){
+  // Tujuan surat: input teks + saran otomatis (autocomplete), niru tampilan
+  // floating-menu yang sama dipakai .styled-select-menu (dropdown lain di
+  // sistem ini) -- input hidden #surat_tujuan nyimpen ID satuan yang BENERAN
+  // kepilih dari daftar; ngetik doang tanpa milih dari saran nggak dianggap
+  // valid (hidden value dikosongin lagi tiap ngetik), jadi backend selalu
+  // nerima ID satuan yang valid, bukan teks bebas.
+  const wrap=document.getElementById('suratTujuanCombobox');
+  const search=document.getElementById('surat_tujuan_search');
+  const hidden=document.getElementById('surat_tujuan');
+  const options=window.__suratTujuanOptions||[];
+  if(!wrap||!search||!hidden)return;
+  const menu=document.createElement('div');
+  menu.className='styled-select-menu';
+  const inner=document.createElement('div');
+  inner.className='styled-select-menu-inner';
+  menu.appendChild(inner);
+  document.body.appendChild(menu);
+  function clearInvalid(){
+    search.classList.remove('field-invalid');
+    const anchor=search.closest('.form-field');
+    const msg=anchor&&anchor.querySelector(':scope > .kirim-laporan-error');
+    if(msg)msg.style.display='none';
+  }
+  function renderOptions(){
+    inner.innerHTML='';
+    const q=search.value.trim().toLowerCase();
+    const filtered=options.filter(function(o){return !q||o.name.toLowerCase().indexOf(q)>-1||(o.kode&&o.kode.toLowerCase().indexOf(q)>-1)});
+    if(!filtered.length){
+      const empty=document.createElement('div');
+      empty.className='styled-select-option';
+      empty.style.cssText='cursor:default;opacity:.6';
+      empty.textContent='Tidak ada satuan yang cocok.';
+      inner.appendChild(empty);
+      return;
+    }
+    filtered.forEach(function(o){
+      const item=document.createElement('button');
+      item.type='button';
+      item.className='styled-select-option'+(hidden.value===o.id?' active':'');
+      const txt=document.createElement('span');
+      txt.className='ss-opt-text';
+      txt.textContent=o.name;
+      item.appendChild(txt);
+      item.addEventListener('mousedown',function(e){
+        e.preventDefault();
+        hidden.value=o.id;
+        search.value=o.name;
+        clearInvalid();
+        hidden.dispatchEvent(new Event('change',{bubbles:true}));
+        close();
+      });
+      inner.appendChild(item);
+    });
+  }
+  function position(){
+    const r=search.getBoundingClientRect();
+    menu.style.minWidth=r.width+'px';
+    let left=r.left,top=r.bottom+6;
+    const vw=window.innerWidth;
+    menu.style.left=left+'px';
+    menu.style.top=top+'px';
+    const mr=menu.getBoundingClientRect();
+    if(mr.right>vw-8)left=Math.max(8,vw-8-mr.width);
+    menu.style.left=left+'px';
+  }
+  function close(){
+    menu.classList.remove('open');
+  }
+  search.addEventListener('input',function(){
+    hidden.value='';
+    if(!search.value.trim()){close();return}
+    renderOptions();
+    position();
+    menu.classList.add('open');
+  });
+  document.addEventListener('click',function(e){
+    if(!wrap.contains(e.target)&&!menu.contains(e.target))close();
+  });
+  window.addEventListener('scroll',function(e){
+    if(menu.contains(e.target))return;
+    if(menu.classList.contains('open'))close();
+  },true);
+  window.addEventListener('resize',function(){
+    if(menu.classList.contains('open'))position();
+  });
+  })();
+  (function(){
+  const zone=document.getElementById('suratLampiranZone');
+  const input=document.getElementById('surat_lampiran');
+  const list=document.getElementById('suratLampiranFileList');
+  const emptyEl=document.getElementById('suratLampiranFileListEmpty');
+  const errEl=document.getElementById('suratLampiranError');
+  const previewEl=document.getElementById('suratLampiranPreview');
+  const form=document.getElementById('kirimSuratForm');
+  const LAMPIRAN_MAX_BYTES=10*1024*1024;
+  let fileObjectUrl=null;
+  let previewGeneration=0;
+  if(!zone||!input||!list)return;
+  function loadPdfJs(){
+    if(!window.__pdfjsLibPromise){
+      window.__pdfjsLibPromise=import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.3.289/pdf.min.mjs').then(function(lib){
+        lib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.3.289/pdf.worker.min.mjs';
+        return lib;
+      });
+    }
+    return window.__pdfjsLibPromise;
+  }
+  function renderPdfPreview(file,frame,gen){
+    const canvas=document.createElement('canvas');
+    canvas.style.cssText='position:absolute;top:0;left:0;width:100%;height:auto;display:block';
+    loadPdfJs().then(function(lib){
+      return file.arrayBuffer().then(function(buf){
+        return lib.getDocument({data:buf}).promise;
+      });
+    }).then(function(pdf){
+      return pdf.getPage(1);
+    }).then(function(page){
+      if(gen!==previewGeneration)return;
+      const frameWidth=frame.clientWidth||96;
+      const dpr=window.devicePixelRatio||1;
+      const unscaled=page.getViewport({scale:1});
+      const viewport=page.getViewport({scale:(frameWidth/unscaled.width)*dpr});
+      canvas.width=Math.ceil(viewport.width);
+      canvas.height=Math.ceil(viewport.height);
+      canvas.style.width=frameWidth+'px';
+      return page.render({canvasContext:canvas.getContext('2d'),viewport:viewport}).promise;
+    }).then(function(){
+      if(gen!==previewGeneration)return;
+      frame.appendChild(canvas);
+    }).catch(function(){
+      if(gen!==previewGeneration)return;
+      renderFallback(file,frame);
+    });
+  }
+  function renderFallback(file,frame){
+    frame.innerHTML='';
+    const badge=(window.siberadLampiranBadge&&window.siberadLampiranBadge(file.name))||{text:'FILE',cls:'lfx-other'};
+    const fb=document.createElement('div');
+    fb.className='surat-lampiran-preview-fallback';
+    const box=document.createElement('span');
+    box.className='surat-lampiran-preview-fallback-badge lampiran-file-row-icon '+badge.cls;
+    box.textContent=badge.text;
+    const txt=document.createElement('span');
+    txt.className='surat-lampiran-preview-fallback-text';
+    txt.textContent='Tanpa pratinjau';
+    fb.appendChild(box);fb.appendChild(txt);
+    frame.appendChild(fb);
+  }
+  function renderPreview(file,fileUrl){
+    if(!previewEl)return;
+    previewGeneration++;
+    previewEl.innerHTML='';
+    if(!file){previewEl.hidden=true;return}
+    previewEl.hidden=false;
+    const frame=document.createElement('div');
+    frame.className='surat-lampiran-preview-frame';
+    const isPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name);
+    if(isPdf){
+      renderPdfPreview(file,frame,previewGeneration);
+    }else{
+      renderFallback(file,frame);
+    }
+    previewEl.appendChild(frame);
+  }
+  function showLampiranError(text){
+    zone.classList.add('field-invalid');
+    if(errEl){errEl.textContent=text;errEl.style.display='flex';}
+  }
+  function clearLampiranError(){
+    zone.classList.remove('field-invalid');
+    if(errEl)errEl.style.display='none';
+  }
+  function formatSize(bytes){
+    if(bytes<1024*1024) return Math.max(1,Math.round(bytes/1024))+' KB';
+    return (bytes/1024/1024).toFixed(1)+' MB';
+  }
+  function render(){
+    list.querySelectorAll('.lampiran-file-row').forEach(function(el){el.remove()});
+    if(fileObjectUrl){URL.revokeObjectURL(fileObjectUrl);fileObjectUrl=null;}
+    const file=input.files&&input.files[0];
+    if(!file){if(emptyEl)emptyEl.hidden=false;renderPreview(null);return}
+    if(emptyEl)emptyEl.hidden=true;
+    fileObjectUrl=URL.createObjectURL(file);
+    renderPreview(file,fileObjectUrl);
+    const badge=(window.siberadLampiranBadge&&window.siberadLampiranBadge(file.name))||{text:'PDF',cls:'lfx-pdf'};
+    const row=document.createElement('div');
+    row.className='lampiran-file-row';
+    const icon=document.createElement('span');
+    icon.className='lampiran-file-row-icon '+badge.cls;
+    icon.textContent=badge.text;
+    const info=document.createElement('span');
+    info.className='lampiran-file-row-info';
+    const name=document.createElement('a');
+    name.className='lampiran-file-row-name';
+    name.href=fileObjectUrl;
+    name.target='_blank';
+    name.rel='noopener';
+    name.textContent=file.name;
+    const size=document.createElement('span');
+    size.className='lampiran-file-row-size';
+    size.textContent=formatSize(file.size);
+    info.appendChild(name);info.appendChild(size);
+    const removeBtn=document.createElement('button');
+    removeBtn.type='button';
+    removeBtn.className='lampiran-file-row-remove';
+    removeBtn.setAttribute('aria-label','Hapus file');
+    removeBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>';
+    removeBtn.addEventListener('click',function(){input.value='';render()});
+    row.appendChild(icon);row.appendChild(info);row.appendChild(removeBtn);
+    list.appendChild(row);
+  }
+  input.addEventListener('change',function(){
+    const file=input.files&&input.files[0];
+    if(file&&file.size>LAMPIRAN_MAX_BYTES){
+      input.value='';
+      showLampiranError('Ukuran file melebihi 10 MB, tidak bisa dipilih.');
+      render();
+      return;
+    }
+    if(file)clearLampiranError();
+    render();
+  });
+  ['dragenter','dragover'].forEach(function(evt){zone.addEventListener(evt,function(){zone.classList.add('is-dragover')})});
+  ['dragleave','drop'].forEach(function(evt){zone.addEventListener(evt,function(){zone.classList.remove('is-dragover')})});
+  if(form)form.addEventListener('submit',function(e){
+    if(!input.files||input.files.length===0){
+      e.preventDefault();
+      showLampiranError('Lampiran wajib diisi.');
+      zone.scrollIntoView({block:'center',behavior:'smooth'});
+    }
+  });
+  render();
+  })();
+  (function(){
+  const form=document.getElementById('kirimSuratForm');
+  if(!form)return;
+  const suratMessages={
+    tujuan_satuan_id:'Tujuan surat wajib dipilih.',
+    perihal:'Perihal wajib diisi.',
+    kategori:'Kategori wajib diisi.',
+    prioritas:'Pilih salah satu prioritas.',
+    deskripsi:'Isi ringkasan surat wajib diisi.'
+  };
+  form.querySelectorAll('select[required],input[required],textarea[required]').forEach(function(input){
+    var anchor=input.closest('.form-field')||input;
+    var msg=anchor.querySelector(':scope > .kirim-laporan-error');
+    if(!msg){
+      msg=document.createElement('span');
+      msg.className='kirim-laporan-error';
+      msg.style.display='none';
+      anchor.appendChild(msg);
+    }
+    input.addEventListener('invalid',function(e){
+      e.preventDefault();
+      input.classList.add('field-invalid');
+      msg.textContent=suratMessages[input.name]||'Kolom ini wajib diisi.';
+      msg.style.display='flex';
+    });
+    function clearInvalid(){
+      input.classList.remove('field-invalid');
+      msg.style.display='none';
+    }
+    input.addEventListener('input',clearInvalid);
+    input.addEventListener('change',clearInvalid);
+  });
+  const tujuanSearch=document.getElementById('surat_tujuan_search');
+  const tujuanHidden=document.getElementById('surat_tujuan');
+  if(tujuanSearch&&tujuanHidden){
+    form.addEventListener('submit',function(e){
+      if(tujuanHidden.value)return;
+      e.preventDefault();
+      var anchor=tujuanSearch.closest('.form-field');
+      var msg=anchor&&anchor.querySelector(':scope > .kirim-laporan-error');
+      if(!msg&&anchor){
+        msg=document.createElement('span');
+        msg.className='kirim-laporan-error';
+        anchor.appendChild(msg);
+      }
+      tujuanSearch.classList.add('field-invalid');
+      if(msg){msg.textContent=suratMessages.tujuan_satuan_id;msg.style.display='flex';}
+      tujuanSearch.scrollIntoView({block:'center',behavior:'smooth'});
+    });
+    tujuanSearch.addEventListener('input',function(){
+      tujuanSearch.classList.remove('field-invalid');
+      var anchor=tujuanSearch.closest('.form-field');
+      var msg=anchor&&anchor.querySelector(':scope > .kirim-laporan-error');
+      if(msg)msg.style.display='none';
+    });
+  }
+  })();
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('reportDetailModal')?.classList.contains('open'))document.getElementById('reportDetailModal').classList.remove('open')});
 
   // "Detail Permintaan Laporan" -- dipakai tombol "Lihat Detail" kartu
@@ -1222,6 +1546,8 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
     }
     forceUppercase(document.getElementById('danpusRequestPerihal'));
     forceUppercase(document.getElementById('danpusRequestKategori'));
+    forceUppercase(document.getElementById('surat_perihal'));
+    forceUppercase(document.getElementById('surat_kategori'));
 
     // Deadline dipecah jadi picker tanggal & jam kustom (bukan input
     // datetime-local/date/time bawaan browser) -- formatnya jadi konsisten

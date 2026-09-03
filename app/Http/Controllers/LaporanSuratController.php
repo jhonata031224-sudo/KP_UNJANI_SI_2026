@@ -132,19 +132,21 @@ class LaporanSuratController extends Controller
 
         $tujuan = Satuan::findOrFail($validated['tujuan_satuan_id']);
 
-        $lampiranPath = $request->file('lampiran')->store('lampiran-surat', 'public');
+        $lampiranFile = $request->file('lampiran');
+        $lampiranPath = $lampiranFile->store('lampiran-surat', 'public');
         abort_if(! $lampiranPath, 500, 'Gagal menyimpan file lampiran ke server.');
 
         $surat = LaporanSurat::create([
-            'satuan_id'        => $satuanAsal->id,
-            'user_id'          => $user->id,
-            'tujuan_satuan_id' => $tujuan->id,
-            'perihal'          => $validated['perihal'],
-            'kategori'         => $validated['kategori'] ?? null,
-            'deskripsi'        => $validated['deskripsi'],
-            'prioritas'        => $validated['prioritas'],
-            'lampiran_path'    => $lampiranPath,
-            'status'           => LaporanSurat::STATUS_MENUNGGU,
+            'satuan_id'           => $satuanAsal->id,
+            'user_id'             => $user->id,
+            'tujuan_satuan_id'    => $tujuan->id,
+            'perihal'             => $validated['perihal'],
+            'kategori'            => $validated['kategori'] ?? null,
+            'deskripsi'           => $validated['deskripsi'],
+            'prioritas'           => $validated['prioritas'],
+            'lampiran_path'       => $lampiranPath,
+            'lampiran_nama_asli'  => $lampiranFile->getClientOriginalName(),
+            'status'              => LaporanSurat::STATUS_MENUNGGU,
         ]);
 
         foreach (User::where('satuan_id', $tujuan->id)->get() as $penerima) {

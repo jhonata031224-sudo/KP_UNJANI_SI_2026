@@ -18,7 +18,7 @@
                 data-tanggal="{{ e($s->created_at->translatedFormat('d M Y H:i')) }}"
                 data-deskripsi="{{ e($s->deskripsi) }}"
                 data-deskripsi-label="Isi Surat"
-                data-lampiran="{{ $s->lampiran_path ? collect([['url' => asset('storage/'.$s->lampiran_path), 'nama' => basename($s->lampiran_path)]])->toJson() : '[]' }}"
+                data-lampiran="{{ $s->lampiran_path ? collect([['url' => asset('storage/'.$s->lampiran_path), 'nama' => $s->lampiran_nama_asli ?: basename($s->lampiran_path)]])->toJson() : '[]' }}"
                 data-kendala-report="1"
                 data-surat-masuk="1"
                 data-readonly="1"
