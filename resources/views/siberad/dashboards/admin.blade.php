@@ -715,17 +715,6 @@
           <a href="#" class="side-sub-link" data-tab-link="backup" title="Cadangan Data"><span class="sub-dot"></span>Cadangan Data</a>
           <a href="#" class="side-sub-link" data-tab-link="reset-data-laporan" title="Reset Data Laporan"><span class="sub-dot"></span>Reset Data Laporan</a>
           <a href="#" class="side-sub-link" data-tab-link="pengaturan-umum" title="Pengaturan Umum"><span class="sub-dot"></span>Pengaturan Umum</a>
-        </div></div>
-      </div>
-
-      <div class="side-nav-group open" id="setelanGroup">
-        <button type="button" class="side-nav-group-title" id="setelanToggle" title="Setelan">
-          <span class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
-          <span class="side-text">Setelan</span>
-          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
-        </button>
-        <div class="side-subnav"><div>
-          <span class="side-subnav-label">Setelan</span>
           <a href="#" class="side-sub-link" data-tab-link="setelan-notifikasi" title="Notifikasi"><span class="sub-dot"></span>Notifikasi</a>
         </div></div>
       </div>
@@ -3515,7 +3504,7 @@
         </script>
       </section>
 
-      {{-- ===== SETELAN -> NOTIFIKASI ===== --}}
+      {{-- ===== KELOLA SISTEM -> NOTIFIKASI ===== --}}
       <section class="tab-panel" data-tab-panel="setelan-notifikasi">
         <div class="section-head panel">
           <h2>Setelan Notifikasi</h2>
@@ -3626,7 +3615,7 @@
             var akanAktif = checkbox.checked;
             var pesanKonfirmasi = akanAktif
               ? 'Aktifkan fitur push notifikasi untuk seluruh pengguna?'
-              : 'Matikan fitur push notifikasi untuk seluruh pengguna? Tombol "Aktifkan Notifikasi" akan hilang dari semua halaman dan tidak ada push yang terkirim.';
+              : 'Matikan fitur push notifikasi untuk seluruh pengguna? Tidak ada notifikasi push yang akan terkirim ke perangkat manapun.';
             if (!window.confirm(pesanKonfirmasi)) {
               checkbox.checked = !akanAktif;
               return;
