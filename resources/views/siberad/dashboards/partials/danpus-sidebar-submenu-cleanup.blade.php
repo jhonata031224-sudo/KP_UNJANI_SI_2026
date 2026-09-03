@@ -276,7 +276,7 @@
       if(!groups.length&&!pending.length){var empty=document.createElement('div');empty.className='empty-state';empty.innerHTML='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada aktivitas dari satuan ini</div>';wrapper.appendChild(empty)}
       else{
         groups.forEach(function(g){wrapper.appendChild(buildProcessLog(g.rows))});
-        pending.forEach(function(p){wrapper.appendChild(buildPendingPermintaanLog(p)});
+        pending.forEach(function(p){wrapper.appendChild(buildPendingPermintaanLog(p))});
       }
       wrapper.dataset.timelineReady='1';
     });
