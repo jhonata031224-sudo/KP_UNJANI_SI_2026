@@ -639,8 +639,8 @@
      dari tema global (dark/light). Semua variabel warna teks/panel
      di-override lokal di sini supaya konten di dalamnya tetap gelap &
      kebaca meski tema global gelap. */
-  .kcard{position:relative;background:#ffffff;border:1px solid rgba(15,23,42,.14);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;--panel:#ffffff;--panel-2:#ffffff;--panel-alt:#f4f5f7;--border:rgba(15,23,42,.16);--border-soft:rgba(15,23,42,.09);--text:#1c2430;--text-muted:#5b6472;--text-dim:#8a92a0;}
-  .kcard:hover{border-color:var(--gold-bright);box-shadow:0 4px 20px rgba(0,0,0,.12);transform:translateY(-2px);}
+  .kcard{position:relative;background:#ffffff;border:1px solid rgba(15,23,42,.14);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 10px 30px rgba(0,0,0,.16);--panel:#ffffff;--panel-2:#ffffff;--panel-alt:#f4f5f7;--border:rgba(15,23,42,.16);--border-soft:rgba(15,23,42,.09);--text:#1c2430;--text-muted:#5b6472;--text-dim:#8a92a0;}
+  .kcard:hover{border-color:var(--gold-bright);box-shadow:0 4px 20px rgba(0,0,0,.18);transform:translateY(-2px);}
 
   /* Header */
   .kcard-header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
