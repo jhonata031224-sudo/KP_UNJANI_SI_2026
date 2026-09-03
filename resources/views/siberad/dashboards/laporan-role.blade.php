@@ -148,6 +148,18 @@ document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>{const m
     konfirmOverlay.classList.add('open');
   });
   document.getElementById('konfirmasiKendalaYa')?.addEventListener('click',function(){
+    // Guard supaya laporan tidak ke-submit DUA KALI kalau tombol ini
+    // sempat diklik/di-tap dua kali dengan cepat (mis. koneksi agak
+    // lambat sehingga halaman belum langsung berpindah, atau double-tap
+    // di HP). Tombolnya type="button" (bukan submit bawaan), jadi TIDAK
+    // ada proteksi klik-ganda otomatis dari browser -- form.requestSubmit()
+    // bisa kepanggil berkali-kali sebelum navigasi ke halaman berikutnya
+    // benar-benar terjadi, dan tiap panggilan bikin 1 baris laporan
+    // kendala baru di database. Akibatnya laporan yang BARU dikirim malah
+    // kelihatan "duplikat 2 kartu identik", bukan hilang.
+    if(this.disabled)return;
+    this.disabled=true;
+    document.getElementById('konfirmasiKendalaBatal')?.setAttribute('disabled','disabled');
     closeKonfirm();
     form.dataset.confirmed='1';
     form.requestSubmit?form.requestSubmit():form.submit();
