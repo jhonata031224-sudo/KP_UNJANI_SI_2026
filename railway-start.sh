@@ -40,7 +40,4 @@ php artisan storage:link || true
 # error "The lampiran.0 failed to upload." bukan pesan validasi yang bermakna.
 # Solusi: paksa batas PHP sama dengan batas aplikasi (12M sedikit di atas 10MB
 # supaya ada ruang untuk multipart boundary & header form lainnya).
-php artisan serve --host=0.0.0.0 --port="${PORT:-8000}" --no-reload \
-  -d upload_max_filesize=12M \
-  -d post_max_size=32M \
-  -d memory_limit=256M
+php -d upload_max_filesize=12M -d post_max_size=32M -d memory_limit=256M artisan serve --host=0.0.0.0 --port="${PORT:-8000}" --no-reload
