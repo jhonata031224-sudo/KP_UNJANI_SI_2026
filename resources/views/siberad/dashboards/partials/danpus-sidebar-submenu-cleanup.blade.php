@@ -276,7 +276,7 @@
       if(!groups.length&&!pending.length){var empty=document.createElement('div');empty.className='empty-state';empty.innerHTML='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada aktivitas dari satuan ini</div>';wrapper.appendChild(empty)}
       else{
         groups.forEach(function(g){wrapper.appendChild(buildProcessLog(g.rows))});
-        pending.forEach(function(p){wrapper.appendChild(buildPendingPermintaanLog(p))});
+        pending.forEach(function(p){wrapper.appendChild(buildPendingPermintaanLog(p)});
       }
       wrapper.dataset.timelineReady='1';
     });
@@ -285,3 +285,52 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyDanpusSubmenuFix);else applyDanpusSubmenuFix();
 })();
 </script>
+
+<style>
+/* Popup Riwayat Aktivitas Pimpinan pada sidebar ciutkan:
+   tampilannya mengikuti item submenu saat sidebar lebar. Selector dibatasi
+   hanya ke grup #monitorGroup agar bagian/sidebar lain tidak ikut berubah. */
+@media(min-width:901px){
+  .sidebar.collapsed #monitorGroup.open .side-subnav>div{gap:2px!important;}
+  .sidebar.collapsed #monitorGroup.open .side-sub-link{
+    gap:10px!important;
+    padding:9px 12px 9px 17px!important;
+    border-radius:0 9px 9px 0!important;
+    color:var(--text-muted)!important;
+    font-family:var(--body)!important;
+    font-size:13px!important;
+    font-weight:500!important;
+    line-height:1.4!important;
+    text-decoration:none!important;
+  }
+  .sidebar.collapsed #monitorGroup.open .side-sub-link:hover{
+    background:var(--hover-tint)!important;
+    color:var(--text)!important;
+  }
+  .sidebar.collapsed #monitorGroup.open .side-sub-link.active{
+    background:var(--gold-dim,rgba(201,122,0,.1))!important;
+    color:var(--p-accent)!important;
+    font-weight:600!important;
+  }
+  .sidebar.collapsed #monitorGroup.open .side-sub-link.active:before{
+    left:-1px;
+    top:8px;
+    bottom:8px;
+    width:2px;
+    border-radius:2px;
+    background:var(--p-accent);
+  }
+  .sidebar.collapsed #monitorGroup.open .side-sub-link .sub-dot{
+    width:5px;
+    height:5px;
+    border-radius:50%;
+    opacity:.5;
+    background:currentColor;
+  }
+  .sidebar.collapsed #monitorGroup.open .side-sub-link.active .sub-dot{
+    background:var(--p-accent)!important;
+    opacity:1!important;
+    box-shadow:0 0 0 3px rgba(201,122,0,.15)!important;
+  }
+}
+</style>
