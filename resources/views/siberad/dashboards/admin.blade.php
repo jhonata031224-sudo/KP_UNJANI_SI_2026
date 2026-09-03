@@ -289,7 +289,16 @@
           </div>
           <div class="help-topic-body">
             <div class="help-topic-title">Monitoring</div>
-            <div class="help-topic-desc">Pantau rekap &amp; ekspor laporan dari seluruh satuan, lihat siapa saja yang sedang aktif login lewat Pengguna Aktif, serta telusuri log aktivitas sistem.</div>
+            <div class="help-topic-desc">Pantau rekap &amp; ekspor laporan dari seluruh satuan, serta lihat siapa saja yang sedang aktif login lewat Pengguna Aktif.</div>
+          </div>
+        </div>
+        <div class="help-topic">
+          <div class="help-topic-icon">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          </div>
+          <div class="help-topic-body">
+            <div class="help-topic-title">Riwayat Aktivitas</div>
+            <div class="help-topic-desc">Telusuri rekam jejak login, logout, dan seluruh aksi kelola sistem oleh Admin.</div>
           </div>
         </div>
         <div class="help-topic">
@@ -698,6 +707,17 @@
           <a href="#" class="side-sub-link" data-tab-link="rekap-laporan" title="Ringkasan Data"><span class="sub-dot"></span>Ringkasan Data</a>
           <a href="#" class="side-sub-link" data-tab-link="laporan-admin" title="Data Laporan"><span class="sub-dot"></span>Data Laporan</a>
           <a href="#" class="side-sub-link" data-tab-link="sesi-aktif" title="Pengguna Aktif"><span class="sub-dot"></span>Pengguna Aktif</a>
+        </div></div>
+      </div>
+
+      <div class="side-nav-group open" id="aktivitasGroup">
+        <button type="button" class="side-nav-group-title" id="aktivitasToggle" title="Riwayat Aktivitas">
+          <span class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+          <span class="side-text">Riwayat Aktivitas</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
+        </button>
+        <div class="side-subnav"><div>
+          <span class="side-subnav-label">Riwayat Aktivitas</span>
           <a href="#" class="side-sub-link" data-tab-link="log-aktivitas" title="Riwayat Aktivitas"><span class="sub-dot"></span>Riwayat Aktivitas</a>
         </div></div>
       </div>
