@@ -11,6 +11,7 @@
    di luar box itu (shadow per kartu, bukan nempel jadi satu kotak besar). ---- */
 .deadline-sender-section{overflow:visible}
 .deadline-sender-section > .report-card{margin-bottom:40px}
+#kendala-kasansi.deadline-sender-section > .danpus-request-panel,#arsip-kendala-kasansi.deadline-sender-section > .danpus-request-panel,#kirim-laporan-kendala.deadline-sender-section > .report-card,#arsip-kendala-kasansi.deadline-sender-section > .report-card{margin-bottom:16px}
 .deadline-sender-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));column-gap:18px;row-gap:64px}
 .deadline-sender-list > .empty-state{grid-column:1/-1}
 @keyframes dcardZoomIn{0%{opacity:0;transform:scale(.82)}100%{opacity:1;transform:scale(1)}}
