@@ -49,33 +49,6 @@
     });
   }
 
-  function setButtonState(button, granted) {
-    if (!button) return;
-    if (granted) {
-      button.textContent = 'Notifikasi Aktif';
-      button.classList.add('is-active');
-      button.disabled = false;
-    } else {
-      button.textContent = 'Aktifkan Notifikasi';
-      button.classList.remove('is-active');
-      button.disabled = false;
-    }
-  }
-
-  function ensureStyle() {
-    if (document.getElementById('siberad-push-style')) return;
-    var style = document.createElement('style');
-    style.id = 'siberad-push-style';
-    style.textContent =
-      '.siberad-push-btn{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;margin-right:8px;border-radius:9px;border:1px solid var(--border-soft);background:var(--panel-alt);color:var(--text-muted);font-family:var(--body);font-size:11.5px;font-weight:700;letter-spacing:.02em;cursor:pointer;transition:border-color .15s ease,color .15s ease,background .15s ease;white-space:nowrap;}' +
-      '.siberad-push-btn:hover{border-color:var(--border-strong);color:var(--text);}' +
-      '.siberad-push-btn.is-active{border-color:var(--gold,#FF9800);color:var(--gold-bright,#FF9800);background:var(--gold-dim,rgba(217,146,11,.12));}' +
-      '.siberad-push-btn[disabled]{opacity:.6;cursor:default;}' +
-      '@media(max-width:640px){.siberad-push-btn{padding:0 10px;font-size:10.5px;}}' +
-      '@media(max-width:480px){.siberad-push-btn{padding:0 7px;font-size:9px;margin-right:5px;height:32px;}}';
-    document.head.appendChild(style);
-  }
-
   // Dipanggil dari dialog konfirmasi logout (partials/global-shell-enhancements.blade.php)
   // SEBELUM form logout benar-benar submit -- supaya:
   //   1) baris push_subscriptions milik user yang lagi logout ini kehapus
@@ -139,8 +112,6 @@
     if (Notification.permission === 'denied') return; // browser sendiri yang blokir prompt ulang, jangan paksa
 
     navigator.serviceWorker.register('/sw.js').then(function (registration) {
-      var actions = document.querySelector('.topbar-actions');
-
       // Sudah pernah diizinkan sebelumnya (device/browser ini) -> pastikan
       // subscription-nya masih tersimpan di server, tanpa nge-prompt lagi
       // (browser tidak akan munculkan dialog izin kalau sudah granted).
@@ -152,43 +123,13 @@
             doSubscribe(registration).catch(function () {});
           }
         });
-        return; // sudah aktif, tidak perlu tampilkan tombol
       }
 
-      // Belum pernah ditanya -- tampilkan tombol, JANGAN auto-prompt saat
-      // halaman baru dimuat (banyak browser mem-block/dianggap spam kalau
-      // izin notifikasi diminta tanpa interaksi user dulu).
-      if (!actions || document.getElementById('pushEnableBtn')) return;
-      ensureStyle();
-
-      var button = document.createElement('button');
-      button.type = 'button';
-      button.id = 'pushEnableBtn';
-      button.className = 'siberad-push-btn';
-      setButtonState(button, false);
-
-      button.addEventListener('click', function () {
-        button.disabled = true;
-        button.textContent = 'Meminta izin...';
-        Notification.requestPermission().then(function (permission) {
-          if (permission !== 'granted') {
-            setButtonState(button, false);
-            if (permission === 'denied') button.remove();
-            return;
-          }
-          doSubscribe(registration).then(function () {
-            setButtonState(button, true);
-            if (window.siberadShowToast) window.siberadShowToast('success', 'Notifikasi push berhasil diaktifkan.');
-          }).catch(function () {
-            setButtonState(button, false);
-            if (window.siberadShowToast) window.siberadShowToast('error', 'Gagal mengaktifkan notifikasi push. Coba lagi nanti.');
-          });
-        });
-      });
-
-      var notifMenu = document.getElementById('notifMenu');
-      if (notifMenu) actions.insertBefore(button, notifMenu);
-      else actions.insertBefore(button, actions.firstChild);
+      // Belum pernah ditanya -- dulu di sini ditampilkan tombol "Aktifkan
+      // Notifikasi" per-user. Tombol itu SENGAJA dihapus: aktif/nonaktifnya
+      // fitur push sekarang murni dikendalikan admin lewat Pengaturan ->
+      // Notifikasi (lihat Pengaturan::current()->notifikasi_push_aktif di
+      // InjectWebPushUi), jadi tidak perlu lagi kontrol per-user di sisi ini.
     }).catch(function () {
       // Gagal daftar service worker (mis. browser lawas) -- diam saja,
       // fitur notifikasi in-app (lonceng) tetap jalan seperti biasa.
