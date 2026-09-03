@@ -11,21 +11,23 @@
     <div class="kcard-perihal">{{ $k->perihal }}</div>
   </div>
 
-  @if(! $k->tembusans->isEmpty())
   <div class="kcard-tembusan">
     <span class="kcard-tembusan-label">Tembusan</span>
-    @foreach($k->tembusans as $t)
-      <div class="kcard-tembusan-item">
-        <span class="satuan-pill" style="font-size:10px">{{ $t->satuan->kode ?? $t->satuan->nama ?? '-' }}</span>
-        @if($t->feedback)
-          <span class="kcard-tembusan-status replied">Sudah dibalas</span>
-        @else
-          <span class="kcard-tembusan-status waiting">Menunggu…</span>
-        @endif
-      </div>
-    @endforeach
+    @if($k->tembusans->isEmpty())
+      <span class="kcard-tembusan-status waiting">Tidak ada tembusan</span>
+    @else
+      @foreach($k->tembusans as $t)
+        <div class="kcard-tembusan-item">
+          <span class="satuan-pill" style="font-size:10px">{{ $t->satuan->kode ?? $t->satuan->nama ?? '-' }}</span>
+          @if($t->feedback)
+            <span class="kcard-tembusan-status replied">Sudah dibalas</span>
+          @else
+            <span class="kcard-tembusan-status waiting">Menunggu…</span>
+          @endif
+        </div>
+      @endforeach
+    @endif
   </div>
-  @endif
 
   <div class="kcard-footer">
     <div class="kcard-actions">

@@ -261,8 +261,8 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 .kcard-btn-approve:hover{background:rgba(22,131,75,.1);}
 .kcard-btn-reject{border-color:var(--p-red,#c83b3b);color:var(--p-red,#c83b3b);}
 .kcard-btn-reject:hover{background:rgba(200,59,59,.1);}
-.kcard-btn-archive{border-color:var(--p-accent,#c97a00);color:var(--p-accent,#c97a00);}
-.kcard-btn-archive:hover{background:rgba(201,122,0,.1);}
+.kcard-btn-archive{border-color:var(--p-green,var(--success));color:var(--p-green,var(--success));}
+.kcard-btn-archive:hover{background:var(--success-dim,rgba(63,194,125,.14));}
 .kcard-empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:48px 20px;text-align:center;color:var(--p-muted);}
 .kcard-empty-title{font-size:14px;font-weight:700;color:var(--p-muted);}
 .kcard-empty-sub{font-size:12px;color:var(--p-muted);line-height:1.5;max-width:320px;opacity:.7;}
