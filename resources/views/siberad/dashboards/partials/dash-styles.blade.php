@@ -648,6 +648,9 @@
 
   /* Body */
   .kcard-body{display:flex;flex-direction:column;gap:4px;}
+  .kcard-body-row{display:flex;align-items:center;gap:10px;}
+  .kcard-icon{flex-shrink:0;width:36px;height:36px;border-radius:10px;background:rgba(255,152,0,.13);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;}
+  .kcard-icon svg{width:18px;height:18px;}
   .kcard-sender{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);}
   .kcard-perihal{font-size:15px;font-weight:800;color:var(--text);line-height:1.35;}
   .kcard-kategori{font-size:11px;color:var(--text-muted);font-style:italic;}

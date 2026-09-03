@@ -13,7 +13,12 @@
   </div>
 
   <div class="kcard-body">
-    <div class="kcard-perihal">{{ $k->perihal }}</div>
+    <div class="kcard-body-row">
+      <span class="kcard-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </span>
+      <div class="kcard-perihal">{{ $k->perihal }}</div>
+    </div>
   </div>
 
   <div class="kcard-footer">
@@ -32,7 +37,7 @@
         data-readonly="{{ $kendalaAdaAksi ? '0' : '1' }}"
         @if(! $kendalaAdaAksi) data-readonly-text="Kendala ini sudah ditindaklanjuti — status: {{ $k->status }}." @endif>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        Detail
+        Lihat Detail
       </button>
 
       @if($k->status === 'Menunggu' && ! $isDanpus)
@@ -64,14 +69,14 @@
       @endif
 
       @if($isDanpus)
-        <form method="POST" action="{{ route('laporan-kendala.status', $k) }}" data-perihal="{{ e($k->perihal) }}" style="display:inline-flex">
-          <input type="hidden" name="status" value="Dikonfirmasi">
-          @csrf @method('PATCH')
-          <button class="kcard-btn kcard-btn-archive confirm-archive" type="submit" title="Konfirmasi dan pindahkan ke Arsip Kendala Kasansi">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M23 3H1v5h22V3z"/><path d="M10 12h4"/></svg>
-            Konfirmasi & Arsipkan
-          </button>
-        </form>
+        <button type="button" class="kcard-btn kcard-btn-archive confirm-archive"
+          onclick="bukaKonfirmasiArsipkanKendala(this)"
+          data-action="{{ route('laporan-kendala.status', $k) }}"
+          data-perihal="{{ e($k->perihal) }}"
+          title="Konfirmasi dan pindahkan ke Arsip Kendala Kasansi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M23 3H1v5h22V3z"/><path d="M10 12h4"/></svg>
+          Konfirmasi & Arsipkan
+        </button>
       @endif
     </div>
   </div>
