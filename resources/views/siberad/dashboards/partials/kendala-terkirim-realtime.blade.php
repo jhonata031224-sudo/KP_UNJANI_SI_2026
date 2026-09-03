@@ -19,7 +19,21 @@
     return (first && !first.hasAttribute(idAttr)) ? first.outerHTML : '';
   }
 
-  function norm(html){ return html.replace(/>\s+</g,'><').trim(); }
+  // PENTING: buang class animasi transient (siberad-card-updated /
+  // siberad-card-in) sebelum membandingkan outerHTML. Tanpa ini, card yang
+  // baru saja di-update masih membawa class siberad-card-updated di DOM,
+  // sedangkan HTML segar dari server TIDAK PERNAH punya class itu (class
+  // ini murni ditambahkan di sisi client). Akibatnya outerHTML dua-duanya
+  // selalu dianggap "berbeda" walau datanya sama persis -> card dianggap
+  // berubah, class ditambah lagi, kedip lagi, setiap polling (3 detik)
+  // tanpa henti. Ini penyebab bug "kartu kedip kuning terus" di Kirim
+  // Kendala & Arsip Kendala.
+  function norm(html){
+    return html
+      .replace(/>\s+</g,'><')
+      .replace(/\s*\b(siberad-card-updated|siberad-card-in)\b/g,'')
+      .trim();
+  }
 
   function syncGrid(container, freshHtml, emptyMarkup){
     if(!container) return;
