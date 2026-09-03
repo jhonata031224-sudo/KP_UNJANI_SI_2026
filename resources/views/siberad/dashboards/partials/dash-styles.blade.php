@@ -634,15 +634,12 @@
   .siberad-file-name{font-family:var(--body);font-size:11.5px;color:var(--text-muted);word-break:break-all;}
 
   /* ─── KCARD: Card-based Kendala Kasansi (pengirim & penerima) ─────────── */
-  .kcard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;padding:4px 0 8px;}
+  .kcard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));align-items:start;gap:14px;padding:4px 0 8px;}
   /* Kartu kendala kasansi (kirim & terima) -- sengaja SELALU putih terlepas
      dari tema global (dark/light). Semua variabel warna teks/panel
      di-override lokal di sini supaya konten di dalamnya tetap gelap &
-     kebaca meski tema global gelap. Overlay blur hitam ditaruh DI BELAKANG
-     card (bukan terpotong di dalamnya) mirip glow di belakang panel/tabel
-     lain di sistem. */
-  .kcard{position:relative;isolation:isolate;background:#ffffff;border:1px solid rgba(15,23,42,.14);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;--panel:#ffffff;--panel-2:#ffffff;--panel-alt:#f4f5f7;--border:rgba(15,23,42,.16);--border-soft:rgba(15,23,42,.09);--text:#1c2430;--text-muted:#5b6472;--text-dim:#8a92a0;}
-  .kcard::before{content:"";position:absolute;z-index:-1;inset:6px;border-radius:14px;background:rgba(0,0,0,.55);filter:blur(28px);opacity:.32;pointer-events:none;}
+     kebaca meski tema global gelap. */
+  .kcard{position:relative;background:#ffffff;border:1px solid rgba(15,23,42,.14);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;--panel:#ffffff;--panel-2:#ffffff;--panel-alt:#f4f5f7;--border:rgba(15,23,42,.16);--border-soft:rgba(15,23,42,.09);--text:#1c2430;--text-muted:#5b6472;--text-dim:#8a92a0;}
   .kcard:hover{border-color:var(--gold-bright);box-shadow:0 4px 20px rgba(0,0,0,.12);transform:translateY(-2px);}
 
   /* Header */
@@ -652,7 +649,7 @@
   /* Body */
   .kcard-body{display:flex;flex-direction:column;gap:4px;}
   .kcard-sender{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);}
-  .kcard-perihal{font-size:14px;font-weight:800;color:var(--text);line-height:1.35;}
+  .kcard-perihal{font-size:15px;font-weight:800;color:var(--text);line-height:1.35;}
   .kcard-kategori{font-size:11px;color:var(--text-muted);font-style:italic;}
 
   /* Tembusan */
@@ -669,7 +666,7 @@
   .kcard-confirm-info strong{color:var(--text);font-weight:700;}
 
   /* Footer */
-  .kcard-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:2px;padding-top:10px;border-top:1px solid var(--border-soft);}
+  .kcard-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:0;padding-top:8px;border-top:1px solid var(--border-soft);}
   .kcard-footer:not(:has(.kcard-date)){justify-content:flex-end;}
   .kcard-date{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text-dim);white-space:nowrap;}
   .kcard-date svg{width:12px;height:12px;flex-shrink:0;opacity:.7;}
