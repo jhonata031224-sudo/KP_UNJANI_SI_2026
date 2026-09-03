@@ -636,11 +636,13 @@
   /* ─── KCARD: Card-based Kendala Kasansi (pengirim & penerima) ─────────── */
   .kcard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;padding:4px 0 8px;}
   /* Kartu kendala kasansi (kirim & terima) -- sengaja SELALU putih terlepas
-     dari tema global (dark/light) + overlay blur hitam tipis di pojok untuk
-     kesan depth. Semua variabel warna teks/panel di-override lokal di sini
-     supaya konten di dalamnya tetap gelap & kebaca meski tema global gelap. */
-  .kcard{position:relative;isolation:isolate;overflow:hidden;background:#ffffff;border:1px solid rgba(15,23,42,.14);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;--panel:#ffffff;--panel-2:#ffffff;--panel-alt:#f4f5f7;--border:rgba(15,23,42,.16);--border-soft:rgba(15,23,42,.09);--text:#1c2430;--text-muted:#5b6472;--text-dim:#8a92a0;}
-  .kcard::before{content:"";position:absolute;z-index:-1;top:-35%;right:-25%;width:65%;height:75%;background:rgba(0,0,0,.65);filter:blur(60px);opacity:.10;pointer-events:none;}
+     dari tema global (dark/light). Semua variabel warna teks/panel
+     di-override lokal di sini supaya konten di dalamnya tetap gelap &
+     kebaca meski tema global gelap. Overlay blur hitam ditaruh DI BELAKANG
+     card (bukan terpotong di dalamnya) mirip glow di belakang panel/tabel
+     lain di sistem. */
+  .kcard{position:relative;isolation:isolate;background:#ffffff;border:1px solid rgba(15,23,42,.14);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;--panel:#ffffff;--panel-2:#ffffff;--panel-alt:#f4f5f7;--border:rgba(15,23,42,.16);--border-soft:rgba(15,23,42,.09);--text:#1c2430;--text-muted:#5b6472;--text-dim:#8a92a0;}
+  .kcard::before{content:"";position:absolute;z-index:-1;inset:6px;border-radius:14px;background:rgba(0,0,0,.55);filter:blur(28px);opacity:.32;pointer-events:none;}
   .kcard:hover{border-color:var(--gold-bright);box-shadow:0 4px 20px rgba(0,0,0,.12);transform:translateY(-2px);}
 
   /* Header */
