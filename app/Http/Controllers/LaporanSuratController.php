@@ -159,7 +159,7 @@ class LaporanSuratController extends Controller
             'prioritas'        => $surat->prioritas,
         ]);
 
-        return back()->with('status', 'Surat berhasil dikirim ke '.$tujuan->nama.'. Menunggu konfirmasi dari penerima.');
+        return back()->with('status', 'Surat berhasil dikirim ke '.$tujuan->nama.'.');
     }
 
     /**
