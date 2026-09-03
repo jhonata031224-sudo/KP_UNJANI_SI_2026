@@ -9,6 +9,7 @@ use App\Models\Satuan;
 use App\Models\User;
 use App\Notifications\LaporanKendalaBaruDiterima;
 use App\Notifications\LaporanKendalaTembusanBaru;
+use App\Support\DecorativeSeparatorCleaner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -71,9 +72,18 @@ class LaporanKendalaController extends Controller
                     ->max('id') ?? 0)
                 : 0;
 
+            // PENTING: items_html dikirim lewat JSON, jadi middleware
+            // RemoveDecorativeSeparators (yang cuma jalan utk response
+            // text/html) TIDAK PERNAH menyentuhnya. Kalau tidak dibersihkan
+            // manual di sini, teks kartu ini bisa beda PERMANEN dari versi
+            // yang dirender pas halaman pertama dibuka (yang sudah kena
+            // middleware) -- signature() di sisi JS jadi selalu menganggap
+            // kartunya "berubah" & kartu itu kedip terus tiap polling
+            // walau datanya sama sekali tidak berubah. Lihat
+            // DecorativeSeparatorCleaner utk detail lengkapnya.
             return response()->json([
                 'latest_id' => $latestId,
-                'items_html' => $items->map(fn (LaporanKendala $k) => view('siberad.dashboards.partials.kendala-kasansi-row', ['k' => $k, 'satuan' => $satuan])->render())->implode(''),
+                'items_html' => DecorativeSeparatorCleaner::clean($items->map(fn (LaporanKendala $k) => view('siberad.dashboards.partials.kendala-kasansi-row', ['k' => $k, 'satuan' => $satuan])->render())->implode('')),
             ], 200, [
                 'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             ]);
@@ -92,9 +102,17 @@ class LaporanKendalaController extends Controller
         $terkirim = $items->where('status', '!=', LaporanKendala::STATUS_DIKONFIRMASI)->values();
         $arsip = $items->where('status', LaporanKendala::STATUS_DIKONFIRMASI)->values();
 
+        // Sama seperti items_html di atas: normalisasi manual di sini
+        // supaya HTML kartu yang dikirim lewat JSON polling ini SELALU
+        // sama persis dengan HTML kartu hasil render halaman pertama (yang
+        // sudah lewat middleware RemoveDecorativeSeparators). Tanpa ini,
+        // kartu dgn teks yang kena pola pembersihnya (mis. ada "-", "/",
+        // atau spasi ganda di perihal/catatan) bakal kedip terus nonstop
+        // tiap 3 detik walau tidak ada perubahan data sama sekali -- lihat
+        // DecorativeSeparatorCleaner.
         return response()->json([
-            'terkirim_items_html' => $terkirim->map(fn (LaporanKendala $k) => view('siberad.dashboards.partials.kendala-terkirim-row', ['k' => $k, 'satuan' => $satuan])->render())->implode(''),
-            'arsip_items_html' => $arsip->map(fn (LaporanKendala $k) => view('siberad.dashboards.partials.kendala-terkirim-row', ['k' => $k, 'satuan' => $satuan])->render())->implode(''),
+            'terkirim_items_html' => DecorativeSeparatorCleaner::clean($terkirim->map(fn (LaporanKendala $k) => view('siberad.dashboards.partials.kendala-terkirim-row', ['k' => $k, 'satuan' => $satuan])->render())->implode('')),
+            'arsip_items_html' => DecorativeSeparatorCleaner::clean($arsip->map(fn (LaporanKendala $k) => view('siberad.dashboards.partials.kendala-terkirim-row', ['k' => $k, 'satuan' => $satuan])->render())->implode('')),
         ], 200, [
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
         ]);
