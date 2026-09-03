@@ -139,6 +139,14 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 @media(min-width:901px){
 .sidebar.collapsed .side-nav-group.open .side-subnav>div{border-left:none;margin-left:0;padding:0;}
 .sidebar.collapsed .side-sub-link{padding:9px 10px;border-radius:8px;}
+/* Flyout Riwayat Aktivitas (#monitorGroup) dikecualikan dari reset di atas --
+   selector di-scope pakai ID biar cuma grup ini yang balik reuse persis
+   style .side-subnav>div / .side-sub-link yang sama dengan submenu saat
+   sidebar terbuka (lihat definisi base-nya beberapa baris di atas). Grup
+   lain (Pelaporan/Surat/Kendala Kasansi) TIDAK disentuh dan tetap pakai
+   reset padding:0/border-radius:8px seperti semula. */
+#monitorGroup.side-nav-group.open .side-subnav>div{border-left:1px solid var(--p-border,var(--border-soft));margin-left:18px;padding:3px 0;}
+#monitorGroup .side-sub-link{padding:9px 12px 9px 17px;border-radius:0 9px 9px 0;}
 }
 .sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar{width:8px;}
 .sidebar.collapsed .side-nav-group.open .side-subnav>div::-webkit-scrollbar-thumb{background:var(--p-muted,var(--border-soft));border-radius:99px;border:2px solid var(--p-surface);background-clip:padding-box;}
