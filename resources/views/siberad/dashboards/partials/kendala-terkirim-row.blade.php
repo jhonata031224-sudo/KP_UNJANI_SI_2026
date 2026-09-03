@@ -2,7 +2,6 @@
 <div class="kcard" data-kendala-id="{{ $k->id }}" data-search="{{ strtolower($k->perihal.' '.($k->tujuanSatuan->nama ?? '')) }}" data-prioritas="{{ $k->prioritas }}">
   <div class="kcard-header">
     <div class="kcard-meta">
-      <span class="priority-tag prio-{{ strtolower($k->prioritas) }}">{{ $k->prioritas }}</span>
       <span class="satuan-pill">{{ $k->tujuanSatuan->kode ?? $k->tujuanSatuan->nama ?? '-' }}</span>
     </div>
     <span class="kcard-status status-dot {{ in_array($k->status, ['Ditindaklanjuti','Selesai','Dikonfirmasi'], true) ? 'green' : ($k->status === 'Ditolak' ? 'bad' : 'amber') }}">{{ $k->status }}</span>
@@ -10,9 +9,6 @@
 
   <div class="kcard-body">
     <div class="kcard-perihal">{{ $k->perihal }}</div>
-    @if($k->kategori)
-      <div class="kcard-kategori">{{ $k->kategori }}</div>
-    @endif
   </div>
 
   @if(! $k->tembusans->isEmpty())
@@ -32,10 +28,6 @@
   @endif
 
   <div class="kcard-footer">
-    <span class="kcard-date">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-      {{ $k->created_at->translatedFormat('d M Y, H:i') }}
-    </span>
     <div class="kcard-actions">
       <button type="button" class="kcard-btn kcard-btn-detail" onclick="openReportDetail(this)"
         data-pengirim="{{ e($satuan->nama) }}"

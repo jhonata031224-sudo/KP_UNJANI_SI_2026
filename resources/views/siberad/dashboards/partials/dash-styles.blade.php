@@ -105,11 +105,6 @@
     --surface:rgba(6,9,12,.92);
     --hover-tint:rgba(255,255,255,.04);
 
-    /* Kartu kendala kasansi (kirim & terima) -- sengaja dibedakan dari
-       --panel biasa supaya tidak "nyatu" dengan background di kedua tema. */
-    --kcard-bg:linear-gradient(155deg,#16212b 0%,#101a22 100%);
-    --kcard-border:rgba(217,146,11,.2);
-
     color-scheme:dark;
   }
 
@@ -144,11 +139,6 @@
 
     --surface:rgba(255,255,255,.85);
     --hover-tint:rgba(0,0,0,.035);
-
-    /* Kartu kendala kasansi (kirim & terima) -- warna tinted, bukan putih
-       polos, supaya tetap kontras dengan background terang. */
-    --kcard-bg:linear-gradient(155deg,#eef2f8 0%,#e2e8f2 100%);
-    --kcard-border:rgba(93,120,160,.28);
 
     color-scheme:light;
   }
@@ -645,7 +635,12 @@
 
   /* ─── KCARD: Card-based Kendala Kasansi (pengirim & penerima) ─────────── */
   .kcard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;padding:4px 0 8px;}
-  .kcard{background:var(--kcard-bg);border:1px solid var(--kcard-border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;}
+  /* Kartu kendala kasansi (kirim & terima) -- sengaja SELALU putih terlepas
+     dari tema global (dark/light) + overlay blur hitam tipis di pojok untuk
+     kesan depth. Semua variabel warna teks/panel di-override lokal di sini
+     supaya konten di dalamnya tetap gelap & kebaca meski tema global gelap. */
+  .kcard{position:relative;isolation:isolate;overflow:hidden;background:#ffffff;border:1px solid rgba(15,23,42,.14);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;--panel:#ffffff;--panel-2:#ffffff;--panel-alt:#f4f5f7;--border:rgba(15,23,42,.16);--border-soft:rgba(15,23,42,.09);--text:#1c2430;--text-muted:#5b6472;--text-dim:#8a92a0;}
+  .kcard::before{content:"";position:absolute;z-index:-1;top:-35%;right:-25%;width:65%;height:75%;background:rgba(0,0,0,.65);filter:blur(60px);opacity:.10;pointer-events:none;}
   .kcard:hover{border-color:var(--gold-bright);box-shadow:0 4px 20px rgba(0,0,0,.12);transform:translateY(-2px);}
 
   /* Header */
@@ -673,6 +668,7 @@
 
   /* Footer */
   .kcard-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:2px;padding-top:10px;border-top:1px solid var(--border-soft);}
+  .kcard-footer:not(:has(.kcard-date)){justify-content:flex-end;}
   .kcard-date{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text-dim);white-space:nowrap;}
   .kcard-date svg{width:12px;height:12px;flex-shrink:0;opacity:.7;}
   .kcard-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
