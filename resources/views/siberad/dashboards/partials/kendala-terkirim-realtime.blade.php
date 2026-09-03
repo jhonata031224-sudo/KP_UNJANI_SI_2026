@@ -19,33 +19,25 @@
     return (first && !first.hasAttribute(idAttr)) ? first.outerHTML : '';
   }
 
-  // Kenapa TIDAK cukup cuma membandingkan outerHTML mentah (sekalipun sudah
-  // dibuang whitespace-nya): render pertama halaman (Blade, langsung di
-  // laporan-role.blade.php) dan render endpoint realtime() ini SAMA-SAMA
-  // pakai partial kendala-terkirim-row.blade.php, tapi begitu card sempat
-  // di-replace sekali oleh polling ini, DOM-nya jadi punya sisa atribut/
-  // class yang TIDAK PERNAH ada di HTML dari server (class animasi
-  // siberad-card-updated/siberad-card-in yang cuma ditambah di sisi
-  // client). Kalau dibandingkan mentah-mentah, itu bikin server dianggap
-  // "berbeda" terus -> SEMUA card ikut di-replace & kedip lagi tiap
-  // polling (3 detik), tanpa henti. Pola yang sama persis sudah pernah
-  // dibereskan untuk kartu Permintaan Laporan lewat cardSig() di
-  // laporan-role-realtime-sync.blade.php -- signature() di bawah ini
-  // meniru pendekatan itu: clone node, buang SEMUA hal yang transient
-  // (class animasi, style inline, atribut *bound* yang ditempel JS lain),
-  // baru dibandingkan.
-  function signature(el){
-    var c=el.cloneNode(true);
-    c.classList.remove('siberad-card-updated','siberad-card-in');
-    if(c.getAttribute('class')==='') c.removeAttribute('class');
-    c.removeAttribute('style');
-    Array.prototype.slice.call(c.querySelectorAll('[style]')).forEach(function(n){n.removeAttribute('style');});
-    Array.prototype.slice.call(c.querySelectorAll('*')).forEach(function(n){
-      Array.prototype.slice.call(n.attributes||[]).forEach(function(a){
-        if(/bound/i.test(a.name)) n.removeAttribute(a.name);
-      });
-    });
-    return c.outerHTML.replace(/>\s+</g,'><').trim();
+  // Kenapa TIDAK dibandingkan lewat DOM (baik mentah maupun "dibersihkan"
+  // dulu pakai clone+strip class/style/atribut *bound*): elemen kcard yang
+  // sudah sempat dirender di halaman bisa kena tempelan macam-macam dari
+  // script LAIN yang tidak kita tahu semuanya di sini (mis. lightbox
+  // lampiran, listener openReportDetail yang menandai tombol, dsb) --
+  // daftar strip manual gampang ketinggalan satu atribut baru dan begitu
+  // itu terjadi, card itu dianggap "beda terus" dibanding HTML asli server
+  // -> ikut di-replace & kedip tiap 3 detik tanpa henti, walau datanya
+  // tidak pernah berubah. Solusinya samain persis dengan pola yang sudah
+  // terbukti di syncExistingRequests() (log-aktivitas-realtime.blade.php):
+  // JANGAN pernah baca dari DOM yang sedang tampil sama sekali -- simpan
+  // HTML MURNI dari server per siklus fetch ke Map `lastFreshHtml`, lalu
+  // bandingkan fresh-vs-fresh (siklus sekarang vs siklus sebelumnya).
+  // Dengan begitu, mau ada script lain yang nempelin apa pun ke DOM, itu
+  // tidak pernah ikut terbaca / tidak pernah memengaruhi hasil banding.
+  var lastFreshHtml={};
+
+  function normalize(html){
+    return html.replace(/>\s+</g,'><').trim();
   }
 
   // Poll PERTAMA setelah halaman dibuka dipakai buat "menyamakan" baseline
@@ -84,9 +76,15 @@
     var prevEl=null;
     freshCards.forEach(function(fresh){
       var id=fresh.getAttribute(idAttr);
+      var freshSig=normalize(fresh.outerHTML);
       var existing=container.querySelector('['+idAttr+'="'+id+'"]');
       if(existing){
-        if(signature(existing)!==signature(fresh)){
+        var prevSig=lastFreshHtml[id];
+        // undefined = ID ini baru pertama kali kelihatan di siklus fresh
+        // (mis. baru saja disisipkan sebagai card baru di siklus
+        // sebelumnya) -- jangan dianggap "berubah" & jangan ikut kena
+        // animasi glow, cukup catat baseline-nya dulu.
+        if(prevSig!==undefined && prevSig!==freshSig){
           if(animateSync) fresh.classList.add('siberad-card-updated');
           existing.replaceWith(fresh);
         }
@@ -98,6 +96,7 @@
         else container.insertBefore(fresh,container.firstChild);
         prevEl=fresh;
       }
+      lastFreshHtml[id]=freshSig;
     });
   }
 
