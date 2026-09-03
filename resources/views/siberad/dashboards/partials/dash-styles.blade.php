@@ -105,6 +105,11 @@
     --surface:rgba(6,9,12,.92);
     --hover-tint:rgba(255,255,255,.04);
 
+    /* Kartu kendala kasansi (kirim & terima) -- sengaja dibedakan dari
+       --panel biasa supaya tidak "nyatu" dengan background di kedua tema. */
+    --kcard-bg:linear-gradient(155deg,#16212b 0%,#101a22 100%);
+    --kcard-border:rgba(217,146,11,.2);
+
     color-scheme:dark;
   }
 
@@ -139,6 +144,11 @@
 
     --surface:rgba(255,255,255,.85);
     --hover-tint:rgba(0,0,0,.035);
+
+    /* Kartu kendala kasansi (kirim & terima) -- warna tinted, bukan putih
+       polos, supaya tetap kontras dengan background terang. */
+    --kcard-bg:linear-gradient(155deg,#eef2f8 0%,#e2e8f2 100%);
+    --kcard-border:rgba(93,120,160,.28);
 
     color-scheme:light;
   }
@@ -635,7 +645,7 @@
 
   /* ─── KCARD: Card-based Kendala Kasansi (pengirim & penerima) ─────────── */
   .kcard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;padding:4px 0 8px;}
-  .kcard{background:var(--panel);border:1px solid var(--border-soft);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;}
+  .kcard{background:var(--kcard-bg);border:1px solid var(--kcard-border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;}
   .kcard:hover{border-color:var(--gold-bright);box-shadow:0 4px 20px rgba(0,0,0,.12);transform:translateY(-2px);}
 
   /* Header */
@@ -677,8 +687,8 @@
   .kcard-btn-approve:hover{background:var(--success-dim);}
   .kcard-btn-reject{border-color:var(--red);color:var(--red);}
   .kcard-btn-reject:hover{background:var(--red-dim,rgba(181,52,47,.1));}
-  .kcard-btn-archive{border-color:var(--gold-bright);color:var(--gold-bright);}
-  .kcard-btn-archive:hover{background:var(--gold-dim);}
+  .kcard-btn-archive{border-color:var(--success);color:var(--success);}
+  .kcard-btn-archive:hover{background:var(--success-dim);}
 
   /* Empty state */
   .kcard-empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:48px 20px;text-align:center;color:var(--text-dim);}
