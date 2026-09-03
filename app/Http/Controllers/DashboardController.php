@@ -384,8 +384,15 @@ class DashboardController
             // ===== Surat Masuk: surat dari Kasansi ke SATU tujuan bebas,
             // tanpa tembusan & tanpa progres -- lihat komentar
             // LaporanSuratController. Danpus/Wadan bisa saja jadi salah
-            // satu tujuan surat, sama seperti satuan lain manapun.
-            $suratMasuk = LaporanSurat::with('satuan')->where('tujuan_satuan_id', $satuan->id)->latest()->get();
+            // satu tujuan surat, sama seperti satuan lain manapun. Cuma yang
+            // masih MENUNGGU -- yang sudah dikonfirmasi pindah ke $suratArsip
+            // di bawah (niru pola Kirim Surat: begitu dikonfirmasi, otomatis
+            // pindah ke Arsip Surat, bukan nyangkut selamanya di Surat Masuk).
+            $suratMasuk = LaporanSurat::with('satuan')
+                ->where('tujuan_satuan_id', $satuan->id)
+                ->where('status', LaporanSurat::STATUS_MENUNGGU)
+                ->latest()
+                ->get();
 
             // ===== Menu Surat Danpus/Wadan: FULL sama seperti Kasansi --
             // Danpus/Wadan juga bisa Kirim Surat (bukan cuma terima),
@@ -396,8 +403,13 @@ class DashboardController
                 ->where('status', LaporanSurat::STATUS_MENUNGGU)
                 ->latest()
                 ->get();
-            $suratArsip = LaporanSurat::with('tujuanSatuan')
-                ->where('satuan_id', $satuan->id)
+            // Arsip Surat gabungan dua arah -- lihat komentar panjang di
+            // role() untuk $suratArsip, pola & alasannya identik persis.
+            $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan'])
+                ->where(function ($q) use ($satuan) {
+                    $q->where('satuan_id', $satuan->id)
+                        ->orWhere('tujuan_satuan_id', $satuan->id);
+                })
                 ->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
                 ->latest()
                 ->get();
@@ -468,21 +480,38 @@ class DashboardController
                 ->latest()
                 ->get()
             : collect();
-        $suratArsip = $bisaKirimSurat
-            ? LaporanSurat::with('tujuanSatuan')
-                ->where('satuan_id', $satuan->id)
-                ->where('status', \App\Models\LaporanSurat::STATUS_DIKONFIRMASI)
-                ->latest()
-                ->get()
-            : collect();
+        // Arsip Surat SEKARANG gabungan dua arah -- surat yang DIKIRIM satuan
+        // ini dan sudah dikonfirmasi penerima, DITAMBAH surat yang MASUK ke
+        // satuan ini dan sudah DIA SENDIRI konfirmasi (dulu surat masuk yang
+        // dikonfirmasi cuma diam di Surat Masuk selamanya, gak pernah pindah
+        // kemana-mana -- sekarang niru pola Kirim Surat -> Arsip Surat).
+        // SENGAJA gak digating $bisaKirimSurat lagi (beda dari suratTerkirim
+        // di atas) -- satuan APAPUN bisa nerima & konfirmasi surat masuk,
+        // jadi arsipnya juga harus kebentuk buat semua role, bukan cuma yang
+        // bisa Kirim Surat.
+        $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan'])
+            ->where(function ($q) use ($satuan) {
+                $q->where('satuan_id', $satuan->id)
+                    ->orWhere('tujuan_satuan_id', $satuan->id);
+            })
+            ->where('status', \App\Models\LaporanSurat::STATUS_DIKONFIRMASI)
+            ->latest()
+            ->get();
         // Pilihan tujuan di form Kirim Surat: seluruh satuan lain di
         // sistem selain diri sendiri dan ADMIN.
         $satuanSuratTujuanPilihan = $bisaKirimSurat
             ? Satuan::where('id', '!=', $satuan->id)->where('kode', '!=', 'ADMIN')->get()->sortBy($urutkanSatuan)->values()
             : collect();
-        // Surat Masuk: satuan APAPUN bisa jadi tujuan surat,
-        // jadi selalu disiapkan buat semua role.
-        $suratMasuk = LaporanSurat::with('satuan')->where('tujuan_satuan_id', $satuan->id)->latest()->get();
+        // Surat Masuk: satuan APAPUN bisa jadi tujuan surat, jadi selalu
+        // disiapkan buat semua role. Cuma yang masih MENUNGGU -- yang sudah
+        // dikonfirmasi pindah ke $suratArsip di atas (niru persis pola
+        // Kirim Surat: begitu dikonfirmasi, otomatis pindah ke Arsip Surat,
+        // bukan nyangkut selamanya di Surat Masuk).
+        $suratMasuk = LaporanSurat::with('satuan')
+            ->where('tujuan_satuan_id', $satuan->id)
+            ->where('status', \App\Models\LaporanSurat::STATUS_MENUNGGU)
+            ->latest()
+            ->get();
 
         return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
     }

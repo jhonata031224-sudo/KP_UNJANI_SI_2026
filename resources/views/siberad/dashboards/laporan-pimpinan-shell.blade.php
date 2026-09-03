@@ -20,3 +20,8 @@
      danpus-permintaan-arsip-mode -> initRiwayatCardFilter/syncRiwayatCards),
      jadi kedua partial itu inert / malah bikin konflik <select> filter. --}}
 @include('siberad.dashboards.partials.danpus-kendala-kasansi-realtime')
+{{-- Kirim Surat/Arsip Surat/Surat Masuk Pimpinan sebelumnya SAMA SEKALI
+     gak realtime (partial ini gak pernah di-include di sini) -- id
+     container (#suratTerkirimGrid/#suratArsipBody/#suratMasukGrid) sama
+     persis kayak dashboard Satuan, jadi partial yang sama dipakai bareng. --}}
+@include('siberad.dashboards.partials.surat-terkirim-realtime')

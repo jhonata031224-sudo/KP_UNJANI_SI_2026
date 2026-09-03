@@ -34,9 +34,11 @@ class LaporanSuratController extends Controller
 {
     /**
      * Realtime poll dari JS -- pola sama dengan LaporanKendalaController.
-     * Sisi penerima: item baru di Surat Masuk sejak `since`.
-     * Sisi Kasansi: snapshot penuh terpisah antara suratTerkirim
-     *               (menunggu_konfirmasi) dan suratArsip (dikonfirmasi).
+     * Surat Masuk, Kirim Surat, dan Arsip Surat SEMUANYA snapshot penuh yang
+     * di-diff di JS (syncContainer di surat-terkirim-realtime.blade.php),
+     * BUKAN append-only lagi -- begitu surat masuk dikonfirmasi (sisi
+     * penerima konfirmasi sendiri), dia harus HILANG dari snapshot Surat
+     * Masuk & MUNCUL di snapshot Arsip Surat, persis pola Kirim Surat.
      */
     public function realtime(Request $request): JsonResponse
     {
@@ -44,18 +46,17 @@ class LaporanSuratController extends Controller
         $satuan = $user->satuan;
         abort_unless($satuan, 403, 'Akun belum terhubung ke satuan.');
 
-        $since = max(0, (int) $request->query('since', 0));
-
-        $suratMasukBaru = LaporanSurat::with('satuan')
+        // Surat Masuk: cuma yang masih MENUNGGU -- yang sudah dikonfirmasi
+        // sudah pindah ke $arsip di bawah.
+        $suratMasuk = LaporanSurat::with('satuan')
             ->where('tujuan_satuan_id', $satuan->id)
-            ->where('id', '>', $since)
-            ->orderBy('id')
+            ->where('status', LaporanSurat::STATUS_MENUNGGU)
+            ->latest()
             ->get();
 
         $payload = [
-            'latest_id'        => (int) (LaporanSurat::where('tujuan_satuan_id', $satuan->id)->max('id') ?? 0),
-            'masuk_items_html' => $suratMasukBaru->map(
-                fn (LaporanSurat $s) => view('siberad.dashboards.partials.surat-masuk-row', ['s' => $s])->render()
+            'masuk_items_html' => $suratMasuk->map(
+                fn (LaporanSurat $s) => view('siberad.dashboards.partials.surat-masuk-row', ['s' => $s, 'satuan' => $satuan])->render()
             )->implode(''),
         ];
 
@@ -74,21 +75,29 @@ class LaporanSuratController extends Controller
                 ->latest()
                 ->get();
 
-            // Arsip Surat: hanya yang sudah dikonfirmasi
-            $arsip = LaporanSurat::with('tujuanSatuan')
-                ->where('satuan_id', $satuan->id)
-                ->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
-                ->latest()
-                ->get();
-
             $payload['terkirim_items_html'] = $terkirim->map(
                 fn (LaporanSurat $s) => view('siberad.dashboards.partials.surat-terkirim-row', ['s' => $s, 'satuan' => $satuan])->render()
             )->implode('');
-
-            $payload['arsip_items_html'] = $arsip->map(
-                fn (LaporanSurat $s) => view('siberad.dashboards.partials.surat-arsip-row', ['s' => $s, 'satuan' => $satuan])->render()
-            )->implode('');
         }
+
+        // Arsip Surat: gabungan dua arah (dikirim & dikonfirmasi penerima,
+        // ATAU diterima & dikonfirmasi sendiri) -- lihat komentar panjang di
+        // DashboardController::role()/pimpinan() untuk alasannya. SENGAJA
+        // gak digating $bisaKirimSurat (beda dari terkirim_items_html di
+        // atas) -- satuan APAPUN bisa nerima & konfirmasi surat, jadi
+        // arsipnya juga harus disiapkan buat semua role.
+        $arsip = LaporanSurat::with(['satuan', 'tujuanSatuan'])
+            ->where(function ($q) use ($satuan) {
+                $q->where('satuan_id', $satuan->id)
+                    ->orWhere('tujuan_satuan_id', $satuan->id);
+            })
+            ->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
+            ->latest()
+            ->get();
+
+        $payload['arsip_items_html'] = $arsip->map(
+            fn (LaporanSurat $s) => view('siberad.dashboards.partials.surat-arsip-row', ['s' => $s, 'satuan' => $satuan])->render()
+        )->implode('');
 
         return response()->json($payload, 200, [
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',

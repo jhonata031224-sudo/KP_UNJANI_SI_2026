@@ -5,6 +5,14 @@
    sempat kejadian pas nge-redesain modal Buat Surat (banyak properti
    ketinggalan di salah satu file). */
 .surat-file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+/* Animasi kartu hilang (realtime, lihat surat-terkirim-realtime.blade.php)
+   -- niru persis .siberad-card-leaving punya Permintaan Laporan
+   (laporan-role-realtime-sync.blade.php), tapi didefinisikan sendiri di
+   sini (nama keyframe beda) karena file itu cuma di-include shell Satuan,
+   sedangkan grid Surat dipakai bareng Satuan & Pimpinan. */
+.surat-file-card.siberad-card-leaving{animation:siberadSuratCardOut .3s ease forwards;pointer-events:none}
+@keyframes siberadSuratCardOut{to{opacity:0;transform:translateY(-6px) scale(.97)}}
+@media(prefers-reduced-motion:reduce){.surat-file-card.siberad-card-leaving{animation:none!important}}
 .surat-file-card{position:relative;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--border-soft);border-radius:14px;padding:22px;box-sizing:border-box;box-shadow:0 10px 30px rgba(0,0,0,.15)}
 .surat-file-card-icon{flex-shrink:0;width:68px;height:68px;border-radius:16px;background:var(--gold-dim);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
 .surat-file-card-icon svg{width:32px;height:32px}
@@ -51,7 +59,11 @@
 .surat-detail-timeline-dot{position:absolute;left:0;top:0;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--success-bright,#3dba7e);color:#fff;z-index:1}
 .surat-detail-timeline-dot svg{width:10px;height:10px}
 .surat-detail-timeline-item.is-pending .surat-detail-timeline-dot{background:var(--panel);border:2px solid var(--border);color:transparent}
-.surat-detail-timeline-item:not(:last-child)::before{content:"";position:absolute;left:8px;top:18px;bottom:-20px;width:2px;background:var(--border-soft)}
+.surat-detail-timeline-item:not(:last-child)::before{content:"";position:absolute;left:8px;top:18px;bottom:-9px;width:2px;background:var(--border-soft)}
+.surat-detail-timeline-item:not(:last-child)::after{content:"";position:absolute;left:8px;top:18px;bottom:-9px;width:2px;background:var(--success-bright,#3dba7e);clip-path:inset(0 0 100% 0);transition:clip-path .5s ease}
+.surat-detail-timeline-item.line-complete:not(:last-child)::after{clip-path:inset(0 0 0% 0)}
+@keyframes suratTimelineDotPop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+.surat-detail-timeline-dot.just-confirmed{animation:suratTimelineDotPop .45s cubic-bezier(.34,1.56,.64,1)}
 .surat-detail-timeline-title{font-size:13px;font-weight:700;color:var(--text);line-height:18px}
 .surat-detail-timeline-sub{font-size:11.5px;color:var(--text-muted);margin-top:3px}
 .surat-detail-dokumen-row{display:flex;align-items:center;gap:12px}
@@ -63,22 +75,24 @@
 .surat-detail-dokumen-download{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;color:var(--gold-bright);font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap}
 .surat-detail-dokumen-download:hover{text-decoration:underline}
 .surat-detail-dokumen-download svg{width:15px;height:15px}
-#suratDetailModal .modal-actions{margin-top:20px}
+#suratDetailModal .modal-actions{gap:8px;margin-top:20px}
 #suratDetailKonfirmasi{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border-color:transparent}
 #suratDetailKonfirmasi[hidden]{display:none}
 @media(max-width:700px){.surat-detail-body{grid-template-columns:1fr}.surat-detail-col-left{border-right:none;padding-right:0;padding-bottom:20px;border-bottom:1px solid var(--border-soft);margin-bottom:20px}}
 </style>
 <script>
 (function(){
-  // Cari + urutkan kartu Kirim Surat -- niru pola .rpt-filter-* yang sama
-  // dipakai initReportFilter() (danpus-report-table-filter.blade.php) &
-  // initCardSearch() (permintaan-laporan-deadline.blade.php), tapi versi
-  // lebih simpel karena grid ini cuma 1 status ("Menunggu Konfirmasi") --
-  // gak butuh dropdown filter status, cuma cari + Terbaru/Terlama.
-  function initSuratCardSearch(){
-    var section=document.getElementById('kirim-surat');
+  // Cari + urutkan kartu grid Surat (Kirim Surat & Surat Masuk) -- niru pola
+  // .rpt-filter-* yang sama dipakai initReportFilter()
+  // (danpus-report-table-filter.blade.php) & initCardSearch()
+  // (permintaan-laporan-deadline.blade.php), tapi versi lebih simpel karena
+  // tiap grid cuma butuh cari + Terbaru/Terlama, gak butuh dropdown filter
+  // status. Dipanggil sekali per grid (Kirim Surat & Surat Masuk) lewat
+  // initAllSuratCardSearch() di bawah -- parametrized biar gak dobel-tulis.
+  function initSuratCardSearch(sectionId,gridId,searchPlaceholder){
+    var section=document.getElementById(sectionId);
     if(!section||section.dataset.searchReady==='1')return;
-    var grid=document.getElementById('suratTerkirimGrid');
+    var grid=document.getElementById(gridId);
     var panel=section.querySelector('.panel');
     if(!grid||!panel)return;
     var initialCards=grid.querySelectorAll(':scope > .surat-file-card');
@@ -87,7 +101,14 @@
 
     var bar=document.createElement('div');
     bar.className='rpt-filter-bar';
-    bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="Cari perihal atau tujuan..." aria-label="Cari perihal atau tujuan"></div><select aria-label="Urutkan"><option value="newest">Terbaru</option><option value="oldest">Terlama</option></select><span class="rpt-filter-count"></span>';
+    bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="'+searchPlaceholder+'" aria-label="'+searchPlaceholder+'"></div><select aria-label="Urutkan"><option value="newest">Terbaru</option><option value="oldest">Terlama</option></select><span class="rpt-filter-count"></span>';
+    // .panel di grid Surat cuma bungkus panel-head (judul+deskripsi+tombol)
+    // -- grid kartunya sendiri SENGAJA di luar .panel (lihat markup
+    // #kirim-surat/#surat-masuk). Bar cari+urut ikut di DALAM .panel
+    // (nempel di bawah panel-head, satu kotak sama header), niru persis
+    // pola card grid "Permintaan Laporan" (search+filter+counter satu
+    // kotak sama header, kartunya sendiri baru di luar/bawah kotak) --
+    // BUKAN pola danpus-log-search.blade.php yang taruh bar di luar list.
     panel.appendChild(bar);
 
     var searchEmpty=document.createElement('div');
@@ -154,6 +175,11 @@
 
     apply();
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initSuratCardSearch);else initSuratCardSearch();
+  function initAllSuratCardSearch(){
+    initSuratCardSearch('kirim-surat','suratTerkirimGrid','Cari perihal atau tujuan...');
+    initSuratCardSearch('surat-masuk','suratMasukGrid','Cari perihal atau pengirim...');
+    initSuratCardSearch('arsip-surat','suratArsipGrid','Cari perihal atau dari/tujuan...');
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initAllSuratCardSearch);else initAllSuratCardSearch();
 })();
 </script>

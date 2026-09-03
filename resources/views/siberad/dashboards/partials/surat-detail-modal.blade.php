@@ -3,6 +3,10 @@
 window.openSuratDetail = function(button){
   var modal = document.getElementById('suratDetailModal');
   if (!modal) return;
+  var wasOpen = modal.classList.contains('open');
+  var prevSudahDikonfirmasi = document.getElementById('suratDetailStatusText').classList.contains('status-dikonfirmasi');
+  var card = button.closest('.surat-file-card');
+  modal.dataset.openSuratId = card ? (card.dataset.suratId || '') : '';
   document.getElementById('suratDetailDari').textContent = 'Dari ' + (button.dataset.dari || '-');
   document.getElementById('suratDetailTujuan').textContent = button.dataset.tujuan || '-';
   var tujuanKode = document.getElementById('suratDetailTujuanKode');
@@ -22,12 +26,13 @@ window.openSuratDetail = function(button){
   var checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
   var timeline = document.getElementById('suratDetailTimeline');
   timeline.innerHTML = '';
+  var sudahKonfirmasi = !!button.dataset.dikonfirmasiTanggal;
+  var justConfirmed = wasOpen && !prevSudahDikonfirmasi && sudahKonfirmasi;
   var dibuat = document.createElement('div');
   dibuat.className = 'surat-detail-timeline-item';
   dibuat.innerHTML = '<span class="surat-detail-timeline-dot">' + checkSvg + '</span><div class="surat-detail-timeline-title">Dibuat</div><div class="surat-detail-timeline-sub"></div>';
   dibuat.querySelector('.surat-detail-timeline-sub').textContent = 'Oleh ' + (button.dataset.dibuatOleh || '-') + ' • ' + (button.dataset.dibuatTanggal || '-');
   timeline.appendChild(dibuat);
-  var sudahKonfirmasi = !!button.dataset.dikonfirmasiTanggal;
   var konfirmasi = document.createElement('div');
   konfirmasi.className = 'surat-detail-timeline-item' + (sudahKonfirmasi ? '' : ' is-pending');
   konfirmasi.innerHTML = '<span class="surat-detail-timeline-dot">' + (sudahKonfirmasi ? checkSvg : '') + '</span><div class="surat-detail-timeline-title">Dikonfirmasi</div><div class="surat-detail-timeline-sub"></div>';
@@ -35,6 +40,25 @@ window.openSuratDetail = function(button){
     ? ('Oleh ' + (button.dataset.dikonfirmasiOleh || '-') + ' • ' + button.dataset.dikonfirmasiTanggal)
     : 'Menunggu konfirmasi penerima';
   timeline.appendChild(konfirmasi);
+  if (sudahKonfirmasi) {
+    // Garis penghubung "line-complete" WAJIB ditambahin belakangan (bukan
+    // langsung di className pas elemen dibuat) + dipaksa reflow dulu (2x rAF,
+    // niru pola flipPlay di surat-terkirim-realtime.blade.php) -- elemen yang
+    // "line-complete" dari lahir gak pernah kepaint dalam state awalnya
+    // (scaleY(0)), jadi transition CSS-nya gak ada apa-apa buat dianimasiin
+    // dari situ (asal-asalan langsung "dep" kepenuhan).
+    void dibuat.offsetHeight;
+    requestAnimationFrame(function(){requestAnimationFrame(function(){
+      dibuat.classList.add('line-complete');
+    });});
+  }
+  if (justConfirmed) {
+    statusEl.classList.add('siberad-row-updated');
+    konfirmasi.classList.add('siberad-row-updated');
+    var justDot = konfirmasi.querySelector('.surat-detail-timeline-dot');
+    if (justDot) justDot.classList.add('just-confirmed');
+    if (window.siberadShowToast) window.siberadShowToast('success', 'Surat sudah dikonfirmasi.');
+  }
 
   var dokWrap = document.getElementById('suratDetailDokumenWrap');
   var dokPanel = document.getElementById('suratDetailDokumenPanel');
@@ -73,7 +97,6 @@ window.openSuratDetail = function(button){
   if (button.dataset.canConfirm === '1') {
     confirmBtn.hidden = false;
     confirmBtn.onclick = function(){
-      modal.classList.remove('open');
       if (typeof window.bukaKonfirmasiSurat === 'function') {
         window.bukaKonfirmasiSurat(button.dataset.confirmAction, button.dataset.confirmToken, button.dataset.dari);
       }
@@ -83,13 +106,35 @@ window.openSuratDetail = function(button){
     confirmBtn.onclick = null;
   }
 
+  modal.dataset.openSuratSig = button.outerHTML.replace(/>\s+</g,'><').trim();
   void modal.offsetHeight;
   modal.classList.add('open');
 };
+
+// Selagi modal Detail Surat lagi kebuka, poll realtime (surat-terkirim-realtime.blade.php)
+// manggil ini tiap habis sync -- kalau kartu surat yang lagi ditampilkan berubah
+// (mis. status Menunggu -> Dikonfirmasi gara-gara penerima baru aja konfirmasi
+// selagi pengirim masih buka detailnya), modal ikut kebarui otomatis tanpa
+// perlu ditutup-buka lagi. Signature dibanding dulu biar gak render ulang
+// (dan animasi .just-confirmed gak keputer ulang) kalau sebenernya gak ada
+// yang berubah dari poll sebelumnya.
+window.siberadRefreshSuratDetailIfOpen = function(){
+  var modal = document.getElementById('suratDetailModal');
+  if (!modal || !modal.classList.contains('open')) return;
+  var id = modal.dataset.openSuratId;
+  if (!id) return;
+  var card = document.querySelector('.surat-file-card[data-surat-id="' + id + '"]:not(.siberad-card-leaving)');
+  var btn = card ? card.querySelector('.surat-file-card-btn') : null;
+  if (!btn) return;
+  var sig = btn.outerHTML.replace(/>\s+</g,'><').trim();
+  if (sig === modal.dataset.openSuratSig) return;
+  window.openSuratDetail(btn);
+};
+
 (function(){
   var modal = document.getElementById('suratDetailModal');
   if (!modal) return;
-  function close(){ modal.classList.remove('open'); }
+  function close(){ modal.classList.remove('open'); modal.dataset.openSuratId = ''; modal.dataset.openSuratSig = ''; }
   document.getElementById('suratDetailClose')?.addEventListener('click', close);
   document.getElementById('suratDetailTutup')?.addEventListener('click', close);
   document.addEventListener('keydown', function(e){
