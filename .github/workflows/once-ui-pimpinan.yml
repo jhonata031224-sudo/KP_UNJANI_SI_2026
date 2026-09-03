@@ -1,0 +1,36 @@
+name: Once UI Pimpinan
+on:
+  push:
+    branches: [refactor-fokus-laporan]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.event.head_commit.message != 'fix(ui): samakan popup Riwayat Aktivitas Pimpinan'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch target only
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('resources/views/siberad/dashboards/laporan-pimpinan.blade.php')
+          s = p.read_text(encoding='utf-8')
+          old = '''@media(min-width:901px){\n.sidebar.collapsed .side-nav-group.open .side-subnav>div{border-left:none;margin-left:0;padding:0;}\n.sidebar.collapsed .side-sub-link{padding:9px 10px;border-radius:8px;}\n}'''
+          new = '''@media(min-width:901px){\n.sidebar.collapsed .side-nav-group.open .side-subnav>div{border-left:none;margin-left:0;padding:0;}\n.sidebar.collapsed .side-sub-link{padding:9px 10px;border-radius:8px;}\n\n/* Khusus popup Riwayat Aktivitas Pimpinan saat sidebar ciutkan.\n   Style item dibuat sama dengan submenu saat sidebar terbuka. */\n.sidebar.collapsed #monitorGroup.open .side-subnav>div{gap:2px!important;}\n.sidebar.collapsed #monitorGroup.open .side-sub-link{\n  gap:10px!important;\n  padding:9px 12px 9px 17px!important;\n  border-radius:0 9px 9px 0!important;\n  color:var(--text-muted)!important;\n  font-family:var(--body)!important;\n  font-size:13px!important;\n  font-weight:500!important;\n  line-height:1.4!important;\n  text-decoration:none!important;\n}\n.sidebar.collapsed #monitorGroup.open .side-sub-link:hover{\n  background:var(--hover-tint)!important;\n  color:var(--text)!important;\n}\n.sidebar.collapsed #monitorGroup.open .side-sub-link.active{\n  background:var(--gold-dim,rgba(201,122,0,.1))!important;\n  color:var(--p-accent)!important;\n  font-weight:600!important;\n}\n.sidebar.collapsed #monitorGroup.open .side-sub-link.active:before{\n  left:-1px;\n  top:8px;\n  bottom:8px;\n  width:2px;\n  border-radius:2px;\n  background:var(--p-accent);\n}\n.sidebar.collapsed #monitorGroup.open .side-sub-link .sub-dot{\n  width:5px;\n  height:5px;\n  border-radius:50%;\n  opacity:.5;\n  background:currentColor;\n}\n.sidebar.collapsed #monitorGroup.open .side-sub-link.active .sub-dot{\n  background:var(--p-accent)!important;\n  opacity:1!important;\n  box-shadow:0 0 0 3px rgba(201,122,0,.15)!important;\n}\n}'''
+          if '#monitorGroup.open .side-sub-link' in s:
+              raise SystemExit('target patch already exists')
+          if old not in s:
+              raise SystemExit('target CSS block not found')
+          p.write_text(s.replace(old,new,1), encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add resources/views/siberad/dashboards/laporan-pimpinan.blade.php
+          git rm .github/workflows/once-ui-pimpinan.yml
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix(ui): samakan popup Riwayat Aktivitas Pimpinan'
+          git push origin HEAD:refactor-fokus-laporan
