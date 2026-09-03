@@ -11,9 +11,10 @@ class Pengaturan extends Model
         'hero_eyebrow','hero_judul_awal','hero_judul_aksen','hero_subjudul','hero_deskripsi','hero_image_path',
         'fitur','tentang_deskripsi','tentang_nama_resmi','tentang_nama_lama','tentang_fungsi_utama',
         'tentang_moto_judul','tentang_moto_deskripsi','website','sosial_media','landing_content',
+        'notifikasi_push_aktif',
     ];
 
-    protected $casts = ['fitur' => 'array','sosial_media' => 'array','landing_content' => 'array'];
+    protected $casts = ['fitur' => 'array','sosial_media' => 'array','landing_content' => 'array','notifikasi_push_aktif' => 'boolean'];
 
     public static function current(): self
     {
@@ -48,6 +49,7 @@ class Pengaturan extends Model
                 ['platform' => 'wikipedia', 'label' => 'Profil Resmi', 'url' => 'https://id.wikipedia.org/wiki/Pusat_Sandi_dan_Siber_Angkatan_Darat'],
             ],
             'landing_content'=>self::defaultLandingContent(),
+            'notifikasi_push_aktif'=>true,
         ]);
     }
 

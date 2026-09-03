@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Pengaturan;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,6 +21,15 @@ class InjectWebPushUi
         $response = $next($request);
 
         if (! $request->routeIs('dashboard') || ! $request->user()) {
+            return $response;
+        }
+
+        // Admin bisa matikan fitur push utk SELURUH pengguna lewat menu
+        // Setelan -> Notifikasi. Kalau dimatikan, tombol "Aktifkan
+        // Notifikasi" tidak pernah dimunculkan sama sekali di halaman
+        // manapun (bukan cuma pengiriman push-nya yang di-skip, lihat
+        // WebPushChannel::send()).
+        if (! Pengaturan::current()->notifikasi_push_aktif) {
             return $response;
         }
 

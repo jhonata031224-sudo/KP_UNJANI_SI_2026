@@ -717,6 +717,18 @@
           <a href="#" class="side-sub-link" data-tab-link="pengaturan-umum" title="Pengaturan Umum"><span class="sub-dot"></span>Pengaturan Umum</a>
         </div></div>
       </div>
+
+      <div class="side-nav-group open" id="setelanGroup">
+        <button type="button" class="side-nav-group-title" id="setelanToggle" title="Setelan">
+          <span class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+          <span class="side-text">Setelan</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
+        </button>
+        <div class="side-subnav"><div>
+          <span class="side-subnav-label">Setelan</span>
+          <a href="#" class="side-sub-link" data-tab-link="setelan-notifikasi" title="Notifikasi"><span class="sub-dot"></span>Notifikasi</a>
+        </div></div>
+      </div>
     </nav>
     <div class="side-foot">
       <form class="logout logout-form" method="POST" action="{{ route('logout') }}">
@@ -3500,6 +3512,130 @@
 
             updatePreview();
           })();
+        </script>
+      </section>
+
+      {{-- ===== SETELAN -> NOTIFIKASI ===== --}}
+      <section class="tab-panel" data-tab-panel="setelan-notifikasi">
+        <div class="section-head panel">
+          <h2>Setelan Notifikasi</h2>
+          <p>Kelola fitur push notification (notifikasi yang muncul di luar sistem/tab tertutup) untuk seluruh pengguna sekaligus.</p>
+        </div>
+
+        <style>
+          .sn-switch-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;flex-wrap:wrap;}
+          .sn-switch-row-main{display:flex;flex-direction:column;gap:3px;min-width:220px;}
+          .sn-switch-row-title{font-size:13px;font-weight:700;color:var(--text);}
+          .sn-switch-row-desc{font-size:11.5px;color:var(--text-muted);}
+          .sn-switch{position:relative;display:inline-flex;flex-shrink:0;width:44px;height:25px;}
+          .sn-switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;}
+          .sn-switch-track{position:absolute;inset:0;border-radius:999px;background:var(--border-strong,#c9c9c9);transition:background .18s ease;}
+          .sn-switch-thumb{position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .18s ease;}
+          .sn-switch input:checked ~ .sn-switch-track{background:var(--gold,#FF9800);}
+          .sn-switch input:checked ~ .sn-switch-thumb{transform:translateX(19px);}
+          .sn-broadcast-form{display:flex;flex-direction:column;gap:12px;padding:18px 22px;}
+          .sn-field label{display:block;font-size:11.5px;font-weight:700;color:var(--text-muted);margin-bottom:5px;}
+          .sn-field input[type="text"],.sn-field textarea{width:100%;box-sizing:border-box;border:1px solid var(--border-soft);border-radius:9px;padding:9px 12px;font-family:var(--body);font-size:12.5px;background:var(--panel-alt);color:var(--text);}
+          .sn-field textarea{resize:vertical;min-height:80px;}
+          .sn-sub-table{width:100%;border-collapse:collapse;font-size:12px;}
+          .sn-sub-table th{text-align:left;padding:9px 14px;color:var(--text-muted);font-weight:700;font-size:11px;border-bottom:1px solid var(--border-soft);}
+          .sn-sub-table td{padding:9px 14px;border-bottom:1px solid var(--border-soft);color:var(--text);}
+          .sn-sub-table tr:last-child td{border-bottom:none;}
+          .sn-empty{padding:22px;text-align:center;color:var(--text-muted);font-size:12.5px;}
+        </style>
+
+        <div class="panel">
+          <div class="panel-head"><div><h3>Saklar Global</h3><p>Kalau dimatikan, tombol "Aktifkan Notifikasi" tidak muncul di halaman manapun dan tidak ada push yang dikirim ke siapapun. Notifikasi lonceng di dalam sistem tetap berjalan seperti biasa.</p></div></div>
+          <form method="POST" action="{{ route('admin.setelan.notifikasi.toggle') }}" id="formNotifikasiToggle">
+            @csrf @method('PATCH')
+            <input type="hidden" name="aktif" id="notifikasiToggleValue" value="{{ $pengaturan->notifikasi_push_aktif ? '1' : '0' }}">
+            <div class="sn-switch-row">
+              <div class="sn-switch-row-main">
+                <span class="sn-switch-row-title">Fitur Push Notifikasi</span>
+                <span class="sn-switch-row-desc" id="notifikasiToggleDesc">{{ $pengaturan->notifikasi_push_aktif ? 'Sedang aktif untuk seluruh pengguna.' : 'Sedang dimatikan untuk seluruh pengguna.' }}</span>
+              </div>
+              <label class="sn-switch">
+                <input type="checkbox" id="notifikasiToggleCheckbox" @checked($pengaturan->notifikasi_push_aktif)>
+                <span class="sn-switch-track"></span>
+                <span class="sn-switch-thumb"></span>
+              </label>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel-head"><div><h3>Kirim Pengumuman ke Semua Pengguna</h3><p>Pesan akan masuk ke lonceng notifikasi semua pengguna, dan ke notifikasi OS (push) bagi yang sudah mengizinkan.</p></div></div>
+          <form method="POST" action="{{ route('admin.setelan.notifikasi.broadcast') }}" class="sn-broadcast-form">
+            @csrf
+            <div class="sn-field">
+              <label for="snJudul">Judul</label>
+              <input type="text" id="snJudul" name="judul" maxlength="100" placeholder="Contoh: Pemeliharaan Sistem" required>
+            </div>
+            <div class="sn-field">
+              <label for="snPesan">Isi Pesan</label>
+              <textarea id="snPesan" name="pesan" maxlength="500" placeholder="Tulis isi pengumuman di sini..." required></textarea>
+            </div>
+            <div>
+              <button type="submit" class="btn btn-primary btn-sm">Kirim ke Semua Pengguna</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel-head"><div><h3>Pengguna yang Mengaktifkan Notifikasi</h3><p>Daftar perangkat yang sudah mengizinkan push notification ({{ $daftarPushSubscription->count() }} perangkat).</p></div></div>
+          @if($daftarPushSubscription->isEmpty())
+          <div class="sn-empty">Belum ada pengguna yang mengaktifkan notifikasi push.</div>
+          @else
+          <div style="overflow-x:auto;">
+            <table class="sn-sub-table">
+              <thead><tr><th>Nama</th><th>Satuan</th><th>Perangkat/Browser</th><th>Diaktifkan</th></tr></thead>
+              <tbody>
+                @foreach($daftarPushSubscription as $sub)
+                @php
+                  $ua = (string) ($sub->user_agent ?? '');
+                  $browser = 'Tidak diketahui';
+                  foreach (['Edg' => 'Edge','OPR' => 'Opera','Chrome' => 'Chrome','Firefox' => 'Firefox','Safari' => 'Safari'] as $needle => $label) {
+                      if (str_contains($ua, $needle)) { $browser = $label; break; }
+                  }
+                @endphp
+                <tr>
+                  <td>{{ $sub->user->name ?? '—' }}</td>
+                  <td>{{ $sub->user->satuan->nama ?? '—' }}</td>
+                  <td>{{ $browser }}</td>
+                  <td>{{ optional($sub->created_at)->format('d M Y H:i') }}</td>
+                </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
+          @endif
+        </div>
+
+        <script>
+        (function () {
+          var panel = document.querySelector('[data-tab-panel="setelan-notifikasi"]');
+          if (!panel) return;
+
+          var checkbox = document.getElementById('notifikasiToggleCheckbox');
+          var hiddenValue = document.getElementById('notifikasiToggleValue');
+          var desc = document.getElementById('notifikasiToggleDesc');
+          var form = document.getElementById('formNotifikasiToggle');
+          if (!checkbox || !hiddenValue || !form) return;
+
+          checkbox.addEventListener('change', function () {
+            var akanAktif = checkbox.checked;
+            var pesanKonfirmasi = akanAktif
+              ? 'Aktifkan fitur push notifikasi untuk seluruh pengguna?'
+              : 'Matikan fitur push notifikasi untuk seluruh pengguna? Tombol "Aktifkan Notifikasi" akan hilang dari semua halaman dan tidak ada push yang terkirim.';
+            if (!window.confirm(pesanKonfirmasi)) {
+              checkbox.checked = !akanAktif;
+              return;
+            }
+            hiddenValue.value = akanAktif ? '1' : '0';
+            if (desc) desc.textContent = akanAktif ? 'Sedang aktif untuk seluruh pengguna.' : 'Sedang dimatikan untuk seluruh pengguna.';
+            form.submit();
+          });
+        })();
         </script>
       </section>
 

@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Channels;
 
+use App\Models\Pengaturan;
 use App\Models\PushSubscription;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +23,13 @@ class WebPushChannel
     {
         // Guard: jika library belum terinstall, skip tanpa error
         if (! class_exists(\Minishlink\WebPush\WebPush::class)) {
+            return;
+        }
+
+        // Saklar global Admin (menu Setelan -> Notifikasi) -- kalau
+        // dimatikan, tidak ada push apapun yang dikirim ke siapapun,
+        // meski subscription-nya masih tersimpan di database.
+        if (! Pengaturan::current()->notifikasi_push_aktif) {
             return;
         }
 
@@ -79,7 +87,7 @@ class WebPushChannel
             : (method_exists($notification, 'toArray') ? $notification->toArray($notifiable) : []);
 
         return [
-            'title' => config('app.name', 'SIBERAD'),
+            'title' => $data['judul'] ?? config('app.name', 'SIBERAD'),
             'body' => $data['pesan'] ?? 'Ada pembaruan baru di SIBERAD.',
             'notification_id' => $notification->id,
             'url' => url('/dashboard'),

@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ResetDataLaporanController;
 use App\Http\Controllers\Admin\SatuanController;
 use App\Http\Controllers\Admin\SessionController;
+use App\Http\Controllers\Admin\NotifikasiSettingController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AkunMedsosController;
@@ -292,4 +293,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/permintaan-reset-password/{permintaanResetPassword}/tolak', [AdminPermintaanResetPasswordController::class, 'tolak'])->name('permintaan-reset-password.tolak');
     Route::delete('/permintaan-reset-password/riwayat', [AdminPermintaanResetPasswordController::class, 'hapusRiwayat'])->name('permintaan-reset-password.hapus-riwayat');
     Route::delete('/reset-data-laporan', [ResetDataLaporanController::class, 'destroy'])->name('reset-data-laporan.destroy');
+    Route::patch('/setelan/notifikasi/toggle', [NotifikasiSettingController::class, 'updateToggle'])->name('setelan.notifikasi.toggle');
+    Route::post('/setelan/notifikasi/broadcast', [NotifikasiSettingController::class, 'broadcast'])->name('setelan.notifikasi.broadcast');
 });
