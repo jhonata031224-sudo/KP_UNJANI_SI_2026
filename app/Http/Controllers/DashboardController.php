@@ -41,26 +41,21 @@ class DashboardController
     {
         // Urutan tampil: Admin -> Pimpinan -> Direktorat -> Satuan (bukan
         // urutan alfabet/urutan input), sesuai jenjang role di organisasi.
+        // Logika urut-nya di User::terurutOrganisasi() -- dipakai juga di
+        // respons AJAX Tambah/Ubah/Hapus Pengguna biar urutannya konsisten
+        // tanpa reload.
         $prioritasKategori = Satuan::prioritasKategori();
-        $semuaPengguna = User::with('satuan')->get()
-            ->sortBy(fn ($p) => Satuan::kunciUrutSatuan($p->satuan->kategori ?? null, $p->satuan->kode ?? null))
-            ->values();
+        $semuaPengguna = User::terurutOrganisasi();
         // Urutan satuan (dipakai tab "Data Satuan" & "Hak Akses Pengguna")
         // SELALU ikut jenjang organisasi resmi lewat Satuan::kunciUrutSatuan()
         // -- Danpus -> Wadan -> Urdal -> Pok Analis -> 4 Sdir -> 4 Satlak --
         // bukan urutan alfabet ataupun kapan satuan dibuat. Satuan baru yang
         // kodenya belum ada di Satuan::urutanDalamKategori() otomatis jatuh
         // ke urutan terakhir dalam kategorinya (created_at/id sebagai
-        // penentu akhir kalau ada beberapa satuan baru sekaligus).
-        $semuaSatuan = Satuan::withCount('users')->get()
-            ->sort(function ($a, $b) {
-                $kunciA = Satuan::kunciUrutSatuan($a->kategori, $a->kode);
-                $kunciB = Satuan::kunciUrutSatuan($b->kategori, $b->kode);
-                if ($kunciA !== $kunciB) return $kunciA <=> $kunciB;
-                if ($a->created_at != $b->created_at) return $a->created_at <=> $b->created_at;
-                return $a->id <=> $b->id;
-            })
-            ->values();
+        // penentu akhir kalau ada beberapa satuan baru sekaligus). Logika
+        // urut-nya di Satuan::terurut() -- dipakai juga di respons AJAX
+        // Tambah/Ubah Satuan biar urutannya konsisten tanpa reload.
+        $semuaSatuan = Satuan::terurut();
         $permintaanResetPassword = PermintaanResetPassword::with(['user.satuan', 'diprosesOleh'])->latest()->get();
         $labelKategori = [Satuan::KATEGORI_SATLAK => 'Satlak', Satuan::KATEGORI_DIREKTORAT => 'Direktorat', Satuan::KATEGORI_PIMPINAN => 'Pimpinan', Satuan::KATEGORI_ADMIN => 'Admin', Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan', Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan', Satuan::KATEGORI_KOTAMA => 'Kasansi'];
         // Urutan grup di sini SENGAJA dipastikan lewat prioritasKategori

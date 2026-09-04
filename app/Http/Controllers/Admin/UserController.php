@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,7 +15,7 @@ class UserController extends Controller
     /**
      * Tambah akun pengguna baru — fitur "Manajemen Pengguna (CRUD User)".
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $this->validated($request);
         $validated['password'] = Hash::make($validated['password']);
@@ -23,13 +24,17 @@ class UserController extends Controller
 
         ActivityLog::catat('user.create', "Membuat akun pengguna \"{$user->name}\" ({$user->username}).");
 
-        return back()->with('status', "Akun \"{$user->name}\" berhasil ditambahkan.");
+        $pesan = "Akun \"{$user->name}\" berhasil ditambahkan.";
+
+        return $request->wantsJson()
+            ? $this->tableJson($request, $user, $pesan)
+            : back()->with('status', $pesan);
     }
 
     /**
      * Perbarui data akun pengguna. Password hanya diubah kalau field diisi.
      */
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(Request $request, User $user): RedirectResponse|JsonResponse
     {
         $validated = $this->validated($request, $user);
 
@@ -59,24 +64,63 @@ class UserController extends Controller
             ActivityLog::catat('user.update', "Memperbarui akun pengguna \"{$user->name}\" ({$user->username}).");
         }
 
-        return back()->with('status', "Akun \"{$user->name}\" berhasil diperbarui.".($passwordDiubah ? ' Password baru sudah aktif.' : ''));
+        $pesan = "Akun \"{$user->name}\" berhasil diperbarui.".($passwordDiubah ? ' Password baru sudah aktif.' : '');
+
+        return $request->wantsJson()
+            ? $this->tableJson($request, $user, $pesan)
+            : back()->with('status', $pesan);
     }
 
     /**
      * Hapus akun pengguna. Admin tidak bisa menghapus akunnya sendiri.
      */
-    public function destroy(Request $request, User $user): RedirectResponse
+    public function destroy(Request $request, User $user): RedirectResponse|JsonResponse
     {
         if ($user->id === $request->user()->id) {
-            return back()->with('error', 'Tidak bisa menghapus akun yang sedang digunakan.');
+            $pesan = 'Tidak bisa menghapus akun yang sedang digunakan.';
+
+            return $request->wantsJson()
+                ? response()->json(['ok' => false, 'message' => $pesan], 422)
+                : back()->with('error', $pesan);
         }
 
+        $id = $user->id;
         $nama = $user->name;
         $user->delete();
 
         ActivityLog::catat('user.delete', "Menghapus akun pengguna \"{$nama}\".");
 
-        return back()->with('status', "Akun \"{$nama}\" berhasil dihapus.");
+        $pesan = "Akun \"{$nama}\" berhasil dihapus.";
+
+        return $request->wantsJson()
+            ? response()->json(['ok' => true, 'id' => $id, 'message' => $pesan])
+            : back()->with('status', $pesan);
+    }
+
+    /**
+     * Balas JSON berisi SELURUH isi <tbody> tabel Daftar Pengguna yang sudah
+     * dirender ulang & terurut jenjang organisasi (User::terurutOrganisasi())
+     * -- klien tinggal timpa innerHTML tbody tanpa reload, jadi modal
+     * Tambah/Ubah tetap kebuka DAN baris baru/berubah tetap di posisi sesuai
+     * urutan satuan (bukan nyelonong ke paling atas).
+     */
+    private function tableJson(Request $request, User $subject, string $pesan): JsonResponse
+    {
+        $authUserId = $request->user()->id;
+
+        $rowsHtml = User::terurutOrganisasi()
+            ->map(fn (User $p) => view('siberad.dashboards.partials.pengguna-row', [
+                'p' => $p,
+                'authUserId' => $authUserId,
+            ])->render())
+            ->implode('');
+
+        return response()->json([
+            'ok' => true,
+            'id' => $subject->id,
+            'message' => $pesan,
+            'rows_html' => $rowsHtml,
+        ]);
     }
 
     private function validated(Request $request, ?User $user = null): array

@@ -588,7 +588,11 @@
     .toast-stack{width:92vw;}
   }
 
-  .toast-stack{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2000;width:min(400px,86vw);pointer-events:none;height:0;}
+  /* z-index harus di atas SEMUA overlay modal (.user-modal-overlay 10030,
+     .confirm-overlay, .styled-select-menu 100060, overlay lain s/d 100500) --
+     sejak Tambah/Ubah Satuan submit-nya AJAX & modalnya tetap kebuka, toast
+     sukses harus tetap kelihatan di depan modal, bukan ketutup di belakangnya. */
+  .toast-stack{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:200000;width:min(400px,86vw);pointer-events:none;height:0;}
 
   /* Dipakai bareng oleh semua partial polling realtime (log-aktivitas-realtime,
      laporan-role-realtime-sync, danpus-kendala-kasansi-realtime, dst) buat
@@ -597,8 +601,10 @@
      sama animasi .tab-panel.active (fadeIn) yang sudah ada di atas. */
   @keyframes siberadRowIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
   @keyframes siberadRowUpdate{0%{background:var(--gold-dim)}100%{background:transparent}}
+  @keyframes siberadRowOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-14px)}}
   .siberad-row-in{animation:siberadRowIn .35s ease}
   .siberad-row-updated{animation:siberadRowUpdate 1.2s ease}
+  .siberad-row-out{animation:siberadRowOut .26s ease forwards;pointer-events:none}
   .toast{position:absolute;top:0;left:50%;overflow:hidden;pointer-events:auto;display:flex;align-items:center;gap:11px;padding:13px 18px 15px;border-radius:11px;background:var(--panel);border:1px solid var(--border-soft);box-shadow:0 15px 40px rgba(0,0,0,.35);font-family:var(--body);font-size:13px;color:var(--text);width:100%;box-sizing:border-box;opacity:0;transform:translate(-50%,-26px) scale(.97);transition:top .8s cubic-bezier(.34,1.2,.64,1);animation:toastIn .35s cubic-bezier(.34,1.56,.64,1) forwards;}
   .toast.leaving{animation:toastOut .4s cubic-bezier(.4,0,.2,1) forwards;}
   .toast.success{border-color:rgba(63,194,125,.4);}

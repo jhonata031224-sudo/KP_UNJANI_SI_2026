@@ -249,6 +249,29 @@ class Satuan extends Model
         return sprintf('%d-%03d', $prioritasKategori, $urutanDalamKategori);
     }
 
+    /**
+     * Semua satuan (dengan users_count) terurut persis seperti yang tampil di
+     * daftar: kategori (prioritasKategori) -> urutan-dalam-kategori (kode) ->
+     * created_at -> id. Satuan baru yang kodenya belum terdaftar di
+     * urutanDalamKategori() jatuh ke akhir grup kategorinya.
+     *
+     * Dipakai bareng oleh DashboardController (render awal tabel Data Satuan)
+     * dan SatuanController (respons AJAX Tambah/Ubah) supaya urutannya tetap
+     * sama setelah submit tanpa reload.
+     */
+    public static function terurut(): \Illuminate\Support\Collection
+    {
+        return static::withCount('users')->get()
+            ->sort(function ($a, $b) {
+                $kunciA = self::kunciUrutSatuan($a->kategori, $a->kode);
+                $kunciB = self::kunciUrutSatuan($b->kategori, $b->kode);
+                if ($kunciA !== $kunciB) return $kunciA <=> $kunciB;
+                if ($a->created_at != $b->created_at) return $a->created_at <=> $b->created_at;
+                return $a->id <=> $b->id;
+            })
+            ->values();
+    }
+
     public function users(): HasMany
     {
         return $this->hasMany(User::class);

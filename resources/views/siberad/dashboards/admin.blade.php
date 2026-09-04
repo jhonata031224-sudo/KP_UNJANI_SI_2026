@@ -135,6 +135,8 @@
   .user-modal-card .form-grid{grid-template-columns:1fr;min-width:0;}
   .user-modal-card .form-field{min-width:0;}
   .user-modal-card .form-field select,.user-modal-card .form-field input{min-width:0;width:100%;box-sizing:border-box;}
+  /* Kode satuan Admin dikunci di modal Ubah (readonly) -- kelihatan non-aktif. */
+  #usKode[readonly]{opacity:.6;cursor:not-allowed;background:var(--panel-alt);}
   /* Combobox Satuan (input teks + saran) di modal Tambah/Ubah Pengguna --
      niru "Tujuan" di Buat Surat. Daftar saran-nya numpang .styled-select-menu
      (partials/styled-select.blade.php) yang di-append ke <body>. */
@@ -335,7 +337,7 @@
         <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M6 6l12 12M18 6L6 18"></path></svg>
       </button>
     </div>
-    <form class="form-grid" method="POST" action="{{ route('admin.users.store') }}" autocomplete="off">
+    <form class="form-grid" method="POST" action="{{ route('admin.users.store') }}" id="tambahPenggunaForm" autocomplete="off">
       @csrf
       {{-- Penanda form: dipakai saat validasi gagal supaya modal yang benar
            dibuka ulang dengan error merah inline (lihat script re-open di bawah). --}}
@@ -462,7 +464,7 @@
       @csrf @method('DELETE')
       <div class="confirm-actions">
         <button type="button" class="btn" id="hapusPenggunaBatal">Batal</button>
-        <button type="submit" class="btn btn-ghost-red">Ya, Hapus</button>
+        <button type="submit" class="btn btn-ghost-red" id="hapusPenggunaYa">Ya, Hapus</button>
       </div>
     </form>
   </div>
@@ -637,7 +639,7 @@
       @csrf @method('DELETE')
       <div class="confirm-actions">
         <button type="button" class="btn" id="hapusSatuanBatal">Batal</button>
-        <button type="submit" class="btn btn-ghost-red">Ya, Hapus</button>
+        <button type="submit" class="btn btn-ghost-red" id="hapusSatuanYa">Ya, Hapus</button>
       </div>
     </form>
   </div>
@@ -1155,41 +1157,7 @@
             <table class="dtbl" id="tblPengguna">
               <thead><tr><th>Nama</th><th>Username</th><th>Email</th><th>Satuan</th><th>Aksi</th></tr></thead>
               <tbody>
-                @foreach($semuaPengguna as $p)
-                @php
-                  $kategoriLabel = match ($p->satuan->kategori ?? null) {
-                    \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
-                    \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
-                    \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
-                    \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
-                    \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
-                    \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
-                    default => 'Satlak',
-                  };
-                @endphp
-                <tr data-filter-value="{{ $kategoriLabel }}" data-search-value="{{ strtolower($p->name.' '.($p->satuan->nama ?? '').' '.($p->satuan->kode ?? '')) }}">
-                  <td>{{ $p->name }}</td>
-                  <td><span class="badge badge-plain">{{ $p->username }}</span></td>
-                  <td style="color:var(--text-muted);">{{ $p->email ?: '-' }}</td>
-                  <td>{{ $p->satuan->nama_keterangan ?? '-' }}</td>
-                  <td>
-                    <div class="btn-row">
-                      <button class="table-action-btn edit" type="button" onclick="bukaUbahPengguna(this)"
-                        data-action="{{ route('admin.users.update', $p) }}"
-                        data-user-id="{{ $p->id }}"
-                        data-name="{{ $p->name }}"
-                        data-username="{{ $p->username }}"
-                        data-email="{{ $p->email }}"
-                        data-satuan-id="{{ $p->satuan_id }}">Ubah</button>
-                      @if($p->id !== $user->id)
-                      <button class="table-action-btn danger" type="button" onclick="bukaHapusPengguna(this)"
-                        data-action="{{ route('admin.users.destroy', $p) }}"
-                        data-nama="{{ $p->name }}">Hapus</button>
-                      @endif
-                    </div>
-                  </td>
-                </tr>
-                @endforeach
+                @foreach($semuaPengguna as $p)@include('siberad.dashboards.partials.pengguna-row', ['p' => $p, 'authUserId' => $user->id])@endforeach
               </tbody>
             </table>
           </div>
@@ -1209,12 +1177,13 @@
           'kode' => mb_strtolower(trim((string) $s->kode)),
         ])->values();
         // Opsi combobox "Satuan" di modal Tambah/Ubah Pengguna -- teks tampil
-        // = "Nama (KODE)" persis kayak <option> lama; id string biar cocok
-        // dibanding dgn value hidden. @php block wajib (bukan inline @json)
-        // -- lihat [[project_blade_at_word_comment_gotcha]].
+        // = "Nama (KODE)" pakai kode satuan APA ADANYA dari Data Satuan (dulu
+        // URDAL & POKANALIS dikecualikan; sekarang semua konsisten). id string
+        // biar cocok dibanding dgn value hidden. @php block wajib (bukan inline
+        // @json) -- lihat [[project_blade_at_word_comment_gotcha]].
         $penggunaSatuanOpts = $semuaSatuan->map(fn ($s) => [
           'id' => (string) $s->id,
-          'name' => $s->nama.(in_array($s->kode, ['URDAL', 'POKANALIS'], true) ? '' : ' ('.$s->kode.')'),
+          'name' => $s->nama.' ('.$s->kode.')',
           'kode' => (string) $s->kode,
         ])->values();
       @endphp
@@ -1374,6 +1343,65 @@
         siberadBindSatuanCombobox('uSatuanCombobox', 'uSatuanSearch', 'uSatuan');
         siberadBindSatuanCombobox('upSatuanCombobox', 'upSatuanSearch', 'upSatuan');
 
+        // Submit Tambah/Ubah Pengguna via AJAX -> modal TETAP kebuka (nggak
+        // reload). Sukses: server balikin SELURUH <tbody> #tblPengguna yang
+        // sudah terurut jenjang organisasi -> timpa langsung, highlight baris
+        // baru/berubah, reset form (khusus Tambah) + toast + refresh filter.
+        // Pola & penanganan error identik dengan siberadSubmitSatuanAjax.
+        function siberadSubmitPenggunaAjax(form, isEdit) {
+          var yesBtn = document.getElementById(isEdit ? 'ubahPenggunaKonfirmasiYa' : 'tambahPenggunaKonfirmasiYa');
+          if (yesBtn) yesBtn.disabled = true;
+          fetch(form.action, {
+            method: 'POST', body: new FormData(form), credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+          }).then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, data: d }; });
+          }).then(function (res) {
+            if (res.status === 200 && res.data && res.data.ok) {
+              var tbody = document.querySelector('#tblPengguna tbody');
+              if (tbody && typeof res.data.rows_html === 'string') {
+                tbody.innerHTML = res.data.rows_html;
+                var affected = tbody.querySelector('tr[data-user-id="' + res.data.id + '"]');
+                if (affected) affected.classList.add(isEdit ? 'siberad-row-updated' : 'siberad-row-in');
+                if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblPengguna');
+              }
+              if (!isEdit) {
+                form.reset();
+                // Combobox Satuan pakai input teks biasa -> form.reset() sudah
+                // ngosongin #uSatuanSearch & hidden #uSatuan, nggak perlu sync
+                // label kayak styled-select.
+              }
+              form.querySelectorAll('.field-invalid').forEach(function (el) { el.classList.remove('field-invalid'); });
+              form.querySelectorAll('.profile-field-error').forEach(function (el) { el.style.display = 'none'; });
+              window.siberadShowToast && window.siberadShowToast('success', res.data.message || 'Berhasil disimpan.');
+            } else if (res.status === 422 && res.data && res.data.errors) {
+              var map = isEdit
+                ? { name: 'upNama', username: 'upUsername', email: 'upEmail', satuan_id: 'upSatuanSearch', password: 'upPassword' }
+                : { name: 'uNama', username: 'uUsername', email: 'uEmail', satuan_id: 'uSatuanSearch', password: 'uPassword' };
+              Object.keys(res.data.errors).forEach(function (f) {
+                var el = document.getElementById(map[f]);
+                if (!el) return;
+                el.classList.add('field-invalid');
+                var msg = el.nextElementSibling;
+                if (!msg || !msg.classList.contains('profile-field-error')) {
+                  msg = document.createElement('span'); msg.className = 'profile-field-error';
+                  el.insertAdjacentElement('afterend', msg);
+                }
+                msg.textContent = res.data.errors[f][0];
+                msg.style.display = 'flex';
+              });
+            } else if (res.status === 401 && window.siberadTampilkanSesiBerakhir) {
+              window.siberadTampilkanSesiBerakhir();
+            } else {
+              window.siberadShowToast && window.siberadShowToast('error', (res.data && res.data.message) || 'Gagal menyimpan data pengguna.');
+            }
+          }).catch(function () {
+            window.siberadShowToast && window.siberadShowToast('error', 'Gagal terhubung ke server, coba lagi.');
+          }).finally(function () {
+            if (yesBtn) yesBtn.disabled = false;
+          });
+        }
+
         (function () {
           var modal = document.getElementById('tambahPenggunaModal');
           var openBtn = document.getElementById('tambahPenggunaOpen');
@@ -1446,8 +1474,7 @@
             });
             document.getElementById('tambahPenggunaKonfirmasiYa')?.addEventListener('click', function () {
               closeKonfirm();
-              form.dataset.confirmed = '1';
-              form.requestSubmit ? form.requestSubmit() : form.submit();
+              siberadSubmitPenggunaAjax(form, false);
             });
             document.getElementById('tambahPenggunaKonfirmasiBatal')?.addEventListener('click', closeKonfirm);
             document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && konfirmOverlay.classList.contains('open')) closeKonfirm(); });
@@ -1477,6 +1504,48 @@
         };
         document.getElementById('hapusPenggunaBatal')?.addEventListener('click', () => document.getElementById('hapusPenggunaOverlay')?.classList.remove('open'));
         document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusPenggunaOverlay')?.classList.remove('open'); });
+
+        // Hapus pengguna via AJAX -- baris tabel dibuang tanpa reload halaman,
+        // sama seperti Tambah/Ubah. Tombolnya tetap type="submit" jadi kalau
+        // JS mati masih jalan (reload biasa).
+        (function () {
+          var formHapus = document.getElementById('formHapusPengguna');
+          var overlay = document.getElementById('hapusPenggunaOverlay');
+          var yesBtn = document.getElementById('hapusPenggunaYa');
+          if (!formHapus) return;
+          formHapus.addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (yesBtn) yesBtn.disabled = true;
+            fetch(formHapus.action, {
+              method: 'POST', body: new FormData(formHapus), credentials: 'same-origin',
+              headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            }).then(function (r) {
+              return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, data: d }; });
+            }).then(function (res) {
+              if (res.status === 200 && res.data && res.data.ok) {
+                var row = document.querySelector('#tblPengguna tbody tr[data-user-id="' + res.data.id + '"]');
+                if (row) {
+                  row.classList.add('siberad-row-out');
+                  setTimeout(function () {
+                    row.remove();
+                    if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblPengguna');
+                  }, 260);
+                }
+                overlay && overlay.classList.remove('open');
+                window.siberadShowToast && window.siberadShowToast('success', res.data.message || 'Akun berhasil dihapus.');
+              } else if (res.status === 401 && window.siberadTampilkanSesiBerakhir) {
+                window.siberadTampilkanSesiBerakhir();
+              } else {
+                overlay && overlay.classList.remove('open');
+                window.siberadShowToast && window.siberadShowToast('error', (res.data && res.data.message) || 'Gagal menghapus akun pengguna.');
+              }
+            }).catch(function () {
+              window.siberadShowToast && window.siberadShowToast('error', 'Gagal terhubung ke server, coba lagi.');
+            }).finally(function () {
+              if (yesBtn) yesBtn.disabled = false;
+            });
+          });
+        })();
 
         window.bukaHapusBackup = function (btn) {
           document.getElementById('formHapusBackup').action = btn.dataset.action;
@@ -1562,8 +1631,7 @@
             });
             document.getElementById('ubahPenggunaKonfirmasiYa')?.addEventListener('click', function () {
               closeKonfirm();
-              form.dataset.confirmed = '1';
-              form.requestSubmit ? form.requestSubmit() : form.submit();
+              siberadSubmitPenggunaAjax(form, true);
             });
             document.getElementById('ubahPenggunaKonfirmasiBatal')?.addEventListener('click', closeKonfirm);
             document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && konfirmOverlay.classList.contains('open')) closeKonfirm(); });
@@ -1676,44 +1744,7 @@
               <colgroup><col style="width:14%"><col style="width:28%"><col style="width:16%"><col style="width:16%"><col style="width:26%"></colgroup>
               <thead><tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Jumlah Pengguna</th><th>Aksi</th></tr></thead>
               <tbody>
-                @forelse($semuaSatuan as $s)
-                @php
-                  $kategoriFilterLabel = match ($s->kategori) {
-                    \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
-                    \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
-                    \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
-                    \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
-                    \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
-                    \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
-                    default => 'Satlak',
-                  };
-                @endphp
-                <tr data-filter-value="{{ $kategoriFilterLabel }}">
-                  <td><span class="badge">{{ $s->kode }}</span></td>
-                  <td>{{ $s->nama }}</td>
-                  <td style="color:var(--text-muted);">{{ $kategoriFilterLabel }}</td>
-                  <td>{{ $s->users_count }}</td>
-                  <td>
-                    <div class="btn-row">
-                      <button class="table-action-btn edit" type="button" onclick="bukaUbahSatuan(this)"
-                        data-action="{{ route('admin.satuan.update', $s) }}"
-                        data-satuan-id="{{ $s->id }}"
-                        data-kode="{{ $s->kode }}"
-                        data-nama="{{ $s->nama }}"
-                        data-kategori="{{ $s->kategori }}"
-                        data-deskripsi="{{ $s->deskripsi }}">Ubah</button>
-                      {{-- Satuan kategori Admin tidak pernah bisa dihapus (selalu
-                           punya akun admin terdaftar -> SatuanController::destroy
-                           nolak), jadi tombol Hapus-nya sekalian tidak dirender. --}}
-                      @if($s->kategori !== \App\Models\Satuan::KATEGORI_ADMIN)
-                      <button class="table-action-btn danger" type="button" onclick="bukaHapusSatuan(this)"
-                        data-action="{{ route('admin.satuan.destroy', $s) }}"
-                        data-nama="{{ $s->nama }}">Hapus</button>
-                      @endif
-                    </div>
-                  </td>
-                </tr>
-                @empty
+                @forelse($semuaSatuan as $s)@include('siberad.dashboards.partials.satuan-row', ['s' => $s])@empty
                 <tr><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada data satuan</div></div></td></tr>
                 @endforelse
               </tbody>
@@ -1722,6 +1753,69 @@
         </div>
       </section>
       <script>
+        // Submit Tambah/Ubah Satuan via AJAX -> modal TETAP kebuka (nggak
+        // reload). Sukses: sisipkan (tambah) / replaceWith (ubah) <tr> yang
+        // dirender ulang server, reset form + toast, refresh filter tabel.
+        function siberadSubmitSatuanAjax(form, isEdit) {
+          var yesBtn = document.getElementById(isEdit ? 'ubahSatuanKonfirmasiYa' : 'tambahSatuanKonfirmasiYa');
+          if (yesBtn) yesBtn.disabled = true;
+          fetch(form.action, {
+            method: 'POST', body: new FormData(form), credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+          }).then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, data: d }; });
+          }).then(function (res) {
+            if (res.status === 200 && res.data && res.data.ok) {
+              // Server balikin SELURUH tbody yang sudah terurut (kategori ->
+              // urutan-dalam-kategori). Timpa langsung biar baris baru/berubah
+              // mendarat di posisi yang benar, bukan dipaksa ke paling atas.
+              var tbody = document.querySelector('#tblSatuan tbody');
+              if (tbody && typeof res.data.rows_html === 'string') {
+                tbody.innerHTML = res.data.rows_html;
+                var affected = tbody.querySelector('tr[data-satuan-id="' + res.data.id + '"]');
+                if (affected) affected.classList.add(isEdit ? 'siberad-row-updated' : 'siberad-row-in');
+                if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblSatuan');
+              }
+              // Tambah: kosongkan form biar siap nambah lagi. Ubah: biarkan
+              // nilai yang barusan tersimpan tetap tampil (jangan reset ke kosong).
+              if (!isEdit) {
+                form.reset();
+                // form.reset() nggak nge-fire 'change', jadi label trigger
+                // styled-select (Kategori) perlu di-sync manual.
+                form.querySelectorAll('.styled-select-wrap').forEach(function (w) {
+                  if (w.__syncStyledSelect) w.__syncStyledSelect();
+                });
+              }
+              form.querySelectorAll('.field-invalid').forEach(function (el) { el.classList.remove('field-invalid'); });
+              form.querySelectorAll('.profile-field-error').forEach(function (el) { el.style.display = 'none'; });
+              window.siberadShowToast && window.siberadShowToast('success', res.data.message || 'Berhasil disimpan.');
+            } else if (res.status === 422 && res.data && res.data.errors) {
+              var map = isEdit
+                ? { kode: 'usKode', nama: 'usNama', kategori: 'usKategori' }
+                : { kode: 'sKode', nama: 'sNama', kategori: 'sKategori' };
+              Object.keys(res.data.errors).forEach(function (f) {
+                var el = document.getElementById(map[f]);
+                if (!el) return;
+                el.classList.add('field-invalid');
+                var msg = el.nextElementSibling;
+                if (!msg || !msg.classList.contains('profile-field-error')) {
+                  msg = document.createElement('span'); msg.className = 'profile-field-error';
+                  el.insertAdjacentElement('afterend', msg);
+                }
+                msg.textContent = res.data.errors[f][0];
+                msg.style.display = 'flex';
+              });
+            } else if (res.status === 401 && window.siberadTampilkanSesiBerakhir) {
+              window.siberadTampilkanSesiBerakhir();
+            } else {
+              window.siberadShowToast && window.siberadShowToast('error', (res.data && res.data.message) || 'Gagal menyimpan data satuan.');
+            }
+          }).catch(function () {
+            window.siberadShowToast && window.siberadShowToast('error', 'Gagal terhubung ke server, coba lagi.');
+          }).finally(function () {
+            if (yesBtn) yesBtn.disabled = false;
+          });
+        }
         (function () {
           var modal = document.getElementById('tambahSatuanModal');
           var openBtn = document.getElementById('tambahSatuanOpen');
@@ -1788,8 +1882,7 @@
             });
             document.getElementById('tambahSatuanKonfirmasiYa')?.addEventListener('click', function () {
               closeKonfirm();
-              form.dataset.confirmed = '1';
-              form.requestSubmit ? form.requestSubmit() : form.submit();
+              siberadSubmitSatuanAjax(form, false);
             });
             document.getElementById('tambahSatuanKonfirmasiBatal')?.addEventListener('click', closeKonfirm);
             document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && konfirmOverlay.classList.contains('open')) closeKonfirm(); });
@@ -1799,9 +1892,35 @@
         window.bukaUbahSatuan = function (btn) {
           document.getElementById('ubahSatuanForm').action = btn.dataset.action;
           document.getElementById('usSatuanId').value = btn.dataset.satuanId || '';
-          document.getElementById('usKode').value = btn.dataset.kode || '';
+          var usKode = document.getElementById('usKode');
+          usKode.value = btn.dataset.kode || '';
+          // Kode satuan kategori Admin TIDAK boleh diubah -- dipakai hardcoded di
+          // banyak cek role (kode === 'ADMIN'). readonly (bukan disabled) supaya
+          // nilainya tetap ke-submit & lolos validasi 'required'. Server juga
+          // dikunci di SatuanController::update().
+          var kunciKode = (btn.dataset.kategori || '') === @json(\App\Models\Satuan::KATEGORI_ADMIN);
+          usKode.readOnly = kunciKode;
+          usKode.title = kunciKode ? 'Kode satuan Admin tidak dapat diubah.' : '';
           document.getElementById('usNama').value = btn.dataset.nama || '';
-          document.getElementById('usKategori').value = btn.dataset.kategori || '';
+          // Kategori satuan Admin juga dikunci (sama alasan kayak kode). Select
+          // di-disable -> styled-select ikut non-aktif; nilainya tetap ke-submit
+          // lewat input hidden bayangan supaya validasi 'required' lolos. Server
+          // juga maksa kategori tetap di SatuanController::update().
+          var usKategori = document.getElementById('usKategori');
+          usKategori.value = btn.dataset.kategori || '';
+          usKategori.disabled = kunciKode;
+          usKategori.title = kunciKode ? 'Kategori satuan Admin tidak dapat diubah.' : '';
+          var katShadow = document.getElementById('usKategoriShadow');
+          if (kunciKode) {
+            if (!katShadow) {
+              katShadow = document.createElement('input');
+              katShadow.type = 'hidden'; katShadow.name = 'kategori'; katShadow.id = 'usKategoriShadow';
+              document.getElementById('ubahSatuanForm').appendChild(katShadow);
+            }
+            katShadow.value = usKategori.value;
+          } else if (katShadow) {
+            katShadow.remove();
+          }
           document.getElementById('usDeskripsi').value = btn.dataset.deskripsi || '';
           // Bersihkan sisa penanda error merah dari sesi Ubah sebelumnya.
           document.querySelectorAll('#ubahSatuanForm .field-invalid').forEach(function (el) { el.classList.remove('field-invalid'); });
@@ -1816,6 +1935,48 @@
         };
         document.getElementById('hapusSatuanBatal')?.addEventListener('click', () => document.getElementById('hapusSatuanOverlay')?.classList.remove('open'));
         document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusSatuanOverlay')?.classList.remove('open'); });
+
+        // Hapus satuan via AJAX -- baris tabel dibuang tanpa reload halaman,
+        // sama seperti Tambah/Ubah. Fallback ke submit form biasa kalau fetch
+        // gagal total (bukan cuma respons error server).
+        (function () {
+          var formHapus = document.getElementById('formHapusSatuan');
+          var overlay = document.getElementById('hapusSatuanOverlay');
+          var yesBtn = document.getElementById('hapusSatuanYa');
+          if (!formHapus) return;
+          formHapus.addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (yesBtn) yesBtn.disabled = true;
+            fetch(formHapus.action, {
+              method: 'POST', body: new FormData(formHapus), credentials: 'same-origin',
+              headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            }).then(function (r) {
+              return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, data: d }; });
+            }).then(function (res) {
+              if (res.status === 200 && res.data && res.data.ok) {
+                var row = document.querySelector('#tblSatuan tbody tr[data-satuan-id="' + res.data.id + '"]');
+                if (row) {
+                  row.classList.add('siberad-row-out');
+                  setTimeout(function () {
+                    row.remove();
+                    if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblSatuan');
+                  }, 260);
+                }
+                overlay && overlay.classList.remove('open');
+                window.siberadShowToast && window.siberadShowToast('success', res.data.message || 'Satuan berhasil dihapus.');
+              } else if (res.status === 401 && window.siberadTampilkanSesiBerakhir) {
+                window.siberadTampilkanSesiBerakhir();
+              } else {
+                overlay && overlay.classList.remove('open');
+                window.siberadShowToast && window.siberadShowToast('error', (res.data && res.data.message) || 'Gagal menghapus satuan.');
+              }
+            }).catch(function () {
+              window.siberadShowToast && window.siberadShowToast('error', 'Gagal terhubung ke server, coba lagi.');
+            }).finally(function () {
+              if (yesBtn) yesBtn.disabled = false;
+            });
+          });
+        })();
         (function () {
           var modal = document.getElementById('ubahSatuanModal');
           var closeBtn = document.getElementById('ubahSatuanClose');
@@ -1877,8 +2038,7 @@
             });
             document.getElementById('ubahSatuanKonfirmasiYa')?.addEventListener('click', function () {
               closeKonfirm();
-              form.dataset.confirmed = '1';
-              form.requestSubmit ? form.requestSubmit() : form.submit();
+              siberadSubmitSatuanAjax(form, true);
             });
             document.getElementById('ubahSatuanKonfirmasiBatal')?.addEventListener('click', closeKonfirm);
             document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && konfirmOverlay.classList.contains('open')) closeKonfirm(); });

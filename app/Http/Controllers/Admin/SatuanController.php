@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Satuan;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -13,7 +14,7 @@ class SatuanController extends Controller
     /**
      * Tambah satuan/Satlak baru — fitur "Manajemen Satlak".
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $this->validated($request);
 
@@ -21,36 +22,85 @@ class SatuanController extends Controller
 
         ActivityLog::catat('satuan.create', "Menambahkan satuan \"{$satuan->nama}\" ({$satuan->kode}).");
 
-        return back()->with('status', "Satuan \"{$satuan->nama}\" berhasil ditambahkan.");
+        $pesan = "Satuan \"{$satuan->nama}\" berhasil ditambahkan.";
+
+        return $request->wantsJson()
+            ? $this->tableJson($satuan, $pesan)
+            : back()->with('status', $pesan);
     }
 
-    public function update(Request $request, Satuan $satuan): RedirectResponse
+    public function update(Request $request, Satuan $satuan): RedirectResponse|JsonResponse
     {
         $validated = $this->validated($request, $satuan);
+
+        // Kode & kategori satuan Admin dikunci -- dipakai hardcoded di banyak
+        // cek role (kode === 'ADMIN', kategori admin); mengubahnya bikin
+        // deteksi role admin kacau. Field-nya sudah readonly/disabled di modal,
+        // ini pengaman kalau request diakalin.
+        if ($satuan->kategori === Satuan::KATEGORI_ADMIN) {
+            $validated['kode'] = $satuan->kode;
+            $validated['kategori'] = $satuan->kategori;
+        }
 
         $satuan->update($validated);
 
         ActivityLog::catat('satuan.update', "Memperbarui data satuan \"{$satuan->nama}\" ({$satuan->kode}).");
 
-        return back()->with('status', "Satuan \"{$satuan->nama}\" berhasil diperbarui.");
+        $pesan = "Satuan \"{$satuan->nama}\" berhasil diperbarui.";
+
+        return $request->wantsJson()
+            ? $this->tableJson($satuan, $pesan)
+            : back()->with('status', $pesan);
+    }
+
+    /**
+     * Balas JSON berisi SELURUH isi <tbody> tabel Data Satuan yang sudah
+     * dirender ulang & terurut (Satuan::terurut()) -- klien tinggal timpa
+     * innerHTML tbody tanpa reload, jadi modal Tambah/Ubah Satuan tetap
+     * kebuka DAN baris baru/berubah tetap di posisi sesuai urutan kategori
+     * (bukan nyelonong ke paling atas).
+     */
+    private function tableJson(Satuan $satuan, string $pesan): JsonResponse
+    {
+        $rowsHtml = Satuan::terurut()
+            ->map(fn (Satuan $s) => view('siberad.dashboards.partials.satuan-row', ['s' => $s])->render())
+            ->implode('');
+
+        return response()->json([
+            'ok' => true,
+            'id' => $satuan->id,
+            'message' => $pesan,
+            'rows_html' => $rowsHtml,
+        ]);
     }
 
     /**
      * Hapus satuan. Ditolak kalau masih ada pengguna terdaftar di satuan
-     * tsb, supaya tidak ada akun yang kehilangan relasi satuan.
+     * tsb, supaya tidak ada akun yang kehilangan relasi satuan. Balas JSON
+     * saat wantsJson() supaya tabel Data Satuan bisa hapus barisnya tanpa
+     * reload (senada dengan Tambah/Ubah yang sudah AJAX).
      */
-    public function destroy(Satuan $satuan): RedirectResponse
+    public function destroy(Request $request, Satuan $satuan): RedirectResponse|JsonResponse
     {
         if ($satuan->users()->exists()) {
-            return back()->with('error', "Satuan \"{$satuan->nama}\" masih punya pengguna terdaftar, pindahkan dulu akunnya sebelum menghapus.");
+            $pesan = "Satuan \"{$satuan->nama}\" masih punya pengguna terdaftar, pindahkan dulu akunnya sebelum menghapus.";
+
+            return $request->wantsJson()
+                ? response()->json(['ok' => false, 'message' => $pesan], 422)
+                : back()->with('error', $pesan);
         }
 
+        $id = $satuan->id;
         $nama = $satuan->nama;
         $satuan->delete();
 
         ActivityLog::catat('satuan.delete', "Menghapus satuan \"{$nama}\".");
 
-        return back()->with('status', "Satuan \"{$nama}\" berhasil dihapus.");
+        $pesan = "Satuan \"{$nama}\" berhasil dihapus.";
+
+        return $request->wantsJson()
+            ? response()->json(['ok' => true, 'id' => $id, 'message' => $pesan])
+            : back()->with('status', $pesan);
     }
 
     private function validated(Request $request, ?Satuan $satuan = null): array
