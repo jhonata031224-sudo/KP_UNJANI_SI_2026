@@ -9,6 +9,22 @@
   // belakang" yang tampil di panel admin), bukan diam-diam balik ke gambar
   // default seolah-olah belum dihapus.
   $lpLogoUrl = $pengaturan->logo_path ? asset('storage/'.$pengaturan->logo_path) : null;
+
+  // Logo di dalam #loader (splash) di-INLINE jadi data URI supaya muncul
+  // langsung bareng loader-nya. Sebelumnya <img src="storage/..."> itu request
+  // jaringan tersendiri -- pas mendarat di halaman ini sesudah logout, cache-nya
+  // dingin, jadi ring-nya keburu muter dengan lingkaran kosong dulu baru
+  // logonya "nyusul" (telat muncul). File kecil (<64 KB) doang yang di-inline;
+  // selebihnya fallback ke URL biasa. Logo di nav/login/footer tetap $lpLogoUrl
+  // (di belakang loader, jadi latency-nya ketutupan).
+  $lpLoaderLogo = $lpLogoUrl;
+  if ($pengaturan->logo_path) {
+    $lpLogoAbs = storage_path('app/public/'.$pengaturan->logo_path);
+    if (is_file($lpLogoAbs) && filesize($lpLogoAbs) <= 64 * 1024) {
+      $lpLoaderLogo = 'data:'.(mime_content_type($lpLogoAbs) ?: 'image/jpeg')
+        .';base64,'.base64_encode(file_get_contents($lpLogoAbs));
+    }
+  }
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -187,6 +203,11 @@
     box-shadow:0 0 0 1px rgba(0,0,0,.3) inset, 0 8px 30px rgba(0,0,0,.5);
   }
   .mark-plate img{width:100%;height:100%;object-fit:cover;}
+  /* Fallback halus kalau logo loader kebetulan gak ke-inline (file > 64 KB) --
+     fade-in pas ke-load, bukan "nyeplak" telat. Dgn data URI, is-ready kepasang
+     langsung dari JS jadi transisinya nyaris gak kelihatan. */
+  #loaderMark .mark-plate img{opacity:0;transition:opacity .3s ease;}
+  #loaderMark .mark-plate img.is-ready{opacity:1;}
 
   .mark-ring{
     position:absolute;inset:0;
@@ -788,7 +809,7 @@
           <circle class="ring-arc" cx="74" cy="74" r="65"></circle>
         </svg>
       </div>
-      <div class="mark-plate">@if ($lpLogoUrl)<img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">@endif</div>
+      <div class="mark-plate">@if ($lpLoaderLogo)<img src="{{ $lpLoaderLogo }}" alt="Lambang Pussiberad">@endif</div>
     </div>
     <div class="loader-caption">{{ $lp['loader']['caption'] }}</div>
   </div>
@@ -1063,6 +1084,14 @@
   // ---------- loader sequence (icon only) ----------
   const loader = document.getElementById('loader');
   const mark = document.getElementById('loaderMark');
+  // Logo loader: tampilkan begitu siap (data URI -> praktis instan; URL -> fade-in
+  // pas ke-load) supaya gak ada jeda "ring muter, lingkaran kosong, logo nyusul".
+  const markImg = mark ? mark.querySelector('img') : null;
+  if (markImg) {
+    const markReady = () => markImg.classList.add('is-ready');
+    if (markImg.complete && markImg.naturalWidth) markReady();
+    else { markImg.addEventListener('load', markReady, {once:true}); markImg.addEventListener('error', markReady, {once:true}); }
+  }
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const duration = reduceMotion ? 150 : 1200;
 
