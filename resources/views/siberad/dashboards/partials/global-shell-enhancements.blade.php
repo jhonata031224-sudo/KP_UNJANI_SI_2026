@@ -52,6 +52,12 @@
     cancel?.addEventListener('click', closeConfirm);
     confirmBtn?.addEventListener('click', function () {
       if (!pendingForm) return;
+      // Tandai "user memang sengaja logout". Selama transisi logout (nunggu
+      // lepas-langganan push + POST /logout + redirect + load landing), poller
+      // realtime yang masih jalan bisa kena 401 -- itu WAJAR, bukan sesi
+      // kadaluarsa. Flag ini dibaca tampilkanSesiBerakhir() supaya modal
+      // "Sesi Anda Berakhir" tidak berkedip sekejap saat logout normal.
+      window.__siberadLoggingOut = true;
       // Reset HANYA tab menu terakhir supaya login berikutnya selalu mulai
       // dari Dashboard. Jangan hapus SEMUA key "siberad-*" -- itu juga
       // menyimpan status buka/tutup tiap dropdown menu, tema, dan status
@@ -74,7 +80,9 @@
         ? window.siberadUnsubscribePush()
         : Promise.resolve();
 
-      unsubscribe.then(function () {
+      // .catch(...) supaya logout tetap jalan walau lepas-langganan push gagal
+      // -- jangan sampai gantung (apalagi flag __siberadLoggingOut sudah ke-set).
+      unsubscribe.catch(function () {}).then(function () {
         formToSubmit.submit();
       });
     });

@@ -124,6 +124,11 @@
       return overlay;
     }
     function tampilkanSesiBerakhir() {
+      // User memang sengaja logout (lihat global-shell-enhancements.blade.php):
+      // 401 dari poller realtime yang masih sempat jalan selama transisi logout
+      // itu WAJAR, bukan sesi kadaluarsa -- jangan munculin modal yang bikin
+      // kaget sekejap sebelum halaman landing kebuka.
+      if (window.__siberadLoggingOut) return;
       if (window.__siberadSesiBerakhirShown) return;
       window.__siberadSesiBerakhirShown = true;
       if (pollTimer) window.clearInterval(pollTimer);
