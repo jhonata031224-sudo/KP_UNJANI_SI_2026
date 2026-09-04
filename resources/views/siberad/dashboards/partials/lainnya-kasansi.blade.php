@@ -14,13 +14,13 @@
 .lainnya-section-title{font-size:18px;font-weight:700;font-family:var(--display);margin:0 0 4px}
 .lainnya-section-sub{font-size:12.5px;color:var(--text-muted);line-height:1.55;margin:0}
 
-/* ---- Notifikasi ---- */
-.notif-setting-card{background:var(--panel);border:1px solid var(--border-soft);border-radius:14px;overflow:hidden;margin-bottom:14px}
-.notif-setting-row{display:flex;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--border-soft)}
-.notif-setting-row:last-child{border-bottom:none}
+/* ---- Notifikasi (gaya card terpisah, bukan tabel/baris bergaris) ---- */
+.notif-setting-card{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
+.notif-setting-row{display:flex;align-items:center;gap:14px;padding:16px 18px;background:var(--panel);border:1px solid var(--border-soft);border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);transition:box-shadow .15s ease,border-color .15s ease;flex-wrap:wrap}
+.notif-setting-row:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);border-color:color-mix(in srgb,var(--border-soft) 60%,var(--gold-bright))}
 .notif-setting-row-icon{flex-shrink:0;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--gold-dim);color:var(--gold-bright)}
 .notif-setting-row-icon svg{width:17px;height:17px}
-.notif-setting-row-body{flex:1;min-width:0}
+.notif-setting-row-body{flex:1;min-width:180px}
 .notif-setting-row-label{font-size:13.5px;font-weight:600;color:var(--text)}
 .notif-setting-row-desc{font-size:11.5px;color:var(--text-muted);line-height:1.5;margin-top:2px}
 .notif-setting-row-right{flex-shrink:0}

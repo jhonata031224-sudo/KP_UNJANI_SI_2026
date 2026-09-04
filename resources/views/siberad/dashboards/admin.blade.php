@@ -706,6 +706,16 @@
           <a href="#" class="side-sub-link" data-tab-link="backup" title="Cadangan Data"><span class="sub-dot"></span>Cadangan Data</a>
           <a href="#" class="side-sub-link" data-tab-link="reset-data-laporan" title="Reset Data Laporan"><span class="sub-dot"></span>Reset Data Laporan</a>
           <a href="#" class="side-sub-link" data-tab-link="pengaturan-umum" title="Pengaturan Umum"><span class="sub-dot"></span>Pengaturan Umum</a>
+        </div></div>
+      </div>
+      <div class="side-nav-group open" id="lainnyaAdminGroup">
+        <button type="button" class="side-nav-group-title" id="lainnyaAdminToggle" title="Lainnya">
+          <span class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></span>
+          <span class="side-text">Lainnya</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
+        </button>
+        <div class="side-subnav"><div>
+          <span class="side-subnav-label">Lainnya</span>
           <a href="#" class="side-sub-link" data-tab-link="setelan-notifikasi" title="Notifikasi"><span class="sub-dot"></span>Notifikasi</a>
           <a href="#" class="side-sub-link" data-tab-link="struktur-organisasi" title="Struktur Organisasi"><span class="sub-dot"></span>Struktur Organisasi</a>
         </div></div>
