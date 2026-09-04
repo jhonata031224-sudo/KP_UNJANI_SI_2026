@@ -135,6 +135,11 @@
   .user-modal-card .form-grid{grid-template-columns:1fr;min-width:0;}
   .user-modal-card .form-field{min-width:0;}
   .user-modal-card .form-field select,.user-modal-card .form-field input{min-width:0;width:100%;box-sizing:border-box;}
+  /* Combobox Satuan (input teks + saran) di modal Tambah/Ubah Pengguna --
+     niru "Tujuan" di Buat Surat. Daftar saran-nya numpang .styled-select-menu
+     (partials/styled-select.blade.php) yang di-append ke <body>. */
+  .pengguna-satuan-cb{position:relative;width:100%;}
+  .pengguna-satuan-cb input[type="text"]{width:100%;box-sizing:border-box;}
 
   /* ===== tombol aksi tabel Daftar Pengguna & Daftar Satuan (gaya sama
      seperti tombol Edit/Batal di Permintaan Laporan Pimpinan) ===== */
@@ -348,13 +353,14 @@
         <input id="uEmail" name="email" type="email" autocomplete="off" placeholder="Contoh: nama@email.com">
       </div>
       <div class="form-field">
-        <label for="uSatuan">Satuan</label>
-        <select id="uSatuan" name="satuan_id" required>
-          <option value="">— Pilih Satuan —</option>
-          @foreach($semuaSatuan as $s)
-          <option value="{{ $s->id }}">{{ $s->nama }}{{ in_array($s->kode, ['URDAL', 'POKANALIS'], true) ? '' : ' ('.$s->kode.')' }}</option>
-          @endforeach
-        </select>
+        <label for="uSatuanSearch">Satuan</label>
+        {{-- Input teks + saran otomatis (bukan <select>), pola sama persis
+             kayak "Tujuan" di Buat Surat. Hidden #uSatuan yang bawa id satuan
+             ke server; ngetik doang tanpa milih dari saran = hidden kosong. --}}
+        <div class="pengguna-satuan-cb" id="uSatuanCombobox">
+          <input type="hidden" id="uSatuan" name="satuan_id">
+          <input type="text" id="uSatuanSearch" autocomplete="off" placeholder="Ketik nama / kode satuan...">
+        </div>
       </div>
       <div class="form-field">
         <label for="uPassword">Password Awal</label>
@@ -413,12 +419,11 @@
         <input id="upEmail" name="email" type="email" autocomplete="off" placeholder="Contoh: nama@email.com">
       </div>
       <div class="form-field">
-        <label for="upSatuan">Satuan</label>
-        <select id="upSatuan" name="satuan_id" required>
-          @foreach($semuaSatuan as $s)
-          <option value="{{ $s->id }}">{{ $s->nama }}{{ in_array($s->kode, ['URDAL', 'POKANALIS'], true) ? '' : ' ('.$s->kode.')' }}</option>
-          @endforeach
-        </select>
+        <label for="upSatuanSearch">Satuan</label>
+        <div class="pengguna-satuan-cb" id="upSatuanCombobox">
+          <input type="hidden" id="upSatuan" name="satuan_id">
+          <input type="text" id="upSatuanSearch" autocomplete="off" placeholder="Ketik nama / kode satuan...">
+        </div>
       </div>
       <div class="form-field">
         <label for="upPassword">Password Baru (opsional)</label>
@@ -1152,7 +1157,7 @@
                   };
                 @endphp
                 <tr data-filter-value="{{ $kategoriLabel }}" data-search-value="{{ strtolower($p->name.' '.($p->satuan->nama ?? '').' '.($p->satuan->kode ?? '')) }}">
-                  <td>{{ $p->satuan->nama_singkat ?? $p->name }}</td>
+                  <td>{{ $p->name }}</td>
                   <td><span class="badge badge-plain">{{ $p->username }}</span></td>
                   <td style="color:var(--text-muted);">{{ $p->email ?: '-' }}</td>
                   <td>{{ $p->satuan->nama_keterangan ?? '-' }}</td>
@@ -1192,6 +1197,15 @@
           'id' => $s->id,
           'kode' => mb_strtolower(trim((string) $s->kode)),
         ])->values();
+        // Opsi combobox "Satuan" di modal Tambah/Ubah Pengguna -- teks tampil
+        // = "Nama (KODE)" persis kayak <option> lama; id string biar cocok
+        // dibanding dgn value hidden. @php block wajib (bukan inline @json)
+        // -- lihat [[project_blade_at_word_comment_gotcha]].
+        $penggunaSatuanOpts = $semuaSatuan->map(fn ($s) => [
+          'id' => (string) $s->id,
+          'name' => $s->nama.(in_array($s->kode, ['URDAL', 'POKANALIS'], true) ? '' : ' ('.$s->kode.')'),
+          'kode' => (string) $s->kode,
+        ])->values();
       @endphp
       <script>
         // Daftar akun & satuan yang sudah ada -> deteksi Username/NRP / Email /
@@ -1200,6 +1214,7 @@
         // re-open modal kalau ada balapan dgn tab / admin lain.
         window.__siberadAkunList = @json($akunListForDup);
         window.__siberadSatuanList = @json($satuanListForDup);
+        window.__penggunaSatuanOptions = @json($penggunaSatuanOpts);
         function siberadBindDupCheck(field, kind, getIgnoreId) {
           if (!field) return;
           var msg = field.nextElementSibling;
@@ -1232,6 +1247,122 @@
           field.addEventListener('input', check);
           field.addEventListener('blur', check);
         }
+
+        // Combobox "Satuan" -- input teks + saran melayang, niru "Tujuan" di
+        // Buat Surat. Daftar saran numpang .styled-select-menu (di-append ke
+        // <body>). Hidden #<hiddenId> nyimpen id satuan yg BENERAN dipilih dari
+        // saran; ngetik tanpa milih = hidden dikosongin -> submit diblok.
+        function siberadBindSatuanCombobox(wrapId, searchId, hiddenId) {
+          var wrap = document.getElementById(wrapId);
+          var search = document.getElementById(searchId);
+          var hidden = document.getElementById(hiddenId);
+          if (!wrap || !search || !hidden) return;
+          var options = window.__penggunaSatuanOptions || [];
+          var menu = document.createElement('div');
+          menu.className = 'styled-select-menu';
+          var inner = document.createElement('div');
+          inner.className = 'styled-select-menu-inner';
+          menu.appendChild(inner);
+          document.body.appendChild(menu);
+          var GUARD_MSG = 'Satuan wajib dipilih dari daftar.';
+          var errMsg = search.nextElementSibling;
+          if (!errMsg || !errMsg.classList.contains('profile-field-error')) {
+            errMsg = document.createElement('span');
+            errMsg.className = 'profile-field-error';
+            errMsg.style.display = 'none';
+            search.insertAdjacentElement('afterend', errMsg);
+          }
+          function setInvalid(on) {
+            search.classList.toggle('field-invalid', !!on);
+            if (on) { errMsg.textContent = GUARD_MSG; errMsg.style.display = 'flex'; }
+            else if (errMsg.textContent === GUARD_MSG) { errMsg.style.display = 'none'; }
+          }
+          function render() {
+            inner.innerHTML = '';
+            var q = search.value.trim().toLowerCase();
+            var filtered = options.filter(function (o) {
+              return !q || o.name.toLowerCase().indexOf(q) > -1 || (o.kode && o.kode.toLowerCase().indexOf(q) > -1);
+            });
+            if (!filtered.length) {
+              var empty = document.createElement('div');
+              empty.className = 'styled-select-option';
+              empty.style.cssText = 'cursor:default;opacity:.55';
+              empty.textContent = 'Tidak ada satuan yang cocok.';
+              inner.appendChild(empty);
+              return;
+            }
+            filtered.forEach(function (o) {
+              var item = document.createElement('button');
+              item.type = 'button';
+              item.className = 'styled-select-option' + (hidden.value === o.id ? ' active' : '');
+              var txt = document.createElement('span');
+              txt.className = 'ss-opt-text';
+              txt.textContent = o.name;
+              item.appendChild(txt);
+              item.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+                hidden.value = o.id;
+                search.value = o.name;
+                setInvalid(false);
+                hidden.dispatchEvent(new Event('change', { bubbles: true }));
+                close();
+              });
+              inner.appendChild(item);
+            });
+          }
+          function position() {
+            var r = search.getBoundingClientRect();
+            menu.style.minWidth = r.width + 'px';
+            menu.style.left = r.left + 'px';
+            menu.style.top = (r.bottom + 6) + 'px';
+            var mr = menu.getBoundingClientRect();
+            var vw = window.innerWidth;
+            var left = r.left;
+            if (mr.right > vw - 8) left = Math.max(8, vw - 8 - mr.width);
+            menu.style.left = left + 'px';
+          }
+          function open() { render(); position(); menu.classList.add('open'); }
+          function close() { menu.classList.remove('open'); }
+          search.addEventListener('input', function () {
+            hidden.value = '';
+            if (!search.value.trim()) { close(); return; }
+            open();
+          });
+          search.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+              var first = inner.querySelector('button.styled-select-option');
+              if (first) { e.preventDefault(); first.dispatchEvent(new Event('mousedown')); }
+            } else if (e.key === 'Escape') { close(); }
+          });
+          document.addEventListener('click', function (e) {
+            if (!wrap.contains(e.target) && !menu.contains(e.target)) close();
+          });
+          window.addEventListener('scroll', function (e) {
+            if (menu.contains(e.target)) return;
+            if (menu.classList.contains('open')) close();
+          }, true);
+          window.addEventListener('resize', function () { if (menu.classList.contains('open')) position(); });
+          var form = search.closest('form');
+          if (form) {
+            form.addEventListener('submit', function (e) {
+              if (hidden.value) return;
+              e.preventDefault();
+              e.stopImmediatePropagation();
+              setInvalid(true);
+              search.focus();
+            }, true);
+          }
+          // Dipakai bukaUbahPengguna / reopen script buat set teks tampilannya.
+          wrap.__setSatuan = function (id) {
+            var o = options.filter(function (x) { return x.id === String(id || ''); })[0];
+            hidden.value = o ? o.id : '';
+            search.value = o ? o.name : '';
+            setInvalid(false);
+          };
+        }
+        siberadBindSatuanCombobox('uSatuanCombobox', 'uSatuanSearch', 'uSatuan');
+        siberadBindSatuanCombobox('upSatuanCombobox', 'upSatuanSearch', 'upSatuan');
+
         (function () {
           var modal = document.getElementById('tambahPenggunaModal');
           var openBtn = document.getElementById('tambahPenggunaOpen');
@@ -1318,7 +1449,9 @@
           document.getElementById('upNama').value = btn.dataset.name || '';
           document.getElementById('upUsername').value = btn.dataset.username || '';
           document.getElementById('upEmail').value = btn.dataset.email || '';
-          document.getElementById('upSatuan').value = btn.dataset.satuanId || '';
+          var _upCb = document.getElementById('upSatuanCombobox');
+          if (_upCb && _upCb.__setSatuan) _upCb.__setSatuan(btn.dataset.satuanId || '');
+          else document.getElementById('upSatuan').value = btn.dataset.satuanId || '';
           document.getElementById('upPassword').value = '';
           // Bersihkan sisa penanda error merah dari sesi Ubah sebelumnya.
           document.querySelectorAll('#ubahPenggunaForm .field-invalid').forEach(function (el) { el.classList.remove('field-invalid'); });
@@ -1473,6 +1606,12 @@
             var el = document.getElementById(cfg.map[f]);
             if (el && oldVals[f] != null && oldVals[f] !== '') el.value = oldVals[f];
           });
+          @if(! $reopenIsSatuan)
+          // Field Satuan sekarang combobox -- set teks tampilannya juga, bukan
+          // cuma hidden #uSatuan/#upSatuan yang barusan di-set loop di atas.
+          var _sCb = document.getElementById((isUpdate ? 'up' : 'u') + 'SatuanCombobox');
+          if (_sCb && _sCb.__setSatuan && oldVals.satuan_id) _sCb.__setSatuan(oldVals.satuan_id);
+          @endif
           var errs = @json($reopenErrs);
           Object.keys(errs).forEach(function (f) {
             var el = document.getElementById(cfg.map[f]);
@@ -2516,7 +2655,7 @@
                   @endphp
                   <tr data-filter-value="{{ $kategoriLabelDlPengguna }}" data-search-value="{{ strtolower($p->name.' '.$p->username.' '.$p->email.' '.($p->satuan->nama ?? '').' '.($p->jabatan ?? '')) }}">
                     <td>{{ $i + 1 }}</td>
-                    <td><strong>{{ $p->satuan->nama_singkat ?? $p->name }}</strong></td>
+                    <td><strong>{{ $p->name }}</strong></td>
                     <td>{{ $p->username }}</td>
                     <td>{{ $p->email ?: '-' }}</td>
                     <td>{{ $p->satuan->nama_keterangan ?? '-' }}</td>
@@ -3898,7 +4037,7 @@
       {{-- ===== KONFIRMASI SETUJUI/TOLAK PERMINTAAN GANTI PASSWORD ===== --}}
       <div class="confirm-overlay" id="setujuiResetPasswordOverlay">
         <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="setujuiResetPasswordTitle">
-          <div class="confirm-icon" style="background:var(--gold-dim);color:var(--gold-bright)">
+          <div class="confirm-icon" style="background:var(--success-dim);color:var(--success-bright)">
             <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><circle cx="12" cy="12" r="9"></circle><path d="M9 12l2 2 4-4"></path></svg>
           </div>
           <h3 id="setujuiResetPasswordTitle">Setujui Permintaan Ganti Password?</h3>
@@ -3907,7 +4046,7 @@
             @csrf @method('PATCH')
             <div class="confirm-actions">
               <button type="button" class="btn" id="setujuiResetPasswordBatal">Batal</button>
-              <button type="submit" class="btn btn-primary">Ya, Setujui</button>
+              <button type="submit" class="btn btn-ghost-green">Ya, Setujui</button>
             </div>
           </form>
         </div>

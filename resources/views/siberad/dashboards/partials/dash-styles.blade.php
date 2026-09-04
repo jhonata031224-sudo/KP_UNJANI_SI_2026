@@ -356,14 +356,23 @@
   .field-toggle.is-visible .icon-eye{display:none;}
   .field-toggle.is-visible .icon-eye-off{display:block;}
   .profile-subtabs{display:flex;border-bottom:1px solid var(--border-soft);margin:0 2px 22px;}
-  .profile-subtab-btn{position:relative;flex:1;display:flex;align-items:center;justify-content:center;gap:7px;box-sizing:border-box;border:0;background:transparent;color:var(--text-dim);font-family:var(--body);font-size:12.5px;font-weight:600;padding:0 6px 13px;cursor:pointer;transition:color .15s ease;}
+  /* min-width:0 -> kedua tombol persis 1/2 lebar container (tanpa ini flex
+     item nggak mau nyusut di bawah lebar teks-nya, jadi "Ganti Password"
+     lebih lebar dari "Foto Profil" -> garis bawahnya jadi beda panjang). */
+  .profile-subtab-btn{position:relative;flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:7px;box-sizing:border-box;border:0;background:transparent;color:var(--text-dim);font-family:var(--body);font-size:12.5px;font-weight:600;padding:0 6px 13px;cursor:pointer;transition:color .15s ease;}
   .profile-subtab-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0;opacity:.65;transition:opacity .15s ease;}
   .profile-subtab-btn:hover{color:var(--text);}
   .profile-subtab-btn:hover svg{opacity:1;}
-  .profile-subtab-btn::after{content:"";position:absolute;left:8px;right:8px;bottom:-1px;height:2px;border-radius:2px 2px 0 0;background:var(--gold-bright);transform:scaleX(0);transition:transform .22s cubic-bezier(.4,0,.2,1);}
+  /* Garis aktif: lebar SAMA di kedua tab (left:8/right:8 + tombol kini
+     sama lebar). Reveal-nya fade + geser-naik kecil (opacity + translateY),
+     BUKAN transform:scaleX() -- scaleX bikin garis 2px ke-render lewat layer
+     terpisah + snap sub-pixel yang beda, jadi kelihatan lebih tipis daripada
+     garis yang sudah settle. Kondisi aktif = transform:none -> 2px pixel-crisp
+     identik. translateY dianimasikan (GPU) jadi transisinya mulus. */
+  .profile-subtab-btn::after{content:"";position:absolute;left:8px;right:8px;bottom:-1px;height:2px;border-radius:2px 2px 0 0;background:var(--gold-bright);opacity:0;transform:translateY(4px);transition:opacity .2s ease,transform .26s cubic-bezier(.34,1.15,.64,1);}
   .profile-subtab-btn.active{color:var(--gold-bright);}
   .profile-subtab-btn.active svg{opacity:1;}
-  .profile-subtab-btn.active::after{transform:scaleX(1);}
+  .profile-subtab-btn.active::after{opacity:1;transform:none;}
   .profile-subtab-panel{display:none;}
   .profile-subtab-panel.active{display:block;animation:profileTabFade .2s ease;}
   @keyframes profileTabFade{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:translateY(0);}}
@@ -480,6 +489,10 @@
   .btn-primary:hover{color:var(--on-gold);box-shadow:0 10px 26px -6px rgba(217,146,11,.6);}
   .btn-ghost-red{color:var(--red);border-color:rgba(198,40,40,.3);}
   .btn-ghost-red:hover{border-color:var(--red);color:var(--red);}
+  /* Kembaran .btn-ghost-red tapi hijau -- dipakai tombol "Ya, Setujui" di
+     konfirmasi supaya bentuknya sama persis dgn "Ya, Tolak", beda warna doang. */
+  .btn-ghost-green{color:var(--success);border-color:color-mix(in srgb,var(--success) 32%,transparent);}
+  .btn-ghost-green:hover{border-color:var(--success);color:var(--success);}
   .btn-sm{padding:7px 12px;font-size:10.5px;}
   .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
 

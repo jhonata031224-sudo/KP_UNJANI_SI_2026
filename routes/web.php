@@ -210,6 +210,11 @@ Route::delete('/profil/foto', [ProfilFotoController::class, 'destroy'])
 Route::post('/permintaan-reset-password', [PermintaanResetPasswordController::class, 'store'])
     ->middleware('auth')
     ->name('permintaan-reset-password.store');
+// Dipoll pengaju buat tahu (realtime) begitu Admin menyetujui/menolak
+// permintaannya -> form balik ke semula + toast, tanpa reload.
+Route::get('/permintaan-reset-password/status', [PermintaanResetPasswordController::class, 'status'])
+    ->middleware('auth')
+    ->name('permintaan-reset-password.status');
 
 Route::get('/notifikasi/realtime', [NotifikasiController::class, 'realtime'])
     ->middleware(['auth', 'modul:notifikasi'])

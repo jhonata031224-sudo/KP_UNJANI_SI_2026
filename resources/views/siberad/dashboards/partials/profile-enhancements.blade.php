@@ -52,6 +52,64 @@
       if (fotoError) fotoError.style.display = 'none';
     }
 
+    // ===== Ganti/Hapus foto lewat AJAX (bukan reload penuh) supaya modal
+    //       Pengaturan Akun TETAP kebuka setelahnya. Server balas JSON kalau
+    //       request-nya minta JSON (lihat ProfilFotoController). =====
+    function csrfToken(){
+      var m = document.querySelector('meta[name="csrf-token"]');
+      if (m && m.content) return m.content;
+      var f = document.querySelector('input[name="_token"]');
+      return f ? f.value : '';
+    }
+    function applyFotoProfil(url){
+      ['profilePhotoLarge','profilePhotoBtn','profilePhotoDropdown'].forEach(function(id){
+        var img = document.getElementById(id);
+        if (!img) return;
+        if (url){ img.src = url; img.style.display = 'block'; }
+        else { img.removeAttribute('src'); img.style.display = 'none'; }
+      });
+      ['profileInitialLarge','profileInitial','profileInitialDropdown'].forEach(function(id){
+        var el = document.getElementById(id);
+        if (el) el.style.display = url ? 'none' : '';
+      });
+      if (deleteBtn) deleteBtn.style.display = url ? '' : 'none';
+    }
+    function setFotoBusy(on){
+      if (changeBtn) changeBtn.disabled = !!on;
+      var lbl = document.getElementById('gantiFotoLabel');
+      if (!lbl) return;
+      if (on){ lbl.dataset.idle = lbl.dataset.idle || lbl.textContent; lbl.textContent = 'Mengunggah...'; }
+      else if (lbl.dataset.idle){ lbl.textContent = lbl.dataset.idle; }
+    }
+    function uploadFoto(file){
+      if (!file || !formGanti) return;
+      setFotoBusy(true);
+      clearFotoError();
+      var fd = new FormData();
+      fd.append('foto', file, file.name || 'foto-profil.jpg');
+      fetch(formGanti.action, {
+        method: 'POST', body: fd, credentials: 'same-origin',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken() }
+      }).then(function(r){
+        return r.json().catch(function(){ return {}; }).then(function(d){ return { status: r.status, data: d }; });
+      }).then(function(res){
+        if (res.status === 200 && res.data && res.data.ok){
+          applyFotoProfil(res.data.foto_url);
+          window.siberadShowToast && window.siberadShowToast('success', res.data.message || 'Foto profil berhasil diperbarui.');
+        } else if (res.status === 401 && window.siberadTampilkanSesiBerakhir){
+          window.siberadTampilkanSesiBerakhir();
+        } else {
+          var msg = (res.data && (res.data.message || (res.data.errors && res.data.errors.foto && res.data.errors.foto[0]))) || 'Gagal mengunggah foto.';
+          showFotoError(msg);
+        }
+      }).catch(function(){
+        showFotoError('Gagal terhubung ke server, coba lagi.');
+      }).finally(function(){
+        setFotoBusy(false);
+        input.value = '';
+      });
+    }
+
     changeBtn.addEventListener('click', function(){ input.click(); });
 
     // ===== Modal "Atur Foto Profil": geser (drag) + zoom (slider) =====
@@ -179,7 +237,7 @@
           // aslinya aja (nggak ke-crop) daripada gagal total.
         }
         closeCrop();
-        if (formGanti) formGanti.requestSubmit ? formGanti.requestSubmit() : formGanti.submit();
+        uploadFoto(croppedFile);
       }, 'image/jpeg', 0.92);
     });
 
@@ -198,9 +256,8 @@
         return;
       }
       if (!cropCanUse) {
-        // Fallback kalau markup modalnya nggak ada: langsung upload apa
-        // adanya, nggak crash.
-        if (formGanti) formGanti.requestSubmit ? formGanti.requestSubmit() : formGanti.submit();
+        // Fallback kalau markup modal crop-nya nggak ada: upload apa adanya.
+        uploadFoto(file);
         return;
       }
       if (objectUrl) URL.revokeObjectURL(objectUrl);
@@ -210,11 +267,39 @@
     });
 
     var hapusOverlay = document.getElementById('hapusFotoOverlay');
+    var formHapus = document.getElementById('formHapusFoto');
     if (deleteBtn && hapusOverlay) {
       function closeHapusFoto(){ hapusOverlay.classList.remove('open'); }
       deleteBtn.addEventListener('click', function(){ hapusOverlay.classList.add('open'); });
       document.getElementById('hapusFotoBatal')?.addEventListener('click', closeHapusFoto);
       document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && hapusOverlay.classList.contains('open')) closeHapusFoto(); });
+      if (formHapus) {
+        formHapus.addEventListener('submit', function(e){
+          e.preventDefault();
+          var btn = formHapus.querySelector('button[type="submit"]');
+          if (btn) btn.disabled = true;
+          fetch(formHapus.action, {
+            method: 'DELETE', credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken() }
+          }).then(function(r){
+            return r.json().catch(function(){ return {}; }).then(function(d){ return { status: r.status, data: d }; });
+          }).then(function(res){
+            if (res.status === 200 && res.data && res.data.ok){
+              applyFotoProfil(null);
+              window.siberadShowToast && window.siberadShowToast('success', res.data.message || 'Foto profil berhasil dihapus.');
+            } else if (res.status === 401 && window.siberadTampilkanSesiBerakhir){
+              window.siberadTampilkanSesiBerakhir();
+            } else {
+              window.siberadShowToast && window.siberadShowToast('error', (res.data && res.data.message) || 'Gagal menghapus foto.');
+            }
+          }).catch(function(){
+            window.siberadShowToast && window.siberadShowToast('error', 'Gagal terhubung ke server, coba lagi.');
+          }).finally(function(){
+            if (btn) btn.disabled = false;
+            closeHapusFoto();
+          });
+        });
+      }
     }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initFotoProfil);
@@ -318,7 +403,7 @@ function initFormGantiPassword(){
   }
 
   form.addEventListener('submit', function(e){
-    if (form.dataset.confirmed === '1') { form.dataset.confirmed = ''; return; }
+    // Selalu AJAX -- jangan pernah reload penuh (modal Pengaturan Akun nutup).
     e.preventDefault();
     clearKonfirmasiError();
     if (passBaru && passKonfirmasi && passBaru.value !== passKonfirmasi.value) {
@@ -328,16 +413,88 @@ function initFormGantiPassword(){
     overlay.classList.add('open');
   });
 
+  // Kirim permintaan via AJAX -> tanpa reload, modal tetap kebuka. Sukses:
+  // sisipkan blok "Sedang Diproses" (HTML dirender server), sembunyikan form,
+  // reset field, toast, lalu mulai poll realtime buat permintaan yang baru.
+  function submitGantiPasswordAjax(){
+    var yesBtn = document.getElementById('kirimGantiPasswordYa');
+    if (yesBtn) yesBtn.disabled = true;
+    fetch(form.action, {
+      method: 'POST', body: new FormData(form), credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+    }).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(d){ return { status: r.status, data: d }; });
+    }).then(function(res){
+      if (res.status === 200 && res.data && res.data.ok){
+        var wrap = document.getElementById('profilePasswordFormWrap');
+        if (res.data.pending_html && wrap){
+          wrap.insertAdjacentHTML('beforebegin', res.data.pending_html);
+          wrap.style.display = 'none';
+        }
+        form.reset();
+        form.querySelectorAll('.field-invalid').forEach(function(el){ el.classList.remove('field-invalid'); });
+        form.querySelectorAll('.profile-field-error').forEach(function(el){ el.style.display = 'none'; });
+        window.siberadShowToast && window.siberadShowToast('success', res.data.message || 'Permintaan ganti password berhasil dikirim ke Admin.');
+        if (typeof initGantiPasswordRealtime === 'function') initGantiPasswordRealtime();
+      } else if (res.status === 401 && window.siberadTampilkanSesiBerakhir){
+        window.siberadTampilkanSesiBerakhir();
+      } else {
+        var msg = (res.data && (res.data.message || (res.data.errors && Object.values(res.data.errors).flat()[0]))) || 'Gagal mengirim permintaan.';
+        window.siberadShowToast && window.siberadShowToast('error', msg);
+      }
+    }).catch(function(){
+      window.siberadShowToast && window.siberadShowToast('error', 'Gagal terhubung ke server, coba lagi.');
+    }).finally(function(){
+      if (yesBtn) yesBtn.disabled = false;
+    });
+  }
+
   document.getElementById('kirimGantiPasswordYa')?.addEventListener('click', function(){
     closeConfirm();
-    form.dataset.confirmed = '1';
-    form.requestSubmit ? form.requestSubmit() : form.submit();
+    submitGantiPasswordAjax();
   });
   document.getElementById('kirimGantiPasswordBatal')?.addEventListener('click', closeConfirm);
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && overlay.classList.contains('open')) closeConfirm(); });
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initFormGantiPassword);
 else initFormGantiPassword();
+
+// ===== REALTIME: permintaan ganti password diputuskan Admin (POV pengaju) =====
+// Selama masih ada blok "Permintaan Sedang Diproses" (#profilePasswordPending),
+// poll status permintaan-nya. Begitu Admin memutuskan (Disetujui/Ditolak),
+// hilangkan blok pending + tampilkan lagi form-nya + toast -- tanpa reload.
+function initGantiPasswordRealtime(){
+  var pending = document.getElementById('profilePasswordPending');
+  if (!pending) return;
+  var id = pending.getAttribute('data-permintaan-id');
+  if (!id) return;
+  var url = @json(route('permintaan-reset-password.status'));
+  var timer = null, done = false;
+  function stop(){ done = true; if (timer) window.clearInterval(timer); }
+  function check(){
+    if (done) return;
+    fetch(url + '?id=' + encodeURIComponent(id), {
+      credentials: 'same-origin', cache: 'no-store',
+      headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+    }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+      if (!d || d.state !== 'decided') return;
+      stop();
+      var wrap = document.getElementById('profilePasswordFormWrap');
+      if (wrap) wrap.style.display = '';
+      if (pending.parentNode) pending.parentNode.removeChild(pending);
+      var ok = d.status === 'Disetujui';
+      window.siberadShowToast && window.siberadShowToast(
+        ok ? 'success' : 'error',
+        d.pesan || (ok ? 'Permintaan ganti password kamu disetujui Admin.' : 'Permintaan ganti password kamu ditolak Admin.')
+      );
+    }).catch(function(){});
+  }
+  timer = window.setInterval(check, 5000);
+  check();
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) check(); });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initGantiPasswordRealtime);
+else initGantiPasswordRealtime();
 
 // ===== AKSI LAPORAN MASUK DIPINDAHKAN KE DETAIL =====
 (function(){
