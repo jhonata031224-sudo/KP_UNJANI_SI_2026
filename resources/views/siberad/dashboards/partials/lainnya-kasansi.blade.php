@@ -47,30 +47,10 @@
 .notif-permission-box.denied{background:rgba(200,59,59,.07);border-color:rgba(200,59,59,.2);color:var(--red)}
 .notif-permission-box.default{background:rgba(183,121,0,.07);border-color:rgba(183,121,0,.25);color:var(--amber)}
 
-/* ---- Struktur Organisasi ---- */
-.struktur-org-wrap{overflow-x:auto;padding-bottom:8px}
-.struktur-org-tree{display:flex;flex-direction:column;align-items:center;gap:0;min-width:560px}
-
-/* Node */
-.org-node{display:flex;flex-direction:column;align-items:center;gap:0}
-.org-card{display:inline-flex;flex-direction:column;align-items:center;gap:4px;padding:10px 18px;background:var(--panel);border:1px solid var(--border-soft);border-radius:11px;min-width:130px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.org-card.org-root{background:var(--gold-dim);border-color:color-mix(in srgb,var(--gold-bright) 50%,var(--border));min-width:180px}
-.org-card-label{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--gold-bright);text-transform:uppercase}
-.org-card-name{font-size:12.5px;font-weight:600;color:var(--text)}
-.org-card-kode{font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-top:1px}
-
-/* Konektor vertikal */
-.org-vline{width:2px;height:24px;background:var(--border-soft);margin:0 auto}
-
-/* Baris anak */
-.org-children-row{display:flex;align-items:flex-start;gap:0;position:relative;width:100%}
-.org-children-row::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--border-soft)}
-.org-child-col{display:flex;flex-direction:column;align-items:center;flex:1;padding-top:0}
-.org-child-col-vline{width:2px;height:22px;background:var(--border-soft);margin:0 auto}
-
-/* Satuan aktif (user saat ini) */
-.org-card.org-current{border-color:var(--gold-bright);box-shadow:0 0 0 3px var(--gold-dim)}
-.org-card.org-current .org-card-kode{color:var(--gold-bright)}
+/* ---- Struktur Organisasi (gambar unggahan Admin) ---- */
+.struktur-org-image-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.struktur-org-image{display:block;max-width:100%;width:auto;max-height:640px;object-fit:contain;border-radius:14px;border:1px solid var(--border-soft);background:var(--panel);box-shadow:0 4px 16px rgba(0,0,0,.12);cursor:zoom-in}
+.struktur-org-image-hint{margin:0;font-size:11.5px;color:var(--text-muted)}
 </style>
 
 {{-- ===== SECTION: Notifikasi ===== --}}
@@ -205,82 +185,27 @@
             </div>
         </div>
 
-        <div class="notif-help-box">
-            Satuan yang disorot <b style="color:var(--gold-bright)">emas</b> adalah satuan kamu saat ini: <b>{{ $satuan->nama ?? '-' }}</b>.
-        </div>
-
-        <div class="struktur-org-wrap">
-            <div class="struktur-org-tree" id="strukturOrgTree">
-                {{-- Root: DANPUS --}}
-                <div class="org-node">
-                    <div class="org-card org-root {{ strtoupper($satuan->kode ?? '') === 'DANPUS' ? 'org-current' : '' }}">
-                        <div class="org-card-label">Pimpinan</div>
-                        <div class="org-card-name">Danpus</div>
-                        <div class="org-card-kode">DANPUS</div>
-                    </div>
-                    <div class="org-vline"></div>
-                </div>
-
-                {{-- Level 2: WADAN --}}
-                <div class="org-node">
-                    <div class="org-card {{ strtoupper($satuan->kode ?? '') === 'WADAN' ? 'org-current' : '' }}">
-                        <div class="org-card-label">Wakil</div>
-                        <div class="org-card-name">Wadan</div>
-                        <div class="org-card-kode">WADAN</div>
-                    </div>
-                    <div class="org-vline"></div>
-                </div>
-
-                {{-- Hline -> Sdir & pendukung --}}
-                @php
-                    $kotamaKode = ['SANSIDAM','SIBER SOSIAL','PENANGKALAN','PENINDAKAN','DUKTEK','URDAL'];
-                    $satuanTampil = [];
-                    // Coba ambil dari variable $semuaSatuan kalau tersedia,
-                    // fallback ke daftar hardcode
-                    $satuanList = $semuaSatuan ?? collect();
-                    $kotamaLabel = [
-                        'SANSIDAM'     => ['Kasansi','Sansidam'],
-                        'SIBER SOSIAL' => ['Satlak','Siber Sosial'],
-                        'PENANGKALAN'  => ['Satlak','Penangkalan'],
-                        'PENINDAKAN'   => ['Satlak','Penindakan'],
-                        'DUKTEK'       => ['Staf','Duktek'],
-                        'URDAL'        => ['Staf','Urdal'],
-                    ];
-                @endphp
-
-                <div class="org-children-row" style="justify-content:center;gap:12px;flex-wrap:wrap">
-                    @foreach($kotamaLabel as $kode => $info)
-                        @php
-                            $isCurrent = strtoupper($satuan->kode ?? '') === strtoupper($kode);
-                        @endphp
-                        <div class="org-child-col">
-                            <div class="org-child-col-vline"></div>
-                            <div class="org-card {{ $isCurrent ? 'org-current' : '' }}" style="min-width:110px">
-                                <div class="org-card-label">{{ $info[0] }}</div>
-                                <div class="org-card-name">{{ $info[1] }}</div>
-                                <div class="org-card-kode">{{ $kode }}</div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-
-                {{-- Keterangan --}}
-                <div style="margin-top:20px;display:flex;gap:18px;flex-wrap:wrap;justify-content:center;font-size:11.5px;color:var(--text-muted)">
-                    <span style="display:flex;align-items:center;gap:6px">
-                        <span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:var(--gold-dim);border:1.5px solid var(--gold-bright)"></span>
-                        Satuan kamu
-                    </span>
-                    <span style="display:flex;align-items:center;gap:6px">
-                        <span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:var(--gold-dim);border:1.5px solid var(--gold-bright);opacity:.6"></span>
-                        Komando utama
-                    </span>
-                    <span style="display:flex;align-items:center;gap:6px">
-                        <span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:var(--panel);border:1px solid var(--border-soft)"></span>
-                        Satuan lain
-                    </span>
-                </div>
+        @if($pengaturan->struktur_organisasi_path ?? null)
+            <div class="struktur-org-image-wrap">
+                <a href="{{ asset('storage/'.$pengaturan->struktur_organisasi_path) }}" target="_blank" rel="noopener" title="Buka gambar ukuran penuh di tab baru">
+                    <img src="{{ asset('storage/'.$pengaturan->struktur_organisasi_path) }}" alt="Struktur Organisasi" class="struktur-org-image">
+                </a>
+                <p class="struktur-org-image-hint">Klik gambar untuk melihat ukuran penuh.</p>
             </div>
-        </div>
+        @else
+            <div class="kcard-empty">
+                <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="var(--text-dim)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="2" width="6" height="4" rx="1"/>
+                    <rect x="1" y="18" width="6" height="4" rx="1"/>
+                    <rect x="9" y="18" width="6" height="4" rx="1"/>
+                    <rect x="17" y="18" width="6" height="4" rx="1"/>
+                    <path d="M4 18v-4h16v4"/>
+                    <path d="M12 6v8"/>
+                </svg>
+                <div class="kcard-empty-title">Belum ada gambar struktur organisasi</div>
+                <div class="kcard-empty-sub">Gambar bagan struktur organisasi akan tampil di sini setelah diunggah oleh Admin.</div>
+            </div>
+        @endif
     </div>
 </section>
 

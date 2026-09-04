@@ -707,6 +707,7 @@
           <a href="#" class="side-sub-link" data-tab-link="reset-data-laporan" title="Reset Data Laporan"><span class="sub-dot"></span>Reset Data Laporan</a>
           <a href="#" class="side-sub-link" data-tab-link="pengaturan-umum" title="Pengaturan Umum"><span class="sub-dot"></span>Pengaturan Umum</a>
           <a href="#" class="side-sub-link" data-tab-link="setelan-notifikasi" title="Notifikasi"><span class="sub-dot"></span>Notifikasi</a>
+          <a href="#" class="side-sub-link" data-tab-link="struktur-organisasi" title="Struktur Organisasi"><span class="sub-dot"></span>Struktur Organisasi</a>
         </div></div>
       </div>
     </nav>
@@ -3834,6 +3835,72 @@
             if (desc) desc.textContent = akanAktif ? 'Sedang aktif untuk seluruh pengguna.' : 'Sedang dimatikan untuk seluruh pengguna.';
             form.submit();
           });
+        })();
+        </script>
+      </section>
+
+      {{-- ===== KELOLA SISTEM -> STRUKTUR ORGANISASI ===== --}}
+      <section class="tab-panel" data-tab-panel="struktur-organisasi">
+        <div class="section-head panel">
+          <h2>Struktur Organisasi</h2>
+          <p>Unggah satu gambar bagan struktur organisasi. Gambar ini akan tampil apa adanya di dashboard Kasansi, menu Lainnya &rarr; Struktur Organisasi.</p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><div><h3>Gambar Struktur Organisasi</h3><p>Format JPG, PNG, atau WEBP, maksimal 8 MB. Gunakan gambar dengan resolusi tinggi supaya tetap jelas saat ditampilkan penuh.</p></div></div>
+          <form method="POST" action="{{ route('admin.struktur-organisasi.update') }}" enctype="multipart/form-data" id="strukturOrgForm" style="padding:18px 22px">
+            @csrf
+            <div class="lp-hero-image-row">
+              <img src="{{ $pengaturan->struktur_organisasi_path ? asset('storage/'.$pengaturan->struktur_organisasi_path) : '' }}" alt="Gambar Struktur Organisasi saat ini" class="lp-current-image" id="strukturOrgPreviewImg" style="max-width:420px;max-height:320px;object-fit:contain;{{ $pengaturan->struktur_organisasi_path ? '' : 'display:none' }}">
+              <div class="lp-image-placeholder" id="strukturOrgPreviewPlaceholder" style="width:260px;height:160px;{{ $pengaturan->struktur_organisasi_path ? 'display:none' : '' }}">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
+                <span>Belum ada gambar struktur organisasi</span>
+              </div>
+              <label class="btn btn-ghost" style="cursor:pointer" for="strukturOrgInput">{{ $pengaturan->struktur_organisasi_path ? 'Ganti Gambar' : 'Pilih Gambar' }}</label>
+              <input id="strukturOrgInput" name="struktur_organisasi" type="file" accept="image/*" hidden required>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+                <button type="submit" class="btn btn-primary btn-sm" id="strukturOrgSubmitBtn" disabled>Simpan Gambar</button>
+                @if($pengaturan->struktur_organisasi_path)
+                <button type="button" class="btn btn-ghost-red btn-sm" id="strukturOrgDeleteBtn">Hapus Gambar</button>
+                @endif
+              </div>
+            </div>
+          </form>
+          <form method="POST" action="{{ route('admin.struktur-organisasi.destroy') }}" id="strukturOrgDeleteForm" style="display:none">
+            @csrf @method('DELETE')
+          </form>
+        </div>
+
+        <script>
+        (function () {
+          var input = document.getElementById('strukturOrgInput');
+          var img = document.getElementById('strukturOrgPreviewImg');
+          var placeholder = document.getElementById('strukturOrgPreviewPlaceholder');
+          var submitBtn = document.getElementById('strukturOrgSubmitBtn');
+          var deleteBtn = document.getElementById('strukturOrgDeleteBtn');
+          var deleteForm = document.getElementById('strukturOrgDeleteForm');
+
+          if (input) {
+            input.addEventListener('change', function () {
+              var file = input.files && input.files[0];
+              if (!file) return;
+              submitBtn.disabled = false;
+              var reader = new FileReader();
+              reader.onload = function (e) {
+                if (img) { img.src = e.target.result; img.style.display = 'block'; }
+                if (placeholder) placeholder.style.display = 'none';
+              };
+              reader.readAsDataURL(file);
+            });
+          }
+
+          if (deleteBtn && deleteForm) {
+            deleteBtn.addEventListener('click', function () {
+              if (window.confirm('Hapus gambar Struktur Organisasi? Menu Struktur Organisasi di dashboard Kasansi akan kosong sampai gambar baru diunggah.')) {
+                deleteForm.submit();
+              }
+            });
+          }
         })();
         </script>
       </section>
