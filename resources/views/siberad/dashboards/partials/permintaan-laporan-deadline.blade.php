@@ -720,7 +720,12 @@
             form.dataset.readonlyReason='locked';
             setKirimLaporanReadonly(form,true);
             var lampiranZone=document.getElementById('lampiranDropzone');
-            if(lampiranZone) setLampiranExisting(lampiranZone,[],true);
+            // Cuma KUNCI zona lampiran -- JANGAN pakai setLampiranExisting(...,[],...)
+            // di sini: argumen [] itu ngosongin state.existing + state.staged, jadi
+            // lampiran yang udah kesimpan / udah dipilih user ILANG dari modal pas
+            // deadline lewat (padahal cukup dikunci, bukan dihapus). Balik "normal"
+            // pas modal ditutup+buka lagi karena handler open ngisi ulang dari server.
+            if(lampiranZone) setLampiranReadonly(lampiranZone,true);
             var progresInput=form.querySelector('[name="progres"]');
             applyLaporanTexts('view',progresInput?progresInput.value:0,'locked');
             var alasan=card.dataset.terlambat==='1'
@@ -728,22 +733,35 @@
                 : 'Permintaan ini dibatalkan oleh Pimpinan.';
             window.siberadShowToast&&window.siberadShowToast('info',alasan+' Formulir dikunci, laporan tidak bisa dikirim lagi.');
         }else if(!lockedNow && wizardLocked){
-            // Pimpinan buka lagi permintaan ini -> lepas kunci wizard, balikin
-            // ke mode isi (default "create"/Update Progres -- jalur paling umum
-            // buat permintaan aktif), tanpa perlu tutup-buka modal. Teks yang
-            // tadi keketik TETAP dibiarin, cuma dibuka lagi supaya bisa diedit.
-            form.dataset.mode='create';
+            // Pimpinan buka lagi permintaan ini (mis. Edit Deadline) -> lepas
+            // kunci wizard tanpa perlu tutup-buka modal. Teks yang tadi keketik
+            // TETAP dibiarin, cuma dibuka lagi supaya bisa diedit.
             form.dataset.readonlyReason='';
-            form.dataset.editingTaskId='';
-            if(form.dataset.storeAction) form.action=form.dataset.storeAction;
-            setFormMethod(form,null);
             setKirimLaporanReadonly(form,false);
-            var taskIdReopen=form.querySelector('input[name="task_id"]');
-            if(taskIdReopen) taskIdReopen.value=target.dataset.taskId||'';
             var lampiranZoneReopen=document.getElementById('lampiranDropzone');
-            if(lampiranZoneReopen) setLampiranExisting(lampiranZoneReopen,[],false);
+            // Cuma BUKA kuncinya -- JANGAN setLampiranExisting(...,[],...): argumen
+            // [] ngosongin state.existing + state.staged, jadi lampiran checkpoint
+            // yang lagi diedit ILANG pas Pimpinan Edit Deadline (balik "normal"
+            // cuma pas modal ditutup+buka lagi). Cukup dibikin bisa diedit lagi.
+            if(lampiranZoneReopen) setLampiranReadonly(lampiranZoneReopen,false);
             var progresReopen=form.querySelector('[name="progres"]');
-            applyLaporanTexts('create',progresReopen?progresReopen.value:0);
+            // editingTaskId cuma di-set initEditProgresButtons & TIDAK disentuh
+            // blok kunci di atas -> kalau masih ada isinya berarti wizard tadinya
+            // mode Edit Progres (checkpoint "done"). Balikin ke 'edit' di
+            // checkpoint & row yang SAMA (form.action = updateUrl + _method=PATCH
+            // juga gak disentuh blok kunci) -- JANGAN dipaksa ke 'create', itu
+            // bikin submit jadi checkpoint BARU, bukan update row yang diedit.
+            if(form.dataset.editingTaskId){
+                form.dataset.mode='edit';
+                applyLaporanTexts('edit',progresReopen?progresReopen.value:0);
+            }else{
+                form.dataset.mode='create';
+                if(form.dataset.storeAction) form.action=form.dataset.storeAction;
+                setFormMethod(form,null);
+                var taskIdReopen=form.querySelector('input[name="task_id"]');
+                if(taskIdReopen) taskIdReopen.value=target.dataset.taskId||'';
+                applyLaporanTexts('create',progresReopen?progresReopen.value:0);
+            }
             window.siberadShowToast&&window.siberadShowToast('success','Permintaan laporan ini dibuka lagi oleh Pimpinan. Kamu bisa lanjut isi laporannya.');
         }
     };
@@ -1044,6 +1062,33 @@
         var msg=lampiranSizeErrorEl(zone);
         if(msg) msg.style.display='none';
         syncLampiranRemovedInputs(zone);
+        renderLampiranFileList(zone);
+    }
+    // Kunci / buka zona lampiran TANPA mengganti isinya -- beda dari
+    // setLampiranExisting() yang selalu me-reset daftar ke `list` baru (kalau
+    // dikasih [] jadi ngosongin state.existing + state.staged). Dipakai pas
+    // wizard #kirimLaporanModal keburu kekunci gara-gara deadline lewat /
+    // dibatalkan Pimpinan SEMENTARA modal-nya lagi kebuka: user tetap harus
+    // bisa LIHAT lampiran yang sudah tersimpan / sudah dipilih, cuma nggak
+    // bisa nambah/hapus lagi.
+    function setLampiranReadonly(zone,readonly){
+        var state=lampiranZoneState(zone);
+        state.readonly=!!readonly;
+        // Sembunyiin kotak dropzone-nya; #lampiranFileList itu elemen sibling
+        // (bukan anak zone) jadi daftar file-nya tetap kelihatan.
+        zone.hidden=!!readonly;
+        if(readonly){
+            // Lepas file staged dari <input type=file> (barisnya tetap tampil
+            // dari state.staged) supaya gak keikut ke-submit kalau form entah
+            // gimana tetap disubmit dalam keadaan terkunci.
+            var input=zone.querySelector('.lampiran-dropzone-input');
+            if(input) input.value='';
+        }else{
+            // Buka kunci lagi -> kembalikan file staged ke input.files (tadi
+            // dilepas pas dikunci) biar ikut ke-submit kalau nanti dikirim.
+            syncLampiranInputFiles(zone);
+        }
+        // Re-render: buildLampiranRow baca state.readonly -> baris tanpa tombol hapus.
         renderLampiranFileList(zone);
     }
     function initLampiranDropzone(){
