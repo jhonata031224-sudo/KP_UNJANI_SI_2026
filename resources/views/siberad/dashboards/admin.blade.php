@@ -271,7 +271,7 @@
     {{-- ===== VIEW BANTUAN & PANDUAN ===== --}}
     <div class="profile-dropdown-view" id="profileHelpView" style="display:none;">
       <div class="profile-modal-title">Bantuan &amp; Panduan</div>
-      <p class="help-intro">Ringkasan singkat menu utama di dashboard Admin.</p>
+      <p class="help-intro">Ringkasan menu di dashboard Admin. Semua menu ada di sidebar kiri.</p>
 
       <div class="help-topics">
         <div class="help-topic">
@@ -280,7 +280,7 @@
           </div>
           <div class="help-topic-body">
             <div class="help-topic-title">Kelola Pengguna</div>
-            <div class="help-topic-desc">Tambah, ubah, atau nonaktifkan akun, serta proses permintaan reset password.</div>
+            <div class="help-topic-desc">Daftar Pengguna untuk menambah, mengubah, dan menonaktifkan akun tiap satuan. Permintaan Ganti Password untuk menyetujui atau menolak reset password dari pengguna.</div>
           </div>
         </div>
         <div class="help-topic">
@@ -289,7 +289,7 @@
           </div>
           <div class="help-topic-body">
             <div class="help-topic-title">Monitoring</div>
-            <div class="help-topic-desc">Pantau rekap &amp; ekspor laporan dari seluruh satuan, serta lihat siapa saja yang sedang aktif login lewat Pengguna Aktif.</div>
+            <div class="help-topic-desc">Ringkasan Data (rekap &amp; grafik seluruh satuan), Data Laporan (daftar lengkap + ekspor), dan Pengguna Aktif (daftar yang sedang login).</div>
           </div>
         </div>
         <div class="help-topic">
@@ -298,7 +298,7 @@
           </div>
           <div class="help-topic-body">
             <div class="help-topic-title">Riwayat Aktivitas</div>
-            <div class="help-topic-desc">Telusuri rekam jejak login, logout, dan seluruh aksi kelola sistem oleh Admin.</div>
+            <div class="help-topic-desc">Rekam jejak login, logout, dan seluruh aksi kelola sistem oleh Admin, lengkap dengan waktu dan pelakunya.</div>
           </div>
         </div>
         <div class="help-topic">
@@ -307,7 +307,7 @@
           </div>
           <div class="help-topic-body">
             <div class="help-topic-title">Kelola Sistem</div>
-            <div class="help-topic-desc">Atur data satuan, role &amp; hak akses, backup database, hingga pengaturan umum aplikasi.</div>
+            <div class="help-topic-desc">Data Satuan, Hak Akses Pengguna, Cadangan Data, Reset Data Laporan, Pengaturan Umum, dan Notifikasi aplikasi.</div>
           </div>
         </div>
       </div>
