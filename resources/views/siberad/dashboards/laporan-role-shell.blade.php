@@ -11,3 +11,6 @@
 @include('siberad.dashboards.partials.surat-terkirim-realtime')
 @include('siberad.dashboards.partials.styled-select')
 @include('siberad.dashboards.partials.sidebar-header-surface')
+@if($isKasansi)
+@include('siberad.dashboards.partials.lainnya-kasansi')
+@endif

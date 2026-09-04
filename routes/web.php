@@ -233,6 +233,11 @@ Route::post('/push/unsubscribe', [\App\Http\Controllers\PushSubscriptionControll
     ->middleware('auth')
     ->name('push.unsubscribe');
 
+// Toggle preferensi push notification per-user (on/off dari panel Notifikasi Kasansi)
+Route::post('/notifikasi/toggle-user', [\App\Http\Controllers\UserNotifikasiController::class, 'toggle'])
+    ->middleware('auth')
+    ->name('notifikasi.toggle-user');
+
 // ===== Manajemen Akun Media Sosial =====
 Route::post('/akun-medsos', [AkunMedsosController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('akun-medsos.store');
 Route::patch('/akun-medsos/{akunMedsos}', [AkunMedsosController::class, 'update'])->middleware(['auth', 'modul:laporan'])->name('akun-medsos.update');

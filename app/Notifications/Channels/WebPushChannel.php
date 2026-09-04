@@ -33,6 +33,12 @@ class WebPushChannel
             return;
         }
 
+        // Saklar per-user: kalau user sendiri yang matiin notif push-nya
+        // lewat panel Notifikasi di sidebar, skip juga.
+        if (isset($notifiable->notif_push_enabled) && ! $notifiable->notif_push_enabled) {
+            return;
+        }
+
         $subscriptions = $notifiable->pushSubscriptions()->get();
         if ($subscriptions->isEmpty()) {
             return;

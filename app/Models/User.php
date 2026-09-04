@@ -28,7 +28,10 @@ class User extends Authenticatable
         'satuan_id',
         'jabatan',
         'foto_path',
+        'notif_push_enabled',
     ];
+
+
 
     /**
      * Satuan tempat user ini terdaftar (dipakai untuk memvalidasi pilihan
@@ -85,6 +88,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'notif_push_enabled' => 'boolean',
         ];
     }
 }
