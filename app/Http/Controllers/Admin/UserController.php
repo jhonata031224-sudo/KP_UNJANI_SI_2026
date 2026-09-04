@@ -81,12 +81,26 @@ class UserController extends Controller
 
     private function validated(Request $request, ?User $user = null): array
     {
+        // Pesan Bahasa Indonesia -- proyek ini tidak punya file lang, jadi
+        // tanpa ini pesan gagal validasi (mis. username/NRP kembar) muncul
+        // dalam Bahasa Inggris bawaan Laravel. Ditampilkan inline di bawah
+        // field yang salah di modal Tambah/Ubah Pengguna (bukan toast).
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:50', 'unique:users,username'.($user ? ','.$user->id : '')],
             'email' => ['nullable', 'email', 'max:255', 'unique:users,email'.($user ? ','.$user->id : '')],
             'satuan_id' => ['required', 'exists:satuans,id'],
             'password' => [$user ? 'nullable' : 'required', 'string'],
+        ], [
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'username.required' => 'Username / NRP wajib diisi.',
+            'username.unique' => 'Username / NRP ini sudah dipakai akun lain.',
+            'username.max' => 'Username / NRP maksimal 50 karakter.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email ini sudah terdaftar di akun lain.',
+            'satuan_id.required' => 'Satuan wajib dipilih.',
+            'satuan_id.exists' => 'Satuan yang dipilih tidak valid.',
+            'password.required' => 'Password awal wajib diisi.',
         ]);
 
         return $data;

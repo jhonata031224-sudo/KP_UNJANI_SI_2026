@@ -332,6 +332,9 @@
     </div>
     <form class="form-grid" method="POST" action="{{ route('admin.users.store') }}" autocomplete="off">
       @csrf
+      {{-- Penanda form: dipakai saat validasi gagal supaya modal yang benar
+           dibuka ulang dengan error merah inline (lihat script re-open di bawah). --}}
+      <input type="hidden" name="_form" value="user_store">
       <div class="form-field">
         <label for="uNama">Nama Lengkap</label>
         <input id="uNama" name="name" type="text" autocomplete="off" placeholder="Contoh: Budi Santoso" required>
@@ -393,6 +396,10 @@
     <form class="form-grid" method="POST" action="" id="ubahPenggunaForm" autocomplete="off">
       @csrf
       @method('PATCH')
+      {{-- Penanda + id user: dipakai saat validasi gagal supaya modal Ubah
+           dibuka ulang (action-nya dibangun dari _uid) dengan error merah inline. --}}
+      <input type="hidden" name="_form" value="user_update">
+      <input type="hidden" name="_uid" id="upUid">
       <div class="form-field">
         <label for="upNama">Nama Lengkap</label>
         <input id="upNama" name="name" type="text" autocomplete="off" placeholder="Contoh: Budi Santoso" required>
@@ -926,7 +933,9 @@
            akan pernah kelihatan kalau user submit form dari tab LAIN
            (JS mengembalikan user ke tab terakhir yang dibuka, bukan otomatis
            ke tab yang errornya ada). --}}
-      @if($errors->any())<script>document.addEventListener('DOMContentLoaded',function(){window.siberadShowToast?window.siberadShowToast('error',{!! json_encode($errors->first()) !!}):null});</script>@endif
+      {{-- Error form Tambah/Ubah Pengguna TIDAK di-toast -- ditampilkan inline
+           (merah, di bawah field) lewat script re-open modal di bawah. --}}
+      @if($errors->any() && ! in_array(old('_form'), ['user_store', 'user_update'], true))<script>document.addEventListener('DOMContentLoaded',function(){window.siberadShowToast?window.siberadShowToast('error',{!! json_encode($errors->first()) !!}):null});</script>@endif
 
       {{-- ===== DASHBOARD ===== --}}
       <section class="tab-panel active" data-tab-panel="dashboard">
@@ -1144,6 +1153,7 @@
                     <div class="btn-row">
                       <button class="table-action-btn edit" type="button" onclick="bukaUbahPengguna(this)"
                         data-action="{{ route('admin.users.update', $p) }}"
+                        data-user-id="{{ $p->id }}"
                         data-name="{{ $p->name }}"
                         data-username="{{ $p->username }}"
                         data-email="{{ $p->email }}"
@@ -1163,7 +1173,52 @@
         </div>
       </section>
 
+      @php
+        // Disiapkan di PHP -- @json() dengan map() + mb_strtolower(trim())
+        // bersarang bikin parser direktif Blade salah hitung kurung.
+        $akunListForDup = $semuaPengguna->map(fn ($u) => [
+          'id' => $u->id,
+          'username' => mb_strtolower(trim((string) $u->username)),
+          'email' => mb_strtolower(trim((string) $u->email)),
+        ])->values();
+      @endphp
       <script>
+        // Daftar akun yang sudah ada -> deteksi Username/NRP & Email KEMBAR
+        // secara LIVE saat diketik (bukan cuma pas submit). Rule unique:users
+        // di server tetap jadi pengaman terakhir + fallback re-open modal
+        // kalau ada balapan dgn tab / admin lain.
+        window.__siberadAkunList = @json($akunListForDup);
+        function siberadBindDupCheck(field, kind, getIgnoreId) {
+          if (!field) return;
+          var msg = field.nextElementSibling;
+          if (!msg || !msg.classList.contains('profile-field-error')) {
+            msg = document.createElement('span');
+            msg.className = 'profile-field-error';
+            msg.style.display = 'none';
+            field.insertAdjacentElement('afterend', msg);
+          }
+          var label = kind === 'email'
+            ? 'Email ini sudah terdaftar di akun lain.'
+            : 'Username / NRP ini sudah dipakai akun lain.';
+          function check() {
+            var val = (field.value || '').trim().toLowerCase();
+            var ignoreId = getIgnoreId ? String(getIgnoreId() || '') : '';
+            var dup = !!val && (window.__siberadAkunList || []).some(function (a) {
+              return String(a[kind] || '') === val && String(a.id) !== ignoreId;
+            });
+            if (dup) {
+              field.classList.add('field-invalid');
+              field.setCustomValidity(label);   // blokir submit juga
+              msg.textContent = label;
+              msg.style.display = 'flex';
+            } else {
+              field.setCustomValidity('');
+              if (msg.textContent === label) { field.classList.remove('field-invalid'); msg.style.display = 'none'; }
+            }
+          }
+          field.addEventListener('input', check);
+          field.addEventListener('blur', check);
+        }
         (function () {
           var modal = document.getElementById('tambahPenggunaModal');
           var openBtn = document.getElementById('tambahPenggunaOpen');
@@ -1199,7 +1254,9 @@
               field.addEventListener('invalid', function (e) {
                 e.preventDefault();
                 field.classList.add('field-invalid');
-                msg.textContent = field.validity.typeMismatch
+                msg.textContent = field.validity.customError
+                  ? field.validationMessage
+                  : field.validity.typeMismatch
                   ? 'Format email tidak valid.'
                   : (requiredMessages[field.id] || 'Kolom ini wajib diisi.');
                 msg.style.display = 'flex';
@@ -1214,6 +1271,10 @@
               });
             });
           }
+
+          // Deteksi Username/NRP & Email KEMBAR secara LIVE saat diketik.
+          siberadBindDupCheck(document.getElementById('uUsername'), 'username', null);
+          siberadBindDupCheck(document.getElementById('uEmail'), 'email', null);
 
           // Konfirmasi dulu sebelum beneran kirim (senada sama konfirmasi
           // Kirim Permintaan ke Admin di form Ganti Password): validasi
@@ -1240,11 +1301,15 @@
 
         window.bukaUbahPengguna = function (btn) {
           document.getElementById('ubahPenggunaForm').action = btn.dataset.action;
+          document.getElementById('upUid').value = btn.dataset.userId || '';
           document.getElementById('upNama').value = btn.dataset.name || '';
           document.getElementById('upUsername').value = btn.dataset.username || '';
           document.getElementById('upEmail').value = btn.dataset.email || '';
           document.getElementById('upSatuan').value = btn.dataset.satuanId || '';
           document.getElementById('upPassword').value = '';
+          // Bersihkan sisa penanda error merah dari sesi Ubah sebelumnya.
+          document.querySelectorAll('#ubahPenggunaForm .field-invalid').forEach(function (el) { el.classList.remove('field-invalid'); });
+          document.querySelectorAll('#ubahPenggunaForm .profile-field-error').forEach(function (el) { el.style.display = 'none'; });
           document.getElementById('ubahPenggunaModal').classList.add('open');
         };
 
@@ -1304,7 +1369,9 @@
               field.addEventListener('invalid', function (e) {
                 e.preventDefault();
                 field.classList.add('field-invalid');
-                msg.textContent = field.validity.typeMismatch
+                msg.textContent = field.validity.customError
+                  ? field.validationMessage
+                  : field.validity.typeMismatch
                   ? 'Format email tidak valid.'
                   : (requiredMessages[field.id] || 'Kolom ini wajib diisi.');
                 msg.style.display = 'flex';
@@ -1319,6 +1386,11 @@
               });
             });
           }
+
+          // Deteksi Username/NRP & Email KEMBAR secara LIVE (kecuali akun yang
+          // sedang diedit itu sendiri -> pakai #upUid sebagai id yang diabaikan).
+          siberadBindDupCheck(document.getElementById('upUsername'), 'username', function () { return document.getElementById('upUid').value; });
+          siberadBindDupCheck(document.getElementById('upEmail'), 'email', function () { return document.getElementById('upUid').value; });
 
           // Konfirmasi dulu sebelum beneran kirim (senada sama modal Tambah
           // Pengguna): validasi wajib-diisi bawaan browser tetap jalan
@@ -1341,6 +1413,72 @@
           }
         })();
       </script>
+
+      @if($errors->any() && in_array(old('_form'), ['user_store', 'user_update'], true))
+      @php
+        // Disiapkan di PHP dulu -- @json() dengan array literal multi-baris +
+        // old() bersarang bikin parser direktif Blade salah hitung kurung.
+        $reopenIsUpdate = old('_form') === 'user_update';
+        $reopenOldVals = [
+          'name' => old('name'),
+          'username' => old('username'),
+          'email' => old('email'),
+          'satuan_id' => old('satuan_id'),
+        ];
+        $reopenErrs = $errors->messages();
+        $reopenUid = old('_uid');
+        $reopenBase = url('admin/users');
+      @endphp
+      {{-- Validasi Tambah/Ubah Pengguna gagal (mis. Username/NRP atau Email
+           kembar) -> buka ulang modal-nya, isi ulang nilai lama, tampilkan
+           pesan MERAH inline di bawah field yang salah (bukan toast). Reuse
+           kelas .field-invalid / .profile-field-error + listener input/change
+           yang sudah dipasang IIFE modal di atas (jadi error hilang begitu
+           field-nya diketik ulang). --}}
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          var isUpdate = {{ $reopenIsUpdate ? 'true' : 'false' }};
+          var modal = document.getElementById(isUpdate ? 'ubahPenggunaModal' : 'tambahPenggunaModal');
+          if (!modal) return;
+          var idMap = isUpdate
+            ? { name: 'upNama', username: 'upUsername', email: 'upEmail', satuan_id: 'upSatuan' }
+            : { name: 'uNama', username: 'uUsername', email: 'uEmail', satuan_id: 'uSatuan' };
+          var oldVals = @json($reopenOldVals);
+          @if($reopenIsUpdate)
+          var uForm = document.getElementById('ubahPenggunaForm');
+          var uid = @json($reopenUid);
+          if (uForm && uid) {
+            uForm.action = @json($reopenBase) + '/' + uid;
+            var uidField = document.getElementById('upUid');
+            if (uidField) uidField.value = uid;
+          }
+          @endif
+          Object.keys(idMap).forEach(function (f) {
+            var el = document.getElementById(idMap[f]);
+            if (el && oldVals[f] != null && oldVals[f] !== '') el.value = oldVals[f];
+          });
+          var errs = @json($reopenErrs);
+          Object.keys(errs).forEach(function (f) {
+            var el = document.getElementById(idMap[f]);
+            if (!el) return;
+            el.classList.add('field-invalid');
+            var msg = el.nextElementSibling;
+            if (!msg || !msg.classList.contains('profile-field-error')) {
+              msg = document.createElement('span');
+              msg.className = 'profile-field-error';
+              el.insertAdjacentElement('afterend', msg);
+              el.addEventListener('input', function () { el.classList.remove('field-invalid'); msg.style.display = 'none'; });
+              el.addEventListener('change', function () { el.classList.remove('field-invalid'); msg.style.display = 'none'; });
+            }
+            msg.textContent = errs[f][0];
+            msg.style.display = 'flex';
+          });
+          modal.classList.add('open');
+          var firstBad = Object.keys(errs).map(function (f) { return document.getElementById(idMap[f]); }).filter(Boolean)[0];
+          if (firstBad) setTimeout(function () { try { firstBad.focus(); } catch (e) {} }, 60);
+        });
+      </script>
+      @endif
 
       {{-- ===== MANAJEMEN SATUAN ===== --}}
       <section class="tab-panel" data-tab-panel="satlak">
