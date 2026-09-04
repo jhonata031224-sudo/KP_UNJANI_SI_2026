@@ -511,8 +511,17 @@ function initDanpusArchiveMode(){
  // fresh dari server, kartu baru disisipin, semua dengan animasi halus.
  // Pola sama dengan sisi satuan (laporan-role-realtime-sync.blade.php).
  // Kartu yang HILANG (diarsip/diputuskan) tetap ditangani loadHistory().
- const cardsEndpoint='{{ route('permintaan-laporan.realtime') }}?pimpinan=1';
- let cardsSince='0',cardsBusy=false;
+ //
+ // Selalu kirim since=0 (minta daftar aktif LENGKAP tiap poll), PERSIS
+ // kayak syncRequestList() di satuan. Dulu di sini pakai cursor
+ // since=server_time (incremental) -- tapi teks hitung mundur deadline &
+ // warna urgensi (near/bad) itu properti TERHITUNG dari deadline_at vs
+ // now(), updated_at-nya gak ikut berubah. Jadi kartu yang cuma "makin
+ // lama terlambat" gak pernah dikirim ulang -> pill deadline-nya beku di
+ // Pimpinan (di satuan normal karena selalu full). Diff cardSignature()
+ // di bawah tetap nyaring: kartu yang teksnya gak berubah gak di-replace.
+ const cardsEndpoint='{{ route('permintaan-laporan.realtime') }}?pimpinan=1&since=0';
+ let cardsBusy=false;
  function prefersReduce(){return window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
  // Bandingkan kartu tanpa atribut/kelas yang dikelola klien (pin, menu
  // kebuka, flag *-bound, style sisa FLIP, kelas animasi) -- biar cuma
@@ -656,10 +665,9 @@ function initDanpusArchiveMode(){
    if(list.querySelector('.dcard-menu.open'))return; // jangan ganggu menu titik-3 yang lagi kebuka
    cardsBusy=true;
    try{
-     const r=await fetch(cardsEndpoint+'&since='+encodeURIComponent(cardsSince)+'&_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest','Cache-Control':'no-cache'}});
+     const r=await fetch(cardsEndpoint+'&_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest','Cache-Control':'no-cache'}});
      if(!r.ok)return;
      const data=await r.json();
-     if(data&&data.server_time)cardsSince=data.server_time;
      if(typeof data.items_html!=='string')return;
      const holder=document.createElement('div');holder.innerHTML=data.items_html.trim();
      const fresh=Array.prototype.slice.call(holder.querySelectorAll(':scope > article.deadline-sender-item'));
@@ -714,7 +722,7 @@ function initDanpusArchiveMode(){
 
  // Dipakai setelah aksi AJAX (Batalkan / Edit Deadline dari modal Lihat
  // Progres) buat nyegerin kartu + isi modal SEGERA, tanpa nunggu poll 4-5 dtk.
- window.siberadSyncPimpinanCardsNow=function(){cardsSince='0';syncPimpinanCards();setTimeout(syncPimpinanCards,500);};
+ window.siberadSyncPimpinanCardsNow=function(){syncPimpinanCards();setTimeout(syncPimpinanCards,500);};
  window.siberadLoadHistoryNow=loadHistory;
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initDanpusArchiveMode,{once:true});else initDanpusArchiveMode();

@@ -87,49 +87,22 @@ class PermintaanLaporanController extends Controller
         // per kartu tiap siklus poll (status/progres/tugas/tombol ikut
         // ke-refresh), pola sama dengan sisi satuan (laporan-role-realtime-
         // sync.blade.php). Penghapusan kartu (diarsip/diputuskan) tetap
-        // ditangani jalur ?history=1 di atas. Incremental: cuma kirim kartu
-        // yang berubah sejak `since` (jam server), plus kartu baru.
+        // ditangani jalur ?history=1 di atas.
+        //
+        // SELALU balikin daftar aktif LENGKAP (bukan incremental pakai cursor
+        // `since`) -- persis kayak jalur satuan di bawah. Dulu sempat pakai
+        // filter `updated_at > since`, tapi teks hitung mundur deadline &
+        // warna urgensi (near/bad) itu properti TERHITUNG (deadline_at vs
+        // now()) yang gak nyentuh updated_at, jadi kartu yang cuma "makin lama
+        // terlambat" gak pernah dikirim ulang -> pill deadline-nya beku sampai
+        // reload. Klien (danpus-permintaan-arsip-mode) nge-diff cardSignature()
+        // per kartu, jadi yang teksnya gak berubah tetap gak di-replaceWith().
         if ($this->isPimpinan($request) && $request->boolean('pimpinan')) {
-            $sinceRaw = trim((string) $request->query('since', '0'));
-
-            try {
-                $since = ($sinceRaw !== '' && $sinceRaw !== '0')
-                    ? \Illuminate\Support\Carbon::parse($sinceRaw)
-                    : null;
-            } catch (\Throwable $e) {
-                $since = null;
-            }
-
-            $query = PermintaanLaporan::with(['pembuat.satuan', 'tujuanSatuan', 'laporan', 'laporans', 'tasks.laporans'])
+            $items = PermintaanLaporan::with(['pembuat.satuan', 'tujuanSatuan', 'laporan', 'laporans', 'tasks.laporans'])
                 ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS', 'WADAN']))
-                ->whereNull('archived_at');
-
-            if ($since) {
-                $now = now();
-                $query->where(function ($q) use ($since, $now) {
-                    $q->where('updated_at', '>', $since)
-                        ->orWhereHas('tasks', fn ($t) => $t->where('updated_at', '>', $since))
-                        ->orWhereHas('laporans', fn ($l) => $l->where('updated_at', '>', $since))
-                        // Permintaan yang BARU lewat deadline sejak poll terakhir
-                        // (jadi "Terlambat"). Statusnya properti terhitung
-                        // (deadline_at vs now), updated_at gak berubah -- jadi
-                        // harus dikirim eksplisit di sini biar kartu + modal
-                        // "Lihat Progres" yang lagi kebuka ikut nyusut ke
-                        // tampilan Terlambat tanpa perlu tutup-buka modal.
-                        ->orWhere(function ($t) use ($since, $now) {
-                            $t->whereNull('laporan_id')
-                                ->whereNotIn('status', [
-                                    PermintaanLaporan::STATUS_SELESAI,
-                                    PermintaanLaporan::STATUS_PEMERIKSAAN,
-                                    PermintaanLaporan::STATUS_DIBATALKAN,
-                                ])
-                                ->where('deadline_at', '>', $since)
-                                ->where('deadline_at', '<=', $now);
-                        });
-                });
-            }
-
-            $items = $query->latest('id')->get();
+                ->whereNull('archived_at')
+                ->latest('id')
+                ->get();
 
             return response()->json([
                 'items_html' => view('siberad.dashboards.partials.permintaan-laporan-pimpinan-realtime-items', [
