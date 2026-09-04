@@ -61,6 +61,9 @@ class SatuanController extends Controller
         // campuran huruf besar/kecil walau kelihatan kapital pas diketik.
         $request->merge(['kode' => strtoupper(trim((string) $request->input('kode')))]);
 
+        // Pesan Bahasa Indonesia -- proyek tidak punya file lang, jadi tanpa
+        // ini kode satuan kembar dsb muncul dalam Bahasa Inggris bawaan Laravel.
+        // Ditampilkan inline merah di bawah field (bukan toast).
         return $request->validate([
             'kode' => ['required', 'string', 'max:50', 'unique:satuans,kode'.($satuan ? ','.$satuan->id : '')],
             'nama' => ['required', 'string', 'max:255'],
@@ -73,6 +76,13 @@ class SatuanController extends Controller
                 Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN,
             ])],
             'deskripsi' => ['nullable', 'string'],
+        ], [
+            'kode.required' => 'Kode satuan wajib diisi.',
+            'kode.unique' => 'Kode satuan ini sudah dipakai satuan lain.',
+            'kode.max' => 'Kode satuan maksimal 50 karakter.',
+            'nama.required' => 'Nama satuan wajib diisi.',
+            'kategori.required' => 'Kategori wajib dipilih.',
+            'kategori.in' => 'Kategori yang dipilih tidak valid.',
         ]);
     }
 }

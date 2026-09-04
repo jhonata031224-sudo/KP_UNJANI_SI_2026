@@ -525,6 +525,9 @@
     </div>
     <form class="form-grid" method="POST" action="{{ route('admin.satuan.store') }}" autocomplete="off">
       @csrf
+      {{-- Penanda form: dipakai saat validasi gagal supaya modal yang benar
+           dibuka ulang dengan error merah inline (lihat script re-open di bawah). --}}
+      <input type="hidden" name="_form" value="satuan_store">
       <div class="form-field"><label for="sKode">Kode</label><input id="sKode" name="kode" type="text" autocomplete="off" placeholder="Contoh: BINLOG" required style="text-transform:uppercase;"></div>
       <div class="form-field"><label for="sNama">Nama Satuan</label><input id="sNama" name="nama" type="text" autocomplete="off" placeholder="Contoh: Pembinaan Logistik" required></div>
       <div class="form-field">
@@ -577,6 +580,10 @@
     <form class="form-grid" method="POST" action="" id="ubahSatuanForm" autocomplete="off">
       @csrf
       @method('PATCH')
+      {{-- Penanda + id satuan: dipakai saat validasi gagal supaya modal Ubah
+           dibuka ulang (action dibangun dari _uid) dengan error merah inline. --}}
+      <input type="hidden" name="_form" value="satuan_update">
+      <input type="hidden" name="_uid" id="usSatuanId">
       <div class="form-field"><label for="usKode">Kode</label><input id="usKode" name="kode" type="text" autocomplete="off" placeholder="Contoh: BINLOG" required style="text-transform:uppercase;"></div>
       <div class="form-field"><label for="usNama">Nama Satuan</label><input id="usNama" name="nama" type="text" autocomplete="off" placeholder="Contoh: Pembinaan Logistik" required></div>
       <div class="form-field">
@@ -935,7 +942,7 @@
            ke tab yang errornya ada). --}}
       {{-- Error form Tambah/Ubah Pengguna TIDAK di-toast -- ditampilkan inline
            (merah, di bawah field) lewat script re-open modal di bawah. --}}
-      @if($errors->any() && ! in_array(old('_form'), ['user_store', 'user_update'], true))<script>document.addEventListener('DOMContentLoaded',function(){window.siberadShowToast?window.siberadShowToast('error',{!! json_encode($errors->first()) !!}):null});</script>@endif
+      @if($errors->any() && ! in_array(old('_form'), ['user_store', 'user_update', 'satuan_store', 'satuan_update'], true))<script>document.addEventListener('DOMContentLoaded',function(){window.siberadShowToast?window.siberadShowToast('error',{!! json_encode($errors->first()) !!}):null});</script>@endif
 
       {{-- ===== DASHBOARD ===== --}}
       <section class="tab-panel active" data-tab-panel="dashboard">
@@ -1181,13 +1188,18 @@
           'username' => mb_strtolower(trim((string) $u->username)),
           'email' => mb_strtolower(trim((string) $u->email)),
         ])->values();
+        $satuanListForDup = $semuaSatuan->map(fn ($s) => [
+          'id' => $s->id,
+          'kode' => mb_strtolower(trim((string) $s->kode)),
+        ])->values();
       @endphp
       <script>
-        // Daftar akun yang sudah ada -> deteksi Username/NRP & Email KEMBAR
-        // secara LIVE saat diketik (bukan cuma pas submit). Rule unique:users
-        // di server tetap jadi pengaman terakhir + fallback re-open modal
-        // kalau ada balapan dgn tab / admin lain.
+        // Daftar akun & satuan yang sudah ada -> deteksi Username/NRP / Email /
+        // Kode Satuan KEMBAR secara LIVE saat diketik (bukan cuma pas submit).
+        // Rule unique:* di server tetap jadi pengaman terakhir + fallback
+        // re-open modal kalau ada balapan dgn tab / admin lain.
         window.__siberadAkunList = @json($akunListForDup);
+        window.__siberadSatuanList = @json($satuanListForDup);
         function siberadBindDupCheck(field, kind, getIgnoreId) {
           if (!field) return;
           var msg = field.nextElementSibling;
@@ -1197,13 +1209,14 @@
             msg.style.display = 'none';
             field.insertAdjacentElement('afterend', msg);
           }
-          var label = kind === 'email'
-            ? 'Email ini sudah terdaftar di akun lain.'
+          var label = kind === 'email' ? 'Email ini sudah terdaftar di akun lain.'
+            : kind === 'kode' ? 'Kode satuan ini sudah dipakai satuan lain.'
             : 'Username / NRP ini sudah dipakai akun lain.';
           function check() {
             var val = (field.value || '').trim().toLowerCase();
+            var list = kind === 'kode' ? (window.__siberadSatuanList || []) : (window.__siberadAkunList || []);
             var ignoreId = getIgnoreId ? String(getIgnoreId() || '') : '';
-            var dup = !!val && (window.__siberadAkunList || []).some(function (a) {
+            var dup = !!val && list.some(function (a) {
               return String(a[kind] || '') === val && String(a.id) !== ignoreId;
             });
             if (dup) {
@@ -1414,52 +1427,55 @@
         })();
       </script>
 
-      @if($errors->any() && in_array(old('_form'), ['user_store', 'user_update'], true))
+      @php $reopenForm = old('_form'); @endphp
+      @if($errors->any() && in_array($reopenForm, ['user_store', 'user_update', 'satuan_store', 'satuan_update'], true))
       @php
-        // Disiapkan di PHP dulu -- @json() dengan array literal multi-baris +
-        // old() bersarang bikin parser direktif Blade salah hitung kurung.
-        $reopenIsUpdate = old('_form') === 'user_update';
-        $reopenOldVals = [
-          'name' => old('name'),
-          'username' => old('username'),
-          'email' => old('email'),
-          'satuan_id' => old('satuan_id'),
-        ];
+        // Disiapkan di PHP -- @json() dgn array literal multi-baris + old()
+        // bersarang bikin parser direktif Blade salah hitung kurung.
+        $reopenIsUpdate = str_ends_with($reopenForm, '_update');
+        $reopenIsSatuan = str_starts_with($reopenForm, 'satuan_');
+        $reopenOldVals = $reopenIsSatuan
+          ? ['kode' => old('kode'), 'nama' => old('nama'), 'kategori' => old('kategori'), 'deskripsi' => old('deskripsi')]
+          : ['name' => old('name'), 'username' => old('username'), 'email' => old('email'), 'satuan_id' => old('satuan_id')];
         $reopenErrs = $errors->messages();
         $reopenUid = old('_uid');
-        $reopenBase = url('admin/users');
+        $reopenBase = $reopenIsSatuan ? url('admin/satuan') : url('admin/users');
       @endphp
-      {{-- Validasi Tambah/Ubah Pengguna gagal (mis. Username/NRP atau Email
-           kembar) -> buka ulang modal-nya, isi ulang nilai lama, tampilkan
-           pesan MERAH inline di bawah field yang salah (bukan toast). Reuse
-           kelas .field-invalid / .profile-field-error + listener input/change
-           yang sudah dipasang IIFE modal di atas (jadi error hilang begitu
-           field-nya diketik ulang). --}}
+      {{-- Validasi Tambah/Ubah Pengguna atau Satuan gagal (mis. Username/NRP,
+           Email, atau Kode Satuan kembar) -> buka ulang modal-nya, isi ulang
+           nilai lama, tampilkan pesan MERAH inline di bawah field yang salah
+           (bukan toast). Reuse .field-invalid / .profile-field-error + listener
+           input/change dari IIFE modal (error hilang begitu diketik ulang). --}}
       <script>
         document.addEventListener('DOMContentLoaded', function () {
           var isUpdate = {{ $reopenIsUpdate ? 'true' : 'false' }};
-          var modal = document.getElementById(isUpdate ? 'ubahPenggunaModal' : 'tambahPenggunaModal');
+          var isSatuan = {{ $reopenIsSatuan ? 'true' : 'false' }};
+          var cfg = isSatuan
+            ? (isUpdate
+                ? { modal: 'ubahSatuanModal', form: 'ubahSatuanForm', uidField: 'usSatuanId', map: { kode: 'usKode', nama: 'usNama', kategori: 'usKategori', deskripsi: 'usDeskripsi' } }
+                : { modal: 'tambahSatuanModal', map: { kode: 'sKode', nama: 'sNama', kategori: 'sKategori', deskripsi: 'sDeskripsi' } })
+            : (isUpdate
+                ? { modal: 'ubahPenggunaModal', form: 'ubahPenggunaForm', uidField: 'upUid', map: { name: 'upNama', username: 'upUsername', email: 'upEmail', satuan_id: 'upSatuan' } }
+                : { modal: 'tambahPenggunaModal', map: { name: 'uNama', username: 'uUsername', email: 'uEmail', satuan_id: 'uSatuan' } });
+          var modal = document.getElementById(cfg.modal);
           if (!modal) return;
-          var idMap = isUpdate
-            ? { name: 'upNama', username: 'upUsername', email: 'upEmail', satuan_id: 'upSatuan' }
-            : { name: 'uNama', username: 'uUsername', email: 'uEmail', satuan_id: 'uSatuan' };
           var oldVals = @json($reopenOldVals);
           @if($reopenIsUpdate)
-          var uForm = document.getElementById('ubahPenggunaForm');
           var uid = @json($reopenUid);
+          var uForm = cfg.form ? document.getElementById(cfg.form) : null;
           if (uForm && uid) {
             uForm.action = @json($reopenBase) + '/' + uid;
-            var uidField = document.getElementById('upUid');
+            var uidField = cfg.uidField ? document.getElementById(cfg.uidField) : null;
             if (uidField) uidField.value = uid;
           }
           @endif
-          Object.keys(idMap).forEach(function (f) {
-            var el = document.getElementById(idMap[f]);
+          Object.keys(cfg.map).forEach(function (f) {
+            var el = document.getElementById(cfg.map[f]);
             if (el && oldVals[f] != null && oldVals[f] !== '') el.value = oldVals[f];
           });
           var errs = @json($reopenErrs);
           Object.keys(errs).forEach(function (f) {
-            var el = document.getElementById(idMap[f]);
+            var el = document.getElementById(cfg.map[f]);
             if (!el) return;
             el.classList.add('field-invalid');
             var msg = el.nextElementSibling;
@@ -1474,7 +1490,7 @@
             msg.style.display = 'flex';
           });
           modal.classList.add('open');
-          var firstBad = Object.keys(errs).map(function (f) { return document.getElementById(idMap[f]); }).filter(Boolean)[0];
+          var firstBad = Object.keys(errs).map(function (f) { return document.getElementById(cfg.map[f]); }).filter(Boolean)[0];
           if (firstBad) setTimeout(function () { try { firstBad.focus(); } catch (e) {} }, 60);
         });
       </script>
@@ -1531,6 +1547,7 @@
                     <div class="btn-row">
                       <button class="table-action-btn edit" type="button" onclick="bukaUbahSatuan(this)"
                         data-action="{{ route('admin.satuan.update', $s) }}"
+                        data-satuan-id="{{ $s->id }}"
                         data-kode="{{ $s->kode }}"
                         data-nama="{{ $s->nama }}"
                         data-kategori="{{ $s->kategori }}"
@@ -1589,7 +1606,9 @@
               field.addEventListener('invalid', function (e) {
                 e.preventDefault();
                 field.classList.add('field-invalid');
-                msg.textContent = requiredMessages[field.id] || 'Kolom ini wajib diisi.';
+                msg.textContent = field.validity.customError
+                  ? field.validationMessage
+                  : (requiredMessages[field.id] || 'Kolom ini wajib diisi.');
                 msg.style.display = 'flex';
               });
               field.addEventListener('input', function () {
@@ -1602,6 +1621,9 @@
               });
             });
           }
+
+          // Deteksi Kode Satuan KEMBAR secara LIVE saat diketik.
+          siberadBindDupCheck(document.getElementById('sKode'), 'kode', null);
 
           // Konfirmasi dulu sebelum beneran kirim (senada sama modal Tambah
           // Pengguna): validasi wajib-diisi bawaan browser tetap jalan
@@ -1626,10 +1648,14 @@
 
         window.bukaUbahSatuan = function (btn) {
           document.getElementById('ubahSatuanForm').action = btn.dataset.action;
+          document.getElementById('usSatuanId').value = btn.dataset.satuanId || '';
           document.getElementById('usKode').value = btn.dataset.kode || '';
           document.getElementById('usNama').value = btn.dataset.nama || '';
           document.getElementById('usKategori').value = btn.dataset.kategori || '';
           document.getElementById('usDeskripsi').value = btn.dataset.deskripsi || '';
+          // Bersihkan sisa penanda error merah dari sesi Ubah sebelumnya.
+          document.querySelectorAll('#ubahSatuanForm .field-invalid').forEach(function (el) { el.classList.remove('field-invalid'); });
+          document.querySelectorAll('#ubahSatuanForm .profile-field-error').forEach(function (el) { el.style.display = 'none'; });
           document.getElementById('ubahSatuanModal').classList.add('open');
         };
 
@@ -1669,7 +1695,9 @@
               field.addEventListener('invalid', function (e) {
                 e.preventDefault();
                 field.classList.add('field-invalid');
-                msg.textContent = requiredMessages[field.id] || 'Kolom ini wajib diisi.';
+                msg.textContent = field.validity.customError
+                  ? field.validationMessage
+                  : (requiredMessages[field.id] || 'Kolom ini wajib diisi.');
                 msg.style.display = 'flex';
               });
               field.addEventListener('input', function () {
@@ -1682,6 +1710,10 @@
               });
             });
           }
+
+          // Deteksi Kode Satuan KEMBAR secara LIVE (kecuali satuan yang sedang
+          // diedit itu sendiri -> pakai #usSatuanId sebagai id yang diabaikan).
+          siberadBindDupCheck(document.getElementById('usKode'), 'kode', function () { return document.getElementById('usSatuanId').value; });
 
           // Konfirmasi dulu sebelum beneran kirim (senada sama modal Tambah
           // Satuan).
