@@ -1521,9 +1521,14 @@
                         data-nama="{{ $s->nama }}"
                         data-kategori="{{ $s->kategori }}"
                         data-deskripsi="{{ $s->deskripsi }}">Ubah</button>
+                      {{-- Satuan kategori Admin tidak pernah bisa dihapus (selalu
+                           punya akun admin terdaftar -> SatuanController::destroy
+                           nolak), jadi tombol Hapus-nya sekalian tidak dirender. --}}
+                      @if($s->kategori !== \App\Models\Satuan::KATEGORI_ADMIN)
                       <button class="table-action-btn danger" type="button" onclick="bukaHapusSatuan(this)"
                         data-action="{{ route('admin.satuan.destroy', $s) }}"
                         data-nama="{{ $s->nama }}">Hapus</button>
+                      @endif
                     </div>
                   </td>
                 </tr>
