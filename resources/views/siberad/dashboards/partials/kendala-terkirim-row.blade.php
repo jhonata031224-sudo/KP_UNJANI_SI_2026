@@ -1,10 +1,15 @@
 {{-- CARD: Kendala Terkirim (sisi pengirim / Kasansi) --}}
+@php
+  $statusBadgeClass = in_array($k->status, ['Ditindaklanjuti','Selesai','Dikonfirmasi'], true)
+      ? 'status-dikonfirmasi'
+      : ($k->status === 'Ditolak' ? 'status-ditolak' : 'status-menunggu');
+@endphp
 <div class="kcard" data-kendala-id="{{ $k->id }}" data-search="{{ strtolower($k->perihal.' '.($k->tujuanSatuan->nama ?? '')) }}" data-prioritas="{{ $k->prioritas }}">
   <div class="kcard-header">
     <div class="kcard-meta">
       <span class="satuan-pill">{{ $k->tujuanSatuan->kode ?? $k->tujuanSatuan->nama ?? '-' }}</span>
     </div>
-    <span class="kcard-status status-dot {{ in_array($k->status, ['Ditindaklanjuti','Selesai','Dikonfirmasi'], true) ? 'green' : ($k->status === 'Ditolak' ? 'bad' : 'amber') }}">{{ $k->status }}</span>
+    <span class="kcard-status status-badge {{ $statusBadgeClass }}">{{ $k->status }}</span>
   </div>
 
   <div class="kcard-body">

@@ -635,11 +635,10 @@
 
   /* ─── KCARD: Card-based Kendala Kasansi (pengirim & penerima) ─────────── */
   .kcard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));align-items:start;gap:14px;padding:4px 0 8px;}
-  /* Kartu kendala kasansi (kirim & terima) -- sengaja SELALU putih terlepas
-     dari tema global (dark/light). Semua variabel warna teks/panel
-     di-override lokal di sini supaya konten di dalamnya tetap gelap &
-     kebaca meski tema global gelap. */
-  .kcard{position:relative;background:#ffffff;border:1px solid rgba(15,23,42,.14);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 10px 30px rgba(0,0,0,.16);--panel:#ffffff;--panel-2:#ffffff;--panel-alt:#f4f5f7;--border:rgba(15,23,42,.16);--border-soft:rgba(15,23,42,.09);--text:#1c2430;--text-muted:#5b6472;--text-dim:#8a92a0;}
+  /* Kartu kendala kasansi (kirim & terima) -- ikut tema global (dark/light)
+     lewat variabel --panel/--border-soft/--text dsb, sama kayak pola kartu
+     Surat (surat-file-card di surat-card-styles.blade.php). */
+  .kcard{position:relative;background:var(--panel);border:1px solid var(--border-soft);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;box-shadow:0 10px 30px rgba(0,0,0,.15);}
   .kcard:hover{border-color:var(--gold-bright);box-shadow:0 4px 20px rgba(0,0,0,.18);transform:translateY(-2px);}
 
   /* Header */
