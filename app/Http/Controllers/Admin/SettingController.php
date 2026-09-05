@@ -143,13 +143,30 @@ class SettingController extends Controller
 
         $pengaturan = Pengaturan::current();
 
+        // Kumpulan label gambar yang gagal BENERAN tersimpan di disk (walau
+        // Laravel tidak melempar exception) -- lihat catatan panjang di
+        // storeVerifiedImage() untuk kenapa pengecekan manual ini perlu ada.
+        $gagalSimpanGambar = [];
+
         if ($request->hasFile('hero_image')) {
-            if ($pengaturan->hero_image_path) Storage::disk('public')->delete($pengaturan->hero_image_path);
-            $validated['hero_image_path'] = $request->file('hero_image')->store('pengaturan', 'public');
+            $path = $this->storeVerifiedImage($request->file('hero_image'), 'pengaturan');
+            if ($path) {
+                if ($pengaturan->hero_image_path) Storage::disk('public')->delete($pengaturan->hero_image_path);
+                $validated['hero_image_path'] = $path;
+            } else {
+                $gagalSimpanGambar[] = 'Gambar latar (BG) beranda';
+                unset($validated['hero_image']);
+            }
         }
         if ($request->hasFile('logo_file')) {
-            if ($pengaturan->logo_path) Storage::disk('public')->delete($pengaturan->logo_path);
-            $validated['logo_path'] = $request->file('logo_file')->store('pengaturan', 'public');
+            $path = $this->storeVerifiedImage($request->file('logo_file'), 'pengaturan');
+            if ($path) {
+                if ($pengaturan->logo_path) Storage::disk('public')->delete($pengaturan->logo_path);
+                $validated['logo_path'] = $path;
+            } else {
+                $gagalSimpanGambar[] = 'Logo';
+                unset($validated['logo_file']);
+            }
         }
 
         if (!empty($validated['landing_content'])) {
@@ -164,7 +181,48 @@ class SettingController extends Controller
         $pengaturan->update($validated);
         ActivityLog::catat('pengaturan.landing.update', 'Memperbarui seluruh konten halaman landing (branding, navigasi, beranda, fitur, tentang, kontak, footer).');
 
+        // Field lain (teks, fitur, kontak, dst) tetap tersimpan sekalipun ada
+        // gambar yang gagal -- tapi Admin HARUS tahu gambarnya tidak
+        // benar-benar ke-upload, supaya tidak mengira semuanya sukses
+        // seperti sebelumnya (409/logo baru tampak "kosong" tanpa penjelasan).
+        if (! empty($gagalSimpanGambar)) {
+            return back()->with('error',
+                implode(' & ', $gagalSimpanGambar).' GAGAL disimpan ke server (storage tidak bisa ditulis). '
+                .'Konten lain sudah tersimpan. Coba upload ulang gambar; kalau gagal terus, cek log server / kapasitas volume Railway.'
+            );
+        }
+
         return back()->with('status', 'Konten halaman landing berhasil disimpan.');
+    }
+
+    /**
+     * Simpan file upload ke disk 'public' lalu VERIFIKASI file-nya benar-benar
+     * ada & tidak kosong (0 byte) di disk sesudahnya.
+     *
+     * Kenapa perlu: disk 'public' disetel throw=false (lihat
+     * config/filesystems.php), jadi UploadedFile::store() bisa saja tidak
+     * melempar exception sama sekali walau penulisan file ke disk sebenarnya
+     * gagal (mis. mount volume Railway lagi bermasalah/read-only sesaat,
+     * disk penuh, dsb) -- request tetap dianggap "berhasil", path tetap
+     * disimpan ke kolom logo_path/hero_image_path di database, padahal
+     * file fisiknya tidak pernah benar-benar ada. Efeknya: Admin nyimpen,
+     * dapat pesan sukses, tapi gambar hilang/kosong di landing page --
+     * kadang baru ketahuan berselang lama sesudahnya, bukan saat itu juga.
+     *
+     * Dengan verifikasi manual ini, kegagalan tulis fisik langsung ketahuan
+     * DI REQUEST YANG SAMA, jadi bisa dikasih tahu ke Admin saat itu juga.
+     */
+    private function storeVerifiedImage($file, string $folder): ?string
+    {
+        $path = $file->store($folder, 'public');
+
+        if (! $path || ! Storage::disk('public')->exists($path) || Storage::disk('public')->size($path) < 1) {
+            if ($path) Storage::disk('public')->delete($path);
+
+            return null;
+        }
+
+        return $path;
     }
 
     public function deleteLandingImage(Request $request, string $tipe): RedirectResponse
