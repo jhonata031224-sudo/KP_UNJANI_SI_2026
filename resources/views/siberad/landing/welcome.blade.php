@@ -8,7 +8,21 @@
   // kosong (konsisten dengan kotak "Belum ada logo"/"Belum ada gambar latar
   // belakang" yang tampil di panel admin), bukan diam-diam balik ke gambar
   // default seolah-olah belum dihapus.
-  $lpLogoUrl = $pengaturan->logo_path ? asset('storage/'.$pengaturan->logo_path) : null;
+  //
+  // Selain itu, path yang tersimpan di kolom logo_path/hero_image_path bisa
+  // jadi "dangling reference" -- path-nya ada di DB tapi file fisiknya sudah
+  // tidak ada di disk (mis. upload gagal senyap sebelum fix di
+  // SettingController::storeVerifiedImage(), lihat commit 9fbcbc21, atau file
+  // ke-hapus manual di server). Kalau dibiarkan, <img> jadi rusak (alt text
+  // "Lambang Pussiberad" nyangkut kosong) alih-alih tampil rapi seperti kotak
+  // "Belum ada logo". Makanya di sini keberadaan file fisiknya diverifikasi
+  // dulu (Storage::exists), bukan cuma percaya kolomnya terisi.
+  $lpLogoExists = $pengaturan->logo_path
+    && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->logo_path);
+  $lpLogoUrl = $lpLogoExists ? asset('storage/'.$pengaturan->logo_path) : null;
+
+  $lpHeroExists = $pengaturan->hero_image_path
+    && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->hero_image_path);
 
   // Logo di dalam #loader (splash) di-INLINE jadi data URI supaya muncul
   // langsung bareng loader-nya. Sebelumnya <img src="storage/..."> itu request
@@ -18,7 +32,7 @@
   // selebihnya fallback ke URL biasa. Logo di nav/login/footer tetap $lpLogoUrl
   // (di belakang loader, jadi latency-nya ketutupan).
   $lpLoaderLogo = $lpLogoUrl;
-  if ($pengaturan->logo_path) {
+  if ($lpLogoExists) {
     $lpLogoAbs = storage_path('app/public/'.$pengaturan->logo_path);
     if (is_file($lpLogoAbs) && filesize($lpLogoAbs) <= 64 * 1024) {
       $lpLoaderLogo = 'data:'.(mime_content_type($lpLogoAbs) ?: 'image/jpeg')
@@ -472,7 +486,7 @@
     background-image:
       linear-gradient(115deg, var(--hero-ov-1) 0%, var(--hero-ov-2) 32%, var(--hero-ov-3) 58%, var(--hero-ov-4) 100%),
       linear-gradient(to top, var(--hero-ov-top) 0%, var(--hero-ov-top-fade) 26%)
-      @if ($pengaturan->hero_image_path)
+      @if ($lpHeroExists)
       , url('{{ asset('storage/'.$pengaturan->hero_image_path) }}')
       @endif
       ;

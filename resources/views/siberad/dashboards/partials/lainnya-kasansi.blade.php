@@ -185,7 +185,16 @@
             </div>
         </div>
 
-        @if($pengaturan->struktur_organisasi_path ?? null)
+        @php
+          // Verifikasi file struktur organisasi benar-benar ada di disk, bukan
+          // cuma percaya kolom struktur_organisasi_path terisi -- path bisa
+          // "dangling" (file sudah tidak ada) kalau upload gagal senyap atau
+          // file terhapus manual di server, lihat catatan yang sama di
+          // welcome.blade.php & admin.blade.php (commit 9fbcbc21).
+          $strukturOrgExists = ($pengaturan->struktur_organisasi_path ?? null)
+            && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->struktur_organisasi_path);
+        @endphp
+        @if($strukturOrgExists)
             <div class="struktur-org-image-wrap">
                 <a href="{{ asset('storage/'.$pengaturan->struktur_organisasi_path) }}" target="_blank" rel="noopener" title="Buka gambar ukuran penuh di tab baru">
                     <img src="{{ asset('storage/'.$pengaturan->struktur_organisasi_path) }}" alt="Struktur Organisasi" class="struktur-org-image">

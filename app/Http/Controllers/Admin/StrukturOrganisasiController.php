@@ -28,11 +28,28 @@ class StrukturOrganisasiController extends Controller
 
         $pengaturan = Pengaturan::current();
 
+        // Sama seperti bug logo/BG landing page yang sudah diperbaiki di
+        // SettingController::storeVerifiedImage() (lihat komentar di sana):
+        // disk 'public' disetel throw=false, jadi kalau penulisan file gagal
+        // di level filesystem, store() tetap "sukses" tanpa exception. Path
+        // yang tidak benar-benar ada di disk kalau ikut disimpan ke kolom
+        // struktur_organisasi_path bikin gambar di dashboard Kasansi jadi
+        // kosong/rusak belakangan tanpa Admin tahu penyebabnya saat itu juga.
+        $path = $request->file('struktur_organisasi')->store('struktur-organisasi', 'public');
+
+        if (! $path || ! Storage::disk('public')->exists($path) || Storage::disk('public')->size($path) < 1) {
+            if ($path) Storage::disk('public')->delete($path);
+
+            return back()->with('error',
+                'Gambar Struktur Organisasi GAGAL disimpan ke server (storage tidak bisa ditulis). '
+                .'Coba upload ulang; kalau gagal terus, cek log server / kapasitas volume Railway.'
+            );
+        }
+
         if ($pengaturan->struktur_organisasi_path) {
             Storage::disk('public')->delete($pengaturan->struktur_organisasi_path);
         }
 
-        $path = $request->file('struktur_organisasi')->store('struktur-organisasi', 'public');
         $pengaturan->update(['struktur_organisasi_path' => $path]);
 
         ActivityLog::catat('struktur-organisasi.update', 'Memperbarui gambar Struktur Organisasi.');

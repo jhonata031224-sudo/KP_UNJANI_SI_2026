@@ -3140,6 +3140,23 @@
           <p>Konfigurasi umum aplikasi SIBERAD.</p>
         </div>
 
+        @php
+          // Verifikasi logo/gambar latar beranda BENAR-BENAR ada secara fisik
+          // di disk, bukan cuma percaya kolom logo_path/hero_image_path
+          // terisi -- kalau path-nya "dangling" (file sudah tidak ada, mis.
+          // gara-gara upload gagal senyap sebelum fix di
+          // SettingController::storeVerifiedImage(), lihat commit 9fbcbc21),
+          // panel ini dulu menampilkan <img> rusak padahal data-has-current
+          // masih "1". Sekarang kalau file-nya gak ketemu, panel ini ikut
+          // nunjukin kotak "Belum ada logo/gambar" yang sama seperti kalau
+          // memang belum pernah di-upload.
+          $pengaturanLogoExists = $pengaturan->logo_path
+            && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->logo_path);
+          $pengaturanHeroExists = $pengaturan->hero_image_path
+            && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->hero_image_path);
+          $pengaturanStrukturOrgExists = $pengaturan->struktur_organisasi_path
+            && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->struktur_organisasi_path);
+        @endphp
 
         {{-- ===== KONTEN HALAMAN LANDING ===== --}}
         <div class="lp-layout">
@@ -3153,7 +3170,7 @@
               </div>
             </div>
 
-            <form id="landingForm" method="POST" action="{{ route('admin.pengaturan.landing.update') }}" enctype="multipart/form-data" data-current-logo="{{ $pengaturan->logo_path ? asset('storage/'.$pengaturan->logo_path) : '' }}" data-logo-delete-url="{{ route('admin.pengaturan.landing.image.destroy', 'logo') }}">
+            <form id="landingForm" method="POST" action="{{ route('admin.pengaturan.landing.update') }}" enctype="multipart/form-data" data-current-logo="{{ $pengaturanLogoExists ? asset('storage/'.$pengaturan->logo_path) : '' }}" data-logo-delete-url="{{ route('admin.pengaturan.landing.image.destroy', 'logo') }}">
               @csrf @method('PATCH')
 
               <div class="lp-tabs" role="tablist">
@@ -3218,13 +3235,13 @@
                     <div class="form-field full">
                       <label for="lpHeroImage" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Gambar Latar Beranda</label>
                       <div class="lp-hero-image-row">
-                        <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturan->hero_image_path ? '1' : '0' }}" data-label-existing="Ganti Gambar">
-                        <img src="{{ $pengaturan->hero_image_path ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}">
-                        <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturan->hero_image_path ? 'display:none' : '' }}">
+                        <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturanHeroExists ? '1' : '0' }}" data-label-existing="Ganti Gambar">
+                        <img src="{{ $pengaturanHeroExists ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}">
+                        <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturanHeroExists ? 'display:none' : '' }}">
                           <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
                           <span>Belum ada gambar latar belakang</span>
                         </div>
-                        <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturan->hero_image_path ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Latar Belakang</button>
+                        <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Latar Belakang</button>
                       </div>
                     </div>
                   </div>
@@ -4021,16 +4038,16 @@
           <form method="POST" action="{{ route('admin.struktur-organisasi.update') }}" enctype="multipart/form-data" id="strukturOrgForm" style="padding:18px 22px">
             @csrf
             <div class="lp-hero-image-row">
-              <img src="{{ $pengaturan->struktur_organisasi_path ? asset('storage/'.$pengaturan->struktur_organisasi_path) : '' }}" alt="Gambar Struktur Organisasi saat ini" class="lp-current-image" id="strukturOrgPreviewImg" style="max-width:420px;max-height:320px;object-fit:contain;{{ $pengaturan->struktur_organisasi_path ? '' : 'display:none' }}">
-              <div class="lp-image-placeholder" id="strukturOrgPreviewPlaceholder" style="width:260px;height:160px;{{ $pengaturan->struktur_organisasi_path ? 'display:none' : '' }}">
+              <img src="{{ $pengaturanStrukturOrgExists ? asset('storage/'.$pengaturan->struktur_organisasi_path) : '' }}" alt="Gambar Struktur Organisasi saat ini" class="lp-current-image" id="strukturOrgPreviewImg" style="max-width:420px;max-height:320px;object-fit:contain;{{ $pengaturanStrukturOrgExists ? '' : 'display:none' }}">
+              <div class="lp-image-placeholder" id="strukturOrgPreviewPlaceholder" style="width:260px;height:160px;{{ $pengaturanStrukturOrgExists ? 'display:none' : '' }}">
                 <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
                 <span>Belum ada gambar struktur organisasi</span>
               </div>
-              <label class="btn btn-ghost" style="cursor:pointer" for="strukturOrgInput">{{ $pengaturan->struktur_organisasi_path ? 'Ganti Gambar' : 'Pilih Gambar' }}</label>
+              <label class="btn btn-ghost" style="cursor:pointer" for="strukturOrgInput">{{ $pengaturanStrukturOrgExists ? 'Ganti Gambar' : 'Pilih Gambar' }}</label>
               <input id="strukturOrgInput" name="struktur_organisasi" type="file" accept="image/*" hidden required>
               <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
                 <button type="submit" class="btn btn-primary btn-sm" id="strukturOrgSubmitBtn" disabled>Simpan Gambar</button>
-                @if($pengaturan->struktur_organisasi_path)
+                @if($pengaturanStrukturOrgExists)
                 <button type="button" class="btn btn-ghost-red btn-sm" id="strukturOrgDeleteBtn">Hapus Gambar</button>
                 @endif
               </div>
