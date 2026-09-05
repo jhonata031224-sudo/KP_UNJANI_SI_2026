@@ -139,6 +139,23 @@ class SettingController extends Controller
             'sosial_media.*.label'=>['nullable','string','max:100'],
             'sosial_media.*.url'=>['nullable','url','max:500'],
             'landing_content'=>['nullable','string','max:30000'],
+        ], [
+            // Tanpa pesan custom di sini, kegagalan upload hero_image/logo_file
+            // jatuh ke pesan bawaan Laravel dalam bahasa Inggris (locale app
+            // ini 'en', tidak ada resources/lang/id) -- termasuk pesan generik
+            // "The hero image failed to upload." yang bikin Admin bingung soal
+            // apa yang sebenarnya salah. Pesan di bawah menutupi 3 skenario:
+            // 1) 'uploaded' (rule implisit bawaan Laravel untuk field file) --
+            //    gagal di LEVEL PHP SEBELUM validasi ukuran sempat jalan,
+            //    biasanya karena file melebihi batas upload PHP di server.
+            // 2) 'max' -- file berhasil terkirim tapi lebih besar dari 5 MB.
+            // 3) 'image' -- file terkirim tapi bukan format gambar yang valid.
+            'hero_image.uploaded' => 'Gambar latar beranda gagal diunggah. Kemungkinan ukurannya terlalu besar -- pastikan ukuran file maksimal 5 MB.',
+            'hero_image.max' => 'Ukuran gambar latar beranda maksimal 5 MB. Silakan kompres atau pilih foto lain.',
+            'hero_image.image' => 'File gambar latar beranda tidak valid. Gunakan format JPG, PNG, atau WEBP.',
+            'logo_file.uploaded' => 'Logo gagal diunggah. Kemungkinan ukurannya terlalu besar -- pastikan ukuran file maksimal 5 MB.',
+            'logo_file.max' => 'Ukuran logo maksimal 5 MB. Silakan kompres atau pilih foto lain.',
+            'logo_file.image' => 'File logo tidak valid. Gunakan format JPG, PNG, atau WEBP.',
         ]);
 
         $pengaturan = Pengaturan::current();

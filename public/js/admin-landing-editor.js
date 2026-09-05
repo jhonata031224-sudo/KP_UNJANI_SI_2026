@@ -370,6 +370,17 @@
       logo.addEventListener('change', () => {
         const f = logo.files && logo.files[0];
         if (!f) return;
+        // Batas ukuran HARUS sama persis dengan validasi server
+        // ('max:5120' KB di SettingController::updateLanding()) supaya
+        // Admin ditolak instan saat memilih file, bukan setelah submit.
+        const LP_MAX_LOGO_BYTES = 5 * 1024 * 1024; // 5 MB
+        if (f.size > LP_MAX_LOGO_BYTES) {
+          const ukuranMb = (f.size / (1024 * 1024)).toFixed(1);
+          window.siberadShowToast && window.siberadShowToast('error',
+            'Logo berukuran ' + ukuranMb + ' MB, melebihi batas maksimal 5 MB. Silakan kompres atau pilih foto lain.');
+          logo.value = ''; // batalkan pilihan supaya tidak ikut ke-submit
+          return;
+        }
         const r = new FileReader();
         r.onload = e => {
           // Kotak pratinjau kecil di sebelah tombol pilih file: begitu logo

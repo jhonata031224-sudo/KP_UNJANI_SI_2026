@@ -3243,6 +3243,7 @@
                         </div>
                         <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Latar Belakang</button>
                       </div>
+                      <small>Format JPG, PNG, atau WEBP · maksimal 5 MB.</small>
                     </div>
                   </div>
                 </div>
@@ -3877,9 +3878,25 @@
               });
             });
 
+            // Batas ukuran gambar (BG beranda & logo) -- HARUS sama persis
+            // dengan validasi server ('max:5120' KB di SettingController)
+            // supaya Admin ditolak SAAT MEMILIH FILE (instan, tanpa perlu
+            // submit + tunggu round-trip ke server dulu baru tahu gagal).
+            var LP_MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+            function lpTolakJikaTerlaluBesar(input, labelGambar){
+              var file = input.files && input.files[0];
+              if(!file || file.size <= LP_MAX_IMAGE_BYTES) return false;
+              var ukuranMb = (file.size / (1024 * 1024)).toFixed(1);
+              window.siberadShowToast && window.siberadShowToast('error',
+                labelGambar+' berukuran '+ukuranMb+' MB, melebihi batas maksimal 5 MB. Silakan kompres atau pilih foto lain.');
+              input.value = ''; // batalkan pilihan supaya tidak ikut ke-submit
+              return true;
+            }
+
             var heroImageInput = form.querySelector('[data-lp-image="hero_image"]');
             if(heroImageInput){
               heroImageInput.addEventListener('change', function(){
+                if(lpTolakJikaTerlaluBesar(this, 'Gambar latar beranda')) return;
                 var file = this.files && this.files[0];
                 var heroEl = document.getElementById('lpPreviewHero');
                 var previewImg = document.getElementById('lpHeroImagePreviewImg');
