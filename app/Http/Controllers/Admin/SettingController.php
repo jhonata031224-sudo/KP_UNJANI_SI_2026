@@ -120,6 +120,10 @@ class SettingController extends Controller
             'hero_subjudul'=>['nullable','string','max:255'],
             'hero_deskripsi'=>['nullable','string','max:2000'],
             'hero_image'=>['nullable','image','max:5120'],
+            // hero_blur_level: efek blur langsung di foto latar (px, 0-20).
+            // hero_overlay_intensity: kepekatan lapisan gradient di atas foto (%, 0-100).
+            'hero_blur_level'=>['nullable','integer','min:0','max:20'],
+            'hero_overlay_intensity'=>['nullable','integer','min:0','max:100'],
             'logo_file'=>['nullable','image','max:5120'],
             'fitur'=>['required','array','size:4'],
             'fitur.*.judul'=>['required','string','max:100'],

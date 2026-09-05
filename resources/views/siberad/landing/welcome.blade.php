@@ -24,6 +24,13 @@
   $lpHeroExists = $pengaturan->hero_image_path
     && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->hero_image_path);
 
+  // Diatur dari Pengaturan Umum > Beranda > "Gambar Latar Beranda":
+  // - hero_blur_level: efek blur (buram) langsung di FOTO-nya, dalam px.
+  // - hero_overlay_intensity: kepekatan lapisan gradient warna DI ATAS foto,
+  //   dalam persen (100 = seperti sebelum fitur ini ada).
+  $lpHeroBlur = max(0, min(20, (int) ($pengaturan->hero_blur_level ?? 0)));
+  $lpHeroOverlay = max(0, min(100, (int) ($pengaturan->hero_overlay_intensity ?? 100))) / 100;
+
   // Logo di dalam #loader (splash) di-INLINE jadi data URI supaya muncul
   // langsung bareng loader-nya. Sebelumnya <img src="storage/..."> itu request
   // jaringan tersendiri -- pas mendarat di halaman ini sesudah logout, cache-nya
@@ -483,17 +490,31 @@
      konsisten dengan kotak "Belum ada gambar latar belakang" di admin. */
   .hero-stats-bg{
     position:relative;overflow:hidden;
-    background-image:
-      linear-gradient(115deg, var(--hero-ov-1) 0%, var(--hero-ov-2) 32%, var(--hero-ov-3) 58%, var(--hero-ov-4) 100%),
-      linear-gradient(to top, var(--hero-ov-top) 0%, var(--hero-ov-top-fade) 26%)
-      @if ($lpHeroExists)
-      , url('{{ asset('storage/'.$pengaturan->hero_image_path) }}')
-      @endif
-      ;
+  }
+  /* Layer foto (::before): terpisah dari overlay supaya blur cuma kena
+     foto-nya, bukan ikut mem-blur gradient/teks di atasnya. Di-scale up
+     dikit supaya tepi yang buram akibat filter:blur() tidak kelihatan
+     "kepotong" bening di pinggir elemen. */
+  .hero-stats-bg::before{
+    content:"";position:absolute;inset:-24px;z-index:0;
+    @if ($lpHeroExists)
+    background-image:url('{{ asset('storage/'.$pengaturan->hero_image_path) }}');
     background-size:cover;
     background-position:center 58%;
     background-repeat:no-repeat;
+    @endif
+    filter:blur({{ $lpHeroBlur }}px);
   }
+  /* Layer overlay (::after): gradient warna tema di atas foto, kepekatannya
+     diatur lewat --hero-overlay-alpha (dari Pengaturan Umum). */
+  .hero-stats-bg::after{
+    content:"";position:absolute;inset:0;z-index:1;
+    opacity:var(--hero-overlay-alpha, 1);
+    background-image:
+      linear-gradient(115deg, var(--hero-ov-1) 0%, var(--hero-ov-2) 32%, var(--hero-ov-3) 58%, var(--hero-ov-4) 100%),
+      linear-gradient(to top, var(--hero-ov-top) 0%, var(--hero-ov-top-fade) 26%);
+  }
+  .hero-stats-bg > *{position:relative;z-index:2;}
   .hero{
     padding:74px 0 70px;
     position:relative;
@@ -898,7 +919,7 @@
 
   <main>
     <!-- ================= HERO ================= -->
-    <div class="hero-stats-bg">
+    <div class="hero-stats-bg" style="--hero-overlay-alpha:{{ $lpHeroOverlay }};">
     <section class="hero" id="tentang">
       <div class="wrap hero-inner">
         <div data-reveal>

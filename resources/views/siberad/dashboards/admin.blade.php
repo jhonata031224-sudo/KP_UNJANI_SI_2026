@@ -3245,6 +3245,16 @@
                       </div>
                       <small>Format JPG, PNG, atau WEBP · maksimal 5 MB.</small>
                     </div>
+                    <div class="form-field">
+                      <label for="lpHeroBlur">Blur Foto Latar — <span id="lpHeroBlurVal">{{ old('hero_blur_level', $pengaturan->hero_blur_level ?? 0) }}</span>px</label>
+                      <input id="lpHeroBlur" name="hero_blur_level" type="range" min="0" max="20" step="1" value="{{ old('hero_blur_level', $pengaturan->hero_blur_level ?? 0) }}" data-lp="hero_blur_level" oninput="document.getElementById('lpHeroBlurVal').textContent=this.value">
+                      <small>Mengaburkan foto-nya saja (0 = tajam, 20 = paling buram). Teks &amp; overlay tidak ikut buram.</small>
+                    </div>
+                    <div class="form-field">
+                      <label for="lpHeroOverlay">Kepekatan Overlay Warna — <span id="lpHeroOverlayVal">{{ old('hero_overlay_intensity', $pengaturan->hero_overlay_intensity ?? 100) }}</span>%</label>
+                      <input id="lpHeroOverlay" name="hero_overlay_intensity" type="range" min="0" max="100" step="1" value="{{ old('hero_overlay_intensity', $pengaturan->hero_overlay_intensity ?? 100) }}" data-lp="hero_overlay_intensity" oninput="document.getElementById('lpHeroOverlayVal').textContent=this.value">
+                      <small>Lapisan gradient gelap/terang di atas foto (0 = foto polos tanpa overlay, 100 = seperti tampilan bawaan).</small>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3398,9 +3408,7 @@
                 </div>
                 <div class="lp-preview" id="lpPreview">
                   <div class="lp-hero" id="lpPreviewHero" data-lp-preview-section="beranda"
-                    @if($pengaturan->hero_image_path)
-                      style="background-image:linear-gradient(160deg, color-mix(in srgb, var(--panel-2) 85%, transparent), color-mix(in srgb, var(--bg-deep) 75%, transparent)), url('{{ asset('storage/'.$pengaturan->hero_image_path) }}');background-size:cover;background-position:center;"
-                    @endif
+                    style="--lp-hero-photo:@if($pengaturan->hero_image_path)url('{{ asset('storage/'.$pengaturan->hero_image_path) }}')@else none @endif;--lp-hero-blur:{{ old('hero_blur_level', $pengaturan->hero_blur_level ?? 0) }}px;--lp-hero-overlay:{{ (old('hero_overlay_intensity', $pengaturan->hero_overlay_intensity ?? 100)) / 100 }};"
                   >
                     <div class="lp-eyebrow" id="lpPvEyebrow"></div>
                     <div class="lp-h1"><span id="lpPvJudulAwal"></span><em id="lpPvJudulAksen"></em></div>
@@ -3676,7 +3684,23 @@
           .lp-preview [data-lp-preview-section]{position:relative;outline:2px solid transparent;outline-offset:-2px;transition:outline-color .2s ease;}
           .lp-preview [data-lp-preview-section].is-focus{outline-color:var(--gold);}
 
-          .lp-hero{padding:26px 22px 22px;background:linear-gradient(160deg,var(--panel-2),var(--bg-deep));background-size:cover;background-position:center;}
+          .lp-hero{padding:26px 22px 22px;position:relative;overflow:hidden;background:linear-gradient(160deg,var(--panel-2),var(--bg-deep));}
+          /* Foto (::before) & overlay gradient (::after) dipisah supaya slider
+             "Blur Foto Latar" cuma mem-blur foto-nya, tidak ikut mem-blur teks
+             judul/deskripsi pratinjau -- lihat --lp-hero-photo/-blur/-overlay
+             yang di-set inline & disinkronkan lewat JS pas slider digeser. */
+          .lp-hero::before{
+            content:"";position:absolute;inset:-14px;z-index:0;
+            background-image:var(--lp-hero-photo, none);
+            background-size:cover;background-position:center;
+            filter:blur(var(--lp-hero-blur, 0px));
+          }
+          .lp-hero::after{
+            content:"";position:absolute;inset:0;z-index:1;
+            opacity:var(--lp-hero-overlay, 1);
+            background-image:linear-gradient(160deg, color-mix(in srgb, var(--panel-2) 85%, transparent), color-mix(in srgb, var(--bg-deep) 75%, transparent));
+          }
+          .lp-hero > *{position:relative;z-index:2;}
           .lp-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
           .lp-h1{font-family:var(--display);font-size:27px;font-weight:700;line-height:1;text-transform:uppercase;margin-bottom:9px;color:var(--text);}
           .lp-h1 em{color:var(--gold-bright);font-style:normal;}
@@ -3852,6 +3876,11 @@
             }
 
             function updatePreview(){
+              var heroBlurEl = form.querySelector('[data-lp="hero_blur_level"]');
+              var heroOverlayEl = form.querySelector('[data-lp="hero_overlay_intensity"]');
+              var lpPreviewHero = document.getElementById('lpPreviewHero');
+              if(lpPreviewHero && heroBlurEl){ lpPreviewHero.style.setProperty('--lp-hero-blur', heroBlurEl.value + 'px'); }
+              if(lpPreviewHero && heroOverlayEl){ lpPreviewHero.style.setProperty('--lp-hero-overlay', (heroOverlayEl.value / 100)); }
               setText('lpPvEyebrow', form.querySelector('[data-lp="hero_eyebrow"]').value, 'PUSSIBERAD SISTEM PENDUKUNG OPERASIONAL');
               setText('lpPvJudulAwal', form.querySelector('[data-lp="hero_judul_awal"]').value, 'SIBER');
               setText('lpPvJudulAksen', form.querySelector('[data-lp="hero_judul_aksen"]').value, 'AD');
@@ -3901,10 +3930,10 @@
                 var heroEl = document.getElementById('lpPreviewHero');
                 var previewImg = document.getElementById('lpHeroImagePreviewImg');
                 var placeholder = document.getElementById('lpHeroImagePreviewPlaceholder');
-                if(!file){ heroEl.style.backgroundImage = ''; return; }
+                if(!file){ heroEl.style.setProperty('--lp-hero-photo', 'none'); return; }
                 var reader = new FileReader();
                 reader.onload = function(e){
-                  heroEl.style.backgroundImage = 'linear-gradient(160deg, color-mix(in srgb, var(--panel-2) 85%, transparent), color-mix(in srgb, var(--bg-deep) 75%, transparent)), url(' + e.target.result + ')';
+                  heroEl.style.setProperty('--lp-hero-photo', 'url(' + e.target.result + ')');
                   // Tampilkan pratinjau BG realtime di sebelah tombol pilih file,
                   // gantikan kotak "belum ada gambar" begitu file dipilih.
                   if(previewImg){ previewImg.src = e.target.result; previewImg.style.display = 'block'; }

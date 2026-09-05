@@ -9,12 +9,16 @@ class Pengaturan extends Model
     protected $fillable = [
         'nama_instansi','singkatan','logo_path','alamat','email_kontak','telepon_kontak',
         'hero_eyebrow','hero_judul_awal','hero_judul_aksen','hero_subjudul','hero_deskripsi','hero_image_path',
+        'hero_blur_level','hero_overlay_intensity',
         'fitur','tentang_deskripsi','tentang_nama_resmi','tentang_nama_lama','tentang_fungsi_utama',
         'tentang_moto_judul','tentang_moto_deskripsi','website','sosial_media','landing_content',
         'notifikasi_push_aktif','struktur_organisasi_path',
     ];
 
-    protected $casts = ['fitur' => 'array','sosial_media' => 'array','landing_content' => 'array','notifikasi_push_aktif' => 'boolean'];
+    protected $casts = [
+        'fitur' => 'array','sosial_media' => 'array','landing_content' => 'array','notifikasi_push_aktif' => 'boolean',
+        'hero_blur_level' => 'integer','hero_overlay_intensity' => 'integer',
+    ];
 
     public static function current(): self
     {
@@ -50,6 +54,8 @@ class Pengaturan extends Model
             ],
             'landing_content'=>self::defaultLandingContent(),
             'notifikasi_push_aktif'=>true,
+            'hero_blur_level'=>0,
+            'hero_overlay_intensity'=>100,
         ]);
     }
 
