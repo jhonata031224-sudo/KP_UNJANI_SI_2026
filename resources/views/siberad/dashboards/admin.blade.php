@@ -4253,7 +4253,7 @@
         <div class="panel">
           <div class="panel-head"><div><h2>Pengguna Aktif</h2><p>Pantau perangkat/browser yang sedang login, dan paksa logout kalau perlu.</p></div></div>
           <div class="tbl-wrap">
-            <table class="dtbl">
+            <table class="dtbl" id="tblSesiAktif">
               <thead><tr><th>Pengguna</th><th>IP Address</th><th>Perangkat / Browser</th><th>Terakhir Aktif</th><th>Aksi</th></tr></thead>
               <tbody>
                 @forelse($sesiAktif as $s)@include('siberad.dashboards.partials.sesi-aktif-row', ['s' => $s])@empty

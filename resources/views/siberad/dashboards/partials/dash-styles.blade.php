@@ -721,6 +721,107 @@
     .kcard-actions{width:100%;}
     .kcard-btn{flex:1;justify-content:center;}
   }
+
+  /* ===== Mode kartu untuk tabel data (table.dtbl) di layar HP (≤640px) =====
+     Tabel data (Daftar Pengguna, Data Satuan, Riwayat Aktivitas, dst) kalau
+     dipaksa tetap tabel di layar sempit jadi kepotong/overflow ke samping.
+     Di breakpoint ini <thead> disembunyikan dan tiap <tr> disulap jadi
+     kartu ringkas berdiri (tiap <td> ditumpuk vertikal dengan label kolom
+     otomatis lewat ::before). Ini PURE CSS, cuma nyala di bawah breakpoint
+     ini -- markup tabel & tampilan desktop/tablet (>640px) TIDAK disentuh
+     sama sekali, tetap tabel seperti biasa. Label per kolom di-hardcode
+     lewat nth-child menyesuaikan urutan <thead> masing-masing tabel, jadi
+     tidak perlu ubah satu pun baris di Blade partial / JS row-builder. */
+  @media(max-width:640px){
+    /* dulu box tabel dibatasi tinggi + scroll internal (data-row-limit,
+       kelas tbl-scroll, termasuk yang di-set inline lewat style="max-height"
+       atau lewat JS terapkanRowLimitWrap()) -- di mode kartu ini dimatikan
+       supaya list-nya ngikut scroll halaman biasa, bukan nge-scroll dalam
+       kotak kecil yang malah bikin canggung dipegang di HP. */
+    .tbl-wrap{overflow-x:hidden;}
+    .tbl-wrap.tbl-scroll{overflow-y:visible!important;max-height:none!important;}
+
+    table.dtbl thead{display:none;}
+    table.dtbl,table.dtbl tbody{display:block;width:100%;}
+    table.dtbl tr{display:block;background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;padding:4px 14px;margin-bottom:12px;}
+    table.dtbl tr:last-child{margin-bottom:0;}
+    table.dtbl td{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:1px solid var(--border-soft);text-align:right;font-size:13px;}
+    table.dtbl tr:last-child td:last-child{border-bottom:none;}
+    table.dtbl td::before{content:attr(data-label);flex-shrink:0;text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);padding-top:1px;}
+
+    /* baris kosong ("Belum ada data...", colspan penuh) tampil polos tanpa label */
+    table.dtbl td[colspan]{display:block;text-align:center;padding:8px 0;}
+    table.dtbl td[colspan]::before{content:none;}
+
+    /* kolom Aksi berisi tombol (btn-row) -- ditumpuk penuh ke bawah label,
+       bukan disempitkan sejajar ke kanan seperti kolom teks biasa */
+    #tblPengguna td:nth-child(5),
+    #tblSatuan td:nth-child(5),
+    #tblRiwayatBackup td:nth-child(5),
+    #tblResetPassword td:nth-child(4),
+    #tblSesiAktif td:nth-child(5){flex-direction:column;align-items:stretch;text-align:left;}
+    #tblPengguna td:nth-child(5)::before,
+    #tblSatuan td:nth-child(5)::before,
+    #tblRiwayatBackup td:nth-child(5)::before,
+    #tblResetPassword td:nth-child(4)::before,
+    #tblSesiAktif td:nth-child(5)::before{margin-bottom:8px;}
+    table.dtbl .btn-row{justify-content:flex-end;}
+    table.dtbl .btn-row .table-action-btn{flex:1;text-align:center;}
+
+    /* kolom "Perangkat/Browser" (Pengguna Aktif) isinya beberapa baris teks
+       -- ditumpuk ke bawah label juga biar tidak sempit ke kanan */
+    #tblSesiAktif td:nth-child(3){flex-direction:column;align-items:flex-start;text-align:left;}
+    #tblSesiAktif td:nth-child(3)::before{margin-bottom:6px;}
+
+    /* Label tiap kolom, urut sesuai <thead> tabel masing-masing */
+    #tblPengguna td:nth-child(1)::before{content:"Nama";}
+    #tblPengguna td:nth-child(2)::before{content:"Username";}
+    #tblPengguna td:nth-child(3)::before{content:"Email";}
+    #tblPengguna td:nth-child(4)::before{content:"Satuan";}
+    #tblPengguna td:nth-child(5)::before{content:"Aksi";}
+
+    #tblSatuan td:nth-child(1)::before{content:"Kode";}
+    #tblSatuan td:nth-child(2)::before{content:"Nama";}
+    #tblSatuan td:nth-child(3)::before{content:"Kategori";}
+    #tblSatuan td:nth-child(4)::before{content:"Jumlah Pengguna";}
+    #tblSatuan td:nth-child(5)::before{content:"Aksi";}
+
+    #tblLogAktivitas td:nth-child(1)::before,#tblDlAktivitas td:nth-child(1)::before{content:"Waktu";}
+    #tblLogAktivitas td:nth-child(2)::before,#tblDlAktivitas td:nth-child(2)::before{content:"Pengguna";}
+    #tblLogAktivitas td:nth-child(3)::before,#tblDlAktivitas td:nth-child(3)::before{content:"Aksi";}
+    #tblLogAktivitas td:nth-child(4)::before,#tblDlAktivitas td:nth-child(4)::before{content:"Deskripsi";}
+    #tblLogAktivitas td:nth-child(5)::before,#tblDlAktivitas td:nth-child(5)::before{content:"IP";}
+
+    #tblRiwayatBackup td:nth-child(1)::before{content:"Nama File";}
+    #tblRiwayatBackup td:nth-child(2)::before{content:"Ukuran";}
+    #tblRiwayatBackup td:nth-child(3)::before{content:"Tanggal";}
+    #tblRiwayatBackup td:nth-child(4)::before{content:"Jam";}
+    #tblRiwayatBackup td:nth-child(5)::before{content:"Aksi";}
+
+    #tblDlPengguna td:nth-child(1)::before{content:"No";}
+    #tblDlPengguna td:nth-child(2)::before{content:"Nama";}
+    #tblDlPengguna td:nth-child(3)::before{content:"Username";}
+    #tblDlPengguna td:nth-child(4)::before{content:"Email";}
+    #tblDlPengguna td:nth-child(5)::before{content:"Satuan";}
+    #tblDlPengguna td:nth-child(6)::before{content:"Dibuat";}
+
+    #tblResetPassword td:nth-child(1)::before{content:"Pengaju";}
+    #tblResetPassword td:nth-child(2)::before{content:"Catatan";}
+    #tblResetPassword td:nth-child(3)::before{content:"Tanggal";}
+    #tblResetPassword td:nth-child(4)::before{content:"Aksi";}
+
+    #tblRekapSatuan td:nth-child(1)::before{content:"Satuan";}
+    #tblRekapSatuan td:nth-child(2)::before{content:"Total Laporan";}
+    #tblRekapSatuan td:nth-child(3)::before{content:"Disetujui";}
+    #tblRekapSatuan td:nth-child(4)::before{content:"Ditolak";}
+    #tblRekapSatuan td:nth-child(5)::before{content:"Terlambat";}
+    #tblRekapSatuan td:nth-child(6)::before{content:"Dibatalkan";}
+
+    #tblSesiAktif td:nth-child(1)::before{content:"Pengguna";}
+    #tblSesiAktif td:nth-child(2)::before{content:"IP Address";}
+    #tblSesiAktif td:nth-child(4)::before{content:"Terakhir Aktif";}
+    #tblSesiAktif td:nth-child(5)::before{content:"Aksi";}
+  }
 </style>
 <script>
   function siberadEnhanceFileInputs(root){
