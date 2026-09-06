@@ -775,20 +775,26 @@
   /* Lambang yang membesar & bergeser ke tengah -- posisinya di-set lewat JS
      (dari koordinat lambang kecil di halaman, menuju tengah stage), supaya
      transisinya benar-benar "meluncur" dari titik klik, bukan cuma muncul
-     tiba-tiba di tengah. */
+     tiba-tiba di tengah.
+     mix-blend-mode:multiply pada <img> "membuang" latar bulat putih bawaan
+     file lambang (putih x apa pun = tidak berubah, jadi area putih itu
+     otomatis menyatu/transparan dengan backdrop modal) -- tanpa itu, latar
+     putih itu bagian dari pixel gambar sendiri dan tidak bisa dihilangkan
+     cuma dengan border-radius/overflow (itu cuma motong bentuknya jadi
+     lingkaran, bukan menghapus warna putihnya). */
   .makna-logo-crest{
     position:fixed;border-radius:50%;overflow:hidden;
-    box-shadow:0 0 0 10px rgba(212,175,55,.08), 0 30px 80px rgba(0,0,0,.6);
+    box-shadow:0 25px 65px rgba(0,0,0,.4);
     z-index:1;
     transition:top .55s cubic-bezier(.65,0,.2,1), left .55s cubic-bezier(.65,0,.2,1),
       width .55s cubic-bezier(.65,0,.2,1), height .55s cubic-bezier(.65,0,.2,1),
       box-shadow .55s ease;
     will-change:top,left,width,height;
   }
-  .makna-logo-crest img{width:100%;height:100%;object-fit:cover;display:block;}
+  .makna-logo-crest img{width:100%;height:100%;object-fit:cover;display:block;mix-blend-mode:multiply;}
 
   .makna-logo-point{
-    position:absolute;display:flex;align-items:center;gap:10px;
+    position:absolute;display:flex;align-items:center;gap:0;
     transform:translateY(-50%);
     opacity:0;transition:opacity .35s ease, transform .35s ease;
     transition-delay:var(--mlp-delay,0s);
@@ -796,15 +802,16 @@
   }
   .makna-logo-overlay.open .makna-logo-point{opacity:1;}
   .makna-logo-point-num{
-    flex-shrink:0;width:34px;height:34px;border-radius:50%;
+    flex-shrink:0;width:32px;height:32px;border-radius:50%;
     display:flex;align-items:center;justify-content:center;
     background:var(--gold);color:var(--bg-deep);
-    font-family:var(--display);font-weight:700;font-size:15px;
-    box-shadow:0 4px 14px rgba(0,0,0,.35);
+    font-family:var(--display);font-weight:700;font-size:14px;
+    box-shadow:0 0 0 3px var(--panel-2),0 4px 14px rgba(0,0,0,.35);
+    position:relative;z-index:2;margin-right:-11px;
   }
   .makna-logo-point-card{
-    background:var(--panel-2);border:1px solid var(--border);border-radius:10px;
-    padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,.3);
+    background:var(--panel-2);border:1.5px solid var(--border-strong);border-radius:14px;
+    padding:10px 14px 10px 22px;box-shadow:0 8px 24px rgba(0,0,0,.3);
   }
   .makna-logo-point-title{
     font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
@@ -813,16 +820,16 @@
   .makna-logo-point-desc{font-family:var(--body);font-size:12.5px;color:var(--text);line-height:1.5;}
 
   .makna-logo-lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;}
-  .makna-logo-lines line{stroke:var(--border-strong);stroke-width:1.1;stroke-linecap:round;opacity:0;transition:opacity .35s ease;transition-delay:var(--mlp-delay,0s);}
+  .makna-logo-lines line{stroke:var(--gold);stroke-opacity:.55;stroke-width:1.4;stroke-linecap:round;opacity:0;transition:opacity .35s ease;transition-delay:var(--mlp-delay,0s);}
   .makna-logo-overlay.open .makna-logo-lines line{opacity:1;}
 
   /* Titik presisi tempat garis benar-benar menyentuh badan lambang --
      lingkaran kecil solid + cincin tipis di sekelilingnya (gaya "callout
      point" pada infografis), diposisikan persis di koordinat "anchor". */
   .makna-logo-anchor-dot{
-    position:absolute;z-index:2;width:9px;height:9px;border-radius:50%;
+    position:absolute;z-index:2;width:7px;height:7px;border-radius:50%;
     transform:translate(-50%,-50%);
-    background:var(--gold);box-shadow:0 0 0 3px var(--gold-dim),0 1px 3px rgba(0,0,0,.4);
+    background:var(--gold);box-shadow:0 0 0 2px rgba(255,255,255,.85),0 1px 3px rgba(0,0,0,.4);
     opacity:0;transition:opacity .35s ease,transform .35s ease;
     transition-delay:var(--mlp-delay,0s);
   }
