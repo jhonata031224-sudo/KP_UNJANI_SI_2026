@@ -748,25 +748,28 @@
     backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
   }
   .makna-logo-close{
-    position:fixed;top:22px;right:26px;z-index:2;
-    width:42px;height:42px;border-radius:10px;
+    position:fixed;top:24px;right:26px;z-index:3;
+    width:44px;height:44px;border-radius:14px;
     display:flex;align-items:center;justify-content:center;
-    background:var(--panel-2);border:1px solid var(--border);color:var(--text);
-    cursor:pointer;transition:border-color .2s ease,color .2s ease,transform .2s ease;
+    background:var(--panel-2);border:none;color:var(--text);
+    box-shadow:0 10px 26px rgba(0,0,0,.16);
+    cursor:pointer;transition:color .2s ease,transform .2s ease,box-shadow .2s ease;
     opacity:0;transform:translateY(-8px);
   }
   .makna-logo-overlay.open .makna-logo-close{opacity:1;transform:translateY(0);transition:opacity .3s ease .25s, transform .3s ease .25s;}
-  .makna-logo-close:hover{border-color:var(--gold);color:var(--gold-bright);transform:translateY(-2px) rotate(90deg);}
+  .makna-logo-close:hover{color:var(--gold-bright);transform:translateY(-2px) rotate(90deg);box-shadow:0 12px 30px rgba(0,0,0,.2);}
   .makna-logo-close svg{width:18px;height:18px;}
 
   .makna-logo-eyebrow{
-    position:absolute;top:0;left:50%;transform:translate(-50%,-6px);
-    font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
-    color:var(--gold-bright);background:var(--panel-2);border:1px solid var(--border);
-    padding:8px 18px;border-radius:999px;white-space:nowrap;
-    opacity:0;transition:opacity .3s ease .25s, transform .3s ease .25s;
+    position:fixed;top:24px;left:26px;z-index:3;
+    font-family:var(--display);font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--gold-bright);background:var(--panel-2);border:1.5px solid var(--gold);
+    padding:11px 24px;border-radius:999px;white-space:nowrap;
+    box-shadow:0 10px 26px rgba(0,0,0,.14);
+    opacity:0;transform:translateY(-8px);
+    transition:opacity .3s ease .25s, transform .3s ease .25s;
   }
-  .makna-logo-overlay.open .makna-logo-eyebrow{opacity:1;transform:translate(-50%,0);}
+  .makna-logo-overlay.open .makna-logo-eyebrow{opacity:1;transform:translateY(0);}
 
   .makna-logo-stage{
     position:relative;width:min(92vw,1180px);aspect-ratio:1920/818;
@@ -783,15 +786,21 @@
      cuma dengan border-radius/overflow (itu cuma motong bentuknya jadi
      lingkaran, bukan menghapus warna putihnya). */
   .makna-logo-crest{
-    position:fixed;border-radius:50%;overflow:hidden;
-    box-shadow:0 25px 65px rgba(0,0,0,.4);
-    z-index:1;
+    position:fixed;z-index:1;
     transition:top .55s cubic-bezier(.65,0,.2,1), left .55s cubic-bezier(.65,0,.2,1),
-      width .55s cubic-bezier(.65,0,.2,1), height .55s cubic-bezier(.65,0,.2,1),
-      box-shadow .55s ease;
+      width .55s cubic-bezier(.65,0,.2,1), height .55s cubic-bezier(.65,0,.2,1);
     will-change:top,left,width,height;
   }
-  .makna-logo-crest img{width:100%;height:100%;object-fit:cover;display:block;mix-blend-mode:multiply;}
+  /* Tanpa bingkai/lingkaran putih di belakang lambang -- mix-blend-mode:multiply
+     "membuang" latar putih bawaan file PNG lambang (menyatu dgn backdrop terang
+     modal), dan filter:drop-shadow (bukan box-shadow) supaya bayangannya
+     mengikuti siluet perisai, bukan kotak pembungkusnya. object-fit:contain
+     supaya bentuk lambang tidak pernah terpotong. */
+  .makna-logo-crest img{
+    width:100%;height:100%;object-fit:contain;display:block;
+    mix-blend-mode:multiply;
+    filter:drop-shadow(0 18px 34px rgba(0,0,0,.35));
+  }
 
   .makna-logo-point{
     position:absolute;display:flex;align-items:center;gap:0;
@@ -802,34 +811,34 @@
   }
   .makna-logo-overlay.open .makna-logo-point{opacity:1;}
   .makna-logo-point-num{
-    flex-shrink:0;width:32px;height:32px;border-radius:50%;
+    flex-shrink:0;width:36px;height:36px;border-radius:50%;
     display:flex;align-items:center;justify-content:center;
-    background:var(--gold);color:var(--bg-deep);
-    font-family:var(--display);font-weight:700;font-size:14px;
-    box-shadow:0 0 0 3px var(--panel-2),0 4px 14px rgba(0,0,0,.35);
-    position:relative;z-index:2;margin-right:-11px;
+    background:var(--gold);color:#fff;
+    font-family:var(--display);font-weight:700;font-size:15px;
+    box-shadow:0 0 0 4px var(--panel-2),0 6px 16px rgba(0,0,0,.3);
+    position:relative;z-index:2;margin-right:-15px;
   }
   .makna-logo-point-card{
-    background:var(--panel-2);border:1.5px solid var(--border-strong);border-radius:14px;
-    padding:10px 14px 10px 22px;box-shadow:0 8px 24px rgba(0,0,0,.3);
+    background:var(--panel-2);border:2px solid var(--gold);border-radius:22px;
+    padding:11px 18px 11px 28px;box-shadow:0 10px 28px rgba(0,0,0,.16);
   }
   .makna-logo-point-title{
-    font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+    font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
     color:var(--gold-bright);margin-bottom:3px;
   }
   .makna-logo-point-desc{font-family:var(--body);font-size:12.5px;color:var(--text);line-height:1.5;}
 
   .makna-logo-lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;}
-  .makna-logo-lines line{stroke:var(--gold);stroke-opacity:.55;stroke-width:1.4;stroke-linecap:round;opacity:0;transition:opacity .35s ease;transition-delay:var(--mlp-delay,0s);}
+  .makna-logo-lines line{stroke:var(--gold);stroke-opacity:.75;stroke-width:2;stroke-linecap:round;opacity:0;transition:opacity .35s ease;transition-delay:var(--mlp-delay,0s);}
   .makna-logo-overlay.open .makna-logo-lines line{opacity:1;}
 
   /* Titik presisi tempat garis benar-benar menyentuh badan lambang --
      lingkaran kecil solid + cincin tipis di sekelilingnya (gaya "callout
      point" pada infografis), diposisikan persis di koordinat "anchor". */
   .makna-logo-anchor-dot{
-    position:absolute;z-index:2;width:7px;height:7px;border-radius:50%;
+    position:absolute;z-index:2;width:8px;height:8px;border-radius:50%;
     transform:translate(-50%,-50%);
-    background:var(--gold);box-shadow:0 0 0 2px rgba(255,255,255,.85),0 1px 3px rgba(0,0,0,.4);
+    background:var(--gold);box-shadow:0 0 0 3px var(--panel-2),0 1px 3px rgba(0,0,0,.4);
     opacity:0;transition:opacity .35s ease,transform .35s ease;
     transition-delay:var(--mlp-delay,0s);
   }
@@ -839,14 +848,16 @@
      ganti jadi daftar bertumpuk yang simpel (tampilan desktop tidak
      berubah), senada dengan pendekatan responsif lain di halaman ini. */
   @media (max-width:760px){
-    .makna-logo-overlay{align-items:flex-start;padding:70px 16px 32px;}
+    .makna-logo-overlay{align-items:flex-start;padding:78px 16px 32px;}
+    .makna-logo-eyebrow{top:16px;left:16px;font-size:11px;padding:9px 18px;}
+    .makna-logo-close{top:16px;right:16px;width:40px;height:40px;}
     .makna-logo-stage{
       width:100%;aspect-ratio:auto;display:flex;flex-direction:column;align-items:center;gap:22px;
     }
     .makna-logo-crest{
       position:relative !important;top:auto !important;left:auto !important;
       width:min(46vw,190px) !important;height:min(46vw,190px) !important;
-      margin:0 auto;transition:box-shadow .35s ease;
+      margin:0 auto;transition:none;
     }
     .makna-logo-lines{display:none;}
     .makna-logo-anchor-dot{display:none;}
