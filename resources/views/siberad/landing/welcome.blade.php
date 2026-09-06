@@ -791,19 +791,22 @@
      cuma dengan border-radius/overflow (itu cuma motong bentuknya jadi
      lingkaran, bukan menghapus warna putihnya). */
   .makna-logo-crest{
-    position:fixed;z-index:1;background:none;
+    position:fixed;z-index:1;background:#fff;
     transition:top .55s cubic-bezier(.65,0,.2,1), left .55s cubic-bezier(.65,0,.2,1),
       width .55s cubic-bezier(.65,0,.2,1), height .55s cubic-bezier(.65,0,.2,1);
     will-change:top,left,width,height;
   }
-  /* Tanpa bingkai/lingkaran putih di belakang lambang -- mix-blend-mode:multiply
-     "membuang" latar putih bawaan file PNG lambang (menyatu dgn backdrop terang
-     modal). filter:drop-shadow SENGAJA TIDAK dipakai lagi: kalau file lambang
-     yang diunggah admin ternyata latar putihnya piksel asli (bukan alpha
-     transparan), drop-shadow tetap menghitung bayangan dari batas PERSEGI
-     gambarnya (bukan siluet perisainya) -- itu yang membuat "kotak putih"
-     samar kelihatan di belakang lambang pada bug sebelumnya. object-fit:contain
-     supaya bentuk lambang tidak pernah terpotong. */
+  /* Tanpa bingkai/lingkaran putih di belakang lambang -- .makna-logo-crest
+     (position:fixed + z-index) otomatis membentuk STACKING CONTEXT sendiri,
+     sehingga mix-blend-mode:multiply di <img> di bawah ini "terisolasi":
+     ia blend dengan backdrop LOKAL milik .makna-logo-crest itu sendiri,
+     BUKAN dengan seluruh halaman di belakangnya. Makanya background:#fff
+     di atas WAJIB ada (disamakan dgn latar overlay yg juga putih solid) --
+     tanpa itu, backdrop lokalnya transparan, multiply jadi tidak berefek,
+     dan latar putih bawaan file lambang tetap tampak sbg kotak. Dengan
+     backdrop lokal putih, hasilnya putih x putih = menyatu sempurna, logo
+     langsung "mengambang" di atas putih tanpa kotak/bingkai apa pun.
+     object-fit:contain supaya bentuk lambang tidak pernah terpotong. */
   .makna-logo-crest img{
     width:100%;height:100%;object-fit:contain;display:block;
     mix-blend-mode:multiply;
@@ -841,7 +844,7 @@
   .is-bottom .makna-logo-point-num{margin-right:-15px;}
   .is-left .makna-logo-point-num{margin-left:-15px;}
   .makna-logo-point-card{
-    width:230px;height:46px;box-sizing:border-box;
+    width:200px;height:44px;box-sizing:border-box;
     display:flex;align-items:center;
     background:var(--panel-2);border:2px solid var(--gold);border-radius:999px;
     box-shadow:0 10px 28px rgba(0,0,0,.16);
@@ -863,7 +866,17 @@
   .makna-logo-point-desc{font-family:var(--body);font-size:12.5px;color:var(--text);line-height:1.5;}
 
   .makna-logo-lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;}
-  .makna-logo-lines line{stroke:var(--gold);stroke-opacity:.75;stroke-width:2;stroke-linecap:round;opacity:0;transition:opacity .35s ease;transition-delay:var(--mlp-delay,0s);}
+  /* stroke-width di sini SEBELUMNYA ikut "diregangkan" jadi tebal krn
+     preserveAspectRatio="none" pada <svg> meregangkan viewBox 100x100 kotak
+     secara tidak proporsional ke ukuran stage yg lebar/pendek (rasio
+     1920/818) -- vector-effect:non-scaling-stroke mengunci ketebalan garis
+     tetap 2px sungguhan di layar, tidak ikut terdistorsi oleh peregangan
+     itu, sehingga tampil tipis & rapi seperti garis konektor biasa. */
+  .makna-logo-lines line{
+    stroke:var(--gold);stroke-opacity:.8;stroke-width:2px;stroke-linecap:round;
+    vector-effect:non-scaling-stroke;
+    opacity:0;transition:opacity .35s ease;transition-delay:var(--mlp-delay,0s);
+  }
   .makna-logo-overlay.open .makna-logo-lines line{opacity:1;}
 
   /* Titik presisi tempat garis benar-benar menyentuh badan lambang --
@@ -1332,21 +1345,22 @@
       // sebaliknya. Kalau logo yang diunggah admin beda bentuk, nilai ini
       // tinggal digeser manual per titik (tetap ikuti 2 aturan di atas).
       //
-      // Posisi kotak ("badge") SENGAJA disamakan per kolom (x=24 utk kiri,
-      // x=76 utk kanan) & dibuat berjarak sama rata (y) supaya semua kotak
-      // di satu sisi sejajar rapi & lega -- meniru acuan desain "Makna
-      // Logo" (kotak seragam, nomor bulat menempel di sisi yg menghadap
-      // lambang). Titik anchor di badan lambang TIDAK diubah/digeser.
+      // Posisi kotak ("badge") SENGAJA disamakan per kolom (x=20 utk kiri,
+      // x=80 utk kanan -- jarak dilebarkan dari lambang) & dibuat berjarak
+      // sama rata (y) supaya semua kotak di satu sisi sejajar rapi & lega
+      // -- meniru acuan desain "Makna Logo" (kotak seragam, nomor bulat
+      // menempel di sisi yg menghadap lambang). Titik anchor di badan
+      // lambang TIDAK diubah/digeser.
       $mlPoints = [
-        ['badge' => [76.00, 10.00], 'anchor' => [50.00, 15.23]],   // 1. Bintang Emas (ujung atas)
-        ['badge' => [24.00, 18.00], 'anchor' => [42.74, 23.97]],   // 2. Perisai (tepi kiri atas)
-        ['badge' => [76.00, 26.00], 'anchor' => [54.23, 25.78]],   // 3. Ujung Tombak Kanan
-        ['badge' => [76.00, 42.00], 'anchor' => [52.42, 33.04]],   // 4. Persilangan Tombak/Keris
-        ['badge' => [24.00, 38.00], 'anchor' => [44.56, 31.83]],   // 5. Sisi Emas / Bingkai Segi Delapan
-        ['badge' => [76.00, 58.00], 'anchor' => [54.84, 40.29]],   // 6. Lapisan/Warna Hijau
-        ['badge' => [24.00, 78.00], 'anchor' => [47.58, 46.34]],   // 7. Hexagonal / Warna Merah Putih
-        ['badge' => [24.00, 58.00], 'anchor' => [45.77, 38.48]],   // 8. Ujung Tombak Kiri
-        ['badge' => [76.00, 74.00], 'anchor' => [50.60, 54.20]],   // 9. Pita Nama / Moto
+        ['badge' => [80.00, 10.00], 'anchor' => [50.00, 15.23]],   // 1. Bintang Emas (ujung atas)
+        ['badge' => [20.00, 18.00], 'anchor' => [42.74, 23.97]],   // 2. Perisai (tepi kiri atas)
+        ['badge' => [80.00, 26.00], 'anchor' => [54.23, 25.78]],   // 3. Ujung Tombak Kanan
+        ['badge' => [80.00, 42.00], 'anchor' => [52.42, 33.04]],   // 4. Persilangan Tombak/Keris
+        ['badge' => [20.00, 38.00], 'anchor' => [44.56, 31.83]],   // 5. Sisi Emas / Bingkai Segi Delapan
+        ['badge' => [80.00, 58.00], 'anchor' => [54.84, 40.29]],   // 6. Lapisan/Warna Hijau
+        ['badge' => [20.00, 78.00], 'anchor' => [47.58, 46.34]],   // 7. Hexagonal / Warna Merah Putih
+        ['badge' => [20.00, 58.00], 'anchor' => [45.77, 38.48]],   // 8. Ujung Tombak Kiri
+        ['badge' => [80.00, 74.00], 'anchor' => [50.60, 54.20]],   // 9. Pita Nama / Moto
         ['badge' => [50.00, 88.00], 'anchor' => [50.00, 47.29]],   // 10. Globe / Bola Dunia
       ];
       $mlItems = old('makna_logo') ?? $pengaturan->makna_logo ?? \App\Models\Pengaturan::defaultMaknaLogo();
