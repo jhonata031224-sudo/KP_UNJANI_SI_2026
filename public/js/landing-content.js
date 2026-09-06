@@ -13,48 +13,30 @@
     qa('.logo-text b').forEach(el=>{
       el.innerHTML='';
       el.append(document.createTextNode(brand.name||'SIBER'));
-      const s=document.createElement('span');
-      s.textContent=brand.accent||'AD';
-      el.append(s);
+      const s=document.createElement('span');s.textContent=brand.accent||'AD';el.append(s);
     });
     qa('.logo-text small').forEach(el=>text(el,brand.tagline||'Pussiberad · TNI AD'));
     if(cfg.logo_url){
       qa('.logo-badge img,.hero-crest .mark-plate img,#loader .mark-plate img,#tentang-pussiberad img').forEach(img=>attr(img,'src',cfg.logo_url));
-      const f=q('link[rel="icon"]');
-      if(f)f.href=cfg.logo_url;
+      const f=q('link[rel="icon"]');if(f)f.href=cfg.logo_url;
     }
-    if(Array.isArray(cfg.nav))qa('.nav-links a').forEach((el,i)=>{
-      const x=cfg.nav[i];
-      if(x){text(el,x.label);attr(el,'href',x.url||'#');}
-    });
+    if(Array.isArray(cfg.nav))qa('.nav-links a').forEach((el,i)=>{const x=cfg.nav[i];if(x){text(el,x.label);attr(el,'href',x.url||'#');}});
     const hero=cfg.hero||{},hb=q('.hero-actions .btn-primary');
-    text(hb,hero.button_label||'Selengkapnya');
-    attr(hb,'href',hero.button_url||'#fitur');
+    text(hb,hero.button_label||'Selengkapnya');attr(hb,'href',hero.button_url||'#fitur');
     const crest=q('.hero-crest-caption');
     if(crest)crest.innerHTML=(hero.crest_caption||'Pusat Siber Angkatan Darat')+(hero.crest_motto?('<br><b>“'+hero.crest_motto+'”</b>'):'');
-    if(Array.isArray(cfg.stats))qa('.stats-grid .stat').forEach((el,i)=>{
-      const x=cfg.stats[i];
-      if(x){text(q('.stat-num',el),x.number);text(q('.stat-label',el),x.label);}
-    });
+    if(Array.isArray(cfg.stats))qa('.stats-grid .stat').forEach((el,i)=>{const x=cfg.stats[i];if(x){text(q('.stat-num',el),x.number);text(q('.stat-label',el),x.label);}});
     const fs=cfg.features_section||{},fr=q('#fitur');
     if(fr){text(q('.section-head .eyebrow',fr),fs.eyebrow);text(q('.section-head h3',fr),fs.title);text(q('.section-head p',fr),fs.description);}
     const as=cfg.about_section||{},ar=q('#tentang-pussiberad');
     if(ar){text(q('.eyebrow',ar),as.eyebrow);text(q('.about-top h3',ar),as.title);}
-    if(cfg.footer){
-      text(q('.footer-desc'),cfg.footer.description);
-      const c=q('.footer-bottom');
-      if(c&&cfg.footer.copyright)text(c,cfg.footer.copyright);
-    }
+    if(cfg.footer){text(q('.footer-desc'),cfg.footer.description);const c=q('.footer-bottom');if(c&&cfg.footer.copyright)text(c,cfg.footer.copyright);}
     if(cfg.colors)Object.entries(cfg.colors).forEach(([k,v])=>{if(v)document.documentElement.style.setProperty('--'+k,v);});
-    if(cfg.background_url){
-      const bg=q('.hero-stats-bg');
-      if(bg)bg.style.backgroundImage="linear-gradient(115deg,var(--hero-ov-1) 0%,var(--hero-ov-2) 32%,var(--hero-ov-3) 58%,var(--hero-ov-4) 100%),linear-gradient(to top,var(--hero-ov-top) 0%,var(--hero-ov-top-fade) 26%),url('"+cfg.background_url.replace(/'/g,"\\'")+"')";
-    }
+    if(cfg.background_url){const bg=q('.hero-stats-bg');if(bg)bg.style.backgroundImage="linear-gradient(115deg,var(--hero-ov-1) 0%,var(--hero-ov-2) 32%,var(--hero-ov-3) 58%,var(--hero-ov-4) 100%),linear-gradient(to top,var(--hero-ov-top) 0%,var(--hero-ov-top-fade) 26%),url('"+cfg.background_url.replace(/'/g,"\\'")+"')";}
   }
 
   function initMaknaLogoDropdown(){
-    const overlay=q('#maknaLogoOverlay');
-    if(!overlay)return;
+    const overlay=q('#maknaLogoOverlay');if(!overlay)return;
     if(!document.getElementById('makna-logo-dropdown-style')){
       const style=document.createElement('style');style.id='makna-logo-dropdown-style';
       style.textContent=`
@@ -65,14 +47,7 @@
         #maknaLogoOverlay .makna-logo-point-card:hover{border-color:#FF9800!important;box-shadow:0 14px 32px rgba(0,0,0,.20)!important;}
         #maknaLogoOverlay .makna-logo-point.is-expanded .makna-logo-point-card{border-color:#FF9800!important;}
         #maknaLogoOverlay .makna-logo-point-title,#maknaLogoOverlay .makna-logo-point-desc{display:none!important;}
-        #maknaLogoOverlay .makna-logo-dropdown{
-          position:absolute!important;top:calc(100% + 12px)!important;left:0!important;right:auto!important;
-          width:100%!important;min-width:300px!important;max-width:390px!important;padding:15px 17px!important;
-          background:#fff!important;color:#1b2620!important;border:1.5px solid #FF9800!important;border-radius:14px!important;
-          box-shadow:0 20px 44px rgba(0,0,0,.24)!important;opacity:0;visibility:hidden!important;
-          transform:translateY(-6px);transition:opacity .2s ease,transform .2s ease,visibility .2s ease!important;
-          z-index:1000000!important;pointer-events:none!important;
-        }
+        #maknaLogoOverlay .makna-logo-dropdown{position:absolute!important;top:calc(100% + 12px)!important;left:0!important;right:auto!important;width:100%!important;min-width:300px!important;max-width:390px!important;padding:15px 17px!important;background:#fff!important;color:#1b2620!important;border:1.5px solid #FF9800!important;border-radius:14px!important;box-shadow:0 20px 44px rgba(0,0,0,.24)!important;opacity:0;visibility:hidden!important;transform:translateY(-6px);transition:opacity .2s ease,transform .2s ease,visibility .2s ease!important;z-index:1000000!important;pointer-events:none!important;}
         #maknaLogoOverlay .makna-logo-point.is-left .makna-logo-dropdown{left:auto!important;right:0!important;}
         #maknaLogoOverlay .makna-logo-point.is-bottom .makna-logo-dropdown{left:50%!important;right:auto!important;transform:translate(-50%,-6px);}
         #maknaLogoOverlay .makna-logo-point.is-drop-up .makna-logo-dropdown{top:auto!important;bottom:calc(100% + 12px)!important;transform:translateY(6px)!important;}
@@ -83,45 +58,26 @@
         #maknaLogoOverlay .makna-logo-point.is-expanded.is-drop-up .makna-logo-point-card::after{content:'⌄';}
         #maknaLogoOverlay .makna-logo-dropdown-title{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#FF9800;margin-bottom:7px;}
         #maknaLogoOverlay .makna-logo-dropdown-desc{font-family:var(--body);font-size:13px;line-height:1.6;color:#465a4d;}
-        @media(max-width:760px){
-          #maknaLogoOverlay{overflow:auto!important;}
-          #maknaLogoOverlay .makna-logo-stage{overflow:visible!important;}
-          #maknaLogoOverlay .makna-logo-dropdown,#maknaLogoOverlay .makna-logo-point.is-left .makna-logo-dropdown,#maknaLogoOverlay .makna-logo-point.is-bottom .makna-logo-dropdown,#maknaLogoOverlay .makna-logo-point.is-drop-up .makna-logo-dropdown{
-            position:relative!important;top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;width:100%!important;max-width:none!important;min-width:0!important;margin-top:8px!important;transform:none!important;
-          }
-        }
+        @media(max-width:760px){#maknaLogoOverlay{overflow:auto!important;}#maknaLogoOverlay .makna-logo-stage{overflow:visible!important;}#maknaLogoOverlay .makna-logo-dropdown,#maknaLogoOverlay .makna-logo-point.is-left .makna-logo-dropdown,#maknaLogoOverlay .makna-logo-point.is-bottom .makna-logo-dropdown,#maknaLogoOverlay .makna-logo-point.is-drop-up .makna-logo-dropdown{position:relative!important;top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;width:100%!important;max-width:none!important;min-width:0!important;margin-top:8px!important;transform:none!important;}}
       `;document.head.appendChild(style);
     }
     qa('.makna-logo-point',overlay).forEach((point,index)=>{
-      const card=q('.makna-logo-point-card',point),title=q('.makna-logo-point-title',point),desc=q('.makna-logo-point-desc',point);
-      if(!card)return;
-      const number=Number((q('.makna-logo-point-num',point)?.textContent||'').trim())||index+1;
-      point.dataset.mlNumber=String(number);
+      const card=q('.makna-logo-point-card',point),title=q('.makna-logo-point-title',point),desc=q('.makna-logo-point-desc',point);if(!card)return;
+      const number=Number((q('.makna-logo-point-num',point)?.textContent||'').trim())||index+1;point.dataset.mlNumber=String(number);
       card.setAttribute('role','button');card.setAttribute('tabindex','0');card.setAttribute('aria-expanded','false');card.setAttribute('aria-label','Lihat makna poin '+number);
       let dropdown=q('.makna-logo-dropdown',point);
-      if(!dropdown){
-        dropdown=document.createElement('div');dropdown.className='makna-logo-dropdown';
-        dropdown.innerHTML='<div class="makna-logo-dropdown-title"></div><div class="makna-logo-dropdown-desc"></div>';point.appendChild(dropdown);
-      }
-      text(q('.makna-logo-dropdown-title',dropdown),title?.textContent?.trim()||('Poin '+number));
-      text(q('.makna-logo-dropdown-desc',dropdown),desc?.textContent?.trim()||'');
-      const toggle=()=>{
-        const open=point.classList.contains('is-expanded');
-        qa('.makna-logo-point.is-expanded',overlay).forEach(other=>{other.classList.remove('is-expanded');const c=q('.makna-logo-point-card',other);if(c)c.setAttribute('aria-expanded','false');});
-        if(!open){point.classList.add('is-expanded');card.setAttribute('aria-expanded','true');}
-      };
-      card.addEventListener('click',toggle);
-      card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}});
+      if(!dropdown){dropdown=document.createElement('div');dropdown.className='makna-logo-dropdown';dropdown.innerHTML='<div class="makna-logo-dropdown-title"></div><div class="makna-logo-dropdown-desc"></div>';point.appendChild(dropdown);}
+      text(q('.makna-logo-dropdown-title',dropdown),title?.textContent?.trim()||('Poin '+number));text(q('.makna-logo-dropdown-desc',dropdown),desc?.textContent?.trim()||'');
+      const toggle=()=>{const open=point.classList.contains('is-expanded');qa('.makna-logo-point.is-expanded',overlay).forEach(other=>{other.classList.remove('is-expanded');const c=q('.makna-logo-point-card',other);if(c)c.setAttribute('aria-expanded','false');});if(!open){point.classList.add('is-expanded');card.setAttribute('aria-expanded','true');}};
+      card.addEventListener('click',toggle);card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}});
     });
     const closeAll=()=>qa('.makna-logo-point.is-expanded',overlay).forEach(point=>{point.classList.remove('is-expanded');const card=q('.makna-logo-point-card',point);if(card)card.setAttribute('aria-expanded','false');});
-    overlay.addEventListener('click',e=>{if(!e.target.closest('.makna-logo-point'))closeAll();});
-    document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAll();});
+    overlay.addEventListener('click',e=>{if(!e.target.closest('.makna-logo-point'))closeAll();});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAll();});
     const close=q('#maknaLogoClose');if(close)close.addEventListener('click',closeAll);
   }
 
   function syncMaknaLogoPrototype(){
-    const overlay=q('#maknaLogoOverlay'),stage=q('#maknaLogoStage');
-    if(!overlay||!stage)return;
+    const overlay=q('#maknaLogoOverlay'),stage=q('#maknaLogoStage');if(!overlay||!stage)return;
     if(!document.getElementById('makna-logo-prototype-override')){
       const style=document.createElement('style');style.id='makna-logo-prototype-override';
       style.textContent=`
@@ -138,7 +94,7 @@
         #maknaLogoOverlay .makna-logo-point.is-right .makna-logo-point-card{justify-content:flex-start!important;text-align:left!important;padding:0 18px!important;border-radius:999px!important;}
         #maknaLogoOverlay .makna-logo-point.is-left .makna-logo-point-num{margin-left:-15px!important;margin-right:0!important;}
         #maknaLogoOverlay .makna-logo-point.is-right .makna-logo-point-num{margin-right:-15px!important;margin-left:0!important;}
-        #maknaLogoOverlay .makna-logo-point.is-bottom{height:48px!important;left:50%!important;right:auto!important;top:91%!important;transform:translate(-50%,-50%)!important;}
+        #maknaLogoOverlay .makna-logo-point.is-bottom{height:48px!important;left:60%!important;right:auto!important;top:91%!important;transform:translate(-50%,-50%)!important;}
         #maknaLogoOverlay .makna-logo-point.is-bottom .makna-logo-point-card{border-radius:999px!important;justify-content:center!important;text-align:center!important;padding:0 18px!important;}
         #maknaLogoOverlay .makna-logo-lines{z-index:5!important;pointer-events:none!important;overflow:visible!important;}
         #maknaLogoOverlay .makna-logo-lines line,#maknaLogoOverlay .makna-logo-lines polyline{stroke:#FF9800!important;stroke-opacity:1!important;stroke-width:1.6px!important;fill:none!important;vector-effect:non-scaling-stroke!important;}
@@ -160,14 +116,19 @@
       2:{side:'left',x:4,top:24,width:300},
       3:{side:'right',x:72,top:33,width:360},
       4:{side:'left',x:9,top:43,width:390},
-      5:{side:'right',x:69,top:50,width:390},
+      5:{side:'right',x:69,top:50,width:360},
       6:{side:'right',x:73,top:64,width:350},
       7:{side:'left',x:7,top:63,width:370},
       8:{side:'left',x:14,top:79,width:340},
-      9:{side:'right',x:69,top:79,width:320},
-      10:{side:'bottom',x:50,top:91,width:300}
+      9:{side:'right',x:69,top:79,width:330},
+      10:{side:'bottom',x:60,top:91,width:300}
     };
-    const anchors={1:[49.23,29.99],2:[44.59,33.38],3:[52.47,40.22],4:[46.98,35.83],5:[52.72,35.89],6:[49.43,40.83],7:[49.43,46.79],8:[45.48,52.15],9:[49.30,52.15],10:[53.32,52.15]};
+    // Anchor coordinates are tied to the enlarged 300px crest, not to the cards.
+    // Mapping follows the meaning of each label: 10 = the globe, 9 = the right ribbon area.
+    const anchors={
+      1:[44.43,33.23],2:[39.05,36.39],3:[48.52,43.23],4:[41.78,38.92],5:[48.52,38.92],
+      6:[44.73,43.73],7:[40.04,54.75],8:[44.66,49.56],9:[49.20,54.75],10:[44.51,54.75]
+    };
     qa('.makna-logo-point',stage).forEach((point,index)=>{
       const number=Number(point.dataset.mlNumber||(q('.makna-logo-point-num',point)?.textContent||'').trim())||index+1;
       const p=layout[number];if(!p)return;
@@ -175,7 +136,8 @@
       point.style.top=p.top+'%';point.style.bottom='auto';point.style.left=p.x+'%';point.style.right='auto';point.style.width=p.width+'px';point.style.maxWidth=p.width+'px';
       if(p.top>=78)point.classList.add('is-drop-up');
       const a=anchors[number];
-      const dot=q('.makna-logo-anchor-dot[data-ml-number="'+number+'"]',stage)||qa('.makna-logo-anchor-dot',stage)[number-1];
+      const dots=qa('.makna-logo-anchor-dot',stage);
+      const dot=dots[number-1];
       if(a&&dot){dot.dataset.mlNumber=String(number);dot.style.left=a[0]+'%';dot.style.top=a[1]+'%';}
     });
     const redraw=()=>{
@@ -183,7 +145,7 @@
       const stageRect=stage.getBoundingClientRect();
       qa('.makna-logo-point',stage).forEach((point,index)=>{
         const number=Number(point.dataset.mlNumber||(q('.makna-logo-point-num',point)?.textContent||'').trim())||index+1;
-        const badge=q('.makna-logo-point-num',point),dot=q('.makna-logo-anchor-dot[data-ml-number="'+number+'"]',stage)||qa('.makna-logo-anchor-dot',stage)[index];
+        const badge=q('.makna-logo-point-num',point),dot=q('.makna-logo-anchor-dot[data-ml-number="'+number+'"]',stage)||qa('.makna-logo-anchor-dot',stage)[number-1];
         if(!badge||!dot)return;
         const br=badge.getBoundingClientRect(),dr=dot.getBoundingClientRect();
         const isLeft=point.classList.contains('is-left'),isBottom=point.classList.contains('is-bottom');
@@ -192,22 +154,18 @@
         const x1=(startPxX-stageRect.left)/stageRect.width*100,y1=(br.top+br.height/2-stageRect.top)/stageRect.height*100;
         let route;
         if(number===10){
-          const bendY=y1-3;
-          route=[[x1,y1],[x1,bendY],[x2,bendY],[x2,y2]];
-        }else if([2,3,6,7,8,9].includes(number)){
-          const direction=isLeft?1:-1;
-          const bendX=x1+direction*5;
-          route=[[x1,y1],[bendX,y1],[x2,y2]];
+          // One straight vertical connector: the card is positioned to align its badge with the globe anchor.
+          route=[[x1,y1],[x2,y2]];
+        }else if([2,6,7,8].includes(number)){
+          const direction=isLeft?1:-1;const bendX=x1+direction*5;route=[[x1,y1],[bendX,y1],[x2,y2]];
         }else{
           route=[[x1,y1],[x2,y2]];
         }
         svg.querySelectorAll('[data-ml-line="'+index+'"]').forEach(el=>el.remove());
         if(route.length===2){
-          const line=document.createElementNS('http://www.w3.org/2000/svg','line');
-          line.setAttribute('data-ml-line',String(index));line.setAttribute('x1',route[0][0]);line.setAttribute('y1',route[0][1]);line.setAttribute('x2',route[1][0]);line.setAttribute('y2',route[1][1]);line.setAttribute('stroke','#FF9800');line.setAttribute('fill','none');svg.appendChild(line);
+          const line=document.createElementNS('http://www.w3.org/2000/svg','line');line.setAttribute('data-ml-line',String(index));line.setAttribute('x1',route[0][0]);line.setAttribute('y1',route[0][1]);line.setAttribute('x2',route[1][0]);line.setAttribute('y2',route[1][1]);line.setAttribute('stroke','#FF9800');line.setAttribute('fill','none');svg.appendChild(line);
         }else{
-          const poly=document.createElementNS('http://www.w3.org/2000/svg','polyline');
-          poly.setAttribute('data-ml-line',String(index));poly.setAttribute('points',route.map(p=>p.join(',')).join(' '));poly.setAttribute('stroke','#FF9800');poly.setAttribute('fill','none');svg.appendChild(poly);
+          const poly=document.createElementNS('http://www.w3.org/2000/svg','polyline');poly.setAttribute('data-ml-line',String(index));poly.setAttribute('points',route.map(p=>p.join(',')).join(' '));poly.setAttribute('stroke','#FF9800');poly.setAttribute('fill','none');svg.appendChild(poly);
         }
       });
     };
