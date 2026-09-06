@@ -48,7 +48,7 @@
     if(cfg.colors)Object.entries(cfg.colors).forEach(([k,v])=>{if(v)document.documentElement.style.setProperty('--'+k,v);});
     if(cfg.background_url){
       const bg=q('.hero-stats-bg');
-      if(bg)bg.style.backgroundImage="linear-gradient(115deg,var(--hero-ov-1) 0%,var(--hero-ov-2) 32%,var(--hero-ov-3) 58%,var(--hero-ov-4) 100%),linear-gradient(to top,var(--hero-ov-top) 0%,var(--hero-ov-top-fade) 26%),url('"+cfg.background_url.replace(/'/g,"\\'")+")";
+      if(bg)bg.style.backgroundImage="linear-gradient(115deg,var(--hero-ov-1) 0%,var(--hero-ov-2) 32%,var(--hero-ov-3) 58%,var(--hero-ov-4) 100%),linear-gradient(to top,var(--hero-ov-top) 0%,var(--hero-ov-top-fade) 26%),url('"+cfg.background_url.replace(/'/g,"\\'")+"')";
     }
   }
 
@@ -80,9 +80,6 @@
         #maknaLogoOverlay .makna-logo-point.is-left .makna-logo-dropdown{left:auto!important;right:0!important;}
         #maknaLogoOverlay .makna-logo-point.is-bottom .makna-logo-dropdown{left:50%!important;right:auto!important;transform:translate(-50%,-6px);}
         #maknaLogoOverlay .makna-logo-point.is-drop-up .makna-logo-dropdown{top:auto!important;bottom:calc(100% + 12px)!important;transform:translateY(6px)!important;}
-        #maknaLogoOverlay .makna-logo-point.is-drop-up .makna-logo-dropdown,
-        #maknaLogoOverlay .makna-logo-point.is-bottom .makna-logo-dropdown{transform:translateY(6px);}
-        #maknaLogoOverlay .makna-logo-point.is-bottom.is-drop-up .makna-logo-dropdown{transform:translate(-50%,6px)!important;}
         #maknaLogoOverlay .makna-logo-point.is-expanded .makna-logo-dropdown{opacity:1;visibility:visible!important;transform:translateY(0)!important;pointer-events:auto!important;display:block!important;}
         #maknaLogoOverlay .makna-logo-point.is-expanded.is-bottom .makna-logo-dropdown{transform:translate(-50%,0)!important;}
         #maknaLogoOverlay .makna-logo-point.is-expanded .makna-logo-point-card::after{content:'⌃';position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:14px;color:#FF9800;}
@@ -198,7 +195,7 @@
         #maknaLogoOverlay .makna-logo-point.is-right .makna-logo-point-card{justify-content:flex-start!important;text-align:left!important;padding:0 18px!important;border-radius:999px!important;}
         #maknaLogoOverlay .makna-logo-point.is-left .makna-logo-point-num{margin-left:-15px!important;margin-right:0!important;}
         #maknaLogoOverlay .makna-logo-point.is-right .makna-logo-point-num{margin-right:-15px!important;margin-left:0!important;}
-        #maknaLogoOverlay .makna-logo-point.is-bottom{width:260px!important;max-width:260px!important;height:46px!important;left:50%!important;right:auto!important;top:88%!important;transform:translate(-50%,-50%)!important;}
+        #maknaLogoOverlay .makna-logo-point.is-bottom{width:260px!important;max-width:260px!important;height:46px!important;left:50%!important;right:auto!important;top:90%!important;transform:translate(-50%,-50%)!important;}
         #maknaLogoOverlay .makna-logo-point.is-bottom .makna-logo-point-card{border-radius:999px!important;justify-content:center!important;text-align:center!important;padding:0 18px!important;}
         #maknaLogoOverlay .makna-logo-lines{z-index:3!important;pointer-events:none!important;overflow:visible!important;}
         #maknaLogoOverlay .makna-logo-lines line,#maknaLogoOverlay .makna-logo-lines polyline{
@@ -219,7 +216,6 @@
       document.head.appendChild(style);
     }
 
-    // Setiap nomor mempunyai posisi kartu sendiri. Titik anchor di logo TIDAK berubah.
     const layout={
       1:{side:'right',x:70,top:18},
       2:{side:'left',x:2,top:28},
@@ -247,16 +243,8 @@
       point.classList.add('is-'+p.side);
       point.style.top=p.top+'%';
       point.style.bottom='auto';
-      if(p.side==='left'){
-        point.style.left=p.x+'%';
-        point.style.right='auto';
-      }else if(p.side==='right'){
-        point.style.left=p.x+'%';
-        point.style.right='auto';
-      }else{
-        point.style.left='50%';
-        point.style.right='auto';
-      }
+      point.style.left=p.x+'%';
+      point.style.right='auto';
       if(p.top>=78)point.classList.add('is-drop-up');
 
       const a=anchors[number];
@@ -287,7 +275,8 @@
           connector.setAttribute('data-ml-line',String(index));
           connector.setAttribute('fill','none');
           connector.setAttribute('stroke','#FF9800');
-          if(oldLine){svg.replaceChild(connector,oldLine);}else{svg.appendChild(connector);}
+          if(oldLine)svg.replaceChild(connector,oldLine);
+          else svg.appendChild(connector);
         }
 
         const br=badge.getBoundingClientRect(),dr=dot.getBoundingClientRect();
@@ -295,7 +284,8 @@
         const isBottom=point.classList.contains('is-bottom');
         const x2=(dr.left+dr.width/2-stageRect.left)/stageRect.width*100;
         const y2=(dr.top+dr.height/2-stageRect.top)/stageRect.height*100;
-        const x1=(isBottom?(br.left+br.width/2):(isLeft?br.left:br.right)-stageRect.left)/stageRect.width*100;
+        const startPxX=isBottom?(br.left+br.width/2):(isLeft?br.left:br.right);
+        const x1=(startPxX-stageRect.left)/stageRect.width*100;
         const y1=(br.top+br.height/2-stageRect.top)/stageRect.height*100;
 
         let points;
