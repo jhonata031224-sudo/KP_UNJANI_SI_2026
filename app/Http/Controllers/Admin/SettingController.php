@@ -134,6 +134,12 @@ class SettingController extends Controller
             'tentang_fungsi_utama'=>['nullable','string','max:1000'],
             'tentang_moto_judul'=>['nullable','string','max:255'],
             'tentang_moto_deskripsi'=>['nullable','string','max:2000'],
+            // makna_logo: 10 poin keterangan makna lambang yang tampil di modal
+            // "Makna Logo" pada landing page. 'size:10' memastikan jumlahnya
+            // tetap 10 poin sesuai jumlah nomor pada diagram di modal.
+            'makna_logo'=>['nullable','array','size:10'],
+            'makna_logo.*.judul'=>['nullable','string','max:100'],
+            'makna_logo.*.keterangan'=>['nullable','string','max:600'],
             'alamat'=>['nullable','string','max:1000'],
             'email_kontak'=>['nullable','email','max:255'],
             'telepon_kontak'=>['nullable','string','max:30'],

@@ -12,12 +12,12 @@ class Pengaturan extends Model
         'hero_blur_level','hero_overlay_intensity',
         'fitur','tentang_deskripsi','tentang_nama_resmi','tentang_nama_lama','tentang_fungsi_utama',
         'tentang_moto_judul','tentang_moto_deskripsi','website','sosial_media','landing_content',
-        'notifikasi_push_aktif','struktur_organisasi_path',
+        'notifikasi_push_aktif','struktur_organisasi_path','makna_logo',
     ];
 
     protected $casts = [
         'fitur' => 'array','sosial_media' => 'array','landing_content' => 'array','notifikasi_push_aktif' => 'boolean',
-        'hero_blur_level' => 'integer','hero_overlay_intensity' => 'integer',
+        'hero_blur_level' => 'integer','hero_overlay_intensity' => 'integer','makna_logo' => 'array',
     ];
 
     public static function current(): self
@@ -56,7 +56,34 @@ class Pengaturan extends Model
             'notifikasi_push_aktif'=>true,
             'hero_blur_level'=>0,
             'hero_overlay_intensity'=>100,
+            'makna_logo'=>self::defaultMaknaLogo(),
         ]);
+    }
+
+    /**
+     * 10 poin keterangan makna lambang (Bintang, Perisai, Tombak/Keris,
+     * Kilat, Bendera Merah Putih, Bola Dunia, Pita Moto, dst) yang tampil di
+     * modal "Makna Logo" pada landing page saat logo diklik. Urutan array
+     * (index 0-9) mengikuti urutan nomor 1-10 pada diagram di modal --
+     * mengubah urutan di sini akan mengubah nomor mana yang menampilkan
+     * keterangan yang mana. Nilai ini hanya DEFAULT/contoh awal; Admin bebas
+     * mengubah judul & keterangan tiap poin lewat Pengaturan Umum -> tab
+     * Tentang -> kartu "Makna Logo".
+     */
+    public static function defaultMaknaLogo(): array
+    {
+        return [
+            ['judul' => 'Bintang Emas', 'keterangan' => 'Melambangkan Ketuhanan Yang Maha Esa serta cita-cita luhur prajurit siber TNI Angkatan Darat.'],
+            ['judul' => 'Perisai', 'keterangan' => 'Melambangkan pertahanan dan perlindungan terhadap kedaulatan negara di ranah siber.'],
+            ['judul' => 'Ujung Tombak Kanan', 'keterangan' => 'Melambangkan ketajaman dan kesiagaan dalam mendeteksi ancaman siber.'],
+            ['judul' => 'Persilangan Tombak/Keris', 'keterangan' => 'Melambangkan kesiapsiagaan tempur di ranah pertahanan siber dan sandi.'],
+            ['judul' => 'Bingkai Segi Delapan', 'keterangan' => 'Melambangkan kewaspadaan menyeluruh dari delapan penjuru mata angin.'],
+            ['judul' => 'Warna Hijau', 'keterangan' => 'Melambangkan identitas dan pengabdian sebagai bagian dari TNI Angkatan Darat.'],
+            ['judul' => 'Warna Merah Putih', 'keterangan' => 'Melambangkan jiwa nasionalisme dan kebangsaan Indonesia.'],
+            ['judul' => 'Ujung Tombak Kiri', 'keterangan' => 'Melambangkan kekuatan dan kesiapan tempur prajurit siber.'],
+            ['judul' => 'Pita Moto', 'keterangan' => 'Bertuliskan semboyan "Satria Yudha Waskita" yang menjadi jati diri satuan.'],
+            ['judul' => 'Bola Dunia', 'keterangan' => 'Melambangkan jangkauan ruang siber (cyber space) yang bersifat global dan tanpa batas.'],
+        ];
     }
 
     public static function defaultLandingContent(): array

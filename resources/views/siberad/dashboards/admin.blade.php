@@ -3330,6 +3330,30 @@
                     </div>
                   </div>
                 </div>
+
+                <div class="lp-card">
+                  <div class="lp-card-title">Makna Logo</div>
+                  <p class="lp-card-desc">
+                    10 poin keterangan makna lambang. Saat pengunjung mengklik logo di bagian "Tentang" landing page,
+                    muncul jendela berisi lambang yang membesar ke tengah beserta 10 kartu keterangan bernomor
+                    (1-10) di sekelilingnya -- isi Judul &amp; Keterangan tiap poin di bawah ini sesuai nomornya.
+                  </p>
+                  @foreach ((old('makna_logo') ?? $pengaturan->makna_logo ?? \App\Models\Pengaturan::defaultMaknaLogo()) as $i => $makna)
+                    <div class="lp-card" style="background:var(--panel-alt,transparent);">
+                      <div class="lp-card-title">Poin Nomor {{ $i + 1 }}</div>
+                      <div class="form-grid">
+                        <div class="form-field full">
+                          <label for="lpMaknaJudul{{ $i }}">Judul Singkat</label>
+                          <input id="lpMaknaJudul{{ $i }}" name="makna_logo[{{ $i }}][judul]" type="text" value="{{ is_array($makna) ? ($makna['judul'] ?? '') : '' }}" data-lp="makna_logo_judul_{{ $i }}">
+                        </div>
+                        <div class="form-field full">
+                          <label for="lpMaknaKeterangan{{ $i }}">Keterangan</label>
+                          <textarea id="lpMaknaKeterangan{{ $i }}" name="makna_logo[{{ $i }}][keterangan]" rows="2" data-lp="makna_logo_keterangan_{{ $i }}">{{ is_array($makna) ? ($makna['keterangan'] ?? '') : '' }}</textarea>
+                        </div>
+                      </div>
+                    </div>
+                  @endforeach
+                </div>
               </div>
 
               {{-- ===== TAB: KONTAK ===== --}}

@@ -719,8 +719,124 @@
     position:relative;width:100%;max-width:220px;margin:0 auto;
     border-radius:50%;overflow:hidden;border:1px solid var(--border-strong);
     box-shadow:0 0 0 10px rgba(212,175,55,.05), 0 24px 60px rgba(0,0,0,.5);
+    /* .about-crest sekarang elemen <button> (supaya bisa diklik utk modal
+       Makna Logo) -- reset gaya bawaan tombol biar tampilannya identik
+       dengan sebelumnya (waktu masih <div>). */
+    display:block;padding:0;background:none;cursor:pointer;
+    transition:transform .25s ease, box-shadow .25s ease;
   }
+  .about-crest:hover{transform:translateY(-3px);box-shadow:0 0 0 10px rgba(212,175,55,.09), 0 28px 70px rgba(0,0,0,.55);}
+  .about-crest:focus-visible{outline:2px solid var(--gold);outline-offset:4px;}
   .about-crest img{width:100%;display:block;}
+
+  /* ================= MODAL: MAKNA LOGO ================= */
+  /* Overlay full-screen: background halaman diberi blur+gelap, lambang
+     "berpindah" (transisi transform) dari posisi kecilnya di section Tentang
+     menuju tengah layar dalam ukuran besar, lalu 10 kartu keterangan
+     bernomor muncul menyebar di sekelilingnya menyerupai garis penunjuk. */
+  .makna-logo-overlay{
+    position:fixed;inset:0;z-index:80;
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;overflow:auto;
+    background:var(--overlay-bg);
+    backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);
+    opacity:0;pointer-events:none;
+    transition:opacity .35s ease, backdrop-filter .45s ease;
+  }
+  .makna-logo-overlay.open{
+    opacity:1;pointer-events:auto;
+    backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  }
+  .makna-logo-close{
+    position:fixed;top:22px;right:26px;z-index:2;
+    width:42px;height:42px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    cursor:pointer;transition:border-color .2s ease,color .2s ease,transform .2s ease;
+    opacity:0;transform:translateY(-8px);
+  }
+  .makna-logo-overlay.open .makna-logo-close{opacity:1;transform:translateY(0);transition:opacity .3s ease .25s, transform .3s ease .25s;}
+  .makna-logo-close:hover{border-color:var(--gold);color:var(--gold-bright);transform:translateY(-2px) rotate(90deg);}
+  .makna-logo-close svg{width:18px;height:18px;}
+
+  .makna-logo-eyebrow{
+    position:absolute;top:0;left:50%;transform:translate(-50%,-6px);
+    font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--gold-bright);background:var(--panel-2);border:1px solid var(--border);
+    padding:8px 18px;border-radius:999px;white-space:nowrap;
+    opacity:0;transition:opacity .3s ease .25s, transform .3s ease .25s;
+  }
+  .makna-logo-overlay.open .makna-logo-eyebrow{opacity:1;transform:translate(-50%,0);}
+
+  .makna-logo-stage{
+    position:relative;width:min(92vw,1180px);aspect-ratio:1920/818;
+  }
+
+  /* Lambang yang membesar & bergeser ke tengah -- posisinya di-set lewat JS
+     (dari koordinat lambang kecil di halaman, menuju tengah stage), supaya
+     transisinya benar-benar "meluncur" dari titik klik, bukan cuma muncul
+     tiba-tiba di tengah. */
+  .makna-logo-crest{
+    position:fixed;border-radius:50%;overflow:hidden;
+    box-shadow:0 0 0 10px rgba(212,175,55,.08), 0 30px 80px rgba(0,0,0,.6);
+    z-index:1;
+    transition:top .55s cubic-bezier(.65,0,.2,1), left .55s cubic-bezier(.65,0,.2,1),
+      width .55s cubic-bezier(.65,0,.2,1), height .55s cubic-bezier(.65,0,.2,1),
+      box-shadow .55s ease;
+    will-change:top,left,width,height;
+  }
+  .makna-logo-crest img{width:100%;height:100%;object-fit:cover;display:block;}
+
+  .makna-logo-point{
+    position:absolute;display:flex;align-items:center;gap:10px;
+    transform:translateY(-50%);
+    opacity:0;transition:opacity .35s ease, transform .35s ease;
+    transition-delay:var(--mlp-delay,0s);
+    max-width:min(46vw,300px);
+  }
+  .makna-logo-overlay.open .makna-logo-point{opacity:1;}
+  .makna-logo-point-num{
+    flex-shrink:0;width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--gold);color:var(--bg-deep);
+    font-family:var(--display);font-weight:700;font-size:15px;
+    box-shadow:0 4px 14px rgba(0,0,0,.35);
+  }
+  .makna-logo-point-card{
+    background:var(--panel-2);border:1px solid var(--border);border-radius:10px;
+    padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,.3);
+  }
+  .makna-logo-point-title{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--gold-bright);margin-bottom:3px;
+  }
+  .makna-logo-point-desc{font-family:var(--body);font-size:12.5px;color:var(--text);line-height:1.5;}
+
+  .makna-logo-lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;}
+  .makna-logo-lines line{stroke:var(--border-strong);stroke-width:1.5;opacity:0;transition:opacity .35s ease;transition-delay:var(--mlp-delay,0s);}
+  .makna-logo-overlay.open .makna-logo-lines line{opacity:1;}
+
+  /* Mobile: layout garis-penunjuk-menyebar sulit dibaca di layar sempit --
+     ganti jadi daftar bertumpuk yang simpel (tampilan desktop tidak
+     berubah), senada dengan pendekatan responsif lain di halaman ini. */
+  @media (max-width:760px){
+    .makna-logo-overlay{align-items:flex-start;padding:70px 16px 32px;}
+    .makna-logo-stage{
+      width:100%;aspect-ratio:auto;display:flex;flex-direction:column;align-items:center;gap:22px;
+    }
+    .makna-logo-crest{
+      position:relative !important;top:auto !important;left:auto !important;
+      width:min(46vw,190px) !important;height:min(46vw,190px) !important;
+      margin:0 auto;transition:box-shadow .35s ease;
+    }
+    .makna-logo-lines{display:none;}
+    .makna-logo-point{
+      position:relative;inset:auto;max-width:100%;width:100%;
+      opacity:0;transform:translateY(10px) !important;
+    }
+    .makna-logo-overlay.open .makna-logo-point{opacity:1;transform:translateY(0) !important;}
+    .makna-logo-point-card{flex:1;}
+  }
   .about-grid{
     display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
   }
@@ -1004,9 +1120,13 @@
     <section class="about" id="tentang-pussiberad">
       <div class="wrap">
         <div class="about-top" data-reveal>
-          <div class="about-crest">
-            @if ($lpLogoUrl)<img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">@endif
-          </div>
+          @if ($lpLogoUrl)
+            <button type="button" class="about-crest" id="maknaLogoTrigger" aria-haspopup="dialog" aria-label="Lihat makna lambang Pussiberad">
+              <img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad" id="maknaLogoSourceImg">
+            </button>
+          @else
+            <div class="about-crest"></div>
+          @endif
           <div>
             <div class="eyebrow">{{ $lp['about_section']['eyebrow'] }}</div>
             <h3 style="font-family:var(--display);font-size:clamp(28px,3.4vw,38px);font-weight:700;margin:14px 0 14px;text-transform:uppercase;">{{ $lp['about_section']['title'] }}</h3>
@@ -1115,6 +1235,61 @@
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="6 11 12 5 18 11"></polyline></svg>
   </button>
 
+  <!-- ================= MODAL: MAKNA LOGO ================= -->
+  @if ($lpLogoUrl)
+    @php
+      // Koordinat (dalam skala 1920x818, lalu dikonversi ke persen) posisi
+      // tiap kartu bernomor 1-10 di sekeliling lambang & titik ujung garis
+      // penunjuknya di badan lambang -- meniru tata letak diagram "Makna
+      // Logo" (nomor menyebar di kiri/kanan, nomor 10 di bawah tengah).
+      // Indeks array (0-9) = nomor 1-10, dan JUGA jadi indeks yang dipakai
+      // untuk mengambil judul/keterangan dari $pengaturan->makna_logo.
+      $mlPoints = [
+        ['badge' => [75.52, 11.61], 'anchor' => [51.56, 17.73]],
+        ['badge' => [25.52, 25.06], 'anchor' => [41.67, 31.78]],
+        ['badge' => [77.08, 29.95], 'anchor' => [51.56, 35.45]],
+        ['badge' => [77.08, 47.68], 'anchor' => [51.30, 47.07]],
+        ['badge' => [25.00, 44.62], 'anchor' => [43.23, 44.62]],
+        ['badge' => [77.08, 65.40], 'anchor' => [52.60, 54.40]],
+        ['badge' => [24.74, 80.68], 'anchor' => [47.40, 62.96]],
+        ['badge' => [24.74, 63.57], 'anchor' => [45.31, 54.40]],
+        ['badge' => [77.08, 85.57], 'anchor' => [56.25, 62.96]],
+        ['badge' => [50.00, 92.91], 'anchor' => [50.00, 67.85]],
+      ];
+      $mlItems = old('makna_logo') ?? $pengaturan->makna_logo ?? \App\Models\Pengaturan::defaultMaknaLogo();
+    @endphp
+    <div class="makna-logo-overlay" id="maknaLogoOverlay" role="dialog" aria-modal="true" aria-label="Makna Logo">
+      <button type="button" class="makna-logo-close" id="maknaLogoClose" aria-label="Tutup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+      </button>
+      <div class="makna-logo-eyebrow">Makna Logo</div>
+      <div class="makna-logo-stage" id="maknaLogoStage">
+        <svg class="makna-logo-lines" id="maknaLogoLines" preserveAspectRatio="none" viewBox="0 0 100 100">
+          @foreach ($mlPoints as $i => $p)
+            <line data-ml-line="{{ $i }}"
+              x1="{{ $p['badge'][0] }}" y1="{{ $p['badge'][1] }}"
+              x2="{{ $p['anchor'][0] }}" y2="{{ $p['anchor'][1] }}"
+              style="--mlp-delay:{{ .25 + $i * .05 }}s">
+            </line>
+          @endforeach
+        </svg>
+        <div class="makna-logo-crest" id="maknaLogoCrest">
+          <img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">
+        </div>
+        @foreach ($mlPoints as $i => $p)
+          @php $item = is_array($mlItems[$i] ?? null) ? $mlItems[$i] : []; @endphp
+          <div class="makna-logo-point" style="left:{{ $p['badge'][0] }}%;top:{{ $p['badge'][1] }}%;--mlp-delay:{{ .25 + $i * .05 }}s;">
+            <div class="makna-logo-point-num">{{ $i + 1 }}</div>
+            <div class="makna-logo-point-card">
+              <div class="makna-logo-point-title">{{ $item['judul'] ?? ('Poin '.($i + 1)) }}</div>
+              <div class="makna-logo-point-desc">{{ $item['keterangan'] ?? '' }}</div>
+            </div>
+          </div>
+        @endforeach
+      </div>
+    </div>
+  @endif
+
 <script>
   // ---------- loader sequence (icon only) ----------
   const loader = document.getElementById('loader');
@@ -1174,6 +1349,93 @@
   loginTriggers.forEach(t => t.addEventListener('click', openLogin));
   loginClose.addEventListener('click', closeLogin);
   document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeLogin(); });
+
+  // ---------- modal: makna logo (klik lambang di section Tentang) ----------
+  // Efek "meluncur ke tengah": posisi & ukuran awal .makna-logo-crest
+  // di-set PERSIS sama dengan posisi lambang kecil yang diklik (pakai
+  // getBoundingClientRect), lalu di frame berikutnya di-set ke posisi/ukuran
+  // akhir di tengah stage -- karena elemen itu punya CSS transition pada
+  // top/left/width/height, perubahan ini otomatis teranimasi jadi terlihat
+  // seperti "bergeser & membesar" dari titik klik menuju tengah layar.
+  (function(){
+    const maknaTrigger = document.getElementById('maknaLogoTrigger');
+    if(!maknaTrigger) return; // logo belum diunggah admin -> tombol tidak dirender
+
+    const maknaOverlay = document.getElementById('maknaLogoOverlay');
+    const maknaClose = document.getElementById('maknaLogoClose');
+    const maknaStage = document.getElementById('maknaLogoStage');
+    const maknaCrest = document.getElementById('maknaLogoCrest');
+    const maknaSourceImg = document.getElementById('maknaLogoSourceImg');
+    const maknaReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function maknaIsMobile(){
+      return window.matchMedia('(max-width:760px)').matches;
+    }
+
+    // Di layar mobile posisi kartu diatur lewat CSS (flow normal, bukan
+    // position:fixed) supaya tetap mudah dibaca -- lihat media query
+    // ".makna-logo-crest" di <style>. Jadi JS tidak perlu (dan tidak boleh)
+    // ikut mengatur top/left/width/height lewat inline style di mobile.
+    function maknaPlaceCrestAt(rect, withTransition){
+      if(maknaIsMobile()) return;
+      if(!withTransition) crest_disableTransition();
+      maknaCrest.style.top = rect.top + 'px';
+      maknaCrest.style.left = rect.left + 'px';
+      maknaCrest.style.width = rect.width + 'px';
+      maknaCrest.style.height = rect.height + 'px';
+      if(!withTransition) crest_restoreTransition();
+
+      function crest_disableTransition(){ maknaCrest.style.transition = 'none'; }
+      function crest_restoreTransition(){
+        // paksa reflow dulu supaya posisi "instan" di atas benar-benar
+        // ke-apply sebelum transition CSS normal dikembalikan
+        maknaCrest.getBoundingClientRect();
+        maknaCrest.style.transition = '';
+      }
+    }
+
+    function maknaTargetRect(){
+      const stageRect = maknaStage.getBoundingClientRect();
+      const size = Math.min(stageRect.width * .215, 260);
+      return {
+        top: stageRect.top + stageRect.height * .415 - size / 2,
+        left: stageRect.left + stageRect.width * .5 - size / 2,
+        width: size,
+        height: size,
+      };
+    }
+
+    function openMaknaLogo(){
+      document.body.style.overflow = 'hidden';
+      if(maknaIsMobile()){
+        maknaOverlay.classList.add('open');
+        return;
+      }
+      maknaPlaceCrestAt(maknaSourceImg.getBoundingClientRect(), false);
+      maknaOverlay.classList.add('open');
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          maknaPlaceCrestAt(maknaTargetRect(), true);
+        });
+      });
+    }
+
+    function closeMaknaLogo(){
+      maknaOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+      if(!maknaIsMobile() && !maknaReduceMotion){
+        maknaPlaceCrestAt(maknaSourceImg.getBoundingClientRect(), true);
+      }
+    }
+
+    maknaTrigger.addEventListener('click', openMaknaLogo);
+    maknaClose.addEventListener('click', closeMaknaLogo);
+    maknaOverlay.addEventListener('click', (e)=>{ if(e.target === maknaOverlay) closeMaknaLogo(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && maknaOverlay.classList.contains('open')) closeMaknaLogo(); });
+    window.addEventListener('resize', ()=>{
+      if(maknaOverlay.classList.contains('open') && !maknaIsMobile()) maknaPlaceCrestAt(maknaTargetRect(), false);
+    });
+  })();
 
   // ---------- submit login via AJAX (biar gagal login tidak refresh halaman) ----------
   loginForm.addEventListener('submit', async function(e){
