@@ -117,7 +117,7 @@
         }
         #maknaLogoOverlay .makna-logo-crest{
           position:absolute!important;z-index:auto!important;background:transparent!important;
-          width:230px!important;height:230px!important;top:50%!important;left:50%!important;
+          width:230px!important;height:230px!important;top:42.76%!important;left:50%!important;
           transform:translate(-50%,-50%)!important;transition:none!important;
         }
         #maknaLogoOverlay .makna-logo-crest img{
@@ -153,7 +153,7 @@
         #maknaLogoOverlay .makna-logo-point.is-right .makna-logo-point-num{margin-right:-15px!important;margin-left:0!important;}
         #maknaLogoOverlay .makna-logo-point.is-bottom{
           width:260px!important;max-width:260px!important;height:46px!important;left:50%!important;right:auto!important;
-          top:66.84%!important;transform:translate(-50%,-50%)!important;
+          top:63.42%!important;transform:translate(-50%,-50%)!important;
         }
         #maknaLogoOverlay .makna-logo-point.is-bottom .makna-logo-point-card{
           border-radius:999px!important;justify-content:center!important;text-align:center!important;padding:0 18px!important;
@@ -204,11 +204,11 @@
       {n:1,side:'right',top:31.32},{n:2,side:'left',top:34.21},{n:3,side:'right',top:52.37},
       {n:4,side:'left',top:44.74},{n:5,side:'right',top:41.84},{n:6,side:'right',top:62.89},
       {n:7,side:'left',top:55.26},{n:8,side:'left',top:65.79},{n:9,side:'right',top:73.42},
-      {n:10,side:'bottom',top:66.84},
+      {n:10,side:'bottom',top:63.42},
     ];
     const anchors=[
-      [45.9,7.8],[21.3,19.0],[63.1,41.6],[34.0,27.1],[64.4,27.3],
-      [47.0,43.6],[47.0,63.3],[26.0,81.0],[46.3,81.0],[67.6,81.0]
+      [49.23,29.99],[44.59,33.38],[52.47,40.22],[46.98,35.83],[52.72,35.89],
+      [49.43,40.83],[49.43,46.79],[45.48,52.15],[49.30,52.15],[53.32,52.15]
     ];
 
     qa('.makna-logo-point',stage).forEach((point,i)=>{
