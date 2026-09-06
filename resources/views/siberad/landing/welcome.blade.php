@@ -738,14 +738,19 @@
     position:fixed;inset:0;z-index:80;
     display:flex;align-items:center;justify-content:center;
     padding:24px;overflow:auto;
-    background:var(--overlay-bg);
-    backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);
+    /* Putih SOLID (bukan var(--overlay-bg) yang transparan+blur) -- ini
+       kuncinya supaya mix-blend-mode:multiply di <img> lambang (lihat
+       .makna-logo-crest img) benar-benar melebur sempurna dgn latar
+       (putih x putih = putih, tanpa sisa kotak/bingkai yg kelihatan).
+       Kalau backdrop-nya transparan/blur (nunjukkin konten halaman di
+       belakangnya yg warnanya macam-macam), hasil multiply jadi rembes
+       & keliatan kotaknya -- itu sebab bug "kotak putih" sebelumnya. */
+    background:#fff;
     opacity:0;pointer-events:none;
-    transition:opacity .35s ease, backdrop-filter .45s ease;
+    transition:opacity .35s ease;
   }
   .makna-logo-overlay.open{
     opacity:1;pointer-events:auto;
-    backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
   }
   .makna-logo-close{
     position:fixed;top:24px;right:26px;z-index:3;
@@ -1276,25 +1281,31 @@
       // Indeks array (0-9) = nomor 1-10, dan JUGA jadi indeks yang dipakai
       // untuk mengambil judul/keterangan dari $pengaturan->makna_logo.
       //
-      // Titik "anchor" (ujung garis di badan lambang) diukur LANGSUNG dari
-      // pixel lambang default (Satria Yudha Waskita) supaya presisi --
-      // dihitung sbg offset dari titik tengah lingkaran lambang (yang di-set
-      // JS via maknaTargetRect(): left 50%, top 41.5% dari stage) lalu
-      // dikonversi memakai jari-jari lambang (~10.75% lebar stage) dan rasio
-      // aspek stage (1920/818) supaya bentuknya tetap presisi di sudut yang
-      // benar meski stage tidak persegi. Kalau logo yang diunggah admin
-      // beda bentuk, nilai ini tinggal digeser manual per titik.
+      // Titik "anchor" (ujung garis di badan lambang), diukur dari pixel
+      // lambang default (Satria Yudha Waskita) & disesuaikan dgn ukuran
+      // lambang baru (lihat maknaTargetRect(): size .26 dari lebar stage,
+      // titik tengah tetap di 50% / 41.5% stage).
+      //
+      // ATURAN PENTING supaya garis tidak saling silang ("muter"): untuk
+      // kartu-kartu di SISI YANG SAMA (kiri atau kanan), urutkan anchor-nya
+      // menaik searah urutan kartu dari atas ke bawah -- kartu yang
+      // posisinya lebih rendah, titik anchor-nya di lambang juga harus
+      // lebih rendah (atau sama), jangan sampai "naik" lagi. Anchor kiri
+      // (x<50) dan kanan (x>50) juga sengaja dipisah tegas di sisi masing-
+      // masing supaya tidak ada garis kiri yang menyeberang ke kanan atau
+      // sebaliknya. Kalau logo yang diunggah admin beda bentuk, nilai ini
+      // tinggal digeser manual per titik (tetap ikuti 2 aturan di atas).
       $mlPoints = [
-        ['badge' => [75.52, 11.61], 'anchor' => [50.00, 19.78]],   // Bintang Emas
-        ['badge' => [25.52, 25.06], 'anchor' => [44.69, 28.25]],   // Perisai
-        ['badge' => [77.08, 29.95], 'anchor' => [53.54, 30.16]],   // Ujung Tombak Kanan
-        ['badge' => [77.08, 47.68], 'anchor' => [50.00, 37.83]],   // Persilangan Tombak/Keris
-        ['badge' => [25.00, 44.62], 'anchor' => [45.51, 37.03]],   // Bingkai Segi Delapan
-        ['badge' => [77.08, 65.40], 'anchor' => [53.40, 32.24]],   // Warna Hijau
-        ['badge' => [24.74, 80.68], 'anchor' => [50.00, 35.43]],   // Warna Merah Putih
-        ['badge' => [24.74, 63.57], 'anchor' => [46.53, 30.16]],   // Ujung Tombak Kiri
-        ['badge' => [77.08, 85.57], 'anchor' => [50.00, 55.87]],   // Pita Moto
-        ['badge' => [50.00, 92.91], 'anchor' => [50.00, 46.29]],   // Bola Dunia
+        ['badge' => [75.52, 11.61], 'anchor' => [50.00, 15.23]],   // 1. Bintang Emas (ujung atas)
+        ['badge' => [25.52, 25.06], 'anchor' => [42.74, 23.97]],   // 2. Perisai (tepi kiri atas)
+        ['badge' => [77.08, 29.95], 'anchor' => [54.23, 25.78]],   // 3. Ujung Tombak Kanan
+        ['badge' => [77.08, 47.68], 'anchor' => [52.42, 33.04]],   // 4. Persilangan Tombak/Keris
+        ['badge' => [25.00, 44.62], 'anchor' => [44.56, 31.83]],   // 5. Sisi Emas / Bingkai Segi Delapan
+        ['badge' => [77.08, 65.40], 'anchor' => [54.84, 40.29]],   // 6. Lapisan/Warna Hijau
+        ['badge' => [24.74, 80.68], 'anchor' => [47.58, 46.34]],   // 7. Hexagonal / Warna Merah Putih
+        ['badge' => [24.74, 63.57], 'anchor' => [45.77, 38.48]],   // 8. Ujung Tombak Kiri
+        ['badge' => [77.08, 85.57], 'anchor' => [50.60, 54.20]],   // 9. Pita Nama / Moto
+        ['badge' => [50.00, 92.91], 'anchor' => [50.00, 47.29]],   // 10. Globe / Bola Dunia
       ];
       $mlItems = old('makna_logo') ?? $pengaturan->makna_logo ?? \App\Models\Pengaturan::defaultMaknaLogo();
     @endphp
@@ -1443,7 +1454,10 @@
 
     function maknaTargetRect(){
       const stageRect = maknaStage.getBoundingClientRect();
-      const size = Math.min(stageRect.width * .215, 260);
+      // Diperbesar dari .215/260 -> .26/300 supaya lambang lebih dominan
+      // & jelas di tengah (anchor titik-titik di $mlPoints sudah
+      // disesuaikan/di-skalakan mengikuti rasio pembesaran ini).
+      const size = Math.min(stageRect.width * .26, 300);
       return {
         top: stageRect.top + stageRect.height * .415 - size / 2,
         left: stageRect.left + stageRect.width * .5 - size / 2,
