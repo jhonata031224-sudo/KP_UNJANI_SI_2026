@@ -813,8 +813,20 @@
   .makna-logo-point-desc{font-family:var(--body);font-size:12.5px;color:var(--text);line-height:1.5;}
 
   .makna-logo-lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;}
-  .makna-logo-lines line{stroke:var(--border-strong);stroke-width:1.5;opacity:0;transition:opacity .35s ease;transition-delay:var(--mlp-delay,0s);}
+  .makna-logo-lines line{stroke:var(--border-strong);stroke-width:1.1;stroke-linecap:round;opacity:0;transition:opacity .35s ease;transition-delay:var(--mlp-delay,0s);}
   .makna-logo-overlay.open .makna-logo-lines line{opacity:1;}
+
+  /* Titik presisi tempat garis benar-benar menyentuh badan lambang --
+     lingkaran kecil solid + cincin tipis di sekelilingnya (gaya "callout
+     point" pada infografis), diposisikan persis di koordinat "anchor". */
+  .makna-logo-anchor-dot{
+    position:absolute;z-index:2;width:9px;height:9px;border-radius:50%;
+    transform:translate(-50%,-50%);
+    background:var(--gold);box-shadow:0 0 0 3px var(--gold-dim),0 1px 3px rgba(0,0,0,.4);
+    opacity:0;transition:opacity .35s ease,transform .35s ease;
+    transition-delay:var(--mlp-delay,0s);
+  }
+  .makna-logo-overlay.open .makna-logo-anchor-dot{opacity:1;}
 
   /* Mobile: layout garis-penunjuk-menyebar sulit dibaca di layar sempit --
      ganti jadi daftar bertumpuk yang simpel (tampilan desktop tidak
@@ -830,6 +842,7 @@
       margin:0 auto;transition:box-shadow .35s ease;
     }
     .makna-logo-lines{display:none;}
+    .makna-logo-anchor-dot{display:none;}
     .makna-logo-point{
       position:relative;inset:auto;max-width:100%;width:100%;
       opacity:0;transform:translateY(10px) !important;
@@ -1244,17 +1257,26 @@
       // Logo" (nomor menyebar di kiri/kanan, nomor 10 di bawah tengah).
       // Indeks array (0-9) = nomor 1-10, dan JUGA jadi indeks yang dipakai
       // untuk mengambil judul/keterangan dari $pengaturan->makna_logo.
+      //
+      // Titik "anchor" (ujung garis di badan lambang) diukur LANGSUNG dari
+      // pixel lambang default (Satria Yudha Waskita) supaya presisi --
+      // dihitung sbg offset dari titik tengah lingkaran lambang (yang di-set
+      // JS via maknaTargetRect(): left 50%, top 41.5% dari stage) lalu
+      // dikonversi memakai jari-jari lambang (~10.75% lebar stage) dan rasio
+      // aspek stage (1920/818) supaya bentuknya tetap presisi di sudut yang
+      // benar meski stage tidak persegi. Kalau logo yang diunggah admin
+      // beda bentuk, nilai ini tinggal digeser manual per titik.
       $mlPoints = [
-        ['badge' => [75.52, 11.61], 'anchor' => [51.56, 17.73]],
-        ['badge' => [25.52, 25.06], 'anchor' => [41.67, 31.78]],
-        ['badge' => [77.08, 29.95], 'anchor' => [51.56, 35.45]],
-        ['badge' => [77.08, 47.68], 'anchor' => [51.30, 47.07]],
-        ['badge' => [25.00, 44.62], 'anchor' => [43.23, 44.62]],
-        ['badge' => [77.08, 65.40], 'anchor' => [52.60, 54.40]],
-        ['badge' => [24.74, 80.68], 'anchor' => [47.40, 62.96]],
-        ['badge' => [24.74, 63.57], 'anchor' => [45.31, 54.40]],
-        ['badge' => [77.08, 85.57], 'anchor' => [56.25, 62.96]],
-        ['badge' => [50.00, 92.91], 'anchor' => [50.00, 67.85]],
+        ['badge' => [75.52, 11.61], 'anchor' => [50.00, 19.78]],   // Bintang Emas
+        ['badge' => [25.52, 25.06], 'anchor' => [44.69, 28.25]],   // Perisai
+        ['badge' => [77.08, 29.95], 'anchor' => [53.54, 30.16]],   // Ujung Tombak Kanan
+        ['badge' => [77.08, 47.68], 'anchor' => [50.00, 37.83]],   // Persilangan Tombak/Keris
+        ['badge' => [25.00, 44.62], 'anchor' => [45.51, 37.03]],   // Bingkai Segi Delapan
+        ['badge' => [77.08, 65.40], 'anchor' => [53.40, 32.24]],   // Warna Hijau
+        ['badge' => [24.74, 80.68], 'anchor' => [50.00, 35.43]],   // Warna Merah Putih
+        ['badge' => [24.74, 63.57], 'anchor' => [46.53, 30.16]],   // Ujung Tombak Kiri
+        ['badge' => [77.08, 85.57], 'anchor' => [50.00, 55.87]],   // Pita Moto
+        ['badge' => [50.00, 92.91], 'anchor' => [50.00, 46.29]],   // Bola Dunia
       ];
       $mlItems = old('makna_logo') ?? $pengaturan->makna_logo ?? \App\Models\Pengaturan::defaultMaknaLogo();
     @endphp
@@ -1276,6 +1298,13 @@
         <div class="makna-logo-crest" id="maknaLogoCrest">
           <img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">
         </div>
+        {{-- Titik presisi di badan lambang (ujung garis) -- div terpisah dari
+             <svg> supaya lingkarannya tidak ikut gepeng oleh preserveAspectRatio
+             "none" milik .makna-logo-lines (garis lurus aman diregangkan,
+             tapi <circle> di dalam SVG yang sama akan tampak jadi oval). --}}
+        @foreach ($mlPoints as $i => $p)
+          <div class="makna-logo-anchor-dot" style="left:{{ $p['anchor'][0] }}%;top:{{ $p['anchor'][1] }}%;--mlp-delay:{{ .25 + $i * .05 }}s;"></div>
+        @endforeach
         @foreach ($mlPoints as $i => $p)
           @php $item = is_array($mlItems[$i] ?? null) ? $mlItems[$i] : []; @endphp
           <div class="makna-logo-point" style="left:{{ $p['badge'][0] }}%;top:{{ $p['badge'][1] }}%;--mlp-delay:{{ .25 + $i * .05 }}s;">
