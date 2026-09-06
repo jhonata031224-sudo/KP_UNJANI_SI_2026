@@ -17,5 +17,90 @@
     if(cfg.colors)Object.entries(cfg.colors).forEach(([k,v])=>{if(v)document.documentElement.style.setProperty('--'+k,v);});
     if(cfg.background_url){const bg=q('.hero-stats-bg');if(bg)bg.style.backgroundImage="linear-gradient(115deg,var(--hero-ov-1) 0%,var(--hero-ov-2) 32%,var(--hero-ov-3) 58%,var(--hero-ov-4) 100%),linear-gradient(to top,var(--hero-ov-top) 0%,var(--hero-ov-top-fade) 26%),url('"+cfg.background_url.replace(/'/g,"\\'")+"')";}
   }
+
+  // ---------- Makna Logo: klik nomor/kartu untuk membuka detail ----------
+  function initMaknaLogoDropdown(){
+    const overlay=q('#maknaLogoOverlay');
+    if(!overlay) return;
+
+    const style=document.createElement('style');
+    style.textContent=`
+      .makna-logo-point{z-index:20;}
+      .makna-logo-point-card{cursor:pointer;position:relative;transition:border-color .2s ease,box-shadow .2s ease;}
+      .makna-logo-point-card:hover{border-color:var(--gold-bright);}
+      .makna-logo-point.is-expanded .makna-logo-point-card{border-color:var(--gold-bright);}
+      .makna-logo-point-title,.makna-logo-point-desc{display:none!important;}
+      .makna-logo-dropdown{position:absolute;top:calc(100% + 10px);left:0;width:100%;min-width:280px;padding:14px 16px;background:var(--panel);color:var(--text);border:1px solid var(--gold-bright);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .2s ease,transform .2s ease,visibility .2s ease;z-index:100;pointer-events:none;}
+      .makna-logo-point.is-left .makna-logo-dropdown{left:auto;right:0;}
+      .makna-logo-point.is-bottom .makna-logo-dropdown{left:50%;right:auto;transform:translate(-50%,-6px);}
+      .makna-logo-point.is-expanded .makna-logo-dropdown{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto;}
+      .makna-logo-point.is-expanded .makna-logo-dropdown{display:block;}
+      .makna-logo-point.is-expanded .makna-logo-point-card::after{content:'⌃';position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--gold-bright);}
+      .makna-logo-dropdown-title{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:7px;}
+      .makna-logo-dropdown-desc{font-family:var(--body);font-size:13px;line-height:1.6;color:var(--text-muted);}
+      @media(max-width:760px){
+        .makna-logo-dropdown,.makna-logo-point.is-left .makna-logo-dropdown,.makna-logo-point.is-bottom .makna-logo-dropdown{position:relative;top:auto;left:auto;right:auto;width:100%;min-width:0;margin-top:8px;transform:none!important;}
+      }
+    `;
+    document.head.appendChild(style);
+
+    qa('.makna-logo-point',overlay).forEach((point,index)=>{
+      const card=q('.makna-logo-point-card',point);
+      const title=q('.makna-logo-point-title',point);
+      const desc=q('.makna-logo-point-desc',point);
+      if(!card) return;
+
+      card.setAttribute('role','button');
+      card.setAttribute('tabindex','0');
+      card.setAttribute('aria-expanded','false');
+      card.setAttribute('aria-label','Lihat makna poin '+(index+1));
+
+      let dropdown=q('.makna-logo-dropdown',point);
+      if(!dropdown){
+        dropdown=document.createElement('div');
+        dropdown.className='makna-logo-dropdown';
+        dropdown.innerHTML='<div class="makna-logo-dropdown-title"></div><div class="makna-logo-dropdown-desc"></div>';
+        point.appendChild(dropdown);
+      }
+      text(q('.makna-logo-dropdown-title',dropdown),title?.textContent?.trim()||('Poin '+(index+1)));
+      text(q('.makna-logo-dropdown-desc',dropdown),desc?.textContent?.trim()||'');
+
+      const toggle=()=>{
+        const open=point.classList.contains('is-expanded');
+        qa('.makna-logo-point.is-expanded',overlay).forEach(other=>{
+          other.classList.remove('is-expanded');
+          const otherCard=q('.makna-logo-point-card',other);
+          if(otherCard) otherCard.setAttribute('aria-expanded','false');
+        });
+        if(!open){
+          point.classList.add('is-expanded');
+          card.setAttribute('aria-expanded','true');
+        }
+      };
+
+      card.addEventListener('click',toggle);
+      card.addEventListener('keydown',e=>{
+        if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}
+      });
+    });
+
+    const closeAll=()=>qa('.makna-logo-point.is-expanded',overlay).forEach(point=>{
+      point.classList.remove('is-expanded');
+      const card=q('.makna-logo-point-card',point);
+      if(card)card.setAttribute('aria-expanded','false');
+    });
+
+    overlay.addEventListener('click',e=>{
+      if(!e.target.closest('.makna-logo-point')) closeAll();
+    });
+    document.addEventListener('keydown',e=>{
+      if(e.key==='Escape') closeAll();
+    });
+    const close=q('#maknaLogoClose');
+    if(close)close.addEventListener('click',closeAll);
+  }
+
   fetch('/landing-config',{headers:{Accept:'application/json'}}).then(r=>r.ok?r.json():null).then(d=>{if(d&&d.config)apply(d.config);}).catch(()=>{});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initMaknaLogoDropdown,{once:true});
+  else initMaknaLogoDropdown();
 })();
