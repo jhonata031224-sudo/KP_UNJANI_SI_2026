@@ -791,29 +791,43 @@
      cuma dengan border-radius/overflow (itu cuma motong bentuknya jadi
      lingkaran, bukan menghapus warna putihnya). */
   .makna-logo-crest{
-    position:fixed;z-index:1;
+    position:fixed;z-index:1;background:none;
     transition:top .55s cubic-bezier(.65,0,.2,1), left .55s cubic-bezier(.65,0,.2,1),
       width .55s cubic-bezier(.65,0,.2,1), height .55s cubic-bezier(.65,0,.2,1);
     will-change:top,left,width,height;
   }
   /* Tanpa bingkai/lingkaran putih di belakang lambang -- mix-blend-mode:multiply
      "membuang" latar putih bawaan file PNG lambang (menyatu dgn backdrop terang
-     modal), dan filter:drop-shadow (bukan box-shadow) supaya bayangannya
-     mengikuti siluet perisai, bukan kotak pembungkusnya. object-fit:contain
+     modal). filter:drop-shadow SENGAJA TIDAK dipakai lagi: kalau file lambang
+     yang diunggah admin ternyata latar putihnya piksel asli (bukan alpha
+     transparan), drop-shadow tetap menghitung bayangan dari batas PERSEGI
+     gambarnya (bukan siluet perisainya) -- itu yang membuat "kotak putih"
+     samar kelihatan di belakang lambang pada bug sebelumnya. object-fit:contain
      supaya bentuk lambang tidak pernah terpotong. */
   .makna-logo-crest img{
     width:100%;height:100%;object-fit:contain;display:block;
     mix-blend-mode:multiply;
-    filter:drop-shadow(0 18px 34px rgba(0,0,0,.35));
   }
 
+  /* Kartu callout bernomor -- .is-right (nomor bulat di KIRI kotak, kotak
+     memanjang ke kanan menjauhi lambang) dan .is-left (kebalikannya: nomor
+     bulat di KANAN kotak, kotak memanjang ke kiri) dipisah jadi 2 varian
+     supaya nomornya selalu berada di sisi yang paling dekat dengan lambang,
+     sesuai acuan desain. .is-bottom (khusus nomor 10) dipusatkan horizontal
+     tepat di bawah lambang. Lebar/tinggi kotak dibuat SERAGAM (tidak lagi
+     menyesuaikan panjang teks) supaya semua kartu di satu sisi sejajar rapi
+     -- lihat juga .makna-logo-point-title/.makna-logo-point-desc di bawah
+     (teksnya disembunyikan sementara lewat display:none). */
   .makna-logo-point{
-    position:absolute;display:flex;align-items:center;gap:0;
+    position:absolute;display:flex;align-items:center;gap:0;z-index:2;
     transform:translateY(-50%);
     opacity:0;transition:opacity .35s ease, transform .35s ease;
     transition-delay:var(--mlp-delay,0s);
-    max-width:min(46vw,300px);
   }
+  .makna-logo-point.is-right,
+  .makna-logo-point.is-bottom{flex-direction:row;}
+  .makna-logo-point.is-left{flex-direction:row-reverse;}
+  .makna-logo-point.is-bottom{transform:translate(-50%,-50%);}
   .makna-logo-overlay.open .makna-logo-point{opacity:1;}
   .makna-logo-point-num{
     flex-shrink:0;width:36px;height:36px;border-radius:50%;
@@ -821,12 +835,27 @@
     background:var(--gold);color:#fff;
     font-family:var(--display);font-weight:700;font-size:15px;
     box-shadow:0 0 0 4px var(--panel-2),0 6px 16px rgba(0,0,0,.3);
-    position:relative;z-index:2;margin-right:-15px;
+    position:relative;z-index:2;
   }
+  .is-right .makna-logo-point-num,
+  .is-bottom .makna-logo-point-num{margin-right:-15px;}
+  .is-left .makna-logo-point-num{margin-left:-15px;}
   .makna-logo-point-card{
-    background:var(--panel-2);border:2px solid var(--gold);border-radius:22px;
-    padding:11px 18px 11px 28px;box-shadow:0 10px 28px rgba(0,0,0,.16);
+    width:230px;height:46px;box-sizing:border-box;
+    display:flex;align-items:center;
+    background:var(--panel-2);border:2px solid var(--gold);border-radius:999px;
+    box-shadow:0 10px 28px rgba(0,0,0,.16);
   }
+  .is-right .makna-logo-point-card,
+  .is-bottom .makna-logo-point-card{padding:0 18px 0 28px;}
+  .is-left .makna-logo-point-card{padding:0 28px 0 18px;justify-content:flex-end;text-align:right;}
+  /* Untuk sementara isi kotak cukup nomor bulatnya saja (sesuai acuan
+     desain) -- judul & keterangan (datanya tetap tersimpan/diatur admin
+     seperti biasa di menu Pengaturan, TIDAK dihapus/diubah) disembunyikan
+     dulu lewat CSS. Cara mengaktifkan lagi nanti: hapus 2 baris
+     "display:none" di bawah ini. */
+  .makna-logo-point-title,
+  .makna-logo-point-desc{display:none;}
   .makna-logo-point-title{
     font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
     color:var(--gold-bright);margin-bottom:3px;
@@ -867,11 +896,18 @@
     .makna-logo-lines{display:none;}
     .makna-logo-anchor-dot{display:none;}
     .makna-logo-point{
-      position:relative;inset:auto;max-width:100%;width:100%;
+      position:relative;inset:auto;left:auto !important;right:auto !important;
+      max-width:100%;width:100%;flex-direction:row !important;
       opacity:0;transform:translateY(10px) !important;
     }
     .makna-logo-overlay.open .makna-logo-point{opacity:1;transform:translateY(0) !important;}
-    .makna-logo-point-card{flex:1;}
+    .is-right .makna-logo-point-num,
+    .is-bottom .makna-logo-point-num{margin-right:-15px;margin-left:0;}
+    .is-left .makna-logo-point-num{margin-left:0;margin-right:-15px;}
+    .makna-logo-point-card{
+      flex:1;width:auto;height:auto;padding:11px 18px 11px 28px !important;
+      justify-content:flex-start !important;text-align:left !important;
+    }
   }
   .about-grid{
     display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
@@ -1295,17 +1331,23 @@
       // masing supaya tidak ada garis kiri yang menyeberang ke kanan atau
       // sebaliknya. Kalau logo yang diunggah admin beda bentuk, nilai ini
       // tinggal digeser manual per titik (tetap ikuti 2 aturan di atas).
+      //
+      // Posisi kotak ("badge") SENGAJA disamakan per kolom (x=24 utk kiri,
+      // x=76 utk kanan) & dibuat berjarak sama rata (y) supaya semua kotak
+      // di satu sisi sejajar rapi & lega -- meniru acuan desain "Makna
+      // Logo" (kotak seragam, nomor bulat menempel di sisi yg menghadap
+      // lambang). Titik anchor di badan lambang TIDAK diubah/digeser.
       $mlPoints = [
-        ['badge' => [75.52, 11.61], 'anchor' => [50.00, 15.23]],   // 1. Bintang Emas (ujung atas)
-        ['badge' => [25.52, 25.06], 'anchor' => [42.74, 23.97]],   // 2. Perisai (tepi kiri atas)
-        ['badge' => [77.08, 29.95], 'anchor' => [54.23, 25.78]],   // 3. Ujung Tombak Kanan
-        ['badge' => [77.08, 47.68], 'anchor' => [52.42, 33.04]],   // 4. Persilangan Tombak/Keris
-        ['badge' => [25.00, 44.62], 'anchor' => [44.56, 31.83]],   // 5. Sisi Emas / Bingkai Segi Delapan
-        ['badge' => [77.08, 65.40], 'anchor' => [54.84, 40.29]],   // 6. Lapisan/Warna Hijau
-        ['badge' => [24.74, 80.68], 'anchor' => [47.58, 46.34]],   // 7. Hexagonal / Warna Merah Putih
-        ['badge' => [24.74, 63.57], 'anchor' => [45.77, 38.48]],   // 8. Ujung Tombak Kiri
-        ['badge' => [77.08, 85.57], 'anchor' => [50.60, 54.20]],   // 9. Pita Nama / Moto
-        ['badge' => [50.00, 92.91], 'anchor' => [50.00, 47.29]],   // 10. Globe / Bola Dunia
+        ['badge' => [76.00, 10.00], 'anchor' => [50.00, 15.23]],   // 1. Bintang Emas (ujung atas)
+        ['badge' => [24.00, 18.00], 'anchor' => [42.74, 23.97]],   // 2. Perisai (tepi kiri atas)
+        ['badge' => [76.00, 26.00], 'anchor' => [54.23, 25.78]],   // 3. Ujung Tombak Kanan
+        ['badge' => [76.00, 42.00], 'anchor' => [52.42, 33.04]],   // 4. Persilangan Tombak/Keris
+        ['badge' => [24.00, 38.00], 'anchor' => [44.56, 31.83]],   // 5. Sisi Emas / Bingkai Segi Delapan
+        ['badge' => [76.00, 58.00], 'anchor' => [54.84, 40.29]],   // 6. Lapisan/Warna Hijau
+        ['badge' => [24.00, 78.00], 'anchor' => [47.58, 46.34]],   // 7. Hexagonal / Warna Merah Putih
+        ['badge' => [24.00, 58.00], 'anchor' => [45.77, 38.48]],   // 8. Ujung Tombak Kiri
+        ['badge' => [76.00, 74.00], 'anchor' => [50.60, 54.20]],   // 9. Pita Nama / Moto
+        ['badge' => [50.00, 88.00], 'anchor' => [50.00, 47.29]],   // 10. Globe / Bola Dunia
       ];
       $mlItems = old('makna_logo') ?? $pengaturan->makna_logo ?? \App\Models\Pengaturan::defaultMaknaLogo();
     @endphp
@@ -1335,8 +1377,17 @@
           <div class="makna-logo-anchor-dot" style="left:{{ $p['anchor'][0] }}%;top:{{ $p['anchor'][1] }}%;--mlp-delay:{{ .25 + $i * .05 }}s;"></div>
         @endforeach
         @foreach ($mlPoints as $i => $p)
-          @php $item = is_array($mlItems[$i] ?? null) ? $mlItems[$i] : []; @endphp
-          <div class="makna-logo-point" style="left:{{ $p['badge'][0] }}%;top:{{ $p['badge'][1] }}%;--mlp-delay:{{ .25 + $i * .05 }}s;">
+          @php
+            $item = is_array($mlItems[$i] ?? null) ? $mlItems[$i] : [];
+            // Sisi kartu: x<50 = kiri (nomor menempel di KANAN kotak),
+            // x>50 = kanan (nomor menempel di KIRI kotak), x=50 = bawah
+            // tengah (khusus nomor 10).
+            $mlSide = $p['badge'][0] < 50 ? 'left' : ($p['badge'][0] > 50 ? 'right' : 'bottom');
+            $mlPosStyle = $mlSide === 'left'
+              ? 'right:'.(100 - $p['badge'][0]).'%;'
+              : 'left:'.$p['badge'][0].'%;';
+          @endphp
+          <div class="makna-logo-point is-{{ $mlSide }}" style="{{ $mlPosStyle }}top:{{ $p['badge'][1] }}%;--mlp-delay:{{ .25 + $i * .05 }}s;">
             <div class="makna-logo-point-num">{{ $i + 1 }}</div>
             <div class="makna-logo-point-card">
               <div class="makna-logo-point-title">{{ $item['judul'] ?? ('Poin '.($i + 1)) }}</div>
