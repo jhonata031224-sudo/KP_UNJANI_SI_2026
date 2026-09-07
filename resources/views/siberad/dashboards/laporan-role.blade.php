@@ -282,11 +282,13 @@ document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>{const m
     if(emptyEl)emptyEl.hidden=staged.length>0;
     if(staged.length>0)clearError();
   }
-  input.addEventListener('change',function(){
-    const picked=Array.from(input.files||[]);
-    if(!picked.length)return;
-    const gabungan=staged.concat(picked);
-    const total=gabungan.reduce(function(sum,f){return sum+f.size},0);
+  function addFiles(picked){
+    if(!picked||!picked.length)return;
+    var existing=staged.map(function(f){return f.name+'|'+f.size});
+    var baru=Array.from(picked).filter(function(f){return existing.indexOf(f.name+'|'+f.size)===-1});
+    if(!baru.length)return;
+    var gabungan=staged.concat(baru);
+    var total=gabungan.reduce(function(sum,f){return sum+f.size},0);
     if(total>LAMPIRAN_TOTAL_MAX_BYTES){
       showError('Total ukuran seluruh lampiran melebihi 10 MB. Kurangi jumlah/ukuran file lalu pilih ulang.');
       syncInputFiles();
@@ -296,9 +298,20 @@ document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>{const m
     staged=gabungan;
     syncInputFiles();
     render();
+  }
+  input.addEventListener('change',function(){
+    addFiles(input.files);
+    input.value='';
   });
-  ['dragenter','dragover'].forEach(function(evt){zone.addEventListener(evt,function(){zone.classList.add('is-dragover')})});
-  ['dragleave','drop'].forEach(function(evt){zone.addEventListener(evt,function(){zone.classList.remove('is-dragover')})});
+  ['dragenter','dragover'].forEach(function(evt){
+    zone.addEventListener(evt,function(e){e.preventDefault();e.stopPropagation();zone.classList.add('is-dragover');});
+  });
+  zone.addEventListener('dragleave',function(){zone.classList.remove('is-dragover');});
+  zone.addEventListener('drop',function(e){
+    e.preventDefault();e.stopPropagation();
+    zone.classList.remove('is-dragover');
+    if(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files.length){addFiles(e.dataTransfer.files);}
+  });
   render();
 })();
 (function(){
