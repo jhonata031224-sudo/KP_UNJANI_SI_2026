@@ -3506,6 +3506,93 @@
           .lp-card-compact{padding:12px 16px;}
           .lp-card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
           .lp-card-desc{margin:-4px 0 14px;font-size:11.5px;line-height:1.55;color:var(--text-muted);}
+
+          /* ===== Redesain kartu jadi "card UI" yang lebih nyaman & tidak
+             terasa seperti tabel/form biasa -- SENGAJA di-scope semua di
+             bawah ".lp-panel" (panel editor) saja, supaya TIDAK ikut
+             mengubah ".lp-preview-panel" (Pratinjau Langsung, sudah pas
+             seperti sekarang) maupun halaman/tab lain di luar Pengaturan
+             Umum yang kebetulan memakai class umum seperti .form-field. */
+          .lp-panel .lp-card{
+            border-radius:16px;
+            padding:22px 24px 24px;
+            margin-bottom:18px;
+            position:relative;
+            overflow:hidden;
+            transition:box-shadow .2s ease, border-color .2s ease;
+          }
+          /* Garis aksen emas tipis di sisi kiri kartu -- penanda visual halus
+             ala "card" modern, bukan sekadar kotak form polos. */
+          .lp-panel .lp-card::before{
+            content:"";
+            position:absolute; top:0; bottom:0; left:0; width:3px;
+            background:linear-gradient(180deg, var(--gold), transparent 85%);
+          }
+          .lp-panel .lp-card:hover{
+            border-color:var(--border-strong);
+            box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 14px 34px rgba(0,0,0,.28);
+          }
+          .lp-panel .lp-card-compact{padding:16px 18px;}
+
+          /* Judul kartu: dikasih bullet bulat kecil + garis putus-putus di
+             bawahnya supaya jelas terpisah dari isi field, alih-alih cuma
+             teks kapital polos menempel langsung ke input di bawahnya. */
+          .lp-panel .lp-card-title{
+            display:flex; align-items:center; gap:9px;
+            margin-bottom:0;
+            padding-bottom:13px;
+            border-bottom:1px dashed var(--border-soft);
+          }
+          .lp-panel .lp-card-title::before{
+            content:""; width:7px; height:7px; border-radius:999px; flex:0 0 auto;
+            background:var(--gold-bright);
+            box-shadow:0 0 0 4px var(--gold-dim);
+          }
+          .lp-panel .lp-card-desc{margin:12px 0 18px;}
+
+          /* Kartu bersarang (mis. tiap "Fitur N" / "Poin Nomor N" di dalam
+             kartu "Makna Logo") dibedakan dari kartu induknya -- border
+             putus-putus & tanpa aksen/bayangan sendiri, supaya hierarki
+             induk-vs-anak kelihatan jelas alih-alih dua kartu identik
+             bertumpuk. */
+          .lp-panel .lp-card .lp-card{
+            border-style:dashed;
+            box-shadow:none;
+            padding:16px 18px 18px;
+            margin-bottom:14px;
+          }
+          .lp-panel .lp-card .lp-card::before{display:none;}
+          .lp-panel .lp-card .lp-card-title{border-bottom:none;padding-bottom:0;}
+          .lp-panel .lp-card .lp-card-desc{margin:10px 0 14px;}
+          .lp-panel .lp-card .lp-card:last-child{margin-bottom:0;}
+
+          /* Field lebih empuk & nyaman diisi -- radius lebih besar, warna
+             latar sedikit beda dari kartu (supaya kelihatan sebagai "kotak
+             isian", bukan garis tabel), dengan efek fokus glow lembut. */
+          .lp-panel .form-field input,
+          .lp-panel .form-field select,
+          .lp-panel .form-field textarea{
+            border-radius:12px;
+            padding:12px 14px;
+            background:var(--panel-alt);
+            transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
+          }
+          .lp-panel .form-field input:hover,
+          .lp-panel .form-field select:hover,
+          .lp-panel .form-field textarea:hover{
+            border-color:var(--border-strong);
+          }
+          .lp-panel .form-field input:focus,
+          .lp-panel .form-field select:focus,
+          .lp-panel .form-field textarea:focus{
+            box-shadow:0 0 0 3px var(--gold-dim);
+            background:var(--panel);
+          }
+          .lp-panel .form-grid{row-gap:18px;}
+
+          /* Tab pill sedikit lebih tegas & "hidup" saat aktif. */
+          .lp-panel .lp-tab{padding:10px 18px;border-radius:12px;}
+          .lp-panel .lp-tab.active{box-shadow:0 4px 14px rgba(255,152,0,.16);}
           /* Sosial Media: dulu tiap platform (Instagram/TikTok/dst) jadi
              kartu ".lp-card" terpisah sendiri-sendiri (numpuk banyak kartu
              kecil) -- sekarang digabung jadi SATU kartu "Sosial Media" berisi
