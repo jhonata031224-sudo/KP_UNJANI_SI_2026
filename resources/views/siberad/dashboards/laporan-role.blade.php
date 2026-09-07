@@ -301,7 +301,6 @@ document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>{const m
   }
   input.addEventListener('change',function(){
     addFiles(input.files);
-    input.value='';
   });
   ['dragenter','dragover'].forEach(function(evt){
     zone.addEventListener(evt,function(e){e.preventDefault();e.stopPropagation();zone.classList.add('is-dragover');});
