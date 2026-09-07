@@ -49,7 +49,7 @@
         data-proyek="{{ e($k->kategori ?? '-') }}"
         data-tanggal="{{ e($k->created_at->translatedFormat('d M Y H:i')) }}"
         data-deskripsi="{{ e($k->deskripsi) }}"
-        data-deskripsi-label="Isi Balasan"
+        data-deskripsi-label="Isi Laporan"
         data-kendala="{{ e($k->catatan ?? '') }}"
         data-lampiran="{{ $k->semuaLampiran->map(fn($x) => ['url' => asset('storage/'.$x->path), 'nama' => $x->nama_asli])->values()->toJson() }}"
         data-tembusan-balasan="{{ $k->tembusans->map(fn($t) => ['satuan' => $t->satuan->nama ?? $t->satuan->kode ?? '-', 'feedback' => $t->feedback])->values()->toJson() }}"
