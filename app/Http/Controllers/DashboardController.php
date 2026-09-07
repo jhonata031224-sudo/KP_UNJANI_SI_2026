@@ -449,13 +449,19 @@ class DashboardController
         // SENGAJA terpisah total dari $permintaanLaporan/$laporanTerkirim di
         // atas (alur Danpus/Wadan <-> satuan pelaksana) -- ini cuma daftar
         // info/koordinasi read-only, lihat komentar LaporanKendalaTembusan.
+        // Begitu satuan penerima mengisi feedback (submenu "Tembusan
+        // Kendala" -> tombol Detail -> kirim balasan), baris itu dianggap
+        // selesai dan otomatis pindah ke submenu "Arsip Kendala" -- sama
+        // pola dengan Kirim Kendala/Arsip Kendala milik Kasansi di atas.
         $isPenerimaTembusan = in_array($kode, $kodeTembusanKasansi, true);
-        $tembusanMasuk = $isPenerimaTembusan
+        $tembusanMasukSemua = $isPenerimaTembusan
             ? LaporanKendalaTembusan::with(['laporanKendala.satuan', 'laporanKendala.lampirans', 'dibacaOleh'])
                 ->where('satuan_id', $satuan->id)
                 ->latest()
                 ->get()
             : collect();
+        $tembusanMasuk = $tembusanMasukSemua->whereNull('feedback')->values();
+        $tembusanArsip = $tembusanMasukSemua->whereNotNull('feedback')->values();
 
         // ===== Surat: Kasansi (21 Sansidam), 4 Satlak, 4 Sdir (Pembinaan),
         // Urdal, dan Pok Analis semuanya bisa Kirim Surat ke SATU tujuan bebas.
@@ -508,6 +514,6 @@ class DashboardController
             ->latest()
             ->get();
 
-        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
+        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk','tembusanArsip','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
     }
 }
