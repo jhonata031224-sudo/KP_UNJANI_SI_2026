@@ -3159,17 +3159,33 @@
         @endphp
 
         {{-- ===== KONTEN HALAMAN LANDING ===== --}}
+        {{-- Header dipisah jadi kartu ".panel" sendiri (sibling, BUKAN
+             pembungkus) -- pola sama seperti "Kirim Kendala" di dashboard
+             Kasansi/Danpus (lihat laporan-role.blade.php): kartu judul
+             berdiri sendiri, lalu kartu-kartu isinya jadi sibling di
+             bawahnya. Sebelumnya header ini menyatu jadi SATU kartu
+             ".panel.lp-panel" bersama seluruh form/kartu ".lp-card" di
+             bawahnya (Judul & Deskripsi Utama, dll), sehingga kelihatan
+             seperti kartu bersarang (kartu besar membungkus kartu kecil). --}}
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Konten Halaman Landing</h3>
+              <p>Pilih bagian yang mau diedit, lalu lihat hasilnya di panel pratinjau.</p>
+            </div>
+          </div>
+        </div>
+
         <div class="lp-layout">
 
-          {{-- ---------- PANEL EDITOR ---------- --}}
-          <div class="panel lp-panel">
-            <div class="panel-head">
-              <div>
-                <h3>Konten Halaman Landing</h3>
-                <p>Pilih bagian yang mau diedit, lalu lihat hasilnya di panel pratinjau.</p>
-              </div>
-            </div>
-
+          {{-- ---------- PANEL EDITOR (tanpa kartu pembungkus luar --
+               class "panel" sengaja dihapus dari sini, class "lp-panel"
+               dipertahankan karena masih dipakai selector CSS
+               ".lp-panel .lp-card" dkk di bawah. Kartu "Judul & Deskripsi
+               Utama", "Gambar Latar Beranda", dll sekarang jadi kartu
+               mandiri langsung di atas background, bukan numpuk di dalam
+               kartu ini lagi) ---------- --}}
+          <div class="lp-panel">
             <form id="landingForm" method="POST" action="{{ route('admin.pengaturan.landing.update') }}" enctype="multipart/form-data" data-current-logo="{{ $pengaturanLogoExists ? asset('storage/'.$pengaturan->logo_path) : '' }}" data-logo-delete-url="{{ route('admin.pengaturan.landing.image.destroy', 'logo') }}">
               @csrf @method('PATCH')
 
@@ -3647,8 +3663,20 @@
              (buat clipping visual rounded corner) -- tapi overflow selain
              visible pada ancestor bikin position:sticky di dalamnya (tombol
              Simpan) tidak berfungsi. Dikembalikan ke visible di sini karena
-             urutan <style> ini di render lebih akhir di halaman. */
-          .lp-panel{overflow:visible;}
+             urutan <style> ini di render lebih akhir di halaman.
+
+             Sekaligus reset box-shadow & border-radius dari ".lp-panel"
+             yang juga di-set (dengan !important) di pengumuman-banner.
+             blade.php -- dulu itu wajar karena div ini masih punya class
+             "panel" (jadi kartu berbayang sengaja). Sekarang class "panel"
+             sudah dicabut dari div ini (lihat markup di atas, header
+             "Konten Halaman Landing" sudah jadi kartu terpisah) supaya
+             kartu-kartu ".lp-card" di dalamnya (Judul & Deskripsi Utama,
+             dll) tidak lagi numpuk di dalam kartu besar ini -- jadi
+             bayangan/radius sisa dari aturan lama itu perlu dimatikan
+             juga, kalau tidak akan tetap kelihatan seperti kartu kosong
+             mengambang di belakang kartu-kartu kecilnya. */
+          .lp-panel{overflow:visible;box-shadow:none!important;border-radius:0!important;background:none!important;}
 
           /* Tombol Simpan pakai position:fixed (BUKAN sticky). Ternyata
              .content (partials/admin-ui-consistency.blade.php) dikasih
