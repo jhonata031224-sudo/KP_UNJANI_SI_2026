@@ -3159,33 +3159,27 @@
         @endphp
 
         {{-- ===== KONTEN HALAMAN LANDING ===== --}}
-        {{-- Header dipisah jadi kartu ".panel" sendiri (sibling, BUKAN
-             pembungkus) -- pola sama seperti "Kirim Kendala" di dashboard
-             Kasansi/Danpus (lihat laporan-role.blade.php): kartu judul
-             berdiri sendiri, lalu kartu-kartu isinya jadi sibling di
-             bawahnya. Sebelumnya header ini menyatu jadi SATU kartu
-             ".panel.lp-panel" bersama seluruh form/kartu ".lp-card" di
-             bawahnya (Judul & Deskripsi Utama, dll), sehingga kelihatan
-             seperti kartu bersarang (kartu besar membungkus kartu kecil). --}}
-        <div class="panel">
-          <div class="panel-head">
-            <div>
-              <h3>Konten Halaman Landing</h3>
-              <p>Pilih bagian yang mau diedit, lalu lihat hasilnya di panel pratinjau.</p>
-            </div>
-          </div>
-        </div>
-
+        {{-- Header, tab Beranda/Fitur/Tentang/Kontak, & banner keterangan
+             tab sekarang balik jadi SATU kartu yang sama dengan judul
+             "Konten Halaman Landing" (sesuai permintaan) -- supaya tombol
+             tab & keterangan "Bagian paling atas landing page..." tidak
+             lagi kelihatan mengambang terpisah di luar kartu judulnya.
+             Yang membedakan tiap kelompok field (Judul & Deskripsi Utama,
+             Gambar Latar Beranda, dst) dari kartu induk ini SEKARANG bukan
+             lagi bingkai/aksen warna terpisah (lihat aturan ".lp-card" di
+             bawah yang sudah diratakan, tanpa aksen emas), melainkan cuma
+             pemisah tipis + lebar yang SAMA PERSIS dengan kartu induk. --}}
         <div class="lp-layout">
 
-          {{-- ---------- PANEL EDITOR (tanpa kartu pembungkus luar --
-               class "panel" sengaja dihapus dari sini, class "lp-panel"
-               dipertahankan karena masih dipakai selector CSS
-               ".lp-panel .lp-card" dkk di bawah. Kartu "Judul & Deskripsi
-               Utama", "Gambar Latar Beranda", dll sekarang jadi kartu
-               mandiri langsung di atas background, bukan numpuk di dalam
-               kartu ini lagi) ---------- --}}
-          <div class="lp-panel">
+          {{-- ---------- PANEL EDITOR ---------- --}}
+          <div class="panel lp-panel">
+            <div class="panel-head">
+              <div>
+                <h3>Konten Halaman Landing</h3>
+                <p>Pilih bagian yang mau diedit, lalu lihat hasilnya di panel pratinjau.</p>
+              </div>
+            </div>
+
             <form id="landingForm" method="POST" action="{{ route('admin.pengaturan.landing.update') }}" enctype="multipart/form-data" data-current-logo="{{ $pengaturanLogoExists ? asset('storage/'.$pengaturan->logo_path) : '' }}" data-logo-delete-url="{{ route('admin.pengaturan.landing.image.destroy', 'logo') }}">
               @csrf @method('PATCH')
 
@@ -3520,7 +3514,7 @@
             margin-bottom:20px;
           }
           .lp-card-compact{padding:12px 16px;}
-          .lp-card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
+          .lp-card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;}
           .lp-card-desc{margin:-4px 0 14px;font-size:11.5px;line-height:1.55;color:var(--text-muted);}
 
           /* ===== Redesain kartu jadi "card UI" yang lebih nyaman & tidak
@@ -3537,38 +3531,29 @@
             overflow:hidden;
             transition:box-shadow .2s ease, border-color .2s ease;
           }
-          /* Garis aksen emas tipis di sisi kiri kartu -- penanda visual halus
-             ala "card" modern, bukan sekadar kotak form polos. */
-          .lp-panel .lp-card::before{
-            content:"";
-            position:absolute; top:0; bottom:0; left:0; width:3px;
-            background:linear-gradient(180deg, var(--gold), transparent 85%);
-          }
           .lp-panel .lp-card:hover{
             border-color:var(--border-strong);
             box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 14px 34px rgba(0,0,0,.28);
           }
           .lp-panel .lp-card-compact{padding:16px 18px;}
 
-          /* Judul kartu: dikasih bullet bulat kecil + garis putus-putus di
-             bawahnya supaya jelas terpisah dari isi field, alih-alih cuma
-             teks kapital polos menempel langsung ke input di bawahnya. */
+          /* Judul kartu: dikasih garis putus-putus di bawahnya supaya jelas
+             terpisah dari isi field, alih-alih cuma teks kapital polos
+             menempel langsung ke input di bawahnya -- TANPA aksen warna
+             (bullet emas & garis kiri emas sudah dihapus atas permintaan,
+             supaya kartu ini tidak lagi kelihatan "menonjol"/beraksen
+             berbeda dari kartu "Konten Halaman Landing" di atasnya). */
           .lp-panel .lp-card-title{
             display:flex; align-items:center; gap:9px;
             margin-bottom:0;
             padding-bottom:13px;
             border-bottom:1px dashed var(--border-soft);
           }
-          .lp-panel .lp-card-title::before{
-            content:""; width:7px; height:7px; border-radius:999px; flex:0 0 auto;
-            background:var(--gold-bright);
-            box-shadow:0 0 0 4px var(--gold-dim);
-          }
           .lp-panel .lp-card-desc{margin:12px 0 18px;}
 
           /* Kartu bersarang (mis. tiap "Fitur N" / "Poin Nomor N" di dalam
              kartu "Makna Logo") dibedakan dari kartu induknya -- border
-             putus-putus & tanpa aksen/bayangan sendiri, supaya hierarki
+             putus-putus & tanpa bayangan sendiri, supaya hierarki
              induk-vs-anak kelihatan jelas alih-alih dua kartu identik
              bertumpuk. */
           .lp-panel .lp-card .lp-card{
@@ -3577,7 +3562,6 @@
             padding:16px 18px 18px;
             margin-bottom:14px;
           }
-          .lp-panel .lp-card .lp-card::before{display:none;}
           .lp-panel .lp-card .lp-card-title{border-bottom:none;padding-bottom:0;}
           .lp-panel .lp-card .lp-card-desc{margin:10px 0 14px;}
           .lp-panel .lp-card .lp-card:last-child{margin-bottom:0;}
@@ -3663,20 +3647,8 @@
              (buat clipping visual rounded corner) -- tapi overflow selain
              visible pada ancestor bikin position:sticky di dalamnya (tombol
              Simpan) tidak berfungsi. Dikembalikan ke visible di sini karena
-             urutan <style> ini di render lebih akhir di halaman.
-
-             Sekaligus reset box-shadow & border-radius dari ".lp-panel"
-             yang juga di-set (dengan !important) di pengumuman-banner.
-             blade.php -- dulu itu wajar karena div ini masih punya class
-             "panel" (jadi kartu berbayang sengaja). Sekarang class "panel"
-             sudah dicabut dari div ini (lihat markup di atas, header
-             "Konten Halaman Landing" sudah jadi kartu terpisah) supaya
-             kartu-kartu ".lp-card" di dalamnya (Judul & Deskripsi Utama,
-             dll) tidak lagi numpuk di dalam kartu besar ini -- jadi
-             bayangan/radius sisa dari aturan lama itu perlu dimatikan
-             juga, kalau tidak akan tetap kelihatan seperti kartu kosong
-             mengambang di belakang kartu-kartu kecilnya. */
-          .lp-panel{overflow:visible;box-shadow:none!important;border-radius:0!important;background:none!important;}
+             urutan <style> ini di render lebih akhir di halaman. */
+          .lp-panel{overflow:visible;}
 
           /* Tombol Simpan pakai position:fixed (BUKAN sticky). Ternyata
              .content (partials/admin-ui-consistency.blade.php) dikasih
