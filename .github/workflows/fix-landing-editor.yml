@@ -1,0 +1,57 @@
+name: Fix landing editor layout
+
+on:
+  push:
+    branches:
+      - refactor-fokus-laporan
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor == 'jhonata031224-sudo'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: refactor-fokus-laporan
+          fetch-depth: 0
+
+      - name: Remove dynamic Beranda cards
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('public/js/admin-landing-editor.js')
+          text = path.read_text(encoding='utf-8')
+
+          start_marker = '    // ----- Tab Beranda:'
+          end_marker = '    // ----- Tab Fitur / Tentang / Kontak:'
+
+          start = text.find(start_marker)
+          end = text.find(end_marker, start)
+          if start < 0 or end < 0:
+              raise SystemExit('Target buildEditor block tidak ditemukan; file tidak diubah.')
+
+          replacement = '''    // ----- Tab Beranda: JANGAN menyuntikkan kartu landing_content tambahan.
+    // Tab Beranda sengaja dibiarkan hanya berisi panel statis dari Blade,
+    // sehingga tampilannya tetap persis seperti rancangan: panel Konten
+    // Halaman Landing -> Latar Belakang Beranda -> panel-panel Beranda lain.
+    // Kartu Identitas Brand/Navigasi, Tombol Hero, SEO, Logo, Statistik, dll
+    // yang sebelumnya dibuat JS adalah sumber layout lama yang muncul lagi
+    // beberapa detik setelah refresh saat /landing-config selesai dimuat.
+
+'''
+          path.write_text(text[:start] + replacement + text[end:], encoding='utf-8')
+
+      - name: Commit fix
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/js/admin-landing-editor.js
+          git diff --cached --quiet && exit 0
+          git commit -m "Fix layout editor landing page Beranda"
+          git push origin HEAD:refactor-fokus-laporan
