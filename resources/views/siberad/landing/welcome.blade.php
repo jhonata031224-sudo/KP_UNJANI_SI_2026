@@ -728,6 +728,12 @@
   .about-crest:hover{transform:translateY(-3px);box-shadow:0 0 0 10px rgba(212,175,55,.09), 0 28px 70px rgba(0,0,0,.55);}
   .about-crest:focus-visible{outline:2px solid var(--gold);outline-offset:4px;}
   .about-crest img{width:100%;display:block;}
+  /* Modal Makna Logo dinonaktifkan sementara di mobile (lihat juga guard
+     maknaIsMobile() di script bawah) -- lambang tetap tampil, cuma tidak
+     bisa diklik/dibuka di layar <=760px. */
+  @media (max-width:760px){
+    .about-crest{cursor:default;pointer-events:none;}
+  }
 
   /* ================= MODAL: MAKNA LOGO ================= */
   /* Overlay full-screen: background halaman diberi blur+gelap, lambang
@@ -872,12 +878,14 @@
      1920/818) -- vector-effect:non-scaling-stroke mengunci ketebalan garis
      tetap 2px sungguhan di layar, tidak ikut terdistorsi oleh peregangan
      itu, sehingga tampil tipis & rapi seperti garis konektor biasa. */
-  .makna-logo-lines line{
-    stroke:var(--gold);stroke-opacity:.8;stroke-width:2px;stroke-linecap:round;
-    vector-effect:non-scaling-stroke;
+  .makna-logo-lines line,
+  .makna-logo-lines polyline{
+    stroke:var(--gold);stroke-opacity:.8;stroke-width:2px;stroke-linecap:round;stroke-linejoin:round;
+    vector-effect:non-scaling-stroke;fill:none;
     opacity:0;transition:opacity .35s ease;transition-delay:var(--mlp-delay,0s);
   }
-  .makna-logo-overlay.open .makna-logo-lines line{opacity:1;}
+  .makna-logo-overlay.open .makna-logo-lines line,
+  .makna-logo-overlay.open .makna-logo-lines polyline{opacity:1;}
 
   /* Titik presisi tempat garis benar-benar menyentuh badan lambang --
      lingkaran kecil solid + cincin tipis di sekelilingnya (gaya "callout
@@ -885,11 +893,75 @@
   .makna-logo-anchor-dot{
     position:absolute;z-index:2;width:8px;height:8px;border-radius:50%;
     transform:translate(-50%,-50%);
-    background:var(--gold);box-shadow:0 0 0 3px var(--panel-2),0 1px 3px rgba(0,0,0,.4);
+    background:var(--gold);box-shadow:0 0 0 1.5px rgba(255,255,255,.9),0 1px 3px rgba(0,0,0,.4);
     opacity:0;transition:opacity .35s ease,transform .35s ease;
     transition-delay:var(--mlp-delay,0s);
   }
   .makna-logo-overlay.open .makna-logo-anchor-dot{opacity:1;}
+
+  /* ================= MAKNA LOGO: PANEL DETAIL =================
+     Ganti pola dropdown lama yang nempel per-kartu (kecil, posisinya beda2
+     tiap kartu, gampang kepotong di tepi layar) -- klik kartu bernomor
+     manapun sekarang membuka panel ini di TENGAH layar, posisinya SELALU
+     sama, dilengkapi navigasi Sebelumnya/Selanjutnya jadi bisa jelajah
+     semua 10 poin tanpa tutup-buka panel berkali-kali. Interaksinya
+     di-wire dari public/js/landing-content.js (initMaknaLogoDetail()). */
+  .makna-detail{position:absolute;inset:0;z-index:30;pointer-events:none;}
+  .makna-detail-backdrop{
+    position:absolute;inset:0;border-radius:inherit;
+    background:rgba(17,22,17,.6);backdrop-filter:blur(3px);
+    opacity:0;transition:opacity .3s ease;
+  }
+  .makna-detail.open{pointer-events:auto;}
+  .makna-detail.open .makna-detail-backdrop{opacity:1;}
+  .makna-detail-card{
+    position:absolute;top:50%;left:50%;
+    width:min(430px,calc(100% - 40px));
+    background:var(--panel-2);border:1.5px solid var(--gold);border-radius:22px;
+    padding:36px 32px 26px;box-sizing:border-box;
+    box-shadow:0 30px 70px rgba(0,0,0,.4);
+    opacity:0;transform:translate(-50%,-50%) translateY(12px) scale(.96);
+    transition:opacity .3s ease, transform .3s ease;
+  }
+  .makna-detail.open .makna-detail-card{opacity:1;transform:translate(-50%,-50%) translateY(0) scale(1);}
+  .makna-detail-close{
+    position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    background:transparent;border:none;color:var(--text-muted);cursor:pointer;
+    transition:color .2s ease,background .2s ease,transform .2s ease;
+  }
+  .makna-detail-close:hover{color:var(--gold-bright);background:rgba(212,175,55,.14);transform:rotate(90deg);}
+  .makna-detail-close svg{width:16px;height:16px;}
+  .makna-detail-num{
+    width:50px;height:50px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--gold);color:#fff;font-family:var(--display);font-weight:700;font-size:19px;
+    box-shadow:0 10px 24px rgba(0,0,0,.25);margin-bottom:18px;
+  }
+  .makna-detail-title{
+    font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.01em;
+    text-transform:uppercase;color:var(--text);margin-bottom:12px;line-height:1.35;
+  }
+  .makna-detail-desc{
+    font-family:var(--body);font-size:14px;line-height:1.75;color:var(--text-muted);
+    min-height:42px;
+  }
+  .makna-detail-nav{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    margin-top:26px;padding-top:18px;border-top:1px solid var(--border-soft);
+  }
+  .makna-detail-nav-btn{
+    display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;
+    font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--text-muted);transition:color .2s ease,transform .2s ease;padding:6px 2px;
+  }
+  .makna-detail-nav-btn:hover{color:var(--gold-bright);}
+  .makna-detail-nav-btn.is-prev:hover{transform:translateX(-3px);}
+  .makna-detail-nav-btn.is-next:hover{transform:translateX(3px);}
+  .makna-detail-nav-btn svg{width:13px;height:13px;}
+  .makna-detail-dots{display:flex;gap:5px;}
+  .makna-detail-dot{width:6px;height:6px;border-radius:50%;background:var(--border-strong);transition:background .2s ease,transform .2s ease;}
+  .makna-detail-dot.is-active{background:var(--gold);transform:scale(1.4);}
 
   /* Mobile: layout garis-penunjuk-menyebar sulit dibaca di layar sempit --
      ganti jadi daftar bertumpuk yang simpel (tampilan desktop tidak
@@ -901,13 +973,43 @@
     .makna-logo-stage{
       width:100%;aspect-ratio:auto;display:flex;flex-direction:column;align-items:center;gap:22px;
     }
-    .makna-logo-crest{
-      position:relative !important;top:auto !important;left:auto !important;
-      width:min(46vw,190px) !important;height:min(46vw,190px) !important;
-      margin:0 auto;transition:none;
+    /* Kotak referensi persentase buat titik anchor -- ukurannya PERSIS sama
+       dengan lambang kecil di bawah ini (lihat komentar di HTML), supaya
+       style [data-ml-number] di bawah (dihitung relatif ke badan lambang)
+       jatuh di tempat yang benar walau layoutnya sudah jadi daftar
+       bertumpuk, bukan panel lebar seperti di desktop. */
+    .makna-logo-crest-wrap{
+      position:relative;width:min(46vw,190px);height:min(46vw,190px);
+      margin:0 auto;flex-shrink:0;
     }
-    .makna-logo-lines{display:none;}
-    .makna-logo-anchor-dot{display:none;}
+    .makna-logo-crest{
+      position:absolute !important;top:0 !important;left:0 !important;
+      width:100% !important;height:100% !important;
+      margin:0;transition:none;
+    }
+    /* Titik anchor tetap tampil di lambang (lingkaran kecil polos), tapi
+       garis penghubungnya di mobile TIDAK diagonal -- dirutekan siku-siku
+       (lurus - belok 90 derajat - lurus), gaya diagram/flowchart, supaya
+       tidak kelihatan seperti benang kusut walau harus menjangkau kartu yang
+       jauh di bawah daftar. Lihat redraw() di landing-content.js: untuk
+       lebar layar <=760px, tiap garis dirender sebagai <polyline> 2 segmen
+       (vertikal dari titik turun ke ketinggian kartunya, lalu horizontal ke
+       badge nomornya) -- bukan <line> diagonal seperti di desktop. */
+    .makna-logo-anchor-dot{width:7px;height:7px;}
+    /* Posisi tiap titik dihitung relatif ke .makna-logo-crest-wrap
+       (persentase terhadap badan lambang itu sendiri) -- BUKAN memakai
+       persentase yang sama dengan versi desktop (yang relatif ke seluruh
+       panel/stage lebar). Nomor mengikuti atribut data-ml-number di HTML. */
+    .makna-logo-anchor-dot[data-ml-number="1"]{left:50.00%!important;top:14.79%!important;}
+    .makna-logo-anchor-dot[data-ml-number="2"]{left:18.01%!important;top:28.00%!important;}
+    .makna-logo-anchor-dot[data-ml-number="3"]{left:58.84%!important;top:36.75%!important;}
+    .makna-logo-anchor-dot[data-ml-number="4"]{left:39.00%!important;top:36.85%!important;}
+    .makna-logo-anchor-dot[data-ml-number="5"]{left:62.01%!important;top:49.02%!important;}
+    .makna-logo-anchor-dot[data-ml-number="6"]{left:49.03%!important;top:46.41%!important;}
+    .makna-logo-anchor-dot[data-ml-number="7"]{left:48.99%!important;top:63.02%!important;}
+    .makna-logo-anchor-dot[data-ml-number="8"]{left:31.08%!important;top:79.05%!important;}
+    .makna-logo-anchor-dot[data-ml-number="9"]{left:48.72%!important;top:78.99%!important;}
+    .makna-logo-anchor-dot[data-ml-number="10"]{left:68.22%!important;top:79.51%!important;}
     .makna-logo-point{
       position:relative;inset:auto;left:auto !important;right:auto !important;
       max-width:100%;width:100%;flex-direction:row !important;
@@ -1349,19 +1451,31 @@
       // x=80 utk kanan -- jarak dilebarkan dari lambang) & dibuat berjarak
       // sama rata (y) supaya semua kotak di satu sisi sejajar rapi & lega
       // -- meniru acuan desain "Makna Logo" (kotak seragam, nomor bulat
-      // menempel di sisi yg menghadap lambang). Titik anchor di badan
-      // lambang TIDAK diubah/digeser.
+      // menempel di sisi yg menghadap lambang).
+      //
+      // Anchor DIUKUR ULANG langsung dari file lambang aktif (grid % per
+      // piksel, bukan kira-kira lagi) supaya titik ujung garis benar-benar
+      // menempel ke elemen yang dimaksud (ujung bintang, ujung tombak
+      // kiri/kanan, titik silang tombak/keris, sudut segi delapan emas,
+      // warna hijau perisai, segi delapan merah-putih, pita moto, globe).
+      // Badge poin 5 & 8 SENGAJA ditukar posisi (y=58<->y=38) dari versi
+      // sebelumnya -- anchor asli "Ujung Tombak Kiri" (no.8) letaknya jauh
+      // lebih tinggi di lambang drpd "Sisi Emas/Segi Delapan" (no.5),
+      // sehingga kalau badge no.8 tetap di bawah badge no.5 (urutan lama),
+      // anchor no.8 terpaksa "dipaksa turun" jauh dari lokasi aslinya cuma
+      // supaya urutan y menaik (lihat aturan di atas) -- itu penyebab
+      // garis no.8 terlihat salah sambung/​tidak sesuai gambar lambang.
       $mlPoints = [
-        ['badge' => [80.00, 10.00], 'anchor' => [50.00, 15.23]],   // 1. Bintang Emas (ujung atas)
-        ['badge' => [20.00, 18.00], 'anchor' => [42.74, 23.97]],   // 2. Perisai (tepi kiri atas)
-        ['badge' => [80.00, 26.00], 'anchor' => [54.23, 25.78]],   // 3. Ujung Tombak Kanan
-        ['badge' => [80.00, 42.00], 'anchor' => [52.42, 33.04]],   // 4. Persilangan Tombak/Keris
-        ['badge' => [20.00, 38.00], 'anchor' => [44.56, 31.83]],   // 5. Sisi Emas / Bingkai Segi Delapan
-        ['badge' => [80.00, 58.00], 'anchor' => [54.84, 40.29]],   // 6. Lapisan/Warna Hijau
-        ['badge' => [20.00, 78.00], 'anchor' => [47.58, 46.34]],   // 7. Hexagonal / Warna Merah Putih
-        ['badge' => [20.00, 58.00], 'anchor' => [45.77, 38.48]],   // 8. Ujung Tombak Kiri
-        ['badge' => [80.00, 74.00], 'anchor' => [50.60, 54.20]],   // 9. Pita Nama / Moto
-        ['badge' => [50.00, 88.00], 'anchor' => [50.00, 47.29]],   // 10. Globe / Bola Dunia
+        ['badge' => [80.00, 10.00], 'anchor' => [50.00, 14.04]],   // 1. Bintang Emas (ujung atas)
+        ['badge' => [20.00, 18.00], 'anchor' => [44.54, 23.80]],   // 2. Perisai (tepi kiri atas)
+        ['badge' => [80.00, 26.00], 'anchor' => [53.38, 27.46]],   // 3. Ujung Tombak Kanan
+        ['badge' => [80.00, 42.00], 'anchor' => [50.50, 39.06]],   // 4. Persilangan Tombak/Keris
+        ['badge' => [20.00, 58.00], 'anchor' => [44.02, 37.84]],   // 5. Sisi Emas / Bingkai Segi Delapan
+        ['badge' => [80.00, 58.00], 'anchor' => [55.98, 43.33]],   // 6. Lapisan/Warna Hijau
+        ['badge' => [20.00, 78.00], 'anchor' => [46.10, 42.72]],   // 7. Hexagonal / Warna Merah Putih
+        ['badge' => [20.00, 38.00], 'anchor' => [45.06, 26.85]],   // 8. Ujung Tombak Kiri
+        ['badge' => [80.00, 74.00], 'anchor' => [52.86, 60.42]],   // 9. Pita Nama / Moto
+        ['badge' => [50.00, 88.00], 'anchor' => [49.74, 49.43]],   // 10. Globe / Bola Dunia
       ];
       $mlItems = old('makna_logo') ?? $pengaturan->makna_logo ?? \App\Models\Pengaturan::defaultMaknaLogo();
     @endphp
@@ -1380,16 +1494,29 @@
             </line>
           @endforeach
         </svg>
-        <div class="makna-logo-crest" id="maknaLogoCrest">
-          <img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">
+        {{-- Wrapper ini SENGAJA ditambahkan supaya titik anchor punya kotak
+             referensi persentase sendiri yang PERSIS sama bentuk/ukurannya
+             dengan lambang (crest) -- di desktop wrapper ini "transparan"
+             (tidak diberi position:relative, jadi .makna-logo-crest yang
+             position:absolute tetap mengacu ke .makna-logo-stage seperti
+             biasa). Di mobile (lihat @media 760px di bawah & di
+             landing-content.js), wrapper ini yang diberi position:relative
+             + ukuran match dengan lambang kecilnya, sehingga titik-titik
+             anchor bisa dipasang ulang dengan style [data-ml-number] yang
+             persentasenya dihitung relatif ke LAMBANG itu sendiri (bukan ke
+             seluruh panel yang sudah memanjang jadi daftar bertumpuk). --}}
+        <div class="makna-logo-crest-wrap" id="maknaLogoCrestWrap">
+          <div class="makna-logo-crest" id="maknaLogoCrest">
+            <img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad">
+          </div>
+          {{-- Titik presisi di badan lambang (ujung garis) -- div terpisah dari
+               <svg> supaya lingkarannya tidak ikut gepeng oleh preserveAspectRatio
+               "none" milik .makna-logo-lines (garis lurus aman diregangkan,
+               tapi <circle> di dalam SVG yang sama akan tampak jadi oval). --}}
+          @foreach ($mlPoints as $i => $p)
+            <div class="makna-logo-anchor-dot" data-ml-number="{{ $i + 1 }}" style="left:{{ $p['anchor'][0] }}%;top:{{ $p['anchor'][1] }}%;--mlp-delay:{{ .25 + $i * .05 }}s;"></div>
+          @endforeach
         </div>
-        {{-- Titik presisi di badan lambang (ujung garis) -- div terpisah dari
-             <svg> supaya lingkarannya tidak ikut gepeng oleh preserveAspectRatio
-             "none" milik .makna-logo-lines (garis lurus aman diregangkan,
-             tapi <circle> di dalam SVG yang sama akan tampak jadi oval). --}}
-        @foreach ($mlPoints as $i => $p)
-          <div class="makna-logo-anchor-dot" style="left:{{ $p['anchor'][0] }}%;top:{{ $p['anchor'][1] }}%;--mlp-delay:{{ .25 + $i * .05 }}s;"></div>
-        @endforeach
         @foreach ($mlPoints as $i => $p)
           @php
             $item = is_array($mlItems[$i] ?? null) ? $mlItems[$i] : [];
@@ -1409,6 +1536,29 @@
             </div>
           </div>
         @endforeach
+
+        <div class="makna-detail" id="maknaDetail">
+          <div class="makna-detail-backdrop" id="maknaDetailBackdrop"></div>
+          <div class="makna-detail-card" role="dialog" aria-modal="true" aria-labelledby="maknaDetailTitle">
+            <button type="button" class="makna-detail-close" id="maknaDetailClose" aria-label="Tutup detail">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg>
+            </button>
+            <div class="makna-detail-num" id="maknaDetailNum">01</div>
+            <div class="makna-detail-title" id="maknaDetailTitle"></div>
+            <div class="makna-detail-desc" id="maknaDetailDesc"></div>
+            <div class="makna-detail-nav">
+              <button type="button" class="makna-detail-nav-btn is-prev" id="maknaDetailPrev">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg>
+                Sebelumnya
+              </button>
+              <div class="makna-detail-dots" id="maknaDetailDots"></div>
+              <button type="button" class="makna-detail-nav-btn is-next" id="maknaDetailNext">
+                Selanjutnya
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   @endif
@@ -1532,11 +1682,11 @@
     }
 
     function openMaknaLogo(){
+      // Modal Makna Logo dinonaktifkan sementara di mobile -- .about-crest
+      // sudah diberi pointer-events:none lewat CSS, guard ini jaga-jaga
+      // kalau tombolnya tetap ke-trigger lewat keyboard (Tab+Enter/Space).
+      if(maknaIsMobile()) return;
       document.body.style.overflow = 'hidden';
-      if(maknaIsMobile()){
-        maknaOverlay.classList.add('open');
-        return;
-      }
       maknaPlaceCrestAt(maknaSourceImg.getBoundingClientRect(), false);
       maknaOverlay.classList.add('open');
       requestAnimationFrame(()=>{

@@ -73,16 +73,16 @@ class Pengaturan extends Model
     public static function defaultMaknaLogo(): array
     {
         return [
-            ['judul' => 'Bintang Emas', 'keterangan' => 'Melambangkan Ketuhanan Yang Maha Esa serta cita-cita luhur prajurit siber TNI Angkatan Darat.'],
-            ['judul' => 'Perisai', 'keterangan' => 'Melambangkan pertahanan dan perlindungan terhadap kedaulatan negara di ranah siber.'],
-            ['judul' => 'Ujung Tombak Kanan', 'keterangan' => 'Melambangkan ketajaman dan kesiagaan dalam mendeteksi ancaman siber.'],
-            ['judul' => 'Persilangan Tombak/Keris', 'keterangan' => 'Melambangkan kesiapsiagaan tempur di ranah pertahanan siber dan sandi.'],
-            ['judul' => 'Bingkai Segi Delapan', 'keterangan' => 'Melambangkan kewaspadaan menyeluruh dari delapan penjuru mata angin.'],
-            ['judul' => 'Warna Hijau', 'keterangan' => 'Melambangkan identitas dan pengabdian sebagai bagian dari TNI Angkatan Darat.'],
-            ['judul' => 'Warna Merah Putih', 'keterangan' => 'Melambangkan jiwa nasionalisme dan kebangsaan Indonesia.'],
-            ['judul' => 'Ujung Tombak Kiri', 'keterangan' => 'Melambangkan kekuatan dan kesiapan tempur prajurit siber.'],
-            ['judul' => 'Pita Moto', 'keterangan' => 'Bertuliskan semboyan "Satria Yudha Waskita" yang menjadi jati diri satuan.'],
-            ['judul' => 'Bola Dunia', 'keterangan' => 'Melambangkan jangkauan ruang siber (cyber space) yang bersifat global dan tanpa batas.'],
+            ['judul' => 'Bintang', 'keterangan' => ''],
+            ['judul' => 'Perisai', 'keterangan' => ''],
+            ['judul' => 'Sangkur', 'keterangan' => ''],
+            ['judul' => 'Tombak', 'keterangan' => ''],
+            ['judul' => 'Heksagonal Merah Putih', 'keterangan' => ''],
+            ['judul' => 'Petir', 'keterangan' => ''],
+            ['judul' => 'Globe', 'keterangan' => ''],
+            ['judul' => 'Kata "SATRIA"', 'keterangan' => ''],
+            ['judul' => 'Kata "YUDHA"', 'keterangan' => ''],
+            ['judul' => 'Kata "WASKITA"', 'keterangan' => ''],
         ];
     }
 
