@@ -1237,7 +1237,17 @@
           var search = document.getElementById(searchId);
           var hidden = document.getElementById(hiddenId);
           if (!wrap || !search || !hidden) return;
-          var options = window.__penggunaSatuanOptions || [];
+          // SENGAJA gak disimpan sekali di variabel lokal (dulu begitu, jadi
+          // "beku" di daftar Satuan versi awal load halaman) -- combobox ini
+          // dibikin cuma sekali per modal saat page load, tapi dipakai
+          // berkali-kali (tiap dropdown dibuka). Kalau Satuan
+          // ditambah/ubah/hapus SETELAH itu, window.__penggunaSatuanOptions
+          // sendiri sudah ke-refresh (lihat siberadSubmitSatuanAjax() &
+          // handler hapus Satuan), tapi combobox tetap nunjukin daftar lama
+          // kalau opsinya cuma dibaca sekali di sini. getOptions() dipanggil
+          // ULANG tiap render()/​__setSatuan(), jadi selalu ambil versi
+          // terbaru dari window.
+          function getOptions() { return window.__penggunaSatuanOptions || []; }
           var menu = document.createElement('div');
           menu.className = 'styled-select-menu';
           var inner = document.createElement('div');
@@ -1260,7 +1270,7 @@
           function render() {
             inner.innerHTML = '';
             var q = search.value.trim().toLowerCase();
-            var filtered = options.filter(function (o) {
+            var filtered = getOptions().filter(function (o) {
               return !q || o.name.toLowerCase().indexOf(q) > -1 || (o.kode && o.kode.toLowerCase().indexOf(q) > -1);
             });
             if (!filtered.length) {
@@ -1334,7 +1344,7 @@
           }
           // Dipakai bukaUbahPengguna / reopen script buat set teks tampilannya.
           wrap.__setSatuan = function (id) {
-            var o = options.filter(function (x) { return x.id === String(id || ''); })[0];
+            var o = getOptions().filter(function (x) { return x.id === String(id || ''); })[0];
             hidden.value = o ? o.id : '';
             search.value = o ? o.name : '';
             setInvalid(false);
@@ -1364,6 +1374,17 @@
                 var affected = tbody.querySelector('tr[data-user-id="' + res.data.id + '"]');
                 if (affected) affected.classList.add(isEdit ? 'siberad-row-updated' : 'siberad-row-in');
                 if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblPengguna');
+              }
+              // Kebalikan dari sinkronisasi Satuan->Pengguna: tambah/ubah
+              // (termasuk pindah satuan)/hapus Pengguna bikin kolom "Jumlah
+              // Pengguna" di tab Data Satuan basi kalau cuma tbody Pengguna
+              // yang ditimpa (satu halaman yang sama, beda tab, bukan
+              // reload). Server (UserController::tableJson()) sudah ikut
+              // ngirim tbody Satuan terbarunya.
+              var tblSatuan = document.querySelector('#tblSatuan tbody');
+              if (tblSatuan && typeof res.data.satuan_rows_html === 'string') {
+                tblSatuan.innerHTML = res.data.satuan_rows_html;
+                if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblSatuan');
               }
               if (!isEdit) {
                 form.reset();
@@ -1532,6 +1553,14 @@
                   }, 260);
                 }
                 overlay && overlay.classList.remove('open');
+                // Hapus akun bikin "Jumlah Pengguna" satuan asalnya berkurang
+                // 1 di tab Data Satuan -- server sudah ikut ngirim tbody
+                // terbarunya.
+                var tblSatuanHapus = document.querySelector('#tblSatuan tbody');
+                if (tblSatuanHapus && typeof res.data.satuan_rows_html === 'string') {
+                  tblSatuanHapus.innerHTML = res.data.satuan_rows_html;
+                  if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblSatuan');
+                }
                 window.siberadShowToast && window.siberadShowToast('success', res.data.message || 'Akun berhasil dihapus.');
               } else if (res.status === 401 && window.siberadTampilkanSesiBerakhir) {
                 window.siberadTampilkanSesiBerakhir();
@@ -1776,6 +1805,19 @@
                 if (affected) affected.classList.add(isEdit ? 'siberad-row-updated' : 'siberad-row-in');
                 if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblSatuan');
               }
+              // Tab "Daftar Pengguna" ada di halaman yang SAMA (cuma beda
+              // tab, bukan reload) -- kolom "Satuan" di tabelnya & opsi
+              // combobox Satuan di modal Tambah/Ubah Pengguna jadi basi
+              // kalau nama/kode satuan berubah tapi cuma tbody Satuan yang
+              // ditimpa. Server (SatuanController::tableJson()) sudah ikut
+              // ngirim data terbarunya -- tinggal disimpan di sini.
+              var tblPengguna = document.querySelector('#tblPengguna tbody');
+              if (tblPengguna && typeof res.data.pengguna_rows_html === 'string') {
+                tblPengguna.innerHTML = res.data.pengguna_rows_html;
+                if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblPengguna');
+              }
+              if (res.data.pengguna_satuan_options) window.__penggunaSatuanOptions = res.data.pengguna_satuan_options;
+              if (res.data.satuan_list_for_dup) window.__siberadSatuanList = res.data.satuan_list_for_dup;
               // Tambah: kosongkan form biar siap nambah lagi. Ubah: biarkan
               // nilai yang barusan tersimpan tetap tampil (jangan reset ke kosong).
               if (!isEdit) {
@@ -1963,6 +2005,13 @@
                   }, 260);
                 }
                 overlay && overlay.classList.remove('open');
+                // Satuan yg masih punya pengguna gak bisa dihapus (server
+                // sudah nolak), jadi gak ada baris tabel Pengguna yg jadi
+                // basi -- tapi opsi combobox Satuan di modal Tambah/Ubah
+                // Pengguna tetap perlu disegarkan, biar satuan yg baru
+                // dihapus gak nyangkut sbg pilihan yg masih bisa dipilih.
+                if (res.data.pengguna_satuan_options) window.__penggunaSatuanOptions = res.data.pengguna_satuan_options;
+                if (res.data.satuan_list_for_dup) window.__siberadSatuanList = res.data.satuan_list_for_dup;
                 window.siberadShowToast && window.siberadShowToast('success', res.data.message || 'Satuan berhasil dihapus.');
               } else if (res.status === 401 && window.siberadTampilkanSesiBerakhir) {
                 window.siberadTampilkanSesiBerakhir();

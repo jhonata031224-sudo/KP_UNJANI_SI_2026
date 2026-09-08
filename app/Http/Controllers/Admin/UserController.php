@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\Satuan;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -92,8 +93,19 @@ class UserController extends Controller
 
         $pesan = "Akun \"{$nama}\" berhasil dihapus.";
 
+        // Hapus akun bikin kolom "Jumlah Pengguna" satuan asalnya berkurang
+        // 1 -- ikut kirim tbody Data Satuan terbaru, sama kayak store()/
+        // update() lewat tableJson(). Lihat komentar di tableJson() soal
+        // kenapa ini perlu.
         return $request->wantsJson()
-            ? response()->json(['ok' => true, 'id' => $id, 'message' => $pesan])
+            ? response()->json([
+                'ok' => true,
+                'id' => $id,
+                'message' => $pesan,
+                'satuan_rows_html' => Satuan::terurut()
+                    ->map(fn (Satuan $s) => view('siberad.dashboards.partials.satuan-row', ['s' => $s])->render())
+                    ->implode(''),
+            ])
             : back()->with('status', $pesan);
     }
 
@@ -103,6 +115,16 @@ class UserController extends Controller
      * -- klien tinggal timpa innerHTML tbody tanpa reload, jadi modal
      * Tambah/Ubah tetap kebuka DAN baris baru/berubah tetap di posisi sesuai
      * urutan satuan (bukan nyelonong ke paling atas).
+     *
+     * Ikut menyertakan tbody tabel Data Satuan yang SUDAH TERBIT juga
+     * (`satuan_rows_html`) -- kebalikan dari fix di SatuanController::
+     * tableJson(). Kolom "Jumlah Pengguna" di tabel Data Satuan dihitung
+     * dari relasi users() (Satuan::terurut() pakai withCount('users')), jadi
+     * tambah/ubah (termasuk pindah satuan)/hapus Pengguna bikin angkanya
+     * basi di tab Data Satuan kalau cuma tbody Pengguna sendiri yang
+     * ditimpa -- padahal keduanya satu halaman yang sama (beda tab, bukan
+     * reload). Klien (siberadSubmitPenggunaAjax() & handler hapus Pengguna
+     * di admin.blade.php) menimpa #tblSatuan kalau field ini ada di respons.
      */
     private function tableJson(Request $request, User $subject, string $pesan): JsonResponse
     {
@@ -115,11 +137,16 @@ class UserController extends Controller
             ])->render())
             ->implode('');
 
+        $satuanRowsHtml = Satuan::terurut()
+            ->map(fn (Satuan $s) => view('siberad.dashboards.partials.satuan-row', ['s' => $s])->render())
+            ->implode('');
+
         return response()->json([
             'ok' => true,
             'id' => $subject->id,
             'message' => $pesan,
             'rows_html' => $rowsHtml,
+            'satuan_rows_html' => $satuanRowsHtml,
         ]);
     }
 
