@@ -11,7 +11,9 @@ if [ "$DB_CONNECTION" = "sqlite" ]; then
   touch "$DB_PATH"
 fi
 
+echo "==> [1/5] config:clear"
 php artisan config:clear
+echo "==> [1/5] OK"
 
 # Regenerate cache discovery package (bootstrap/cache/packages.php &
 # services.php) di setiap container start. File ini sengaja TIDAK
@@ -19,10 +21,30 @@ php artisan config:clear
 # daftar provider yang sesuai dependency production (--no-dev) yang
 # benar-benar ter-install, bukan snapshot lama yang bisa saja masih
 # menyertakan provider dev-only seperti Laravel Pail.
-php artisan package:discover --ansi
+#
+# Dibungkus `timeout` supaya kalau step ini macet (mis. karena provider
+# tertentu nyambung ke sesuatu saat boot), container TETAP lanjut ke
+# php artisan serve di bawah alih-alih nge-hang selamanya dan bikin situs
+# 502 total tanpa sebab yang kelihatan di log. `set +e`/`set -e` di sekitarnya
+# supaya exit code timeout tidak langsung mematikan script (karena `set -e`
+# aktif di atas).
+echo "==> [2/5] package:discover"
+set +e
+timeout 30 php artisan package:discover --ansi
+DISCOVER_EXIT=$?
+set -e
+echo "==> [2/5] exit code: $DISCOVER_EXIT"
 
-php artisan migrate --force
+echo "==> [3/5] migrate --force"
+set +e
+timeout 60 php artisan migrate --force -v
+MIGRATE_EXIT=$?
+set -e
+echo "==> [3/5] exit code: $MIGRATE_EXIT"
+
+echo "==> [4/5] storage:link"
 php artisan storage:link || true
+echo "==> [4/5] OK"
 
 # --no-reload WAJIB ada supaya PHP_CLI_SERVER_WORKERS (di-set lewat Railway
 # variables) beneran dipakai -- tanpa flag ini, Laravel diam-diam nolak
@@ -40,4 +62,12 @@ php artisan storage:link || true
 # error "The lampiran.0 failed to upload." bukan pesan validasi yang bermakna.
 # Solusi: paksa batas PHP sama dengan batas aplikasi (12M sedikit di atas 10MB
 # supaya ada ruang untuk multipart boundary & header form lainnya).
-php -d upload_max_filesize=12M -d post_max_size=32M -d memory_limit=256M artisan serve --host=0.0.0.0 --port="${PORT:-8000}" --no-reload
+#
+# Fallback port 8080 (BUKAN 8000) -- ini harus SAMA PERSIS dengan "Target port"
+# domain publik di Railway (Settings > Networking). Kalau $PORT dari Railway
+# ternyata tidak ke-set dan fallback-nya beda dari target port domain, proxy
+# Railway akan connect ke port yang tidak ada yang dengar (nobody listening),
+# dan hasilnya "Application failed to respond" walau app-nya sendiri hidup.
+PORT="${PORT:-8080}"
+echo "==> [5/5] starting php artisan serve on 0.0.0.0:${PORT}"
+exec php -d upload_max_filesize=12M -d post_max_size=32M -d memory_limit=256M artisan serve --host=0.0.0.0 --port="${PORT}" --no-reload
