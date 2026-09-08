@@ -283,7 +283,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/satuan/{satuan}', [SatuanController::class, 'update'])->name('satuan.update');
     Route::delete('/satuan/{satuan}', [SatuanController::class, 'destroy'])->name('satuan.destroy');
     Route::patch('/satuan/{satuan}/permissions', [PermissionController::class, 'update'])->name('satuan.permissions');
-    Route::patch('/pengaturan/landing', [SettingController::class, 'updateLanding'])->name('pengaturan.landing.update');
+    Route::match(['POST','PATCH'], '/pengaturan/landing', [SettingController::class, 'updateLanding'])->name('pengaturan.landing.update');
     Route::delete('/pengaturan/landing/gambar/{tipe}', [SettingController::class, 'deleteLandingImage'])->whereIn('tipe', ['logo', 'hero_image', 'hero_video'])->name('pengaturan.landing.image.destroy');
     Route::post('/backup', [BackupController::class, 'store'])->name('backup.store');
     Route::post('/backup/upload', [BackupFileController::class, 'store'])->name('backup.upload');
