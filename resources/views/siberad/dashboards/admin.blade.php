@@ -989,6 +989,11 @@
             <div class="val">{{ $stats['total_laporan'] }}</div>
             <div class="sub">Laporan tercatat di sistem</div>
           </div>
+          <div class="stat-card kpi-card">
+            <div class="lbl">Total Surat</div>
+            <div class="val">{{ $stats['total_surat'] }}</div>
+            <div class="sub">Surat tercatat di sistem</div>
+          </div>
           <div class="stat-card kpi-card wait">
             <div class="lbl">Reset Password</div>
             <div class="val">{{ $stats['reset_password_pending'] }}</div>
@@ -1093,7 +1098,7 @@
         </div>
 
         <style>
-          .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
+          .kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:26px;}
           @media(max-width:980px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
           .kpi-card .lbl{font-weight:800;}
           .kpi-card .val{font-family:var(--mono);color:var(--text);}
