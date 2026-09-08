@@ -234,6 +234,39 @@
 </style>
 </head>
 <body>
+<script>
+// Anti-kedip tab aktif: tab yang aktif secara default di HTML selalu
+// "dashboard" (lihat data-tab-panel="dashboard" section.tab-panel active
+// di bawah), sedangkan tab yang SEBENARNYA terakhir dibuka Admin (mis.
+// "pengaturan-umum" setelah klik Simpan lalu halaman reload penuh)
+// disimpan di sessionStorage dan baru dipulihkan oleh script di
+// dash-script.blade.php -- yang posisinya di akhir <body>. Jeda antara
+// browser mengecat HTML awal (tab Dashboard) dan script itu jalan itulah
+// yang kelihatan sebagai "kedip" balik ke Dashboard sekejap.
+//
+// Script ini jalan SEBELUM konten <body> lain di-parse (jadi sebelum
+// sempat dicat), baca tab tersimpan, lalu suntik <style> yang langsung
+// menimpa tampilan ke tab yang benar. Style sementara ini dihapus lagi
+// begitu activateAdminTab() asli (di dash-script.blade.php) jalan dan
+// benar-benar memindah class .active -- supaya klik pindah tab sesudahnya
+// tetap normal.
+(function () {
+  try {
+    var KEY = 'siberad-admin-active-tab';
+    var t = sessionStorage.getItem(KEY);
+    if (!t || t === 'dashboard' || !/^[a-z0-9-]+$/i.test(t)) return;
+    var css =
+      '[data-tab-panel="dashboard"].tab-panel{display:none!important;}' +
+      '[data-tab-panel="' + t + '"].tab-panel{display:block!important;}' +
+      '.side-link[data-tab-link="dashboard"]{background:transparent!important;color:var(--text-muted)!important;border-color:transparent!important;font-weight:500!important;}' +
+      '.side-link[data-tab-link="' + t + '"]{background:var(--gold-dim)!important;color:var(--gold-bright)!important;border-color:var(--border)!important;font-weight:600!important;}';
+    var style = document.createElement('style');
+    style.id = 'siberadNoFlashTab';
+    style.textContent = css;
+    document.head.appendChild(style);
+  } catch (e) {}
+})();
+</script>
 <div class="profile-modal-overlay" id="profileModalOverlay">
   <div class="profile-modal-card" id="profileModalCard" role="dialog" aria-modal="true" aria-label="Detail profil">
     <button type="button" class="profile-modal-close" id="profileModalCloseBtn" aria-label="Tutup">
@@ -4123,13 +4156,6 @@
           }
           .lp-sosial-chip svg{width:12px;height:12px;color:var(--gold-bright);flex-shrink:0;}
 
-          /* Semua panel/kartu di tab "Pengaturan Umum" (termasuk kartu
-             header "Pengaturan Umum", kartu "Konten Halaman Landing",
-             tiap kartu field terpisah, dan panel pratinjau) diberi border
-             hitam tegas -- sesuai contoh SS yang diminta. */
-          [data-tab-panel="pengaturan-umum"] .panel{
-            border:1.5px solid #000;
-          }
         </style>
 
         <script>
