@@ -39,13 +39,24 @@ class SessionController extends Controller
      * baris session-nya di tabel `sessions` (SESSION_DRIVER=database).
      * Menghapus baris ini membuat sesi itu langsung tidak valid di sisi
      * server, walau cookie di browser pengguna masih ada.
+     *
+     * Balas JSON saat wantsJson() supaya baris tabel "Pengguna Aktif" bisa
+     * langsung dibuang di tempat tanpa reload halaman -- poll realtime
+     * (admin-sesi-aktif-realtime.blade.php) sebenarnya bakal ikut membuang
+     * baris ini juga di siklus berikutnya (~4 detik), tapi tanpa AJAX di sini
+     * admin yang mengklik sendiri harus nunggu reload dulu buat lihat
+     * hasilnya -- sama seperti kasus Setujui/Tolak Permintaan Ganti Password.
      */
-    public function destroy(string $id): RedirectResponse
+    public function destroy(Request $request, string $id): RedirectResponse|JsonResponse
     {
         $sesi = DB::table('sessions')->where('id', $id)->first();
 
         if (! $sesi) {
-            return back()->with('status', 'Sesi tidak ditemukan (mungkin sudah berakhir).');
+            $pesan = 'Sesi tidak ditemukan (mungkin sudah berakhir).';
+
+            return $request->wantsJson()
+                ? response()->json(['ok' => false, 'message' => $pesan], 404)
+                : back()->with('status', $pesan);
         }
 
         $namaPengguna = $sesi->user_id
@@ -59,6 +70,10 @@ class SessionController extends Controller
             'Memaksa logout sesi milik ' . ($namaPengguna ?? 'pengguna tidak dikenal') . " (IP: {$sesi->ip_address})."
         );
 
-        return back()->with('status', 'Sesi berhasil dipaksa logout.');
+        $pesan = 'Sesi berhasil dipaksa logout.';
+
+        return $request->wantsJson()
+            ? response()->json(['ok' => true, 'id' => $id, 'message' => $pesan])
+            : back()->with('status', $pesan);
     }
 }

@@ -4762,7 +4762,7 @@
             @csrf @method('DELETE')
             <div class="confirm-actions">
               <button type="button" class="btn" id="paksaLogoutBatal">Batal</button>
-              <button type="submit" class="btn btn-ghost-red">Ya</button>
+              <button type="submit" class="btn btn-ghost-red" id="paksaLogoutYa">Ya</button>
             </div>
           </form>
         </div>
@@ -4775,6 +4775,46 @@
         };
         document.getElementById('paksaLogoutBatal')?.addEventListener('click', () => document.getElementById('paksaLogoutOverlay')?.classList.remove('open'));
         document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('paksaLogoutOverlay')?.classList.remove('open'); });
+
+        // Paksa Logout via AJAX -- baris tabel Pengguna Aktif dibuang tanpa
+        // reload halaman, sama seperti Setujui/Tolak Permintaan Ganti
+        // Password. Fallback ke submit form biasa kalau fetch gagal total
+        // (bukan cuma respons error server).
+        document.getElementById('formPaksaLogout')?.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var form = this;
+          var overlay = document.getElementById('paksaLogoutOverlay');
+          var yaBtn = document.getElementById('paksaLogoutYa');
+          if (yaBtn) yaBtn.disabled = true;
+          fetch(form.action, {
+            method: 'POST', body: new FormData(form), credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+          }).then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, data: d }; });
+          }).then(function (res) {
+            if (res.status === 200 && res.data && res.data.ok) {
+              var row = document.querySelector('#tblSesiAktif tbody tr[data-session-id="' + res.data.id + '"]');
+              if (row) {
+                row.classList.add('siberad-row-out');
+                setTimeout(function () {
+                  row.remove();
+                  if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblSesiAktif');
+                }, 260);
+              }
+              overlay && overlay.classList.remove('open');
+              window.siberadShowToast && window.siberadShowToast('success', res.data.message || 'Sesi berhasil dipaksa logout.');
+            } else if (res.status === 401 && window.siberadTampilkanSesiBerakhir) {
+              window.siberadTampilkanSesiBerakhir();
+            } else {
+              overlay && overlay.classList.remove('open');
+              window.siberadShowToast && window.siberadShowToast('error', (res.data && res.data.message) || 'Gagal memaksa logout sesi.');
+            }
+          }).catch(function () {
+            window.siberadShowToast && window.siberadShowToast('error', 'Gagal terhubung ke server, coba lagi.');
+          }).finally(function () {
+            if (yaBtn) yaBtn.disabled = false;
+          });
+        });
       </script>
 
     </div>
