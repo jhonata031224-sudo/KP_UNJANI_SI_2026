@@ -923,70 +923,6 @@
   }
   .makna-logo-overlay.open .makna-logo-anchor-dot{opacity:1;}
 
-  /* ================= MAKNA LOGO: PANEL DETAIL =================
-     Ganti pola dropdown lama yang nempel per-kartu (kecil, posisinya beda2
-     tiap kartu, gampang kepotong di tepi layar) -- klik kartu bernomor
-     manapun sekarang membuka panel ini di TENGAH layar, posisinya SELALU
-     sama, dilengkapi navigasi Sebelumnya/Selanjutnya jadi bisa jelajah
-     semua 10 poin tanpa tutup-buka panel berkali-kali. Interaksinya
-     di-wire dari public/js/landing-content.js (initMaknaLogoDetail()). */
-  .makna-detail{position:absolute;inset:0;z-index:30;pointer-events:none;}
-  .makna-detail-backdrop{
-    position:absolute;inset:0;border-radius:inherit;
-    background:rgba(17,22,17,.6);backdrop-filter:blur(3px);
-    opacity:0;transition:opacity .3s ease;
-  }
-  .makna-detail.open{pointer-events:auto;}
-  .makna-detail.open .makna-detail-backdrop{opacity:1;}
-  .makna-detail-card{
-    position:absolute;top:50%;left:50%;
-    width:min(430px,calc(100% - 40px));
-    background:var(--panel-2);border:1.5px solid var(--gold);border-radius:22px;
-    padding:36px 32px 26px;box-sizing:border-box;
-    box-shadow:0 30px 70px rgba(0,0,0,.4);
-    opacity:0;transform:translate(-50%,-50%) translateY(12px) scale(.96);
-    transition:opacity .3s ease, transform .3s ease;
-  }
-  .makna-detail.open .makna-detail-card{opacity:1;transform:translate(-50%,-50%) translateY(0) scale(1);}
-  .makna-detail-close{
-    position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:10px;
-    display:flex;align-items:center;justify-content:center;
-    background:transparent;border:none;color:var(--text-muted);cursor:pointer;
-    transition:color .2s ease,background .2s ease,transform .2s ease;
-  }
-  .makna-detail-close:hover{color:var(--gold-bright);background:rgba(212,175,55,.14);transform:rotate(90deg);}
-  .makna-detail-close svg{width:16px;height:16px;}
-  .makna-detail-num{
-    width:50px;height:50px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    background:var(--gold);color:#fff;font-family:var(--display);font-weight:700;font-size:19px;
-    box-shadow:0 10px 24px rgba(0,0,0,.25);margin-bottom:18px;
-  }
-  .makna-detail-title{
-    font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.01em;
-    text-transform:uppercase;color:var(--text);margin-bottom:12px;line-height:1.35;
-  }
-  .makna-detail-desc{
-    font-family:var(--body);font-size:14px;line-height:1.75;color:var(--text-muted);
-    min-height:42px;
-  }
-  .makna-detail-nav{
-    display:flex;align-items:center;justify-content:space-between;gap:12px;
-    margin-top:26px;padding-top:18px;border-top:1px solid var(--border-soft);
-  }
-  .makna-detail-nav-btn{
-    display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;
-    font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
-    color:var(--text-muted);transition:color .2s ease,transform .2s ease;padding:6px 2px;
-  }
-  .makna-detail-nav-btn:hover{color:var(--gold-bright);}
-  .makna-detail-nav-btn.is-prev:hover{transform:translateX(-3px);}
-  .makna-detail-nav-btn.is-next:hover{transform:translateX(3px);}
-  .makna-detail-nav-btn svg{width:13px;height:13px;}
-  .makna-detail-dots{display:flex;gap:5px;}
-  .makna-detail-dot{width:6px;height:6px;border-radius:50%;background:var(--border-strong);transition:background .2s ease,transform .2s ease;}
-  .makna-detail-dot.is-active{background:var(--gold);transform:scale(1.4);}
-
   /* Mobile: layout garis-penunjuk-menyebar sulit dibaca di layar sempit --
      ganti jadi daftar bertumpuk yang simpel (tampilan desktop tidak
      berubah), senada dengan pendekatan responsif lain di halaman ini. */
@@ -1566,29 +1502,6 @@
             </div>
           </div>
         @endforeach
-
-        <div class="makna-detail" id="maknaDetail">
-          <div class="makna-detail-backdrop" id="maknaDetailBackdrop"></div>
-          <div class="makna-detail-card" role="dialog" aria-modal="true" aria-labelledby="maknaDetailTitle">
-            <button type="button" class="makna-detail-close" id="maknaDetailClose" aria-label="Tutup detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg>
-            </button>
-            <div class="makna-detail-num" id="maknaDetailNum">01</div>
-            <div class="makna-detail-title" id="maknaDetailTitle"></div>
-            <div class="makna-detail-desc" id="maknaDetailDesc"></div>
-            <div class="makna-detail-nav">
-              <button type="button" class="makna-detail-nav-btn is-prev" id="maknaDetailPrev">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg>
-                Sebelumnya
-              </button>
-              <div class="makna-detail-dots" id="maknaDetailDots"></div>
-              <button type="button" class="makna-detail-nav-btn is-next" id="maknaDetailNext">
-                Selanjutnya
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   @endif

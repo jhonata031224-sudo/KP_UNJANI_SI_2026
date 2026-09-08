@@ -75,16 +75,16 @@ class Pengaturan extends Model
     public static function defaultMaknaLogo(): array
     {
         return [
-            ['judul' => 'Bintang', 'keterangan' => ''],
-            ['judul' => 'Perisai', 'keterangan' => ''],
-            ['judul' => 'Sangkur', 'keterangan' => ''],
-            ['judul' => 'Tombak', 'keterangan' => ''],
-            ['judul' => 'Heksagonal Merah Putih', 'keterangan' => ''],
-            ['judul' => 'Petir', 'keterangan' => ''],
-            ['judul' => 'Globe', 'keterangan' => ''],
-            ['judul' => 'Kata "SATRIA"', 'keterangan' => ''],
-            ['judul' => 'Kata "YUDHA"', 'keterangan' => ''],
-            ['judul' => 'Kata "WASKITA"', 'keterangan' => ''],
+            ['judul' => 'Bintang', 'keterangan' => 'Bintang bersudut lima melambangkan Pancasila sebagai dasar negara serta falsafah hidup bangsa Indonesia, merupakan simbol TNI AD yang mengandung lima kebulatan tekad yang terwujudkan dalam Sumpah Prajurit.'],
+            ['judul' => 'Perisai', 'keterangan' => 'Perisai memiliki arti perlindungan awal dan garda terdepan dalam mengantisipasi ancaman siber terhadap data serta infrastruktur informasi vital TNI AD, yang mencerminkan kesiapsiagaan prajurit TNI AD dalam menghadapi setiap ancaman.'],
+            ['judul' => 'Sangkur', 'keterangan' => 'Sangkur melambangkan kecerdikan dan strategi dalam menghadapi lawan.'],
+            ['judul' => 'Tombak', 'keterangan' => 'Tombak melambangkan ketegasan dan kemampuan menyerang.'],
+            ['judul' => 'Heksagonal Merah Putih', 'keterangan' => 'Heksagonal berwarna merah dan putih memiliki arti struktur yang kokoh/stabilitas, serta melambangkan 6 pilar utama pengembangan Pussiberad yaitu people, process, technology, policy, data dan community yang merupakan kekuatan pertahanan siber terpadu.'],
+            ['judul' => 'Petir', 'keterangan' => 'Petir memiliki makna kecepatan dan kemampuan menghadapi ancaman siber dan peperangan modern, serta merepresentasikan teknologi, komunikasi, dan daya serang yang efektif.'],
+            ['judul' => 'Globe', 'keterangan' => 'Globe melambangkan ruang siber yang bersifat global, di mana lintas batas antarnegara yang tidak lagi mengenal ruang dan waktu, serta merepresentasikan keterhubungan seluruh penjuru dunia oleh network.'],
+            ['judul' => 'Kata "SATRIA"', 'keterangan' => 'SATRIA, mempunyai arti pribadi pemberani, menjunjung kehormatan dan pengabdian.'],
+            ['judul' => 'Kata "YUDHA"', 'keterangan' => 'YUDHA, mempunyai arti pertempuran.'],
+            ['judul' => 'Kata "WASKITA"', 'keterangan' => 'WASKITA, mempunyai arti waspada dan mengutamakan prinsip kerahasiaan.'],
         ];
     }
 
