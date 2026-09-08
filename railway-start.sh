@@ -72,6 +72,15 @@ echo "==> [4/5] OK"
 # setiap kali proses PHP baru dimulai (baik pembungkus maupun anak),
 # sehingga upload_max_filesize dkk konsisten di KEDUA proses.
 #
+# PENTING (bug produksi yang sempat kejadian): PHP_INI_SCAN_DIR HARUS diawali
+# titik dua (":$DIR", bukan "$DIR" polos) -- tanpa titik dua di depan, PHP
+# hanya scan folder custom ini dan BERHENTI scan folder default sistem
+# (mis. /etc/php/8.2/cli/conf.d/), sehingga semua .ini ekstensi bawaan
+# (pdo_mysql, sqlite3, zip, mbstring, dst) gagal ke-load -- akibatnya SELURUH
+# situs 500 (bukan cuma upload video) karena Eloquent/DB butuh pdo_mysql.
+# Titik dio depan artinya "scan folder default DULU, baru tambahkan folder
+# ini di akhir" -- jadi ekstensi bawaan tetap ke-load DAN override kita ikut.
+#
 # upload_max_filesize=110M -- HARUS >= batas terbesar single-file di aplikasi.
 # Sejak fitur "Latar Belakang Video Beranda" (hero_video, lihat
 # SettingController::updateLanding) dinaikkan ke 100 MB, 110M dikasih ruang
@@ -98,7 +107,7 @@ memory_limit=512M
 max_input_time=300
 max_execution_time=300
 EOF
-export PHP_INI_SCAN_DIR="$PHP_INI_OVERRIDE_DIR"
+export PHP_INI_SCAN_DIR=":$PHP_INI_OVERRIDE_DIR"
 echo "==> [4.5/5] php.ini override ditulis ke ${PHP_INI_OVERRIDE_DIR}/uploads.ini (PHP_INI_SCAN_DIR di-set)"
 
 # Fallback port 8080 (BUKAN 8000) -- ini harus SAMA PERSIS dengan "Target port"
