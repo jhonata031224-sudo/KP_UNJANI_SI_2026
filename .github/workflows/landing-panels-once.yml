@@ -102,93 +102,201 @@ jobs:
 '''
           text = text[:start] + new_add_card_html + text[end:]
 
-          start = text.index('  function buildEditor() {')
-          end = text.index("  fetch('/landing-config'", start)
-          new_build = r'''  function buildEditor() {
-    form.querySelectorAll('[data-lp-tab="lengkap"],[data-lp-tab-panel="lengkap"],.lp-managed-panels').forEach(el => el.remove());
+          # Inject a dedicated card visual system into the landing editor.
+          # This is presentation-only: existing field names, event handlers,
+          # tabs, save logic, upload logic, and preview bindings are untouched.
+          if 'function applyLandingCardDesign()' not in text:
+              marker = '  function styleFilePickers() {'
+              card_styles = r'''  function applyLandingCardDesign() {
+    if (document.getElementById('landing-card-design-style')) return;
 
-    const getStaticPanels = tab => Array.from(form.querySelectorAll('[data-lp-tab-panel="' + tab + '"]'));
-    const createManagedHost = tab => {
-      const panels = getStaticPanels(tab);
-      if (!panels.length) return null;
-      const host = document.createElement('div');
-      host.className = 'lp-tab-panel lp-managed-panels' + (tab === 'beranda' ? ' active' : '');
-      host.dataset.lpTabPanel = tab;
-      const anchor = panels[panels.length - 1];
-      anchor.parentNode.insertBefore(host, anchor.nextSibling);
-      return host;
-    };
+    const style = document.createElement('style');
+    style.id = 'landing-card-design-style';
+    style.textContent = `
+      /* ===== LANDING EDITOR — CARD DESIGN ===== */
+      .lp-layout > form > .lp-panel.lp-tab-panel:not(.lp-managed-panels){
+        background:var(--panel,#fff);
+        border:1px solid var(--border-soft,#e2e8f0);
+        border-radius:16px;
+        box-shadow:0 5px 18px rgba(15,23,42,.055);
+        overflow:hidden;
+        margin:0 0 16px;
+      }
 
-    const beranda = createManagedHost('beranda');
-    const fitur = createManagedHost('fitur');
-    const tentang = createManagedHost('tentang');
-    const kontak = createManagedHost('kontak');
-    if (!beranda || !fitur || !tentang || !kontak) return;
+      .lp-layout > form > .lp-panel.lp-tab-panel:not(.lp-managed-panels) .panel-head{
+        padding:18px 20px 15px;
+        border-bottom:1px solid var(--border-soft,#e2e8f0);
+        background:linear-gradient(180deg,rgba(248,250,252,.96),rgba(255,255,255,.98));
+        position:relative;
+      }
 
-    // ----- Tab Beranda: setiap kelompok dinamis menjadi panel mandiri,
-    // sejajar dengan panel-panel statis Blade. Tidak lagi dimasukkan ke
-    // dalam panel "Konten Halaman Landing" atau panel Beranda lainnya.
-    addCard(beranda, 'Identitas Brand & Navigasi Header', [
-      ['brand.name', 'Nama Brand', 'text', { full: false }, 'SIBER'],
-      ['brand.accent', 'Teks Aksen Brand', 'text', { full: false }, 'AD'],
-      ['brand.tagline', 'Tagline Brand', 'text', {}, 'Pussiberad · TNI AD'],
-    ], 'Nama, aksen huruf, dan tagline kecil yang tampil di pojok kiri atas (header) landing page.');
+      .lp-layout > form > .lp-panel.lp-tab-panel:not(.lp-managed-panels) .panel-head::before,
+      .lp-managed-section .panel-head::before{
+        content:"";
+        position:absolute;
+        left:0;
+        top:0;
+        bottom:0;
+        width:4px;
+        background:var(--gold,#ff9800);
+        border-radius:16px 0 0 16px;
+      }
 
-    addCard(beranda, 'Tombol & Lambang di Hero', [
-      ['hero.button_label', 'Teks Tombol Hero', 'text', { full: false }, 'Selengkapnya'],
-      ['hero.button_url', 'Link Tombol Hero', 'text', { full: false }, '#fitur'],
-      ['hero.crest_caption', 'Caption Lambang', 'text', { full: false }, 'Pusat Siber Angkatan Darat'],
-      ['hero.crest_motto', 'Moto Lambang', 'text', { full: false }, 'Satria Yudha Waskita'],
-    ], 'Tombol aksi utama serta teks pendamping lambang yang tampil di bagian paling atas (hero) landing page.');
+      .lp-layout > form > .lp-panel.lp-tab-panel:not(.lp-managed-panels) .panel-head h3,
+      .lp-managed-section .panel-head h3{
+        margin:0;
+        font-family:var(--display,inherit);
+        font-size:15px;
+        line-height:1.35;
+        font-weight:750;
+        letter-spacing:-.01em;
+        color:var(--text,#17212b);
+      }
 
-    addCard(beranda, 'Judul Browser & SEO', [
-      ['meta.title', 'Judul Browser / SEO'],
-      ['meta.description', 'Deskripsi SEO', 'textarea', { rows: 3 }],
-    ], 'Judul yang muncul di tab browser dan cuplikan hasil pencarian Google. Tidak tampil langsung di halaman landing page.');
+      .lp-layout > form > .lp-panel.lp-tab-panel:not(.lp-managed-panels) .panel-head p,
+      .lp-managed-section .panel-head p{
+        margin:5px 0 0;
+        max-width:780px;
+        font-size:11.5px;
+        line-height:1.55;
+        color:var(--text-muted,#64748b);
+      }
 
-    addLogoField(beranda);
-    addNavFields(beranda);
-    addStatsFields(beranda);
-    addLoginFields(beranda);
-    addLoaderFields(beranda);
+      .lp-layout > form > .lp-panel.lp-tab-panel:not(.lp-managed-panels) > .form-grid,
+      .lp-layout > form > .lp-panel.lp-tab-panel:not(.lp-managed-panels) > .lp-card,
+      .lp-layout > form > .lp-panel.lp-tab-panel:not(.lp-managed-panels) > .lp-tab-desc{
+        margin-left:20px;
+        margin-right:20px;
+      }
 
-    // ----- Tab Fitur / Tentang / Kontak: kelompok dinamis juga menjadi
-    // panel mandiri agar tidak menjadi kartu/section di dalam panel tab.
-    addCard(fitur, 'Judul Section Fitur', [
-      ['features_section.eyebrow', 'Label kecil section'],
-      ['features_section.title', 'Judul section'],
-      ['features_section.description', 'Deskripsi section', 'textarea', { rows: 3 }],
-    ], 'Judul & label yang tampil di atas 4 kartu Fitur pada landing page.');
+      .lp-layout > form > .lp-panel.lp-tab-panel:not(.lp-managed-panels) > .form-grid{
+        padding:18px 0 20px;
+      }
 
-    addCard(tentang, 'Judul Section Tentang', [
-      ['about_section.eyebrow', 'Label kecil section'],
-      ['about_section.title', 'Judul section'],
-    ], 'Judul & label yang tampil di atas bagian Tentang pada landing page.');
-    addAboutItemsFields(tentang);
+      .lp-layout > form > .lp-panel.lp-tab-panel:not(.lp-managed-panels) > .lp-tab-desc{
+        padding:16px 0 18px;
+        margin-bottom:0;
+      }
 
-    addCard(kontak, 'Footer Landing Page', [
-      ['footer.description', 'Deskripsi footer', 'textarea', { rows: 3 }],
-      ['footer.brand_subtitle', 'Sub-teks di bawah nama brand (footer)', 'text', { full: false }],
-      ['footer.bottom_tagline', 'Tagline baris paling bawah footer', 'text', { full: false }],
-      ['footer.nav_title', 'Judul kolom "Navigasi"', 'text', { full: false }],
-      ['footer.social_title', 'Judul kolom "Terhubung"', 'text', { full: false }],
-      ['footer.mabesad_title', 'Judul kolom "Mabesad"', 'text', { full: false }],
-      ['footer.mabesad_description', 'Deskripsi kolom "Mabesad"', 'textarea', { rows: 3 }],
-      ['footer.copyright', 'Teks copyright / footer bawah'],
-    ], 'Teks yang tampil di bagian paling bawah (footer) landing page.');
+      /* Dynamic sections such as Identitas Brand, Tombol Hero, Navigasi,
+         Statistik, Login, Loading, Footer, etc. are arranged as a clean
+         two-column card grid. The host itself is transparent so it never
+         looks like a card containing cards. */
+      .lp-layout > form .lp-managed-panels{
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:16px;
+        width:100%;
+        background:transparent;
+        border:0;
+        border-radius:0;
+        box-shadow:none;
+        padding:0;
+        margin:0 0 16px;
+        overflow:visible;
+      }
 
-    const hidden = document.createElement('input');
-    hidden.type = 'hidden';
-    hidden.name = 'landing_content';
-    hidden.id = 'landingContentPayload';
-    form.appendChild(hidden);
+      .lp-layout > form .lp-managed-panels:not(.active){
+        display:none;
+      }
 
-    styleFilePickers();
-    bindLivePreview();
+      .lp-layout > form .lp-managed-section{
+        min-width:0;
+        margin:0;
+        padding:0;
+        background:var(--panel,#fff);
+        border:1px solid var(--border-soft,#e2e8f0);
+        border-radius:16px;
+        box-shadow:0 5px 18px rgba(15,23,42,.055);
+        overflow:hidden;
+        transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
+      }
+
+      .lp-layout > form .lp-managed-section:hover{
+        border-color:var(--border-strong,#cbd5e1);
+        box-shadow:0 8px 24px rgba(15,23,42,.075);
+        transform:translateY(-1px);
+      }
+
+      .lp-layout > form .lp-managed-section .panel-head{
+        position:relative;
+        min-height:78px;
+        box-sizing:border-box;
+        padding:17px 18px 14px 20px;
+        border-bottom:1px solid var(--border-soft,#e2e8f0);
+        background:linear-gradient(180deg,rgba(248,250,252,.96),rgba(255,255,255,.98));
+      }
+
+      .lp-layout > form .lp-managed-section > .form-grid{
+        padding:17px 18px 19px;
+        box-sizing:border-box;
+      }
+
+      /* Tampilkan kelompok field berulang tetap rapi di dalam card. */
+      .lp-layout > form .lp-managed-section .form-grid{
+        min-width:0;
+      }
+
+      .lp-layout > form .lp-managed-section input,
+      .lp-layout > form .lp-managed-section textarea,
+      .lp-layout > form .lp-managed-section select{
+        min-width:0;
+        max-width:100%;
+        box-sizing:border-box;
+      }
+
+      .lp-layout > form .lp-managed-section .form-field{
+        min-width:0;
+      }
+
+      /* Card statis yang memang sudah memakai .lp-card tetap ringan dan
+         tidak berubah menjadi card bersarang. */
+      .lp-layout > form .lp-panel .lp-card{
+        border-color:var(--border-soft,#e2e8f0);
+        background:var(--panel-alt,#f8fafc);
+        border-radius:12px;
+      }
+
+      @media(max-width:900px){
+        .lp-layout > form .lp-managed-panels{
+          grid-template-columns:1fr;
+        }
+      }
+
+      @media(max-width:640px){
+        .lp-layout > form > .lp-panel.lp-tab-panel:not(.lp-managed-panels){
+          border-radius:13px;
+          margin-bottom:13px;
+        }
+        .lp-layout > form > .lp-panel.lp-tab-panel:not(.lp-managed-panels) .panel-head{
+          padding:16px 16px 14px;
+        }
+        .lp-layout > form > .lp-panel.lp-tab-panel:not(.lp-managed-panels) > .form-grid,
+        .lp-layout > form > .lp-panel.lp-tab-panel:not(.lp-managed-panels) > .lp-card,
+        .lp-layout > form > .lp-panel.lp-tab-panel:not(.lp-managed-panels) > .lp-tab-desc{
+          margin-left:16px;
+          margin-right:16px;
+        }
+        .lp-layout > form .lp-managed-section{
+          border-radius:13px;
+        }
+        .lp-layout > form .lp-managed-section .panel-head{
+          padding:16px 16px 14px 18px;
+        }
+        .lp-layout > form .lp-managed-section > .form-grid{
+          padding:16px 16px 17px;
+        }
+      }
+    `;
+    document.head.appendChild(style);
   }
 
 '''
-          text = text[:start] + new_build + text[end:]
+              text = text.replace(marker, card_styles + marker, 1)
+
+          # Apply the visual layer when the editor is built. No data/behavior
+          # is modified by this call.
+          text = text.replace('    styleFilePickers();', '    applyLandingCardDesign();\n    styleFilePickers();', 1)
 
           path.write_text(text, encoding='utf-8')
           PY
