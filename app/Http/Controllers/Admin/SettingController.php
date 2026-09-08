@@ -172,7 +172,22 @@ class SettingController extends Controller
             // dicek terpisah lewat rule closure 'durasi_video_maks_60_detik'
             // di bawah (butuh ffprobe, lihat getDurasiVideoDetik()) karena
             // Laravel tidak punya rule bawaan untuk durasi media.
-            'hero_video'=>['nullable','file','mimes:mp4,webm,mov,quicktime','max:102400', function ($attribute, $value, $fail) {
+            // CATATAN PERBAIKAN: sebelumnya pakai rule 'mimes:mp4,webm,mov,quicktime'
+            // bawaan Laravel -- rule itu menebak tipe file dari ISI BYTE file
+            // (via fileinfo/libmagic), BUKAN dari ekstensi nama file yang
+            // diunggah. Banyak video .mp4 hasil rekam layar HP (game recorder
+            // dsb) punya struktur container yang membuat libmagic di server
+            // salah menebak tipenya, sehingga file .mp4 ASLI & VALID tetap
+            // ditolak "format tidak valid" (dilaporkan Admin berulang kali).
+            // "quicktime" di daftar lama itu sendiri juga bukan ekstensi file
+            // yang sah (seharusnya "mov"), jadi rule lama memang salah sejak
+            // awal. Diganti closure validasiFormatVideo() di bawah yang
+            // memvalidasi dari EKSTENSI ASLI nama file + MIME type, dengan
+            // ffprobe (validasiDurasiVideoMaksimal) tetap jadi pengaman lapis
+            // kedua yang membaca isi video sungguhan.
+            'hero_video'=>['nullable','file','max:102400', function ($attribute, $value, $fail) {
+                $this->validasiFormatVideo($value, $fail);
+            }, function ($attribute, $value, $fail) {
                 $this->validasiDurasiVideoMaksimal($value, $fail, 60);
             }],
             // hero_blur_level: efek blur langsung di foto latar (px, 0-20).
@@ -221,7 +236,10 @@ class SettingController extends Controller
             'hero_image.image' => 'File gambar latar beranda tidak valid. Gunakan format JPG, PNG, atau WEBP.',
             'hero_video.uploaded' => 'Video latar beranda gagal diunggah. Kemungkinan ukurannya terlalu besar -- pastikan ukuran file maksimal 100 MB.',
             'hero_video.max' => 'Ukuran video latar beranda maksimal 100 MB. Silakan kompres atau pilih video lain.',
-            'hero_video.mimes' => 'Format video latar beranda tidak valid. Gunakan format MP4, WEBM, atau MOV.',
+            // Pesan format tidak valid untuk hero_video sekarang dilempar
+            // LANGSUNG oleh closure validasiFormatVideo() lewat $fail(), jadi
+            // tidak perlu key 'hero_video.mimes' lagi di sini (rule 'mimes'
+            // sudah tidak dipakai -- lihat komentar di rule validasi atas).
             'logo_file.uploaded' => 'Logo gagal diunggah. Kemungkinan ukurannya terlalu besar -- pastikan ukuran file maksimal 5 MB.',
             'logo_file.max' => 'Ukuran logo maksimal 5 MB. Silakan kompres atau pilih foto lain.',
             'logo_file.image' => 'File logo tidak valid. Gunakan format JPG, PNG, atau WEBP.',
@@ -357,6 +375,42 @@ class SettingController extends Controller
         }
 
         return back()->with('status', $label.' berhasil dihapus.');
+    }
+
+    /**
+     * Rule validasi closure untuk field hero_video: memastikan file yang
+     * diunggah benar video dengan format MP4/WEBM/MOV.
+     *
+     * Sengaja TIDAK memakai rule bawaan Laravel `mimes:` (yang menebak tipe
+     * file dari isi byte via fileinfo/libmagic) karena penebakan itu kerap
+     * SALAH untuk video .mp4 hasil rekam layar HP (struktur container yang
+     * tidak umum bikin libmagic salah tebak), sehingga video yang sebenarnya
+     * valid ditolak. Di sini validasi dilakukan dari EKSTENSI ASLI nama file
+     * yang diunggah (jauh lebih dapat diandalkan untuk kasus ini) DIBANTU
+     * MIME type sebagai cek tambahan -- lolos salah satu saja sudah cukup.
+     * Verifikasi bahwa isinya BENAR video yang bisa dibaca tetap dilakukan
+     * terpisah oleh validasiDurasiVideoMaksimal() lewat ffprobe.
+     */
+    private function validasiFormatVideo($file, callable $fail): void
+    {
+        if (! $file) return;
+
+        $ekstensiDiizinkan = ['mp4', 'webm', 'mov', 'm4v', 'qt'];
+        $mimeDiizinkan = [
+            'video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v',
+            'application/mp4', 'video/mp4v-es', 'video/x-msvideo',
+        ];
+
+        $ekstensiAsli = strtolower((string) $file->getClientOriginalExtension());
+        if (in_array($ekstensiAsli, $ekstensiDiizinkan, true)) return;
+
+        // Fallback: kalau nama file tidak punya ekstensi yang cocok (mis.
+        // hasil rename tanpa ekstensi), masih dicoba lewat MIME type yang
+        // dilaporkan browser/OS saat upload.
+        $mimeAsli = strtolower((string) $file->getClientMimeType());
+        if (in_array($mimeAsli, $mimeDiizinkan, true)) return;
+
+        $fail('Format video latar beranda tidak valid. Gunakan format MP4, WEBM, atau MOV.');
     }
 
     /**
