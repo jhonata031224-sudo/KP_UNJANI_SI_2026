@@ -54,13 +54,23 @@ echo "==> [4/5] OK"
 # yang ditahan lama (mis. long-polling) bisa nge-block SELURUH situs karena
 # cuma ada 1 proses yang gantian ngelayani semua orang.
 #
-# -d upload_max_filesize & post_max_size: PHP built-in server (php artisan serve)
-# defaultnya ikut php.ini sistem yang bisa saja hanya 2MB atau 8MB -- jauh di
-# bawah batas 10 MB yang kita izinkan di validasi Laravel. Akibatnya file yang
-# ukurannya di antara batas PHP dan batas Laravel dianggap "gagal upload" oleh
-# PHP SEBELUM request bahkan sampai ke controller, sehingga Laravel melempar
-# error "The lampiran.0 failed to upload." bukan pesan validasi yang bermakna.
-# Solusi: paksa batas PHP sama dengan batas aplikasi.
+# PENTING -- kenapa dipakai file php.ini + PHP_INI_SCAN_DIR, BUKAN flag -d:
+# `php artisan serve` itu cuma proses PEMBUNGKUS. Begitu jalan, Laravel
+# (Illuminate\Foundation\Console\ServeCommand::serverCommand()) men-SPAWN
+# proses PHP BARU yang sebenarnya menangani semua request:
+#   [php_binary(), '-S', 'host:port', server.php]
+# Proses anak ini di-spawn ulang dari nol dan TIDAK mewarisi flag -d apa pun
+# dari proses pembungkus di atas -- akibatnya walau proses pembungkus jalan
+# dengan `-d upload_max_filesize=110M`, proses anak yang BENERAN melayani
+# upload tetap pakai nilai default PHP (biasanya 2M/8M), dan upload video
+# kecil sekalipun ditolak PHP dengan UPLOAD_ERR_INI_SIZE SEBELUM request
+# sampai ke controller/validasi Laravel.
+#
+# Environment variable (beda dengan flag -d) DIWARISI oleh proses anak,
+# jadi solusinya: tulis php.ini tambahan ke folder, arahkan PHP_INI_SCAN_DIR
+# ke situ SEBELUM start artisan serve. PHP membaca ulang PHP_INI_SCAN_DIR
+# setiap kali proses PHP baru dimulai (baik pembungkus maupun anak),
+# sehingga upload_max_filesize dkk konsisten di KEDUA proses.
 #
 # upload_max_filesize=110M -- HARUS >= batas terbesar single-file di aplikasi.
 # Sejak fitur "Latar Belakang Video Beranda" (hero_video, lihat
@@ -73,7 +83,24 @@ echo "==> [4/5] OK"
 # seluruh isi upload video (sampai ~100 MB) ke memori saat memproses request
 # multipart; 256M terlalu mepet dan berisiko fatal error "Allowed memory
 # size exhausted" pas Admin upload video mendekati batas maksimal.
-#
+# max_input_time=300 -- waktu (detik) yang diizinkan PHP untuk MENERIMA data
+# request dari klien (termasuk membaca body upload). Default 60 detik
+# terlalu singkat untuk upload video mendekati 100 MB di koneksi lambat.
+# max_execution_time=300 -- waktu (detik) untuk MEMPROSES request setelah
+# data diterima (validasi ffprobe + store file ke disk). Default 30 detik
+# juga terlalu mepet untuk file besar di volume Railway yang lambat I/O-nya.
+PHP_INI_OVERRIDE_DIR="/tmp/php-ini-overrides"
+mkdir -p "$PHP_INI_OVERRIDE_DIR"
+cat > "$PHP_INI_OVERRIDE_DIR/uploads.ini" <<'EOF'
+upload_max_filesize=110M
+post_max_size=120M
+memory_limit=512M
+max_input_time=300
+max_execution_time=300
+EOF
+export PHP_INI_SCAN_DIR="$PHP_INI_OVERRIDE_DIR"
+echo "==> [4.5/5] php.ini override ditulis ke ${PHP_INI_OVERRIDE_DIR}/uploads.ini (PHP_INI_SCAN_DIR di-set)"
+
 # Fallback port 8080 (BUKAN 8000) -- ini harus SAMA PERSIS dengan "Target port"
 # domain publik di Railway (Settings > Networking). Kalau $PORT dari Railway
 # ternyata tidak ke-set dan fallback-nya beda dari target port domain, proxy
@@ -81,13 +108,9 @@ echo "==> [4/5] OK"
 # dan hasilnya "Application failed to respond" walau app-nya sendiri hidup.
 PORT="${PORT:-8080}"
 echo "==> [5/5] starting php artisan serve on 0.0.0.0:${PORT}"
-# max_input_time=300 -- waktu (detik) yang diizinkan PHP untuk MENERIMA
-# data request dari klien (termasuk membaca body upload). Default PHP adalah
-# 60 detik -- terlalu singkat untuk upload video mendekati 100 MB di koneksi
-# lambat; request akan di-cut oleh PHP sebelum file selesai diterima dan
-# hasilnya 500 / "failed to upload" tanpa pesan yang bermakna.
-# max_execution_time=300 -- waktu (detik) untuk MEMPROSES request setelah
-# data diterima (validasi ffprobe + store file ke disk). Default 30 detik
-# juga terlalu mepet untuk file besar di volume Railway yang lambat I/O-nya.
-# 300 detik (5 menit) memberi ruang lebih dari cukup untuk keduanya.
-exec php -d upload_max_filesize=110M -d post_max_size=120M -d memory_limit=512M -d max_input_time=300 -d max_execution_time=300 artisan serve --host=0.0.0.0 --port="${PORT}" --no-reload
+# --no-reload WAJIB ada supaya PHP_CLI_SERVER_WORKERS beneran dipakai (lihat
+# komentar di atas). PHP_INI_SCAN_DIR yang di-export di atas otomatis
+# terwariskan ke proses anak yang di-spawn ServeCommand karena itu env var,
+# bukan flag CLI -- jadi tidak perlu (dan tidak akan berguna) pasang -d lagi
+# di baris exec ini.
+exec php artisan serve --host=0.0.0.0 --port="${PORT}" --no-reload
