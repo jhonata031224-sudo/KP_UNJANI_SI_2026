@@ -45,7 +45,7 @@ class PermintaanResetPasswordController extends Controller
      * password_baru yang tersimpan SUDAH di-hash saat permintaan dibuat,
      * jadi harus ditulis apa adanya tanpa lewat cast 'hashed' lagi.
      */
-    public function setujui(Request $request, PermintaanResetPassword $permintaanResetPassword): RedirectResponse
+    public function setujui(Request $request, PermintaanResetPassword $permintaanResetPassword): RedirectResponse|JsonResponse
     {
         abort_if($permintaanResetPassword->status !== PermintaanResetPassword::STATUS_MENUNGGU, 422, 'Permintaan ini sudah diproses sebelumnya.');
 
@@ -65,10 +65,14 @@ class PermintaanResetPasswordController extends Controller
             'permintaan_reset_password_id' => $permintaanResetPassword->id,
         ]);
 
-        return back()->with('status', 'Permintaan ganti password disetujui. Password baru sudah aktif.');
+        $pesan = 'Permintaan ganti password disetujui. Password baru sudah aktif.';
+
+        return $request->wantsJson()
+            ? $this->keputusanJson($permintaanResetPassword, $pesan)
+            : back()->with('status', $pesan);
     }
 
-    public function tolak(Request $request, PermintaanResetPassword $permintaanResetPassword): RedirectResponse
+    public function tolak(Request $request, PermintaanResetPassword $permintaanResetPassword): RedirectResponse|JsonResponse
     {
         abort_if($permintaanResetPassword->status !== PermintaanResetPassword::STATUS_MENUNGGU, 422, 'Permintaan ini sudah diproses sebelumnya.');
 
@@ -84,7 +88,30 @@ class PermintaanResetPasswordController extends Controller
             'permintaan_reset_password_id' => $permintaanResetPassword->id,
         ]);
 
-        return back()->with('status', 'Permintaan ganti password ditolak.');
+        $pesan = 'Permintaan ganti password ditolak.';
+
+        return $request->wantsJson()
+            ? $this->keputusanJson($permintaanResetPassword, $pesan)
+            : back()->with('status', $pesan);
+    }
+
+    /**
+     * Balas JSON berisi baris tabel (`permintaan-reset-password-row` partial)
+     * yang sudah diperbarui -- klien tinggal timpa `<tr>`-nya di tempat (badge
+     * status muncul, tombol Setujui/Tolak hilang) tanpa reload halaman.
+     * Diakses SETELAH update() supaya relasi diprosesOleh() ke-load dengan
+     * nilai diproses_oleh yang baru (bukan cache lama dari sebelum update).
+     */
+    private function keputusanJson(PermintaanResetPassword $permintaanResetPassword, string $pesan): JsonResponse
+    {
+        return response()->json([
+            'ok' => true,
+            'id' => $permintaanResetPassword->id,
+            'message' => $pesan,
+            'row_html' => view('siberad.dashboards.partials.permintaan-reset-password-row', [
+                'r' => $permintaanResetPassword,
+            ])->render(),
+        ]);
     }
 
     /**
@@ -93,7 +120,7 @@ class PermintaanResetPasswordController extends Controller
      * ikut terhapus supaya tidak ada permintaan aktif yang hilang begitu
      * saja sebelum sempat diputuskan admin.
      */
-    public function hapusRiwayat(Request $request): RedirectResponse
+    public function hapusRiwayat(Request $request): RedirectResponse|JsonResponse
     {
         $jumlah = PermintaanResetPassword::where('status', '!=', PermintaanResetPassword::STATUS_MENUNGGU)->count();
 
@@ -101,6 +128,13 @@ class PermintaanResetPasswordController extends Controller
 
         ActivityLog::catat('permintaan-reset-password.hapus-riwayat', "Menghapus {$jumlah} riwayat permintaan ganti password yang sudah diproses.", $request->user());
 
-        return back()->with('status', $jumlah > 0 ? "Riwayat permintaan ganti password ({$jumlah}) berhasil dihapus." : 'Tidak ada riwayat yang perlu dihapus.');
+        $pesan = $jumlah > 0 ? "Riwayat permintaan ganti password ({$jumlah}) berhasil dihapus." : 'Tidak ada riwayat yang perlu dihapus.';
+
+        // Klien menghapus barisnya sendiri (semua <tr> yang bukan status
+        // "Menunggu"), tidak perlu tbody baru dari server -- lihat komentar
+        // di admin.blade.php.
+        return $request->wantsJson()
+            ? response()->json(['ok' => true, 'message' => $pesan, 'jumlah' => $jumlah])
+            : back()->with('status', $pesan);
     }
 }

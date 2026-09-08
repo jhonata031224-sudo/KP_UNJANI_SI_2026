@@ -4827,7 +4827,7 @@
             @csrf @method('PATCH')
             <div class="confirm-actions">
               <button type="button" class="btn" id="setujuiResetPasswordBatal">Batal</button>
-              <button type="submit" class="btn btn-ghost-green">Ya, Setujui</button>
+              <button type="submit" class="btn btn-ghost-green" id="setujuiResetPasswordYa">Ya, Setujui</button>
             </div>
           </form>
         </div>
@@ -4843,7 +4843,7 @@
             @csrf @method('PATCH')
             <div class="confirm-actions">
               <button type="button" class="btn" id="tolakResetPasswordBatal">Batal</button>
-              <button type="submit" class="btn btn-ghost-red">Ya, Tolak</button>
+              <button type="submit" class="btn btn-ghost-red" id="tolakResetPasswordYa">Ya, Tolak</button>
             </div>
           </form>
         </div>
@@ -4860,7 +4860,7 @@
             @csrf @method('DELETE')
             <div class="confirm-actions">
               <button type="button" class="btn" id="hapusRiwayatResetPasswordBatal">Batal</button>
-              <button type="submit" class="btn btn-ghost-red">Ya, Hapus</button>
+              <button type="submit" class="btn btn-ghost-red" id="hapusRiwayatResetPasswordYa">Ya, Hapus</button>
             </div>
           </form>
         </div>
@@ -4889,6 +4889,95 @@
           if (e.key !== 'Escape') return;
           document.getElementById('setujuiResetPasswordOverlay')?.classList.remove('open');
           document.getElementById('tolakResetPasswordOverlay')?.classList.remove('open');
+        });
+
+        // Setujui/Tolak via AJAX -- baris tabel ditimpa di tempat (badge
+        // status muncul, tombol Setujui/Tolak hilang) tanpa reload halaman,
+        // senada dengan Tambah/Ubah/Hapus Satuan & Pengguna. Fallback ke
+        // submit form biasa kalau fetch gagal total (bukan cuma respons
+        // error server).
+        function siberadSubmitResetPasswordKeputusan(form, overlayId, yaBtnId, pesanDefault) {
+          var overlay = document.getElementById(overlayId);
+          var yaBtn = document.getElementById(yaBtnId);
+          if (yaBtn) yaBtn.disabled = true;
+          fetch(form.action, {
+            method: 'POST', body: new FormData(form), credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+          }).then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, data: d }; });
+          }).then(function (res) {
+            if (res.status === 200 && res.data && res.data.ok) {
+              var row = document.querySelector('#tblResetPassword tbody tr[data-reset-id="' + res.data.id + '"]');
+              if (row && typeof res.data.row_html === 'string') {
+                var temp = document.createElement('tbody');
+                temp.innerHTML = res.data.row_html;
+                var newRow = temp.firstElementChild;
+                if (newRow) row.replaceWith(newRow);
+              }
+              overlay && overlay.classList.remove('open');
+              window.siberadShowToast && window.siberadShowToast('success', res.data.message || pesanDefault);
+            } else if (res.status === 401 && window.siberadTampilkanSesiBerakhir) {
+              window.siberadTampilkanSesiBerakhir();
+            } else {
+              overlay && overlay.classList.remove('open');
+              window.siberadShowToast && window.siberadShowToast('error', (res.data && res.data.message) || 'Gagal memproses permintaan.');
+            }
+          }).catch(function () {
+            window.siberadShowToast && window.siberadShowToast('error', 'Gagal terhubung ke server, coba lagi.');
+          }).finally(function () {
+            if (yaBtn) yaBtn.disabled = false;
+          });
+        }
+        document.getElementById('formSetujuiResetPassword')?.addEventListener('submit', function (e) {
+          e.preventDefault();
+          siberadSubmitResetPasswordKeputusan(this, 'setujuiResetPasswordOverlay', 'setujuiResetPasswordYa', 'Permintaan ganti password disetujui.');
+        });
+        document.getElementById('formTolakResetPassword')?.addEventListener('submit', function (e) {
+          e.preventDefault();
+          siberadSubmitResetPasswordKeputusan(this, 'tolakResetPasswordOverlay', 'tolakResetPasswordYa', 'Permintaan ganti password ditolak.');
+        });
+
+        // Hapus Riwayat via AJAX -- buang semua baris yang BUKAN "Menunggu"
+        // (baris "Menunggu" dikenali dari .btn-row Setujui/Tolak-nya, karena
+        // server juga sengaja tidak menghapus yang masih menunggu) tanpa
+        // reload halaman.
+        document.getElementById('formHapusRiwayatResetPassword')?.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var form = this;
+          var overlay = document.getElementById('hapusRiwayatResetPasswordOverlay');
+          var yaBtn = document.getElementById('hapusRiwayatResetPasswordYa');
+          if (yaBtn) yaBtn.disabled = true;
+          fetch(form.action, {
+            method: 'POST', body: new FormData(form), credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+          }).then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, data: d }; });
+          }).then(function (res) {
+            if (res.status === 200 && res.data && res.data.ok) {
+              var tbody = document.querySelector('#tblResetPassword tbody');
+              if (tbody) {
+                Array.prototype.slice.call(tbody.querySelectorAll('tr[data-reset-id]')).forEach(function (row) {
+                  if (row.querySelector('.btn-row')) return; // masih "Menunggu", jangan ikut dibuang
+                  row.classList.add('siberad-row-out');
+                  setTimeout(function () {
+                    row.remove();
+                    if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblResetPassword');
+                  }, 260);
+                });
+              }
+              overlay && overlay.classList.remove('open');
+              window.siberadShowToast && window.siberadShowToast('success', res.data.message || 'Riwayat berhasil dihapus.');
+            } else if (res.status === 401 && window.siberadTampilkanSesiBerakhir) {
+              window.siberadTampilkanSesiBerakhir();
+            } else {
+              overlay && overlay.classList.remove('open');
+              window.siberadShowToast && window.siberadShowToast('error', (res.data && res.data.message) || 'Gagal menghapus riwayat.');
+            }
+          }).catch(function () {
+            window.siberadShowToast && window.siberadShowToast('error', 'Gagal terhubung ke server, coba lagi.');
+          }).finally(function () {
+            if (yaBtn) yaBtn.disabled = false;
+          });
         });
 
         document.getElementById('tblResetPasswordSort')?.addEventListener('change', function () {
