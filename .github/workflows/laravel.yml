@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "main", "refactor-fokus-laporan" ]
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -13,6 +16,183 @@ jobs:
     steps:
       - name: Checkout kode
         uses: actions/checkout@v4
+
+      - name: Patch landing editor standalone panels
+        if: github.event_name == 'push' && github.ref == 'refs/heads/refactor-fokus-laporan' && github.actor == 'jhonata031224-sudo'
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('public/js/admin-landing-editor.js')
+          text = path.read_text(encoding='utf-8')
+          if 'lp-managed-panels' in text:
+              print('Standalone landing panels sudah diterapkan; lewati patch.')
+              raise SystemExit(0)
+
+          start = text.index('  function addCard(')
+          end = text.index('  function addLogoField(', start)
+          new_add_card = r'''  function addCard(panel, title, fields, desc = '') {
+    const standalone = panel && panel.classList.contains('lp-managed-panels');
+    const card = document.createElement('div');
+    card.className = standalone ? 'panel lp-panel lp-managed-section' : 'lp-card';
+
+    if (standalone) {
+      const head = document.createElement('div');
+      head.className = 'panel-head';
+      const inner = document.createElement('div');
+      const h = document.createElement('h3');
+      h.textContent = title;
+      inner.appendChild(h);
+      if (desc) {
+        const p = document.createElement('p');
+        p.textContent = desc;
+        inner.appendChild(p);
+      }
+      head.appendChild(inner);
+      card.appendChild(head);
+    } else {
+      const t = document.createElement('div');
+      t.className = 'lp-card-title';
+      t.textContent = title;
+      card.appendChild(t);
+      if (desc) {
+        const p = document.createElement('p');
+        p.className = 'lp-card-desc';
+        p.textContent = desc;
+        card.appendChild(p);
+      }
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'form-grid';
+    fields.forEach(f => {
+      addField(grid, f[1], f[0], get(config, f[0], f[4] ?? ''), f[2] || 'text', f[3] || {});
+    });
+    card.appendChild(grid);
+    panel.appendChild(card);
+    return card;
+  }
+
+'''
+          text = text[:start] + new_add_card + text[end:]
+
+          start = text.index('  function addCardHtml(')
+          end = text.index('  function styleFilePickers(', start)
+          new_add_card_html = r'''  function addCardHtml(panel, headHtml) {
+    const standalone = panel && panel.classList.contains('lp-managed-panels');
+    const card = document.createElement('div');
+
+    if (standalone) {
+      card.className = 'panel lp-panel lp-managed-section';
+      const head = document.createElement('div');
+      head.className = 'panel-head';
+      const inner = document.createElement('div');
+      inner.innerHTML = headHtml;
+      head.appendChild(inner);
+      card.appendChild(head);
+    } else {
+      card.className = 'lp-card lp-card-compact';
+      card.innerHTML = headHtml;
+    }
+
+    panel.appendChild(card);
+    return card;
+  }
+
+'''
+          text = text[:start] + new_add_card_html + text[end:]
+
+          start = text.index('  function buildEditor() {')
+          end = text.index("  fetch('/landing-config'", start)
+          new_build = r'''  function buildEditor() {
+    form.querySelectorAll('[data-lp-tab="lengkap"],[data-lp-tab-panel="lengkap"],.lp-managed-panels').forEach(el => el.remove());
+
+    const getStaticPanels = tab => Array.from(form.querySelectorAll('[data-lp-tab-panel="' + tab + '"]'));
+    const createManagedHost = tab => {
+      const panels = getStaticPanels(tab);
+      if (!panels.length) return null;
+      const host = document.createElement('div');
+      host.className = 'lp-tab-panel lp-managed-panels' + (tab === 'beranda' ? ' active' : '');
+      host.dataset.lpTabPanel = tab;
+      const anchor = panels[panels.length - 1];
+      anchor.parentNode.insertBefore(host, anchor.nextSibling);
+      return host;
+    };
+
+    const beranda = createManagedHost('beranda');
+    const fitur = createManagedHost('fitur');
+    const tentang = createManagedHost('tentang');
+    const kontak = createManagedHost('kontak');
+    if (!beranda || !fitur || !tentang || !kontak) return;
+
+    addCard(beranda, 'Identitas Brand & Navigasi Header', [
+      ['brand.name', 'Nama Brand', 'text', { full: false }, 'SIBER'],
+      ['brand.accent', 'Teks Aksen Brand', 'text', { full: false }, 'AD'],
+      ['brand.tagline', 'Tagline Brand', 'text', {}, 'Pussiberad · TNI AD'],
+    ], 'Nama, aksen huruf, dan tagline kecil yang tampil di pojok kiri atas (header) landing page.');
+
+    addCard(beranda, 'Tombol & Lambang di Hero', [
+      ['hero.button_label', 'Teks Tombol Hero', 'text', { full: false }, 'Selengkapnya'],
+      ['hero.button_url', 'Link Tombol Hero', 'text', { full: false }, '#fitur'],
+      ['hero.crest_caption', 'Caption Lambang', 'text', { full: false }, 'Pusat Siber Angkatan Darat'],
+      ['hero.crest_motto', 'Moto Lambang', 'text', { full: false }, 'Satria Yudha Waskita'],
+    ], 'Tombol aksi utama serta teks pendamping lambang yang tampil di bagian paling atas (hero) landing page.');
+
+    addCard(beranda, 'Judul Browser & SEO', [
+      ['meta.title', 'Judul Browser / SEO'],
+      ['meta.description', 'Deskripsi SEO', 'textarea', { rows: 3 }],
+    ], 'Judul yang muncul di tab browser dan cuplikan hasil pencarian Google. Tidak tampil langsung di halaman landing page.');
+
+    addLogoField(beranda);
+    addNavFields(beranda);
+    addStatsFields(beranda);
+    addLoginFields(beranda);
+    addLoaderFields(beranda);
+
+    addCard(fitur, 'Judul Section Fitur', [
+      ['features_section.eyebrow', 'Label kecil section'],
+      ['features_section.title', 'Judul section'],
+      ['features_section.description', 'Deskripsi section', 'textarea', { rows: 3 }],
+    ], 'Judul & label yang tampil di atas 4 kartu Fitur pada landing page.');
+
+    addCard(tentang, 'Judul Section Tentang', [
+      ['about_section.eyebrow', 'Label kecil section'],
+      ['about_section.title', 'Judul section'],
+    ], 'Judul & label yang tampil di atas bagian Tentang pada landing page.');
+    addAboutItemsFields(tentang);
+
+    addCard(kontak, 'Footer Landing Page', [
+      ['footer.description', 'Deskripsi footer', 'textarea', { rows: 3 }],
+      ['footer.brand_subtitle', 'Sub-teks di bawah nama brand (footer)', 'text', { full: false }],
+      ['footer.bottom_tagline', 'Tagline baris paling bawah footer', 'text', { full: false }],
+      ['footer.nav_title', 'Judul kolom "Navigasi"', 'text', { full: false }],
+      ['footer.social_title', 'Judul kolom "Terhubung"', 'text', { full: false }],
+      ['footer.mabesad_title', 'Judul kolom "Mabesad"', 'text', { full: false }],
+      ['footer.mabesad_description', 'Deskripsi kolom "Mabesad"', 'textarea', { rows: 3 }],
+      ['footer.copyright', 'Teks copyright / footer bawah'],
+    ], 'Teks yang tampil di bagian paling bawah (footer) landing page.');
+
+    const hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.name = 'landing_content';
+    hidden.id = 'landingContentPayload';
+    form.appendChild(hidden);
+
+    styleFilePickers();
+    bindLivePreview();
+  }
+
+'''
+          text = text[:start] + new_build + text[end:]
+          path.write_text(text, encoding='utf-8')
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/js/admin-landing-editor.js
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Fix landing editor standalone section panels"
+          git push origin HEAD:refactor-fokus-laporan
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
