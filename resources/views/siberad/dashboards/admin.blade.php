@@ -3213,6 +3213,13 @@
           $pengaturanHeroBgType = old('hero_bg_type', $pengaturan->hero_bg_type ?? 'gambar');
           $pengaturanStrukturOrgExists = $pengaturan->struktur_organisasi_path
             && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->struktur_organisasi_path);
+          // Nilai awal slider Blur Latar & Kepekatan Overlay, dipakai buat
+          // ngisi posisi awal "fill" track custom (var CSS --lp-range-fill)
+          // supaya pas pertama kali kebuka track-nya udah keisi sesuai
+          // angka tersimpan, bukan mulai dari 0 dulu baru keupdate pas
+          // slider digeser.
+          $pengaturanHeroBlur = (int) old('hero_blur_level', $pengaturan->hero_blur_level ?? 0);
+          $pengaturanHeroOverlay = (int) old('hero_overlay_intensity', $pengaturan->hero_overlay_intensity ?? 100);
         @endphp
 
         {{-- ===== KONTEN HALAMAN LANDING ===== --}}
@@ -3314,10 +3321,12 @@
                   <div class="lp-bg-type-toggle" role="radiogroup" aria-label="Tipe latar belakang beranda">
                     <label class="lp-bg-type-option">
                       <input type="radio" name="hero_bg_type" value="gambar" data-lp-bg-type-radio @checked($pengaturanHeroBgType !== 'video')>
+                      <span class="lp-bg-type-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg></span>
                       <span>Gambar</span>
                     </label>
                     <label class="lp-bg-type-option">
                       <input type="radio" name="hero_bg_type" value="video" data-lp-bg-type-radio @checked($pengaturanHeroBgType === 'video')>
+                      <span class="lp-bg-type-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m10 9 5 3-5 3z"></path></svg></span>
                       <span>Video</span>
                     </label>
                   </div>
@@ -3354,14 +3363,20 @@
                   <small>Format MP4, WEBM, atau MOV · maksimal 100 MB · durasi maksimal 1 menit · sebaiknya tanpa suara karena akan berputar otomatis (looping) tanpa audio.</small>
                 </div>
 
-                <div class="form-field">
-                  <label for="lpHeroBlur">Blur Latar — <span id="lpHeroBlurVal">{{ old('hero_blur_level', $pengaturan->hero_blur_level ?? 0) }}</span>px</label>
-                  <input id="lpHeroBlur" name="hero_blur_level" type="range" min="0" max="20" step="1" value="{{ old('hero_blur_level', $pengaturan->hero_blur_level ?? 0) }}" data-lp="hero_blur_level" oninput="document.getElementById('lpHeroBlurVal').textContent=this.value">
+                <div class="form-field lp-range-field">
+                  <div class="lp-range-head">
+                    <label for="lpHeroBlur"><span class="lp-range-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="12" r="7" stroke-dasharray="2.2 3.4" opacity=".75"></circle><circle cx="12" cy="12" r="10.5" stroke-dasharray="1.2 4" opacity=".4"></circle></svg></span>Blur Latar</label>
+                    <span class="lp-range-badge"><span id="lpHeroBlurVal">{{ $pengaturanHeroBlur }}</span><small>px</small></span>
+                  </div>
+                  <input id="lpHeroBlur" name="hero_blur_level" type="range" min="0" max="20" step="1" value="{{ $pengaturanHeroBlur }}" class="lp-range" data-lp="hero_blur_level" style="--lp-range-fill:{{ round($pengaturanHeroBlur / 20 * 100, 2) }}%" oninput="document.getElementById('lpHeroBlurVal').textContent=this.value;this.style.setProperty('--lp-range-fill',(this.value/this.max*100)+'%');">
                   <small>Mengaburkan foto-nya saja (0 = tajam, 20 = paling buram). Teks &amp; overlay tidak ikut buram.</small>
                 </div>
-                <div class="form-field">
-                  <label for="lpHeroOverlay">Kepekatan Overlay Warna — <span id="lpHeroOverlayVal">{{ old('hero_overlay_intensity', $pengaturan->hero_overlay_intensity ?? 100) }}</span>%</label>
-                  <input id="lpHeroOverlay" name="hero_overlay_intensity" type="range" min="0" max="100" step="1" value="{{ old('hero_overlay_intensity', $pengaturan->hero_overlay_intensity ?? 100) }}" data-lp="hero_overlay_intensity" oninput="document.getElementById('lpHeroOverlayVal').textContent=this.value">
+                <div class="form-field lp-range-field">
+                  <div class="lp-range-head">
+                    <label for="lpHeroOverlay"><span class="lp-range-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5Z"></path><path d="m3 13 9 5 9-5"></path></svg></span>Kepekatan Overlay Warna</label>
+                    <span class="lp-range-badge"><span id="lpHeroOverlayVal">{{ $pengaturanHeroOverlay }}</span><small>%</small></span>
+                  </div>
+                  <input id="lpHeroOverlay" name="hero_overlay_intensity" type="range" min="0" max="100" step="1" value="{{ $pengaturanHeroOverlay }}" class="lp-range" data-lp="hero_overlay_intensity" style="--lp-range-fill:{{ $pengaturanHeroOverlay }}%" oninput="document.getElementById('lpHeroOverlayVal').textContent=this.value;this.style.setProperty('--lp-range-fill',(this.value/this.max*100)+'%');">
                   <small>Lapisan gradient gelap/terang di atas foto (0 = foto polos tanpa overlay, 100 = seperti tampilan bawaan).</small>
                 </div>
               </div>
@@ -3778,10 +3793,92 @@
           .lp-sosmed-row{padding:16px 0;border-top:1px solid var(--border-soft);}
           .lp-sosmed-row:first-child{padding-top:0;border-top:none;}
           .lp-sosmed-row:last-child{padding-bottom:0;}
-          .lp-bg-type-toggle{display:inline-flex;gap:8px;padding:4px;border-radius:11px;background:var(--panel-alt);border:1px solid var(--border-soft);}
-          .lp-bg-type-option{display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--text-muted);transition:background .15s ease,color .15s ease;}
-          .lp-bg-type-option input{margin:0;accent-color:var(--gold-bright,#FF9800);}
-          .lp-bg-type-option:has(input:checked),.lp-bg-type-option.is-active{background:var(--panel);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.15);}
+          /* ===== Toggle "Tipe Latar Belakang" -- didesain ulang jadi
+             segmented-control bericon (senada sama pill ".lp-tab" di atas),
+             bukan radio polos lagi. Radio aslinya TETAP ada di DOM (supaya
+             form submit & aksesibilitas keyboard/screen-reader tetap
+             jalan normal) tapi disembunyikan visual lewat teknik sr-only --
+             ini juga otomatis menghilangkan bug "GAMBAR/VIDEO ga sejajar"
+             sebelumnya, karena tidak ada lagi kontrol radio bawaan browser
+             yang ukurannya bisa beda antara checked vs unchecked. */
+          .lp-bg-type-toggle{display:inline-flex;gap:6px;padding:5px;border-radius:14px;background:var(--panel-alt);border:1px solid var(--border-soft);}
+          .lp-bg-type-option{
+            position:relative;display:flex;align-items:center;gap:7px;
+            padding:9px 18px;border-radius:10px;cursor:pointer;
+            font-size:12.5px;font-weight:700;letter-spacing:.02em;
+            color:var(--text-muted);background:transparent;
+            transition:background .18s ease,color .18s ease,box-shadow .18s ease,transform .12s ease;
+          }
+          .lp-bg-type-option:active{transform:scale(.97);}
+          .lp-bg-type-icon{display:flex;flex-shrink:0;color:currentColor;opacity:.65;transition:opacity .18s ease;}
+          .lp-bg-type-icon svg{width:16px;height:16px;}
+          .lp-bg-type-option:hover{color:var(--text);}
+          .lp-bg-type-option:hover .lp-bg-type-icon{opacity:1;}
+          .lp-bg-type-option input[type="radio"]{
+            position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+            overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+          }
+          /* Sengaja DUA rule terpisah (bukan digabung satu selector list
+             pakai koma) untuk ".is-active" vs ":has(input:checked)" --
+             kalau digabung satu list dan browser-nya belum kenal :has()
+             (di luar seluruh browser modern hari ini yang sudah dukung),
+             seluruh rule (termasuk fallback class ".is-active" yang di-
+             toggle lewat JS di bawah) ikut dianggap tidak valid dan
+             gagal semua. Dipisah begini, ".is-active" (jalur utama, selalu
+             jalan lewat JS) tetap aman walau :has() nggak didukung. */
+          .lp-bg-type-option.is-active{
+            background:var(--gold-dim);
+            color:var(--gold-bright);
+            box-shadow:0 3px 10px rgba(255,152,0,.2), inset 0 0 0 1px var(--gold);
+          }
+          .lp-bg-type-option.is-active .lp-bg-type-icon{opacity:1;}
+          .lp-bg-type-option:has(input:checked){
+            background:var(--gold-dim);
+            color:var(--gold-bright);
+            box-shadow:0 3px 10px rgba(255,152,0,.2), inset 0 0 0 1px var(--gold);
+          }
+          .lp-bg-type-option:has(input:checked) .lp-bg-type-icon{opacity:1;}
+          .lp-bg-type-option:has(input:focus-visible){outline:2px solid var(--gold-bright);outline-offset:2px;}
+
+          /* ===== Slider "Blur Latar" & "Kepekatan Overlay Warna" -- didesain
+             ulang: label dipindah ke baris sendiri berdampingan sama badge
+             angka (bukan nempel di teks label seperti sebelumnya), lalu
+             track-nya diganti custom (gradient emas yang keisi sesuai nilai
+             + thumb bulat) menggantikan slider polos bawaan browser. */
+          .lp-range-field{gap:10px;}
+          .lp-range-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+          .lp-range-head label{display:flex;align-items:center;gap:7px;margin:0;}
+          .lp-range-icon{display:flex;flex-shrink:0;color:var(--gold-bright);}
+          .lp-range-icon svg{width:15px;height:15px;}
+          .lp-range-badge{
+            display:inline-flex;align-items:baseline;gap:2px;flex-shrink:0;
+            font-family:var(--mono);font-weight:700;font-size:12.5px;color:var(--gold-bright);
+            background:var(--gold-dim);border:1px solid var(--border-soft);border-radius:999px;
+            padding:3px 12px;line-height:1.5;
+          }
+          .lp-range-badge small{font-size:9.5px;font-weight:600;color:var(--text-muted);text-transform:lowercase;margin-left:1px;}
+          input.lp-range[type="range"]{
+            -webkit-appearance:none;appearance:none;
+            width:100%;height:6px;border-radius:999px;margin:13px 0 3px;
+            background:linear-gradient(to right, var(--gold-bright) 0%, var(--gold-bright) var(--lp-range-fill,0%), var(--border-soft) var(--lp-range-fill,0%), var(--border-soft) 100%);
+            border:none;padding:0;outline:none;cursor:pointer;
+          }
+          input.lp-range[type="range"]::-webkit-slider-thumb{
+            -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+            background:#fff;border:3px solid var(--gold-bright);
+            box-shadow:0 2px 6px rgba(0,0,0,.28);margin-top:-6px;cursor:pointer;
+            transition:transform .15s ease,box-shadow .15s ease;
+          }
+          input.lp-range[type="range"]:hover::-webkit-slider-thumb{transform:scale(1.14);}
+          input.lp-range[type="range"]:active::-webkit-slider-thumb{transform:scale(1.05);box-shadow:0 0 0 6px var(--gold-dim);}
+          input.lp-range[type="range"]::-moz-range-track{height:6px;border-radius:999px;background:var(--border-soft);border:none;}
+          input.lp-range[type="range"]::-moz-range-progress{height:6px;border-radius:999px;background:var(--gold-bright);}
+          input.lp-range[type="range"]::-moz-range-thumb{
+            width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--gold-bright);
+            box-shadow:0 2px 6px rgba(0,0,0,.28);cursor:pointer;transition:transform .15s ease;
+          }
+          input.lp-range[type="range"]:hover::-moz-range-thumb{transform:scale(1.14);}
+          input.lp-range[type="range"]:focus-visible{box-shadow:0 0 0 3px var(--gold-dim);border-radius:999px;}
           .lp-hero-image-row{display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:0;text-align:center;}
           .lp-hero-image-row video.lp-current-image{width:100%;max-width:360px;object-fit:cover;background:#000;}
           .lp-hero-image-row .landing-file-picker{align-self:center;flex:0 0 auto;min-width:200px;justify-content:center;}
@@ -4025,6 +4122,14 @@
             background:var(--panel-alt);
           }
           .lp-sosial-chip svg{width:12px;height:12px;color:var(--gold-bright);flex-shrink:0;}
+
+          /* Semua panel/kartu di tab "Pengaturan Umum" (termasuk kartu
+             header "Pengaturan Umum", kartu "Konten Halaman Landing",
+             tiap kartu field terpisah, dan panel pratinjau) diberi border
+             hitam tegas -- sesuai contoh SS yang diminta. */
+          [data-tab-panel="pengaturan-umum"] .panel{
+            border:1.5px solid #000;
+          }
         </style>
 
         <script>
