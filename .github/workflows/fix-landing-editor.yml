@@ -1,7 +1,4 @@
-name: Retire conflicting landing editor patch
-
-# Kept as a documented no-op so the old automatic layout patch no longer
-# overwrites the standalone card design maintained by landing-panels-once.yml.
+name: Fix landing editor card styling
 
 on:
   push:
@@ -9,11 +6,166 @@ on:
       - refactor-fokus-laporan
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: landing-editor-card-styling
+  cancel-in-progress: true
 
 jobs:
-  retired:
+  patch:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
-      - name: No-op
-        run: echo "Legacy landing editor layout patch retired."
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: refactor-fokus-laporan
+          fetch-depth: 0
+
+      - name: Apply landing editor card UI
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('resources/views/siberad/dashboards/admin.blade.php')
+          text = path.read_text(encoding='utf-8-sig')
+
+          marker = '          /* ===== LANDING EDITOR CARD UI V2 ===== */'
+          if marker in text:
+              print('Landing editor card UI already present; nothing to do.')
+              raise SystemExit(0)
+
+          css = r'''          /* ===== LANDING EDITOR CARD UI V2 ===== */
+          /*
+             Section landing editor dibuat sebagai card konfigurasi yang jelas.
+             Hanya visual/layout yang diubah; seluruh input, name, id, data-lp,
+             JavaScript, penyimpanan, upload, dan preview tetap menggunakan
+             mekanisme yang sudah ada.
+          */
+          .lp-dynamic-section{
+            display:grid;
+            grid-template-columns:repeat(2,minmax(0,1fr));
+            gap:16px;
+            margin-top:18px;
+            align-items:start;
+          }
+
+          .lp-dynamic-section .lp-card{
+            position:relative;
+            box-sizing:border-box;
+            min-width:0;
+            margin:0!important;
+            padding:20px 20px 18px!important;
+            border:1px solid var(--border-soft)!important;
+            border-radius:16px!important;
+            background:var(--panel)!important;
+            box-shadow:0 4px 14px rgba(15,23,42,.055)!important;
+            transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+          }
+
+          .lp-dynamic-section .lp-card:hover{
+            border-color:var(--border-strong)!important;
+            box-shadow:0 8px 22px rgba(15,23,42,.08)!important;
+            transform:translateY(-1px);
+          }
+
+          .lp-dynamic-section .lp-card::before{
+            content:"";
+            position:absolute;
+            left:0;
+            top:18px;
+            bottom:18px;
+            width:3px;
+            border-radius:0 4px 4px 0;
+            background:var(--gold);
+            opacity:.9;
+          }
+
+          .lp-dynamic-section .lp-card:nth-child(2n)::before{opacity:.55;}
+
+          .lp-dynamic-section .lp-card-title{
+            display:flex!important;
+            align-items:center;
+            gap:9px;
+            margin:0 0 6px!important;
+            padding:0!important;
+            border:0!important;
+            color:var(--text)!important;
+            font-size:13px!important;
+            line-height:1.35;
+            font-weight:750!important;
+            letter-spacing:0!important;
+            text-transform:none!important;
+          }
+
+          .lp-dynamic-section .lp-card-title::before{
+            content:"";
+            width:28px;
+            height:28px;
+            flex:0 0 28px;
+            border-radius:9px;
+            border:1px solid var(--border-soft);
+            background:var(--gold-dim);
+            box-sizing:border-box;
+          }
+
+          .lp-dynamic-section .lp-card-desc{
+            margin:0 0 16px!important;
+            padding-left:37px;
+            color:var(--text-muted)!important;
+            font-size:11.5px!important;
+            line-height:1.55!important;
+          }
+
+          .lp-dynamic-section .form-grid{
+            gap:13px;
+          }
+
+          .lp-dynamic-section .form-field label{
+            margin-bottom:6px;
+          }
+
+          .lp-dynamic-section .form-field input,
+          .lp-dynamic-section .form-field textarea,
+          .lp-dynamic-section .form-field select{
+            border-radius:10px;
+          }
+
+          .lp-dynamic-section .lp-card:has(.lp-hero-image-row),
+          .lp-dynamic-section .lp-card:has(.lp-sosmed-list){
+            grid-column:1 / -1;
+          }
+
+          @media(max-width:860px){
+            .lp-dynamic-section{grid-template-columns:1fr;}
+            .lp-dynamic-section .lp-card:has(.lp-hero-image-row),
+            .lp-dynamic-section .lp-card:has(.lp-sosmed-list){grid-column:auto;}
+          }
+
+          @media(max-width:560px){
+            .lp-dynamic-section{gap:12px;margin-top:14px;}
+            .lp-dynamic-section .lp-card{padding:17px 16px 16px!important;border-radius:14px!important;}
+          }
+          /* ===== END LANDING EDITOR CARD UI V2 ===== */
+'''
+
+          insert_at = text.find('</style>')
+          if insert_at < 0:
+              raise SystemExit('Penutup <style> tidak ditemukan.')
+
+          text = text[:insert_at] + '\n' + css + text[insert_at:]
+          path.write_text(text, encoding='utf-8')
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add resources/views/siberad/dashboards/admin.blade.php
+          if git diff --cached --quiet; then
+            echo "No landing editor UI changes needed."
+            exit 0
+          fi
+          git commit -m "feat: redesign landing editor sections as cards"
+          git push origin HEAD:refactor-fokus-laporan
