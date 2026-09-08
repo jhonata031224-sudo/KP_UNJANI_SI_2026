@@ -3308,7 +3308,7 @@
               <div class="lp-tab-panel" data-lp-tab-panel="fitur">
                 <p class="lp-tab-desc">Empat kartu keunggulan yang tampil di bagian "Fitur".</p>
                 @foreach ((old('fitur') ?? $pengaturan->fitur ?? []) as $i => $fitur)
-                  <div class="lp-card">
+                  <div class="lp-card lp-card-item">
                     <div class="lp-card-title">Fitur {{ $i + 1 }}</div>
                     <div class="form-grid">
                       <div class="form-field full">
@@ -3384,7 +3384,7 @@
                     (1-10) di sekelilingnya -- isi Judul &amp; Keterangan tiap poin di bawah ini sesuai nomornya.
                   </p>
                   @foreach ((old('makna_logo') ?? $pengaturan->makna_logo ?? \App\Models\Pengaturan::defaultMaknaLogo()) as $i => $makna)
-                    <div class="lp-card" style="background:var(--panel-alt,transparent);">
+                    <div class="lp-card">
                       <div class="lp-card-title">Poin Nomor {{ $i + 1 }}</div>
                       <div class="form-grid">
                         <div class="form-field full">
@@ -3538,75 +3538,76 @@
           @keyframes lpFadeIn{ from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:none;} }
           .lp-tab-desc{font-size:12.5px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;}
 
-          /* Percobaan pertama pakai backdrop blur hitam (::before blur+inset
-             negatif) ternyata malah bikin kartu-kartu yang berdempetan
-             "numpuk" jadi abu-abu kotor -- bukan kelihatan terpisah rapi.
-             Diganti ke pola yang SAMA persis dengan ".panel" (dipakai di
-             semua kartu Cadangan Data / Buat Cadangan Baru / Riwayat Backup
-             -- lihat dash-styles.blade.php): kartu solid var(--panel) +
-             box-shadow biasa (bukan blur melayang di belakang), supaya
-             gaya pemisahan antar kartu konsisten di seluruh dashboard, bukan
-             cuma di tab Konten Landing ini. */
+          /* Kartu ".lp-card" DULU dibikin sebagai kotak penuh (border+
+             shadow+background) sendiri-sendiri persis seperti kartu
+             ".panel" -- efeknya tiap kelompok field (Judul & Deskripsi
+             Utama, Latar Belakang Beranda, dst) jadi kelihatan seperti
+             "kartu di dalam kartu" yang bertumpuk di atas kartu induk
+             "Konten Halaman Landing". Sekarang polanya disamakan dengan
+             kartu satuan (mis. "Danpus") di tab Hak Akses Pengguna: kartu
+             induk (".lp-panel", sudah berupa kotak) cukup diisi
+             LANGSUNG oleh kelompok-kelompok field yang dipisahkan garis
+             putus-putus tipis (bukan kotak/bayangan sendiri lagi) --
+             terpisah tetap jelas lewat judul + garis, tapi tidak lagi
+             boros bikin kotak baru di dalam kotak. */
           .lp-card{
-            background:linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--panel);
-            border:1px solid var(--border-soft);
-            border-radius:12px;
-            box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 10px 30px rgba(0,0,0,.25);
-            padding:18px;
+            background:none;
+            border:none;
+            border-radius:0;
+            box-shadow:none;
+            padding:0 0 20px;
             margin-bottom:20px;
           }
-          .lp-card-compact{padding:12px 16px;}
+          .lp-card-compact{padding:0 0 14px;}
           .lp-card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;}
           .lp-card-desc{margin:-4px 0 14px;font-size:11.5px;line-height:1.55;color:var(--text-muted);}
 
-          /* ===== Redesain kartu jadi "card UI" yang lebih nyaman & tidak
-             terasa seperti tabel/form biasa -- SENGAJA di-scope semua di
-             bawah ".lp-panel" (panel editor) saja, supaya TIDAK ikut
-             mengubah ".lp-preview-panel" (Pratinjau Langsung, sudah pas
-             seperti sekarang) maupun halaman/tab lain di luar Pengaturan
-             Umum yang kebetulan memakai class umum seperti .form-field. */
+          /* ===== SENGAJA di-scope semua di bawah ".lp-panel" (panel
+             editor) saja, supaya TIDAK ikut mengubah ".lp-preview-panel"
+             (Pratinjau Langsung, sudah pas seperti sekarang) maupun
+             halaman/tab lain di luar Pengaturan Umum yang kebetulan
+             memakai class umum seperti .form-field. */
           .lp-panel .lp-card{
-            border-radius:16px;
-            padding:22px 24px 24px;
-            margin-bottom:18px;
-            position:relative;
-            overflow:hidden;
-            transition:box-shadow .2s ease, border-color .2s ease;
+            border-bottom:1px dashed var(--border-soft);
+            padding:0 0 22px;
+            margin-bottom:22px;
           }
-          .lp-panel .lp-card:hover{
-            border-color:var(--border-strong);
-            box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 14px 34px rgba(0,0,0,.28);
-          }
-          .lp-panel .lp-card-compact{padding:16px 18px;}
+          .lp-panel .lp-card:last-child{border-bottom:none;padding-bottom:0;margin-bottom:0;}
+          .lp-panel .lp-card-compact{padding:0 0 16px;}
 
-          /* Judul kartu: dikasih garis putus-putus di bawahnya supaya jelas
-             terpisah dari isi field, alih-alih cuma teks kapital polos
-             menempel langsung ke input di bawahnya -- TANPA aksen warna
-             (bullet emas & garis kiri emas sudah dihapus atas permintaan,
-             supaya kartu ini tidak lagi kelihatan "menonjol"/beraksen
-             berbeda dari kartu "Konten Halaman Landing" di atasnya). */
+          /* Judul kartu: cukup teks kapital kecil menempel ke field di
+             bawahnya (tanpa garis bawah sendiri lagi -- garis pemisah
+             sekarang cuma satu, di paling bawah tiap kelompok, lihat
+             ".lp-panel .lp-card" di atas), supaya tidak ada dua garis
+             dobel (bawah judul + bawah kartu) berdempetan. */
           .lp-panel .lp-card-title{
             display:flex; align-items:center; gap:9px;
-            margin-bottom:0;
-            padding-bottom:13px;
-            border-bottom:1px dashed var(--border-soft);
+            margin-bottom:4px;
           }
-          .lp-panel .lp-card-desc{margin:12px 0 18px;}
+          .lp-panel .lp-card-desc{margin:0 0 16px;}
 
-          /* Kartu bersarang (mis. tiap "Fitur N" / "Poin Nomor N" di dalam
-             kartu "Makna Logo") dibedakan dari kartu induknya -- border
-             putus-putus & tanpa bayangan sendiri, supaya hierarki
-             induk-vs-anak kelihatan jelas alih-alih dua kartu identik
-             bertumpuk. */
+          /* Kartu ITEM berulang (tiap "Fitur N" lewat class tambahan
+             ".lp-card-item", dan tiap "Poin Nomor N" bersarang di dalam
+             kartu "Makna Logo") TETAP dikasih kotak ringan (border solid
+             + latar sedikit beda, tanpa bayangan) -- ini murni daftar
+             entri berulang seperti kartu modul (checkbox) di Hak Akses
+             Pengguna, jadi wajar tetap dibedakan dari kelompok field
+             biasa yang cuma dipisah garis di atas. */
+          .lp-panel .lp-card.lp-card-item,
           .lp-panel .lp-card .lp-card{
-            border-style:dashed;
+            border:1px solid var(--border-soft);
+            border-radius:12px;
+            background:var(--panel-alt);
             box-shadow:none;
             padding:16px 18px 18px;
             margin-bottom:14px;
           }
-          .lp-panel .lp-card .lp-card-title{border-bottom:none;padding-bottom:0;}
-          .lp-panel .lp-card .lp-card-desc{margin:10px 0 14px;}
+          .lp-panel .lp-card.lp-card-item:last-child,
           .lp-panel .lp-card .lp-card:last-child{margin-bottom:0;}
+          .lp-panel .lp-card.lp-card-item .lp-card-title,
+          .lp-panel .lp-card .lp-card-title{border-bottom:none;padding-bottom:0;margin-bottom:10px;}
+          .lp-panel .lp-card.lp-card-item .lp-card-desc,
+          .lp-panel .lp-card .lp-card-desc{margin:10px 0 14px;}
 
           /* Field lebih empuk & nyaman diisi -- radius lebih besar, warna
              latar sedikit beda dari kartu (supaya kelihatan sebagai "kotak
