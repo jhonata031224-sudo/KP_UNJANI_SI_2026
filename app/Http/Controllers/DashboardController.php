@@ -128,7 +128,7 @@ class DashboardController
         $kodeSatuanPengirim = Satuan::whereNotIn('kategori', [Satuan::KATEGORI_ADMIN, Satuan::KATEGORI_PIMPINAN])
             ->pluck('kode')
             ->all();
-        // "Total Laporan" di sini (KPI atas & kolom Rekap Laporan) dihitung
+        // "Total Pelaporan" di sini (KPI atas & kolom Rekap Laporan) dihitung
         // PER PERIHAL (1 permintaan_laporan_id = 1 Perihal), bukan per baris
         // -- satu Perihal yang di-update progresnya berkali-kali (beberapa
         // baris checkpoint "Progres") tetap dihitung SATU laporan, bukan
@@ -330,7 +330,7 @@ class DashboardController
                 // ini ngitung SEMUA permintaan yang ditugaskan ke satuan
                 // itu, terlepas udah dikerjakan/ada laporannya atau belum.
                 'total_permintaan' => $semuaPermintaanPimpinanSatlak->where('tujuan_satuan_id', $satuanPimpinan->id)->count(),
-                // "Total Laporan" dihitung PER PERIHAL (1 permintaan_laporan_id
+                // "Total Pelaporan" dihitung PER PERIHAL (1 permintaan_laporan_id
                 // = 1 Perihal), bukan per baris -- satu Perihal yang di-update
                 // progresnya berkali-kali (beberapa baris checkpoint "Progres")
                 // tetap dihitung SATU laporan. Lihat hitungLaporanPerPerihal().
@@ -512,7 +512,7 @@ class DashboardController
     }
 
     /**
-     * "Total Laporan" (KPI Admin & Pimpinan, kolom Rekap Laporan, grafik
+     * "Total Pelaporan" (KPI Admin & Pimpinan, kolom Rekap Laporan, grafik
      * "Laporan per Satuan") dihitung PER PERIHAL -- 1 permintaan_laporan_id
      * (atau 1 baris tunggal tanpa Permintaan, key 'single-<id>') = 1 Perihal
      * = 1 hitungan, BUKAN per baris Laporan. Satu Perihal yang progresnya
@@ -521,7 +521,7 @@ class DashboardController
      * checkpoint-nya -- beda dari $laporanPimpinanSatlak sendiri (dipakai
      * buat menunggu/diterima/ditolak & daftar Riwayat Aktivitas) yang
      * SENGAJA menghitung tiap checkpoint progres sebagai baris tersendiri
-     * (lihat komentar di atas definisinya) -- cuma "Total Laporan" yang
+     * (lihat komentar di atas definisinya) -- cuma "Total Pelaporan" yang
      * dikelompokkan per Perihal, bukan seluruh cara hitung lainnya.
      *
      * Sebuah Perihal ikut terhitung kalau SALAH SATU barisnya (checkpoint

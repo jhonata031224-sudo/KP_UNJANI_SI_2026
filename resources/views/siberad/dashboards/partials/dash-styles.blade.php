@@ -811,7 +811,7 @@
     #tblResetPassword td:nth-child(4)::before{content:"Aksi";}
 
     #tblRekapSatuan td:nth-child(1)::before{content:"Satuan";}
-    #tblRekapSatuan td:nth-child(2)::before{content:"Total Laporan";}
+    #tblRekapSatuan td:nth-child(2)::before{content:"Total Pelaporan";}
     #tblRekapSatuan td:nth-child(3)::before{content:"Disetujui";}
     #tblRekapSatuan td:nth-child(4)::before{content:"Ditolak";}
     #tblRekapSatuan td:nth-child(5)::before{content:"Terlambat";}

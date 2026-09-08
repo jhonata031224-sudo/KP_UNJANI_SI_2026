@@ -34,13 +34,13 @@
   .chart-mini .chart-legend-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
   @media(max-width:980px){.chart-box-grid{grid-template-columns:1fr;}.chart-mini .chart-wrap{height:198px;}}
 
-  /* ===== toggle "Lihat Detail per Satuan" di header chart Total Laporan
+  /* ===== toggle "Lihat Detail per Satuan" di header chart Total Pelaporan
      per Satuan -- tabel Detail per Satuan disembunyikan default supaya
      chart-nya sendiri punya ruang lebih leluasa, baru muncul (dengan
      scrollbar sendiri di dalam) begitu tombol ini diklik ===== */
   .chart-mini-head-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
   .chart-mini-head-row h4{margin:0;}
-  /* Panel "Total Laporan per Satuan" (Ringkasan Data) butuh header block biasa
+  /* Panel "Total Pelaporan per Satuan" (Ringkasan Data) butuh header block biasa
      (judul di kiri, tombol "Lihat Detail per Satuan" di kanan lewat
      .chart-mini-head-row di atas), bukan flex-row ikon+teks seperti 3 kartu
      ringkasan lain yang memakai .chart-mini-head -- makanya di-scope lewat
@@ -985,7 +985,7 @@
             <div class="sub">Termasuk Admin</div>
           </div>
           <div class="stat-card kpi-card">
-            <div class="lbl">Total Laporan</div>
+            <div class="lbl">Total Pelaporan</div>
             <div class="val">{{ $stats['total_laporan'] }}</div>
             <div class="sub">Laporan tercatat di sistem</div>
           </div>
@@ -4670,7 +4670,7 @@
           <div class="chart-mini">
             <div class="chart-mini-head chart-mini-head-rekap">
               <div class="chart-mini-head-row">
-                <h4>Total Laporan per Satuan</h4>
+                <h4>Total Pelaporan per Satuan</h4>
                 <button type="button" class="btn-toggle-detail" id="btnToggleDetailSatuan" aria-expanded="false" aria-controls="panelDetailPerSatuan">
                   <span id="btnToggleDetailSatuanLabel">Lihat Detail per Satuan</span>
                   <svg class="chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -4713,7 +4713,7 @@
           <div class="tbl-wrap tbl-scroll" style="max-height:420px;">
             <table class="dtbl" id="tblRekapSatuan">
               <colgroup><col style="width:30%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"></colgroup>
-              <thead><tr><th>Satuan</th><th style="text-align:center;">Total Laporan</th><th style="text-align:center;">Disetujui</th><th style="text-align:center;">Ditolak</th><th style="text-align:center;">Terlambat</th><th style="text-align:center;">Dibatalkan</th></tr></thead>
+              <thead><tr><th>Satuan</th><th style="text-align:center;">Total Pelaporan</th><th style="text-align:center;">Disetujui</th><th style="text-align:center;">Ditolak</th><th style="text-align:center;">Terlambat</th><th style="text-align:center;">Dibatalkan</th></tr></thead>
               <tbody>
                 @forelse($rekapLaporanSatuan as $s)
                 <tr data-filter-value="{{ $s->kategori }}" data-search-value="{{ strtolower($s->nama.' '.$s->kode) }}">
@@ -5362,7 +5362,7 @@
       });
     }
 
-    // ===== Grafik 4: Rekap Total Laporan per Satuan (termasuk 21 Kotama) =====
+    // ===== Grafik 4: Rekap Total Pelaporan per Satuan (termasuk 21 Kotama) =====
     // Horizontal bar (bukan vertikal) supaya dengan 35+ satuan, nama satuan
     // tetap kebaca utuh tanpa dirotasi/dipotong -- yang discroll cukup
     // sumbu vertikal (lebih wajar buat orang baru dibanding scroll ke
@@ -5423,7 +5423,7 @@
             return nama.length > 30 ? nama.slice(0, 28) + '…' : nama;
           }),
           datasets: [{
-            label: 'Total Laporan',
+            label: 'Total Pelaporan',
             data: rekapSatuan.map(function (s) { return s.total_laporan; }),
             backgroundColor: warnaBar,
             borderRadius: 4,
@@ -5449,7 +5449,7 @@
                   var s = rekapSatuan[idx];
                   return s ? 'Kategori: ' + (kategoriLabel[s.kategori] || s.kategori) : '';
                 },
-                label: function (item) { return 'Total Laporan: ' + item.raw; }
+                label: function (item) { return 'Total Pelaporan: ' + item.raw; }
               }
             }
           },
@@ -5540,7 +5540,7 @@
   <script>
   (function () {
     // Toggle tabel "Detail per Satuan" -- disembunyikan default supaya
-    // chart "Total Laporan per Satuan" di atasnya punya ruang lebih lega,
+    // chart "Total Pelaporan per Satuan" di atasnya punya ruang lebih lega,
     // baru muncul (dengan scrollbar sendiri) begitu tombol ini diklik.
     var btn = document.getElementById('btnToggleDetailSatuan');
     var panel = document.getElementById('panelDetailPerSatuan');
