@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
  *
  * Alur status:
  *   - 'menunggu_konfirmasi' : baru terkirim, belum dikonfirmasi penerima.
- *                             Tampil di tabel Kirim Surat sisi pengirim.
+ *                             Tampil di tabel Surat Keluar sisi pengirim.
  *   - 'dikonfirmasi'        : penerima sudah konfirmasi. Baru masuk ke
  *                             Arsip Surat sisi pengirim (Kasansi).
  *

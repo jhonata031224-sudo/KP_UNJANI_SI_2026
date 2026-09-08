@@ -247,7 +247,7 @@
     // panelnya sudah jadi grid kartu (.surat-file-grid, bukan
     // <table class="dtbl"> lagi), jadi cari+urutnya sekarang dihandel
     // initSuratCardSearch() di surat-card-styles.blade.php (sama kayak
-    // grid Kirim Surat).
+    // grid Surat Keluar).
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();

@@ -1,6 +1,6 @@
 <style>
 /* Kartu Surat gaya "file/dokumen" (niru referensi surat1.png) -- dipakai
-   ganti tabel di panel Kirim Surat. Sengaja partial TERPISAH & di-include
+   ganti tabel di panel Surat Keluar. Sengaja partial TERPISAH & di-include
    di kedua dashboard (Satuan & Pimpinan) biar gak dobel-tulis kayak yang
    sempat kejadian pas nge-redesain modal Buat Surat (banyak properti
    ketinggalan di salah satu file). */
@@ -82,12 +82,12 @@
 </style>
 <script>
 (function(){
-  // Cari + urutkan kartu grid Surat (Kirim Surat & Surat Masuk) -- niru pola
+  // Cari + urutkan kartu grid Surat (Surat Keluar & Surat Masuk) -- niru pola
   // .rpt-filter-* yang sama dipakai initReportFilter()
   // (danpus-report-table-filter.blade.php) & initCardSearch()
   // (permintaan-laporan-deadline.blade.php), tapi versi lebih simpel karena
   // tiap grid cuma butuh cari + Terbaru/Terlama, gak butuh dropdown filter
-  // status. Dipanggil sekali per grid (Kirim Surat & Surat Masuk) lewat
+  // status. Dipanggil sekali per grid (Surat Keluar & Surat Masuk) lewat
   // initAllSuratCardSearch() di bawah -- parametrized biar gak dobel-tulis.
   function initSuratCardSearch(sectionId,gridId,searchPlaceholder){
     var section=document.getElementById(sectionId);

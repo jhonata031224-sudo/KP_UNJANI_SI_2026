@@ -4,10 +4,10 @@
   // submit -> redirect -> halaman fresh) -- polling ini cuma buat surat yang
   // SUDAH terkirim dan baru saja dikonfirmasi penerima selagi Kasansi masih
   // buka tab ini. Begitu status jadi Dikonfirmasi, kartu harus pindah dari
-  // tab "Kirim Surat" (atau "Surat Masuk") ke tab "Arsip Surat" tanpa
+  // tab "Surat Keluar" (atau "Surat Masuk") ke tab "Arsip Surat" tanpa
   // reload -- pola sinkron sama seperti kendala-terkirim-realtime.blade.php.
   //
-  // Kirim Surat, Surat Masuk, DAN Arsip Surat SEKARANG SEMUANYA kartu (grid
+  // Surat Keluar, Surat Masuk, DAN Arsip Surat SEKARANG SEMUANYA kartu (grid
   // <div>, #suratTerkirimGrid/#suratMasukGrid/#suratArsipGrid) -- gak ada
   // lagi tabel <table>/<tbody> di alur Surat sama sekali, jadi syncContainer
   // di bawah gak butuh percabangan useTable lagi (versi lama sempat ada,
@@ -33,8 +33,8 @@
   // BUKAN numpang punya laporan-role-realtime-sync.blade.php yang cuma
   // di-include di shell Satuan -- Pimpinan butuh yang sama juga). Toast
   // "Surat baru masuk." SENGAJA cuma buat Surat Masuk (info baru yang
-  // pantas diberitahukan) -- Kirim Surat/Arsip Surat gak ditoast begitu ada
-  // perubahan realtime, niru konvensi Kirim Surat yang emang dari awal gak
+  // pantas diberitahukan) -- Surat Keluar/Arsip Surat gak ditoast begitu ada
+  // perubahan realtime, niru konvensi Surat Keluar yang emang dari awal gak
   // pernah ditoast juga.
   var endpoint='{{ route('laporan-surat.realtime') }}';
   var idAttr='data-surat-id';
@@ -79,7 +79,7 @@
     });
   }
 
-  // Kartu yang hilang total (mis. Kirim Surat pindah ke Arsip Surat begitu
+  // Kartu yang hilang total (mis. Surat Keluar pindah ke Arsip Surat begitu
   // dikonfirmasi) di-fade-out dulu (.siberad-card-leaving) sebelum BENERAN
   // di-remove dari DOM -- JANGAN item.remove() mendadak, itu yang bikin
   // "kaku". Guard dataset.leaving biar poll berikutnya nggak dobel proses.

@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Alur "Kirim Surat" -- boleh dipakai oleh:
+ * Alur "Surat Keluar" -- boleh dipakai oleh:
  *   - 21 Kasansi (Kotama)
  *   - 4 Satlak (SATLAKKAL, SATLAKSISOS, SATLAKDAK, SATLAKDUKTEK)
  *   - 4 Sdir/Pembinaan (BINFUNG, BINUM, DIKLAT, BINMAT)
@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Storage;
  * (lihat $bisaKirimSurat di realtime() & pengecekan $kodeAsal di store()):
  *   - Pengirim mengirim surat ke SATU satuan tujuan.
  *   - Surat awalnya berstatus 'menunggu_konfirmasi' dan tampil di tabel
- *     Kirim Surat (bukan Arsip Surat) sisi pengirim.
+ *     Surat Keluar (bukan Arsip Surat) sisi pengirim.
  *   - Penerima melihat surat di Surat Masuk (dalam grup menu Surat) dan
  *     dapat mengkonfirmasi surat lewat tombol Konfirmasi di dalam modal
  *     Detail (bukan tombol terpisah di baris tabel) -- lihat
@@ -34,11 +34,11 @@ class LaporanSuratController extends Controller
 {
     /**
      * Realtime poll dari JS -- pola sama dengan LaporanKendalaController.
-     * Surat Masuk, Kirim Surat, dan Arsip Surat SEMUANYA snapshot penuh yang
+     * Surat Masuk, Surat Keluar, dan Arsip Surat SEMUANYA snapshot penuh yang
      * di-diff di JS (syncContainer di surat-terkirim-realtime.blade.php),
      * BUKAN append-only lagi -- begitu surat masuk dikonfirmasi (sisi
      * penerima konfirmasi sendiri), dia harus HILANG dari snapshot Surat
-     * Masuk & MUNCUL di snapshot Arsip Surat, persis pola Kirim Surat.
+     * Masuk & MUNCUL di snapshot Arsip Surat, persis pola Surat Keluar.
      */
     public function realtime(Request $request): JsonResponse
     {
@@ -68,7 +68,7 @@ class LaporanSuratController extends Controller
             || in_array($kodeSatuan, Satuan::KODE_UNSUR_PEMBANTU_PIMPINAN, true)
             || in_array($kodeSatuan, ['DANPUS', 'WADAN'], true);
         if ($bisaKirimSurat) {
-            // Kirim Surat: hanya yang masih menunggu konfirmasi
+            // Surat Keluar: hanya yang masih menunggu konfirmasi
             $terkirim = LaporanSurat::with('tujuanSatuan')
                 ->where('satuan_id', $satuan->id)
                 ->where('status', LaporanSurat::STATUS_MENUNGGU)
@@ -174,7 +174,7 @@ class LaporanSuratController extends Controller
     /**
      * Konfirmasi surat oleh penerima.
      * Hanya satuan tujuan yang boleh mengkonfirmasi.
-     * Setelah dikonfirmasi, surat pindah dari Kirim Surat ke Arsip Surat
+     * Setelah dikonfirmasi, surat pindah dari Surat Keluar ke Arsip Surat
      * di sisi pengirim.
      */
     public function konfirmasi(Request $request, LaporanSurat $laporanSurat): RedirectResponse

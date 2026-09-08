@@ -375,7 +375,7 @@ class DashboardController
             // LaporanSuratController. Danpus/Wadan bisa saja jadi salah
             // satu tujuan surat, sama seperti satuan lain manapun. Cuma yang
             // masih MENUNGGU -- yang sudah dikonfirmasi pindah ke $suratArsip
-            // di bawah (niru pola Kirim Surat: begitu dikonfirmasi, otomatis
+            // di bawah (niru pola Surat Keluar: begitu dikonfirmasi, otomatis
             // pindah ke Arsip Surat, bukan nyangkut selamanya di Surat Masuk).
             $suratMasuk = LaporanSurat::with('satuan')
                 ->where('tujuan_satuan_id', $satuan->id)
@@ -384,7 +384,7 @@ class DashboardController
                 ->get();
 
             // ===== Menu Surat Danpus/Wadan: FULL sama seperti Kasansi --
-            // Danpus/Wadan juga bisa Kirim Surat (bukan cuma terima),
+            // Danpus/Wadan juga bisa Surat Keluar (bukan cuma terima),
             // lihat LaporanSuratController::store() yang sudah
             // mengizinkan $kodeAsal DANPUS/WADAN selain KODE_KOTAMA.
             $suratTerkirim = LaporanSurat::with('tujuanSatuan')
@@ -402,7 +402,7 @@ class DashboardController
                 ->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
                 ->latest()
                 ->get();
-            // Pilihan tujuan di form Kirim Surat: seluruh satuan lain di
+            // Pilihan tujuan di form Surat Keluar: seluruh satuan lain di
             // sistem selain diri sendiri dan ADMIN (sama seperti Kasansi).
             $satuanSuratTujuanPilihan = Satuan::where('id', '!=', $satuan->id)->where('kode', '!=', 'ADMIN')->get()->sortBy($urutkanSatuan)->values();
 
@@ -458,10 +458,10 @@ class DashboardController
         $tembusanArsip = $tembusanMasukSemua->whereNotNull('feedback')->values();
 
         // ===== Surat: Kasansi (21 Sansidam), 4 Satlak, 4 Sdir (Pembinaan),
-        // Urdal, dan Pok Analis semuanya bisa Kirim Surat ke SATU tujuan bebas.
+        // Urdal, dan Pok Analis semuanya bisa Surat Keluar ke SATU tujuan bebas.
         // $bisaKirimSurat sengaja DIPISAH dari $isKasansi agar logika Kendala
         // (hanya Kasansi) tidak ikut terpengaruh.
-        // Surat berstatus 'menunggu_konfirmasi' tetap di Kirim Surat.
+        // Surat berstatus 'menunggu_konfirmasi' tetap di Surat Keluar.
         // Surat berstatus 'dikonfirmasi' pindah ke Arsip Surat.
         $bisaKirimSurat = $isKasansi
             || in_array($kode, Satuan::KODE_SATLAK, true)
@@ -479,11 +479,11 @@ class DashboardController
         // ini dan sudah dikonfirmasi penerima, DITAMBAH surat yang MASUK ke
         // satuan ini dan sudah DIA SENDIRI konfirmasi (dulu surat masuk yang
         // dikonfirmasi cuma diam di Surat Masuk selamanya, gak pernah pindah
-        // kemana-mana -- sekarang niru pola Kirim Surat -> Arsip Surat).
+        // kemana-mana -- sekarang niru pola Surat Keluar -> Arsip Surat).
         // SENGAJA gak digating $bisaKirimSurat lagi (beda dari suratTerkirim
         // di atas) -- satuan APAPUN bisa nerima & konfirmasi surat masuk,
         // jadi arsipnya juga harus kebentuk buat semua role, bukan cuma yang
-        // bisa Kirim Surat.
+        // bisa Surat Keluar.
         $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan'])
             ->where(function ($q) use ($satuan) {
                 $q->where('satuan_id', $satuan->id)
@@ -492,7 +492,7 @@ class DashboardController
             ->where('status', \App\Models\LaporanSurat::STATUS_DIKONFIRMASI)
             ->latest()
             ->get();
-        // Pilihan tujuan di form Kirim Surat: seluruh satuan lain di
+        // Pilihan tujuan di form Surat Keluar: seluruh satuan lain di
         // sistem selain diri sendiri dan ADMIN.
         $satuanSuratTujuanPilihan = $bisaKirimSurat
             ? Satuan::where('id', '!=', $satuan->id)->where('kode', '!=', 'ADMIN')->get()->sortBy($urutkanSatuan)->values()
@@ -500,7 +500,7 @@ class DashboardController
         // Surat Masuk: satuan APAPUN bisa jadi tujuan surat, jadi selalu
         // disiapkan buat semua role. Cuma yang masih MENUNGGU -- yang sudah
         // dikonfirmasi pindah ke $suratArsip di atas (niru persis pola
-        // Kirim Surat: begitu dikonfirmasi, otomatis pindah ke Arsip Surat,
+        // Surat Keluar: begitu dikonfirmasi, otomatis pindah ke Arsip Surat,
         // bukan nyangkut selamanya di Surat Masuk).
         $suratMasuk = LaporanSurat::with('satuan')
             ->where('tujuan_satuan_id', $satuan->id)
