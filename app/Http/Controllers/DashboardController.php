@@ -16,6 +16,7 @@ use App\Models\PushSubscription;
 use App\Models\Satuan;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -127,21 +128,16 @@ class DashboardController
         $kodeSatuanPengirim = Satuan::whereNotIn('kategori', [Satuan::KATEGORI_ADMIN, Satuan::KATEGORI_PIMPINAN])
             ->pluck('kode')
             ->all();
-        // "Total Laporan" di sini (KPI atas & kolom Rekap Laporan) cuma
-        // ngitung baris (checkpoint progres maupun laporan final, dedup
-        // dulu yang sempat ditolak/direvisi sebelum disetujui/ditolak
-        // final) yang ADA lampiran filenya -- samain sama aturan yang
-        // sudah dipakai di dashboard Pimpinan (DashboardController::index).
-        $laporanRekapDeduped = Laporan::whereIn('satuan_id', Satuan::whereIn('kode', $kodeSatuanPengirim)->pluck('id'))
+        // "Total Laporan" di sini (KPI atas & kolom Rekap Laporan) dihitung
+        // PER PERIHAL (1 permintaan_laporan_id = 1 Perihal), bukan per baris
+        // -- satu Perihal yang di-update progresnya berkali-kali (beberapa
+        // baris checkpoint "Progres") tetap dihitung SATU laporan, bukan
+        // sebanyak baris checkpoint-nya. Lihat hitungLaporanPerPerihal().
+        // Samain sama aturan yang sudah dipakai di dashboard Pimpinan
+        // (DashboardController::index).
+        $laporanRekapMentah = Laporan::whereIn('satuan_id', Satuan::whereIn('kode', $kodeSatuanPengirim)->pluck('id'))
             ->with('lampirans')
-            ->get()
-            ->groupBy(fn ($l) => $l->permintaan_laporan_id ?? 'single-'.$l->id)
-            ->flatMap(function ($group) {
-                $progres = $group->where('status', Laporan::STATUS_PROGRES);
-                $final = $group->reject(fn ($l) => $l->status === Laporan::STATUS_PROGRES)->sortByDesc('id')->take(1);
-                return $progres->merge($final);
-            })
-            ->filter(fn ($l) => $l->semuaLampiran->isNotEmpty());
+            ->get();
         $rekapLaporanSatuan = Satuan::whereIn('kode', $kodeSatuanPengirim)->withCount([
             'laporanTerkirim as laporan_disetujui' => fn ($q) => $q->where('status', 'Disetujui DANPUS'),
             'laporanTerkirim as laporan_ditolak' => fn ($q) => $q->where('status', 'Ditolak DANPUS'),
@@ -153,12 +149,12 @@ class DashboardController
         ])->get()
             ->sortBy(fn ($s) => Satuan::kunciUrutSatuan($s->kategori, $s->kode))
             ->values()
-            ->map(function ($s) use ($laporanRekapDeduped) {
-                $s->total_laporan = $laporanRekapDeduped->where('satuan_id', $s->id)->count();
+            ->map(function ($s) use ($laporanRekapMentah) {
+                $s->total_laporan = $this->hitungLaporanPerPerihal($laporanRekapMentah->where('satuan_id', $s->id));
 
                 return $s;
             });
-        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','aktivitasTujuhHari','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan','logDari','logSampai','daftarPushSubscription') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $laporanRekapDeduped->count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
+        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','aktivitasTujuhHari','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan','logDari','logSampai','daftarPushSubscription') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
     }
 
     private function pelaporan($user, $satuan, ?string $kode, array $modulAktif): View
@@ -334,13 +330,11 @@ class DashboardController
                 // ini ngitung SEMUA permintaan yang ditugaskan ke satuan
                 // itu, terlepas udah dikerjakan/ada laporannya atau belum.
                 'total_permintaan' => $semuaPermintaanPimpinanSatlak->where('tujuan_satuan_id', $satuanPimpinan->id)->count(),
-                // "Total Laporan" cuma ngitung baris (checkpoint progres
-                // maupun laporan final) yang ADA lampiran filenya -- baris
-                // riwayat progres tanpa lampiran dianggap sekadar update
-                // angka, bukan "laporan" yang beneran punya berkas.
-                'total' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)
-                    ->filter(fn ($l) => $l->semuaLampiran->isNotEmpty())
-                    ->count(),
+                // "Total Laporan" dihitung PER PERIHAL (1 permintaan_laporan_id
+                // = 1 Perihal), bukan per baris -- satu Perihal yang di-update
+                // progresnya berkali-kali (beberapa baris checkpoint "Progres")
+                // tetap dihitung SATU laporan. Lihat hitungLaporanPerPerihal().
+                'total' => $this->hitungLaporanPerPerihal($laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)),
                 'menunggu' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->where('status', 'Menunggu')->count(),
                 'diterima' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count(),
                 'ditolak' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count(),
@@ -515,5 +509,31 @@ class DashboardController
             ->get();
 
         return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk','tembusanArsip','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
+    }
+
+    /**
+     * "Total Laporan" (KPI Admin & Pimpinan, kolom Rekap Laporan, grafik
+     * "Laporan per Satuan") dihitung PER PERIHAL -- 1 permintaan_laporan_id
+     * (atau 1 baris tunggal tanpa Permintaan, key 'single-<id>') = 1 Perihal
+     * = 1 hitungan, BUKAN per baris Laporan. Satu Perihal yang progresnya
+     * di-update berkali-kali (beberapa baris checkpoint status "Progres")
+     * sebelum laporan finalnya tetap dihitung SATU, bukan sebanyak baris
+     * checkpoint-nya -- beda dari $laporanPimpinanSatlak sendiri (dipakai
+     * buat menunggu/diterima/ditolak & daftar Riwayat Aktivitas) yang
+     * SENGAJA menghitung tiap checkpoint progres sebagai baris tersendiri
+     * (lihat komentar di atas definisinya) -- cuma "Total Laporan" yang
+     * dikelompokkan per Perihal, bukan seluruh cara hitung lainnya.
+     *
+     * Sebuah Perihal ikut terhitung kalau SALAH SATU barisnya (checkpoint
+     * progres ataupun laporan final) ADA lampiran filenya -- baris progres
+     * tanpa lampiran dianggap sekadar update angka, bukan laporan yang
+     * beneran punya berkas.
+     */
+    private function hitungLaporanPerPerihal(Collection $laporan): int
+    {
+        return $laporan
+            ->groupBy(fn (Laporan $l) => $l->permintaan_laporan_id ?? 'single-'.$l->id)
+            ->filter(fn ($group) => $group->contains(fn (Laporan $l) => $l->semuaLampiran->isNotEmpty()))
+            ->count();
     }
 }
