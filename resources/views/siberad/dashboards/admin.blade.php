@@ -3263,231 +3263,101 @@
               <div class="lp-tab-panel active" data-lp-tab-panel="beranda">
                 <p class="lp-tab-desc">Bagian paling atas landing page — yang pertama kali dilihat pengunjung.</p>
 
-                {{-- "Judul & Deskripsi Utama" DIPINDAH jadi kartu (".panel")
-                     tersendiri di luar kartu "Konten Halaman Landing" ini --
-                     lihat kartu baru setelah kartu ini ditutup, sebelum
-                     "Panel Pratinjau". Tetap nyambung/hilang bareng tab
-                     Beranda lewat data-lp-tab-panel="beranda". --}}
-
-                <div class="lp-card">
-                  <div class="lp-card-title">Latar Belakang Beranda</div>
-                  <p class="lp-card-desc">Latar bagian hero (opsional) — bisa berupa gambar diam atau video singkat yang berputar otomatis.</p>
-                  <div class="form-grid">
-                    <div class="form-field full">
-                      <label style="display:block;margin-bottom:8px;">Tipe Latar Belakang</label>
-                      <div class="lp-bg-type-toggle" role="radiogroup" aria-label="Tipe latar belakang beranda">
-                        <label class="lp-bg-type-option">
-                          <input type="radio" name="hero_bg_type" value="gambar" data-lp-bg-type-radio @checked($pengaturanHeroBgType !== 'video')>
-                          <span>Gambar</span>
-                        </label>
-                        <label class="lp-bg-type-option">
-                          <input type="radio" name="hero_bg_type" value="video" data-lp-bg-type-radio @checked($pengaturanHeroBgType === 'video')>
-                          <span>Video</span>
-                        </label>
-                      </div>
-                      <small>Beralih tipe tidak menghapus file yang sudah diunggah sebelumnya — kalau nanti mau balik lagi, tidak perlu unggah ulang.</small>
-                    </div>
-
-                    {{-- ----- Sub-opsi: GAMBAR ----- --}}
-                    <div class="form-field full lp-bg-type-panel" data-lp-bg-type-panel="gambar">
-                      <label for="lpHeroImage" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Gambar Latar Beranda</label>
-                      <div class="lp-hero-image-row">
-                        <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturanHeroExists ? '1' : '0' }}" data-label-existing="Ganti Gambar">
-                        <img src="{{ $pengaturanHeroExists ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}">
-                        <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturanHeroExists ? 'display:none' : '' }}">
-                          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
-                          <span>Belum ada gambar latar belakang</span>
-                        </div>
-                        <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Gambar</button>
-                      </div>
-                      <small>Format JPG, PNG, atau WEBP · maksimal 5 MB.</small>
-                    </div>
-
-                    {{-- ----- Sub-opsi: VIDEO ----- --}}
-                    <div class="form-field full lp-bg-type-panel" data-lp-bg-type-panel="video" style="display:none;">
-                      <label for="lpHeroVideo" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Video Latar Beranda</label>
-                      <div class="lp-hero-image-row">
-                        <input id="lpHeroVideo" name="hero_video" type="file" accept="video/mp4,video/webm,video/quicktime,.mov" data-lp-video="hero_video" data-has-current="{{ $pengaturanHeroVideoExists ? '1' : '0' }}" data-label-existing="Ganti Video">
-                        <video src="{{ $pengaturanHeroVideoExists ? asset('storage/'.$pengaturan->hero_video_path) : '' }}" class="lp-current-image" id="lpHeroVideoPreviewVideo" muted loop autoplay playsinline style="{{ $pengaturanHeroVideoExists ? '' : 'display:none' }}"></video>
-                        <div class="lp-image-placeholder" id="lpHeroVideoPreviewPlaceholder" style="{{ $pengaturanHeroVideoExists ? 'display:none' : '' }}">
-                          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m10 9 5 3-5 3z"></path></svg>
-                          <span>Belum ada video latar belakang</span>
-                        </div>
-                        <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroVideoDeleteBtn" style="{{ $pengaturanHeroVideoExists ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_video') }}" data-nama="Video Latar Belakang Beranda">Hapus Video</button>
-                      </div>
-                      <small>Format MP4, WEBM, atau MOV · maksimal 100 MB · durasi maksimal 1 menit · sebaiknya tanpa suara karena akan berputar otomatis (looping) tanpa audio.</small>
-                    </div>
-
-                    <div class="form-field">
-                      <label for="lpHeroBlur">Blur Latar — <span id="lpHeroBlurVal">{{ old('hero_blur_level', $pengaturan->hero_blur_level ?? 0) }}</span>px</label>
-                      <input id="lpHeroBlur" name="hero_blur_level" type="range" min="0" max="20" step="1" value="{{ old('hero_blur_level', $pengaturan->hero_blur_level ?? 0) }}" data-lp="hero_blur_level" oninput="document.getElementById('lpHeroBlurVal').textContent=this.value">
-                      <small>Mengaburkan foto-nya saja (0 = tajam, 20 = paling buram). Teks &amp; overlay tidak ikut buram.</small>
-                    </div>
-                    <div class="form-field">
-                      <label for="lpHeroOverlay">Kepekatan Overlay Warna — <span id="lpHeroOverlayVal">{{ old('hero_overlay_intensity', $pengaturan->hero_overlay_intensity ?? 100) }}</span>%</label>
-                      <input id="lpHeroOverlay" name="hero_overlay_intensity" type="range" min="0" max="100" step="1" value="{{ old('hero_overlay_intensity', $pengaturan->hero_overlay_intensity ?? 100) }}" data-lp="hero_overlay_intensity" oninput="document.getElementById('lpHeroOverlayVal').textContent=this.value">
-                      <small>Lapisan gradient gelap/terang di atas foto (0 = foto polos tanpa overlay, 100 = seperti tampilan bawaan).</small>
-                    </div>
-                  </div>
-                </div>
+                {{-- Semua kelompok field tab Beranda ("Latar Belakang
+                     Beranda", "Judul & Deskripsi Utama") SEKARANG jadi kartu
+                     (".panel") tersendiri di luar kartu "Konten Halaman
+                     Landing" ini -- lihat kartu-kartu baru setelah kartu ini
+                     ditutup, sebelum "Panel Pratinjau". Tetap nyambung/
+                     hilang bareng tab Beranda lewat data-lp-tab-panel="beranda". --}}
               </div>
 
               {{-- ===== TAB: FITUR ===== --}}
               <div class="lp-tab-panel" data-lp-tab-panel="fitur">
-                <p class="lp-tab-desc">Empat kartu keunggulan yang tampil di bagian "Fitur".</p>
-                @foreach ((old('fitur') ?? $pengaturan->fitur ?? []) as $i => $fitur)
-                  <div class="lp-card lp-card-item">
-                    <div class="lp-card-title">Fitur {{ $i + 1 }}</div>
-                    <div class="form-grid">
-                      <div class="form-field full">
-                        <label for="lpFiturJudul{{ $i }}">Judul</label>
-                        <input id="lpFiturJudul{{ $i }}" name="fitur[{{ $i }}][judul]" type="text" value="{{ is_array($fitur) ? $fitur['judul'] : '' }}" data-lp="fitur_judul_{{ $i }}" required>
-                      </div>
-                      <div class="form-field full">
-                        <label for="lpFiturDesk{{ $i }}">Deskripsi</label>
-                        <textarea id="lpFiturDesk{{ $i }}" name="fitur[{{ $i }}][deskripsi]" rows="2" data-lp="fitur_deskripsi_{{ $i }}" required>{{ is_array($fitur) ? $fitur['deskripsi'] : '' }}</textarea>
-                      </div>
-                    </div>
-                  </div>
-                @endforeach
+                <p class="lp-tab-desc">Empat kartu keunggulan yang tampil di bagian "Fitur". Tiap kartu Fitur sekarang jadi panel tersendiri di luar "Konten Halaman Landing" -- lihat di bawah.</p>
               </div>
 
               {{-- ===== TAB: TENTANG ===== --}}
               <div class="lp-tab-panel" data-lp-tab-panel="tentang">
-                <p class="lp-tab-desc">Profil singkat instansi dan moto yang tampil di bagian "Tentang".</p>
-
-                {{-- Sama seperti tab Beranda: field statis dipisah jadi kartu
-                     ".lp-card" sendiri-sendiri (bukan numpuk dalam 1 form-grid
-                     panjang) supaya rapi & konsisten dengan tab Beranda/Fitur. --}}
-                <div class="lp-card">
-                  <div class="lp-card-title">Deskripsi Profil Instansi</div>
-                  <p class="lp-card-desc">Paragraf profil singkat instansi yang tampil di bagian "Tentang" landing page.</p>
-                  <div class="form-grid">
-                    <div class="form-field full">
-                      <label for="lpTentangDeskripsi">Deskripsi Tentang (pisahkan paragraf dengan baris kosong)</label>
-                      <textarea id="lpTentangDeskripsi" name="tentang_deskripsi" rows="10" data-lp="tentang_deskripsi">{{ old('tentang_deskripsi', $pengaturan->tentang_deskripsi) }}</textarea>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="lp-card">
-                  <div class="lp-card-title">Identitas Instansi</div>
-                  <p class="lp-card-desc">Tiga kartu identitas (Nama Resmi, Nama Lama, Fungsi Utama) yang tampil di bagian "Tentang" landing page.</p>
-                  <div class="form-grid">
-                    <div class="form-field">
-                      <label for="lpNamaResmi">Nama Resmi</label>
-                      <input id="lpNamaResmi" name="tentang_nama_resmi" type="text" value="{{ old('tentang_nama_resmi', $pengaturan->tentang_nama_resmi) }}" data-lp="tentang_nama_resmi">
-                    </div>
-                    <div class="form-field">
-                      <label for="lpNamaLama">Nama Lama</label>
-                      <input id="lpNamaLama" name="tentang_nama_lama" type="text" value="{{ old('tentang_nama_lama', $pengaturan->tentang_nama_lama) }}" data-lp="tentang_nama_lama">
-                    </div>
-                    <div class="form-field full">
-                      <label for="lpFungsiUtama">Fungsi Utama</label>
-                      <textarea id="lpFungsiUtama" name="tentang_fungsi_utama" rows="3" data-lp="tentang_fungsi_utama">{{ old('tentang_fungsi_utama', $pengaturan->tentang_fungsi_utama) }}</textarea>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="lp-card">
-                  <div class="lp-card-title">Moto</div>
-                  <p class="lp-card-desc">Judul &amp; penjelasan moto instansi yang tampil di bagian "Tentang" landing page.</p>
-                  <div class="form-grid">
-                    <div class="form-field full">
-                      <label for="lpMotoJudul">Judul Moto</label>
-                      <input id="lpMotoJudul" name="tentang_moto_judul" type="text" value="{{ old('tentang_moto_judul', $pengaturan->tentang_moto_judul) }}" data-lp="tentang_moto_judul">
-                    </div>
-                    <div class="form-field full">
-                      <label for="lpMotoDeskripsi">Deskripsi Moto</label>
-                      <textarea id="lpMotoDeskripsi" name="tentang_moto_deskripsi" rows="3" data-lp="tentang_moto_deskripsi">{{ old('tentang_moto_deskripsi', $pengaturan->tentang_moto_deskripsi) }}</textarea>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="lp-card">
-                  <div class="lp-card-title">Makna Logo</div>
-                  <p class="lp-card-desc">
-                    10 poin keterangan makna lambang. Saat pengunjung mengklik logo di bagian "Tentang" landing page,
-                    muncul jendela berisi lambang yang membesar ke tengah beserta 10 kartu keterangan bernomor
-                    (1-10) di sekelilingnya -- isi Judul &amp; Keterangan tiap poin di bawah ini sesuai nomornya.
-                  </p>
-                  @foreach ((old('makna_logo') ?? $pengaturan->makna_logo ?? \App\Models\Pengaturan::defaultMaknaLogo()) as $i => $makna)
-                    <div class="lp-card">
-                      <div class="lp-card-title">Poin Nomor {{ $i + 1 }}</div>
-                      <div class="form-grid">
-                        <div class="form-field full">
-                          <label for="lpMaknaJudul{{ $i }}">Judul Singkat</label>
-                          <input id="lpMaknaJudul{{ $i }}" name="makna_logo[{{ $i }}][judul]" type="text" value="{{ is_array($makna) ? ($makna['judul'] ?? '') : '' }}" data-lp="makna_logo_judul_{{ $i }}">
-                        </div>
-                        <div class="form-field full">
-                          <label for="lpMaknaKeterangan{{ $i }}">Keterangan</label>
-                          <textarea id="lpMaknaKeterangan{{ $i }}" name="makna_logo[{{ $i }}][keterangan]" rows="2" data-lp="makna_logo_keterangan_{{ $i }}">{{ is_array($makna) ? ($makna['keterangan'] ?? '') : '' }}</textarea>
-                        </div>
-                      </div>
-                    </div>
-                  @endforeach
-                </div>
+                <p class="lp-tab-desc">Profil singkat instansi dan moto yang tampil di bagian "Tentang". Tiap kelompok field sekarang jadi panel tersendiri di luar "Konten Halaman Landing" -- lihat di bawah.</p>
               </div>
 
               {{-- ===== TAB: KONTAK ===== --}}
               <div class="lp-tab-panel" data-lp-tab-panel="kontak">
-                <p class="lp-tab-desc">Informasi kontak &amp; tautan sosial media yang tampil di footer.</p>
+                <p class="lp-tab-desc">Informasi kontak &amp; tautan sosial media yang tampil di footer. Tiap kelompok field sekarang jadi panel tersendiri di luar "Konten Halaman Landing" -- lihat di bawah.</p>
+              </div>
+            </div>
 
-                {{-- Sama seperti tab Beranda/Tentang: field statis dipisah jadi
-                     kartu ".lp-card" sendiri-sendiri supaya rapi & konsisten. --}}
-                <div class="lp-card">
-                  <div class="lp-card-title">Informasi Kontak</div>
-                  <p class="lp-card-desc">Alamat, email, telepon, dan website yang tampil di bagian footer landing page.</p>
-                  <div class="form-grid">
-                    <div class="form-field full">
-                      <label for="lpKontakAlamat">Alamat (tampil di footer)</label>
-                      <textarea id="lpKontakAlamat" name="alamat" rows="2" data-lp="alamat">{{ old('alamat', $pengaturan->alamat) }}</textarea>
-                    </div>
-                    <div class="form-field">
-                      <label for="lpKontakEmail">Email Kontak</label>
-                      <input id="lpKontakEmail" name="email_kontak" type="email" value="{{ old('email_kontak', $pengaturan->email_kontak) }}" data-lp="email_kontak">
-                    </div>
-                    <div class="form-field">
-                      <label for="lpKontakTelepon">Telepon Kontak (tampil di footer)</label>
-                      <input id="lpKontakTelepon" name="telepon_kontak" type="text" value="{{ old('telepon_kontak', $pengaturan->telepon_kontak) }}" data-lp="telepon_kontak">
-                    </div>
-                    <div class="form-field full">
-                      <label for="lpWebsite">Website</label>
-                      <input id="lpWebsite" name="website" type="url" value="{{ old('website', $pengaturan->website) }}" data-lp="website" placeholder="https://...">
-                    </div>
-                  </div>
-                </div>
-
-                <div class="lp-card">
-                  <div class="lp-card-title">Sosial Media</div>
-                  <p class="lp-card-desc">Label &amp; tautan akun sosial media yang tampil di bagian footer landing page.</p>
-                  <div class="lp-sosmed-list">
-                    @foreach ((old('sosial_media') ?? $pengaturan->sosial_media ?? []) as $i => $sosial)
-                      <div class="lp-sosmed-row">
-                        <input type="hidden" name="sosial_media[{{ $i }}][platform]" value="{{ is_array($sosial) ? $sosial['platform'] : '' }}" data-lp="sosial_platform_{{ $i }}">
-                        <div class="form-grid">
-                          <div class="form-field">
-                            <label>Label ({{ ucfirst(is_array($sosial) ? $sosial['platform'] : '') }})</label>
-                            <input name="sosial_media[{{ $i }}][label]" type="text" value="{{ is_array($sosial) ? $sosial['label'] : '' }}" data-lp="sosial_label_{{ $i }}">
-                          </div>
-                          <div class="form-field">
-                            <label>URL</label>
-                            <input name="sosial_media[{{ $i }}][url]" type="url" value="{{ is_array($sosial) ? $sosial['url'] : '' }}" placeholder="https://..." data-lp="sosial_url_{{ $i }}">
-                          </div>
-                        </div>
-                      </div>
-                    @endforeach
-                  </div>
+            {{-- ---------- PANEL "LATAR BELAKANG BERANDA" (kartu tersendiri,
+                 sejajar dengan "Konten Halaman Landing" -- sebelumnya kartu
+                 bersarang ".lp-card" di dalam tab Beranda kartu itu). Tetap
+                 ikut tersembunyi/tampil bareng tab Beranda lewat class
+                 ".lp-tab-panel" + data-lp-tab-panel="beranda" (dibaca oleh
+                 JS tab-switching yang query-nya lewat
+                 `form.querySelectorAll(...)`, jadi tetap berfungsi walau
+                 posisi kartu ini sekarang di luar kartu "Konten Halaman
+                 Landing", asal masih di dalam <form> yang sama). --}}
+            <div class="panel lp-panel lp-tab-panel active" data-lp-tab-panel="beranda">
+              <div class="panel-head">
+                <div>
+                  <h3>Latar Belakang Beranda</h3>
+                  <p>Latar bagian hero (opsional) — bisa berupa gambar diam atau video singkat yang berputar otomatis.</p>
                 </div>
               </div>
+              <div class="form-grid">
+                <div class="form-field full">
+                  <label style="display:block;margin-bottom:8px;">Tipe Latar Belakang</label>
+                  <div class="lp-bg-type-toggle" role="radiogroup" aria-label="Tipe latar belakang beranda">
+                    <label class="lp-bg-type-option">
+                      <input type="radio" name="hero_bg_type" value="gambar" data-lp-bg-type-radio @checked($pengaturanHeroBgType !== 'video')>
+                      <span>Gambar</span>
+                    </label>
+                    <label class="lp-bg-type-option">
+                      <input type="radio" name="hero_bg_type" value="video" data-lp-bg-type-radio @checked($pengaturanHeroBgType === 'video')>
+                      <span>Video</span>
+                    </label>
+                  </div>
+                  <small>Beralih tipe tidak menghapus file yang sudah diunggah sebelumnya — kalau nanti mau balik lagi, tidak perlu unggah ulang.</small>
+                </div>
 
-              <div class="lp-form-actions">
-                <div class="lp-form-actions-inner">
-                  <button class="btn btn-primary" type="submit" id="landingFormSubmitBtn">Simpan Konten Landing</button>
-                  <span id="landingFormUploadProgress" style="display:none;margin-left:12px;font-size:13px;color:var(--text-muted);align-items:center;gap:7px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="animation:lpUploadSpin 1s linear infinite;flex-shrink:0"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                    <span id="landingFormUploadProgressText">Mengunggah...</span>
-                  </span>
+                {{-- ----- Sub-opsi: GAMBAR ----- --}}
+                <div class="form-field full lp-bg-type-panel" data-lp-bg-type-panel="gambar">
+                  <label for="lpHeroImage" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Gambar Latar Beranda</label>
+                  <div class="lp-hero-image-row">
+                    <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturanHeroExists ? '1' : '0' }}" data-label-existing="Ganti Gambar">
+                    <img src="{{ $pengaturanHeroExists ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}">
+                    <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturanHeroExists ? 'display:none' : '' }}">
+                      <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
+                      <span>Belum ada gambar latar belakang</span>
+                    </div>
+                    <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Gambar</button>
+                  </div>
+                  <small>Format JPG, PNG, atau WEBP · maksimal 5 MB.</small>
+                </div>
+
+                {{-- ----- Sub-opsi: VIDEO ----- --}}
+                <div class="form-field full lp-bg-type-panel" data-lp-bg-type-panel="video" style="display:none;">
+                  <label for="lpHeroVideo" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Video Latar Beranda</label>
+                  <div class="lp-hero-image-row">
+                    <input id="lpHeroVideo" name="hero_video" type="file" accept="video/mp4,video/webm,video/quicktime,.mov" data-lp-video="hero_video" data-has-current="{{ $pengaturanHeroVideoExists ? '1' : '0' }}" data-label-existing="Ganti Video">
+                    <video src="{{ $pengaturanHeroVideoExists ? asset('storage/'.$pengaturan->hero_video_path) : '' }}" class="lp-current-image" id="lpHeroVideoPreviewVideo" muted loop autoplay playsinline style="{{ $pengaturanHeroVideoExists ? '' : 'display:none' }}"></video>
+                    <div class="lp-image-placeholder" id="lpHeroVideoPreviewPlaceholder" style="{{ $pengaturanHeroVideoExists ? 'display:none' : '' }}">
+                      <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m10 9 5 3-5 3z"></path></svg>
+                      <span>Belum ada video latar belakang</span>
+                    </div>
+                    <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroVideoDeleteBtn" style="{{ $pengaturanHeroVideoExists ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_video') }}" data-nama="Video Latar Belakang Beranda">Hapus Video</button>
+                  </div>
+                  <small>Format MP4, WEBM, atau MOV · maksimal 100 MB · durasi maksimal 1 menit · sebaiknya tanpa suara karena akan berputar otomatis (looping) tanpa audio.</small>
+                </div>
+
+                <div class="form-field">
+                  <label for="lpHeroBlur">Blur Latar — <span id="lpHeroBlurVal">{{ old('hero_blur_level', $pengaturan->hero_blur_level ?? 0) }}</span>px</label>
+                  <input id="lpHeroBlur" name="hero_blur_level" type="range" min="0" max="20" step="1" value="{{ old('hero_blur_level', $pengaturan->hero_blur_level ?? 0) }}" data-lp="hero_blur_level" oninput="document.getElementById('lpHeroBlurVal').textContent=this.value">
+                  <small>Mengaburkan foto-nya saja (0 = tajam, 20 = paling buram). Teks &amp; overlay tidak ikut buram.</small>
+                </div>
+                <div class="form-field">
+                  <label for="lpHeroOverlay">Kepekatan Overlay Warna — <span id="lpHeroOverlayVal">{{ old('hero_overlay_intensity', $pengaturan->hero_overlay_intensity ?? 100) }}</span>%</label>
+                  <input id="lpHeroOverlay" name="hero_overlay_intensity" type="range" min="0" max="100" step="1" value="{{ old('hero_overlay_intensity', $pengaturan->hero_overlay_intensity ?? 100) }}" data-lp="hero_overlay_intensity" oninput="document.getElementById('lpHeroOverlayVal').textContent=this.value">
+                  <small>Lapisan gradient gelap/terang di atas foto (0 = foto polos tanpa overlay, 100 = seperti tampilan bawaan).</small>
                 </div>
               </div>
             </div>
@@ -3529,6 +3399,196 @@
                   <label for="lpDeskripsi">Deskripsi</label>
                   <textarea id="lpDeskripsi" name="hero_deskripsi" rows="3" data-lp="hero_deskripsi">{{ old('hero_deskripsi', $pengaturan->hero_deskripsi) }}</textarea>
                 </div>
+              </div>
+            </div>
+
+            {{-- ---------- PANEL(S) "FITUR N" (satu kartu per fitur,
+                 tersendiri di luar "Konten Halaman Landing"). Tetap ikut
+                 tersembunyi/tampil bareng tab Fitur lewat
+                 data-lp-tab-panel="fitur". --}}
+            @foreach ((old('fitur') ?? $pengaturan->fitur ?? []) as $i => $fitur)
+              <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="fitur">
+                <div class="panel-head">
+                  <div>
+                    <h3>Fitur {{ $i + 1 }}</h3>
+                  </div>
+                </div>
+                <div class="form-grid">
+                  <div class="form-field full">
+                    <label for="lpFiturJudul{{ $i }}">Judul</label>
+                    <input id="lpFiturJudul{{ $i }}" name="fitur[{{ $i }}][judul]" type="text" value="{{ is_array($fitur) ? $fitur['judul'] : '' }}" data-lp="fitur_judul_{{ $i }}" required>
+                  </div>
+                  <div class="form-field full">
+                    <label for="lpFiturDesk{{ $i }}">Deskripsi</label>
+                    <textarea id="lpFiturDesk{{ $i }}" name="fitur[{{ $i }}][deskripsi]" rows="2" data-lp="fitur_deskripsi_{{ $i }}" required>{{ is_array($fitur) ? $fitur['deskripsi'] : '' }}</textarea>
+                  </div>
+                </div>
+              </div>
+            @endforeach
+
+            {{-- ---------- PANEL "DESKRIPSI PROFIL INSTANSI" (tab Tentang) ---------- --}}
+            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang">
+              <div class="panel-head">
+                <div>
+                  <h3>Deskripsi Profil Instansi</h3>
+                  <p>Paragraf profil singkat instansi yang tampil di bagian "Tentang" landing page.</p>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-field full">
+                  <label for="lpTentangDeskripsi">Deskripsi Tentang (pisahkan paragraf dengan baris kosong)</label>
+                  <textarea id="lpTentangDeskripsi" name="tentang_deskripsi" rows="10" data-lp="tentang_deskripsi">{{ old('tentang_deskripsi', $pengaturan->tentang_deskripsi) }}</textarea>
+                </div>
+              </div>
+            </div>
+
+            {{-- ---------- PANEL "IDENTITAS INSTANSI" (tab Tentang) ---------- --}}
+            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang">
+              <div class="panel-head">
+                <div>
+                  <h3>Identitas Instansi</h3>
+                  <p>Tiga kartu identitas (Nama Resmi, Nama Lama, Fungsi Utama) yang tampil di bagian "Tentang" landing page.</p>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label for="lpNamaResmi">Nama Resmi</label>
+                  <input id="lpNamaResmi" name="tentang_nama_resmi" type="text" value="{{ old('tentang_nama_resmi', $pengaturan->tentang_nama_resmi) }}" data-lp="tentang_nama_resmi">
+                </div>
+                <div class="form-field">
+                  <label for="lpNamaLama">Nama Lama</label>
+                  <input id="lpNamaLama" name="tentang_nama_lama" type="text" value="{{ old('tentang_nama_lama', $pengaturan->tentang_nama_lama) }}" data-lp="tentang_nama_lama">
+                </div>
+                <div class="form-field full">
+                  <label for="lpFungsiUtama">Fungsi Utama</label>
+                  <textarea id="lpFungsiUtama" name="tentang_fungsi_utama" rows="3" data-lp="tentang_fungsi_utama">{{ old('tentang_fungsi_utama', $pengaturan->tentang_fungsi_utama) }}</textarea>
+                </div>
+              </div>
+            </div>
+
+            {{-- ---------- PANEL "MOTO" (tab Tentang) ---------- --}}
+            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang">
+              <div class="panel-head">
+                <div>
+                  <h3>Moto</h3>
+                  <p>Judul &amp; penjelasan moto instansi yang tampil di bagian "Tentang" landing page.</p>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-field full">
+                  <label for="lpMotoJudul">Judul Moto</label>
+                  <input id="lpMotoJudul" name="tentang_moto_judul" type="text" value="{{ old('tentang_moto_judul', $pengaturan->tentang_moto_judul) }}" data-lp="tentang_moto_judul">
+                </div>
+                <div class="form-field full">
+                  <label for="lpMotoDeskripsi">Deskripsi Moto</label>
+                  <textarea id="lpMotoDeskripsi" name="tentang_moto_deskripsi" rows="3" data-lp="tentang_moto_deskripsi">{{ old('tentang_moto_deskripsi', $pengaturan->tentang_moto_deskripsi) }}</textarea>
+                </div>
+              </div>
+            </div>
+
+            {{-- ---------- PANEL "MAKNA LOGO" (tab Tentang) -- 10 kartu
+                 "Poin Nomor N" tetap bersarang di dalam panel ini, karena
+                 itu bagian dari isi satu section "Makna Logo", bukan
+                 section terpisah tersendiri. ---------- --}}
+            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang">
+              <div class="panel-head">
+                <div>
+                  <h3>Makna Logo</h3>
+                  <p>
+                    10 poin keterangan makna lambang. Saat pengunjung mengklik logo di bagian "Tentang" landing page,
+                    muncul jendela berisi lambang yang membesar ke tengah beserta 10 kartu keterangan bernomor
+                    (1-10) di sekelilingnya -- isi Judul &amp; Keterangan tiap poin di bawah ini sesuai nomornya.
+                  </p>
+                </div>
+              </div>
+              @foreach ((old('makna_logo') ?? $pengaturan->makna_logo ?? \App\Models\Pengaturan::defaultMaknaLogo()) as $i => $makna)
+                <div class="lp-card">
+                  <div class="lp-card-title">Poin Nomor {{ $i + 1 }}</div>
+                  <div class="form-grid">
+                    <div class="form-field full">
+                      <label for="lpMaknaJudul{{ $i }}">Judul Singkat</label>
+                      <input id="lpMaknaJudul{{ $i }}" name="makna_logo[{{ $i }}][judul]" type="text" value="{{ is_array($makna) ? ($makna['judul'] ?? '') : '' }}" data-lp="makna_logo_judul_{{ $i }}">
+                    </div>
+                    <div class="form-field full">
+                      <label for="lpMaknaKeterangan{{ $i }}">Keterangan</label>
+                      <textarea id="lpMaknaKeterangan{{ $i }}" name="makna_logo[{{ $i }}][keterangan]" rows="2" data-lp="makna_logo_keterangan_{{ $i }}">{{ is_array($makna) ? ($makna['keterangan'] ?? '') : '' }}</textarea>
+                    </div>
+                  </div>
+                </div>
+              @endforeach
+            </div>
+
+            {{-- ---------- PANEL "INFORMASI KONTAK" (tab Kontak) ---------- --}}
+            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="kontak">
+              <div class="panel-head">
+                <div>
+                  <h3>Informasi Kontak</h3>
+                  <p>Alamat, email, telepon, dan website yang tampil di bagian footer landing page.</p>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-field full">
+                  <label for="lpKontakAlamat">Alamat (tampil di footer)</label>
+                  <textarea id="lpKontakAlamat" name="alamat" rows="2" data-lp="alamat">{{ old('alamat', $pengaturan->alamat) }}</textarea>
+                </div>
+                <div class="form-field">
+                  <label for="lpKontakEmail">Email Kontak</label>
+                  <input id="lpKontakEmail" name="email_kontak" type="email" value="{{ old('email_kontak', $pengaturan->email_kontak) }}" data-lp="email_kontak">
+                </div>
+                <div class="form-field">
+                  <label for="lpKontakTelepon">Telepon Kontak (tampil di footer)</label>
+                  <input id="lpKontakTelepon" name="telepon_kontak" type="text" value="{{ old('telepon_kontak', $pengaturan->telepon_kontak) }}" data-lp="telepon_kontak">
+                </div>
+                <div class="form-field full">
+                  <label for="lpWebsite">Website</label>
+                  <input id="lpWebsite" name="website" type="url" value="{{ old('website', $pengaturan->website) }}" data-lp="website" placeholder="https://...">
+                </div>
+              </div>
+            </div>
+
+            {{-- ---------- PANEL "SOSIAL MEDIA" (tab Kontak) ---------- --}}
+            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="kontak">
+              <div class="panel-head">
+                <div>
+                  <h3>Sosial Media</h3>
+                  <p>Label &amp; tautan akun sosial media yang tampil di bagian footer landing page.</p>
+                </div>
+              </div>
+              <div class="lp-sosmed-list">
+                @foreach ((old('sosial_media') ?? $pengaturan->sosial_media ?? []) as $i => $sosial)
+                  <div class="lp-sosmed-row">
+                    <input type="hidden" name="sosial_media[{{ $i }}][platform]" value="{{ is_array($sosial) ? $sosial['platform'] : '' }}" data-lp="sosial_platform_{{ $i }}">
+                    <div class="form-grid">
+                      <div class="form-field">
+                        <label>Label ({{ ucfirst(is_array($sosial) ? $sosial['platform'] : '') }})</label>
+                        <input name="sosial_media[{{ $i }}][label]" type="text" value="{{ is_array($sosial) ? $sosial['label'] : '' }}" data-lp="sosial_label_{{ $i }}">
+                      </div>
+                      <div class="form-field">
+                        <label>URL</label>
+                        <input name="sosial_media[{{ $i }}][url]" type="url" value="{{ is_array($sosial) ? $sosial['url'] : '' }}" placeholder="https://..." data-lp="sosial_url_{{ $i }}">
+                      </div>
+                    </div>
+                  </div>
+                @endforeach
+              </div>
+            </div>
+
+            {{-- ---------- Tombol simpan -- ".lp-form-actions" itu bar
+                 position:fixed nempel dasar viewport (lihat CSS-nya di
+                 bawah), jadi SENGAJA tidak dibungkus ".panel"/".lp-panel"
+                 lagi (dulu memang tidak dibungkus juga, cuma anak langsung
+                 dari kartu "Konten Halaman Landing") -- kalau dibungkus
+                 kartu, kartu kosong itu akan tetap makan tempat mengikuti
+                 alur normal halaman padahal isinya sendiri sudah lepas ke
+                 posisi fixed, jadinya nyisain kotak kosong di bawah kartu
+                 terakhir. ---------- --}}
+            <div class="lp-form-actions">
+              <div class="lp-form-actions-inner">
+                <button class="btn btn-primary" type="submit" id="landingFormSubmitBtn">Simpan Konten Landing</button>
+                <span id="landingFormUploadProgress" style="display:none;margin-left:12px;font-size:13px;color:var(--text-muted);align-items:center;gap:7px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="animation:lpUploadSpin 1s linear infinite;flex-shrink:0"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                  <span id="landingFormUploadProgressText">Mengunggah...</span>
+                </span>
               </div>
             </div>
 
