@@ -32,9 +32,11 @@
         #maknaLogoOverlay .makna-logo-point-card{display:block!important;width:100%!important;min-width:0!important;height:auto!important;box-sizing:border-box!important;background:transparent!important;border:none!important;box-shadow:none!important;cursor:default!important;padding:0!important;}
         #maknaLogoOverlay .makna-logo-point-num{display:none!important;}
         #maknaLogoOverlay .makna-logo-point-title{display:block!important;font-family:var(--display)!important;font-size:13px!important;font-weight:700!important;letter-spacing:.02em!important;text-transform:uppercase!important;color:#1b2620!important;margin:0!important;white-space:normal!important;line-height:1.35!important;}
-        #maknaLogoOverlay .makna-logo-point-desc{display:block!important;font-family:var(--body)!important;font-size:12.5px!important;font-weight:400!important;line-height:1.6!important;color:#465a4d!important;margin:4px 0 0!important;white-space:normal!important;}
+        #maknaLogoOverlay .makna-logo-point-desc{display:block!important;font-family:var(--body)!important;font-size:12.5px!important;font-weight:400!important;line-height:1.6!important;color:#465a4d!important;margin:4px 0 0!important;white-space:normal!important;text-align:justify!important;text-align-last:left!important;}
         #maknaLogoOverlay .makna-logo-point.is-left .makna-logo-point-card{text-align:right!important;}
         #maknaLogoOverlay .makna-logo-point.is-right .makna-logo-point-card{text-align:left!important;}
+        #maknaLogoOverlay .makna-logo-point.is-left .makna-logo-point-desc{text-align-last:right!important;}
+        #maknaLogoOverlay .makna-logo-point.is-bottom .makna-logo-point-desc{text-align-last:center!important;}
         #maknaLogoOverlay .makna-logo-point.is-bottom{height:auto!important;left:60%!important;right:auto!important;top:91%!important;transform:translate(-50%,-50%)!important;}
         #maknaLogoOverlay .makna-logo-point.is-bottom .makna-logo-point-card{text-align:center!important;}
         #maknaLogoOverlay .makna-logo-lines{z-index:5!important;pointer-events:none!important;overflow:visible!important;}
@@ -45,9 +47,44 @@
         @media(max-width:760px){#maknaLogoOverlay{align-items:flex-start!important;padding:78px 16px 32px!important;overflow:auto!important;}#maknaLogoOverlay .makna-logo-stage{width:100%!important;height:auto!important;min-height:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:22px!important;}#maknaLogoOverlay .makna-logo-crest-wrap{position:relative!important;width:min(46vw,190px)!important;height:min(46vw,190px)!important;margin:0 auto!important;flex-shrink:0!important;}#maknaLogoOverlay .makna-logo-crest{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;transform:none!important;margin:0!important;}#maknaLogoOverlay .makna-logo-anchor-dot{width:7px!important;height:7px!important;box-shadow:0 0 0 1.5px rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.3)!important;}#maknaLogoOverlay .makna-logo-point{position:relative!important;inset:auto!important;width:100%!important;max-width:100%!important;height:auto!important;transform:none!important;}#maknaLogoOverlay .makna-logo-point.is-bottom{width:100%!important;max-width:100%!important;left:auto!important;top:auto!important;transform:none!important;}}
       `;document.head.appendChild(style);
     }
-    const layout={1:{side:'right',x:69,top:10,width:390},2:{side:'left',x:8,top:10,width:370},3:{side:'right',x:69,top:30,width:390},4:{side:'left',x:8,top:30,width:370},5:{side:'right',x:69,top:50,width:390},6:{side:'right',x:69,top:70,width:390},7:{side:'left',x:8,top:50,width:370},8:{side:'left',x:8,top:70,width:370},9:{side:'left',x:8,top:90,width:370},10:{side:'right',x:69,top:90,width:390}};
+    // Baris 1 (poin 1 Bintang & 2 Perisai) SENGAJA agak diturunin (top:16,
+    // bukan 10 spt baris lain kalau diteruskan polanya) -- di top:10 posisinya
+    // sejajar sama pill "MAKNA LOGO" & tombol X di pojok atas, kelihatan
+    // numpuk. Baris 2-5 tidak diikutkan turun spy gak mepet ke tepi bawah.
+    //
+    // Semua judul & keterangan SATU kolom lurus, rata sejajar (efek tangga
+    // yang sebelumnya digeser ke teks keterangan sudah dihapus lagi -- user
+    // maunya keterangan selalu rata sama judulnya, gak digeser sama sekali).
+    const layout={1:{side:'right',x:69,top:16,width:390},2:{side:'left',x:8,top:16,width:370},3:{side:'right',x:69,top:30,width:390},4:{side:'left',x:8,top:30,width:370},5:{side:'right',x:69,top:50,width:390},6:{side:'right',x:69,top:70,width:390},7:{side:'left',x:8,top:50,width:370},8:{side:'left',x:8,top:70,width:370},9:{side:'left',x:8,top:90,width:370},10:{side:'right',x:69,top:90,width:390}};
     const anchors={1:[50.00,27.58],2:[45.81,30.30],3:[52.01,38.44],4:[47.50,38.49],5:[52.73,44.51],6:[49.78,43.22],7:[49.77,51.44],8:[45.70,59.36],9:[49.71,59.34],10:[54.14,59.60]};
-    qa('.makna-logo-point',stage).forEach((point,index)=>{const number=Number(point.dataset.mlNumber||(q('.makna-logo-point-num',point)?.textContent||'').trim())||index+1;const p=layout[number];if(!p)return;point.dataset.mlNumber=String(number);point.classList.remove('is-left','is-right','is-bottom','is-drop-up');point.classList.add('is-'+p.side);point.style.top=p.top+'%';point.style.bottom='auto';point.style.left=p.x+'%';point.style.right='auto';point.style.width=p.width+'px';point.style.maxWidth=p.width+'px';if(p.top>=78)point.classList.add('is-drop-up');const a=anchors[number];const dot=q('.makna-logo-anchor-dot[data-ml-number="'+number+'"]',stage)||qa('.makna-logo-anchor-dot',stage)[number-1];if(a&&dot){dot.dataset.mlNumber=String(number);dot.style.left=a[0]+'%';dot.style.top=a[1]+'%';}});
+    qa('.makna-logo-point',stage).forEach((point,index)=>{const number=Number(point.dataset.mlNumber||(q('.makna-logo-point-num',point)?.textContent||'').trim())||index+1;const p=layout[number];if(!p)return;point.dataset.mlNumber=String(number);point.dataset.mlBaseTop=String(p.top);point.classList.remove('is-left','is-right','is-bottom','is-drop-up');point.classList.add('is-'+p.side);point.style.top=p.top+'%';point.style.bottom='auto';point.style.left=p.x+'%';point.style.right='auto';point.style.width=p.width+'px';point.style.maxWidth=p.width+'px';if(p.top>=78)point.classList.add('is-drop-up');const a=anchors[number];const dot=q('.makna-logo-anchor-dot[data-ml-number="'+number+'"]',stage)||qa('.makna-logo-anchor-dot',stage)[number-1];if(a&&dot){dot.dataset.mlNumber=String(number);dot.style.left=a[0]+'%';dot.style.top=a[1]+'%';}});
+    // Dorong-otomatis kalau ketabrak: mulai dari posisi DASAR tiap baris
+    // (dataset.mlBaseTop, dari `layout` di atas), lalu kalau kotak berikutnya
+    // (yg lebih rendah) ternyata tumpang-tindih sama kotak di atasnya --
+    // krn keterangannya panjang & makan banyak baris -- baris itu didorong
+    // turun secukupnya. Jauh lebih akurat drpd nebak persen top manual per
+    // baris, karena based on tinggi KONTEN ASLI yg ke-render (bisa beda2
+    // tergantung device/lebar layar), bukan estimasi. Selalu direset ke
+    // posisi dasar dulu tiap dipanggil supaya gak "ngambang" makin lama makin
+    // turun tiap kali redraw() jalan ulang (resize dsb).
+    const resolveVerticalOverlap=()=>{
+      const stageRect=stage.getBoundingClientRect();const minGap=14;
+      ['left','right'].forEach(side=>{
+        const pts=qa('.makna-logo-point.is-'+side,stage).filter(p=>p.dataset.mlBaseTop!=null)
+          .sort((a,b)=>parseFloat(a.dataset.mlBaseTop)-parseFloat(b.dataset.mlBaseTop));
+        pts.forEach(p=>{p.style.top=p.dataset.mlBaseTop+'%';});
+        let prevBottom=null;
+        pts.forEach(p=>{
+          let r=p.getBoundingClientRect();
+          if(prevBottom!==null&&r.top<prevBottom+minGap){
+            const shiftPx=(prevBottom+minGap)-r.top;
+            p.style.top=(parseFloat(p.style.top)+shiftPx/stageRect.height*100)+'%';
+            r=p.getBoundingClientRect();
+          }
+          prevBottom=r.bottom;
+        });
+      });
+    };
     // Garis "siku pendek" (bukan siku panjang spt versi sebelumnya yg bikin
     // ruas vertikal nembus tengah lambang & numpuk sesama garis) -- ruas
     // UTAMA (anchor->dekat teks) tetap DIAGONAL LURUS & unik per titik
@@ -57,7 +94,7 @@
     // Nempel ke .makna-logo-point-title (bukan seluruh card) biar titik
     // sambung garis stabil di dekat judul, gak ikut turun kalau keterangannya
     // panjang/banyak baris.
-    const redraw=()=>{const svg=q('#maknaLogoLines',stage);if(!svg)return;const stageRect=stage.getBoundingClientRect();const hook=3;qa('.makna-logo-point',stage).forEach((point,index)=>{svg.querySelectorAll('[data-ml-line="'+index+'"]').forEach(el=>el.remove());const number=Number(point.dataset.mlNumber||(q('.makna-logo-point-num',point)?.textContent||'').trim())||index+1;const label=q('.makna-logo-point-title',point),dot=q('.makna-logo-anchor-dot[data-ml-number="'+number+'"]',stage)||qa('.makna-logo-anchor-dot',stage)[index];if(!label||!dot)return;const lr=label.getBoundingClientRect(),dr=dot.getBoundingClientRect();const x2=(dr.left+dr.width/2-stageRect.left)/stageRect.width*100,y2=(dr.top+dr.height/2-stageRect.top)/stageRect.height*100;const isLeft=point.classList.contains('is-left'),isBottom=point.classList.contains('is-bottom');const startPxX=isBottom?(lr.left+lr.width/2):(isLeft?lr.right:lr.left);const startPxY=isBottom?lr.top:(lr.top+lr.height/2);const x1=(startPxX-stageRect.left)/stageRect.width*100,y1=(startPxY-stageRect.top)/stageRect.height*100;let bx=x1,by=y1;if(isBottom)by=y1-hook;else bx=isLeft?(x1+hook):(x1-hook);const poly=document.createElementNS('http://www.w3.org/2000/svg','polyline');poly.setAttribute('data-ml-line',String(index));poly.setAttribute('points',x2+','+y2+' '+bx+','+by+' '+x1+','+y1);poly.setAttribute('stroke','#FF9800');poly.setAttribute('fill','none');svg.appendChild(poly);});};
+    const redraw=()=>{const svg=q('#maknaLogoLines',stage);if(!svg)return;resolveVerticalOverlap();const stageRect=stage.getBoundingClientRect();const hook=3;qa('.makna-logo-point',stage).forEach((point,index)=>{svg.querySelectorAll('[data-ml-line="'+index+'"]').forEach(el=>el.remove());stage.querySelectorAll('[data-ml-endcap="'+index+'"]').forEach(el=>el.remove());const number=Number(point.dataset.mlNumber||(q('.makna-logo-point-num',point)?.textContent||'').trim())||index+1;const label=q('.makna-logo-point-title',point),dot=q('.makna-logo-anchor-dot[data-ml-number="'+number+'"]',stage)||qa('.makna-logo-anchor-dot',stage)[index];if(!label||!dot)return;const lr=label.getBoundingClientRect(),dr=dot.getBoundingClientRect();const x2=(dr.left+dr.width/2-stageRect.left)/stageRect.width*100,y2=(dr.top+dr.height/2-stageRect.top)/stageRect.height*100;const isLeft=point.classList.contains('is-left'),isBottom=point.classList.contains('is-bottom');const gapPx=9;const startPxX=isBottom?(lr.left+lr.width/2):(isLeft?(lr.right+gapPx):(lr.left-gapPx));const startPxY=isBottom?(lr.top-gapPx):(lr.top+lr.height/2);const x1=(startPxX-stageRect.left)/stageRect.width*100,y1=(startPxY-stageRect.top)/stageRect.height*100;let bx=x1,by=y1;if(isBottom)by=y1-hook;else bx=isLeft?(x1+hook):(x1-hook);const poly=document.createElementNS('http://www.w3.org/2000/svg','polyline');poly.setAttribute('data-ml-line',String(index));poly.setAttribute('points',x2+','+y2+' '+bx+','+by+' '+x1+','+y1);poly.setAttribute('stroke','#FF9800');poly.setAttribute('fill','none');svg.appendChild(poly);const endcap=document.createElement('div');endcap.className='makna-logo-line-endcap';endcap.dataset.mlEndcap=String(index);endcap.style.left=x1+'%';endcap.style.top=y1+'%';stage.appendChild(endcap);});};
     requestAnimationFrame(()=>requestAnimationFrame(redraw));if(!stage.dataset.mlResizeBound){window.addEventListener('resize',redraw);stage.dataset.mlResizeBound='1';}
     if(!overlay.dataset.mlOpenObserverBound){
       const redrawWhenOpen=()=>{

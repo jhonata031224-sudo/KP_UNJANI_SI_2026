@@ -949,6 +949,20 @@
   }
   .makna-logo-overlay.open .makna-logo-anchor-dot{opacity:1;}
 
+  /* Ujung garis di sisi JUDUL -- lingkaran BOLONG (cincin, tengahnya
+     transparan, bukan solid spt .makna-logo-anchor-dot di sisi lambang)
+     biar ujung garis ada bentuknya, gak polos. Dibuat elemen <div>
+     terpisah (bukan <circle> di dalam SVG .makna-logo-lines) supaya
+     tetap bulat sempurna -- SVG itu pakai preserveAspectRatio="none"
+     yg meregangkan tidak proporsional, <circle> di dalamnya jadi lonjong.
+     Diposisikan & dibuat ulang tiap redraw() lewat JS (landing-content.js). */
+  .makna-logo-line-endcap{
+    position:absolute;z-index:21;width:8px;height:8px;border-radius:50%;
+    transform:translate(-50%,-50%);
+    background:#fff;border:1.6px solid var(--gold);
+    pointer-events:none;
+  }
+
   /* Mobile: layout garis-penunjuk-menyebar sulit dibaca di layar sempit --
      ganti jadi daftar bertumpuk yang simpel (tampilan desktop tidak
      berubah), senada dengan pendekatan responsif lain di halaman ini. */
