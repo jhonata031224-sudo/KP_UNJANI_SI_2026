@@ -24,15 +24,17 @@
     const overlay=q('#maknaLogoOverlay'),stage=q('#maknaLogoStage');if(!overlay||!stage)return;
     if(!document.getElementById('makna-logo-prototype-override')){
       const style=document.createElement('style');style.id='makna-logo-prototype-override';style.textContent=`
-        #maknaLogoOverlay{background:#fff!important;padding:0!important;}
+        #maknaLogoOverlay{background:var(--panel-2)!important;padding:0!important;}
         #maknaLogoOverlay .makna-logo-stage{position:relative!important;width:min(1320px,96vw)!important;height:min(790px,90vh)!important;aspect-ratio:auto!important;display:block!important;margin:0 auto!important;overflow:visible!important;}
-        #maknaLogoOverlay .makna-logo-crest{position:absolute!important;z-index:1!important;background:transparent!important;width:300px!important;height:300px!important;top:45%!important;left:50%!important;transform:translate(-50%,-50%)!important;transition:none!important;}
+        #maknaLogoOverlay .makna-logo-crest{position:absolute!important;z-index:1!important;background:#fffdf7!important;border-radius:50%!important;overflow:hidden!important;box-shadow:0 0 0 8px rgba(255,152,0,.08),0 22px 55px rgba(0,0,0,.45)!important;width:300px!important;height:300px!important;top:45%!important;left:50%!important;transform:translate(-50%,-50%)!important;transition:none!important;}
+        html[data-theme="light"] #maknaLogoOverlay .makna-logo-crest{background:var(--panel-2)!important;border-radius:0!important;overflow:visible!important;box-shadow:none!important;}
+        html[data-theme="light"] #maknaLogoOverlay .makna-logo-crest img{mix-blend-mode:multiply!important;}
         #maknaLogoOverlay .makna-logo-crest img{width:100%!important;height:100%!important;object-fit:contain!important;display:block!important;mix-blend-mode:multiply!important;}
-        #maknaLogoOverlay .makna-logo-point{position:absolute!important;height:auto!important;transform:translateY(-50%)!important;opacity:1!important;z-index:20!important;}
+        #maknaLogoOverlay .makna-logo-point{position:absolute!important;height:auto!important;z-index:20!important;}
         #maknaLogoOverlay .makna-logo-point-card{display:block!important;width:100%!important;min-width:0!important;height:auto!important;box-sizing:border-box!important;background:transparent!important;border:none!important;box-shadow:none!important;cursor:default!important;padding:0!important;}
         #maknaLogoOverlay .makna-logo-point-num{display:none!important;}
-        #maknaLogoOverlay .makna-logo-point-title{display:block!important;font-family:var(--display)!important;font-size:13px!important;font-weight:700!important;letter-spacing:.02em!important;text-transform:uppercase!important;color:#1b2620!important;margin:0!important;white-space:normal!important;line-height:1.35!important;}
-        #maknaLogoOverlay .makna-logo-point-desc{display:block!important;font-family:var(--body)!important;font-size:12.5px!important;font-weight:400!important;line-height:1.6!important;color:#465a4d!important;margin:4px 0 0!important;white-space:normal!important;text-align:justify!important;text-align-last:left!important;}
+        #maknaLogoOverlay .makna-logo-point-title{display:block!important;font-family:var(--display)!important;font-size:13px!important;font-weight:700!important;letter-spacing:.02em!important;text-transform:uppercase!important;color:var(--text)!important;margin:0!important;white-space:normal!important;line-height:1.35!important;}
+        #maknaLogoOverlay .makna-logo-point-desc{display:block!important;font-family:var(--body)!important;font-size:12.5px!important;font-weight:400!important;line-height:1.6!important;color:var(--text-muted)!important;margin:4px 0 0!important;white-space:normal!important;text-align:justify!important;text-align-last:left!important;}
         #maknaLogoOverlay .makna-logo-point.is-left .makna-logo-point-card{text-align:right!important;}
         #maknaLogoOverlay .makna-logo-point.is-right .makna-logo-point-card{text-align:left!important;}
         #maknaLogoOverlay .makna-logo-point.is-left .makna-logo-point-desc{text-align-last:right!important;}
@@ -42,8 +44,8 @@
         #maknaLogoOverlay .makna-logo-lines{z-index:5!important;pointer-events:none!important;overflow:visible!important;}
         #maknaLogoOverlay .makna-logo-lines line,#maknaLogoOverlay .makna-logo-lines polyline{stroke:#FF9800!important;stroke-opacity:1!important;stroke-width:2px!important;fill:none!important;stroke-linecap:round!important;stroke-linejoin:round!important;vector-effect:non-scaling-stroke!important;}
         #maknaLogoOverlay .makna-logo-anchor-dot{z-index:15!important;width:8px!important;height:8px!important;background:#FF9800!important;box-shadow:0 0 0 1.5px rgba(255,255,255,.9),0 1px 3px rgba(0,0,0,.35)!important;}
-        #maknaLogoOverlay .makna-logo-eyebrow{top:28px!important;left:32px!important;padding:9px 20px!important;border-radius:999px!important;background:#fff!important;border:1.5px solid #FF9800!important;color:#FF9800!important;font-family:var(--mono)!important;font-size:12.5px!important;font-weight:700!important;letter-spacing:.16em!important;box-shadow:none!important;}
-        #maknaLogoOverlay .makna-logo-close{top:24px!important;right:32px!important;width:44px!important;height:44px!important;border-radius:12px!important;background:#f4f2ea!important;box-shadow:none!important;}
+        #maknaLogoOverlay .makna-logo-eyebrow{top:28px!important;left:32px!important;padding:9px 20px!important;border-radius:999px!important;background:var(--panel-2)!important;border:1.5px solid #FF9800!important;color:#FF9800!important;font-family:var(--mono)!important;font-size:12.5px!important;font-weight:700!important;letter-spacing:.16em!important;box-shadow:none!important;}
+        #maknaLogoOverlay .makna-logo-close{top:24px!important;right:32px!important;}
         @media(max-width:760px){#maknaLogoOverlay{align-items:flex-start!important;padding:78px 16px 32px!important;overflow:auto!important;}#maknaLogoOverlay .makna-logo-stage{width:100%!important;height:auto!important;min-height:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:22px!important;}#maknaLogoOverlay .makna-logo-crest-wrap{position:relative!important;width:min(46vw,190px)!important;height:min(46vw,190px)!important;margin:0 auto!important;flex-shrink:0!important;}#maknaLogoOverlay .makna-logo-crest{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;transform:none!important;margin:0!important;}#maknaLogoOverlay .makna-logo-anchor-dot{width:7px!important;height:7px!important;box-shadow:0 0 0 1.5px rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.3)!important;}#maknaLogoOverlay .makna-logo-point{position:relative!important;inset:auto!important;width:100%!important;max-width:100%!important;height:auto!important;transform:none!important;}#maknaLogoOverlay .makna-logo-point.is-bottom{width:100%!important;max-width:100%!important;left:auto!important;top:auto!important;transform:none!important;}}
       `;document.head.appendChild(style);
     }
@@ -94,11 +96,77 @@
     // Nempel ke .makna-logo-point-title (bukan seluruh card) biar titik
     // sambung garis stabil di dekat judul, gak ikut turun kalau keterangannya
     // panjang/banyak baris.
-    const redraw=()=>{const svg=q('#maknaLogoLines',stage);if(!svg)return;resolveVerticalOverlap();const stageRect=stage.getBoundingClientRect();const hook=3;qa('.makna-logo-point',stage).forEach((point,index)=>{svg.querySelectorAll('[data-ml-line="'+index+'"]').forEach(el=>el.remove());stage.querySelectorAll('[data-ml-endcap="'+index+'"]').forEach(el=>el.remove());const number=Number(point.dataset.mlNumber||(q('.makna-logo-point-num',point)?.textContent||'').trim())||index+1;const label=q('.makna-logo-point-title',point),dot=q('.makna-logo-anchor-dot[data-ml-number="'+number+'"]',stage)||qa('.makna-logo-anchor-dot',stage)[index];if(!label||!dot)return;const lr=label.getBoundingClientRect(),dr=dot.getBoundingClientRect();const x2=(dr.left+dr.width/2-stageRect.left)/stageRect.width*100,y2=(dr.top+dr.height/2-stageRect.top)/stageRect.height*100;const isLeft=point.classList.contains('is-left'),isBottom=point.classList.contains('is-bottom');const gapPx=9;const startPxX=isBottom?(lr.left+lr.width/2):(isLeft?(lr.right+gapPx):(lr.left-gapPx));const startPxY=isBottom?(lr.top-gapPx):(lr.top+lr.height/2);const x1=(startPxX-stageRect.left)/stageRect.width*100,y1=(startPxY-stageRect.top)/stageRect.height*100;let bx=x1,by=y1;if(isBottom)by=y1-hook;else bx=isLeft?(x1+hook):(x1-hook);const poly=document.createElementNS('http://www.w3.org/2000/svg','polyline');poly.setAttribute('data-ml-line',String(index));poly.setAttribute('points',x2+','+y2+' '+bx+','+by+' '+x1+','+y1);poly.setAttribute('stroke','#FF9800');poly.setAttribute('fill','none');svg.appendChild(poly);const endcap=document.createElement('div');endcap.className='makna-logo-line-endcap';endcap.dataset.mlEndcap=String(index);endcap.style.left=x1+'%';endcap.style.top=y1+'%';stage.appendChild(endcap);});};
+    // PENTING: garis & endcap di-UPDATE (bukan dihapus+dibikin ulang) tiap
+    // redraw() -- sebelumnya selalu remove()+createElement() ulang, jadi
+    // elemennya "lahir" SETELAH .open sudah aktif dan langsung nongol dalam
+    // kondisi opacity:1 (gak sempet transisi dari 0->1 sama sekali, krn
+    // transition CSS cuma jalan kalau ada elemen YANG SAMA berubah state,
+    // bukan elemen baru yg baru muncul). Sekarang elemen dibikin SEKALI aja
+    // (kalau belum ada), lalu tiap redraw cuma update posisinya -- opacity
+    // masuk/keluarnya jadi murni dikontrol CSS lewat class .open (sama kayak
+    // .makna-logo-point/.makna-logo-anchor-dot), jadi animasinya konsisten
+    // tiap kali modal dibuka-tutup, gak cuma sekali doang.
+    // Garis "ditarik" beneran lewat JS (titik ujung polyline digeser
+    // bertahap tiap frame dari titik penanda -> judul) -- bukan pakai trik
+    // CSS stroke-dasharray/dashoffset lagi, karena itu kebentur bug render:
+    // dikombinasikan sama vector-effect:non-scaling-stroke di dalam SVG yg
+    // viewBox-nya diregangkan gak proporsional (preserveAspectRatio="none",
+    // stage ~1320x790 dari viewBox 100x100), dash-pattern-nya jadi kelihatan
+    // putus-putus/berantakan, bukan satu garis mulus yg tumbuh. Animasi
+    // manual begini gak kena masalah itu sama sekali krn cuma gambar ulang
+    // garis pendek yg makin panjang, sama persis kayak garis biasa.
+    function animateLineDraw(poly,endcap,x2,y2,bx,by,x1,y1,index){
+      const seg1=Math.hypot(bx-x2,by-y2),seg2=Math.hypot(x1-bx,y1-by),total=seg1+seg2;
+      const t0=performance.now()+250+index*50,duration=550;
+      endcap.style.opacity='0';
+      const step=(now)=>{
+        let t=(now-t0)/duration;
+        if(t<0){requestAnimationFrame(step);return;}
+        if(t>1)t=1;
+        const eased=1-Math.pow(1-t,3),dist=eased*total;
+        if(dist<=seg1){const f=seg1?dist/seg1:1;poly.setAttribute('points',x2+','+y2+' '+(x2+(bx-x2)*f)+','+(y2+(by-y2)*f));}
+        else{const f2=seg2?(dist-seg1)/seg2:1;poly.setAttribute('points',x2+','+y2+' '+bx+','+by+' '+(bx+(x1-bx)*f2)+','+(by+(y1-by)*f2));}
+        if(t<1)requestAnimationFrame(step);
+        else{poly.dataset.mlDrawn='1';delete poly.dataset.mlDrawing;endcap.style.transition='opacity .25s ease';endcap.style.opacity='1';}
+      };
+      requestAnimationFrame(step);
+    }
+    const redraw=()=>{const svg=q('#maknaLogoLines',stage);if(!svg)return;resolveVerticalOverlap();const stageRect=stage.getBoundingClientRect();const hook=3;qa('.makna-logo-point',stage).forEach((point,index)=>{const number=Number(point.dataset.mlNumber||(q('.makna-logo-point-num',point)?.textContent||'').trim())||index+1;const label=q('.makna-logo-point-title',point),dot=q('.makna-logo-anchor-dot[data-ml-number="'+number+'"]',stage)||qa('.makna-logo-anchor-dot',stage)[index];if(!label||!dot)return;const lr=label.getBoundingClientRect(),dr=dot.getBoundingClientRect();const x2=(dr.left+dr.width/2-stageRect.left)/stageRect.width*100,y2=(dr.top+dr.height/2-stageRect.top)/stageRect.height*100;const isLeft=point.classList.contains('is-left'),isBottom=point.classList.contains('is-bottom');const gapPx=9;const startPxX=isBottom?(lr.left+lr.width/2):(isLeft?(lr.right+gapPx):(lr.left-gapPx));const startPxY=isBottom?(lr.top-gapPx):(lr.top+lr.height/2);const x1=(startPxX-stageRect.left)/stageRect.width*100,y1=(startPxY-stageRect.top)/stageRect.height*100;let bx=x1,by=y1;if(isBottom)by=y1-hook;else bx=isLeft?(x1+hook):(x1-hook);
+      let poly=svg.querySelector('polyline[data-ml-line="'+index+'"]');
+      if(!poly){poly=document.createElementNS('http://www.w3.org/2000/svg','polyline');poly.setAttribute('data-ml-line',String(index));poly.setAttribute('stroke','#FF9800');poly.setAttribute('fill','none');poly.setAttribute('points',x2+','+y2+' '+x2+','+y2);svg.appendChild(poly);}
+      let endcap=stage.querySelector('[data-ml-endcap="'+index+'"]');
+      if(!endcap){endcap=document.createElement('div');endcap.className='makna-logo-line-endcap';endcap.dataset.mlEndcap=String(index);stage.appendChild(endcap);}
+      endcap.style.left=x1+'%';endcap.style.top=y1+'%';
+      if(poly.dataset.mlDrawn==='1'){
+        // Udah pernah kelar ditarik sebelumnya (mis. reposisi krn resize) --
+        // langsung update posisi akhirnya aja, gak perlu animasi ulang.
+        poly.setAttribute('points',x2+','+y2+' '+bx+','+by+' '+x1+','+y1);
+      } else if(!overlay.classList.contains('open')){
+        // redraw() ini kepanggil pas modal LAGI KETUTUP (mis. "priming"
+        // sekali di awal load halaman, atau resize saat overlay tertutup) --
+        // JANGAN animasi di sini, cukup taruh di titik nol-panjang, biar
+        // gak "diam-diam selesai duluan" di belakang layar sebelum user
+        // sempat buka modalnya (itu penyebab bug "buka pertama gak jalan
+        // animasinya" -- animasinya udah kelar duluan pas priming ini).
+        poly.setAttribute('points',x2+','+y2+' '+x2+','+y2);
+      } else if(!poly.dataset.mlDrawing){
+        poly.dataset.mlDrawing='1';
+        animateLineDraw(poly,endcap,x2,y2,bx,by,x1,y1,index);
+      }
+    });};
     requestAnimationFrame(()=>requestAnimationFrame(redraw));if(!stage.dataset.mlResizeBound){window.addEventListener('resize',redraw);stage.dataset.mlResizeBound='1';}
     if(!overlay.dataset.mlOpenObserverBound){
+      const svgEl=q('#maknaLogoLines',stage);
       const redrawWhenOpen=()=>{
-        if(!overlay.classList.contains('open'))return;
+        if(!overlay.classList.contains('open')){
+          // Modal ditutup -- reset semua garis balik ke "belum digambar"
+          // (titik nol-panjang di posisi penanda) biar pas dibuka lagi
+          // animasinya replay dari awal, bukan langsung nongol penuh krn
+          // nyisa state kelar dari sesi sebelumnya.
+          if(svgEl)qa('polyline[data-ml-line]',svgEl).forEach(p=>{delete p.dataset.mlDrawn;delete p.dataset.mlDrawing;const first=(p.getAttribute('points')||'0,0').split(' ')[0];p.setAttribute('points',first+' '+first);});
+          qa('[data-ml-endcap]',stage).forEach(e=>{e.style.opacity='0';});
+          return;
+        }
         requestAnimationFrame(()=>requestAnimationFrame(redraw));
         setTimeout(redraw,400);
       };

@@ -794,32 +794,50 @@
     position:fixed;inset:0;z-index:80;
     display:flex;align-items:center;justify-content:center;
     padding:24px;overflow:auto;
-    /* Putih SOLID (bukan var(--overlay-bg) yang transparan+blur) -- ini
-       kuncinya supaya mix-blend-mode:multiply di <img> lambang (lihat
-       .makna-logo-crest img) benar-benar melebur sempurna dgn latar
-       (putih x putih = putih, tanpa sisa kotak/bingkai yg kelihatan).
-       Kalau backdrop-nya transparan/blur (nunjukkin konten halaman di
-       belakangnya yg warnanya macam-macam), hasil multiply jadi rembes
-       & keliatan kotaknya -- itu sebab bug "kotak putih" sebelumnya. */
-    background:#fff;
+    /* var(--panel-2) SOLID (bukan var(--overlay-bg) yang transparan+blur)
+       -- ini kuncinya supaya mix-blend-mode:multiply di <img> lambang
+       (lihat .makna-logo-crest img) benar-benar melebur sempurna dgn latar
+       (backdrop x putih = backdrop, tanpa sisa kotak/bingkai putih yg
+       kelihatan -- lambang aslinya punya latar bulat PUTIH bawaan file,
+       multiply "membuang" area putih itu jadi menyatu apapun warna
+       backdrop-nya). Kalau backdrop-nya transparan/blur (nunjukkin konten
+       halaman di belakangnya yg warnanya macam-macam), hasil multiply jadi
+       rembes & keliatan kotaknya -- itu sebab bug "kotak putih" sebelumnya.
+       Dulu hardcode #fff (modal SENGAJA selalu terang, gak ikut tema) --
+       sekarang var(--panel-2) supaya ikut tema gelap/terang situs, TAPI
+       tetap SOLID (bukan transparan) biar trik multiply-nya tetap jalan. */
+    background:var(--panel-2);
     opacity:0;pointer-events:none;
     transition:opacity .35s ease;
   }
   .makna-logo-overlay.open{
     opacity:1;pointer-events:auto;
   }
+  /* Gaya tombol tutup disamakan sama standar yang udah dipakai di seluruh
+     sistem (lihat .profile-modal-close / .crop-modal-close di
+     dash-styles.blade.php) -- kotak border tipis, background transparan,
+     hover jadi merah + muter 90 derajat. Posisi fixed + animasi fade-in
+     saat overlay dibuka tetap dipertahankan (khusus Makna Logo). */
   .makna-logo-close{
     position:fixed;top:24px;right:26px;z-index:3;
-    width:44px;height:44px;border-radius:14px;
+    width:36px;height:36px;border-radius:9px;
     display:flex;align-items:center;justify-content:center;
-    background:var(--panel-2);border:none;color:var(--text);
-    box-shadow:0 10px 26px rgba(0,0,0,.16);
-    cursor:pointer;transition:color .2s ease,transform .2s ease,box-shadow .2s ease;
+    background:transparent;border:1px solid var(--border);color:var(--text-muted);
+    cursor:pointer;transition:border-color .2s ease,color .2s ease,transform .2s ease;
     opacity:0;transform:translateY(-8px);
   }
   .makna-logo-overlay.open .makna-logo-close{opacity:1;transform:translateY(0);transition:opacity .3s ease .25s, transform .3s ease .25s;}
-  .makna-logo-close:hover{color:var(--gold-bright);transform:translateY(-2px) rotate(90deg);box-shadow:0 12px 30px rgba(0,0,0,.2);}
-  .makna-logo-close svg{width:18px;height:18px;}
+  /* :hover diulang di 2 selector (biar menang lawan aturan ".open" di atas
+     yg lebih spesifik -- makanya sebelumnya gak muter) DAN transition-nya
+     di-set ULANG ke cepat/tanpa delay (.2s, no delay) -- kalau nggak, hover
+     ikut kebawa transition punya animasi buka-modal (.3s + delay .25s) yg
+     bikin kerasa lag/lambat pas di-hover setelah modal kebuka. */
+  .makna-logo-close:hover,
+  .makna-logo-overlay.open .makna-logo-close:hover{
+    border-color:var(--red);color:var(--red);transform:rotate(90deg);
+    transition:border-color .2s ease,color .2s ease,transform .2s ease;
+  }
+  .makna-logo-close svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;}
 
   .makna-logo-eyebrow{
     position:fixed;top:24px;left:26px;z-index:3;
@@ -840,33 +858,37 @@
      (dari koordinat lambang kecil di halaman, menuju tengah stage), supaya
      transisinya benar-benar "meluncur" dari titik klik, bukan cuma muncul
      tiba-tiba di tengah.
-     mix-blend-mode:multiply pada <img> "membuang" latar bulat putih bawaan
-     file lambang (putih x apa pun = tidak berubah, jadi area putih itu
-     otomatis menyatu/transparan dengan backdrop modal) -- tanpa itu, latar
-     putih itu bagian dari pixel gambar sendiri dan tidak bisa dihilangkan
-     cuma dengan border-radius/overflow (itu cuma motong bentuknya jadi
-     lingkaran, bukan menghapus warna putihnya). */
+     TEMA GELAP (default situs ini): mix-blend-mode:multiply cuma cocok utk
+     "menghapus" lingkaran putih bawaan lambang kalau backdrop-nya JUGA
+     putih (putih x putih = putih, menyatu) -- kalau backdrop-nya gelap,
+     multiply malah ikut GELAPIN semua warna lambang (hijau perisai, emas,
+     dst jadi suram) krn multiply pada dasarnya operasi "menggelapkan", gak
+     cuma ngilangin si putih doang. Makanya di gelap, lambang ditampilkan
+     APA ADANYA (gak diblend) di atas plat/medali bulat terang -- overflow:
+     hidden+border-radius:50% motong latar putih persegi bawaan file jadi
+     bentuk lingkaran, konsisten sama gaya lambang kecil yg sudah ada di
+     section "Tentang Pussiberad" (.about-crest, lihat CSS-nya di atas). */
   .makna-logo-crest{
-    position:fixed;z-index:1;background:#fff;
+    position:fixed;z-index:1;
+    overflow:hidden;border-radius:50%;
+    background:#fffdf7;
+    box-shadow:0 0 0 8px rgba(255,152,0,.08), 0 22px 55px rgba(0,0,0,.45);
     transition:top .55s cubic-bezier(.65,0,.2,1), left .55s cubic-bezier(.65,0,.2,1),
       width .55s cubic-bezier(.65,0,.2,1), height .55s cubic-bezier(.65,0,.2,1);
     will-change:top,left,width,height;
   }
-  /* Tanpa bingkai/lingkaran putih di belakang lambang -- .makna-logo-crest
-     (position:fixed + z-index) otomatis membentuk STACKING CONTEXT sendiri,
-     sehingga mix-blend-mode:multiply di <img> di bawah ini "terisolasi":
-     ia blend dengan backdrop LOKAL milik .makna-logo-crest itu sendiri,
-     BUKAN dengan seluruh halaman di belakangnya. Makanya background:#fff
-     di atas WAJIB ada (disamakan dgn latar overlay yg juga putih solid) --
-     tanpa itu, backdrop lokalnya transparan, multiply jadi tidak berefek,
-     dan latar putih bawaan file lambang tetap tampak sbg kotak. Dengan
-     backdrop lokal putih, hasilnya putih x putih = menyatu sempurna, logo
-     langsung "mengambang" di atas putih tanpa kotak/bingkai apa pun.
-     object-fit:contain supaya bentuk lambang tidak pernah terpotong. */
   .makna-logo-crest img{
     width:100%;height:100%;object-fit:contain;display:block;
-    mix-blend-mode:multiply;
   }
+  /* TEMA TERANG: balik ke trik blend lama -- overlay & backdrop lokal
+     lambang sama2 putih solid, jadi lingkaran putih bawaan file bisa
+     "dihilangkan" total lewat multiply tanpa kelihatan plat/bingkai sama
+     sekali (lebih clean drpd medali, krn gak perlu motong jadi bulat). */
+  html[data-theme="light"] .makna-logo-crest{
+    overflow:visible;border-radius:0;box-shadow:none;
+    background:var(--panel-2);
+  }
+  html[data-theme="light"] .makna-logo-crest img{mix-blend-mode:multiply;}
 
   /* Kartu callout bernomor -- .is-right (nomor bulat di KIRI kotak, kotak
      memanjang ke kanan menjauhi lambang) dan .is-left (kebalikannya: nomor
@@ -928,11 +950,19 @@
      1920/818) -- vector-effect:non-scaling-stroke mengunci ketebalan garis
      tetap 2px sungguhan di layar, tidak ikut terdistorsi oleh peregangan
      itu, sehingga tampil tipis & rapi seperti garis konektor biasa. */
+  /* Efek "digambar" (garis tumbuh dari titik penanda ke judul) SEKARANG
+     murni lewat JS (lihat animateLineDraw() di landing-content.js, geser
+     titik ujung polyline tiap frame) -- BUKAN pakai stroke-dasharray/
+     dashoffset lagi. Sempat dicoba pakai dasharray/dashoffset tapi
+     dikombinasikan sama vector-effect:non-scaling-stroke di viewBox yg
+     diregangkan gak proporsional, dash-pattern-nya kelihatan putus-putus/
+     berantakan alih-alih satu garis mulus yg tumbuh. CSS di sini jadi cuma
+     opacity fade tipis di awal, jaga-jaga aja. */
   .makna-logo-lines line,
   .makna-logo-lines polyline{
     stroke:var(--gold);stroke-opacity:.8;stroke-width:2px;stroke-linecap:round;stroke-linejoin:round;
     vector-effect:non-scaling-stroke;fill:none;
-    opacity:0;transition:opacity .35s ease;transition-delay:var(--mlp-delay,0s);
+    opacity:0;transition:opacity .3s ease;transition-delay:var(--mlp-delay,0s);
   }
   .makna-logo-overlay.open .makna-logo-lines line,
   .makna-logo-overlay.open .makna-logo-lines polyline{opacity:1;}
@@ -955,13 +985,18 @@
      terpisah (bukan <circle> di dalam SVG .makna-logo-lines) supaya
      tetap bulat sempurna -- SVG itu pakai preserveAspectRatio="none"
      yg meregangkan tidak proporsional, <circle> di dalamnya jadi lonjong.
-     Diposisikan & dibuat ulang tiap redraw() lewat JS (landing-content.js). */
+     Dibuat sekali & diposisikan ulang tiap redraw() lewat JS
+     (landing-content.js) -- lihat komentar di redraw() soal kenapa dibuat
+     sekali (bukan dihapus+dibuat ulang tiap kali), supaya fade-in di bawah
+     ini beneran keanimasi & konsisten tiap modal dibuka-tutup. */
   .makna-logo-line-endcap{
     position:absolute;z-index:21;width:8px;height:8px;border-radius:50%;
     transform:translate(-50%,-50%);
-    background:#fff;border:1.6px solid var(--gold);
+    background:var(--panel-2);border:1.6px solid var(--gold);
     pointer-events:none;
+    opacity:0;transition:opacity .3s ease;transition-delay:var(--mlp-delay,0s);
   }
+  .makna-logo-overlay.open .makna-logo-line-endcap{opacity:1;}
 
   /* Mobile: layout garis-penunjuk-menyebar sulit dibaca di layar sempit --
      ganti jadi daftar bertumpuk yang simpel (tampilan desktop tidak
@@ -1498,19 +1533,22 @@
     @endphp
     <div class="makna-logo-overlay" id="maknaLogoOverlay" role="dialog" aria-modal="true" aria-label="Makna Logo">
       <button type="button" class="makna-logo-close" id="maknaLogoClose" aria-label="Tutup">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
       </button>
       <div class="makna-logo-eyebrow">Makna Logo</div>
       <div class="makna-logo-stage" id="maknaLogoStage">
-        <svg class="makna-logo-lines" id="maknaLogoLines" preserveAspectRatio="none" viewBox="0 0 100 100">
-          @foreach ($mlPoints as $i => $p)
-            <line data-ml-line="{{ $i }}"
-              x1="{{ $p['badge'][0] }}" y1="{{ $p['badge'][1] }}"
-              x2="{{ $p['anchor'][0] }}" y2="{{ $p['anchor'][1] }}"
-              style="--mlp-delay:{{ .25 + $i * .05 }}s">
-            </line>
-          @endforeach
-        </svg>
+        {{-- Kosong SENGAJA -- garis diisi murni lewat JS (redraw() di
+             landing-content.js), bikin <polyline> sendiri berdasarkan posisi
+             ASLI yg ke-render (bukan dari $mlPoints['badge'] di atas, yg
+             cuma dipakai buat posisi awal kartu sebelum JS override).
+             Dulu ada <line> statis dirender di sini pakai koordinat
+             $mlPoints -- itu BUG: karena sama-sama punya atribut
+             data-ml-line, JS redraw() malah "nemu" <line> lama ini duluan
+             lewat querySelector(bukan bikin <polyline> baru), nempelin
+             atribut `points` yang gak dikenali <line> (cuma dikenali
+             <polyline>) -- hasilnya garis lama nyangkut gak ke-update sama
+             sekali, muncul sebagai garis lurus aneh dari koordinat basi. --}}
+        <svg class="makna-logo-lines" id="maknaLogoLines" preserveAspectRatio="none" viewBox="0 0 100 100"></svg>
         {{-- Wrapper ini SENGAJA ditambahkan supaya titik anchor punya kotak
              referensi persentase sendiri yang PERSIS sama bentuk/ukurannya
              dengan lambang (crest) -- di desktop wrapper ini "transparan"
