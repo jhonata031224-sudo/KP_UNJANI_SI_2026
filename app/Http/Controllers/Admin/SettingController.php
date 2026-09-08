@@ -120,8 +120,19 @@ class SettingController extends Controller
             'hero_subjudul'=>['nullable','string','max:255'],
             'hero_deskripsi'=>['nullable','string','max:2000'],
             'hero_image'=>['nullable','image','max:5120'],
+            // hero_bg_type: menentukan latar hero yang DIPAKAI di landing page
+            // ('gambar' atau 'video') -- kolom gambar & video sengaja disimpan
+            // terpisah (lihat migration 2026_09_08_000001) supaya Admin bisa
+            // bolak-balik ganti tipe tanpa upload ulang.
+            'hero_bg_type'=>['nullable','in:gambar,video'],
+            // Video latar beranda: dibatasi 15 MB (lebih besar dari gambar
+            // karena format video, tapi tetap dijaga supaya landing page tidak
+            // berat dimuat) -- format mp4/webm/mov senada dengan validasi
+            // upload video Postingan (lihat PostinganController).
+            'hero_video'=>['nullable','file','mimes:mp4,webm,mov,quicktime','max:15360'],
             // hero_blur_level: efek blur langsung di foto latar (px, 0-20).
             // hero_overlay_intensity: kepekatan lapisan gradient di atas foto (%, 0-100).
+            // Kedua efek ini dipakai bersama untuk latar gambar MAUPUN video.
             'hero_blur_level'=>['nullable','integer','min:0','max:20'],
             'hero_overlay_intensity'=>['nullable','integer','min:0','max:100'],
             'logo_file'=>['nullable','image','max:5120'],
@@ -163,6 +174,9 @@ class SettingController extends Controller
             'hero_image.uploaded' => 'Gambar latar beranda gagal diunggah. Kemungkinan ukurannya terlalu besar -- pastikan ukuran file maksimal 5 MB.',
             'hero_image.max' => 'Ukuran gambar latar beranda maksimal 5 MB. Silakan kompres atau pilih foto lain.',
             'hero_image.image' => 'File gambar latar beranda tidak valid. Gunakan format JPG, PNG, atau WEBP.',
+            'hero_video.uploaded' => 'Video latar beranda gagal diunggah. Kemungkinan ukurannya terlalu besar -- pastikan ukuran file maksimal 15 MB.',
+            'hero_video.max' => 'Ukuran video latar beranda maksimal 15 MB. Silakan kompres atau pilih video lain.',
+            'hero_video.mimes' => 'Format video latar beranda tidak valid. Gunakan format MP4, WEBM, atau MOV.',
             'logo_file.uploaded' => 'Logo gagal diunggah. Kemungkinan ukurannya terlalu besar -- pastikan ukuran file maksimal 5 MB.',
             'logo_file.max' => 'Ukuran logo maksimal 5 MB. Silakan kompres atau pilih foto lain.',
             'logo_file.image' => 'File logo tidak valid. Gunakan format JPG, PNG, atau WEBP.',
@@ -185,6 +199,16 @@ class SettingController extends Controller
                 unset($validated['hero_image']);
             }
         }
+        if ($request->hasFile('hero_video')) {
+            $path = $this->storeVerifiedImage($request->file('hero_video'), 'pengaturan');
+            if ($path) {
+                if ($pengaturan->hero_video_path) Storage::disk('public')->delete($pengaturan->hero_video_path);
+                $validated['hero_video_path'] = $path;
+            } else {
+                $gagalSimpanGambar[] = 'Video latar beranda';
+                unset($validated['hero_video']);
+            }
+        }
         if ($request->hasFile('logo_file')) {
             $path = $this->storeVerifiedImage($request->file('logo_file'), 'pengaturan');
             if ($path) {
@@ -204,7 +228,7 @@ class SettingController extends Controller
             unset($validated['landing_content']);
         }
 
-        unset($validated['hero_image'], $validated['logo_file']);
+        unset($validated['hero_image'], $validated['hero_video'], $validated['logo_file']);
         $pengaturan->update($validated);
         ActivityLog::catat('pengaturan.landing.update', 'Memperbarui seluruh konten halaman landing (branding, navigasi, beranda, fitur, tentang, kontak, footer).');
 
@@ -238,6 +262,10 @@ class SettingController extends Controller
      *
      * Dengan verifikasi manual ini, kegagalan tulis fisik langsung ketahuan
      * DI REQUEST YANG SAMA, jadi bisa dikasih tahu ke Admin saat itu juga.
+     *
+     * Catatan: nama method ini "Image" tapi isinya generik (store + verifikasi
+     * fisik di disk) -- dipakai juga untuk file video (hero_video, lihat
+     * updateLanding()), bukan cuma gambar.
      */
     private function storeVerifiedImage($file, string $folder): ?string
     {
@@ -264,8 +292,16 @@ class SettingController extends Controller
             return back()->with('error', 'Akses Pengaturan Umum belum diverifikasi. Masukkan password dan captcha terlebih dahulu.');
         }
 
-        $kolom = $tipe === 'logo' ? 'logo_path' : 'hero_image_path';
-        $label = $tipe === 'logo' ? 'Logo' : 'Gambar latar (BG) beranda';
+        $kolom = match ($tipe) {
+            'logo' => 'logo_path',
+            'hero_video' => 'hero_video_path',
+            default => 'hero_image_path',
+        };
+        $label = match ($tipe) {
+            'logo' => 'Logo',
+            'hero_video' => 'Video latar beranda',
+            default => 'Gambar latar (BG) beranda',
+        };
 
         $pengaturan = Pengaturan::current();
 

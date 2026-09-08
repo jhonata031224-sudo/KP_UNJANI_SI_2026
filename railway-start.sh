@@ -60,8 +60,15 @@ echo "==> [4/5] OK"
 # ukurannya di antara batas PHP dan batas Laravel dianggap "gagal upload" oleh
 # PHP SEBELUM request bahkan sampai ke controller, sehingga Laravel melempar
 # error "The lampiran.0 failed to upload." bukan pesan validasi yang bermakna.
-# Solusi: paksa batas PHP sama dengan batas aplikasi (12M sedikit di atas 10MB
-# supaya ada ruang untuk multipart boundary & header form lainnya).
+# Solusi: paksa batas PHP sama dengan batas aplikasi.
+#
+# upload_max_filesize=20M -- HARUS >= batas terbesar single-file di aplikasi.
+# Sejak fitur "Latar Belakang Video Beranda" (hero_video, lihat
+# SettingController::updateLanding), batas terbesar adalah video 15 MB;
+# 20M dikasih ruang lebih supaya tidak mepet.
+# post_max_size=40M -- total ukuran SEMUA field dalam satu request (video 15MB
+# + gambar 5MB bisa saja terkirim BERSAMAAN kalau Admin ganti keduanya
+# sekaligus di form Pengaturan Umum, plus overhead multipart boundary).
 #
 # Fallback port 8080 (BUKAN 8000) -- ini harus SAMA PERSIS dengan "Target port"
 # domain publik di Railway (Settings > Networking). Kalau $PORT dari Railway
@@ -70,4 +77,4 @@ echo "==> [4/5] OK"
 # dan hasilnya "Application failed to respond" walau app-nya sendiri hidup.
 PORT="${PORT:-8080}"
 echo "==> [5/5] starting php artisan serve on 0.0.0.0:${PORT}"
-exec php -d upload_max_filesize=12M -d post_max_size=32M -d memory_limit=256M artisan serve --host=0.0.0.0 --port="${PORT}" --no-reload
+exec php -d upload_max_filesize=20M -d post_max_size=40M -d memory_limit=256M artisan serve --host=0.0.0.0 --port="${PORT}" --no-reload

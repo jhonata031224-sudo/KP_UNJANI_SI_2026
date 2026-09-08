@@ -9,6 +9,7 @@ class Pengaturan extends Model
     protected $fillable = [
         'nama_instansi','singkatan','logo_path','alamat','email_kontak','telepon_kontak',
         'hero_eyebrow','hero_judul_awal','hero_judul_aksen','hero_subjudul','hero_deskripsi','hero_image_path',
+        'hero_bg_type','hero_video_path',
         'hero_blur_level','hero_overlay_intensity',
         'fitur','tentang_deskripsi','tentang_nama_resmi','tentang_nama_lama','tentang_fungsi_utama',
         'tentang_moto_judul','tentang_moto_deskripsi','website','sosial_media','landing_content',
@@ -56,6 +57,7 @@ class Pengaturan extends Model
             'notifikasi_push_aktif'=>true,
             'hero_blur_level'=>0,
             'hero_overlay_intensity'=>100,
+            'hero_bg_type'=>'gambar',
             'makna_logo'=>self::defaultMaknaLogo(),
         ]);
     }

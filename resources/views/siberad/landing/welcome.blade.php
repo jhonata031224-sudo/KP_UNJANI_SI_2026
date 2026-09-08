@@ -24,6 +24,15 @@
   $lpHeroExists = $pengaturan->hero_image_path
     && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->hero_image_path);
 
+  // Latar hero bisa berupa VIDEO (bukan cuma gambar) kalau Admin memilih
+  // tipe "video" di Pengaturan Umum > Beranda > "Latar Belakang Beranda" DAN
+  // file videonya benar-benar ada secara fisik di disk. Kalau tipe video
+  // dipilih tapi videonya ternyata tidak ada (mis. dangling reference), latar
+  // FALLBACK diam-diam ke gambar (kalau ada) alih-alih membiarkan hero kosong.
+  $lpHeroVideoExists = $pengaturan->hero_video_path
+    && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->hero_video_path);
+  $lpHeroUseVideo = ($pengaturan->hero_bg_type ?? 'gambar') === 'video' && $lpHeroVideoExists;
+
   // Diatur dari Pengaturan Umum > Beranda > "Gambar Latar Beranda":
   // - hero_blur_level: efek blur (buram) langsung di FOTO-nya, dalam px.
   // - hero_overlay_intensity: kepekatan lapisan gradient warna DI ATAS foto,
@@ -497,12 +506,22 @@
      "kepotong" bening di pinggir elemen. */
   .hero-stats-bg::before{
     content:"";position:absolute;inset:-24px;z-index:0;
-    @if ($lpHeroExists)
+    @if ($lpHeroExists && !$lpHeroUseVideo)
     background-image:url('{{ asset('storage/'.$pengaturan->hero_image_path) }}');
     background-size:cover;
     background-position:center 58%;
     background-repeat:no-repeat;
     @endif
+    filter:blur({{ $lpHeroBlur }}px);
+  }
+  /* Layer VIDEO: <video> sungguhan (bukan pseudo-element, karena ::before
+     tidak bisa berisi elemen media) yang ditumpuk persis di posisi yang sama
+     dengan layer foto di atas -- blur & overlay tetap konsisten dengan mode
+     gambar supaya berpindah tipe latar tidak mengubah nuansa hero. */
+  .hero-bg-video{
+    position:absolute;inset:-24px;z-index:0;
+    width:calc(100% + 48px);height:calc(100% + 48px);
+    object-fit:cover;object-position:center 58%;
     filter:blur({{ $lpHeroBlur }}px);
   }
   /* Layer overlay (::after): gradient warna tema di atas foto, kepekatannya
@@ -515,6 +534,11 @@
       linear-gradient(to top, var(--hero-ov-top) 0%, var(--hero-ov-top-fade) 26%);
   }
   .hero-stats-bg > *{position:relative;z-index:2;}
+  /* .hero-bg-video tetap harus jadi LAYER PALING BELAKANG (di bawah overlay
+     ::after) -- aturan umum ".hero-stats-bg > *" di atas SENGAJA
+     di-override lagi di sini (selector sama-sama satu level spesifisitas,
+     tapi menang karena urutan deklarasi belakangan). */
+  .hero-stats-bg > .hero-bg-video{position:absolute;z-index:0;}
   .hero{
     padding:74px 0 70px;
     position:relative;
@@ -1223,6 +1247,12 @@
   <main>
     <!-- ================= HERO ================= -->
     <div class="hero-stats-bg" style="--hero-overlay-alpha:{{ $lpHeroOverlay }};">
+    @if ($lpHeroUseVideo)
+      <video class="hero-bg-video" autoplay muted loop playsinline
+        @if ($lpHeroExists) poster="{{ asset('storage/'.$pengaturan->hero_image_path) }}" @endif>
+        <source src="{{ asset('storage/'.$pengaturan->hero_video_path) }}">
+      </video>
+    @endif
     <section class="hero" id="tentang">
       <div class="wrap hero-inner">
         <div data-reveal>

@@ -3154,6 +3154,9 @@
             && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->logo_path);
           $pengaturanHeroExists = $pengaturan->hero_image_path
             && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->hero_image_path);
+          $pengaturanHeroVideoExists = $pengaturan->hero_video_path
+            && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->hero_video_path);
+          $pengaturanHeroBgType = old('hero_bg_type', $pengaturan->hero_bg_type ?? 'gambar');
           $pengaturanStrukturOrgExists = $pengaturan->struktur_organisasi_path
             && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->struktur_organisasi_path);
         @endphp
@@ -3239,10 +3242,26 @@
                 </div>
 
                 <div class="lp-card">
-                  <div class="lp-card-title">Gambar Latar Beranda</div>
-                  <p class="lp-card-desc">Foto latar belakang bagian hero (opsional) — kosongkan kalau tidak mau pakai gambar.</p>
+                  <div class="lp-card-title">Latar Belakang Beranda</div>
+                  <p class="lp-card-desc">Latar bagian hero (opsional) — bisa berupa gambar diam atau video singkat yang berputar otomatis.</p>
                   <div class="form-grid">
                     <div class="form-field full">
+                      <label style="display:block;margin-bottom:8px;">Tipe Latar Belakang</label>
+                      <div class="lp-bg-type-toggle" role="radiogroup" aria-label="Tipe latar belakang beranda">
+                        <label class="lp-bg-type-option">
+                          <input type="radio" name="hero_bg_type" value="gambar" data-lp-bg-type-radio @checked($pengaturanHeroBgType !== 'video')>
+                          <span>Gambar</span>
+                        </label>
+                        <label class="lp-bg-type-option">
+                          <input type="radio" name="hero_bg_type" value="video" data-lp-bg-type-radio @checked($pengaturanHeroBgType === 'video')>
+                          <span>Video</span>
+                        </label>
+                      </div>
+                      <small>Beralih tipe tidak menghapus file yang sudah diunggah sebelumnya — kalau nanti mau balik lagi, tidak perlu unggah ulang.</small>
+                    </div>
+
+                    {{-- ----- Sub-opsi: GAMBAR ----- --}}
+                    <div class="form-field full lp-bg-type-panel" data-lp-bg-type-panel="gambar">
                       <label for="lpHeroImage" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Gambar Latar Beranda</label>
                       <div class="lp-hero-image-row">
                         <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturanHeroExists ? '1' : '0' }}" data-label-existing="Ganti Gambar">
@@ -3251,12 +3270,28 @@
                           <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
                           <span>Belum ada gambar latar belakang</span>
                         </div>
-                        <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Latar Belakang</button>
+                        <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Gambar</button>
                       </div>
                       <small>Format JPG, PNG, atau WEBP · maksimal 5 MB.</small>
                     </div>
+
+                    {{-- ----- Sub-opsi: VIDEO ----- --}}
+                    <div class="form-field full lp-bg-type-panel" data-lp-bg-type-panel="video" style="display:none;">
+                      <label for="lpHeroVideo" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Video Latar Beranda</label>
+                      <div class="lp-hero-image-row">
+                        <input id="lpHeroVideo" name="hero_video" type="file" accept="video/mp4,video/webm,video/quicktime,.mov" data-lp-video="hero_video" data-has-current="{{ $pengaturanHeroVideoExists ? '1' : '0' }}" data-label-existing="Ganti Video">
+                        <video src="{{ $pengaturanHeroVideoExists ? asset('storage/'.$pengaturan->hero_video_path) : '' }}" class="lp-current-image" id="lpHeroVideoPreviewVideo" muted loop autoplay playsinline style="{{ $pengaturanHeroVideoExists ? '' : 'display:none' }}"></video>
+                        <div class="lp-image-placeholder" id="lpHeroVideoPreviewPlaceholder" style="{{ $pengaturanHeroVideoExists ? 'display:none' : '' }}">
+                          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m10 9 5 3-5 3z"></path></svg>
+                          <span>Belum ada video latar belakang</span>
+                        </div>
+                        <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroVideoDeleteBtn" style="{{ $pengaturanHeroVideoExists ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_video') }}" data-nama="Video Latar Belakang Beranda">Hapus Video</button>
+                      </div>
+                      <small>Format MP4, WEBM, atau MOV · maksimal 15 MB · sebaiknya video pendek (5–15 detik) tanpa suara karena akan berputar otomatis tanpa audio.</small>
+                    </div>
+
                     <div class="form-field">
-                      <label for="lpHeroBlur">Blur Foto Latar — <span id="lpHeroBlurVal">{{ old('hero_blur_level', $pengaturan->hero_blur_level ?? 0) }}</span>px</label>
+                      <label for="lpHeroBlur">Blur Latar — <span id="lpHeroBlurVal">{{ old('hero_blur_level', $pengaturan->hero_blur_level ?? 0) }}</span>px</label>
                       <input id="lpHeroBlur" name="hero_blur_level" type="range" min="0" max="20" step="1" value="{{ old('hero_blur_level', $pengaturan->hero_blur_level ?? 0) }}" data-lp="hero_blur_level" oninput="document.getElementById('lpHeroBlurVal').textContent=this.value">
                       <small>Mengaburkan foto-nya saja (0 = tajam, 20 = paling buram). Teks &amp; overlay tidak ikut buram.</small>
                     </div>
@@ -3441,9 +3476,12 @@
                   <span class="lp-browser-url">siberad</span>
                 </div>
                 <div class="lp-preview" id="lpPreview">
-                  <div class="lp-hero" id="lpPreviewHero" data-lp-preview-section="beranda"
+                  <div class="lp-hero {{ $pengaturanHeroBgType === 'video' ? 'lp-hero-bg-video' : '' }}" id="lpPreviewHero" data-lp-preview-section="beranda"
                     style="--lp-hero-photo:@if($pengaturan->hero_image_path)url('{{ asset('storage/'.$pengaturan->hero_image_path) }}')@else none @endif;--lp-hero-blur:{{ old('hero_blur_level', $pengaturan->hero_blur_level ?? 0) }}px;--lp-hero-overlay:{{ (old('hero_overlay_intensity', $pengaturan->hero_overlay_intensity ?? 100)) / 100 }};"
                   >
+                    <video id="lpPreviewHeroVideo" class="lp-hero-video-bg" muted loop autoplay playsinline
+                      @if($pengaturanHeroVideoExists) src="{{ asset('storage/'.$pengaturan->hero_video_path) }}" @endif
+                      style="{{ $pengaturanHeroBgType === 'video' && $pengaturanHeroVideoExists ? '' : 'display:none' }}"></video>
                     <div class="lp-eyebrow" id="lpPvEyebrow"></div>
                     <div class="lp-h1"><span id="lpPvJudulAwal"></span><em id="lpPvJudulAksen"></em></div>
                     <div class="lp-h2" id="lpPvSubjudul"></div>
@@ -3601,7 +3639,12 @@
           .lp-sosmed-row{padding:16px 0;border-top:1px solid var(--border-soft);}
           .lp-sosmed-row:first-child{padding-top:0;border-top:none;}
           .lp-sosmed-row:last-child{padding-bottom:0;}
+          .lp-bg-type-toggle{display:inline-flex;gap:8px;padding:4px;border-radius:11px;background:var(--panel-alt);border:1px solid var(--border-soft);}
+          .lp-bg-type-option{display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--text-muted);transition:background .15s ease,color .15s ease;}
+          .lp-bg-type-option input{margin:0;accent-color:var(--gold-bright,#FF9800);}
+          .lp-bg-type-option:has(input:checked),.lp-bg-type-option.is-active{background:var(--panel);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.15);}
           .lp-hero-image-row{display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:0;text-align:center;}
+          .lp-hero-image-row video.lp-current-image{width:100%;max-width:360px;object-fit:cover;background:#000;}
           .lp-hero-image-row .landing-file-picker{align-self:center;flex:0 0 auto;min-width:200px;justify-content:center;}
           /* Tombol "Pilih File", preview gambar, & tombol "Hapus Latar
              Belakang" semuanya rata tengah (align-items:center di parent
@@ -3805,6 +3848,14 @@
             background-image:var(--lp-hero-photo, none);
             background-size:cover;background-position:center;
             filter:blur(var(--lp-hero-blur, 0px));
+          }
+          /* Mode latar VIDEO: sembunyikan layer foto (::before) & tampilkan
+             <video> sungguhan sebagai gantinya, blur/overlay tetap sinkron
+             lewat variabel CSS yang sama dengan mode gambar. */
+          .lp-hero.lp-hero-bg-video::before{display:none;}
+          .lp-hero-video-bg{
+            position:absolute;inset:-14px;z-index:0;width:calc(100% + 28px);height:calc(100% + 28px);
+            object-fit:cover;filter:blur(var(--lp-hero-blur, 0px));
           }
           .lp-hero::after{
             content:"";position:absolute;inset:0;z-index:1;
@@ -4053,6 +4104,58 @@
                 reader.readAsDataURL(file);
               });
             }
+
+            // Batas ukuran VIDEO latar beranda -- HARUS sama persis dengan
+            // validasi server ('max:15360' KB di SettingController).
+            var LP_MAX_VIDEO_BYTES = 15 * 1024 * 1024; // 15 MB
+            var heroVideoInput = form.querySelector('[data-lp-video="hero_video"]');
+            if(heroVideoInput){
+              heroVideoInput.addEventListener('change', function(){
+                var file = this.files && this.files[0];
+                if(file && file.size > LP_MAX_VIDEO_BYTES){
+                  var ukuranMb = (file.size / (1024 * 1024)).toFixed(1);
+                  window.siberadShowToast && window.siberadShowToast('error',
+                    'Video latar beranda berukuran '+ukuranMb+' MB, melebihi batas maksimal 15 MB. Silakan kompres atau pilih video lain.');
+                  this.value = '';
+                  return;
+                }
+                var previewVideo = document.getElementById('lpHeroVideoPreviewVideo');
+                var placeholder = document.getElementById('lpHeroVideoPreviewPlaceholder');
+                var lpPreviewVideo = document.getElementById('lpPreviewHeroVideo');
+                if(!file){
+                  if(lpPreviewVideo){ lpPreviewVideo.removeAttribute('src'); lpPreviewVideo.style.display = 'none'; }
+                  return;
+                }
+                var url = URL.createObjectURL(file);
+                if(previewVideo){ previewVideo.src = url; previewVideo.style.display = 'block'; }
+                if(placeholder){ placeholder.style.display = 'none'; }
+                // Ikut tampilkan di panel Pratinjau Langsung kalau tipe latar
+                // yang sedang aktif memang video.
+                if(lpPreviewVideo){ lpPreviewVideo.src = url; }
+              });
+            }
+
+            // Toggle panel Gambar <-> Video sesuai radio "hero_bg_type" yang
+            // dipilih, plus sinkronkan latar di panel Pratinjau Langsung.
+            var bgTypeRadios = form.querySelectorAll('[data-lp-bg-type-radio]');
+            var lpPreviewHeroEl = document.getElementById('lpPreviewHero');
+            var lpPreviewVideoEl = document.getElementById('lpPreviewHeroVideo');
+            function applyBgType(type){
+              form.querySelectorAll('[data-lp-bg-type-panel]').forEach(function(panel){
+                panel.style.display = (panel.dataset.lpBgTypePanel === type) ? '' : 'none';
+              });
+              bgTypeRadios.forEach(function(radio){
+                var opt = radio.closest('.lp-bg-type-option');
+                if(opt) opt.classList.toggle('is-active', radio.checked);
+              });
+              if(lpPreviewHeroEl) lpPreviewHeroEl.classList.toggle('lp-hero-bg-video', type === 'video');
+              if(lpPreviewVideoEl) lpPreviewVideoEl.style.display = (type === 'video' && lpPreviewVideoEl.getAttribute('src')) ? 'block' : 'none';
+            }
+            bgTypeRadios.forEach(function(radio){
+              radio.addEventListener('change', function(){ if(this.checked) applyBgType(this.value); });
+            });
+            var initialBgTypeRadio = form.querySelector('[data-lp-bg-type-radio]:checked');
+            applyBgType(initialBgTypeRadio ? initialBgTypeRadio.value : 'gambar');
 
             updatePreview();
           })();
