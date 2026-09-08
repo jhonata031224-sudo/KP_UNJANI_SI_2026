@@ -517,12 +517,36 @@
   /* Layer VIDEO: <video> sungguhan (bukan pseudo-element, karena ::before
      tidak bisa berisi elemen media) yang ditumpuk persis di posisi yang sama
      dengan layer foto di atas -- blur & overlay tetap konsisten dengan mode
-     gambar supaya berpindah tipe latar tidak mengubah nuansa hero. */
-  .hero-bg-video{
+     gambar supaya berpindah tipe latar tidak mengubah nuansa hero.
+     .hero-bg-video-stage membungkus DUA <video> (A & B) yang ditumpuk pas di
+     atas satu sama lain lewat position:absolute+inset:0 supaya crossfade
+     (lihat #heroVideoLoopScript) tidak menggeser layout apa pun -- video
+     yang lagi tidak aktif cuma transparan (opacity:0), bukan dihapus dari DOM. */
+  .hero-bg-video-stage{
     position:absolute;inset:-24px;z-index:0;
     width:calc(100% + 48px);height:calc(100% + 48px);
+  }
+  .hero-bg-video{
+    position:absolute;inset:0;
+    width:100%;height:100%;
     object-fit:cover;object-position:center 58%;
     filter:blur({{ $lpHeroBlur }}px);
+    opacity:1;
+    /* Durasi transisi crossfade disamakan dengan HERO_VIDEO_CROSSFADE_MS
+       di #heroVideoLoopScript -- kalau salah satu diubah, ubah juga yang lain. */
+    transition:opacity 900ms linear;
+  }
+  .hero-bg-video-b{ opacity:0; }
+  /* Saat JS menandai video B sebagai yang aktif (class ini di-toggle di
+     #heroVideoLoopScript), urutan opacity dibalik lewat CSS alih-alih
+     inline-style dari JS supaya tetap gampang di-override/di-debug lewat
+     devtools kalau perlu. */
+  .hero-bg-video-stage.is-b-active .hero-bg-video-a{ opacity:0; }
+  .hero-bg-video-stage.is-b-active .hero-bg-video-b{ opacity:1; }
+  @media (prefers-reduced-motion: reduce){
+    /* Pengguna yang minta animasi diminimalkan tidak perlu crossfade halus --
+       potongan instan saat loop lebih baik daripada opacity terus berubah. */
+    .hero-bg-video{ transition:none; }
   }
   /* Layer overlay (::after): gradient warna tema di atas foto, kepekatannya
      diatur lewat --hero-overlay-alpha (dari Pengaturan Umum). */
@@ -534,11 +558,13 @@
       linear-gradient(to top, var(--hero-ov-top) 0%, var(--hero-ov-top-fade) 26%);
   }
   .hero-stats-bg > *{position:relative;z-index:2;}
-  /* .hero-bg-video tetap harus jadi LAYER PALING BELAKANG (di bawah overlay
-     ::after) -- aturan umum ".hero-stats-bg > *" di atas SENGAJA
-     di-override lagi di sini (selector sama-sama satu level spesifisitas,
-     tapi menang karena urutan deklarasi belakangan). */
-  .hero-stats-bg > .hero-bg-video{position:absolute;z-index:0;}
+  /* .hero-bg-video-stage (pembungkus 2 <video> A/B) tetap harus jadi LAYER
+     PALING BELAKANG (di bawah overlay ::after) -- aturan umum
+     ".hero-stats-bg > *" di atas SENGAJA di-override lagi di sini (selector
+     sama-sama satu level spesifisitas, tapi menang karena urutan deklarasi
+     belakangan). Dulu selector ini menunjuk langsung ke .hero-bg-video
+     sebelum videonya dibungkus stage untuk kebutuhan crossfade loop. */
+  .hero-stats-bg > .hero-bg-video-stage{position:absolute;z-index:0;}
   .hero{
     padding:74px 0 70px;
     position:relative;
@@ -1184,10 +1210,21 @@
     <!-- ================= HERO ================= -->
     <div class="hero-stats-bg" style="--hero-overlay-alpha:{{ $lpHeroOverlay }};">
     @if ($lpHeroUseVideo)
-      <video class="hero-bg-video" autoplay muted loop playsinline
-        @if ($lpHeroExists) poster="{{ asset('storage/'.$pengaturan->hero_image_path) }}" @endif>
-        <source src="{{ asset('storage/'.$pengaturan->hero_video_path) }}">
-      </video>
+      {{-- Dua <video> ditumpuk (bukan satu dengan atribut `loop`) supaya
+           saat video mengulang dari awal bisa di-CROSSFADE halus lewat JS
+           (lihat #heroVideoLoopScript di bawah), bukan potongan/"jump cut"
+           kasar seperti restart native `loop` biasa -- terutama kerasa di
+           video yang lebih panjang (sekarang boleh sampai 1 menit).
+           Video kedua (hero-bg-video-b) mulai tersembunyi (opacity:0) dan
+           belum diberi `src` sampai dibutuhkan gilirannya, supaya browser
+           tidak langsung load+buffer 2x video besar sekaligus di awal. --}}
+      <div class="hero-bg-video-stage" id="heroVideoStage" data-hero-video-src="{{ asset('storage/'.$pengaturan->hero_video_path) }}">
+        <video class="hero-bg-video hero-bg-video-a" id="heroVideoA" autoplay muted playsinline preload="auto"
+          @if ($lpHeroExists) poster="{{ asset('storage/'.$pengaturan->hero_image_path) }}" @endif>
+          <source src="{{ asset('storage/'.$pengaturan->hero_video_path) }}">
+        </video>
+        <video class="hero-bg-video hero-bg-video-b" id="heroVideoB" muted playsinline preload="none" aria-hidden="true"></video>
+      </div>
     @endif
     <section class="hero" id="tentang">
       <div class="wrap hero-inner">
@@ -1919,6 +1956,120 @@
   }
   window.addEventListener('scroll', toggleBackToTop, {passive:true});
   toggleBackToTop();
+
+  // ---------- crossfade loop utk video latar hero ----------
+  // Lihat komentar markup #heroVideoStage & CSS .hero-bg-video di atas.
+  // Dibungkus IIFE (bukan langsung di scope atas <script> ini) supaya
+  // variabel lokalnya tidak bentrok dengan deklarasi lain di blok script
+  // yang sama (mis. `reduceMotion`/`duration` punya loader di atas).
+  (function heroVideoLoopScript(){
+    var stage = document.getElementById('heroVideoStage');
+    if (!stage) return; // latar hero yang dipakai bukan video -- tidak ada yang perlu di-loop
+
+    var videoA = document.getElementById('heroVideoA');
+    var videoB = document.getElementById('heroVideoB');
+    var src = stage.dataset.heroVideoSrc;
+    if (!videoA || !videoB || !src) return;
+
+    var heroReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (heroReduceMotion) {
+      // Pengguna minta animasi diminimalkan -- pakai loop native biasa,
+      // tanpa crossfade dua video (transition opacity juga sudah dimatikan
+      // lewat @media (prefers-reduced-motion: reduce) di CSS di atas).
+      videoA.loop = true;
+      return;
+    }
+
+    // CROSSFADE_SECONDS HARUS SAMA PERSIS dengan durasi transisi opacity di
+    // CSS (.hero-bg-video{transition:opacity 900ms linear}) supaya swap
+    // "aktif <-> standby" di JS ini selesai barengan sama animasi CSS-nya.
+    var CROSSFADE_SECONDS = 0.9;
+    // Mulai siapkan (preload) video standby sekian detik SEBELUM video aktif
+    // habis, supaya pas gilirannya nanti sudah siap main tanpa jeda buffering.
+    // Karena src-nya SAMA PERSIS dengan video aktif (sudah pernah didownload
+    // penuh lewat preload="auto" di video pertama), browser pada umumnya
+    // langsung ambil dari cache -- 3 detik lebih dari cukup di kondisi normal.
+    var PRELOAD_LEAD_SECONDS = 3;
+
+    var active = videoA;
+    var standby = videoB;
+    var standbyPrepared = false;
+    var crossfadeTriggered = false;
+    var usingA = true; // dipakai buat toggle class "is-b-active" di stage
+
+    function siapkanSrcJikaBelum(el){
+      if (el.dataset.heroSrcReady) return;
+      el.src = src;
+      el.load();
+      el.dataset.heroSrcReady = '1';
+    }
+    // Video A sudah punya source lewat <source> di HTML (server-rendered),
+    // jadi ditandai siap dari awal supaya tidak di-load ulang sia-sia saat
+    // gilirannya jadi standby nanti.
+    videoA.dataset.heroSrcReady = '1';
+
+    function mulaiCrossfade(){
+      try { standby.currentTime = 0; } catch (err) {}
+      var playPromise = standby.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        // Kalau browser sempat menolak autoplay terprogram (jarang terjadi
+        // karena videonya muted), biarkan saja -- video aktif lama tetap
+        // lanjut sampai kesempatan berikutnya.
+        playPromise.catch(function(){});
+      }
+
+      usingA = !usingA;
+      stage.classList.toggle('is-b-active', !usingA);
+
+      // Setelah crossfade opacity selesai, video lama dihentikan & direset
+      // ke awal supaya siap dipakai lagi sebagai standby di siklus berikutnya
+      // (src-nya dibiarkan sama, tidak perlu di-reload ulang).
+      var videoLama = active;
+      setTimeout(function(){
+        videoLama.pause();
+        try { videoLama.currentTime = 0; } catch (err) {}
+      }, CROSSFADE_SECONDS * 1000);
+
+      // Tukar peran aktif <-> standby untuk siklus loop berikutnya.
+      active = standby;
+      standby = videoLama;
+      standbyPrepared = false;
+      crossfadeTriggered = false;
+    }
+
+    function onHeroVideoTimeUpdate(e){
+      if (e.target !== active) return;
+      var dur = active.duration;
+      if (!isFinite(dur) || dur <= 0) return;
+      var remaining = dur - active.currentTime;
+
+      if (!standbyPrepared && remaining <= PRELOAD_LEAD_SECONDS) {
+        standbyPrepared = true;
+        siapkanSrcJikaBelum(standby);
+      }
+      if (!crossfadeTriggered && remaining <= CROSSFADE_SECONDS) {
+        crossfadeTriggered = true;
+        mulaiCrossfade();
+      }
+    }
+    // Jaring pengaman: kalau event 'timeupdate' (yang frekuensinya tidak
+    // presisi, cuma beberapa kali per detik) sampai kelewatan momen crossfade
+    // di atas dan video aktif keburu mentok ke akhir (event 'ended'), langsung
+    // gilir ke standby SAAT ITU JUGA -- lebih baik potongan sedikit kasar
+    // daripada video macet diam di frame terakhir selamanya.
+    function onHeroVideoEnded(e){
+      if (e.target !== active) return;
+      if (!crossfadeTriggered) {
+        crossfadeTriggered = true;
+        mulaiCrossfade();
+      }
+    }
+
+    videoA.addEventListener('timeupdate', onHeroVideoTimeUpdate);
+    videoB.addEventListener('timeupdate', onHeroVideoTimeUpdate);
+    videoA.addEventListener('ended', onHeroVideoEnded);
+    videoB.addEventListener('ended', onHeroVideoEnded);
+  })();
 
 </script>
 <script src="{{ asset('js/landing-content.js') }}"></script>

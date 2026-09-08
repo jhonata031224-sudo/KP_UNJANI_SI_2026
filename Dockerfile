@@ -14,8 +14,12 @@ WORKDIR /app
 
 # System deps + PHP extensions dibutuhkan project ini (ext-zip di composer.json,
 # plus pdo_mysql/sqlite3 untuk DB, gd untuk image jika dibutuhkan Laravel).
+# ffmpeg disertakan untuk binary `ffprobe` -- dipakai SettingController untuk
+# mengecek durasi video latar beranda (lihat catatan sama di nixpacks.toml,
+# yang aktif dipakai Railway; Dockerfile ini dijaga tetap konsisten sebagai
+# jalur build alternatif/lokal).
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git unzip libzip-dev libpng-dev libonig-dev libxml2-dev libsqlite3-dev \
+    git unzip libzip-dev libpng-dev libonig-dev libxml2-dev libsqlite3-dev ffmpeg \
     && docker-php-ext-install pdo_mysql pdo_sqlite zip pcntl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 

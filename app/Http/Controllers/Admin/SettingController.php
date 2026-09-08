@@ -8,8 +8,11 @@ use App\Models\Pengaturan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\Process\ExecutableFinder;
+use Symfony\Component\Process\Process;
 
 class SettingController extends Controller
 {
@@ -125,11 +128,16 @@ class SettingController extends Controller
             // terpisah (lihat migration 2026_09_08_000001) supaya Admin bisa
             // bolak-balik ganti tipe tanpa upload ulang.
             'hero_bg_type'=>['nullable','in:gambar,video'],
-            // Video latar beranda: dibatasi 15 MB (lebih besar dari gambar
-            // karena format video, tapi tetap dijaga supaya landing page tidak
-            // berat dimuat) -- format mp4/webm/mov senada dengan validasi
-            // upload video Postingan (lihat PostinganController).
-            'hero_video'=>['nullable','file','mimes:mp4,webm,mov,quicktime','max:15360'],
+            // Video latar beranda: dibatasi 100 MB (dinaikkan dari 15 MB
+            // supaya video pendek berkualitas lebih tinggi tetap muat) --
+            // format mp4/webm/mov senada dengan validasi upload video
+            // Postingan (lihat PostinganController). Durasi maksimal 1 menit
+            // dicek terpisah lewat rule closure 'durasi_video_maks_60_detik'
+            // di bawah (butuh ffprobe, lihat getDurasiVideoDetik()) karena
+            // Laravel tidak punya rule bawaan untuk durasi media.
+            'hero_video'=>['nullable','file','mimes:mp4,webm,mov,quicktime','max:102400', function ($attribute, $value, $fail) {
+                $this->validasiDurasiVideoMaksimal($value, $fail, 60);
+            }],
             // hero_blur_level: efek blur langsung di foto latar (px, 0-20).
             // hero_overlay_intensity: kepekatan lapisan gradient di atas foto (%, 0-100).
             // Kedua efek ini dipakai bersama untuk latar gambar MAUPUN video.
@@ -174,8 +182,8 @@ class SettingController extends Controller
             'hero_image.uploaded' => 'Gambar latar beranda gagal diunggah. Kemungkinan ukurannya terlalu besar -- pastikan ukuran file maksimal 5 MB.',
             'hero_image.max' => 'Ukuran gambar latar beranda maksimal 5 MB. Silakan kompres atau pilih foto lain.',
             'hero_image.image' => 'File gambar latar beranda tidak valid. Gunakan format JPG, PNG, atau WEBP.',
-            'hero_video.uploaded' => 'Video latar beranda gagal diunggah. Kemungkinan ukurannya terlalu besar -- pastikan ukuran file maksimal 15 MB.',
-            'hero_video.max' => 'Ukuran video latar beranda maksimal 15 MB. Silakan kompres atau pilih video lain.',
+            'hero_video.uploaded' => 'Video latar beranda gagal diunggah. Kemungkinan ukurannya terlalu besar -- pastikan ukuran file maksimal 100 MB.',
+            'hero_video.max' => 'Ukuran video latar beranda maksimal 100 MB. Silakan kompres atau pilih video lain.',
             'hero_video.mimes' => 'Format video latar beranda tidak valid. Gunakan format MP4, WEBM, atau MOV.',
             'logo_file.uploaded' => 'Logo gagal diunggah. Kemungkinan ukurannya terlalu besar -- pastikan ukuran file maksimal 5 MB.',
             'logo_file.max' => 'Ukuran logo maksimal 5 MB. Silakan kompres atau pilih foto lain.',
@@ -312,5 +320,68 @@ class SettingController extends Controller
         }
 
         return back()->with('status', $label.' berhasil dihapus.');
+    }
+
+    /**
+     * Rule validasi closure untuk field hero_video: menolak video yang
+     * durasinya lebih dari $maksDetik detik (dipakai dengan 60 = 1 menit).
+     *
+     * Dicek pakai `ffprobe` (bagian dari paket ffmpeg, lihat nixpacks.toml)
+     * lewat Symfony Process alih-alih paket PHP tambahan supaya tidak nambah
+     * dependency composer baru. Kalau ffprobe TIDAK ditemukan di server (mis.
+     * environment lokal developer yang belum install ffmpeg) atau gagal
+     * dibaca durasinya karena sebab lain, validasi ini SENGAJA DILEWATI
+     * (tidak menolak upload) -- supaya fitur upload video tidak ikut mati
+     * total gara-gara satu binary opsional hilang. Batas ukuran 100 MB di
+     * rule 'max' tetap jadi pengaman utama pada kondisi itu.
+     */
+    private function validasiDurasiVideoMaksimal($file, callable $fail, int $maksDetik): void
+    {
+        if (! $file) return;
+
+        $durasi = $this->getDurasiVideoDetik($file->getRealPath());
+
+        if ($durasi === null) return; // ffprobe tidak tersedia / gagal baca -- lewati saja
+
+        if ($durasi > $maksDetik) {
+            $durasiBulat = (int) ceil($durasi);
+            $fail("Durasi video latar beranda {$durasiBulat} detik, melebihi batas maksimal {$maksDetik} detik (1 menit). Silakan potong videonya terlebih dahulu.");
+        }
+    }
+
+    /**
+     * Baca durasi video (dalam detik, boleh pecahan) lewat `ffprobe`.
+     * Return null kalau ffprobe tidak ada di PATH server atau proses gagal --
+     * caller (validasiDurasiVideoMaksimal) menganggap null sebagai "lewati
+     * pengecekan", bukan "durasi 0 detik".
+     */
+    private function getDurasiVideoDetik(string $path): ?float
+    {
+        try {
+            $ffprobeBin = (new ExecutableFinder())->find('ffprobe');
+            if (! $ffprobeBin) return null;
+
+            $process = new Process([
+                $ffprobeBin,
+                '-v', 'error',
+                '-show_entries', 'format=duration',
+                '-of', 'default=noprint_wrappers=1:nokey=1',
+                $path,
+            ]);
+            $process->setTimeout(10);
+            $process->run();
+
+            if (! $process->isSuccessful()) return null;
+
+            $output = trim($process->getOutput());
+            if ($output === '' || ! is_numeric($output)) return null;
+
+            return (float) $output;
+        } catch (\Throwable $e) {
+            // Jangan sampai kegagalan pengecekan durasi (proses/exec dinonaktifkan
+            // di beberapa hosting shared) bikin seluruh form Pengaturan Umum error.
+            Log::warning('Gagal membaca durasi video hero_video via ffprobe: '.$e->getMessage());
+            return null;
+        }
     }
 }

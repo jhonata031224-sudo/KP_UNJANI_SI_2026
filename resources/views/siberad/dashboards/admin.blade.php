@@ -3287,7 +3287,7 @@
                         </div>
                         <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroVideoDeleteBtn" style="{{ $pengaturanHeroVideoExists ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_video') }}" data-nama="Video Latar Belakang Beranda">Hapus Video</button>
                       </div>
-                      <small>Format MP4, WEBM, atau MOV · maksimal 15 MB · sebaiknya video pendek (5–15 detik) tanpa suara karena akan berputar otomatis tanpa audio.</small>
+                      <small>Format MP4, WEBM, atau MOV · maksimal 100 MB · durasi maksimal 1 menit · sebaiknya tanpa suara karena akan berputar otomatis (looping) tanpa audio.</small>
                     </div>
 
                     <div class="form-field">
@@ -4105,34 +4105,70 @@
               });
             }
 
-            // Batas ukuran VIDEO latar beranda -- HARUS sama persis dengan
-            // validasi server ('max:15360' KB di SettingController).
-            var LP_MAX_VIDEO_BYTES = 15 * 1024 * 1024; // 15 MB
+            // Batas ukuran & durasi VIDEO latar beranda -- HARUS sama persis
+            // dengan validasi server ('max:102400' KB + rule durasi 60 detik
+            // di SettingController::updateLanding()).
+            var LP_MAX_VIDEO_BYTES = 100 * 1024 * 1024; // 100 MB
+            var LP_MAX_VIDEO_DURATION_SECONDS = 60; // 1 menit
             var heroVideoInput = form.querySelector('[data-lp-video="hero_video"]');
             if(heroVideoInput){
               heroVideoInput.addEventListener('change', function(){
-                var file = this.files && this.files[0];
-                if(file && file.size > LP_MAX_VIDEO_BYTES){
+                var input = this;
+                var file = input.files && input.files[0];
+                if(!file){
+                  var lpPreviewVideoKosong = document.getElementById('lpPreviewHeroVideo');
+                  if(lpPreviewVideoKosong){ lpPreviewVideoKosong.removeAttribute('src'); lpPreviewVideoKosong.style.display = 'none'; }
+                  return;
+                }
+                if(file.size > LP_MAX_VIDEO_BYTES){
                   var ukuranMb = (file.size / (1024 * 1024)).toFixed(1);
                   window.siberadShowToast && window.siberadShowToast('error',
-                    'Video latar beranda berukuran '+ukuranMb+' MB, melebihi batas maksimal 15 MB. Silakan kompres atau pilih video lain.');
-                  this.value = '';
+                    'Video latar beranda berukuran '+ukuranMb+' MB, melebihi batas maksimal 100 MB. Silakan kompres atau pilih video lain.');
+                  input.value = '';
                   return;
                 }
-                var previewVideo = document.getElementById('lpHeroVideoPreviewVideo');
-                var placeholder = document.getElementById('lpHeroVideoPreviewPlaceholder');
-                var lpPreviewVideo = document.getElementById('lpPreviewHeroVideo');
-                if(!file){
-                  if(lpPreviewVideo){ lpPreviewVideo.removeAttribute('src'); lpPreviewVideo.style.display = 'none'; }
-                  return;
-                }
+
                 var url = URL.createObjectURL(file);
-                if(previewVideo){ previewVideo.src = url; previewVideo.style.display = 'block'; }
-                if(placeholder){ placeholder.style.display = 'none'; }
-                // Ikut tampilkan di panel Pratinjau Langsung kalau tipe latar
-                // yang sedang aktif memang video.
-                if(lpPreviewVideo){ lpPreviewVideo.src = url; }
+
+                // Cek durasi lewat metadata video di browser SEBELUM
+                // ditampilkan sebagai pratinjau / ikut ke-submit -- deteksi
+                // instan tanpa perlu round-trip ke server dulu. Validasi
+                // durasi di server (ffprobe, lihat SettingController) tetap
+                // jadi pengaman utama karena cek di sisi klien ini bisa saja
+                // dilewati (mis. devtools).
+                var probeVideo = document.createElement('video');
+                probeVideo.preload = 'metadata';
+                probeVideo.onloadedmetadata = function(){
+                  var durasi = probeVideo.duration;
+                  if(isFinite(durasi) && durasi > LP_MAX_VIDEO_DURATION_SECONDS){
+                    var durasiBulat = Math.ceil(durasi);
+                    window.siberadShowToast && window.siberadShowToast('error',
+                      'Durasi video latar beranda '+durasiBulat+' detik, melebihi batas maksimal 60 detik (1 menit). Silakan potong videonya terlebih dahulu.');
+                    input.value = '';
+                    URL.revokeObjectURL(url);
+                    return;
+                  }
+                  tampilkanPratinjauVideoHero(file, url);
+                };
+                probeVideo.onerror = function(){
+                  // Gagal baca metadata (format tak dikenal browser, dsb) --
+                  // lewati saja pengecekan durasi di sini, biar server yang
+                  // akhirnya menolak/menerima lewat ffprobe.
+                  tampilkanPratinjauVideoHero(file, url);
+                };
+                probeVideo.src = url;
               });
+            }
+
+            function tampilkanPratinjauVideoHero(file, url){
+              var previewVideo = document.getElementById('lpHeroVideoPreviewVideo');
+              var placeholder = document.getElementById('lpHeroVideoPreviewPlaceholder');
+              var lpPreviewVideo = document.getElementById('lpPreviewHeroVideo');
+              if(previewVideo){ previewVideo.src = url; previewVideo.style.display = 'block'; }
+              if(placeholder){ placeholder.style.display = 'none'; }
+              // Ikut tampilkan di panel Pratinjau Langsung kalau tipe latar
+              // yang sedang aktif memang video.
+              if(lpPreviewVideo){ lpPreviewVideo.src = url; }
             }
 
             // Toggle panel Gambar <-> Video sesuai radio "hero_bg_type" yang
