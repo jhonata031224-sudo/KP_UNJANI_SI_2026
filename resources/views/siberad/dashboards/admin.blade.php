@@ -3174,17 +3174,22 @@
              pemisah tipis + lebar yang SAMA PERSIS dengan kartu induk. --}}
         <div class="lp-layout">
 
-          {{-- ---------- PANEL EDITOR ---------- --}}
-          <div class="panel lp-panel">
-            <div class="panel-head">
-              <div>
-                <h3>Konten Halaman Landing</h3>
-                <p>Pilih bagian yang mau diedit, lalu lihat hasilnya di panel pratinjau.</p>
-              </div>
-            </div>
+          {{-- <form> sekarang membungkus SEMUA kartu editor (baik "Konten
+               Halaman Landing" maupun kartu-kartu terpisah lainnya seperti
+               "Judul & Deskripsi Utama"), bukan cuma satu kartu -- supaya
+               kartu-kartu itu bisa jadi kotak sejajar terpisah (sesuai
+               permintaan) tapi tetap satu form yang sama saat disimpan. --}}
+          <form id="landingForm" method="POST" action="{{ route('admin.pengaturan.landing.update') }}" enctype="multipart/form-data" data-current-logo="{{ $pengaturanLogoExists ? asset('storage/'.$pengaturan->logo_path) : '' }}" data-logo-delete-url="{{ route('admin.pengaturan.landing.image.destroy', 'logo') }}">
+            @csrf @method('PATCH')
 
-            <form id="landingForm" method="POST" action="{{ route('admin.pengaturan.landing.update') }}" enctype="multipart/form-data" data-current-logo="{{ $pengaturanLogoExists ? asset('storage/'.$pengaturan->logo_path) : '' }}" data-logo-delete-url="{{ route('admin.pengaturan.landing.image.destroy', 'logo') }}">
-              @csrf @method('PATCH')
+            {{-- ---------- PANEL EDITOR ---------- --}}
+            <div class="panel lp-panel">
+              <div class="panel-head">
+                <div>
+                  <h3>Konten Halaman Landing</h3>
+                  <p>Pilih bagian yang mau diedit, lalu lihat hasilnya di panel pratinjau.</p>
+                </div>
+              </div>
 
               <div class="lp-tabs" role="tablist">
                 <button type="button" class="lp-tab active" data-lp-tab="beranda">
@@ -3209,37 +3214,11 @@
               <div class="lp-tab-panel active" data-lp-tab-panel="beranda">
                 <p class="lp-tab-desc">Bagian paling atas landing page — yang pertama kali dilihat pengunjung.</p>
 
-                {{-- Sebelumnya semua field statis di bawah numpuk jadi 1 form-grid
-                     panjang tanpa pengelompokan (beda sama kartu-kartu dinamis
-                     Fitur/Identitas Brand/dll yang sudah dibungkus .lp-card
-                     masing-masing) -- sekarang dipisah jadi 2 kartu senada:
-                     "Judul & Deskripsi Utama" dan "Gambar Latar Beranda". --}}
-                <div class="lp-card">
-                  <div class="lp-card-title">Judul &amp; Deskripsi Utama</div>
-                  <p class="lp-card-desc">Teks utama yang tampil di bagian paling atas (hero) landing page.</p>
-                  <div class="form-grid">
-                    <div class="form-field full">
-                      <label for="lpEyebrow">Label Kecil di Atas Judul</label>
-                      <input id="lpEyebrow" name="hero_eyebrow" type="text" value="{{ old('hero_eyebrow', $pengaturan->hero_eyebrow) }}" data-lp="hero_eyebrow">
-                    </div>
-                    <div class="form-field">
-                      <label for="lpJudulAwal">Judul (bagian 1) — juga jadi nama sistem di logo &amp; sidebar semua pengguna</label>
-                      <input id="lpJudulAwal" name="hero_judul_awal" type="text" value="{{ old('hero_judul_awal', $pengaturan->hero_judul_awal) }}" data-lp="hero_judul_awal">
-                    </div>
-                    <div class="form-field">
-                      <label for="lpJudulAksen">Judul (bagian 2, warna emas) — juga ikut di logo &amp; sidebar semua pengguna</label>
-                      <input id="lpJudulAksen" name="hero_judul_aksen" type="text" value="{{ old('hero_judul_aksen', $pengaturan->hero_judul_aksen) }}" data-lp="hero_judul_aksen">
-                    </div>
-                    <div class="form-field full">
-                      <label for="lpSubjudul">Sub Judul</label>
-                      <input id="lpSubjudul" name="hero_subjudul" type="text" value="{{ old('hero_subjudul', $pengaturan->hero_subjudul) }}" data-lp="hero_subjudul">
-                    </div>
-                    <div class="form-field full">
-                      <label for="lpDeskripsi">Deskripsi</label>
-                      <textarea id="lpDeskripsi" name="hero_deskripsi" rows="3" data-lp="hero_deskripsi">{{ old('hero_deskripsi', $pengaturan->hero_deskripsi) }}</textarea>
-                    </div>
-                  </div>
-                </div>
+                {{-- "Judul & Deskripsi Utama" DIPINDAH jadi kartu (".panel")
+                     tersendiri di luar kartu "Konten Halaman Landing" ini --
+                     lihat kartu baru setelah kartu ini ditutup, sebelum
+                     "Panel Pratinjau". Tetap nyambung/hilang bareng tab
+                     Beranda lewat data-lp-tab-panel="beranda". --}}
 
                 <div class="lp-card">
                   <div class="lp-card-title">Latar Belakang Beranda</div>
@@ -3462,8 +3441,49 @@
                   </span>
                 </div>
               </div>
-            </form>
-          </div>
+            </div>
+
+            {{-- ---------- PANEL "JUDUL & DESKRIPSI UTAMA" (kartu utama
+                 tersendiri, sejajar dengan "Konten Halaman Landing" -- BUKAN
+                 lagi kartu bersarang di dalamnya). Tetap ikut tersembunyi/
+                 tampil bareng tab Beranda lewat class ".lp-tab-panel" +
+                 data-lp-tab-panel="beranda" (dibaca oleh JS tab-switching
+                 yang query-nya lewat `form.querySelectorAll(...)`, jadi
+                 tetap berfungsi walau posisi kartu ini sekarang di luar
+                 kartu "Konten Halaman Landing", asal masih di dalam
+                 <form> yang sama). --}}
+            <div class="panel lp-panel lp-tab-panel active" data-lp-tab-panel="beranda">
+              <div class="panel-head">
+                <div>
+                  <h3>Judul &amp; Deskripsi Utama</h3>
+                  <p>Teks utama yang tampil di bagian paling atas (hero) landing page.</p>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-field full">
+                  <label for="lpEyebrow">Label Kecil di Atas Judul</label>
+                  <input id="lpEyebrow" name="hero_eyebrow" type="text" value="{{ old('hero_eyebrow', $pengaturan->hero_eyebrow) }}" data-lp="hero_eyebrow">
+                </div>
+                <div class="form-field">
+                  <label for="lpJudulAwal">Judul (bagian 1) — juga jadi nama sistem di logo &amp; sidebar semua pengguna</label>
+                  <input id="lpJudulAwal" name="hero_judul_awal" type="text" value="{{ old('hero_judul_awal', $pengaturan->hero_judul_awal) }}" data-lp="hero_judul_awal">
+                </div>
+                <div class="form-field">
+                  <label for="lpJudulAksen">Judul (bagian 2, warna emas) — juga ikut di logo &amp; sidebar semua pengguna</label>
+                  <input id="lpJudulAksen" name="hero_judul_aksen" type="text" value="{{ old('hero_judul_aksen', $pengaturan->hero_judul_aksen) }}" data-lp="hero_judul_aksen">
+                </div>
+                <div class="form-field full">
+                  <label for="lpSubjudul">Sub Judul</label>
+                  <input id="lpSubjudul" name="hero_subjudul" type="text" value="{{ old('hero_subjudul', $pengaturan->hero_subjudul) }}" data-lp="hero_subjudul">
+                </div>
+                <div class="form-field full">
+                  <label for="lpDeskripsi">Deskripsi</label>
+                  <textarea id="lpDeskripsi" name="hero_deskripsi" rows="3" data-lp="hero_deskripsi">{{ old('hero_deskripsi', $pengaturan->hero_deskripsi) }}</textarea>
+                </div>
+              </div>
+            </div>
+
+          </form>
 
           {{-- ---------- PANEL PRATINJAU (terpisah) ---------- --}}
           <div class="panel lp-preview-panel">
