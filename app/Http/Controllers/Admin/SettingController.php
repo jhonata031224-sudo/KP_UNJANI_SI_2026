@@ -125,6 +125,29 @@ class SettingController extends Controller
         // di level proses server yang bisa berbeda di environment non-Railway.
         @set_time_limit(300);
 
+        // DIAGNOSTIK SEMENTARA: pesan "hero_video.uploaded" ("Kemungkinan
+        // ukurannya terlalu besar") cuma TEBAKAN Laravel -- rule 'uploaded'
+        // sebenarnya gagal untuk SEMUA kode error PHP upload (bukan cuma
+        // ukuran), termasuk UPLOAD_ERR_PARTIAL, UPLOAD_ERR_NO_TMP_DIR,
+        // UPLOAD_ERR_CANT_WRITE, dsb. Baris ini mencatat kode error PHP
+        // MENTAH (dari $_FILES, sebelum dibungkus Laravel/UploadedFile)
+        // via error_log() supaya tetap kebaca di stderr proses `php artisan
+        // serve` (dan ikut tertangkap log deploy Railway) walau
+        // LOG_CHANNEL Laravel (storage/logs, tidak kebaca dari Railway)
+        // tidak dipakai. HAPUS blok ini setelah penyebab pastinya ketemu.
+        if (isset($_FILES['hero_video'])) {
+            $f = $_FILES['hero_video'];
+            error_log(sprintf(
+                '[DIAG hero_video upload] error_code=%s name=%s size=%s tmp_name_exists=%s upload_tmp_dir=%s sys_tmp=%s',
+                $f['error'] ?? 'null',
+                $f['name'] ?? 'null',
+                $f['size'] ?? 'null',
+                (! empty($f['tmp_name']) && is_uploaded_file($f['tmp_name'])) ? 'yes' : 'no',
+                ini_get('upload_tmp_dir') ?: '(default)',
+                sys_get_temp_dir()
+            ));
+        }
+
         $validated = $request->validate([
             'hero_eyebrow'=>['nullable','string','max:255'],
             'hero_judul_awal'=>['nullable','string','max:50'],
