@@ -138,13 +138,18 @@ class SettingController extends Controller
         if (isset($_FILES['hero_video'])) {
             $f = $_FILES['hero_video'];
             error_log(sprintf(
-                '[DIAG hero_video upload] error_code=%s name=%s size=%s tmp_name_exists=%s upload_tmp_dir=%s sys_tmp=%s',
+                '[DIAG hero_video upload] error_code=%s name=%s size=%s tmp_name_exists=%s upload_tmp_dir=%s sys_tmp=%s | RUNTIME ini: upload_max_filesize=%s post_max_size=%s memory_limit=%s php_sapi=%s php_ini_loaded_file=%s',
                 $f['error'] ?? 'null',
                 $f['name'] ?? 'null',
                 $f['size'] ?? 'null',
                 (! empty($f['tmp_name']) && is_uploaded_file($f['tmp_name'])) ? 'yes' : 'no',
                 ini_get('upload_tmp_dir') ?: '(default)',
-                sys_get_temp_dir()
+                sys_get_temp_dir(),
+                ini_get('upload_max_filesize'),
+                ini_get('post_max_size'),
+                ini_get('memory_limit'),
+                PHP_SAPI,
+                php_ini_loaded_file() ?: '(none)'
             ));
         }
 
