@@ -3455,7 +3455,11 @@
 
               <div class="lp-form-actions">
                 <div class="lp-form-actions-inner">
-                  <button class="btn btn-primary" type="submit">Simpan Konten Landing</button>
+                  <button class="btn btn-primary" type="submit" id="landingFormSubmitBtn">Simpan Konten Landing</button>
+                  <span id="landingFormUploadProgress" style="display:none;margin-left:12px;font-size:13px;color:var(--text-muted);align-items:center;gap:7px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="animation:lpUploadSpin 1s linear infinite;flex-shrink:0"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    <span id="landingFormUploadProgressText">Mengunggah...</span>
+                  </span>
                 </div>
               </div>
             </form>
@@ -3964,7 +3968,104 @@
             }
             restoreDraftIfAny();
             form.addEventListener('input', function(){ saveDraft(); });
-            form.addEventListener('submit', function(){ try { sessionStorage.removeItem(LP_DRAFT_KEY); } catch (e) {} });
+
+            // ---------- submit: loading indicator + upload progress ----------
+            // Tombol Simpan di-disable saat submit untuk mencegah double-submit
+            // (klik berkali-kali saat upload video besar yang lambat). Progress
+            // text ditampilkan supaya Admin tahu upload sedang berjalan, bukan
+            // browser-nya hang. Kalau ada video dipilih, tampilkan progress
+            // upload via XMLHttpRequest agar lebih informatif dari sekadar spinner.
+            @php
+            // Inject CSRF token ke JS -- tidak bisa pakai meta[csrf-token] karena
+            // bisa saja belum ada, dan form sudah punya @csrf yang di-render server.
+            $csrfToken = csrf_token();
+            @endphp
+            var lpSubmitBtn = document.getElementById('landingFormSubmitBtn');
+            var lpUploadProgress = document.getElementById('landingFormUploadProgress');
+            var lpUploadProgressText = document.getElementById('landingFormUploadProgressText');
+
+            // Inject animasi spin sekali (tidak perlu duplikat kalau sudah ada)
+            if(!document.getElementById('lpUploadSpinStyle')){
+              var spinStyle = document.createElement('style');
+              spinStyle.id = 'lpUploadSpinStyle';
+              spinStyle.textContent = '@keyframes lpUploadSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+              document.head.appendChild(spinStyle);
+            }
+
+            form.addEventListener('submit', function(e){
+              try { sessionStorage.removeItem(LP_DRAFT_KEY); } catch (ex) {}
+
+              var heroVideoInput = form.querySelector('[data-lp-video="hero_video"]');
+              var hasVideo = heroVideoInput && heroVideoInput.files && heroVideoInput.files.length > 0;
+
+              // Tampilkan loading state pada tombol
+              if(lpSubmitBtn){
+                lpSubmitBtn.disabled = true;
+                lpSubmitBtn.textContent = hasVideo ? 'Mengunggah video...' : 'Menyimpan...';
+              }
+              if(lpUploadProgress) lpUploadProgress.style.display = 'inline-flex';
+
+              if(!hasVideo) return; // submit biasa (native), tidak perlu XHR
+
+              // Ada video -- intercept dengan XHR supaya bisa pantau progress
+              e.preventDefault();
+
+              var xhr = new XMLHttpRequest();
+              var formData = new FormData(form);
+
+              xhr.upload.addEventListener('progress', function(ev){
+                if(!ev.lengthComputable) return;
+                var pct = Math.round((ev.loaded / ev.total) * 100);
+                var mb = (ev.loaded / (1024*1024)).toFixed(1);
+                var total = (ev.total / (1024*1024)).toFixed(1);
+                if(lpUploadProgressText) lpUploadProgressText.textContent = 'Mengunggah video... '+pct+'% ('+mb+'/'+total+' MB)';
+              });
+
+              xhr.addEventListener('load', function(){
+                // Server merespons -- ikuti redirect (3xx) atau tampilkan error
+                if(xhr.status >= 200 && xhr.status < 400){
+                  // Respons sukses atau redirect -- reload halaman untuk
+                  // menampilkan flash message dari server (back()->with(...))
+                  if(lpUploadProgressText) lpUploadProgressText.textContent = 'Tersimpan, memuat ulang...';
+                  window.location.href = xhr.responseURL || window.location.href;
+                } else {
+                  // Error dari server -- tampilkan pesan dan enable kembali tombol
+                  var errMsg = 'Gagal menyimpan (HTTP '+xhr.status+'). Coba lagi.';
+                  try {
+                    var json = JSON.parse(xhr.responseText);
+                    if(json && json.message) errMsg = json.message;
+                    else if(json && json.errors){
+                      var msgs = [];
+                      Object.values(json.errors).forEach(function(arr){ if(Array.isArray(arr)) msgs = msgs.concat(arr); });
+                      if(msgs.length) errMsg = msgs.join(' ');
+                    }
+                  } catch(ex){}
+                  window.siberadShowToast && window.siberadShowToast('error', errMsg);
+                  if(lpSubmitBtn){ lpSubmitBtn.disabled = false; lpSubmitBtn.textContent = 'Simpan Konten Landing'; }
+                  if(lpUploadProgress) lpUploadProgress.style.display = 'none';
+                }
+              });
+
+              xhr.addEventListener('error', function(){
+                window.siberadShowToast && window.siberadShowToast('error',
+                  'Koneksi terputus saat mengunggah video. Periksa internet dan coba lagi.');
+                if(lpSubmitBtn){ lpSubmitBtn.disabled = false; lpSubmitBtn.textContent = 'Simpan Konten Landing'; }
+                if(lpUploadProgress) lpUploadProgress.style.display = 'none';
+              });
+
+              xhr.addEventListener('timeout', function(){
+                window.siberadShowToast && window.siberadShowToast('error',
+                  'Waktu upload habis (timeout). Coba lagi atau gunakan video yang lebih kecil.');
+                if(lpSubmitBtn){ lpSubmitBtn.disabled = false; lpSubmitBtn.textContent = 'Simpan Konten Landing'; }
+                if(lpUploadProgress) lpUploadProgress.style.display = 'none';
+              });
+
+              xhr.timeout = 600000; // 10 menit -- batas klien, lebih dari cukup
+              xhr.open('POST', form.action);
+              xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+              xhr.setRequestHeader('X-CSRF-TOKEN', '{{ $csrfToken }}');
+              xhr.send(formData);
+            });
 
             // ---------- tab switching ----------
             var tabs = form.querySelectorAll('[data-lp-tab]');

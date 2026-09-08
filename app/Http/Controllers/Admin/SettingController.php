@@ -116,6 +116,15 @@ class SettingController extends Controller
             return back()->with('error', 'Akses Pengaturan Umum belum diverifikasi. Masukkan password dan captcha terlebih dahulu.');
         }
 
+        // Naikkan batas waktu eksekusi PHP untuk request ini saja -- file
+        // video bisa mendekati 100 MB sehingga proses store ke disk (terutama
+        // volume Railway yang I/O-nya bisa lambat) melebihi default 30 detik.
+        // max_input_time juga di-set di railway-start.sh tapi set_time_limit()
+        // ini mengatur sisi EKSEKUSI (setelah data sudah diterima) dan berlaku
+        // di level per-request, lebih aman daripada hanya mengandalkan flag -d
+        // di level proses server yang bisa berbeda di environment non-Railway.
+        @set_time_limit(300);
+
         $validated = $request->validate([
             'hero_eyebrow'=>['nullable','string','max:255'],
             'hero_judul_awal'=>['nullable','string','max:50'],

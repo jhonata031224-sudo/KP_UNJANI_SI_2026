@@ -81,4 +81,13 @@ echo "==> [4/5] OK"
 # dan hasilnya "Application failed to respond" walau app-nya sendiri hidup.
 PORT="${PORT:-8080}"
 echo "==> [5/5] starting php artisan serve on 0.0.0.0:${PORT}"
-exec php -d upload_max_filesize=110M -d post_max_size=120M -d memory_limit=512M artisan serve --host=0.0.0.0 --port="${PORT}" --no-reload
+# max_input_time=300 -- waktu (detik) yang diizinkan PHP untuk MENERIMA
+# data request dari klien (termasuk membaca body upload). Default PHP adalah
+# 60 detik -- terlalu singkat untuk upload video mendekati 100 MB di koneksi
+# lambat; request akan di-cut oleh PHP sebelum file selesai diterima dan
+# hasilnya 500 / "failed to upload" tanpa pesan yang bermakna.
+# max_execution_time=300 -- waktu (detik) untuk MEMPROSES request setelah
+# data diterima (validasi ffprobe + store file ke disk). Default 30 detik
+# juga terlalu mepet untuk file besar di volume Railway yang lambat I/O-nya.
+# 300 detik (5 menit) memberi ruang lebih dari cukup untuk keduanya.
+exec php -d upload_max_filesize=110M -d post_max_size=120M -d memory_limit=512M -d max_input_time=300 -d max_execution_time=300 artisan serve --host=0.0.0.0 --port="${PORT}" --no-reload
