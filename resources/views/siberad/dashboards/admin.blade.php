@@ -3402,7 +3402,7 @@
                     <span class="lp-range-badge"><span id="lpHeroBlurVal">{{ $pengaturanHeroBlur }}</span><small>px</small></span>
                   </div>
                   <input id="lpHeroBlur" name="hero_blur_level" type="range" min="0" max="20" step="1" value="{{ $pengaturanHeroBlur }}" class="lp-range" data-lp="hero_blur_level" style="--lp-range-fill:{{ round($pengaturanHeroBlur / 20 * 100, 2) }}%" oninput="document.getElementById('lpHeroBlurVal').textContent=this.value;this.style.setProperty('--lp-range-fill',(this.value/this.max*100)+'%');">
-                  <small>Mengaburkan foto-nya saja (0 = tajam, 20 = paling buram). Teks &amp; overlay tidak ikut buram.</small>
+                  <small>0 = tajam, 20 = paling buram.</small>
                 </div>
                 <div class="form-field lp-range-field">
                   <div class="lp-range-head">
@@ -3410,7 +3410,7 @@
                     <span class="lp-range-badge"><span id="lpHeroOverlayVal">{{ $pengaturanHeroOverlay }}</span><small>%</small></span>
                   </div>
                   <input id="lpHeroOverlay" name="hero_overlay_intensity" type="range" min="0" max="100" step="1" value="{{ $pengaturanHeroOverlay }}" class="lp-range" data-lp="hero_overlay_intensity" style="--lp-range-fill:{{ $pengaturanHeroOverlay }}%" oninput="document.getElementById('lpHeroOverlayVal').textContent=this.value;this.style.setProperty('--lp-range-fill',(this.value/this.max*100)+'%');">
-                  <small>Lapisan gradient gelap/terang di atas foto (0 = foto polos tanpa overlay, 100 = seperti tampilan bawaan).</small>
+                  <small>0 = tanpa overlay, 100 = paling pekat.</small>
                 </div>
               </div>
             </div>
@@ -3834,7 +3834,14 @@
              ini juga otomatis menghilangkan bug "GAMBAR/VIDEO ga sejajar"
              sebelumnya, karena tidak ada lagi kontrol radio bawaan browser
              yang ukurannya bisa beda antara checked vs unchecked. */
-          .lp-bg-type-toggle{display:inline-flex;gap:6px;padding:5px;border-radius:14px;background:var(--panel-alt);border:1px solid var(--border-soft);}
+          /* align-self:flex-start -- ".lp-bg-type-toggle" duduk di dalam
+             ".form-field" yang flex-direction:column (default
+             align-items:stretch), jadi tanpa ini kotak toggle ikut
+             direntangkan selebar kartu (kelihatan "kepanjangan", separuh
+             lebih cuma latar abu-abu kosong di kanan tombol GAMBAR/VIDEO).
+             align-self:flex-start mengembalikannya jadi selebar isinya
+             saja (sesuai display:inline-flex di bawah). */
+          .lp-bg-type-toggle{display:inline-flex;align-self:flex-start;max-width:100%;gap:6px;padding:5px;border-radius:14px;background:var(--panel-alt);border:1px solid var(--border-soft);}
           .lp-bg-type-option{
             position:relative;display:flex;align-items:center;gap:7px;
             padding:9px 18px;border-radius:10px;cursor:pointer;
