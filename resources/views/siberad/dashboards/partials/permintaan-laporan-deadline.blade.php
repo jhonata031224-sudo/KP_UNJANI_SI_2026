@@ -840,35 +840,10 @@
             input.addEventListener('change',clearInvalid);
         });
 
-        // Lampiran WAJIB (min. 1 file) untuk setiap kirim/update checkpoint --
-        // kecuali mode "Lihat Progres" (data-mode="view"). Input file-nya
-        // di-drive dropzone kustom (state.existing + state.staged), jadi
-        // atribut `required` bawaan HTML sengaja TIDAK dipasang (bakal salah
-        // nolak mode edit yang cuma mempertahankan lampiran lama tanpa upload
-        // baru). Dicek di sini saat submit: capture phase + stopImmediate-
-        // Propagation supaya overlay konfirmasi "Kirim Laporan?" di
-        // laporan-role.blade.php TIDAK kebuka kalau lampiran masih kosong.
-        // Native constraint validation (field `required` lain) sudah jalan
-        // lebih dulu -- kalau ada yang kosong, event 'submit' ini tidak
-        // pernah nembak, jadi urutannya aman.
-        form.addEventListener('submit',function(e){
-            if(form.dataset.mode==='view') return;
-            var zone=document.getElementById('lampiranDropzone');
-            if(!zone) return;
-            var st=(typeof lampiranZoneState==='function')?lampiranZoneState(zone):null;
-            var count=st?(st.existing.length+st.staged.length):0;
-            var errEl=lampiranRequiredErrorEl(zone);
-            if(count>0){
-                if(errEl) errEl.style.display='none';
-                zone.classList.remove('field-invalid');
-                return;
-            }
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            zone.classList.add('field-invalid');
-            if(errEl){ errEl.textContent='Lampiran wajib diisi, minimal 1 file.'; errEl.style.display='flex'; }
-            zone.scrollIntoView({block:'center',behavior:'smooth'});
-        },true);
+        // Lampiran OPSIONAL untuk kirim/update checkpoint -- checkpoint boleh
+        // dikirim tanpa file sama sekali. (Dulu ada guard submit di sini yang
+        // mem-block kalau lampiran kosong; sekarang dihapus, sejajar dengan
+        // LaporanController::store()/updateProgres yang juga sudah nullable.)
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initKirimLaporanValidation); else initKirimLaporanValidation();
 
@@ -1000,30 +975,6 @@
             listBox.appendChild(buildLampiranRow(zone,{ kind:'staged', idx:idx, nama:file.name, size:formatLampiranSize(file.size), url:url }));
         });
         if(emptyEl) emptyEl.hidden=total>0;
-        // Lampiran WAJIB: begitu ada minimal 1 file, hapus penanda error yang
-        // sempat muncul dari percobaan submit sebelumnya. Error-nya cuma
-        // DIMUNCULKAN oleh guard submit (di initKirimLaporanValidation), nggak
-        // dari sini -- biar nggak nongol duluan pas modal baru kebuka & masih
-        // kosong wajar.
-        if(total>0){
-            var reqEl=document.querySelector('.kirim-laporan-error[data-lampiran-required-error="1"]');
-            if(reqEl) reqEl.style.display='none';
-            var dz=document.getElementById('lampiranDropzone');
-            if(dz) dz.classList.remove('field-invalid');
-        }
-    }
-    function lampiranRequiredErrorEl(zone){
-        var anchor=zone.parentElement;
-        if(!anchor) return null;
-        var msg=anchor.querySelector(':scope > .kirim-laporan-error[data-lampiran-required-error="1"]');
-        if(!msg){
-            msg=document.createElement('span');
-            msg.className='kirim-laporan-error';
-            msg.setAttribute('data-lampiran-required-error','1');
-            msg.style.display='none';
-            zone.insertAdjacentElement('afterend',msg);
-        }
-        return msg;
     }
     // Dipanggil tiap kali modal dibuka (create ATAU edit) buat reset daftar
     // ke kondisi checkpoint yang lagi dibuka -- create selalu [] (belum ada
