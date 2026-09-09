@@ -3375,7 +3375,7 @@
                    kartu di sini murni tampilan, bukan fungsi baru. ===== --}}
               <div class="lp-overview-grid">
                 <button type="button" class="lp-overview-card" data-lp-tab="beranda" data-lp-scroll-target="lpPanelHeroBg">
-                  <span class="lp-ov-icon lp-ov-blue" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"/></svg></span>
+                  <span class="lp-ov-icon lp-ov-gold" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"/></svg></span>
                   <span class="lp-ov-body">
                     <span class="lp-ov-title">Latar Belakang Beranda</span>
                     <span class="lp-ov-desc">Atur gambar atau video latar, blur, dan overlay warna pada bagian hero.</span>
@@ -3402,7 +3402,7 @@
                 </button>
 
                 <button type="button" class="lp-overview-card" data-lp-tab="fitur" data-lp-scroll-target="lpPanelFitur">
-                  <span class="lp-ov-icon lp-ov-orange" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+                  <span class="lp-ov-icon lp-ov-amber" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
                   <span class="lp-ov-body">
                     <span class="lp-ov-title">Fitur Unggulan</span>
                     <span class="lp-ov-desc">Atur judul dan deskripsi kartu fitur yang tampil di bagian "Fitur".</span>
@@ -3420,7 +3420,7 @@
                 </button>
 
                 <button type="button" class="lp-overview-card" data-lp-tab="kontak" data-lp-scroll-target="lpPanelKontakSosmed">
-                  <span class="lp-ov-icon lp-ov-indigo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-3.9M8.6 13.5l6.8 3.9"/></svg></span>
+                  <span class="lp-ov-icon lp-ov-red" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-3.9M8.6 13.5l6.8 3.9"/></svg></span>
                   <span class="lp-ov-body">
                     <span class="lp-ov-title">Sosial Media</span>
                     <span class="lp-ov-desc">Atur label dan tautan akun sosial media di footer.</span>
@@ -3439,7 +3439,7 @@
                  `form.querySelectorAll(...)`, jadi tetap berfungsi walau
                  posisi kartu ini sekarang di luar kartu "Konten Halaman
                  Landing", asal masih di dalam <form> yang sama). --}}
-            <div class="panel lp-panel lp-tab-panel active" data-lp-tab-panel="beranda" id="lpPanelHeroBg">
+            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="beranda" id="lpPanelHeroBg">
               <div class="panel-head">
                 <div>
                   <h3>Latar Belakang Beranda</h3>
@@ -3526,7 +3526,7 @@
                  tetap berfungsi walau posisi kartu ini sekarang di luar
                  kartu "Konten Halaman Landing", asal masih di dalam
                  <form> yang sama). --}}
-            <div class="panel lp-panel lp-tab-panel active" data-lp-tab-panel="beranda" id="lpPanelHeroText">
+            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="beranda" id="lpPanelHeroText">
               <div class="panel-head">
                 <div>
                   <h3>Judul &amp; Deskripsi Utama</h3>
@@ -3806,12 +3806,12 @@
           .lp-panel form{padding:22px;}
 
           /* ===== Banner ringkasan "Pengaturan Konten Halaman Landing" ===== */
-          .lp-hero-banner{display:flex;align-items:center;gap:18px;background:linear-gradient(120deg,#2563eb,#4f46e5);border:none;color:#fff;overflow:hidden;position:relative;}
-          .lp-hero-banner-icon{flex:0 0 auto;width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;}
-          .lp-hero-banner-icon svg{width:22px;height:22px;stroke:#fff;}
+          .lp-hero-banner{display:flex;align-items:center;gap:18px;background:linear-gradient(120deg,var(--gold-solid-bright),#c9740a);border:none;color:var(--on-gold);overflow:hidden;position:relative;}
+          .lp-hero-banner-icon{flex:0 0 auto;width:44px;height:44px;border-radius:12px;background:rgba(36,26,5,.14);display:flex;align-items:center;justify-content:center;}
+          .lp-hero-banner-icon svg{width:22px;height:22px;stroke:var(--on-gold);}
           .lp-hero-banner-text{flex:1 1 auto;min-width:0;}
-          .lp-hero-banner-text h2{color:#fff;margin-bottom:4px;}
-          .lp-hero-banner-text p{color:rgba(255,255,255,.85);font-size:13px;max-width:640px;}
+          .lp-hero-banner-text h2{color:var(--on-gold);margin-bottom:4px;}
+          .lp-hero-banner-text p{color:rgba(36,26,5,.75);font-size:13px;max-width:640px;}
           .lp-hero-banner-art{flex:0 0 auto;width:120px;height:90px;display:none;}
           @media(min-width:860px){ .lp-hero-banner-art{display:block;} }
 
@@ -3827,19 +3827,34 @@
           }
           .lp-overview-card:hover{border-color:var(--border-strong);box-shadow:0 10px 24px rgba(0,0,0,.1);transform:translateY(-1px);}
           .lp-overview-card:active{transform:translateY(0);}
+          /* Kartu yang sedang "terbuka" (grup field-nya lagi ditampilkan di
+             bawah) ditandai aksen emas di border + latar redup, senada tema. */
+          .lp-overview-card.lp-ov-open{border-color:var(--gold);background:var(--gold-dim);}
           .lp-ov-icon{flex:0 0 auto;width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;}
           .lp-ov-icon svg{width:19px;height:19px;}
-          .lp-ov-blue{background:rgba(37,99,235,.12);color:#2563eb;}
+          .lp-ov-gold{background:var(--gold-dim);color:var(--gold-bright);}
           .lp-ov-purple{background:rgba(147,51,234,.12);color:#9333ea;}
-          .lp-ov-green{background:rgba(22,163,74,.12);color:#16a34a;}
-          .lp-ov-orange{background:rgba(234,88,12,.12);color:#ea580c;}
+          .lp-ov-green{background:var(--green-dim);color:var(--green-bright);}
+          .lp-ov-amber{background:var(--amber-dim);color:var(--amber);}
           .lp-ov-pink{background:rgba(219,39,119,.12);color:#db2777;}
-          .lp-ov-indigo{background:rgba(79,70,229,.12);color:#4f46e5;}
+          .lp-ov-red{background:var(--red-dim);color:var(--red);}
           .lp-ov-body{flex:1 1 auto;min-width:0;padding-top:2px;}
           .lp-ov-title{display:block;font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;}
           .lp-ov-desc{display:block;font-size:12px;color:var(--text-muted);line-height:1.5;}
-          .lp-ov-chevron{flex:0 0 auto;width:18px;height:18px;color:var(--text-dim);margin-top:9px;transition:transform .15s ease;}
+          .lp-ov-chevron{flex:0 0 auto;width:18px;height:18px;color:var(--text-dim);margin-top:9px;transition:transform .2s ease;}
           .lp-overview-card:hover .lp-ov-chevron{transform:translateX(2px);color:var(--text-muted);}
+          .lp-overview-card.lp-ov-open .lp-ov-chevron{transform:rotate(90deg);color:var(--gold-bright);}
+          .lp-overview-card.lp-ov-open:hover .lp-ov-chevron{transform:rotate(90deg) translateX(0);}
+
+          /* ===== Kelompok field cuma tampil setelah kartu ringkasan
+             diklik -- sebelum itu, ".lp-tab-panel" (tanpa ".active") tetap
+             disembunyikan oleh aturan lama ".lp-tab-panel{display:none}"
+             di bawah. Wadah kecil "Sedang mengedit..." ini muncul di atas
+             kelompok field yang lagi terbuka, biar jelas & ada tombol
+             tutup baliknya ke ringkasan. ===== --}}
+          .lp-open-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--gold-dim);border:1px solid var(--gold);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12.5px;font-weight:600;color:var(--gold-bright);}
+          .lp-open-bar button{font-family:inherit;font-size:12px;font-weight:700;color:var(--text-muted);background:var(--panel);border:1px solid var(--border-soft);border-radius:8px;padding:5px 12px;cursor:pointer;transition:color .15s ease,border-color .15s ease;}
+          .lp-open-bar button:hover{color:var(--text);border-color:var(--border-strong);}
 
           .lp-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;border-bottom:1px solid var(--border-soft);padding-bottom:16px;}
           .lp-tab{
@@ -4502,19 +4517,32 @@
               xhr.send(formData);
             });
 
-            // ---------- tab switching ----------
+            // ---------- tab switching (accordion: tertutup semua di awal,
+            // baru kelihatan setelah kartu ringkasan-nya diklik; klik kartu
+            // yang sama lagi = tutup balik) ----------
             var tabs = form.querySelectorAll('[data-lp-tab]');
             var panels = form.querySelectorAll('[data-lp-tab-panel]');
             var previewSections = document.querySelectorAll('[data-lp-preview-section]');
+            var currentOpenTab = null;
 
             function activateTab(name){
-              tabs.forEach(function(t){ t.classList.toggle('active', t.dataset.lpTab === name); });
-              panels.forEach(function(p){ p.classList.toggle('active', p.dataset.lpTabPanel === name); });
-              previewSections.forEach(function(s){ s.classList.toggle('is-focus', s.dataset.lpPreviewSection === name); });
+              currentOpenTab = name;
+              tabs.forEach(function(t){ t.classList.toggle('active', t.dataset.lpTab === name); t.classList.toggle('lp-ov-open', name !== null && t.dataset.lpTab === name); });
+              panels.forEach(function(p){ p.classList.toggle('active', name !== null && p.dataset.lpTabPanel === name); });
+              previewSections.forEach(function(s){ s.classList.toggle('is-focus', name !== null && s.dataset.lpPreviewSection === name); });
             }
 
             tabs.forEach(function(t){
               t.addEventListener('click', function(){
+                // Klik kartu yang tab-nya sudah terbuka -> tutup balik
+                // (accordion), bukan buka ulang. Kartu lain yang kebetulan
+                // mengarah ke tab yang sama (mis. dua kartu Beranda) ikut
+                // dianggap "kartu yang sama lagi diklik" karena memang
+                // sama-sama menampilkan grup field yang identik.
+                if (currentOpenTab === t.dataset.lpTab) {
+                  activateTab(null);
+                  return;
+                }
                 activateTab(t.dataset.lpTab);
                 // Kartu ringkasan (.lp-overview-card) punya data-lp-scroll-target
                 // berisi id panel field yang bersangkutan -- scroll ke situ
@@ -4522,7 +4550,7 @@
                 // tidak punya atribut ini, jadi baris ini aman di-skip untuk itu.
                 if (t.dataset.lpScrollTarget) {
                   var target = document.getElementById(t.dataset.lpScrollTarget);
-                  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  if (target) setTimeout(function(){ target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 30);
                 }
               });
             });
