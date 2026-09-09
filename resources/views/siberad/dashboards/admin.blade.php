@@ -3562,7 +3562,7 @@
                  tersembunyi/tampil bareng tab Fitur lewat
                  data-lp-tab-panel="fitur". --}}
             @foreach ((old('fitur') ?? $pengaturan->fitur ?? []) as $i => $fitur)
-              <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="fitur" @if($i === 0) id="lpPanelFitur" @endif>
+              <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="fitur" data-lp-group="lpPanelFitur" @if($i === 0) id="lpPanelFitur" @endif>
                 <div class="panel-head">
                   <div>
                     <h3>Fitur {{ $i + 1 }}</h3>
@@ -3598,7 +3598,7 @@
             </div>
 
             {{-- ---------- PANEL "IDENTITAS INSTANSI" (tab Tentang) ---------- --}}
-            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang">
+            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang" data-lp-group="lpPanelTentang">
               <div class="panel-head">
                 <div>
                   <h3>Identitas Instansi</h3>
@@ -3622,7 +3622,7 @@
             </div>
 
             {{-- ---------- PANEL "MOTO" (tab Tentang) ---------- --}}
-            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang">
+            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang" data-lp-group="lpPanelTentang">
               <div class="panel-head">
                 <div>
                   <h3>Moto</h3>
@@ -3645,7 +3645,7 @@
                  "Poin Nomor N" tetap bersarang di dalam panel ini, karena
                  itu bagian dari isi satu section "Makna Logo", bukan
                  section terpisah tersendiri. ---------- --}}
-            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang">
+            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang" data-lp-group="lpPanelTentang">
               <div class="panel-head">
                 <div>
                   <h3>Makna Logo</h3>
@@ -3725,6 +3725,26 @@
                     </div>
                   </div>
                 @endforeach
+              </div>
+            </div>
+
+            {{-- ---------- MODAL EDITOR (satu shell generik dipakai bergantian
+                 buat semua section) -- diletakkan di DALAM <form> yang sama
+                 (bukan di luar) supaya panel section yang dipindah JS ke
+                 dalam #lpModalBody tetap anak dari #landingForm, jadi
+                 field-fieldnya tetap ikut ke-submit normal. Isi modal
+                 (judul + panel) di-render kosong di server; JS yang mengisi
+                 saat kartu ringkasan diklik (lihat "modal: klik kartu
+                 ringkasan" di script bawah). ---------- --}}
+            <div class="lp-modal-backdrop" id="lpModalBackdrop" hidden>
+              <div class="lp-modal-box" role="dialog" aria-modal="true" aria-labelledby="lpModalTitle">
+                <div class="lp-modal-head">
+                  <h3 id="lpModalTitle">Detail</h3>
+                  <button type="button" class="lp-modal-close" id="lpModalCloseBtn" aria-label="Tutup">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                  </button>
+                </div>
+                <div class="lp-modal-body" id="lpModalBody"></div>
               </div>
             </div>
 
@@ -3870,6 +3890,28 @@
 
           .lp-tab-panel{display:none;padding-top:18px;}
           .lp-tab-panel.active{display:block;animation:lpFadeIn .18s ease;}
+
+          /* ===== Modal editor (ganti model "buka inline di bawah grid" ke
+             "buka di atas jendela terpisah") -- panel section yang sedang
+             diedit DIPINDAH (appendChild) oleh JS ke dalam #lpModalBody,
+             jadi cukup andalkan selector turunan ini buat nampilinnya;
+             begitu dipindah balik ke posisi asal (modal ditutup), otomatis
+             balik ke aturan ".lp-tab-panel{display:none}" di atas tanpa
+             perlu utak-atik class .active sama sekali. ===== --}}
+          .lp-modal-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(15,17,23,.6);backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow-y:auto;}
+          .lp-modal-backdrop[hidden]{display:none!important;}
+          .lp-modal-box{background:var(--bg);border-radius:18px;width:100%;max-width:760px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:lpModalPop .16s ease;}
+          @keyframes lpModalPop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+          .lp-modal-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;border-bottom:1px solid var(--border-soft);}
+          .lp-modal-head h3{margin:0;font-family:var(--display);font-size:18px;font-weight:700;}
+          .lp-modal-close{flex:0 0 auto;width:32px;height:32px;border-radius:9px;border:1px solid var(--border-soft);background:var(--panel-alt);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s ease,color .15s ease;}
+          .lp-modal-close:hover{background:var(--gold-dim);color:var(--gold-bright);border-color:var(--gold);}
+          .lp-modal-body{flex:1 1 auto;overflow-y:auto;padding:20px 22px 28px;}
+          .lp-modal-body .lp-tab-panel{display:block!important;padding-top:0;animation:lpFadeIn .18s ease;}
+          .lp-modal-body .lp-tab-panel.panel{box-shadow:none;border:1px solid var(--border-soft);}
+          .lp-modal-body .lp-tab-panel.panel + .lp-tab-panel.panel{margin-top:16px;}
+          body.lp-modal-lock{overflow:hidden;}
+          @media(max-width:640px){ .lp-modal-backdrop{padding:0;} .lp-modal-box{max-width:100%;max-height:100vh;height:100%;border-radius:0;} }
           @keyframes lpFadeIn{ from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:none;} }
           .lp-tab-desc{font-size:12.5px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;}
 
@@ -4517,43 +4559,84 @@
               xhr.send(formData);
             });
 
-            // ---------- tab switching (accordion: tertutup semua di awal,
-            // baru kelihatan setelah kartu ringkasan-nya diklik; klik kartu
-            // yang sama lagi = tutup balik) ----------
-            var tabs = form.querySelectorAll('[data-lp-tab]');
-            var panels = form.querySelectorAll('[data-lp-tab-panel]');
+            // ---------- modal editor: klik kartu ringkasan -> PINDAHKAN
+            // (bukan cuma tampilkan) panel section terkait ke dalam modal
+            // terpisah. Kunci pengelompokan pakai data-lp-scroll-target milik
+            // kartu (sudah unik per kartu, walau 2 kartu berbagi data-lp-tab
+            // yang sama seperti "Latar Belakang Beranda" & "Judul & Deskripsi
+            // Utama" -- keduanya sama-sama tab "beranda" tapi scroll-target
+            // beda, jadi tetap kebuka sebagai modal TERPISAH, bukan
+            // ke-bundle jadi satu kayak dulu). Panel dicocokkan lewat
+            // data-lp-group (ditambahkan ke panel yang tidak unik/beririsan
+            // dengan panel lain di tab yang sama), fallback ke id panel itu
+            // sendiri kalau data-lp-group tidak ada. ----------
+            var overviewCards = form.querySelectorAll('[data-lp-tab]');
             var previewSections = document.querySelectorAll('[data-lp-preview-section]');
-            var currentOpenTab = null;
+            var modalBackdrop = document.getElementById('lpModalBackdrop');
+            var modalBody = document.getElementById('lpModalBody');
+            var modalTitle = document.getElementById('lpModalTitle');
+            var modalCloseBtn = document.getElementById('lpModalCloseBtn');
+            var lpMovedPanels = []; // {el, parent, next} -- buat balikin posisi asal pas ditutup
+            var lpOpenCard = null;
 
-            function activateTab(name){
-              currentOpenTab = name;
-              tabs.forEach(function(t){ t.classList.toggle('active', t.dataset.lpTab === name); t.classList.toggle('lp-ov-open', name !== null && t.dataset.lpTab === name); });
-              panels.forEach(function(p){ p.classList.toggle('active', name !== null && p.dataset.lpTabPanel === name); });
-              previewSections.forEach(function(s){ s.classList.toggle('is-focus', name !== null && s.dataset.lpPreviewSection === name); });
+            function lpCloseModal(){
+              if (!modalBackdrop || modalBackdrop.hidden) return;
+              // Balikin tiap panel ke posisi semula, MUNDUR dari yang
+              // terakhir dipindah -- supaya `next` (nextSibling asal) masih
+              // valid buat insertBefore walau beberapa panel dipindah
+              // sekaligus dari kelompok yang sama (mis. 4 panel "Tentang").
+              for (var i = lpMovedPanels.length - 1; i >= 0; i--) {
+                var rec = lpMovedPanels[i];
+                rec.parent.insertBefore(rec.el, rec.next);
+              }
+              lpMovedPanels = [];
+              modalBackdrop.hidden = true;
+              document.body.classList.remove('lp-modal-lock');
+              if (modalBody) modalBody.innerHTML = '';
+              if (lpOpenCard) { lpOpenCard.classList.remove('lp-ov-open'); lpOpenCard = null; }
+              previewSections.forEach(function(s){ s.classList.remove('is-focus'); });
             }
 
-            tabs.forEach(function(t){
-              t.addEventListener('click', function(){
-                // Klik kartu yang tab-nya sudah terbuka -> tutup balik
-                // (accordion), bukan buka ulang. Kartu lain yang kebetulan
-                // mengarah ke tab yang sama (mis. dua kartu Beranda) ikut
-                // dianggap "kartu yang sama lagi diklik" karena memang
-                // sama-sama menampilkan grup field yang identik.
-                if (currentOpenTab === t.dataset.lpTab) {
-                  activateTab(null);
-                  return;
-                }
-                activateTab(t.dataset.lpTab);
-                // Kartu ringkasan (.lp-overview-card) punya data-lp-scroll-target
-                // berisi id panel field yang bersangkutan -- scroll ke situ
-                // setelah tab-nya aktif/kelihatan. Pill-tab lama (kalau ada)
-                // tidak punya atribut ini, jadi baris ini aman di-skip untuk itu.
-                if (t.dataset.lpScrollTarget) {
-                  var target = document.getElementById(t.dataset.lpScrollTarget);
-                  if (target) setTimeout(function(){ target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 30);
+            function lpOpenModal(card){
+              var groupKey = card.dataset.lpScrollTarget;
+              if (!groupKey || !modalBackdrop || !modalBody) return;
+              lpCloseModal(); // jaga-jaga kalau ada modal lain yang masih kebuka
+
+              var candidates = form.querySelectorAll('[data-lp-tab-panel]');
+              var moved = [];
+              candidates.forEach(function(panel){
+                var panelGroup = panel.dataset.lpGroup || panel.id;
+                if (panelGroup === groupKey) {
+                  lpMovedPanels.push({ el: panel, parent: panel.parentNode, next: panel.nextSibling });
+                  modalBody.appendChild(panel);
+                  moved.push(panel);
                 }
               });
+              if (!moved.length) return; // grup kosong (harusnya tidak terjadi) -> jangan buka modal kosong
+
+              var titleEl = card.querySelector('.lp-ov-title');
+              if (modalTitle) modalTitle.textContent = titleEl ? titleEl.textContent : 'Detail';
+              modalBackdrop.hidden = false;
+              document.body.classList.add('lp-modal-lock');
+              card.classList.add('lp-ov-open');
+              lpOpenCard = card;
+
+              var focusName = moved[0].dataset.lpTabPanel;
+              previewSections.forEach(function(s){ s.classList.toggle('is-focus', s.dataset.lpPreviewSection === focusName); });
+            }
+
+            overviewCards.forEach(function(card){
+              card.addEventListener('click', function(){
+                // Klik kartu yang modalnya lagi kebuka -> tutup balik,
+                // bukan buka ulang.
+                if (lpOpenCard === card) { lpCloseModal(); return; }
+                lpOpenModal(card);
+              });
             });
+
+            if (modalCloseBtn) modalCloseBtn.addEventListener('click', lpCloseModal);
+            if (modalBackdrop) modalBackdrop.addEventListener('click', function(e){ if (e.target === modalBackdrop) lpCloseModal(); });
+            document.addEventListener('keydown', function(e){ if (e.key === 'Escape') lpCloseModal(); });
 
             // ---------- live preview ----------
             var sosialIcons = {
