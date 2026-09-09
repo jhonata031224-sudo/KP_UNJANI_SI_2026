@@ -2860,8 +2860,8 @@
                   <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
                 </button>
                 <div class="dl-download-menu">
-                  <a href="{{ route('admin.laporan.export-pengguna') }}"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Unduh CSV / Excel</a>
-                  <a href="{{ route('admin.laporan.cetak', 'pengguna') }}" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>Unduh PDF</a>
+                  <a href="{{ route('admin.laporan.export-pengguna') }}" data-dl-base-href="{{ route('admin.laporan.export-pengguna') }}"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Unduh CSV / Excel</a>
+                  <a href="{{ route('admin.laporan.cetak', 'pengguna') }}" data-dl-base-href="{{ route('admin.laporan.cetak', 'pengguna') }}" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>Unduh PDF</a>
                 </div>
               </div>
             </div>
@@ -2944,8 +2944,8 @@
                   <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
                 </button>
                 <div class="dl-download-menu">
-                  <a href="{{ route('admin.laporan.export-aktivitas') }}"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Unduh CSV / Excel</a>
-                  <a href="{{ route('admin.laporan.cetak', 'aktivitas') }}" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>Unduh PDF</a>
+                  <a href="{{ route('admin.laporan.export-aktivitas') }}" data-dl-base-href="{{ route('admin.laporan.export-aktivitas') }}"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Unduh CSV / Excel</a>
+                  <a href="{{ route('admin.laporan.cetak', 'aktivitas') }}" data-dl-base-href="{{ route('admin.laporan.cetak', 'aktivitas') }}" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>Unduh PDF</a>
                 </div>
               </div>
             </div>
@@ -3216,6 +3216,60 @@
             : ['dlAktivitasDari', 'dlAktivitasSampai'];
           var filterEl = document.querySelector('[data-dl-filter="' + id + '"]');
           if (filterEl) filterEl.addEventListener('change', function () { dlSaringTanggal(id, cfg[0], cfg[1]); });
+        });
+
+        // ── Sinkronkan link "Unduh" (CSV/Excel & PDF) dengan filter aktif ──
+        // Tabel di layar cuma difilter lewat JS (tampil/sembunyi baris), jadi
+        // tanpa ini tombol Unduh selalu mengambil SELURUH data dari server
+        // walau kategori/tanggal/pencarian sedang dipilih. Query string yang
+        // sama ('q', 'kategori', 'dari', 'sampai') dibaca ulang di
+        // ReportController (exportUsersExcel/exportActivityExcel/printView).
+        function dlBuildQuery(tableId, dariId, sampaiId) {
+          var search = document.querySelector('[data-dl-search="' + tableId + '"]');
+          var dariEl = document.getElementById(dariId);
+          var sampaiEl = document.getElementById(sampaiId);
+          var filterEl = document.querySelector('[data-dl-filter="' + tableId + '"]');
+          var params = new URLSearchParams();
+          if (search && search.value.trim()) params.set('q', search.value.trim());
+          if (dariEl && dariEl.value) params.set('dari', dariEl.value);
+          if (sampaiEl && sampaiEl.value) params.set('sampai', sampaiEl.value);
+          if (filterEl && filterEl.value) params.set('kategori', filterEl.value);
+          return params.toString();
+        }
+
+        function dlUpdateDownloadLinks(tableId, dariId, sampaiId) {
+          var sectionId = tableId === 'tblDlPengguna' ? 'dl-pengguna' : 'dl-aktivitas';
+          var section = document.querySelector('[data-dl-section="' + sectionId + '"]');
+          if (!section) return;
+          var qs = dlBuildQuery(tableId, dariId, sampaiId);
+          section.querySelectorAll('.dl-download-menu a[data-dl-base-href]').forEach(function (a) {
+            var base = a.getAttribute('data-dl-base-href');
+            a.setAttribute('href', qs ? (base + '?' + qs) : base);
+          });
+        }
+
+        var dlDownloadTargets = [
+          ['tblDlPengguna', 'dlPenggunaDari', 'dlPenggunaSampai'],
+          ['tblDlAktivitas', 'dlAktivitasDari', 'dlAktivitasSampai'],
+        ];
+
+        dlDownloadTargets.forEach(function (cfg) {
+          var tableId = cfg[0], dariId = cfg[1], sampaiId = cfg[2];
+
+          // Set awal saat halaman dimuat (mis. filter "Sampai" default hari ini).
+          dlUpdateDownloadLinks(tableId, dariId, sampaiId);
+
+          var search = document.querySelector('[data-dl-search="' + tableId + '"]');
+          var dariEl = document.getElementById(dariId);
+          var sampaiEl = document.getElementById(sampaiId);
+          var filterEl = document.querySelector('[data-dl-filter="' + tableId + '"]');
+          var resetBtn = document.getElementById(tableId === 'tblDlPengguna' ? 'dlPenggunaReset' : 'dlAktivitasReset');
+
+          if (search) search.addEventListener('input', function () { dlUpdateDownloadLinks(tableId, dariId, sampaiId); });
+          if (dariEl) dariEl.addEventListener('change', function () { dlUpdateDownloadLinks(tableId, dariId, sampaiId); });
+          if (sampaiEl) sampaiEl.addEventListener('change', function () { dlUpdateDownloadLinks(tableId, dariId, sampaiId); });
+          if (filterEl) filterEl.addEventListener('change', function () { dlUpdateDownloadLinks(tableId, dariId, sampaiId); });
+          if (resetBtn) resetBtn.addEventListener('click', function () { dlUpdateDownloadLinks(tableId, dariId, sampaiId); });
         });
       })();
       </script>

@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Pengaturan;
+use App\Models\Satuan;
 use App\Models\User;
 use App\Support\SimpleXlsx;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -42,10 +44,15 @@ class ReportController extends Controller
     /**
      * Export daftar pengguna sebagai XLSX yang sudah diformat untuk Excel:
      * kolom diberi lebar, header jelas, filter aktif, dan isi panjang di-wrap.
+     *
+     * Menerima query 'q' (pencarian), 'kategori', 'dari', 'sampai' — sama
+     * persis dengan filter yang tampil di tabel "Data Pengguna" pada tab
+     * Data Laporan, supaya hasil unduhan konsisten dengan apa yang sedang
+     * dilihat/difilter oleh admin, bukan selalu seluruh data.
      */
-    public function exportUsersExcel()
+    public function exportUsersExcel(Request $request)
     {
-        $users = User::terurutOrganisasi();
+        $users = $this->filteredUsers($request);
         $rows = $users->map(fn ($u) => [
             $u->name ?: '-',
             $u->username ?: '-',
@@ -68,10 +75,14 @@ class ReportController extends Controller
      * Export log aktivitas sebagai XLSX yang mudah dibaca tanpa kolom ####
      * atau teks terpotong: waktu dibuat sebagai teks, deskripsi di-wrap,
      * dan lebar kolom disesuaikan dengan isi.
+     *
+     * Menerima query 'q', 'kategori', 'dari', 'sampai' — sama seperti pada
+     * exportUsersExcel(), supaya kategori/tanggal/pencarian yang dipilih di
+     * tabel "Data Aktivitas" benar-benar ikut membatasi isi file unduhan.
      */
     public function exportActivityExcel(Request $request)
     {
-        $log = ActivityLog::with('user.satuan')->latest('created_at')->limit(2000)->get();
+        $log = $this->filteredActivityLog($request);
         $rows = $log->map(fn ($l) => [
             $l->created_at?->format('d/m/Y H:i:s') ?: '-',
             $l->nama_pengguna ?: ($l->user?->name ?: '-'),
@@ -198,13 +209,115 @@ class ReportController extends Controller
             'jenis' => $jenis,
             'pengaturan' => Pengaturan::current(),
             'semuaPengguna' => $jenis === 'pengguna'
-                ? User::terurutOrganisasi()
+                ? $this->filteredUsers($request)
                 : collect(),
             'log' => $jenis === 'aktivitas'
-                ? ActivityLog::with('user.satuan')->latest('created_at')->limit(500)->get()
+                ? $this->filteredActivityLog($request)
                 : collect(),
             'dicetakOleh' => $request->user(),
             'dicetakPada' => now(),
         ]);
+    }
+
+    /**
+     * Daftar pengguna terurut organisasi, disaring dengan query 'q'
+     * (nama/username/email/satuan/jabatan), 'kategori' (label kategori
+     * satuan, mis. "Admin"/"Pimpinan"), serta rentang tanggal dibuat
+     * 'dari'/'sampai'. Dipakai bersama oleh export Excel & cetak PDF supaya
+     * keduanya konsisten dengan filter yang aktif di tabel "Data Pengguna".
+     */
+    private function filteredUsers(Request $request)
+    {
+        $users = User::terurutOrganisasi();
+
+        $q = mb_strtolower(trim((string) $request->query('q', '')));
+        $kategori = trim((string) $request->query('kategori', ''));
+        $dari = $request->filled('dari') ? Carbon::parse($request->query('dari'))->startOfDay() : null;
+        $sampai = $request->filled('sampai') ? Carbon::parse($request->query('sampai'))->endOfDay() : null;
+
+        if ($q !== '') {
+            $users = $users->filter(function ($u) use ($q) {
+                $haystack = mb_strtolower(trim(implode(' ', [
+                    $u->name, $u->username, $u->email,
+                    $u->satuan->nama ?? '', $u->jabatan ?? '',
+                ])));
+
+                return str_contains($haystack, $q);
+            });
+        }
+
+        if ($kategori !== '') {
+            $users = $users->filter(fn ($u) => $this->kategoriLabel($u->satuan->kategori ?? null) === $kategori);
+        }
+
+        if ($dari) {
+            $users = $users->filter(fn ($u) => $u->created_at && $u->created_at->gte($dari));
+        }
+
+        if ($sampai) {
+            $users = $users->filter(fn ($u) => $u->created_at && $u->created_at->lte($sampai));
+        }
+
+        return $users->values();
+    }
+
+    /**
+     * Log aktivitas, disaring dengan query 'q' (pengguna/aksi/deskripsi),
+     * 'kategori' (label kategori satuan pemilik log), serta rentang tanggal
+     * 'dari'/'sampai'. Dipakai bersama oleh export Excel & cetak PDF supaya
+     * keduanya konsisten dengan filter yang aktif di tabel "Data Aktivitas".
+     */
+    private function filteredActivityLog(Request $request)
+    {
+        $dari = $request->filled('dari') ? Carbon::parse($request->query('dari'))->startOfDay() : null;
+        $sampai = $request->filled('sampai') ? Carbon::parse($request->query('sampai'))->endOfDay() : null;
+        $q = mb_strtolower(trim((string) $request->query('q', '')));
+        $kategori = trim((string) $request->query('kategori', ''));
+
+        $log = ActivityLog::with('user.satuan')
+            ->when($dari, fn ($qq) => $qq->where('created_at', '>=', $dari))
+            ->when($sampai, fn ($qq) => $qq->where('created_at', '<=', $sampai))
+            ->latest('created_at')
+            ->get();
+
+        if ($q !== '') {
+            $log = $log->filter(function ($l) use ($q) {
+                $haystack = mb_strtolower(trim(($l->nama_pengguna ?? '').' '.$l->aksi.' '.$l->deskripsi));
+
+                return str_contains($haystack, $q);
+            });
+        }
+
+        if ($kategori !== '') {
+            $log = $log->filter(function ($l) use ($kategori) {
+                if (! $l->user || ! $l->user->satuan) {
+                    return false;
+                }
+
+                return $this->kategoriLabel($l->user->satuan->kategori) === $kategori;
+            });
+        }
+
+        return $log->values();
+    }
+
+    /**
+     * Label kategori satuan untuk ditampilkan/difilter, disamakan persis
+     * dengan mapping yang dipakai tabel "Data Laporan" di
+     * siberad.dashboards.admin (dropdown "Semua Kategori" & atribut
+     * data-filter-value tiap baris), supaya nilai yang dikirim dari filter
+     * di halaman itu cocok dengan yang dihitung di sini.
+     */
+    private function kategoriLabel(?string $kategori): string
+    {
+        return match ($kategori) {
+            Satuan::KATEGORI_ADMIN => 'Admin',
+            Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
+            Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+            Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
+            Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+            Satuan::KATEGORI_KOTAMA => 'Kasansi',
+            default => 'Satlak',
+        };
     }
 }
