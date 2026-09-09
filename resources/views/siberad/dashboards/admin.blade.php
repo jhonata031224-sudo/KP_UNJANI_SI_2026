@@ -3939,13 +3939,14 @@
           .lp-bg-type-option:has(input:focus-visible){outline:2px solid var(--gold-bright);outline-offset:2px;}
 
           /* ===== Slider "Blur Latar" & "Kepekatan Overlay Warna" -- model
-             kapsul sederhana (kayak slider volume/brightness), bukan garis
-             tipis + lingkaran mengambang seperti sebelumnya. Track sekarang
-             dibungkus "shell" pil (.lp-range-shell) supaya area sentuhnya
-             kelihatan jadi satu kesatuan, dan thumb-nya solid emas dengan
-             cincin putih supaya tetap jelas kelihatan di latar apa pun --
-             sebelumnya thumb putih polos gampang "hilang" kalau nempel di
-             latar terang. */
+             GARIS TIPIS + thumb bulat solid (sesuai referensi desain dari
+             Admin), BUKAN lagi model kapsul/pil dengan kotak pembungkus
+             (.lp-range-shell) seperti sebelumnya. Track sekarang polos
+             tanpa background/border/padding pembungkus -- cuma garis tipis
+             yang bagian terisinya (kiri thumb) solid warna emas, dan
+             bagian sisanya (kanan thumb) pudar/redup. Thumb jadi lingkaran
+             solid polos (tanpa cincin putih) yang ukurannya jelas lebih
+             besar dari garis track, biar gampang di-drag & dipegang mata. */
           .lp-range-field{gap:10px;}
           .lp-range-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
           .lp-range-head label{display:flex;align-items:center;gap:7px;margin:0;}
@@ -3960,32 +3961,46 @@
           .lp-range-badge small{font-size:9.5px;font-weight:600;color:var(--text-muted);text-transform:lowercase;margin-left:1px;}
           .lp-range-shell{
             display:flex;align-items:center;
-            background:var(--panel-alt);border:1px solid var(--border-soft);
-            border-radius:999px;padding:0 16px;height:40px;margin:2px 0;
-            box-shadow:inset 0 1px 3px rgba(15,23,42,.06);
+            background:none;border:none;border-radius:0;padding:0 9px;height:auto;margin:10px 0;
+            box-shadow:none;
           }
           input.lp-range[type="range"]{
             -webkit-appearance:none;appearance:none;
-            width:100%;height:8px;border-radius:999px;margin:0;
+            width:100%;height:4px;border-radius:999px;margin:0;
             background:linear-gradient(to right, var(--gold-bright) 0%, var(--gold-bright) var(--lp-range-fill,0%), var(--border-soft) var(--lp-range-fill,0%), var(--border-soft) 100%);
             border:none;padding:0;outline:none;cursor:pointer;
           }
           input.lp-range[type="range"]::-webkit-slider-thumb{
-            -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
-            background:var(--gold-bright);border:3px solid #fff;
-            box-shadow:0 1px 5px rgba(15,23,42,.35);cursor:pointer;
+            -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+            background:var(--gold-bright);border:none;margin-top:0;
+            box-shadow:0 1px 4px rgba(15,23,42,.35);cursor:pointer;
             transition:transform .15s ease,box-shadow .15s ease;
           }
           input.lp-range[type="range"]:hover::-webkit-slider-thumb{transform:scale(1.1);}
           input.lp-range[type="range"]:active::-webkit-slider-thumb{transform:scale(1.02);box-shadow:0 0 0 6px var(--gold-dim);}
-          input.lp-range[type="range"]::-moz-range-track{height:8px;border-radius:999px;background:var(--border-soft);border:none;}
-          input.lp-range[type="range"]::-moz-range-progress{height:8px;border-radius:999px;background:var(--gold-bright);}
+          input.lp-range[type="range"]::-moz-range-track{height:4px;border-radius:999px;background:var(--border-soft);border:none;}
+          input.lp-range[type="range"]::-moz-range-progress{height:4px;border-radius:999px;background:var(--gold-bright);}
           input.lp-range[type="range"]::-moz-range-thumb{
-            width:20px;height:20px;border-radius:50%;background:var(--gold-bright);border:3px solid #fff;
-            box-shadow:0 1px 5px rgba(15,23,42,.35);cursor:pointer;transition:transform .15s ease;
+            width:18px;height:18px;border-radius:50%;background:var(--gold-bright);border:none;
+            box-shadow:0 1px 4px rgba(15,23,42,.35);cursor:pointer;transition:transform .15s ease;
           }
           input.lp-range[type="range"]:hover::-moz-range-thumb{transform:scale(1.1);}
           input.lp-range[type="range"]:focus-visible{box-shadow:0 0 0 3px var(--gold-dim);border-radius:999px;}
+          /* CATATAN (fix): partials/pengumuman-banner.blade.php (di-include
+             lebih awal di halaman ini) punya rule generik
+             ".lp-tab-panel .form-field input[type=range]{background:
+             transparent!important}" untuk range field lain di tab "Konten
+             Halaman Landing". Slider Blur Latar & Kepekatan Overlay Warna
+             ini kebetulan juga bersarang di dalam ".lp-tab-panel
+             .form-field" (walau kartunya sendiri sudah di luar "Konten
+             Halaman Landing"), jadi ikut kena background:transparent itu
+             dan gradient dua-warna terisi/kosong di atas jadi tidak
+             kelihatan. Selector di bawah ini SENGAJA dibuat lebih spesifik
+             (3 class + atribut) supaya menang dari rule generik tsb tanpa
+             perlu mengubah file pengumuman-banner.blade.php. */
+          .lp-tab-panel .form-field input.lp-range[type="range"]{
+            background:linear-gradient(to right, var(--gold-bright) 0%, var(--gold-bright) var(--lp-range-fill,0%), var(--border-soft) var(--lp-range-fill,0%), var(--border-soft) 100%) !important;
+          }
           .lp-hero-image-row{display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:0;text-align:center;}
           .lp-hero-image-row video.lp-current-image{width:100%;max-width:360px;object-fit:cover;background:#000;}
           .lp-hero-image-row .landing-file-picker{align-self:center;flex:0 0 auto;min-width:200px;justify-content:center;}
