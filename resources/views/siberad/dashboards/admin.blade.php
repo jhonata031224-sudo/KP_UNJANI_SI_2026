@@ -3276,9 +3276,30 @@
 
       {{-- ===== PENGATURAN UMUM ===== --}}
       <section class="tab-panel" data-tab-panel="pengaturan-umum">
-        <div class="section-head panel">
-          <h2>Pengaturan Umum</h2>
-          <p>Konfigurasi umum aplikasi {{ $pengaturan?->namaSistem() ?? "SIBERAD" }}.</p>
+        {{-- ===== BANNER RINGKASAN (gaya kartu referensi: ikon bulat +
+             judul/subjudul di kiri, ilustrasi dekoratif di kanan, latar
+             gradasi lembut) -- menggantikan header polos ".section-head"
+             lama. Class dasar ".section-head" TETAP dipakai (dipakai juga
+             oleh tab lain), tambahan ".lp-hero-banner" cuma nambah style,
+             bukan gantiin. ===== --}}
+        <div class="section-head panel lp-hero-banner">
+          <div class="lp-hero-banner-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+          <div class="lp-hero-banner-text">
+            <h2>Pengaturan Konten Halaman Landing</h2>
+            <p>Kelola konten halaman landing sesuai kebutuhan — atur identitas brand, hero, tentang, fitur, dan kontak di bawah ini.</p>
+          </div>
+          <div class="lp-hero-banner-art" aria-hidden="true">
+            <svg viewBox="0 0 120 90" fill="none">
+              <rect x="4" y="6" width="72" height="50" rx="8" fill="rgba(255,255,255,.16)" stroke="rgba(255,255,255,.35)" stroke-width="1.5"/>
+              <circle cx="20" cy="20" r="6" fill="rgba(255,255,255,.5)"/>
+              <path d="M9 46 26 30l10 9 14-15 18 22H9Z" fill="rgba(255,255,255,.32)"/>
+              <rect x="46" y="30" width="62" height="46" rx="8" fill="rgba(255,255,255,.24)" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>
+              <circle cx="77" cy="53" r="13" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2.4"/>
+              <path d="M85 61l7 7" stroke="rgba(255,255,255,.55)" stroke-width="2.4" stroke-linecap="round"/>
+            </svg>
+          </div>
         </div>
 
         @php
@@ -3331,58 +3352,81 @@
             @csrf @method('PATCH')
 
             {{-- ---------- PANEL EDITOR ---------- --}}
-            <div class="panel lp-panel">
+            <div class="panel lp-panel lp-overview-wrap">
               <div class="panel-head">
                 <div>
                   <h3>Konten Halaman Landing</h3>
-                  <p>Pilih bagian yang mau diedit, lalu lihat hasilnya di panel pratinjau.</p>
+                  <p>Pilih kartu bagian yang mau diedit di bawah ini, lalu lihat hasilnya di panel pratinjau.</p>
                 </div>
               </div>
 
-              <div class="lp-tabs" role="tablist">
-                <button type="button" class="lp-tab active" data-lp-tab="beranda">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
-                  Beranda
+              {{-- ===== GRID KARTU RINGKASAN (gaya referensi: ikon bulat
+                   warna, judul, deskripsi singkat, chevron di kanan).
+                   Setiap kartu TETAP pakai data-lp-tab yang sama seperti
+                   pill-tab lama -- diklik, JS di bawah ("tab switching")
+                   otomatis panggil activateTab(name) yang sama persis
+                   seperti sebelumnya (fungsinya tidak berubah), lalu
+                   men-scroll ke kelompok field yang bersangkutan lewat
+                   data-lp-scroll-target (id panel field-nya). Dua kartu
+                   bisa mengarah ke tab yang sama (mis. "Latar Belakang
+                   Beranda" & "Judul & Deskripsi Utama" sama-sama tab
+                   "beranda") karena memang keduanya sudah satu kelompok
+                   show/hide yang sama dari dulu -- jadi pemisahan jadi 6
+                   kartu di sini murni tampilan, bukan fungsi baru. ===== --}}
+              <div class="lp-overview-grid">
+                <button type="button" class="lp-overview-card" data-lp-tab="beranda" data-lp-scroll-target="lpPanelHeroBg">
+                  <span class="lp-ov-icon lp-ov-blue" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"/></svg></span>
+                  <span class="lp-ov-body">
+                    <span class="lp-ov-title">Latar Belakang Beranda</span>
+                    <span class="lp-ov-desc">Atur gambar atau video latar, blur, dan overlay warna pada bagian hero.</span>
+                  </span>
+                  <svg class="lp-ov-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
-                <button type="button" class="lp-tab" data-lp-tab="fitur">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-                  Fitur
+
+                <button type="button" class="lp-overview-card" data-lp-tab="beranda" data-lp-scroll-target="lpPanelHeroText">
+                  <span class="lp-ov-icon lp-ov-purple" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg></span>
+                  <span class="lp-ov-body">
+                    <span class="lp-ov-title">Judul &amp; Deskripsi Utama</span>
+                    <span class="lp-ov-desc">Atur label kecil, judul, sub judul, dan deskripsi utama pada bagian hero.</span>
+                  </span>
+                  <svg class="lp-ov-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
-                <button type="button" class="lp-tab" data-lp-tab="tentang">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5"/><path d="M12 8h.01"/></svg>
-                  Tentang
+
+                <button type="button" class="lp-overview-card" data-lp-tab="tentang" data-lp-scroll-target="lpPanelTentang">
+                  <span class="lp-ov-icon lp-ov-green" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/></svg></span>
+                  <span class="lp-ov-body">
+                    <span class="lp-ov-title">Tentang &amp; Profil Instansi</span>
+                    <span class="lp-ov-desc">Kelola deskripsi profil, identitas instansi, moto, dan makna logo.</span>
+                  </span>
+                  <svg class="lp-ov-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
-                <button type="button" class="lp-tab" data-lp-tab="kontak">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12a10 10 0 1 1-5.6-9"/><path d="M15 8l4-4"/><path d="M15 4h4v4"/></svg>
-                  Kontak
+
+                <button type="button" class="lp-overview-card" data-lp-tab="fitur" data-lp-scroll-target="lpPanelFitur">
+                  <span class="lp-ov-icon lp-ov-orange" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+                  <span class="lp-ov-body">
+                    <span class="lp-ov-title">Fitur Unggulan</span>
+                    <span class="lp-ov-desc">Atur judul dan deskripsi kartu fitur yang tampil di bagian "Fitur".</span>
+                  </span>
+                  <svg class="lp-ov-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
-              </div>
 
-              {{-- ===== TAB: BERANDA ===== --}}
-              <div class="lp-tab-panel active" data-lp-tab-panel="beranda">
-                <p class="lp-tab-desc">Bagian paling atas landing page — yang pertama kali dilihat pengunjung.</p>
+                <button type="button" class="lp-overview-card" data-lp-tab="kontak" data-lp-scroll-target="lpPanelKontakInfo">
+                  <span class="lp-ov-icon lp-ov-pink" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12a10 10 0 1 1-5.6-9"/><path d="M15 8l4-4"/><path d="M15 4h4v4"/></svg></span>
+                  <span class="lp-ov-body">
+                    <span class="lp-ov-title">Informasi Kontak</span>
+                    <span class="lp-ov-desc">Atur alamat, email, telepon, dan website yang tampil di footer.</span>
+                  </span>
+                  <svg class="lp-ov-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
 
-                {{-- Semua kelompok field tab Beranda ("Latar Belakang
-                     Beranda", "Judul & Deskripsi Utama") SEKARANG jadi kartu
-                     (".panel") tersendiri di luar kartu "Konten Halaman
-                     Landing" ini -- lihat kartu-kartu baru setelah kartu ini
-                     ditutup, sebelum "Panel Pratinjau". Tetap nyambung/
-                     hilang bareng tab Beranda lewat data-lp-tab-panel="beranda". --}}
-              </div>
-
-              {{-- ===== TAB: FITUR ===== --}}
-              <div class="lp-tab-panel" data-lp-tab-panel="fitur">
-                <p class="lp-tab-desc">Empat kartu keunggulan yang tampil di bagian "Fitur". Tiap kartu Fitur sekarang jadi panel tersendiri di luar "Konten Halaman Landing" -- lihat di bawah.</p>
-              </div>
-
-              {{-- ===== TAB: TENTANG ===== --}}
-              <div class="lp-tab-panel" data-lp-tab-panel="tentang">
-                <p class="lp-tab-desc">Profil singkat instansi dan moto yang tampil di bagian "Tentang". Tiap kelompok field sekarang jadi panel tersendiri di luar "Konten Halaman Landing" -- lihat di bawah.</p>
-              </div>
-
-              {{-- ===== TAB: KONTAK ===== --}}
-              <div class="lp-tab-panel" data-lp-tab-panel="kontak">
-                <p class="lp-tab-desc">Informasi kontak &amp; tautan sosial media yang tampil di footer. Tiap kelompok field sekarang jadi panel tersendiri di luar "Konten Halaman Landing" -- lihat di bawah.</p>
+                <button type="button" class="lp-overview-card" data-lp-tab="kontak" data-lp-scroll-target="lpPanelKontakSosmed">
+                  <span class="lp-ov-icon lp-ov-indigo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-3.9M8.6 13.5l6.8 3.9"/></svg></span>
+                  <span class="lp-ov-body">
+                    <span class="lp-ov-title">Sosial Media</span>
+                    <span class="lp-ov-desc">Atur label dan tautan akun sosial media di footer.</span>
+                  </span>
+                  <svg class="lp-ov-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
               </div>
             </div>
 
@@ -3395,7 +3439,7 @@
                  `form.querySelectorAll(...)`, jadi tetap berfungsi walau
                  posisi kartu ini sekarang di luar kartu "Konten Halaman
                  Landing", asal masih di dalam <form> yang sama). --}}
-            <div class="panel lp-panel lp-tab-panel active" data-lp-tab-panel="beranda">
+            <div class="panel lp-panel lp-tab-panel active" data-lp-tab-panel="beranda" id="lpPanelHeroBg">
               <div class="panel-head">
                 <div>
                   <h3>Latar Belakang Beranda</h3>
@@ -3482,7 +3526,7 @@
                  tetap berfungsi walau posisi kartu ini sekarang di luar
                  kartu "Konten Halaman Landing", asal masih di dalam
                  <form> yang sama). --}}
-            <div class="panel lp-panel lp-tab-panel active" data-lp-tab-panel="beranda">
+            <div class="panel lp-panel lp-tab-panel active" data-lp-tab-panel="beranda" id="lpPanelHeroText">
               <div class="panel-head">
                 <div>
                   <h3>Judul &amp; Deskripsi Utama</h3>
@@ -3518,7 +3562,7 @@
                  tersembunyi/tampil bareng tab Fitur lewat
                  data-lp-tab-panel="fitur". --}}
             @foreach ((old('fitur') ?? $pengaturan->fitur ?? []) as $i => $fitur)
-              <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="fitur">
+              <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="fitur" @if($i === 0) id="lpPanelFitur" @endif>
                 <div class="panel-head">
                   <div>
                     <h3>Fitur {{ $i + 1 }}</h3>
@@ -3538,7 +3582,7 @@
             @endforeach
 
             {{-- ---------- PANEL "DESKRIPSI PROFIL INSTANSI" (tab Tentang) ---------- --}}
-            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang">
+            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang" id="lpPanelTentang">
               <div class="panel-head">
                 <div>
                   <h3>Deskripsi Profil Instansi</h3>
@@ -3630,7 +3674,7 @@
             </div>
 
             {{-- ---------- PANEL "INFORMASI KONTAK" (tab Kontak) ---------- --}}
-            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="kontak">
+            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="kontak" id="lpPanelKontakInfo">
               <div class="panel-head">
                 <div>
                   <h3>Informasi Kontak</h3>
@@ -3658,7 +3702,7 @@
             </div>
 
             {{-- ---------- PANEL "SOSIAL MEDIA" (tab Kontak) ---------- --}}
-            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="kontak">
+            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="kontak" id="lpPanelKontakSosmed">
               <div class="panel-head">
                 <div>
                   <h3>Sosial Media</h3>
@@ -3760,6 +3804,42 @@
           .lp-layout{display:flex;flex-direction:column;gap:22px;}
 
           .lp-panel form{padding:22px;}
+
+          /* ===== Banner ringkasan "Pengaturan Konten Halaman Landing" ===== */
+          .lp-hero-banner{display:flex;align-items:center;gap:18px;background:linear-gradient(120deg,#2563eb,#4f46e5);border:none;color:#fff;overflow:hidden;position:relative;}
+          .lp-hero-banner-icon{flex:0 0 auto;width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;}
+          .lp-hero-banner-icon svg{width:22px;height:22px;stroke:#fff;}
+          .lp-hero-banner-text{flex:1 1 auto;min-width:0;}
+          .lp-hero-banner-text h2{color:#fff;margin-bottom:4px;}
+          .lp-hero-banner-text p{color:rgba(255,255,255,.85);font-size:13px;max-width:640px;}
+          .lp-hero-banner-art{flex:0 0 auto;width:120px;height:90px;display:none;}
+          @media(min-width:860px){ .lp-hero-banner-art{display:block;} }
+
+          /* ===== Grid kartu ringkasan bagian Konten Halaman Landing ===== */
+          .lp-overview-wrap .panel-head{margin-bottom:16px;}
+          .lp-overview-grid{display:grid;grid-template-columns:1fr;gap:14px;}
+          @media(min-width:760px){ .lp-overview-grid{grid-template-columns:1fr 1fr;} }
+          .lp-overview-card{
+            display:flex;align-items:flex-start;gap:14px;text-align:left;
+            font-family:inherit;padding:18px;border-radius:14px;cursor:pointer;
+            background:var(--panel);border:1px solid var(--border-soft);
+            transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease;
+          }
+          .lp-overview-card:hover{border-color:var(--border-strong);box-shadow:0 10px 24px rgba(0,0,0,.1);transform:translateY(-1px);}
+          .lp-overview-card:active{transform:translateY(0);}
+          .lp-ov-icon{flex:0 0 auto;width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;}
+          .lp-ov-icon svg{width:19px;height:19px;}
+          .lp-ov-blue{background:rgba(37,99,235,.12);color:#2563eb;}
+          .lp-ov-purple{background:rgba(147,51,234,.12);color:#9333ea;}
+          .lp-ov-green{background:rgba(22,163,74,.12);color:#16a34a;}
+          .lp-ov-orange{background:rgba(234,88,12,.12);color:#ea580c;}
+          .lp-ov-pink{background:rgba(219,39,119,.12);color:#db2777;}
+          .lp-ov-indigo{background:rgba(79,70,229,.12);color:#4f46e5;}
+          .lp-ov-body{flex:1 1 auto;min-width:0;padding-top:2px;}
+          .lp-ov-title{display:block;font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;}
+          .lp-ov-desc{display:block;font-size:12px;color:var(--text-muted);line-height:1.5;}
+          .lp-ov-chevron{flex:0 0 auto;width:18px;height:18px;color:var(--text-dim);margin-top:9px;transition:transform .15s ease;}
+          .lp-overview-card:hover .lp-ov-chevron{transform:translateX(2px);color:var(--text-muted);}
 
           .lp-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;border-bottom:1px solid var(--border-soft);padding-bottom:16px;}
           .lp-tab{
@@ -4434,7 +4514,17 @@
             }
 
             tabs.forEach(function(t){
-              t.addEventListener('click', function(){ activateTab(t.dataset.lpTab); });
+              t.addEventListener('click', function(){
+                activateTab(t.dataset.lpTab);
+                // Kartu ringkasan (.lp-overview-card) punya data-lp-scroll-target
+                // berisi id panel field yang bersangkutan -- scroll ke situ
+                // setelah tab-nya aktif/kelihatan. Pill-tab lama (kalau ada)
+                // tidak punya atribut ini, jadi baris ini aman di-skip untuk itu.
+                if (t.dataset.lpScrollTarget) {
+                  var target = document.getElementById(t.dataset.lpScrollTarget);
+                  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              });
             });
 
             // ---------- live preview ----------
