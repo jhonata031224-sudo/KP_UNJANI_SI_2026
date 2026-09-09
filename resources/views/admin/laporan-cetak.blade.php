@@ -36,10 +36,10 @@
   <h2>Daftar Pengguna ({{ $semuaPengguna->count() }})</h2>
   <div class="tbl-scroll-wrap">
   <table>
-    <thead><tr><th>#</th><th>Nama</th><th>Username</th><th>Satuan</th><th>Jabatan</th></tr></thead>
+    <thead><tr><th>#</th><th>Nama</th><th>Username</th><th>Satuan</th></tr></thead>
     <tbody>
       @foreach($semuaPengguna as $i => $u)
-      <tr><td>{{ $i + 1 }}</td><td>{{ $u->name }}</td><td>{{ $u->username }}</td><td>{{ $u->satuan->nama ?? '-' }}</td><td>{{ $u->jabatan ?? '-' }}</td></tr>
+      <tr><td>{{ $i + 1 }}</td><td>{{ $u->name }}</td><td>{{ $u->username }}</td><td>{{ $u->satuan->nama ?? '-' }}</td></tr>
       @endforeach
     </tbody>
   </table>

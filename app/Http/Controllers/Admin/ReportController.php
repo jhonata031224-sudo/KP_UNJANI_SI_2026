@@ -58,16 +58,15 @@ class ReportController extends Controller
             $u->username ?: '-',
             $u->email ?: '-',
             $u->satuan?->nama ?: '-',
-            $u->jabatan ?: '-',
             $u->created_at?->format('d/m/Y H:i') ?: '-',
         ])->all();
 
         return SimpleXlsx::download(
             'laporan-pengguna-'.now()->format('Ymd_His').'.xlsx',
             'Laporan Pengguna',
-            ['Nama', 'Username', 'Email', 'Satuan', 'Jabatan', 'Dibuat'],
+            ['Nama', 'Username', 'Email', 'Satuan', 'Dibuat'],
             $rows,
-            [34, 22, 38, 38, 34, 22],
+            [34, 22, 38, 38, 22],
         );
     }
 
