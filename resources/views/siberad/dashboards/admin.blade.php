@@ -3455,7 +3455,9 @@
                     <label for="lpHeroBlur"><span class="lp-range-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="12" r="7" stroke-dasharray="2.2 3.4" opacity=".75"></circle><circle cx="12" cy="12" r="10.5" stroke-dasharray="1.2 4" opacity=".4"></circle></svg></span>Blur Latar</label>
                     <span class="lp-range-badge"><span id="lpHeroBlurVal">{{ $pengaturanHeroBlur }}</span><small>px</small></span>
                   </div>
-                  <input id="lpHeroBlur" name="hero_blur_level" type="range" min="0" max="20" step="1" value="{{ $pengaturanHeroBlur }}" class="lp-range" data-lp="hero_blur_level" style="--lp-range-fill:{{ round($pengaturanHeroBlur / 20 * 100, 2) }}%" oninput="document.getElementById('lpHeroBlurVal').textContent=this.value;this.style.setProperty('--lp-range-fill',(this.value/this.max*100)+'%');">
+                  <div class="lp-range-shell">
+                    <input id="lpHeroBlur" name="hero_blur_level" type="range" min="0" max="20" step="1" value="{{ $pengaturanHeroBlur }}" class="lp-range" data-lp="hero_blur_level" style="--lp-range-fill:{{ round($pengaturanHeroBlur / 20 * 100, 2) }}%" oninput="document.getElementById('lpHeroBlurVal').textContent=this.value;this.style.setProperty('--lp-range-fill',(this.value/this.max*100)+'%');">
+                  </div>
                   <small>0 = tajam, 20 = paling buram.</small>
                 </div>
                 <div class="form-field lp-range-field">
@@ -3463,7 +3465,9 @@
                     <label for="lpHeroOverlay"><span class="lp-range-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5Z"></path><path d="m3 13 9 5 9-5"></path></svg></span>Kepekatan Overlay Warna</label>
                     <span class="lp-range-badge"><span id="lpHeroOverlayVal">{{ $pengaturanHeroOverlay }}</span><small>%</small></span>
                   </div>
-                  <input id="lpHeroOverlay" name="hero_overlay_intensity" type="range" min="0" max="100" step="1" value="{{ $pengaturanHeroOverlay }}" class="lp-range" data-lp="hero_overlay_intensity" style="--lp-range-fill:{{ $pengaturanHeroOverlay }}%" oninput="document.getElementById('lpHeroOverlayVal').textContent=this.value;this.style.setProperty('--lp-range-fill',(this.value/this.max*100)+'%');">
+                  <div class="lp-range-shell">
+                    <input id="lpHeroOverlay" name="hero_overlay_intensity" type="range" min="0" max="100" step="1" value="{{ $pengaturanHeroOverlay }}" class="lp-range" data-lp="hero_overlay_intensity" style="--lp-range-fill:{{ $pengaturanHeroOverlay }}%" oninput="document.getElementById('lpHeroOverlayVal').textContent=this.value;this.style.setProperty('--lp-range-fill',(this.value/this.max*100)+'%');">
+                  </div>
                   <small>0 = tanpa overlay, 100 = paling pekat.</small>
                 </div>
               </div>
@@ -3934,11 +3938,14 @@
           .lp-bg-type-option:has(input:checked) .lp-bg-type-icon{opacity:1;}
           .lp-bg-type-option:has(input:focus-visible){outline:2px solid var(--gold-bright);outline-offset:2px;}
 
-          /* ===== Slider "Blur Latar" & "Kepekatan Overlay Warna" -- didesain
-             ulang: label dipindah ke baris sendiri berdampingan sama badge
-             angka (bukan nempel di teks label seperti sebelumnya), lalu
-             track-nya diganti custom (gradient emas yang keisi sesuai nilai
-             + thumb bulat) menggantikan slider polos bawaan browser. */
+          /* ===== Slider "Blur Latar" & "Kepekatan Overlay Warna" -- model
+             kapsul sederhana (kayak slider volume/brightness), bukan garis
+             tipis + lingkaran mengambang seperti sebelumnya. Track sekarang
+             dibungkus "shell" pil (.lp-range-shell) supaya area sentuhnya
+             kelihatan jadi satu kesatuan, dan thumb-nya solid emas dengan
+             cincin putih supaya tetap jelas kelihatan di latar apa pun --
+             sebelumnya thumb putih polos gampang "hilang" kalau nempel di
+             latar terang. */
           .lp-range-field{gap:10px;}
           .lp-range-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
           .lp-range-head label{display:flex;align-items:center;gap:7px;margin:0;}
@@ -3951,27 +3958,33 @@
             padding:3px 12px;line-height:1.5;
           }
           .lp-range-badge small{font-size:9.5px;font-weight:600;color:var(--text-muted);text-transform:lowercase;margin-left:1px;}
+          .lp-range-shell{
+            display:flex;align-items:center;
+            background:var(--panel-alt);border:1px solid var(--border-soft);
+            border-radius:999px;padding:0 16px;height:40px;margin:2px 0;
+            box-shadow:inset 0 1px 3px rgba(15,23,42,.06);
+          }
           input.lp-range[type="range"]{
             -webkit-appearance:none;appearance:none;
-            width:100%;height:6px;border-radius:999px;margin:13px 0 3px;
+            width:100%;height:8px;border-radius:999px;margin:0;
             background:linear-gradient(to right, var(--gold-bright) 0%, var(--gold-bright) var(--lp-range-fill,0%), var(--border-soft) var(--lp-range-fill,0%), var(--border-soft) 100%);
             border:none;padding:0;outline:none;cursor:pointer;
           }
           input.lp-range[type="range"]::-webkit-slider-thumb{
-            -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
-            background:#fff;border:3px solid var(--gold-bright);
-            box-shadow:0 2px 6px rgba(0,0,0,.28);margin-top:-6px;cursor:pointer;
+            -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+            background:var(--gold-bright);border:3px solid #fff;
+            box-shadow:0 1px 5px rgba(15,23,42,.35);cursor:pointer;
             transition:transform .15s ease,box-shadow .15s ease;
           }
-          input.lp-range[type="range"]:hover::-webkit-slider-thumb{transform:scale(1.14);}
-          input.lp-range[type="range"]:active::-webkit-slider-thumb{transform:scale(1.05);box-shadow:0 0 0 6px var(--gold-dim);}
-          input.lp-range[type="range"]::-moz-range-track{height:6px;border-radius:999px;background:var(--border-soft);border:none;}
-          input.lp-range[type="range"]::-moz-range-progress{height:6px;border-radius:999px;background:var(--gold-bright);}
+          input.lp-range[type="range"]:hover::-webkit-slider-thumb{transform:scale(1.1);}
+          input.lp-range[type="range"]:active::-webkit-slider-thumb{transform:scale(1.02);box-shadow:0 0 0 6px var(--gold-dim);}
+          input.lp-range[type="range"]::-moz-range-track{height:8px;border-radius:999px;background:var(--border-soft);border:none;}
+          input.lp-range[type="range"]::-moz-range-progress{height:8px;border-radius:999px;background:var(--gold-bright);}
           input.lp-range[type="range"]::-moz-range-thumb{
-            width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--gold-bright);
-            box-shadow:0 2px 6px rgba(0,0,0,.28);cursor:pointer;transition:transform .15s ease;
+            width:20px;height:20px;border-radius:50%;background:var(--gold-bright);border:3px solid #fff;
+            box-shadow:0 1px 5px rgba(15,23,42,.35);cursor:pointer;transition:transform .15s ease;
           }
-          input.lp-range[type="range"]:hover::-moz-range-thumb{transform:scale(1.14);}
+          input.lp-range[type="range"]:hover::-moz-range-thumb{transform:scale(1.1);}
           input.lp-range[type="range"]:focus-visible{box-shadow:0 0 0 3px var(--gold-dim);border-radius:999px;}
           .lp-hero-image-row{display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:0;text-align:center;}
           .lp-hero-image-row video.lp-current-image{width:100%;max-width:360px;object-fit:cover;background:#000;}
