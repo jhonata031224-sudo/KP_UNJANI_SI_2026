@@ -103,7 +103,8 @@ class SimpleXlsx
 
         // Informasi laporan di atas tabel: putih polos, tanpa border/fill tambahan.
         $xml .= '<row r="1" ht="28" customHeight="1">'.self::inlineCell(1, 1, $title, 0).'</row>';
-        $xml .= '<row r="2" ht="22" customHeight="1">'.self::inlineCell(1, 2, 'Diekspor otomatis oleh SIBERAD · '.$generated, 4).'</row>';
+        $namaSistem = \App\Models\Pengaturan::current()->namaSistem();
+        $xml .= '<row r="2" ht="22" customHeight="1">'.self::inlineCell(1, 2, 'Diekspor otomatis oleh '.$namaSistem.' · '.$generated, 4).'</row>';
 
         // Header tabel: putih, tebal, border penuh, tanpa filter/dropdown.
         $xml .= '<row r="3" ht="30" customHeight="1">';

@@ -65,7 +65,7 @@
             </div>
             <div>
                 <h2 class="lainnya-section-title">Pengaturan Notifikasi</h2>
-                <p class="lainnya-section-sub">Atur notifikasi yang muncul di perangkat kamu, bahkan saat SIBERAD sedang tidak dibuka.</p>
+                <p class="lainnya-section-sub">Atur notifikasi yang muncul di perangkat kamu, bahkan saat {{ $pengaturan?->namaSistem() ?? "SIBERAD" }} sedang tidak dibuka.</p>
             </div>
         </div>
 
@@ -78,7 +78,7 @@
         </div>
 
         <div class="notif-help-box">
-            Notifikasi <b>push</b> muncul di tray/status bar perangkat kamu — bahkan saat tab SIBERAD tidak aktif atau browser tertutup. Notifikasi <b>lonceng</b> (ikon di navbar) selalu aktif selama kamu login dan tidak dapat dimatikan di sini.
+            Notifikasi <b>push</b> muncul di tray/status bar perangkat kamu — bahkan saat tab {{ $pengaturan?->namaSistem() ?? "SIBERAD" }} tidak aktif atau browser tertutup. Notifikasi <b>lonceng</b> (ikon di navbar) selalu aktif selama kamu login dan tidak dapat dimatikan di sini.
         </div>
 
         <div class="notif-setting-card">
@@ -92,7 +92,7 @@
                 </div>
                 <div class="notif-setting-row-body">
                     <div class="notif-setting-row-label">Notifikasi Push (di luar sistem)</div>
-                    <div class="notif-setting-row-desc">Terima notifikasi di tray OS meski SIBERAD tidak dibuka. Berlaku untuk semua perangkat yang terhubung.</div>
+                    <div class="notif-setting-row-desc">Terima notifikasi di tray OS meski {{ $pengaturan?->namaSistem() ?? "SIBERAD" }} tidak dibuka. Berlaku untuk semua perangkat yang terhubung.</div>
                 </div>
                 <div class="notif-setting-row-right" style="display:flex;align-items:center;gap:10px">
                     <span class="notif-status-pill" id="notifPushPill">
@@ -181,7 +181,7 @@
             </div>
             <div>
                 <h2 class="lainnya-section-title">Struktur Organisasi</h2>
-                <p class="lainnya-section-sub">Bagan hubungan hierarki antar-satuan dalam lingkungan SIBERAD.</p>
+                <p class="lainnya-section-sub">Bagan hubungan hierarki antar-satuan dalam lingkungan {{ $pengaturan?->namaSistem() ?? "SIBERAD" }}.</p>
             </div>
         </div>
 

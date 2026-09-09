@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\Pengaturan;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -72,7 +73,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        ActivityLog::catat('login', 'Berhasil login ke SIBERAD.', $request->user());
+        ActivityLog::catat('login', 'Berhasil login ke '.Pengaturan::current()->namaSistem().'.', $request->user());
 
         $request->session()->flash('login_success', $request->user()->name);
 
@@ -84,7 +85,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        ActivityLog::catat('logout', 'Logout dari SIBERAD.', $request->user());
+        ActivityLog::catat('logout', 'Logout dari '.Pengaturan::current()->namaSistem().'.', $request->user());
 
         // Hapus semua subscription push notifikasi milik user ini SEBELUM
         // sesi diakhiri. Kalau tidak, endpoint push di device/browser ini

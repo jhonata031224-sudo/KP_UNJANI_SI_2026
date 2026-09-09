@@ -92,9 +92,11 @@ class WebPushChannel
             ? $notification->toDatabase($notifiable)
             : (method_exists($notification, 'toArray') ? $notification->toArray($notifiable) : []);
 
+        $namaSistem = Pengaturan::current()->namaSistem();
+
         return [
-            'title' => $data['judul'] ?? config('app.name', 'SIBERAD'),
-            'body' => $data['pesan'] ?? 'Ada pembaruan baru di SIBERAD.',
+            'title' => $data['judul'] ?? $namaSistem,
+            'body' => $data['pesan'] ?? "Ada pembaruan baru di {$namaSistem}.",
             'notification_id' => $notification->id,
             'url' => url('/dashboard'),
         ];

@@ -20,7 +20,7 @@
       overlay.innerHTML = '<div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="globalLogoutConfirmTitle">' +
         '<div class="confirm-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></svg></div>' +
         '<h3 id="globalLogoutConfirmTitle">Keluar dari akun?</h3>' +
-        '<p>Sesi kamu akan diakhiri dan kamu perlu login kembali untuk mengakses SIBERAD.</p>' +
+        '<p>Sesi kamu akan diakhiri dan kamu perlu login kembali untuk mengakses {{ $pengaturan?->namaSistem() ?? "SIBERAD" }}.</p>' +
         '<div class="confirm-actions"><button type="button" class="btn" id="globalLogoutCancel">Batal</button><button type="button" class="btn btn-ghost-red" id="globalLogoutConfirm">Ya, Keluar</button></div>' +
         '</div>';
       document.body.appendChild(overlay);
@@ -93,7 +93,7 @@
 
   var originalConfirm = window.confirm;
   window.confirm = function (message) {
-    if (message === 'Keluar dari akun SIBERAD?') return true;
+    if (typeof message === 'string' && message.indexOf('Keluar dari akun') === 0) return true;
     return originalConfirm.call(window, message);
   };
 

@@ -21,6 +21,22 @@ class Pengaturan extends Model
         'hero_blur_level' => 'integer','hero_overlay_intensity' => 'integer','makna_logo' => 'array',
     ];
 
+    /**
+     * Nama sistem yang tampil ke pengguna (mis. eyebrow dashboard, judul
+     * tab browser, notifikasi push, log aktivitas), diambil dari
+     * hero_judul_awal + hero_judul_aksen yang diatur Admin di Pengaturan
+     * Umum > Konten Landing. SATU sumber kebenaran tunggal -- kalau Admin
+     * ganti nama sistem (mis. dari "SIBERAD" ke "Dharma Tech"), semua
+     * tempat yang manggil method ini ikut berubah otomatis tanpa perlu
+     * ubah kode satu-satu lagi.
+     */
+    public function namaSistem(): string
+    {
+        $nama = trim(($this->hero_judul_awal ?? '').($this->hero_judul_aksen ?? ''));
+
+        return $nama !== '' ? $nama : 'SIBERAD';
+    }
+
     public static function current(): self
     {
         return static::query()->firstOrCreate([], [

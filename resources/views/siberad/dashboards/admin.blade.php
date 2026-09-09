@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<title>Admin — {{ ($pengaturan->hero_judul_awal ?? '') . ($pengaturan->hero_judul_aksen ?? 'SIBERAD') }}</title>
+<title>Admin — {{ $pengaturan?->namaSistem() ?? 'SIBERAD' }}</title>
 <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-pussiberad.jpg') }}">
 @include('siberad.dashboards.partials.dash-styles')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -1000,7 +1000,7 @@
 
         <div class="dash-hero">
           <div>
-            <div class="dash-hero-eyebrow">SIBERAD // {{ $satuan->kode ?? 'SISTEM' }}</div>
+            <div class="dash-hero-eyebrow">{{ $pengaturan->namaSistem() }} // {{ $satuan->kode ?? 'SISTEM' }}</div>
             <h2>{{ $satuan->nama ?? $user->name }}</h2>
             <p>{{ now()->translatedFormat('l, d F Y') }}</p>
           </div>
@@ -1786,7 +1786,7 @@
 
         <div class="panel">
           <div class="panel-head">
-            <div><h2>Data Satuan</h2><p>Kelola daftar satuan/Satlak yang terdaftar di SIBERAD. Satuan yang masih punya pengguna tidak bisa dihapus.</p></div>
+            <div><h2>Data Satuan</h2><p>Kelola daftar satuan/Satlak yang terdaftar di {{ $pengaturan?->namaSistem() ?? "SIBERAD" }}. Satuan yang masih punya pengguna tidak bisa dihapus.</p></div>
             <button class="btn btn-primary" type="button" id="tambahSatuanOpen">Tambah Satuan</button>
           </div>
           <div class="table-toolbar">
@@ -3278,7 +3278,7 @@
       <section class="tab-panel" data-tab-panel="pengaturan-umum">
         <div class="section-head panel">
           <h2>Pengaturan Umum</h2>
-          <p>Konfigurasi umum aplikasi SIBERAD.</p>
+          <p>Konfigurasi umum aplikasi {{ $pengaturan?->namaSistem() ?? "SIBERAD" }}.</p>
         </div>
 
         @php
@@ -5423,7 +5423,7 @@
         <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></svg>
       </div>
       <h3 id="logoutConfirmTitle">Keluar dari akun?</h3>
-      <p>Sesi kamu akan diakhiri dan kamu perlu login kembali untuk mengakses SIBERAD.</p>
+      <p>Sesi kamu akan diakhiri dan kamu perlu login kembali untuk mengakses {{ $pengaturan?->namaSistem() ?? "SIBERAD" }}.</p>
       <div class="confirm-actions">
         <button type="button" class="btn" id="logoutCancelBtn">Batal</button>
         <button type="button" class="btn btn-ghost-red" id="logoutConfirmBtn">Ya, Keluar</button>
