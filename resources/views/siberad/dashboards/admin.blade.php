@@ -4173,14 +4173,28 @@
 
           .lp-panel form{padding:22px;}
 
-          /* ===== Banner ringkasan "Pengaturan Konten Halaman Landing" ===== */
-          .lp-hero-banner{display:flex;align-items:center;gap:18px;background:linear-gradient(120deg,var(--gold-solid-bright),#c9740a);border:none;color:var(--on-gold);overflow:hidden;position:relative;}
-          .lp-hero-banner-icon{flex:0 0 auto;width:44px;height:44px;border-radius:12px;background:rgba(36,26,5,.14);display:flex;align-items:center;justify-content:center;}
-          .lp-hero-banner-icon svg{width:22px;height:22px;stroke:var(--on-gold);}
+          /* ===== Banner ringkasan "Pengaturan Konten Halaman Landing" =====
+             Sebelumnya solid oranye penuh (kesan berat/mentok) -- sekarang
+             dibikin gradasi PUTIH ke oranye (putih dominan di kiri tempat
+             teks, oranye cuma jadi aksen yang "menguar" di kanan/tepi),
+             ditambah border tipis oranye pudar & radial glow lembut supaya
+             tetap kerasa "branded" tapi jauh lebih kalem & premium,
+             bukan blok oranye pekat dari ujung ke ujung. */
+          .lp-hero-banner{
+            display:flex;align-items:center;gap:18px;
+            background:
+              radial-gradient(120% 180% at 100% -20%, rgba(255,152,0,.35), transparent 60%),
+              linear-gradient(115deg,#ffffff 0%,#fffaf2 30%,#ffe7c2 62%,#ffb74d 88%,var(--gold-solid-bright) 100%);
+            border:1px solid rgba(255,152,0,.22);
+            color:var(--on-gold);overflow:hidden;position:relative;
+            box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 14px 34px -16px rgba(201,122,0,.4);
+          }
+          .lp-hero-banner-icon{flex:0 0 auto;width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--gold-solid-bright),#c9740a);box-shadow:0 6px 16px -6px rgba(201,122,0,.55);display:flex;align-items:center;justify-content:center;}
+          .lp-hero-banner-icon svg{width:22px;height:22px;stroke:#fff;}
           .lp-hero-banner-text{flex:1 1 auto;min-width:0;}
-          .lp-hero-banner-text h2{color:var(--on-gold);margin-bottom:4px;}
-          .lp-hero-banner-text p{color:rgba(36,26,5,.75);font-size:13px;max-width:640px;}
-          .lp-hero-banner-art{flex:0 0 auto;width:120px;height:90px;display:none;}
+          .lp-hero-banner-text h2{color:#241a05;margin-bottom:4px;}
+          .lp-hero-banner-text p{color:rgba(36,26,5,.68);font-size:13px;max-width:640px;}
+          .lp-hero-banner-art{flex:0 0 auto;width:120px;height:90px;display:none;opacity:.85;}
           @media(min-width:860px){ .lp-hero-banner-art{display:block;} }
 
           /* ===== Grid kartu ringkasan bagian Konten Halaman Landing ===== */
