@@ -4240,61 +4240,85 @@
           .lp-tab-panel.active{display:block;animation:lpFadeIn .18s ease;}
 
           /* ===== Modal editor pop-up (konten muncul saat kartu pintasan diklik) ===== */
+
+          /* FIX KRITIS: Backdrop-filter pada .sidebar & .topbar membuat new CSS
+             stacking context sehingga elemen position:fixed di luar tidak bisa
+             menembus/overlap mereka, terlepas dari z-index berapapun. Solusi:
+             nonaktifkan backdrop-filter secara sementara saat modal terbuka.
+             class lp-modal-lock sudah ditambahkan ke body oleh lpOpenModal(). */
+          body.lp-modal-lock .sidebar,
+          body.lp-modal-lock .topbar{
+            backdrop-filter:none!important;
+            -webkit-backdrop-filter:none!important;
+          }
+
           .lp-landing-modal-backdrop{
-            position:fixed;inset:0;z-index:100050;
-            background:rgba(10,12,16,.78);
-            backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+            position:fixed;inset:0;z-index:200000;
+            background:rgba(4,7,10,.82);
+            backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
             display:flex;align-items:center;justify-content:center;
-            padding:24px 16px;overflow-y:auto;
+            padding:20px 16px;overflow-y:auto;
             opacity:0;pointer-events:none;visibility:hidden;
-            transition:opacity .22s cubic-bezier(.16,1,.3,1),visibility .22s ease;
+            transition:opacity .25s cubic-bezier(.16,1,.3,1),visibility .25s ease;
           }
           .lp-landing-modal-backdrop.is-open{
             opacity:1;pointer-events:auto;visibility:visible;
           }
           .lp-landing-modal-box{
             background:var(--panel);border:1px solid var(--border-strong);
-            border-radius:18px;width:100%;max-width:820px;max-height:88vh;
+            border-radius:16px;width:100%;max-width:760px;
+            max-height:calc(100vh - 40px);
             display:flex;flex-direction:column;overflow:hidden;
-            box-shadow:0 28px 70px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06);
-            transform:scale(.96) translateY(12px);
-            transition:transform .24s cubic-bezier(.16,1,.3,1);
+            box-shadow:0 32px 80px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.05),0 2px 0 rgba(255,255,255,.04) inset;
+            transform:scale(.96) translateY(10px);
+            transition:transform .26s cubic-bezier(.16,1,.3,1);
           }
           .lp-landing-modal-backdrop.is-open .lp-landing-modal-box{
             transform:scale(1) translateY(0);
           }
+
+          /* -- Header modal: ringkas, ikon + judul + deskripsi + tombol tutup -- */
           .lp-landing-modal-head{
             flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
-            gap:16px;padding:18px 24px;border-bottom:1px solid var(--border-soft);
-            background:var(--panel-alt);
+            gap:12px;padding:16px 20px;
+            border-bottom:1px solid var(--border-soft);
+            background:linear-gradient(to bottom,var(--panel-alt),var(--panel));
           }
           .lp-landing-modal-head-left{
-            display:flex;align-items:center;gap:14px;min-width:0;
+            display:flex;align-items:center;gap:12px;min-width:0;
           }
           .lp-landing-modal-icon{
-            width:42px;height:42px;border-radius:12px;
+            width:38px;height:38px;border-radius:10px;
             display:flex;align-items:center;justify-content:center;flex-shrink:0;
           }
-          .lp-landing-modal-icon svg{width:20px;height:20px;}
+          .lp-landing-modal-icon svg{width:18px;height:18px;}
           .lp-landing-modal-head h3{
-            margin:0 0 3px;font-family:var(--display);font-size:17px;font-weight:700;color:var(--text);
+            margin:0 0 2px;font-family:var(--display);font-size:15.5px;font-weight:700;
+            color:var(--text);letter-spacing:.01em;
           }
           .lp-landing-modal-head p{
-            margin:0;font-size:12px;color:var(--text-muted);line-height:1.4;
+            margin:0;font-size:11.5px;color:var(--text-muted);line-height:1.4;
+            max-width:480px;
           }
           .lp-landing-modal-close{
-            flex:0 0 auto;width:34px;height:34px;border-radius:10px;
-            border:1px solid var(--border-soft);background:var(--panel);
-            color:var(--text-muted);display:flex;align-items:center;justify-content:center;
-            cursor:pointer;transition:all .15s ease;
+            flex:0 0 auto;width:32px;height:32px;border-radius:8px;
+            border:1px solid var(--border-soft);background:transparent;
+            color:var(--text-dim);display:flex;align-items:center;justify-content:center;
+            cursor:pointer;transition:all .15s ease;flex-shrink:0;
           }
           .lp-landing-modal-close:hover{
-            color:var(--text);background:var(--panel-alt);border-color:var(--border-strong);
-            transform:scale(1.05);
+            color:var(--red);border-color:var(--red);
+            background:var(--red-dim);transform:rotate(90deg);
           }
+
+          /* -- Body modal: scrollable, padding nyaman -- */
           .lp-landing-modal-body{
-            flex:1 1 auto;overflow-y:auto;padding:22px 24px;
+            flex:1 1 auto;overflow-y:auto;padding:20px 22px;
+            scrollbar-width:thin;scrollbar-color:var(--border-soft) transparent;
           }
+          .lp-landing-modal-body::-webkit-scrollbar{width:5px;}
+          .lp-landing-modal-body::-webkit-scrollbar-track{background:transparent;}
+          .lp-landing-modal-body::-webkit-scrollbar-thumb{background:var(--border-soft);border-radius:999px;}
           .lp-landing-modal-body .lp-tab-panel{
             display:block!important;padding:0!important;background:none!important;
             border:none!important;box-shadow:none!important;animation:lpFadeIn .18s ease;
@@ -4303,27 +4327,35 @@
             display:none!important;
           }
           .lp-landing-modal-body .lp-tab-panel.panel + .lp-tab-panel.panel{
-            margin-top:20px;padding-top:20px!important;border-top:1px dashed var(--border-soft)!important;
+            margin-top:18px;padding-top:18px!important;border-top:1px dashed var(--border-soft)!important;
           }
+
+          /* -- Footer modal: compact, info kiri + tombol kanan -- */
           .lp-landing-modal-foot{
             flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
-            gap:16px;padding:14px 24px;border-top:1px solid var(--border-soft);
+            gap:12px;padding:12px 20px;
+            border-top:1px solid var(--border-soft);
             background:var(--panel-alt);
           }
           .lp-landing-modal-notice{
-            display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);
+            display:flex;align-items:center;gap:6px;
+            font-size:11px;color:var(--text-dim);
           }
           .lp-landing-modal-notice svg{color:var(--gold-bright);flex-shrink:0;}
           .lp-landing-modal-foot-actions{
-            display:flex;align-items:center;gap:10px;flex-shrink:0;
+            display:flex;align-items:center;gap:8px;flex-shrink:0;
           }
+
           body.lp-modal-lock{overflow:hidden;}
           @media(max-width:640px){
-            .lp-landing-modal-backdrop{padding:0;}
-            .lp-landing-modal-box{max-width:100%;max-height:100vh;height:100%;border-radius:0;}
+            .lp-landing-modal-backdrop{padding:0;align-items:flex-end;}
+            .lp-landing-modal-box{
+              max-width:100%;max-height:92vh;border-radius:16px 16px 0 0;
+            }
             .lp-landing-modal-head,.lp-landing-modal-body,.lp-landing-modal-foot{padding:14px 16px;}
-            .lp-landing-modal-foot{flex-direction:column-reverse;align-items:stretch;gap:12px;}
-            .lp-landing-modal-foot-actions{justify-content:flex-end;}
+            .lp-landing-modal-foot{flex-direction:column-reverse;align-items:stretch;gap:10px;}
+            .lp-landing-modal-foot-actions{flex-direction:column-reverse;gap:8px;}
+            .lp-landing-modal-foot-actions .btn{width:100%;justify-content:center;}
             .lp-landing-modal-notice{justify-content:center;}
           }
           @keyframes lpFadeIn{ from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:none;} }
