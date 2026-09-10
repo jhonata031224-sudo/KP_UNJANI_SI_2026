@@ -4356,10 +4356,31 @@
             background:var(--red-dim);transform:rotate(90deg);
           }
 
-          /* -- Body modal: scrollable, padding nyaman -- */
+          /* -- Body modal: scrollable, padding nyaman --
+             Berlaku SERAGAM untuk keenam kartu pintasan (Latar Belakang
+             Beranda, Judul & Deskripsi Utama, Tentang & Profil Instansi,
+             Fitur Unggulan, Informasi Kontak, Sosial Media) -- semuanya
+             dipindahkan ke satu #lpLandingModalBody yang sama, jadi kalau
+             kontennya panjang (mis. "Tentang & Profil Instansi" yang
+             gabungan 4 sub-bagian, atau "Makna Logo" 10 poin), body ini
+             yang men-scroll, BUKAN box modal-nya -- box tetap utuh &
+             center persis seperti contoh SS "Judul & Deskripsi Utama".
+             Ditambah efek fade halus di tepi atas/bawah (scroll shadow)
+             supaya kelihatan jelas "masih ada konten di bawah/atas" saat
+             modal-nya panjang -- bisa di-swipe/scroll ke atas-bawah. */
           .lp-landing-modal-body{
             flex:1 1 auto;overflow-y:auto;padding:20px 22px;
             scrollbar-width:thin;scrollbar-color:var(--border-soft) transparent;
+            -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+            background-image:
+              linear-gradient(var(--panel) 40%, rgba(0,0,0,0)),
+              linear-gradient(rgba(0,0,0,0), var(--panel) 60%) 0 100%,
+              linear-gradient(to bottom, rgba(0,0,0,.10), rgba(0,0,0,0)),
+              linear-gradient(to top, rgba(0,0,0,.10), rgba(0,0,0,0)) 0 100%;
+            background-repeat:no-repeat;
+            background-color:var(--panel);
+            background-size:100% 28px,100% 28px,100% 10px,100% 10px;
+            background-attachment:local,local,scroll,scroll;
           }
           .lp-landing-modal-body::-webkit-scrollbar{width:5px;}
           .lp-landing-modal-body::-webkit-scrollbar-track{background:transparent;}
