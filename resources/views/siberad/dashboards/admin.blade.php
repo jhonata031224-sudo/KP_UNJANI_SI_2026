@@ -4254,8 +4254,8 @@
 
           .lp-landing-modal-backdrop{
             position:fixed;inset:0;z-index:200000;
-            background:rgba(4,7,10,.82);
-            backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+            background:rgba(15,23,42,.56);
+            backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
             display:flex;align-items:center;justify-content:center;
             padding:20px 16px;overflow-y:auto;
             opacity:0;pointer-events:none;visibility:hidden;
@@ -4390,22 +4390,38 @@
              (Pratinjau Langsung, sudah pas seperti sekarang) maupun
              halaman/tab lain di luar Pengaturan Umum yang kebetulan
              memakai class umum seperti .form-field. */
+          /* ===== Redesign kartu kelompok field (dulu cuma dipisah garis
+             putus-putus tipis, jadi satu tumpukan panjang seragam yang
+             capek di-scan) jadi kotak (".lp-card") sendiri-sendiri yang
+             jelas batasnya -- supaya modal pintasan, walau isinya banyak
+             field, tetap kelihatan simpel & gampang dipahami: satu kotak =
+             satu topik, judulnya langsung kelihatan beda dari isiannya. */
           .lp-panel .lp-card{
-            border-bottom:1px dashed var(--border-soft);
-            padding:0 0 22px;
-            margin-bottom:22px;
+            background:var(--panel);
+            border:1px solid var(--border-soft);
+            border-radius:14px;
+            padding:16px 18px 18px;
+            margin-bottom:14px;
+            box-shadow:0 1px 2px rgba(15,23,42,.03);
+            transition:border-color .15s ease;
           }
-          .lp-panel .lp-card:last-child{border-bottom:none;padding-bottom:0;margin-bottom:0;}
-          .lp-panel .lp-card-compact{padding:0 0 16px;}
+          .lp-panel .lp-card:last-child{margin-bottom:0;}
+          .lp-panel .lp-card-compact{padding:12px 16px 14px;}
 
-          /* Judul kartu: cukup teks kapital kecil menempel ke field di
-             bawahnya (tanpa garis bawah sendiri lagi -- garis pemisah
-             sekarang cuma satu, di paling bawah tiap kelompok, lihat
-             ".lp-panel .lp-card" di atas), supaya tidak ada dua garis
-             dobel (bawah judul + bawah kartu) berdempetan. */
+          /* Judul kartu: dikasih penanda titik kecil warna emas di depan
+             biar langsung kelihatan sebagai "kepala kelompok", ukuran &
+             bobot dinaikkan sedikit (dari 11px) supaya lebih mudah dipindai
+             sekilas dibanding badan teks/isian di bawahnya. */
           .lp-panel .lp-card-title{
             display:flex; align-items:center; gap:9px;
             margin-bottom:4px;
+            font-size:12px;
+            color:var(--text);
+          }
+          .lp-panel .lp-card-title::before{
+            content:'';
+            width:7px;height:7px;border-radius:2.5px;flex-shrink:0;
+            background:var(--gold-bright);
           }
           .lp-panel .lp-card-desc{margin:0 0 16px;}
 
