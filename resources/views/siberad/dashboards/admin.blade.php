@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -526,11 +526,11 @@
       <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>
     </div>
     <h3 id="resetDataLaporanTitle">Hapus Data Laporan Terpilih?</h3>
-    <p>Kategori berikut akan dihapus permanen dari database dan tidak bisa dikembalikan (kecuali dari backup):</p>
-    <ul id="resetDataLaporanDaftar" style="text-align:left;font-size:12px;font-weight:700;color:var(--text);margin:10px 0 0;padding-left:18px;"></ul>
+    <p id="resetDataLaporanSub">Data berikut akan dihapus secara permanen dari database dan penyimpanan server (lampiran file ikut dibersihkan):</p>
+    <ul id="resetDataLaporanDaftar" style="text-align:left;font-size:12px;font-weight:700;color:var(--text);margin:10px 0 0;padding-left:18px;max-height:160px;overflow-y:auto;"></ul>
     <div class="confirm-actions">
       <button type="button" class="btn" id="resetDataLaporanBatal">Batal</button>
-      <button type="button" class="btn btn-ghost-red" id="resetDataLaporanYa">Ya, Hapus</button>
+      <button type="button" class="btn btn-ghost-red" id="resetDataLaporanYa">Ya, Hapus Permanen</button>
     </div>
   </div>
 </div>
@@ -2728,95 +2728,439 @@
 
       {{-- ===== RESET DATA LAPORAN ===== --}}
       <section class="tab-panel" data-tab-panel="reset-data-laporan">
-        <div class="section-head panel">
-          <h2>Reset Data Laporan</h2>
-          <p>Hapus permanen data laporan (dummy/uji coba) per kategori. Data pengguna (username &amp; password), satuan, dan pengaturan sistem tidak ikut terhapus.</p>
+        <div class="section-head panel rdl-head-panel">
+          <div class="rdl-head-content">
+            <div class="rdl-head-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </div>
+            <div>
+              <h2>Reset Data Laporan</h2>
+              <p>Kelola dan bersihkan data laporan uji coba (dummy) secara terpisah per kategori. Anda dapat menghapus seluruh data pada kategori atau memilih beberapa baris data spesifik saja. Data pengguna, satuan, dan pengaturan sistem tetap aman.</p>
+            </div>
+          </div>
         </div>
 
         <style>
-          .reset-data-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
-          .reset-data-card{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--panel-alt);cursor:pointer;transition:border-color .15s,background .15s;}
-          .reset-data-card:hover{border-color:var(--border-strong);}
-          .reset-data-card input[type="checkbox"]{margin-top:3px;width:16px;height:16px;accent-color:#e5484d;flex-shrink:0;cursor:pointer;}
-          .reset-data-card-main{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;}
-          .reset-data-card-title{font-size:12.5px;font-weight:700;color:var(--text);}
-          .reset-data-card-count{font-size:11px;color:var(--text-muted);}
-          .reset-data-card.is-checked{border-color:#e5484d;background:rgba(229,72,77,.08);}
-          .reset-data-card.is-checked .reset-data-card-count{color:#e5484d;}
+          .rdl-head-panel{padding:20px 24px;}
+          .rdl-head-content{display:flex;align-items:center;gap:18px;}
+          .rdl-head-icon{flex:0 0 auto;width:46px;height:46px;border-radius:12px;background:rgba(229,72,77,.12);color:#e5484d;display:flex;align-items:center;justify-content:center;}
+          .rdl-head-icon svg{width:24px;height:24px;}
+
+          /* Grid Switcher Kategori (5 Card Panel Mini) */
+          .rdl-category-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px;}
+          .rdl-cat-card{
+            display:flex;align-items:flex-start;gap:13px;padding:16px 18px;border-radius:14px;
+            background:var(--panel);border:1px solid var(--border-soft);cursor:pointer;
+            transition:all .18s ease;text-align:left;font-family:inherit;width:100%;
+          }
+          .rdl-cat-card:hover{border-color:var(--border-strong);transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.2);}
+          .rdl-cat-card.active{
+            border-color:var(--gold);background:var(--gold-dim);
+            box-shadow:0 6px 18px rgba(255,152,0,.15), inset 0 0 0 1px var(--gold);
+          }
+          .rdl-cat-icon{
+            flex:0 0 auto;width:38px;height:38px;border-radius:10px;background:var(--panel-alt);
+            display:flex;align-items:center;justify-content:center;color:var(--gold-bright);
+            border:1px solid var(--border-soft);transition:background .18s, color .18s;
+          }
+          .rdl-cat-card.active .rdl-cat-icon{background:var(--panel);color:var(--gold-bright);border-color:var(--gold);}
+          .rdl-cat-icon svg{width:18px;height:18px;}
+          .rdl-cat-body{flex:1 1 auto;min-width:0;}
+          .rdl-cat-title{display:block;font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+          .rdl-cat-badge{
+            display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;font-family:var(--mono);
+            padding:2px 8px;border-radius:999px;background:var(--panel-alt);color:var(--text-muted);border:1px solid var(--border-soft);
+          }
+          .rdl-cat-card.active .rdl-cat-badge{background:var(--panel);color:var(--gold-bright);border-color:rgba(255,152,0,.3);}
+
+          /* Card Panel Detail Terpisah */
+          .rdl-detail-panel{display:none;}
+          .rdl-detail-panel.active{display:block;animation:rdlFadeIn .2s ease;}
+          @keyframes rdlFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+          .rdl-panel-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border-soft);}
+          .rdl-panel-title-area{display:flex;align-items:center;gap:12px;}
+          .rdl-panel-icon{width:36px;height:36px;border-radius:9px;background:rgba(255,152,0,.12);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;}
+          .rdl-panel-icon svg{width:20px;height:20px;}
+          .rdl-panel-head h3{font-size:16px;font-weight:700;margin:0;color:var(--text);}
+          .rdl-panel-head p{font-size:12px;color:var(--text-muted);margin:3px 0 0;}
+
+          .rdl-panel-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+          .rdl-search-wrap{position:relative;}
+          .rdl-search-input{
+            background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:10px;
+            padding:7px 12px 7px 32px;font-size:12.5px;color:var(--text);width:220px;transition:border-color .15s,box-shadow .15s;
+          }
+          .rdl-search-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim);}
+          .rdl-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-dim);pointer-events:none;}
+          .rdl-search-icon svg{width:14px;height:14px;}
+
+          /* Tabel Detail */
+          .rdl-table-wrap{overflow-x:auto;max-height:480px;border:1px solid var(--border-soft);border-radius:12px;background:var(--panel-alt);}
+          .rdl-table-wrap::-webkit-scrollbar{width:7px;height:7px;}
+          .rdl-table-wrap::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:4px;}
+          table.rdl-table{width:100%;border-collapse:collapse;font-size:12.5px;text-align:left;}
+          table.rdl-table th{
+            position:sticky;top:0;z-index:2;background:var(--panel);
+            font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim);
+            padding:12px 14px;border-bottom:1px solid var(--border-soft);white-space:nowrap;
+          }
+          table.rdl-table td{padding:12px 14px;border-bottom:1px solid var(--border-soft);vertical-align:middle;color:var(--text);}
+          table.rdl-table tr:hover td{background:rgba(255,152,0,.04);}
+          table.rdl-table tr.is-selected td{background:rgba(229,72,77,.08);}
+
+          .rdl-check-cell{width:36px;text-align:center;}
+          .rdl-check-cell input[type="checkbox"]{width:16px;height:16px;accent-color:#e5484d;cursor:pointer;margin:0;}
+
+          .rdl-title-cell{display:flex;flex-direction:column;gap:3px;}
+          .rdl-item-title{font-weight:600;color:var(--text);line-height:1.4;}
+          .rdl-item-subtype{display:inline-flex;align-items:center;align-self:flex-start;font-size:10px;font-weight:700;font-family:var(--mono);padding:1px 6px;border-radius:4px;text-transform:uppercase;}
+          .rdl-subtype-gold{background:rgba(255,152,0,.15);color:var(--gold-bright);}
+          .rdl-subtype-amber{background:rgba(245,158,11,.15);color:#f59e0b;}
+          .rdl-subtype-cyan{background:rgba(6,182,212,.15);color:#06b6d4;}
+          .rdl-subtype-red{background:rgba(239,68,68,.15);color:#ef4444;}
+          .rdl-subtype-purple{background:rgba(168,85,247,.15);color:#a855f7;}
+
+          .rdl-satuan-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--border-soft);color:var(--text);}
+          .rdl-user-name{font-size:11px;color:var(--text-muted);margin-top:2px;}
+
+          .rdl-date{font-family:var(--mono);font-size:11px;color:var(--text-muted);white-space:nowrap;}
+          .rdl-status-pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:10.5px;font-weight:700;text-transform:uppercase;background:var(--panel);border:1px solid var(--border-soft);color:var(--text-muted);}
+
+          .rdl-action-del-btn{
+            width:30px;height:30px;border-radius:8px;background:transparent;border:1px solid transparent;
+            color:var(--text-dim);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
+            transition:all .15s ease;
+          }
+          .rdl-action-del-btn:hover{background:rgba(229,72,77,.12);color:#e5484d;border-color:rgba(229,72,77,.3);}
+          .rdl-action-del-btn svg{width:15px;height:15px;}
+
+          /* Empty State */
+          .rdl-empty-box{padding:48px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;border:1px dashed var(--border-soft);border-radius:12px;background:var(--panel-alt);}
+          .rdl-empty-icon{width:56px;height:56px;border-radius:16px;background:rgba(47,158,99,.12);color:#2f9e63;display:flex;align-items:center;justify-content:center;}
+          .rdl-empty-icon svg{width:28px;height:28px;}
+          .rdl-empty-box h4{font-size:15px;font-weight:700;color:var(--text);margin:0;}
+          .rdl-empty-box p{font-size:12.5px;color:var(--text-muted);margin:0;max-width:380px;line-height:1.5;}
+
+          .btn-danger-soft{background:rgba(229,72,77,.12);color:#e5484d;border:1px solid rgba(229,72,77,.28);font-weight:700;}
+          .btn-danger-soft:hover{background:#e5484d;color:#fff;border-color:#e5484d;}
         </style>
 
-        <div class="panel">
-          <div class="panel-head"><div><h3>Pilih Kategori yang Akan Dihapus</h3><p>Centang satu atau beberapa kategori data laporan. Kategori yang tidak dicentang tetap aman, tidak ikut terhapus.</p></div></div>
-          <form method="POST" action="{{ route('admin.reset-data-laporan.destroy') }}" id="formResetDataLaporan" style="padding:18px 22px;">
-            @csrf @method('DELETE')
-            <div class="reset-data-grid">
-              @foreach($resetDataKategori as $key => $def)
-              <label class="reset-data-card" data-reset-data-card>
-                <input type="checkbox" name="kategori[]" value="{{ $key }}">
-                <span class="reset-data-card-main">
-                  <span class="reset-data-card-title">{{ $def['label'] }}</span>
-                  <span class="reset-data-card-count">{{ number_format($resetDataCounts[$key] ?? 0) }} baris data saat ini</span>
-                </span>
-              </label>
-              @endforeach
-            </div>
-            <button type="button" class="btn btn-ghost-red" id="btnResetDataLaporan" style="margin-top:16px;" disabled>Hapus Data Terpilih</button>
-          </form>
+        {{-- Grid Kartu Kategori --}}
+        <div class="rdl-category-grid" role="tablist">
+          @foreach($resetDataKategori as $key => $def)
+            @php
+              $countData = $resetDataCounts[$key] ?? 0;
+              $isActiveCat = $loop->first;
+            @endphp
+            <button type="button" class="rdl-cat-card {{ $isActiveCat ? 'active' : '' }}" data-rdl-tab="{{ $key }}" onclick="switchRdlCategory('{{ $key }}')">
+              <div class="rdl-cat-icon">
+                @if($key === 'laporan')
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                @elseif($key === 'monitoring')
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                @elseif($key === 'penindakan')
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                @elseif($key === 'publikasi')
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                @else
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><polyline points="9 14 11 16 15 11"/></svg>
+                @endif
+              </div>
+              <div class="rdl-cat-body">
+                <span class="rdl-cat-title">{{ $def['label'] }}</span>
+                <span class="rdl-cat-badge">{{ number_format($countData) }} baris data</span>
+              </div>
+            </button>
+          @endforeach
         </div>
 
+        {{-- Card Panels Detail per Kategori --}}
+        @foreach($resetDataKategori as $key => $def)
+          @php
+            $items = $resetDataDetails[$key] ?? [];
+            $totalCount = count($items);
+            $isActiveCat = $loop->first;
+          @endphp
+          <div class="panel rdl-detail-panel {{ $isActiveCat ? 'active' : '' }}" id="rdlDetail_{{ $key }}">
+            <div class="rdl-panel-head">
+              <div class="rdl-panel-title-area">
+                <div class="rdl-panel-icon">
+                  @if($key === 'laporan')
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  @elseif($key === 'monitoring')
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  @elseif($key === 'penindakan')
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  @elseif($key === 'publikasi')
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98m-.01-10.98-6.82 3.98"/></svg>
+                  @else
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                  @endif
+                </div>
+                <div>
+                  <h3>{{ $def['label'] }}</h3>
+                  <p>{{ $def['desc'] ?? 'Kelola dan hapus data laporan pada kategori ini.' }} &bull; <strong id="rdlCountBadge_{{ $key }}">{{ $totalCount }}</strong> data tersedia</p>
+                </div>
+              </div>
+              <div class="rdl-panel-actions">
+                <div class="rdl-search-wrap">
+                  <span class="rdl-search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+                  <input type="text" class="rdl-search-input" placeholder="Cari perihal, pengirim..." oninput="filterRdlTable(this, '{{ $key }}')">
+                </div>
+                <button type="button" class="btn btn-sm btn-ghost-red" id="btnDeleteSelected_{{ $key }}" disabled onclick="bukaKonfirmasiHapusTerpilih('{{ $key }}')">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  Hapus Baris Terpilih (<span id="rdlSelectedNum_{{ $key }}">0</span>)
+                </button>
+                <button type="button" class="btn btn-sm btn-danger-soft" @if($totalCount === 0) disabled style="opacity:.5;cursor:not-allowed;" @endif onclick="bukaKonfirmasiHapusSemua('{{ $key }}', '{{ addslashes($def['label']) }}', {{ $totalCount }})">
+                  Hapus Semua ({{ $totalCount }})
+                </button>
+              </div>
+            </div>
+
+            @if($totalCount === 0)
+              <div class="rdl-empty-box">
+                <div class="rdl-empty-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                </div>
+                <h4>Kategori Bersih &amp; Aman</h4>
+                <p>Tidak ada data laporan pada kategori ini. Anda dapat memasukkan data laporan baru melalui modul terkait.</p>
+              </div>
+            @else
+              <div class="rdl-table-wrap">
+                <table class="rdl-table" id="rdlTable_{{ $key }}">
+                  <thead>
+                    <tr>
+                      <th class="rdl-check-cell">
+                        <input type="checkbox" title="Pilih semua baris" onchange="toggleRdlCheckAll(this, '{{ $key }}')">
+                      </th>
+                      <th style="width:40px;">No</th>
+                      <th>Perihal / Rincian Laporan</th>
+                      <th>Satuan &amp; Pengaju</th>
+                      <th>Tanggal Dibuat</th>
+                      <th>Status</th>
+                      <th style="text-align:center;width:80px;">Lampiran</th>
+                      <th style="text-align:center;width:60px;">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @foreach($items as $i => $item)
+                      <tr data-rdl-row data-item-key="{{ $item['key'] }}" data-search-text="{{ strtolower($item['judul'].' '.$item['satuan'].' '.$item['user'].' '.$item['status'].' '.$item['subtipe']) }}">
+                        <td class="rdl-check-cell">
+                          <input type="checkbox" class="rdl-row-cb" value="{{ $item['key'] }}" data-title="{{ e($item['judul']) }}" onchange="syncRdlSelection('{{ $key }}')">
+                        </td>
+                        <td style="font-family:var(--mono);color:var(--text-dim);">{{ $i + 1 }}</td>
+                        <td>
+                          <div class="rdl-title-cell">
+                            <span class="rdl-item-title">{{ $item['judul'] }}</span>
+                            <span class="rdl-item-subtype rdl-subtype-{{ $item['subtipe_badge'] ?? 'gold' }}">{{ $item['subtipe'] }}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="rdl-satuan-badge">{{ $item['satuan'] }}</span>
+                          <div class="rdl-user-name">{{ $item['user'] }}</div>
+                        </td>
+                        <td class="rdl-date">{{ $item['tanggal'] }}</td>
+                        <td>
+                          <span class="rdl-status-pill">{{ $item['status'] }}</span>
+                        </td>
+                        <td style="text-align:center;">
+                          @if(!empty($item['lampiran']))
+                            <span title="Ada lampiran berkas" style="color:var(--success);font-weight:700;display:inline-flex;align-items:center;gap:3px;font-size:11px;">
+                              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                              Ada
+                            </span>
+                          @else
+                            <span style="color:var(--text-dim);font-size:12px;">-</span>
+                          @endif
+                        </td>
+                        <td style="text-align:center;">
+                          <button type="button" class="rdl-action-del-btn" title="Hapus baris ini" onclick="bukaKonfirmasiHapusSatu('{{ $item['key'] }}', '{{ addslashes($item['judul']) }}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                          </button>
+                        </td>
+                      </tr>
+                    @endforeach
+                  </tbody>
+                </table>
+              </div>
+            @endif
+          </div>
+        @endforeach
+
+        {{-- Form Tindakan Reset (Submit Tersembunyi) --}}
+        <form id="formRdlAction" method="POST" action="{{ route('admin.reset-data-laporan.destroy') }}" style="display:none;">
+          @csrf @method('DELETE')
+          <div id="formRdlActionInputs"></div>
+        </form>
+
         <script>
-        (function () {
-          var panel = document.querySelector('[data-tab-panel="reset-data-laporan"]');
-          if (!panel) return;
-
-          var form = document.getElementById('formResetDataLaporan');
-          var cards = Array.prototype.slice.call(panel.querySelectorAll('[data-reset-data-card]'));
-          var btn = document.getElementById('btnResetDataLaporan');
+        (function(){
           var overlay = document.getElementById('resetDataLaporanOverlay');
+          var titleEl = document.getElementById('resetDataLaporanTitle');
+          var subEl = document.getElementById('resetDataLaporanSub');
           var listEl = document.getElementById('resetDataLaporanDaftar');
+          var yaBtn = document.getElementById('resetDataLaporanYa');
+          var batalBtn = document.getElementById('resetDataLaporanBatal');
+          var formAction = document.getElementById('formRdlAction');
+          var formInputs = document.getElementById('formRdlActionInputs');
 
-          function refresh() {
-            var checkedLabels = [];
-            cards.forEach(function (card) {
-              var cb = card.querySelector('input[type="checkbox"]');
-              var checked = cb.checked;
-              card.classList.toggle('is-checked', checked);
-              if (checked) checkedLabels.push(card.querySelector('.reset-data-card-title').textContent.trim());
+          // 1. Switch Active Category
+          window.switchRdlCategory = function(catKey) {
+            document.querySelectorAll('[data-rdl-tab]').forEach(function(card){
+              card.classList.toggle('active', card.getAttribute('data-rdl-tab') === catKey);
             });
-            btn.disabled = checkedLabels.length === 0;
-            return checkedLabels;
-          }
-
-          cards.forEach(function (card) {
-            card.querySelector('input[type="checkbox"]').addEventListener('change', refresh);
-          });
-
-          btn.addEventListener('click', function () {
-            var checkedLabels = refresh();
-            if (checkedLabels.length === 0 || !overlay || !listEl) return;
-            listEl.innerHTML = '';
-            checkedLabels.forEach(function (label) {
-              var li = document.createElement('li');
-              li.textContent = label;
-              listEl.appendChild(li);
+            document.querySelectorAll('.rdl-detail-panel').forEach(function(panel){
+              panel.classList.toggle('active', panel.id === 'rdlDetail_' + catKey);
             });
+          };
+
+          // 2. Search Filter in Table
+          window.filterRdlTable = function(input, catKey) {
+            var val = (input.value || '').trim().toLowerCase();
+            var panel = document.getElementById('rdlDetail_' + catKey);
+            if (!panel) return;
+            var rows = panel.querySelectorAll('tbody tr[data-rdl-row]');
+            rows.forEach(function(row){
+              var searchTxt = row.getAttribute('data-search-text') || '';
+              row.style.display = searchTxt.indexOf(val) !== -1 ? '' : 'none';
+            });
+            syncRdlSelection(catKey);
+          };
+
+          // 3. Toggle Check All
+          window.toggleRdlCheckAll = function(master, catKey) {
+            var panel = document.getElementById('rdlDetail_' + catKey);
+            if (!panel) return;
+            var cbs = panel.querySelectorAll('tbody tr[data-rdl-row]:not([style*="display: none"]) .rdl-row-cb');
+            cbs.forEach(function(cb){
+              cb.checked = master.checked;
+              var tr = cb.closest('tr');
+              if (tr) tr.classList.toggle('is-selected', cb.checked);
+            });
+            syncRdlSelection(catKey);
+          };
+
+          // 4. Sync Selection State & Enable/Disable Buttons
+          window.syncRdlSelection = function(catKey) {
+            var panel = document.getElementById('rdlDetail_' + catKey);
+            if (!panel) return;
+            var cbs = panel.querySelectorAll('tbody .rdl-row-cb:checked');
+            var numEl = document.getElementById('rdlSelectedNum_' + catKey);
+            var delBtn = document.getElementById('btnDeleteSelected_' + catKey);
+            var count = cbs.length;
+            if (numEl) numEl.textContent = count;
+            if (delBtn) delBtn.disabled = count === 0;
+
+            panel.querySelectorAll('tbody .rdl-row-cb').forEach(function(cb){
+              var tr = cb.closest('tr');
+              if (tr) tr.classList.toggle('is-selected', cb.checked);
+            });
+          };
+
+          // Helper buka overlay
+          function openConfirmDialog(title, desc, items, submitCallback) {
+            if (!overlay) return;
+            if (titleEl) titleEl.textContent = title;
+            if (subEl) subEl.textContent = desc;
+            if (listEl) {
+              listEl.innerHTML = '';
+              items.forEach(function(txt){
+                var li = document.createElement('li');
+                li.textContent = txt;
+                listEl.appendChild(li);
+              });
+              listEl.style.display = items.length ? 'block' : 'none';
+            }
+
+            // Bind click Ya
+            yaBtn.onclick = function() {
+              yaBtn.disabled = true;
+              yaBtn.textContent = 'Menghapus...';
+              submitCallback();
+            };
+
             overlay.classList.add('open');
-          });
-
-          var batal = document.getElementById('resetDataLaporanBatal');
-          if (batal && overlay) {
-            batal.addEventListener('click', function () { overlay.classList.remove('open'); });
-          }
-          document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && overlay) overlay.classList.remove('open');
-          });
-
-          var ya = document.getElementById('resetDataLaporanYa');
-          if (ya && form) {
-            ya.addEventListener('click', function () { form.submit(); });
           }
 
-          refresh();
+          function closeConfirmDialog() {
+            if (overlay) overlay.classList.remove('open');
+            if (yaBtn) {
+              yaBtn.disabled = false;
+              yaBtn.textContent = 'Ya, Hapus Permanen';
+            }
+          }
+
+          if (batalBtn) batalBtn.addEventListener('click', closeConfirmDialog);
+          document.addEventListener('keydown', function(e){
+            if (e.key === 'Escape' && overlay && overlay.classList.contains('open')) closeConfirmDialog();
+          });
+
+          // 5. Buka Konfirmasi Hapus Baris Terpilih
+          window.bukaKonfirmasiHapusTerpilih = function(catKey) {
+            var panel = document.getElementById('rdlDetail_' + catKey);
+            if (!panel) return;
+            var cbs = panel.querySelectorAll('tbody .rdl-row-cb:checked');
+            if (!cbs.length) return;
+
+            var items = [];
+            cbs.forEach(function(cb){
+              items.push(cb.getAttribute('data-title') || cb.value);
+            });
+
+            openConfirmDialog(
+              'Hapus ' + cbs.length + ' Baris Data Terpilih?',
+              'Baris data laporan yang Anda centang berikut akan dihapus secara permanen beserta lampirannya:',
+              items.slice(0, 10).concat(items.length > 10 ? ['... dan ' + (items.length - 10) + ' baris lainnya.'] : []),
+              function() {
+                formInputs.innerHTML = '';
+                cbs.forEach(function(cb){
+                  var input = document.createElement('input');
+                  input.type = 'hidden';
+                  input.name = 'item_keys[]';
+                  input.value = cb.value;
+                  formInputs.appendChild(input);
+                });
+                formAction.submit();
+              }
+            );
+          };
+
+          // 6. Buka Konfirmasi Hapus Satu Baris
+          window.bukaKonfirmasiHapusSatu = function(itemKey, title) {
+            openConfirmDialog(
+              'Hapus Baris Data Laporan Ini?',
+              'Data laporan "' + title + '" akan dihapus secara permanen dan tidak bisa dikembalikan:',
+              [title],
+              function() {
+                formInputs.innerHTML = '';
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'item_keys[]';
+                input.value = itemKey;
+                formInputs.appendChild(input);
+                formAction.submit();
+              }
+            );
+          };
+
+          // 7. Buka Konfirmasi Hapus Semua dalam Kategori
+          window.bukaKonfirmasiHapusSemua = function(catKey, catLabel, totalCount) {
+            openConfirmDialog(
+              'Hapus Semua Data di ' + catLabel + '?',
+              'PERINGATAN: Seluruh data sebanyak ' + totalCount + ' baris pada kategori ini akan dibersihkan secara permanen:',
+              [catLabel + ' (Total ' + totalCount + ' baris data)'],
+              function() {
+                formInputs.innerHTML = '';
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'kategori[]';
+                input.value = catKey;
+                formInputs.appendChild(input);
+                formAction.submit();
+              }
+            );
+          };
         })();
         </script>
       </section>
@@ -3430,321 +3774,325 @@
               </div>
             </div>
 
-            {{-- ---------- PANEL "LATAR BELAKANG BERANDA" (kartu tersendiri,
-                 sejajar dengan "Konten Halaman Landing" -- sebelumnya kartu
-                 bersarang ".lp-card" di dalam tab Beranda kartu itu). Tetap
-                 ikut tersembunyi/tampil bareng tab Beranda lewat class
-                 ".lp-tab-panel" + data-lp-tab-panel="beranda" (dibaca oleh
-                 JS tab-switching yang query-nya lewat
-                 `form.querySelectorAll(...)`, jadi tetap berfungsi walau
-                 posisi kartu ini sekarang di luar kartu "Konten Halaman
-                 Landing", asal masih di dalam <form> yang sama). --}}
-            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="beranda" id="lpPanelHeroBg">
-              <div class="panel-head">
-                <div>
-                  <h3>Latar Belakang Beranda</h3>
-                  <p>Latar bagian hero (opsional) — bisa berupa gambar diam atau video singkat yang berputar otomatis.</p>
-                </div>
-              </div>
-              <div class="form-grid">
-                <div class="form-field full">
-                  <label style="display:block;margin-bottom:8px;">Tipe Latar Belakang</label>
-                  <div class="lp-bg-type-toggle" role="radiogroup" aria-label="Tipe latar belakang beranda">
-                    <label class="lp-bg-type-option">
-                      <input type="radio" name="hero_bg_type" value="gambar" data-lp-bg-type-radio @checked($pengaturanHeroBgType !== 'video')>
-                      <span class="lp-bg-type-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg></span>
-                      <span>Gambar</span>
-                    </label>
-                    <label class="lp-bg-type-option">
-                      <input type="radio" name="hero_bg_type" value="video" data-lp-bg-type-radio @checked($pengaturanHeroBgType === 'video')>
-                      <span class="lp-bg-type-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m10 9 5 3-5 3z"></path></svg></span>
-                      <span>Video</span>
-                    </label>
-                  </div>
-                  <small>Beralih tipe tidak menghapus file yang sudah diunggah sebelumnya — kalau nanti mau balik lagi, tidak perlu unggah ulang.</small>
-                </div>
+            {{-- ---------- WADAH PENYIMPANAN PANEL EDITOR (TERSEMBUNYI TOTAL DARI HALAMAN) ----------
+                 Semua panel editor di bawah ini disimpan di dalam #lpPanelsStore dengan display:none !important.
+                 Panel TIDAK AKAN PERNAH muncul menumpuk di alur halaman utama.
+                 Saat kartu pintasan diklik, JS memindahkan panel terkait ke dalam Modal Dialog di bawah.
+                 Saat modal ditutup atau form di-submit, panel dikembalikan ke posisi asal di sini. --}}
+            <div class="lp-panels-store" id="lpPanelsStore" style="display:none !important;" aria-hidden="true">
 
-                {{-- ----- Sub-opsi: GAMBAR ----- --}}
-                <div class="form-field full lp-bg-type-panel" data-lp-bg-type-panel="gambar">
-                  <label for="lpHeroImage" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Gambar Latar Beranda</label>
-                  <div class="lp-hero-image-row">
-                    <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturanHeroExists ? '1' : '0' }}" data-label-existing="Ganti Gambar">
-                    <img src="{{ $pengaturanHeroExists ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}">
-                    <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturanHeroExists ? 'display:none' : '' }}">
-                      <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
-                      <span>Belum ada gambar latar belakang</span>
-                    </div>
-                    <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Gambar</button>
-                  </div>
-                  <small>Format JPG, PNG, atau WEBP · maksimal 5 MB.</small>
-                </div>
-
-                {{-- ----- Sub-opsi: VIDEO ----- --}}
-                <div class="form-field full lp-bg-type-panel" data-lp-bg-type-panel="video" style="display:none;">
-                  <label for="lpHeroVideo" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Video Latar Beranda</label>
-                  <div class="lp-hero-image-row">
-                    <input id="lpHeroVideo" name="hero_video" type="file" accept="video/mp4,video/webm,video/quicktime,.mov" data-lp-video="hero_video" data-has-current="{{ $pengaturanHeroVideoExists ? '1' : '0' }}" data-label-existing="Ganti Video">
-                    <video src="{{ $pengaturanHeroVideoExists ? asset('storage/'.$pengaturan->hero_video_path) : '' }}" class="lp-current-image" id="lpHeroVideoPreviewVideo" muted loop autoplay playsinline style="{{ $pengaturanHeroVideoExists ? '' : 'display:none' }}"></video>
-                    <div class="lp-image-placeholder" id="lpHeroVideoPreviewPlaceholder" style="{{ $pengaturanHeroVideoExists ? 'display:none' : '' }}">
-                      <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m10 9 5 3-5 3z"></path></svg>
-                      <span>Belum ada video latar belakang</span>
-                    </div>
-                    <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroVideoDeleteBtn" style="{{ $pengaturanHeroVideoExists ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_video') }}" data-nama="Video Latar Belakang Beranda">Hapus Video</button>
-                  </div>
-                  <small>Format MP4, WEBM, atau MOV · maksimal 100 MB · durasi maksimal 1 menit · sebaiknya tanpa suara karena akan berputar otomatis (looping) tanpa audio.</small>
-                </div>
-
-                <div class="form-field lp-range-field">
-                  <div class="lp-range-head">
-                    <label for="lpHeroBlur"><span class="lp-range-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="12" r="7" stroke-dasharray="2.2 3.4" opacity=".75"></circle><circle cx="12" cy="12" r="10.5" stroke-dasharray="1.2 4" opacity=".4"></circle></svg></span>Blur Latar</label>
-                    <span class="lp-range-badge"><span id="lpHeroBlurVal">{{ $pengaturanHeroBlur }}</span><small>px</small></span>
-                  </div>
-                  <div class="lp-range-shell">
-                    <input id="lpHeroBlur" name="hero_blur_level" type="range" min="0" max="20" step="1" value="{{ $pengaturanHeroBlur }}" class="lp-range" data-lp="hero_blur_level" style="--lp-range-fill:{{ round($pengaturanHeroBlur / 20 * 100, 2) }}%" oninput="document.getElementById('lpHeroBlurVal').textContent=this.value;this.style.setProperty('--lp-range-fill',(this.value/this.max*100)+'%');">
-                  </div>
-                  <small>0 = tajam, 20 = paling buram.</small>
-                </div>
-                <div class="form-field lp-range-field">
-                  <div class="lp-range-head">
-                    <label for="lpHeroOverlay"><span class="lp-range-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5Z"></path><path d="m3 13 9 5 9-5"></path></svg></span>Kepekatan Overlay Warna</label>
-                    <span class="lp-range-badge"><span id="lpHeroOverlayVal">{{ $pengaturanHeroOverlay }}</span><small>%</small></span>
-                  </div>
-                  <div class="lp-range-shell">
-                    <input id="lpHeroOverlay" name="hero_overlay_intensity" type="range" min="0" max="100" step="1" value="{{ $pengaturanHeroOverlay }}" class="lp-range" data-lp="hero_overlay_intensity" style="--lp-range-fill:{{ $pengaturanHeroOverlay }}%" oninput="document.getElementById('lpHeroOverlayVal').textContent=this.value;this.style.setProperty('--lp-range-fill',(this.value/this.max*100)+'%');">
-                  </div>
-                  <small>0 = tanpa overlay, 100 = paling pekat.</small>
-                </div>
-              </div>
-            </div>
-
-            {{-- ---------- PANEL "JUDUL & DESKRIPSI UTAMA" (kartu utama
-                 tersendiri, sejajar dengan "Konten Halaman Landing" -- BUKAN
-                 lagi kartu bersarang di dalamnya). Tetap ikut tersembunyi/
-                 tampil bareng tab Beranda lewat class ".lp-tab-panel" +
-                 data-lp-tab-panel="beranda" (dibaca oleh JS tab-switching
-                 yang query-nya lewat `form.querySelectorAll(...)`, jadi
-                 tetap berfungsi walau posisi kartu ini sekarang di luar
-                 kartu "Konten Halaman Landing", asal masih di dalam
-                 <form> yang sama). --}}
-            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="beranda" id="lpPanelHeroText">
-              <div class="panel-head">
-                <div>
-                  <h3>Judul &amp; Deskripsi Utama</h3>
-                  <p>Teks utama yang tampil di bagian paling atas (hero) landing page.</p>
-                </div>
-              </div>
-              <div class="form-grid">
-                <div class="form-field full">
-                  <label for="lpEyebrow">Label Kecil di Atas Judul</label>
-                  <input id="lpEyebrow" name="hero_eyebrow" type="text" value="{{ old('hero_eyebrow', $pengaturan->hero_eyebrow) }}" data-lp="hero_eyebrow">
-                </div>
-                <div class="form-field">
-                  <label for="lpJudulAwal">Judul (bagian 1) — juga jadi nama sistem di logo &amp; sidebar semua pengguna</label>
-                  <input id="lpJudulAwal" name="hero_judul_awal" type="text" value="{{ old('hero_judul_awal', $pengaturan->hero_judul_awal) }}" data-lp="hero_judul_awal">
-                </div>
-                <div class="form-field">
-                  <label for="lpJudulAksen">Judul (bagian 2, warna emas) — juga ikut di logo &amp; sidebar semua pengguna</label>
-                  <input id="lpJudulAksen" name="hero_judul_aksen" type="text" value="{{ old('hero_judul_aksen', $pengaturan->hero_judul_aksen) }}" data-lp="hero_judul_aksen">
-                </div>
-                <div class="form-field full">
-                  <label for="lpSubjudul">Sub Judul</label>
-                  <input id="lpSubjudul" name="hero_subjudul" type="text" value="{{ old('hero_subjudul', $pengaturan->hero_subjudul) }}" data-lp="hero_subjudul">
-                </div>
-                <div class="form-field full">
-                  <label for="lpDeskripsi">Deskripsi</label>
-                  <textarea id="lpDeskripsi" name="hero_deskripsi" rows="3" data-lp="hero_deskripsi">{{ old('hero_deskripsi', $pengaturan->hero_deskripsi) }}</textarea>
-                </div>
-              </div>
-            </div>
-
-            {{-- ---------- PANEL(S) "FITUR N" (satu kartu per fitur,
-                 tersendiri di luar "Konten Halaman Landing"). Tetap ikut
-                 tersembunyi/tampil bareng tab Fitur lewat
-                 data-lp-tab-panel="fitur". --}}
-            @foreach ((old('fitur') ?? $pengaturan->fitur ?? []) as $i => $fitur)
-              <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="fitur" data-lp-group="lpPanelFitur" @if($i === 0) id="lpPanelFitur" @endif>
+              {{-- ---------- PANEL "LATAR BELAKANG BERANDA" ---------- --}}
+              <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="beranda" id="lpPanelHeroBg">
                 <div class="panel-head">
                   <div>
-                    <h3>Fitur {{ $i + 1 }}</h3>
+                    <h3>Latar Belakang Beranda</h3>
+                    <p>Latar bagian hero (opsional) — bisa berupa gambar diam atau video singkat yang berputar otomatis.</p>
                   </div>
                 </div>
                 <div class="form-grid">
                   <div class="form-field full">
-                    <label for="lpFiturJudul{{ $i }}">Judul</label>
-                    <input id="lpFiturJudul{{ $i }}" name="fitur[{{ $i }}][judul]" type="text" value="{{ is_array($fitur) ? $fitur['judul'] : '' }}" data-lp="fitur_judul_{{ $i }}" required>
+                    <label style="display:block;margin-bottom:8px;">Tipe Latar Belakang</label>
+                    <div class="lp-bg-type-toggle" role="radiogroup" aria-label="Tipe latar belakang beranda">
+                      <label class="lp-bg-type-option">
+                        <input type="radio" name="hero_bg_type" value="gambar" data-lp-bg-type-radio @checked($pengaturanHeroBgType !== 'video')>
+                        <span class="lp-bg-type-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg></span>
+                        <span>Gambar</span>
+                      </label>
+                      <label class="lp-bg-type-option">
+                        <input type="radio" name="hero_bg_type" value="video" data-lp-bg-type-radio @checked($pengaturanHeroBgType === 'video')>
+                        <span class="lp-bg-type-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m10 9 5 3-5 3z"></path></svg></span>
+                        <span>Video</span>
+                      </label>
+                    </div>
+                    <small>Beralih tipe tidak menghapus file yang sudah diunggah sebelumnya — kalau nanti mau balik lagi, tidak perlu unggah ulang.</small>
+                  </div>
+
+                  {{-- ----- Sub-opsi: GAMBAR ----- --}}
+                  <div class="form-field full lp-bg-type-panel" data-lp-bg-type-panel="gambar">
+                    <label for="lpHeroImage" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Gambar Latar Beranda</label>
+                    <div class="lp-hero-image-row">
+                      <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturanHeroExists ? '1' : '0' }}" data-label-existing="Ganti Gambar">
+                      <img src="{{ $pengaturanHeroExists ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}">
+                      <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturanHeroExists ? 'display:none' : '' }}">
+                        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
+                        <span>Belum ada gambar latar belakang</span>
+                      </div>
+                      <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroImageDeleteBtn" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_image') }}" data-nama="Gambar Latar Belakang Beranda">Hapus Gambar</button>
+                    </div>
+                    <small>Format JPG, PNG, atau WEBP · maksimal 5 MB.</small>
+                  </div>
+
+                  {{-- ----- Sub-opsi: VIDEO ----- --}}
+                  <div class="form-field full lp-bg-type-panel" data-lp-bg-type-panel="video" style="display:none;">
+                    <label for="lpHeroVideo" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Video Latar Beranda</label>
+                    <div class="lp-hero-image-row">
+                      <input id="lpHeroVideo" name="hero_video" type="file" accept="video/mp4,video/webm,video/quicktime,.mov" data-lp-video="hero_video" data-has-current="{{ $pengaturanHeroVideoExists ? '1' : '0' }}" data-label-existing="Ganti Video">
+                      <video src="{{ $pengaturanHeroVideoExists ? asset('storage/'.$pengaturan->hero_video_path) : '' }}" class="lp-current-image" id="lpHeroVideoPreviewVideo" muted loop autoplay playsinline style="{{ $pengaturanHeroVideoExists ? '' : 'display:none' }}"></video>
+                      <div class="lp-image-placeholder" id="lpHeroVideoPreviewPlaceholder" style="{{ $pengaturanHeroVideoExists ? 'display:none' : '' }}">
+                        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m10 9 5 3-5 3z"></path></svg>
+                        <span>Belum ada video latar belakang</span>
+                      </div>
+                      <button type="button" class="btn btn-ghost-red lp-delete-img-btn" id="lpHeroVideoDeleteBtn" style="{{ $pengaturanHeroVideoExists ? '' : 'display:none' }}" onclick="window.bukaHapusLandingGambar(this)" data-action="{{ route('admin.pengaturan.landing.image.destroy', 'hero_video') }}" data-nama="Video Latar Belakang Beranda">Hapus Video</button>
+                    </div>
+                    <small>Format MP4, WEBM, atau MOV · maksimal 100 MB · durasi maksimal 1 menit · sebaiknya tanpa suara karena akan berputar otomatis (looping) tanpa audio.</small>
+                  </div>
+
+                  <div class="form-field lp-range-field">
+                    <div class="lp-range-head">
+                      <label for="lpHeroBlur"><span class="lp-range-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="12" r="7" stroke-dasharray="2.2 3.4" opacity=".75"></circle><circle cx="12" cy="12" r="10.5" stroke-dasharray="1.2 4" opacity=".4"></circle></svg></span>Blur Latar</label>
+                      <span class="lp-range-badge"><span id="lpHeroBlurVal">{{ $pengaturanHeroBlur }}</span><small>px</small></span>
+                    </div>
+                    <div class="lp-range-shell">
+                      <input id="lpHeroBlur" name="hero_blur_level" type="range" min="0" max="20" step="1" value="{{ $pengaturanHeroBlur }}" class="lp-range" data-lp="hero_blur_level" style="--lp-range-fill:{{ round($pengaturanHeroBlur / 20 * 100, 2) }}%" oninput="document.getElementById('lpHeroBlurVal').textContent=this.value;this.style.setProperty('--lp-range-fill',(this.value/this.max*100)+'%');">
+                    </div>
+                    <small>0 = tajam, 20 = paling buram.</small>
+                  </div>
+                  <div class="form-field lp-range-field">
+                    <div class="lp-range-head">
+                      <label for="lpHeroOverlay"><span class="lp-range-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5Z"></path><path d="m3 13 9 5 9-5"></path></svg></span>Kepekatan Overlay Warna</label>
+                      <span class="lp-range-badge"><span id="lpHeroOverlayVal">{{ $pengaturanHeroOverlay }}</span><small>%</small></span>
+                    </div>
+                    <div class="lp-range-shell">
+                      <input id="lpHeroOverlay" name="hero_overlay_intensity" type="range" min="0" max="100" step="1" value="{{ $pengaturanHeroOverlay }}" class="lp-range" data-lp="hero_overlay_intensity" style="--lp-range-fill:{{ $pengaturanHeroOverlay }}%" oninput="document.getElementById('lpHeroOverlayVal').textContent=this.value;this.style.setProperty('--lp-range-fill',(this.value/this.max*100)+'%');">
+                    </div>
+                    <small>0 = tanpa overlay, 100 = paling pekat.</small>
+                  </div>
+                </div>
+              </div>
+
+              {{-- ---------- PANEL "JUDUL & DESKRIPSI UTAMA" ---------- --}}
+              <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="beranda" id="lpPanelHeroText">
+                <div class="panel-head">
+                  <div>
+                    <h3>Judul &amp; Deskripsi Utama</h3>
+                    <p>Teks utama yang tampil di bagian paling atas (hero) landing page.</p>
+                  </div>
+                </div>
+                <div class="form-grid">
+                  <div class="form-field full">
+                    <label for="lpEyebrow">Label Kecil di Atas Judul</label>
+                    <input id="lpEyebrow" name="hero_eyebrow" type="text" value="{{ old('hero_eyebrow', $pengaturan->hero_eyebrow) }}" data-lp="hero_eyebrow">
+                  </div>
+                  <div class="form-field">
+                    <label for="lpJudulAwal">Judul (bagian 1) — juga jadi nama sistem di logo &amp; sidebar semua pengguna</label>
+                    <input id="lpJudulAwal" name="hero_judul_awal" type="text" value="{{ old('hero_judul_awal', $pengaturan->hero_judul_awal) }}" data-lp="hero_judul_awal">
+                  </div>
+                  <div class="form-field">
+                    <label for="lpJudulAksen">Judul (bagian 2, warna emas) — juga ikut di logo &amp; sidebar semua pengguna</label>
+                    <input id="lpJudulAksen" name="hero_judul_aksen" type="text" value="{{ old('hero_judul_aksen', $pengaturan->hero_judul_aksen) }}" data-lp="hero_judul_aksen">
                   </div>
                   <div class="form-field full">
-                    <label for="lpFiturDesk{{ $i }}">Deskripsi</label>
-                    <textarea id="lpFiturDesk{{ $i }}" name="fitur[{{ $i }}][deskripsi]" rows="2" data-lp="fitur_deskripsi_{{ $i }}" required>{{ is_array($fitur) ? $fitur['deskripsi'] : '' }}</textarea>
+                    <label for="lpSubjudul">Sub Judul</label>
+                    <input id="lpSubjudul" name="hero_subjudul" type="text" value="{{ old('hero_subjudul', $pengaturan->hero_subjudul) }}" data-lp="hero_subjudul">
+                  </div>
+                  <div class="form-field full">
+                    <label for="lpDeskripsi">Deskripsi</label>
+                    <textarea id="lpDeskripsi" name="hero_deskripsi" rows="3" data-lp="hero_deskripsi">{{ old('hero_deskripsi', $pengaturan->hero_deskripsi) }}</textarea>
                   </div>
                 </div>
               </div>
-            @endforeach
 
-            {{-- ---------- PANEL "DESKRIPSI PROFIL INSTANSI" (tab Tentang) ---------- --}}
-            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang" id="lpPanelTentang">
-              <div class="panel-head">
-                <div>
-                  <h3>Deskripsi Profil Instansi</h3>
-                  <p>Paragraf profil singkat instansi yang tampil di bagian "Tentang" landing page.</p>
-                </div>
-              </div>
-              <div class="form-grid">
-                <div class="form-field full">
-                  <label for="lpTentangDeskripsi">Deskripsi Tentang (pisahkan paragraf dengan baris kosong)</label>
-                  <textarea id="lpTentangDeskripsi" name="tentang_deskripsi" rows="10" data-lp="tentang_deskripsi">{{ old('tentang_deskripsi', $pengaturan->tentang_deskripsi) }}</textarea>
-                </div>
-              </div>
-            </div>
-
-            {{-- ---------- PANEL "IDENTITAS INSTANSI" (tab Tentang) ---------- --}}
-            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang" data-lp-group="lpPanelTentang">
-              <div class="panel-head">
-                <div>
-                  <h3>Identitas Instansi</h3>
-                  <p>Tiga kartu identitas (Nama Resmi, Nama Lama, Fungsi Utama) yang tampil di bagian "Tentang" landing page.</p>
-                </div>
-              </div>
-              <div class="form-grid">
-                <div class="form-field">
-                  <label for="lpNamaResmi">Nama Resmi</label>
-                  <input id="lpNamaResmi" name="tentang_nama_resmi" type="text" value="{{ old('tentang_nama_resmi', $pengaturan->tentang_nama_resmi) }}" data-lp="tentang_nama_resmi">
-                </div>
-                <div class="form-field">
-                  <label for="lpNamaLama">Nama Lama</label>
-                  <input id="lpNamaLama" name="tentang_nama_lama" type="text" value="{{ old('tentang_nama_lama', $pengaturan->tentang_nama_lama) }}" data-lp="tentang_nama_lama">
-                </div>
-                <div class="form-field full">
-                  <label for="lpFungsiUtama">Fungsi Utama</label>
-                  <textarea id="lpFungsiUtama" name="tentang_fungsi_utama" rows="3" data-lp="tentang_fungsi_utama">{{ old('tentang_fungsi_utama', $pengaturan->tentang_fungsi_utama) }}</textarea>
-                </div>
-              </div>
-            </div>
-
-            {{-- ---------- PANEL "MOTO" (tab Tentang) ---------- --}}
-            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang" data-lp-group="lpPanelTentang">
-              <div class="panel-head">
-                <div>
-                  <h3>Moto</h3>
-                  <p>Judul &amp; penjelasan moto instansi yang tampil di bagian "Tentang" landing page.</p>
-                </div>
-              </div>
-              <div class="form-grid">
-                <div class="form-field full">
-                  <label for="lpMotoJudul">Judul Moto</label>
-                  <input id="lpMotoJudul" name="tentang_moto_judul" type="text" value="{{ old('tentang_moto_judul', $pengaturan->tentang_moto_judul) }}" data-lp="tentang_moto_judul">
-                </div>
-                <div class="form-field full">
-                  <label for="lpMotoDeskripsi">Deskripsi Moto</label>
-                  <textarea id="lpMotoDeskripsi" name="tentang_moto_deskripsi" rows="3" data-lp="tentang_moto_deskripsi">{{ old('tentang_moto_deskripsi', $pengaturan->tentang_moto_deskripsi) }}</textarea>
-                </div>
-              </div>
-            </div>
-
-            {{-- ---------- PANEL "MAKNA LOGO" (tab Tentang) -- 10 kartu
-                 "Poin Nomor N" tetap bersarang di dalam panel ini, karena
-                 itu bagian dari isi satu section "Makna Logo", bukan
-                 section terpisah tersendiri. ---------- --}}
-            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang" data-lp-group="lpPanelTentang">
-              <div class="panel-head">
-                <div>
-                  <h3>Makna Logo</h3>
-                  <p>
-                    10 poin keterangan makna lambang. Saat pengunjung mengklik logo di bagian "Tentang" landing page,
-                    muncul jendela berisi lambang yang membesar ke tengah beserta 10 kartu keterangan bernomor
-                    (1-10) di sekelilingnya -- isi Judul &amp; Keterangan tiap poin di bawah ini sesuai nomornya.
-                  </p>
-                </div>
-              </div>
-              @foreach ((old('makna_logo') ?? $pengaturan->makna_logo ?? \App\Models\Pengaturan::defaultMaknaLogo()) as $i => $makna)
-                <div class="lp-card">
-                  <div class="lp-card-title">Poin Nomor {{ $i + 1 }}</div>
+              {{-- ---------- PANEL(S) "FITUR N" ---------- --}}
+              @foreach ((old('fitur') ?? $pengaturan->fitur ?? []) as $i => $fitur)
+                <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="fitur" data-lp-group="lpPanelFitur" @if($i === 0) id="lpPanelFitur" @endif>
+                  <div class="panel-head">
+                    <div>
+                      <h3>Fitur {{ $i + 1 }}</h3>
+                    </div>
+                  </div>
                   <div class="form-grid">
                     <div class="form-field full">
-                      <label for="lpMaknaJudul{{ $i }}">Judul Singkat</label>
-                      <input id="lpMaknaJudul{{ $i }}" name="makna_logo[{{ $i }}][judul]" type="text" value="{{ is_array($makna) ? ($makna['judul'] ?? '') : '' }}" data-lp="makna_logo_judul_{{ $i }}">
+                      <label for="lpFiturJudul{{ $i }}">Judul</label>
+                      <input id="lpFiturJudul{{ $i }}" name="fitur[{{ $i }}][judul]" type="text" value="{{ is_array($fitur) ? $fitur['judul'] : '' }}" data-lp="fitur_judul_{{ $i }}" required>
                     </div>
                     <div class="form-field full">
-                      <label for="lpMaknaKeterangan{{ $i }}">Keterangan</label>
-                      <textarea id="lpMaknaKeterangan{{ $i }}" name="makna_logo[{{ $i }}][keterangan]" rows="2" data-lp="makna_logo_keterangan_{{ $i }}">{{ is_array($makna) ? ($makna['keterangan'] ?? '') : '' }}</textarea>
+                      <label for="lpFiturDesk{{ $i }}">Deskripsi</label>
+                      <textarea id="lpFiturDesk{{ $i }}" name="fitur[{{ $i }}][deskripsi]" rows="2" data-lp="fitur_deskripsi_{{ $i }}" required>{{ is_array($fitur) ? $fitur['deskripsi'] : '' }}</textarea>
                     </div>
                   </div>
                 </div>
               @endforeach
-            </div>
 
-            {{-- ---------- PANEL "INFORMASI KONTAK" (tab Kontak) ---------- --}}
-            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="kontak" id="lpPanelKontakInfo">
-              <div class="panel-head">
-                <div>
-                  <h3>Informasi Kontak</h3>
-                  <p>Alamat, email, telepon, dan website yang tampil di bagian footer landing page.</p>
+              {{-- ---------- PANEL "DESKRIPSI PROFIL INSTANSI" ---------- --}}
+              <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang" id="lpPanelTentang">
+                <div class="panel-head">
+                  <div>
+                    <h3>Deskripsi Profil Instansi</h3>
+                    <p>Paragraf profil singkat instansi yang tampil di bagian "Tentang" landing page.</p>
+                  </div>
+                </div>
+                <div class="form-grid">
+                  <div class="form-field full">
+                    <label for="lpTentangDeskripsi">Deskripsi Tentang (pisahkan paragraf dengan baris kosong)</label>
+                    <textarea id="lpTentangDeskripsi" name="tentang_deskripsi" rows="10" data-lp="tentang_deskripsi">{{ old('tentang_deskripsi', $pengaturan->tentang_deskripsi) }}</textarea>
+                  </div>
                 </div>
               </div>
-              <div class="form-grid">
-                <div class="form-field full">
-                  <label for="lpKontakAlamat">Alamat (tampil di footer)</label>
-                  <textarea id="lpKontakAlamat" name="alamat" rows="2" data-lp="alamat">{{ old('alamat', $pengaturan->alamat) }}</textarea>
-                </div>
-                <div class="form-field">
-                  <label for="lpKontakEmail">Email Kontak</label>
-                  <input id="lpKontakEmail" name="email_kontak" type="email" value="{{ old('email_kontak', $pengaturan->email_kontak) }}" data-lp="email_kontak">
-                </div>
-                <div class="form-field">
-                  <label for="lpKontakTelepon">Telepon Kontak (tampil di footer)</label>
-                  <input id="lpKontakTelepon" name="telepon_kontak" type="text" value="{{ old('telepon_kontak', $pengaturan->telepon_kontak) }}" data-lp="telepon_kontak">
-                </div>
-                <div class="form-field full">
-                  <label for="lpWebsite">Website</label>
-                  <input id="lpWebsite" name="website" type="url" value="{{ old('website', $pengaturan->website) }}" data-lp="website" placeholder="https://...">
-                </div>
-              </div>
-            </div>
 
-            {{-- ---------- PANEL "SOSIAL MEDIA" (tab Kontak) ---------- --}}
-            <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="kontak" id="lpPanelKontakSosmed">
-              <div class="panel-head">
-                <div>
-                  <h3>Sosial Media</h3>
-                  <p>Label &amp; tautan akun sosial media yang tampil di bagian footer landing page.</p>
+              {{-- ---------- PANEL "IDENTITAS INSTANSI" ---------- --}}
+              <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang" data-lp-group="lpPanelTentang">
+                <div class="panel-head">
+                  <div>
+                    <h3>Identitas Instansi</h3>
+                    <p>Tiga kartu identitas (Nama Resmi, Nama Lama, Fungsi Utama) yang tampil di bagian "Tentang" landing page.</p>
+                  </div>
+                </div>
+                <div class="form-grid">
+                  <div class="form-field">
+                    <label for="lpNamaResmi">Nama Resmi</label>
+                    <input id="lpNamaResmi" name="tentang_nama_resmi" type="text" value="{{ old('tentang_nama_resmi', $pengaturan->tentang_nama_resmi) }}" data-lp="tentang_nama_resmi">
+                  </div>
+                  <div class="form-field">
+                    <label for="lpNamaLama">Nama Lama</label>
+                    <input id="lpNamaLama" name="tentang_nama_lama" type="text" value="{{ old('tentang_nama_lama', $pengaturan->tentang_nama_lama) }}" data-lp="tentang_nama_lama">
+                  </div>
+                  <div class="form-field full">
+                    <label for="lpFungsiUtama">Fungsi Utama</label>
+                    <textarea id="lpFungsiUtama" name="tentang_fungsi_utama" rows="3" data-lp="tentang_fungsi_utama">{{ old('tentang_fungsi_utama', $pengaturan->tentang_fungsi_utama) }}</textarea>
+                  </div>
                 </div>
               </div>
-              <div class="lp-sosmed-list">
-                @foreach ((old('sosial_media') ?? $pengaturan->sosial_media ?? []) as $i => $sosial)
-                  <div class="lp-sosmed-row">
-                    <input type="hidden" name="sosial_media[{{ $i }}][platform]" value="{{ is_array($sosial) ? $sosial['platform'] : '' }}" data-lp="sosial_platform_{{ $i }}">
+
+              {{-- ---------- PANEL "MOTO" ---------- --}}
+              <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang" data-lp-group="lpPanelTentang">
+                <div class="panel-head">
+                  <div>
+                    <h3>Moto</h3>
+                    <p>Judul &amp; penjelasan moto instansi yang tampil di bagian "Tentang" landing page.</p>
+                  </div>
+                </div>
+                <div class="form-grid">
+                  <div class="form-field full">
+                    <label for="lpMotoJudul">Judul Moto</label>
+                    <input id="lpMotoJudul" name="tentang_moto_judul" type="text" value="{{ old('tentang_moto_judul', $pengaturan->tentang_moto_judul) }}" data-lp="tentang_moto_judul">
+                  </div>
+                  <div class="form-field full">
+                    <label for="lpMotoDeskripsi">Deskripsi Moto</label>
+                    <textarea id="lpMotoDeskripsi" name="tentang_moto_deskripsi" rows="3" data-lp="tentang_moto_deskripsi">{{ old('tentang_moto_deskripsi', $pengaturan->tentang_moto_deskripsi) }}</textarea>
+                  </div>
+                </div>
+              </div>
+
+              {{-- ---------- PANEL "MAKNA LOGO" ---------- --}}
+              <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="tentang" data-lp-group="lpPanelTentang">
+                <div class="panel-head">
+                  <div>
+                    <h3>Makna Logo</h3>
+                    <p>
+                      10 poin keterangan makna lambang. Saat pengunjung mengklik logo di bagian "Tentang" landing page,
+                      muncul jendela berisi lambang yang membesar ke tengah beserta 10 kartu keterangan bernomor
+                      (1-10) di sekelilingnya -- isi Judul &amp; Keterangan tiap poin di bawah ini sesuai nomornya.
+                    </p>
+                  </div>
+                </div>
+                @foreach ((old('makna_logo') ?? $pengaturan->makna_logo ?? \App\Models\Pengaturan::defaultMaknaLogo()) as $i => $makna)
+                  <div class="lp-card">
+                    <div class="lp-card-title">Poin Nomor {{ $i + 1 }}</div>
                     <div class="form-grid">
-                      <div class="form-field">
-                        <label>Label ({{ ucfirst(is_array($sosial) ? $sosial['platform'] : '') }})</label>
-                        <input name="sosial_media[{{ $i }}][label]" type="text" value="{{ is_array($sosial) ? $sosial['label'] : '' }}" data-lp="sosial_label_{{ $i }}">
+                      <div class="form-field full">
+                        <label for="lpMaknaJudul{{ $i }}">Judul Singkat</label>
+                        <input id="lpMaknaJudul{{ $i }}" name="makna_logo[{{ $i }}][judul]" type="text" value="{{ is_array($makna) ? ($makna['judul'] ?? '') : '' }}" data-lp="makna_logo_judul_{{ $i }}">
                       </div>
-                      <div class="form-field">
-                        <label>URL</label>
-                        <input name="sosial_media[{{ $i }}][url]" type="url" value="{{ is_array($sosial) ? $sosial['url'] : '' }}" placeholder="https://..." data-lp="sosial_url_{{ $i }}">
+                      <div class="form-field full">
+                        <label for="lpMaknaKeterangan{{ $i }}">Keterangan</label>
+                        <textarea id="lpMaknaKeterangan{{ $i }}" name="makna_logo[{{ $i }}][keterangan]" rows="2" data-lp="makna_logo_keterangan_{{ $i }}">{{ is_array($makna) ? ($makna['keterangan'] ?? '') : '' }}</textarea>
                       </div>
                     </div>
                   </div>
                 @endforeach
               </div>
+
+              {{-- ---------- PANEL "INFORMASI KONTAK" ---------- --}}
+              <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="kontak" id="lpPanelKontakInfo">
+                <div class="panel-head">
+                  <div>
+                    <h3>Informasi Kontak</h3>
+                    <p>Alamat, email, telepon, dan website yang tampil di bagian footer landing page.</p>
+                  </div>
+                </div>
+                <div class="form-grid">
+                  <div class="form-field full">
+                    <label for="lpKontakAlamat">Alamat (tampil di footer)</label>
+                    <textarea id="lpKontakAlamat" name="alamat" rows="2" data-lp="alamat">{{ old('alamat', $pengaturan->alamat) }}</textarea>
+                  </div>
+                  <div class="form-field">
+                    <label for="lpKontakEmail">Email Kontak</label>
+                    <input id="lpKontakEmail" name="email_kontak" type="email" value="{{ old('email_kontak', $pengaturan->email_kontak) }}" data-lp="email_kontak">
+                  </div>
+                  <div class="form-field">
+                    <label for="lpKontakTelepon">Telepon Kontak (tampil di footer)</label>
+                    <input id="lpKontakTelepon" name="telepon_kontak" type="text" value="{{ old('telepon_kontak', $pengaturan->telepon_kontak) }}" data-lp="telepon_kontak">
+                  </div>
+                  <div class="form-field full">
+                    <label for="lpWebsite">Website</label>
+                    <input id="lpWebsite" name="website" type="url" value="{{ old('website', $pengaturan->website) }}" data-lp="website" placeholder="https://...">
+                  </div>
+                </div>
+              </div>
+
+              {{-- ---------- PANEL "SOSIAL MEDIA" ---------- --}}
+              <div class="panel lp-panel lp-tab-panel" data-lp-tab-panel="kontak" id="lpPanelKontakSosmed">
+                <div class="panel-head">
+                  <div>
+                    <h3>Sosial Media</h3>
+                    <p>Label &amp; tautan akun sosial media yang tampil di bagian footer landing page.</p>
+                  </div>
+                </div>
+                <div class="lp-sosmed-list">
+                  @foreach ((old('sosial_media') ?? $pengaturan->sosial_media ?? []) as $i => $sosial)
+                    <div class="lp-sosmed-row">
+                      <input type="hidden" name="sosial_media[{{ $i }}][platform]" value="{{ is_array($sosial) ? $sosial['platform'] : '' }}" data-lp="sosial_platform_{{ $i }}">
+                      <div class="form-grid">
+                        <div class="form-field">
+                          <label>Label ({{ ucfirst(is_array($sosial) ? $sosial['platform'] : '') }})</label>
+                          <input name="sosial_media[{{ $i }}][label]" type="text" value="{{ is_array($sosial) ? $sosial['label'] : '' }}" data-lp="sosial_label_{{ $i }}">
+                        </div>
+                        <div class="form-field">
+                          <label>URL</label>
+                          <input name="sosial_media[{{ $i }}][url]" type="url" value="{{ is_array($sosial) ? $sosial['url'] : '' }}" placeholder="https://..." data-lp="sosial_url_{{ $i }}">
+                        </div>
+                      </div>
+                    </div>
+                  @endforeach
+                </div>
+              </div>
+
             </div>
 
-            {{-- ---------- MODAL EDITOR (satu shell generik dipakai bergantian
-                 buat semua section) -- diletakkan di DALAM <form> yang sama
-                 (bukan di luar) supaya panel section yang dipindah JS ke
-                 dalam #lpModalBody tetap anak dari #landingForm, jadi
-                 field-fieldnya tetap ikut ke-submit normal. Isi modal
-                 (judul + panel) di-render kosong di server; JS yang mengisi
-                 saat kartu ringkasan diklik (lihat "modal: klik kartu
-                 ringkasan" di script bawah). ---------- --}}
-            <div class="lp-modal-backdrop" id="lpModalBackdrop" hidden>
-              <div class="lp-modal-box" role="dialog" aria-modal="true" aria-labelledby="lpModalTitle">
-                <div class="lp-modal-head">
-                  <h3 id="lpModalTitle">Detail</h3>
-                  <button type="button" class="lp-modal-close" id="lpModalCloseBtn" aria-label="Tutup">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            {{-- ---------- MODAL CARD PANEL EDITOR (POP-UP ON CLICK) ----------
+                 Modal pop-up elegan yang menampung form panel yang sedang diedit.
+                 Panel dipindahkan secara dinamis ke #lpLandingModalBody saat kartu diklik,
+                 dan dikembalikan ke #lpPanelsStore saat modal ditutup atau saat form di-submit. --}}
+            <div class="lp-landing-modal-backdrop" id="lpLandingModalBackdrop" aria-hidden="true">
+              <div class="lp-landing-modal-box" role="dialog" aria-modal="true" aria-labelledby="lpLandingModalTitle">
+                <div class="lp-landing-modal-head">
+                  <div class="lp-landing-modal-head-left">
+                    <span class="lp-landing-modal-icon" id="lpLandingModalIcon"></span>
+                    <div>
+                      <h3 id="lpLandingModalTitle">Pengaturan Section</h3>
+                      <p id="lpLandingModalDesc">Ubah konten dan preferensi bagian ini sesuai kebutuhan.</p>
+                    </div>
+                  </div>
+                  <button type="button" class="lp-landing-modal-close" id="lpLandingModalCloseBtn" aria-label="Tutup modal">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
                 </div>
-                <div class="lp-modal-body" id="lpModalBody"></div>
+                <div class="lp-landing-modal-body" id="lpLandingModalBody">
+                  {{-- Panel form yang aktif akan dipindahkan ke sini oleh JS --}}
+                </div>
+                <div class="lp-landing-modal-foot">
+                  <div class="lp-landing-modal-notice">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span>Perubahan otomatis tersinkronisasi ke Pratinjau Langsung di latar.</span>
+                  </div>
+                  <div class="lp-landing-modal-foot-actions">
+                    <button type="button" class="btn btn-ghost" id="lpLandingModalCancelBtn">Tutup</button>
+                    <button type="button" class="btn btn-primary" id="lpLandingModalSaveBtn">
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                      Simpan Konten Landing
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -3891,27 +4239,93 @@
           .lp-tab-panel{display:none;padding-top:18px;}
           .lp-tab-panel.active{display:block;animation:lpFadeIn .18s ease;}
 
-          /* ===== Modal editor (ganti model "buka inline di bawah grid" ke
-             "buka di atas jendela terpisah") -- panel section yang sedang
-             diedit DIPINDAH (appendChild) oleh JS ke dalam #lpModalBody,
-             jadi cukup andalkan selector turunan ini buat nampilinnya;
-             begitu dipindah balik ke posisi asal (modal ditutup), otomatis
-             balik ke aturan ".lp-tab-panel{display:none}" di atas tanpa
-             perlu utak-atik class .active sama sekali. ===== --}}
-          .lp-modal-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(15,17,23,.6);backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow-y:auto;}
-          .lp-modal-backdrop[hidden]{display:none!important;}
-          .lp-modal-box{background:var(--bg);border-radius:18px;width:100%;max-width:760px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:lpModalPop .16s ease;}
-          @keyframes lpModalPop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-          .lp-modal-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;border-bottom:1px solid var(--border-soft);}
-          .lp-modal-head h3{margin:0;font-family:var(--display);font-size:18px;font-weight:700;}
-          .lp-modal-close{flex:0 0 auto;width:32px;height:32px;border-radius:9px;border:1px solid var(--border-soft);background:var(--panel-alt);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s ease,color .15s ease;}
-          .lp-modal-close:hover{background:var(--gold-dim);color:var(--gold-bright);border-color:var(--gold);}
-          .lp-modal-body{flex:1 1 auto;overflow-y:auto;padding:20px 22px 28px;}
-          .lp-modal-body .lp-tab-panel{display:block!important;padding-top:0;animation:lpFadeIn .18s ease;}
-          .lp-modal-body .lp-tab-panel.panel{box-shadow:none;border:1px solid var(--border-soft);}
-          .lp-modal-body .lp-tab-panel.panel + .lp-tab-panel.panel{margin-top:16px;}
+          /* ===== Modal editor pop-up (konten muncul saat kartu pintasan diklik) ===== */
+          .lp-landing-modal-backdrop{
+            position:fixed;inset:0;z-index:100050;
+            background:rgba(10,12,16,.78);
+            backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+            display:flex;align-items:center;justify-content:center;
+            padding:24px 16px;overflow-y:auto;
+            opacity:0;pointer-events:none;visibility:hidden;
+            transition:opacity .22s cubic-bezier(.16,1,.3,1),visibility .22s ease;
+          }
+          .lp-landing-modal-backdrop.is-open{
+            opacity:1;pointer-events:auto;visibility:visible;
+          }
+          .lp-landing-modal-box{
+            background:var(--panel);border:1px solid var(--border-strong);
+            border-radius:18px;width:100%;max-width:820px;max-height:88vh;
+            display:flex;flex-direction:column;overflow:hidden;
+            box-shadow:0 28px 70px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06);
+            transform:scale(.96) translateY(12px);
+            transition:transform .24s cubic-bezier(.16,1,.3,1);
+          }
+          .lp-landing-modal-backdrop.is-open .lp-landing-modal-box{
+            transform:scale(1) translateY(0);
+          }
+          .lp-landing-modal-head{
+            flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+            gap:16px;padding:18px 24px;border-bottom:1px solid var(--border-soft);
+            background:var(--panel-alt);
+          }
+          .lp-landing-modal-head-left{
+            display:flex;align-items:center;gap:14px;min-width:0;
+          }
+          .lp-landing-modal-icon{
+            width:42px;height:42px;border-radius:12px;
+            display:flex;align-items:center;justify-content:center;flex-shrink:0;
+          }
+          .lp-landing-modal-icon svg{width:20px;height:20px;}
+          .lp-landing-modal-head h3{
+            margin:0 0 3px;font-family:var(--display);font-size:17px;font-weight:700;color:var(--text);
+          }
+          .lp-landing-modal-head p{
+            margin:0;font-size:12px;color:var(--text-muted);line-height:1.4;
+          }
+          .lp-landing-modal-close{
+            flex:0 0 auto;width:34px;height:34px;border-radius:10px;
+            border:1px solid var(--border-soft);background:var(--panel);
+            color:var(--text-muted);display:flex;align-items:center;justify-content:center;
+            cursor:pointer;transition:all .15s ease;
+          }
+          .lp-landing-modal-close:hover{
+            color:var(--text);background:var(--panel-alt);border-color:var(--border-strong);
+            transform:scale(1.05);
+          }
+          .lp-landing-modal-body{
+            flex:1 1 auto;overflow-y:auto;padding:22px 24px;
+          }
+          .lp-landing-modal-body .lp-tab-panel{
+            display:block!important;padding:0!important;background:none!important;
+            border:none!important;box-shadow:none!important;animation:lpFadeIn .18s ease;
+          }
+          .lp-landing-modal-body .lp-tab-panel .panel-head{
+            display:none!important;
+          }
+          .lp-landing-modal-body .lp-tab-panel.panel + .lp-tab-panel.panel{
+            margin-top:20px;padding-top:20px!important;border-top:1px dashed var(--border-soft)!important;
+          }
+          .lp-landing-modal-foot{
+            flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+            gap:16px;padding:14px 24px;border-top:1px solid var(--border-soft);
+            background:var(--panel-alt);
+          }
+          .lp-landing-modal-notice{
+            display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);
+          }
+          .lp-landing-modal-notice svg{color:var(--gold-bright);flex-shrink:0;}
+          .lp-landing-modal-foot-actions{
+            display:flex;align-items:center;gap:10px;flex-shrink:0;
+          }
           body.lp-modal-lock{overflow:hidden;}
-          @media(max-width:640px){ .lp-modal-backdrop{padding:0;} .lp-modal-box{max-width:100%;max-height:100vh;height:100%;border-radius:0;} }
+          @media(max-width:640px){
+            .lp-landing-modal-backdrop{padding:0;}
+            .lp-landing-modal-box{max-width:100%;max-height:100vh;height:100%;border-radius:0;}
+            .lp-landing-modal-head,.lp-landing-modal-body,.lp-landing-modal-foot{padding:14px 16px;}
+            .lp-landing-modal-foot{flex-direction:column-reverse;align-items:stretch;gap:12px;}
+            .lp-landing-modal-foot-actions{justify-content:flex-end;}
+            .lp-landing-modal-notice{justify-content:center;}
+          }
           @keyframes lpFadeIn{ from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:none;} }
           .lp-tab-desc{font-size:12.5px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;}
 
@@ -4486,6 +4900,7 @@
 
             form.addEventListener('submit', function(e){
               try { sessionStorage.removeItem(LP_DRAFT_KEY); } catch (ex) {}
+              if (typeof lpRestorePanelsToStore === 'function') lpRestorePanelsToStore();
 
               var heroVideoInput = form.querySelector('[data-lp-video="hero_video"]');
               var hasVideo = heroVideoInput && heroVideoInput.files && heroVideoInput.files.length > 0;
@@ -4559,48 +4974,87 @@
               xhr.send(formData);
             });
 
-            // ---------- modal editor: klik kartu ringkasan -> PINDAHKAN
-            // (bukan cuma tampilkan) panel section terkait ke dalam modal
-            // terpisah. Kunci pengelompokan pakai data-lp-scroll-target milik
-            // kartu (sudah unik per kartu, walau 2 kartu berbagi data-lp-tab
-            // yang sama seperti "Latar Belakang Beranda" & "Judul & Deskripsi
-            // Utama" -- keduanya sama-sama tab "beranda" tapi scroll-target
-            // beda, jadi tetap kebuka sebagai modal TERPISAH, bukan
-            // ke-bundle jadi satu kayak dulu). Panel dicocokkan lewat
-            // data-lp-group (ditambahkan ke panel yang tidak unik/beririsan
-            // dengan panel lain di tab yang sama), fallback ke id panel itu
-            // sendiri kalau data-lp-group tidak ada. ----------
+            // ---------- MODAL CARD PANEL EDITOR: KLIK KARTU RINGKASAN -> BUKA MODAL POP-UP ----------
             var overviewCards = form.querySelectorAll('[data-lp-tab]');
             var previewSections = document.querySelectorAll('[data-lp-preview-section]');
-            var modalBackdrop = document.getElementById('lpModalBackdrop');
-            var modalBody = document.getElementById('lpModalBody');
-            var modalTitle = document.getElementById('lpModalTitle');
-            var modalCloseBtn = document.getElementById('lpModalCloseBtn');
-            var lpMovedPanels = []; // {el, parent, next} -- buat balikin posisi asal pas ditutup
+            var modalBackdrop = document.getElementById('lpLandingModalBackdrop');
+            var modalBody = document.getElementById('lpLandingModalBody');
+            var modalTitle = document.getElementById('lpLandingModalTitle');
+            var modalDesc = document.getElementById('lpLandingModalDesc');
+            var modalIcon = document.getElementById('lpLandingModalIcon');
+            var modalCloseBtn = document.getElementById('lpLandingModalCloseBtn');
+            var modalCancelBtn = document.getElementById('lpLandingModalCancelBtn');
+            var modalSaveBtn = document.getElementById('lpLandingModalSaveBtn');
+            var lpMovedPanels = []; // {el, parent, next}
             var lpOpenCard = null;
 
-            function lpCloseModal(){
-              if (!modalBackdrop || modalBackdrop.hidden) return;
-              // Balikin tiap panel ke posisi semula, MUNDUR dari yang
-              // terakhir dipindah -- supaya `next` (nextSibling asal) masih
-              // valid buat insertBefore walau beberapa panel dipindah
-              // sekaligus dari kelompok yang sama (mis. 4 panel "Tentang").
+            var SECTION_META = {
+              'lpPanelHeroBg': {
+                title: 'Latar Belakang Beranda',
+                desc: 'Atur gambar atau video latar belakang pada bagian hero beranda beserta efek blur dan overlay warna.',
+                iconClass: 'lp-ov-gold',
+                iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>'
+              },
+              'lpPanelHeroText': {
+                title: 'Judul & Deskripsi Utama',
+                desc: 'Atur teks sapaan (eyebrow), judul utama dengan aksen warna, subjudul, dan deskripsi beranda.',
+                iconClass: 'lp-ov-purple',
+                iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>'
+              },
+              'lpPanelTentang': {
+                title: 'Tentang & Profil Instansi',
+                desc: 'Atur ringkasan profil satuan, moto instansi, makna logo resmi, dan tautan dokumen selayang pandang.',
+                iconClass: 'lp-ov-green',
+                iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+              },
+              'lpPanelFitur': {
+                title: 'Fitur Unggulan',
+                desc: 'Atur judul dan deskripsi 4 pilar fitur atau layanan utama yang ditampilkan di beranda.',
+                iconClass: 'lp-ov-amber',
+                iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
+              },
+              'lpPanelKontakInfo': {
+                title: 'Informasi Kontak',
+                desc: 'Atur alamat kantor, email resmi, nomor telepon, dan URL website resmi instansi.',
+                iconClass: 'lp-ov-pink',
+                iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12a10 10 0 1 1-5.6-9"/><path d="M15 8l4-4"/><path d="M15 4h4v4"/></svg>'
+              },
+              'lpPanelKontakSosmed': {
+                title: 'Sosial Media',
+                desc: 'Atur label tautan dan URL channel sosial media resmi instansi di bagian footer.',
+                iconClass: 'lp-ov-red',
+                iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-3.9M8.6 13.5l6.8 3.9"/></svg>'
+              }
+            };
+
+            function lpRestorePanelsToStore(){
               for (var i = lpMovedPanels.length - 1; i >= 0; i--) {
                 var rec = lpMovedPanels[i];
-                rec.parent.insertBefore(rec.el, rec.next);
+                if (rec.el && rec.parent) {
+                  rec.parent.insertBefore(rec.el, rec.next);
+                }
               }
               lpMovedPanels = [];
-              modalBackdrop.hidden = true;
+            }
+
+            function lpCloseModal(){
+              if (!modalBackdrop || !modalBackdrop.classList.contains('is-open')) return;
+              lpRestorePanelsToStore();
+              modalBackdrop.classList.remove('is-open');
+              modalBackdrop.setAttribute('aria-hidden', 'true');
               document.body.classList.remove('lp-modal-lock');
               if (modalBody) modalBody.innerHTML = '';
-              if (lpOpenCard) { lpOpenCard.classList.remove('lp-ov-open'); lpOpenCard = null; }
+              if (lpOpenCard) {
+                lpOpenCard.classList.remove('lp-ov-open');
+                lpOpenCard = null;
+              }
               previewSections.forEach(function(s){ s.classList.remove('is-focus'); });
             }
 
             function lpOpenModal(card){
               var groupKey = card.dataset.lpScrollTarget;
               if (!groupKey || !modalBackdrop || !modalBody) return;
-              lpCloseModal(); // jaga-jaga kalau ada modal lain yang masih kebuka
+              lpCloseModal();
 
               var candidates = form.querySelectorAll('[data-lp-tab-panel]');
               var moved = [];
@@ -4612,11 +5066,22 @@
                   moved.push(panel);
                 }
               });
-              if (!moved.length) return; // grup kosong (harusnya tidak terjadi) -> jangan buka modal kosong
+              if (!moved.length) return;
 
+              var meta = SECTION_META[groupKey] || {};
               var titleEl = card.querySelector('.lp-ov-title');
-              if (modalTitle) modalTitle.textContent = titleEl ? titleEl.textContent : 'Detail';
-              modalBackdrop.hidden = false;
+              var descEl = card.querySelector('.lp-ov-desc');
+              var cardIcon = card.querySelector('.lp-ov-icon');
+
+              if (modalTitle) modalTitle.textContent = meta.title || (titleEl ? titleEl.textContent : 'Pengaturan Section');
+              if (modalDesc) modalDesc.textContent = meta.desc || (descEl ? descEl.textContent : 'Ubah konten dan preferensi bagian ini.');
+              if (modalIcon) {
+                modalIcon.className = 'lp-landing-modal-icon ' + (meta.iconClass || (cardIcon ? cardIcon.className.replace('lp-ov-icon', '').trim() : 'lp-ov-gold'));
+                modalIcon.innerHTML = meta.iconSvg || (cardIcon ? cardIcon.innerHTML : '');
+              }
+
+              modalBackdrop.classList.add('is-open');
+              modalBackdrop.setAttribute('aria-hidden', 'false');
               document.body.classList.add('lp-modal-lock');
               card.classList.add('lp-ov-open');
               lpOpenCard = card;
@@ -4626,17 +5091,34 @@
             }
 
             overviewCards.forEach(function(card){
-              card.addEventListener('click', function(){
-                // Klik kartu yang modalnya lagi kebuka -> tutup balik,
-                // bukan buka ulang.
+              card.addEventListener('click', function(e){
+                e.preventDefault();
                 if (lpOpenCard === card) { lpCloseModal(); return; }
                 lpOpenModal(card);
               });
             });
 
-            if (modalCloseBtn) modalCloseBtn.addEventListener('click', lpCloseModal);
-            if (modalBackdrop) modalBackdrop.addEventListener('click', function(e){ if (e.target === modalBackdrop) lpCloseModal(); });
-            document.addEventListener('keydown', function(e){ if (e.key === 'Escape') lpCloseModal(); });
+            if (modalCloseBtn) modalCloseBtn.addEventListener('click', function(e){ e.preventDefault(); lpCloseModal(); });
+            if (modalCancelBtn) modalCancelBtn.addEventListener('click', function(e){ e.preventDefault(); lpCloseModal(); });
+            if (modalSaveBtn) {
+              modalSaveBtn.addEventListener('click', function(e){
+                e.preventDefault();
+                if (form.requestSubmit) {
+                  form.requestSubmit(lpSubmitBtn);
+                } else {
+                  form.submit();
+                }
+              });
+            }
+
+            if (modalBackdrop) {
+              modalBackdrop.addEventListener('click', function(e){
+                if (e.target === modalBackdrop) lpCloseModal();
+              });
+            }
+            document.addEventListener('keydown', function(e){
+              if (e.key === 'Escape') lpCloseModal();
+            });
 
             // ---------- live preview ----------
             var sosialIcons = {
