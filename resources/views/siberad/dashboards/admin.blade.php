@@ -4252,6 +4252,24 @@
             -webkit-backdrop-filter:none!important;
           }
 
+          /* FIX KRITIS #2 (akar masalah sidebar & topbar TIDAK ikut blur
+             sama sekali walau FIX KRITIS di atas sudah dipasang):
+             ".content" (pembungkus form editor tempat modal ini berada)
+             punya "position:relative;z-index:1" -- ini bikin ".content"
+             jadi stacking context SENDIRI. Akibatnya z-index:200000 pada
+             ".lp-landing-modal-backdrop" cuma dibandingkan dengan elemen
+             LAIN di dalam ".content" (menang di situ), TAPI ".content"
+             sebagai satu kesatuan cuma "rank 1" saat dibandingkan dengan
+             ".sidebar" (rank 100010) di level ".shell" -- makanya modal
+             SELALU kalah tampil di belakang sidebar & topbar, seberapa pun
+             tinggi z-index di dalam modal. Solusi: pas modal kebuka,
+             naikkan sementara rank ".content" itu sendiri di atas sidebar
+             (100010) supaya modal yang bersarang di dalamnya baru bisa
+             benar-benar menembus & mem-blur sidebar/topbar. */
+          body.lp-modal-lock .content{
+            z-index:200001;
+          }
+
           .lp-landing-modal-backdrop{
             position:fixed;inset:0;z-index:200000;
             background:rgba(15,23,42,.56);
