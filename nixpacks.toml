@@ -5,7 +5,7 @@
 # durasi otomatis dilewati (lihat komentar di getDurasiVideoDetik()), jadi
 # fitur upload tidak sampai mati total, tapi durasi lebih dari 1 menit bisa
 # lolos tanpa terdeteksi -- disarankan JANGAN dihapus dari daftar ini.
-nixPkgs = ["php82", "php82Packages.composer", "nodejs_20", "ffmpeg"]
+nixPkgs = ["php82", "php82Extensions.bcmath", "php82Packages.composer", "nodejs_20", "ffmpeg"]
 
 [phases.install]
 cmds = [

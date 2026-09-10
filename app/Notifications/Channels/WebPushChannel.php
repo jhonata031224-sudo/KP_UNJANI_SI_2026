@@ -51,36 +51,50 @@ class WebPushChannel
 
         $payload = $this->buildPayload($notification, $notifiable);
 
-        $webPush = new \Minishlink\WebPush\WebPush(['VAPID' => $vapid]);
+        // Notifikasi ini dipanggil synchronous langsung dari controller (bukan
+        // queue). Channel push HANYA pelengkap (browser tray notification) --
+        // apapun yang gagal di sini (mis. WebPush::__construct memicu notice
+        // "install GMP/BCMath" yang oleh Laravel diubah jadi ErrorException,
+        // atau endpoint push error lain yang tak terduga) TIDAK BOLEH sampai
+        // menggagalkan request utama (mis. kirim kendala) atau channel lain
+        // (database/lonceng in-app) yang sudah lebih dulu berhasil dikirim.
+        try {
+            $webPush = new \Minishlink\WebPush\WebPush(['VAPID' => $vapid]);
 
-        foreach ($subscriptions as $subscription) {
-            $webPush->queueNotification(
-                \Minishlink\WebPush\Subscription::create([
-                    'endpoint' => $subscription->endpoint,
-                    'publicKey' => $subscription->public_key,
-                    'authToken' => $subscription->auth_token,
-                    'contentEncoding' => $subscription->content_encoding ?: 'aesgcm',
-                ]),
-                json_encode($payload)
-            );
-        }
-
-        foreach ($webPush->flush() as $report) {
-            if ($report->isSuccess()) {
-                continue;
+            foreach ($subscriptions as $subscription) {
+                $webPush->queueNotification(
+                    \Minishlink\WebPush\Subscription::create([
+                        'endpoint' => $subscription->endpoint,
+                        'publicKey' => $subscription->public_key,
+                        'authToken' => $subscription->auth_token,
+                        'contentEncoding' => $subscription->content_encoding ?: 'aesgcm',
+                    ]),
+                    json_encode($payload)
+                );
             }
 
-            $statusCode = $report->getResponse()?->getStatusCode();
+            foreach ($webPush->flush() as $report) {
+                if ($report->isSuccess()) {
+                    continue;
+                }
 
-            if (in_array($statusCode, [404, 410], true)) {
-                PushSubscription::where('endpoint', $report->getEndpoint())->delete();
-                continue;
+                $statusCode = $report->getResponse()?->getStatusCode();
+
+                if (in_array($statusCode, [404, 410], true)) {
+                    PushSubscription::where('endpoint', $report->getEndpoint())->delete();
+                    continue;
+                }
+
+                Log::warning('Gagal mengirim web push notification.', [
+                    'endpoint' => $report->getEndpoint(),
+                    'status' => $statusCode,
+                    'reason' => $report->getReason(),
+                ]);
             }
-
-            Log::warning('Gagal mengirim web push notification.', [
-                'endpoint' => $report->getEndpoint(),
-                'status' => $statusCode,
-                'reason' => $report->getReason(),
+        } catch (\Throwable $e) {
+            Log::warning('Gagal memproses web push notification, channel lain tetap lanjut.', [
+                'notifiable_id' => $notifiable->id ?? null,
+                'error' => $e->getMessage(),
             ]);
         }
     }
