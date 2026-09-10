@@ -26,7 +26,12 @@ html{scrollbar-gutter:stable}
 <style>
 :root{--p-bg:#f5f7f9;--p-surface:#fff;--p-surface-2:#f8fafc;--p-border:#e2e8f0;--p-text:#17212b;--p-muted:#64748b;--p-accent:#FF9800;--p-green:#16834b;--p-red:#c83b3b;--p-yellow:#b77900;--p-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 10px 30px rgba(0,0,0,.25)}
 :root:not([data-theme="light"]){--p-bg:var(--bg);--p-surface:var(--panel);--p-surface-2:var(--panel-alt);--p-border:var(--border);--p-text:var(--text);--p-muted:var(--text-muted);--p-accent:var(--gold-bright);--p-green:var(--success-bright);--p-red:var(--red);--p-yellow:var(--amber);--p-shadow:0 10px 30px rgba(0,0,0,.18)}
-body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:var(--p-bg)!important;padding-bottom:40px}.pimp-page{max-width:1500px;margin:0 auto}.pimp-hero{position:relative;background:linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--p-surface);border:1px solid var(--p-border);border-radius:12px;padding:24px 26px;margin-bottom:20px;box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 10px 30px rgba(0,0,0,.25)}.pimp-hero::before{content:"";position:absolute;top:0;left:14px;right:14px;height:1px;background:linear-gradient(90deg, transparent, var(--p-border), transparent)}.pimp-eyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--p-accent);margin-bottom:7px}.pimp-hero h1{margin:0;font-family:var(--display);font-size:30px;line-height:1.15;color:var(--p-text)}.pimp-hero p{margin:8px 0 0;color:var(--p-muted);font-size:13px;line-height:1.6}.pimp-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:20px}.pimp-kpi{background:var(--p-surface);border:1px solid var(--p-border);border-radius:14px;padding:18px 20px;box-shadow:var(--p-shadow);min-width:0}.pimp-kpi .label{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--p-muted)}.pimp-kpi .value{font-family:var(--mono);font-size:30px;font-weight:700;margin-top:8px;color:var(--p-text)}.pimp-kpi .sub{font-size:11px;color:var(--p-muted);margin-top:4px}.pimp-kpi.wait .value{color:#f59e0b}.pimp-kpi.ok .value{color:#22c55e}.pimp-kpi.bad .value{color:#ef4444}.pimp-kpi.late .value{color:#ff6b6b}.pimp-kpi.cancelled .value{color:#c1121f}.section-block{background:var(--p-surface);border:1px solid var(--p-border);border-radius:16px;padding:20px;box-shadow:var(--p-shadow);margin-bottom:20px}.section-head-clean{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:16px}.section-head-clean h2{font-family:var(--display);font-size:19px;margin:0;color:var(--p-text)}.section-head-clean p{margin:5px 0 0;font-size:12px;color:var(--p-muted);line-height:1.5}.chart-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1.95fr);gap:14px;margin-bottom:20px}.chart-card{background:var(--p-surface);border:1px solid var(--p-border);border-radius:16px;padding:18px 20px;box-shadow:var(--p-shadow);min-width:0}.chart-card h3{font-family:var(--display);font-size:16px;margin:0;color:var(--p-text)}.chart-card p{font-size:11px;color:var(--p-muted);margin:5px 0 14px;line-height:1.5}.chart-box{position:relative;height:280px}.chart-card.compact .chart-box{height:215px}.chart-box-scroll{overflow-x:auto;overflow-y:hidden}.chart-box-scroll .chart-box-inner{position:relative;height:100%}.chart-box-scroll::-webkit-scrollbar{height:7px}.chart-box-scroll::-webkit-scrollbar-thumb{background:var(--p-border);border-radius:99px}.chart-grid.solo{grid-template-columns:minmax(0,min(420px,100%))}.chart-grid.balanced{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.status-summary-list{display:flex;flex-direction:column;gap:10px;margin-top:2px}.status-summary-row{display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--p-border);border-radius:10px;background:var(--p-surface-2)}.status-summary-dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}.status-summary-label{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--p-text)}.status-summary-value{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--p-text);white-space:nowrap}.status-summary-value small{font-weight:600;color:var(--p-muted);margin-left:3px;font-size:10.5px}.chart-box-scroll-y{height:520px;overflow-y:auto;overflow-x:hidden}.chart-box-scroll-y .chart-box-inner{position:relative;width:100%}.chart-box-scroll-y::-webkit-scrollbar{width:7px}.chart-box-scroll-y::-webkit-scrollbar-thumb{background:var(--p-border);border-radius:99px}.chart-legend{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px 14px;margin-top:14px}.chart-legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--p-muted);white-space:nowrap;cursor:pointer;user-select:none}.chart-legend-item.is-hidden{text-decoration:line-through;opacity:.5}.chart-legend-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}.satlak-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.satlak-card{border:1px solid var(--p-border);background:var(--p-surface-2);border-radius:12px;padding:18px;transition:.15s ease}.satlak-card:hover{border-color:color-mix(in srgb,var(--p-accent) 30%,var(--p-border));box-shadow:0 6px 16px rgba(15,23,42,.07)}.satlak-card .code{font-family:var(--mono);font-size:10px;color:var(--p-accent);font-weight:800;letter-spacing:.08em}.satlak-card .name{font-weight:700;font-size:14px;line-height:1.35;margin-top:8px;min-height:38px;color:var(--p-text)}.satlak-card .total{font-family:var(--mono);font-size:28px;font-weight:700;margin-top:6px;color:var(--p-text)}.satlak-card .caption{font-size:11px;color:var(--p-muted)}.mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:14px;padding-top:12px;border-top:1px solid var(--p-border)}.mini-stat{text-align:center;border-left:1px solid var(--p-border)}.mini-stat:first-child{border-left:0}.mini-stat strong{display:block;font-family:var(--mono);font-size:15px;font-weight:700}.mini-stat span{display:block;font-size:9px;color:var(--p-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}.mini-stat.wait strong{color:#f59e0b}.mini-stat.ok strong{color:#22c55e}.mini-stat.bad strong{color:#ef4444}.card-link{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:14px;padding:8px;border-radius:8px;border:1px solid var(--p-border);background:var(--p-surface);font-size:11px;font-weight:600;color:var(--p-muted);text-decoration:none;transition:.15s ease}.card-link:hover{border-color:var(--p-accent);color:var(--p-accent);background:var(--p-surface-2)}.status-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;font-size:10px;font-weight:800;border:1px solid transparent}.status-pill:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}.status-pill.wait{color:var(--p-yellow);background:rgba(224,168,58,.12);border-color:rgba(224,168,58,.35)}
+body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:var(--p-bg)!important;padding-bottom:40px}.pimp-page{max-width:1500px;margin:0 auto}.pimp-hero{position:relative;background:linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--p-surface);border:1px solid var(--p-border);border-radius:12px;padding:24px 26px;margin-bottom:20px;box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 10px 30px rgba(0,0,0,.25)}.pimp-hero::before{content:"";position:absolute;top:0;left:14px;right:14px;height:1px;background:linear-gradient(90deg, transparent, var(--p-border), transparent)}.pimp-eyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--p-accent);margin-bottom:7px}.pimp-hero h1{margin:0;font-family:var(--display);font-size:30px;line-height:1.15;color:var(--p-text)}.pimp-hero p{margin:8px 0 0;color:var(--p-muted);font-size:13px;line-height:1.6}.pimp-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:20px}.pimp-kpi{position:relative;overflow:hidden;background:var(--p-surface);border:1px solid var(--p-border);border-radius:18px;padding:20px 22px;box-shadow:var(--p-shadow);min-width:0}.pimp-kpi>:not(.kpi-deco){position:relative;z-index:1}.pimp-kpi .kpi-deco{position:absolute;right:0;bottom:0;width:68%;height:60%;z-index:0;color:var(--kpi-accent);fill:currentColor;opacity:.15;pointer-events:none;transform-origin:bottom;transform:scaleY(1)}
+@keyframes kpiDecoGrow{0%{transform:scaleY(0)}55%{transform:scaleY(1.12)}100%{transform:scaleY(1)}}
+.kpi-deco.is-growing{animation:kpiDecoGrow .9s cubic-bezier(.33,1,.68,1) both}
+@media(prefers-reduced-motion:reduce){.kpi-deco.is-growing{animation:none}}.pimp-kpi .kpi-top{display:flex;align-items:center;gap:12px}.pimp-kpi .kpi-badge{flex:0 0 auto;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--kpi-accent) 15%,transparent);color:var(--kpi-accent)}.pimp-kpi .kpi-badge svg{width:22px;height:22px}.pimp-kpi .kpi-eyebrow{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--p-muted);line-height:1.3}.pimp-kpi .kpi-eyebrow b{font-weight:800;color:var(--p-text)}.pimp-kpi .kpi-value{font-family:var(--display);font-size:38px;font-weight:800;line-height:1;margin-top:16px;color:var(--p-text)}.pimp-kpi .kpi-desc{font-size:13px;color:var(--p-muted);margin-top:8px}.pimp-kpi .kpi-trend{display:flex;align-items:center;gap:5px;margin-top:12px;font-family:var(--mono);font-size:13px;font-weight:800;color:var(--p-muted)}.pimp-kpi .kpi-trend svg{width:14px;height:14px;display:none}.pimp-kpi .kpi-trend.is-up{color:var(--kpi-accent)}.pimp-kpi .kpi-trend.is-up svg{display:block}.pimp-kpi .kpi-trend-cap{font-size:11px;color:var(--p-muted);margin-top:2px}.section-block{background:var(--p-surface);border:1px solid var(--p-border);border-radius:16px;padding:20px;box-shadow:var(--p-shadow);margin-bottom:20px}.section-head-clean{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:16px}.section-head-clean h2{font-family:var(--display);font-size:19px;margin:0;color:var(--p-text)}.section-head-clean p{margin:5px 0 0;font-size:12px;color:var(--p-muted);line-height:1.5}.chart-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1.95fr);gap:14px;margin-bottom:20px}.chart-card{background:var(--p-surface);border:1px solid var(--p-border);border-radius:16px;padding:18px 20px;box-shadow:var(--p-shadow);min-width:0}.chart-card h3{font-family:var(--display);font-size:16px;margin:0;color:var(--p-text)}.chart-card p{font-size:11px;color:var(--p-muted);margin:5px 0 14px;line-height:1.5}.chart-box{position:relative;height:280px}
+.pimp-tren-card{display:flex;flex-direction:column;height:100%}
+.pimp-tren-card .chart-box{flex:1;min-height:0;height:auto}.chart-card.compact .chart-box{height:215px}.chart-box-scroll{overflow-x:auto;overflow-y:hidden}.chart-box-scroll .chart-box-inner{position:relative;height:100%}.chart-box-scroll::-webkit-scrollbar{height:7px}.chart-box-scroll::-webkit-scrollbar-thumb{background:var(--p-border);border-radius:99px}.chart-grid.solo{grid-template-columns:minmax(0,min(420px,100%))}.chart-grid.balanced{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.status-summary-list{display:flex;flex-direction:column;gap:10px;margin-top:2px}.status-summary-row{display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--p-border);border-radius:10px;background:var(--p-surface-2)}.status-summary-dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}.status-summary-label{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--p-text)}.status-summary-value{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--p-text);white-space:nowrap}.status-summary-value small{font-weight:600;color:var(--p-muted);margin-left:3px;font-size:10.5px}.chart-box-scroll-y{height:520px;overflow-y:auto;overflow-x:hidden}.chart-box-scroll-y .chart-box-inner{position:relative;width:100%}.chart-box-scroll-y::-webkit-scrollbar{width:7px}.chart-box-scroll-y::-webkit-scrollbar-thumb{background:var(--p-border);border-radius:99px}.chart-legend{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px 14px;margin-top:14px}.chart-legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--p-muted);white-space:nowrap;cursor:pointer;user-select:none}.chart-legend-item.is-hidden{text-decoration:line-through;opacity:.5}.chart-legend-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}.satlak-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.satlak-card{border:1px solid var(--p-border);background:var(--p-surface-2);border-radius:12px;padding:18px;transition:.15s ease}.satlak-card:hover{border-color:color-mix(in srgb,var(--p-accent) 30%,var(--p-border));box-shadow:0 6px 16px rgba(15,23,42,.07)}.satlak-card .code{font-family:var(--mono);font-size:10px;color:var(--p-accent);font-weight:800;letter-spacing:.08em}.satlak-card .name{font-weight:700;font-size:14px;line-height:1.35;margin-top:8px;min-height:38px;color:var(--p-text)}.satlak-card .total{font-family:var(--mono);font-size:28px;font-weight:700;margin-top:6px;color:var(--p-text)}.satlak-card .caption{font-size:11px;color:var(--p-muted)}.mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:14px;padding-top:12px;border-top:1px solid var(--p-border)}.mini-stat{text-align:center;border-left:1px solid var(--p-border)}.mini-stat:first-child{border-left:0}.mini-stat strong{display:block;font-family:var(--mono);font-size:15px;font-weight:700}.mini-stat span{display:block;font-size:9px;color:var(--p-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}.mini-stat.wait strong{color:#f59e0b}.mini-stat.ok strong{color:#22c55e}.mini-stat.bad strong{color:#ef4444}.card-link{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:14px;padding:8px;border-radius:8px;border:1px solid var(--p-border);background:var(--p-surface);font-size:11px;font-weight:600;color:var(--p-muted);text-decoration:none;transition:.15s ease}.card-link:hover{border-color:var(--p-accent);color:var(--p-accent);background:var(--p-surface-2)}.status-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;font-size:10px;font-weight:800;border:1px solid transparent}.status-pill:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}.status-pill.wait{color:var(--p-yellow);background:rgba(224,168,58,.12);border-color:rgba(224,168,58,.35)}
 .status-pill.revisi{color:var(--gold-solid);background:rgba(217,146,11,.14);border-color:rgba(217,146,11,.4)}.status-pill.blue{color:#2476ad;background:rgba(52,152,219,.1);border-color:rgba(52,152,219,.25)}.status-pill.ok{color:var(--p-green);background:rgba(63,194,125,.12);border-color:rgba(63,194,125,.28)}.status-pill.bad{color:var(--p-red);background:rgba(181,52,47,.12);border-color:rgba(198,40,40,.3)}.status-pill.proses{color:var(--p-orange);background:var(--p-orange-bg);border-color:var(--p-orange-border)}.clean-table-wrap{overflow-x:auto}.clean-table{width:100%;border-collapse:collapse;min-width:780px}.clean-table th{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--p-muted);text-align:left;padding:11px 12px;border-bottom:1px solid var(--p-border);white-space:nowrap}.clean-table td{padding:13px 12px;border-bottom:1px solid var(--p-border);font-size:12px;color:var(--p-text);vertical-align:middle}#kendala-kasansi .clean-table th:nth-child(2),#kendala-kasansi .clean-table th:nth-child(3),#kendala-kasansi .clean-table th:nth-child(4),#kendala-kasansi .clean-table th:nth-child(5),#kendala-kasansi .clean-table th:nth-child(6),#kendala-kasansi .clean-table td:nth-child(2),#kendala-kasansi .clean-table td:nth-child(3),#kendala-kasansi .clean-table td:nth-child(4),#kendala-kasansi .clean-table td:nth-child(5),#kendala-kasansi .clean-table td:nth-child(6){text-align:center}#kendala-kasansi .clean-table .action-row{justify-content:center}#arsip-kendala-kasansi .clean-table th:nth-child(2),#arsip-kendala-kasansi .clean-table th:nth-child(3),#arsip-kendala-kasansi .clean-table th:nth-child(4),#arsip-kendala-kasansi .clean-table th:nth-child(5),#arsip-kendala-kasansi .clean-table th:nth-child(6),#arsip-kendala-kasansi .clean-table td:nth-child(2),#arsip-kendala-kasansi .clean-table td:nth-child(3),#arsip-kendala-kasansi .clean-table td:nth-child(4),#arsip-kendala-kasansi .clean-table td:nth-child(5),#arsip-kendala-kasansi .clean-table td:nth-child(6){text-align:center}#arsip-kendala-kasansi .clean-table .action-row{justify-content:center}.clean-table tbody tr:hover{background:var(--hover-tint)}.clean-table tbody tr:last-child td{border-bottom:0}.sender{font-weight:800;color:var(--p-text)}.subject{font-weight:700;color:var(--p-text)}.muted{font-size:10px;color:var(--p-muted);margin-top:3px}.detail-btn{border:1px solid var(--p-border);background:var(--p-surface);color:var(--p-text);border-radius:8px;padding:7px 10px;font-size:10px;font-weight:700;cursor:pointer;transition:border-color .15s ease,background .15s ease,transform .15s ease}.detail-btn:hover{border-color:var(--p-accent);background:var(--p-surface-2);transform:translateY(-1px)}.detail-btn:active{transform:translateY(0) scale(.97)}.action-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.action-row form{display:inline-flex;margin:0}.action-row button{border:1px solid transparent;border-radius:8px;padding:8px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:filter .15s ease,transform .15s ease,background .15s ease,color .15s ease}
 .action-row .detail-btn{border-color:var(--p-border);padding:7px 10px;font-size:10px}
 .action-row .detail-btn:hover{border-color:var(--p-accent);background:var(--p-surface-2)}.action-row .approve{background:var(--p-green);color:#fff;box-shadow:0 6px 16px -6px rgba(22,131,75,.5)}.btn.approve:hover{border-color:var(--p-green);color:var(--p-green);transform:translateY(-1px)}
@@ -271,12 +276,73 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 .kcard-empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:48px 20px;text-align:center;color:var(--p-muted);}
 .kcard-empty-title{font-size:14px;font-weight:700;color:var(--p-muted);}
 .kcard-empty-sub{font-size:12px;color:var(--p-muted);line-height:1.5;max-width:320px;opacity:.7;}
+.pimp-empty-compact{padding:30px 16px;gap:8px}
+.pimp-empty-compact .kcard-empty-title{font-size:12.5px}
+.pimp-empty-compact .kcard-empty-sub{font-size:11px;max-width:260px}
 @media(max-width:640px){
   .kcard-grid{grid-template-columns:1fr;}
   .kcard-footer{flex-direction:column;align-items:flex-start;}
   .kcard-actions{width:100%;}
   .kcard-btn{flex:1;justify-content:center;}
 }
+.chart-grid.status-dist-row{grid-template-columns:minmax(0,min(520px,100%));justify-content:center}
+.status-dist-card{width:100%}
+.status-dist-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:2px}
+.status-dist-ico{flex:0 0 auto;width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,#22c55e 15%,transparent);color:#22c55e}
+.status-dist-ico svg{width:20px;height:20px}
+.pimp-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.pimp-card-head-main{display:flex;align-items:flex-start;gap:12px;min-width:0}
+.pimp-card-ico{flex:0 0 auto;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center}
+.pimp-card-ico svg{width:19px;height:19px}
+.pimp-card-head h3{font-family:var(--display);font-size:16px;margin:0;color:var(--p-text)}
+.pimp-card-head p{font-size:11px;color:var(--p-muted);margin:4px 0 0;line-height:1.5}
+.tren-range-toggle{display:flex;gap:3px;background:var(--p-surface-2);border:1px solid var(--p-border);border-radius:999px;padding:3px;flex:0 0 auto}
+.tren-range-btn{border:0;background:transparent;color:var(--p-muted);font-size:11px;font-weight:700;padding:6px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;font-family:inherit}
+.tren-range-btn.active{background:#6366f1;color:#fff}
+.clean-table.pimp-mini-table{min-width:0;width:100%;table-layout:fixed}
+.pimp-mini-table th,.pimp-mini-table td{padding:9px 6px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pimp-mini-table th{font-size:9px;letter-spacing:0}
+.pimp-mini-table th:nth-child(1),.pimp-mini-table td:nth-child(1){width:16%}
+.pimp-mini-table th:nth-child(2),.pimp-mini-table td:nth-child(2){width:12%;text-align:center}
+.pimp-mini-table td:nth-child(3){font-weight:700;color:var(--p-text)}
+.pimp-mini-table th:nth-child(4),.pimp-mini-table td:nth-child(4){width:19%;text-align:center}
+.pimp-mini-table th:nth-child(5),.pimp-mini-table td:nth-child(5){width:21%;overflow:visible;text-align:center}
+.pimp-mini-table .surat-arah{justify-content:center}
+.pimp-mini-table .status-badge,.pimp-mini-table .satuan-pill{font-size:9.5px;padding:3px 7px}
+.surat-arah{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;white-space:nowrap}
+.surat-arah-masuk{color:var(--p-green)}
+.surat-arah-keluar{color:#3b82f6}
+.pimp-activity-list{display:flex;flex-direction:column}
+.pimp-activity-item{display:flex;align-items:flex-start;gap:12px;padding:13px 0}
+.pimp-activity-item:first-child{padding-top:0}
+.pimp-activity-item:last-child{padding-bottom:0}
+.pimp-activity-item:not(:last-child){border-bottom:1px solid var(--p-border)}
+.pimp-activity-ico{flex:0 0 auto;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.pimp-activity-ico svg{width:16px;height:16px}
+.pimp-activity-ico-laporan{background:color-mix(in srgb,#22c55e 15%,transparent);color:#22c55e}
+.pimp-activity-ico-surat{background:color-mix(in srgb,#3b82f6 15%,transparent);color:#3b82f6}
+.pimp-activity-ico-kendala{background:color-mix(in srgb,#f59e0b 15%,transparent);color:#f59e0b}
+.pimp-activity-body{flex:1;min-width:0}
+.pimp-activity-title{font-size:13px;font-weight:700;color:var(--p-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pimp-activity-sub{font-size:11px;color:var(--p-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pimp-activity-item .status-pill{flex:0 0 auto;white-space:nowrap}
+@media(max-width:700px){.pimp-card-head{flex-direction:column}}
+.status-dist-head h3{margin:0}
+.status-dist-head p{margin:4px 0 0}
+.status-donut-wrap{position:relative;width:100%;height:230px;margin:6px 0 2px}
+.status-donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;pointer-events:none}
+.status-donut-center span{font-size:11px;color:var(--p-muted)}
+.status-donut-center strong{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--p-text);line-height:1}
+.status-bd{display:flex;flex-direction:column;gap:12px;margin-top:14px;padding-top:16px;border-top:1px solid var(--p-border)}
+.status-bd-row{display:grid;grid-template-columns:10px 1fr auto minmax(90px,1.6fr) auto;align-items:center;gap:10px}
+.status-bd-row.is-zero{opacity:.5}
+.status-bd-dot{width:10px;height:10px;border-radius:50%}
+.status-bd-name{font-size:12.5px;font-weight:700;color:var(--p-text);white-space:nowrap}
+.status-bd-count{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--p-text);text-align:right}
+.status-bd-pct{font-family:var(--mono);font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap;text-align:center}
+.status-bd-bar{position:relative;height:9px;border-radius:999px;background:var(--p-surface-2);border:1px solid var(--p-border);overflow:hidden}
+.status-bd-bar-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;transition:width .9s cubic-bezier(.22,1,.36,1)}
+@media(prefers-reduced-motion:reduce){.status-bd-bar-fill{transition:none}}
 </style>
 </head>
 <body>
@@ -458,7 +524,11 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 @if(session('status'))<script>document.addEventListener('DOMContentLoaded',function(){window.siberadShowToast?window.siberadShowToast('success',{!! json_encode(session('status')) !!}):null});</script>@endif
 @if(session('error'))<script>document.addEventListener('DOMContentLoaded',function(){window.siberadShowToast?window.siberadShowToast('error',{!! json_encode(session('error')) !!}):null});</script>@endif
 @if($errors->any())<script>document.addEventListener('DOMContentLoaded',function(){window.siberadShowToast?window.siberadShowToast('error',{!! json_encode($errors->first()) !!}):null});</script>@endif
-<div class="pimp-page"><section id="dashboard" class="tab-panel active"><div class="pimp-hero"><div class="pimp-eyebrow">{{ $pengaturan->namaSistem() }} // {{ $satuan->kode }}</div><h1>{{ $satuan->nama }}</h1><p>{{ now()->translatedFormat('l, d F Y') }}</p></div><div class="pimp-kpis"><div class="pimp-kpi"><div class="label">Total Pelaporan</div><div class="value">{{ $monitoringPimpinanSatlak->sum('total') }}</div><div class="sub">Aktivitas yang tercatat</div></div><div class="pimp-kpi ok"><div class="label">Disetujui</div><div class="value">{{ $laporanPimpinanSatlak->filter(fn($l)=>str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count() }}</div><div class="sub">Laporan yang disetujui</div></div><div class="pimp-kpi bad"><div class="label">Ditolak</div><div class="value">{{ $laporanPimpinanSatlak->filter(fn($l)=>str_contains(strtolower((string)$l->status),'tolak'))->count() }}</div><div class="sub">Laporan yang ditolak</div></div><div class="pimp-kpi late"><div class="label">Terlambat</div><div class="value">{{ $permintaanLaporan->filter(fn($p)=>$p->isTerlambat())->count() }}</div><div class="sub">Permintaan lewat tenggat</div></div><div class="pimp-kpi cancelled"><div class="label">Dibatalkan</div><div class="value">{{ $permintaanLaporan->where('status',\App\Models\PermintaanLaporan::STATUS_DIBATALKAN)->count() }}</div><div class="sub">Permintaan yang dibatalkan</div></div></div>@php
+<div class="pimp-page"><section id="dashboard" class="tab-panel active"><div class="pimp-hero"><div class="pimp-eyebrow">{{ $pengaturan->namaSistem() }} // {{ $satuan->kode }}</div><h1>{{ $satuan->nama }}</h1><p>{{ now()->translatedFormat('l, d F Y') }}</p></div>@php
+  $pimpTotalPelaporan = $monitoringPimpinanSatlak->sum('total');
+@endphp
+<div id="pimpKpisWrap">@include('siberad.dashboards.partials.pimpinan-kpi-cards', ['pimpTotalPelaporan' => $pimpTotalPelaporan, 'laporanPimpinanSatlak' => $laporanPimpinanSatlak, 'suratMasuk' => $suratMasuk, 'suratTerkirim' => $suratTerkirim, 'suratArsip' => $suratArsip, 'kendalaMasuk' => $kendalaMasuk, 'kendalaArsip' => $kendalaArsip])</div>
+@php
   $pimpTotalDisetujui = $laporanPimpinanSatlak->filter(fn($l)=>str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count();
   $pimpTotalDitolak = $laporanPimpinanSatlak->filter(fn($l)=>str_contains(strtolower((string)$l->status),'tolak'))->count();
   $pimpTotalTerlambat = $permintaanLaporan->filter(fn($p)=>$p->isTerlambat())->count();
@@ -466,7 +536,40 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
   $pimpTotalStatus = $pimpTotalDisetujui + $pimpTotalDitolak + $pimpTotalTerlambat + $pimpTotalDibatalkan;
   $pimpPersen = fn($n) => $pimpTotalStatus > 0 ? round($n / $pimpTotalStatus * 100) : 0;
 @endphp
-<div class="chart-grid balanced"><div class="chart-card compact"><h3>Distribusi Status</h3><p>Komposisi status seluruh laporan dari seluruh Satlak dan unit terkait.</p><div class="chart-box"><canvas id="statusChart"></canvas></div><div class="chart-legend" id="statusChartLegend"></div></div><div class="chart-card compact status-summary-card"><h3>Ringkasan Persentase</h3><p>Sebaran status seluruh laporan dalam angka &amp; persen.</p><div class="status-summary-list"><div class="status-summary-row"><span class="status-summary-dot" style="background:#22c55e"></span><span class="status-summary-label">Disetujui</span><span class="status-summary-value">{{ $pimpTotalDisetujui }} <small>({{ $pimpPersen($pimpTotalDisetujui) }}%)</small></span></div><div class="status-summary-row"><span class="status-summary-dot" style="background:#ef4444"></span><span class="status-summary-label">Ditolak</span><span class="status-summary-value">{{ $pimpTotalDitolak }} <small>({{ $pimpPersen($pimpTotalDitolak) }}%)</small></span></div><div class="status-summary-row"><span class="status-summary-dot" style="background:#ff6b6b"></span><span class="status-summary-label">Terlambat</span><span class="status-summary-value">{{ $pimpTotalTerlambat }} <small>({{ $pimpPersen($pimpTotalTerlambat) }}%)</small></span></div><div class="status-summary-row"><span class="status-summary-dot" style="background:#c1121f"></span><span class="status-summary-label">Dibatalkan</span><span class="status-summary-value">{{ $pimpTotalDibatalkan }} <small>({{ $pimpPersen($pimpTotalDibatalkan) }}%)</small></span></div></div></div></div><div class="section-block"><div class="section-head-clean"><div><h2>Laporan per Satuan</h2><p>Perbandingan jumlah laporan yang dibuat oleh seluruh satuan (Satlak, Direktorat, dan 21 Kasansi). Scroll ke bawah untuk lihat semua satuan.</p></div></div><div class="chart-box chart-box-scroll-y"><div class="chart-box-inner" id="satlakChartInner"><canvas id="satlakChart"></canvas></div></div></div><div class="section-block"><div class="section-head-clean"><div><h2>Ringkasan Aktivitas Seluruh Satuan</h2><p>Ikhtisar cepat sebelum membuka detail aktivitas masing-masing satuan.</p></div></div><div class="satlak-grid">@forelse($monitoringPimpinanSatlak as $m)<article class="satlak-card"><div class="code">{{ $m['kode'] ?? 'SATLAK' }}</div><div class="name">{{ $m['nama'] }}</div><div class="total">{{ $m['total_permintaan'] }}</div><div class="caption">Total permintaan ditugaskan</div><a class="card-link" href="#satlak-{{ $m['id'] }}">Lihat Aktivitas</a></article>@empty<div class="muted">Belum ada data Satlak.</div>@endforelse</div></div></section>
+@php
+  $pimpStatusDist = [
+    ['label' => 'Disetujui',  'color' => '#22c55e', 'labelColor' => '#22c55e', 'count' => $pimpTotalDisetujui],
+    ['label' => 'Ditolak',    'color' => '#ef4444', 'labelColor' => '#ef4444', 'count' => $pimpTotalDitolak],
+    ['label' => 'Terlambat',  'color' => '#ff6b6b', 'labelColor' => '#ff6b6b', 'count' => $pimpTotalTerlambat],
+    ['label' => 'Dibatalkan', 'color' => '#c1121f', 'labelColor' => '#e5484d', 'count' => $pimpTotalDibatalkan],
+  ];
+@endphp
+@php
+  // Tren Laporan 7/30/90 hari -- chart combo bar+line di sebelah donut.
+  $pimpSuratSemuaTren = $suratMasuk->concat($suratTerkirim)->concat($suratArsip);
+  $pimpTrenBuat = function(int $n) use ($laporanPimpinanSatlak, $pimpSuratSemuaTren) {
+    return collect(range($n - 1, 0))->map(function ($k) use ($laporanPimpinanSatlak, $pimpSuratSemuaTren) {
+      $day = now()->startOfDay()->subDays($k);
+      $lap = $laporanPimpinanSatlak->filter(fn ($l) => $l->created_at?->isSameDay($day))->count();
+      $sur = $pimpSuratSemuaTren->filter(fn ($s) => $s->created_at?->isSameDay($day))->count();
+      return ['label' => $day->translatedFormat('d M'), 'laporan' => $lap, 'surat' => $sur, 'total' => $lap + $sur];
+    })->values();
+  };
+  $pimpTrenRentang = ['7' => $pimpTrenBuat(7), '30' => $pimpTrenBuat(30)];
+
+  // Surat Terbaru -- 5 surat (masuk+keluar+arsip) paling baru.
+  $pimpSuratTerbaru = $pimpSuratSemuaTren->sortByDesc('created_at')->take(5)->values();
+
+  // Kendala Kasansi Terbaru -- 5 kendala (masuk+arsip) paling baru. Dulu
+  // kartu ini "Aktivitas Terbaru" (gabungan Laporan/Surat/Kendala), diganti
+  // user jadi khusus Kendala Kasansi biar sejajar konsepnya sama "Surat
+  // Terbaru" (satu domain per kartu).
+  $pimpKendalaSemuaAktivitas = $kendalaMasuk->concat($kendalaArsip);
+  $pimpKendalaTerbaru = $pimpKendalaSemuaAktivitas->sortByDesc('created_at')->take(5)->values();
+@endphp
+<div class="chart-grid balanced"><div class="chart-card compact status-dist-card"><div class="status-dist-head"><span class="status-dist-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path><path d="m9 15 2 2 4-4"></path></svg></span><div><h3>Distribusi Status Laporan</h3><p>Proporsi status seluruh laporan di sistem.</p></div></div><div class="status-donut-wrap"><canvas id="statusDonut"></canvas><div class="status-donut-center"><span>Total Laporan</span><strong id="pimpDonutTotal">{{ $pimpTotalStatus }}</strong></div></div><div id="pimpStatusBdWrap">@include('siberad.dashboards.partials.pimpinan-status-distribusi-list', ['pimpStatusDist' => $pimpStatusDist])</div></div><div class="chart-card pimp-tren-card"><div class="pimp-card-head"><div class="pimp-card-head-main"><span class="pimp-card-ico" style="background:color-mix(in srgb,#6366f1 15%,transparent);color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></span><div><h3>Tren Aktivitas</h3><p>Perbandingan jumlah laporan, surat, dan total aktivitas dari waktu ke waktu.</p></div></div><div class="tren-range-toggle" id="trenRangeToggle"><button type="button" class="tren-range-btn active" data-range="7">7 Hari</button><button type="button" class="tren-range-btn" data-range="30">30 Hari</button></div></div><div class="chart-box"><canvas id="trenLaporanChart"></canvas></div></div></div>
+<div class="chart-grid balanced"><div class="chart-card"><div class="pimp-card-head"><div class="pimp-card-head-main"><span class="pimp-card-ico" style="background:color-mix(in srgb,#3b82f6 15%,transparent);color:#3b82f6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg></span><div><h3>Surat Terbaru</h3><p>5 surat terbaru yang tercatat.</p></div></div></div><div class="clean-table-wrap"><table class="clean-table pimp-mini-table"><thead><tr><th>Tanggal</th><th>Jenis Surat</th><th>Perihal</th><th>Pengirim</th><th>Status</th></tr></thead><tbody id="pimpSuratTerbaruBody">@include('siberad.dashboards.partials.pimpinan-surat-terbaru-rows', ['pimpSuratTerbaru' => $pimpSuratTerbaru, 'satuan' => $satuan])</tbody></table></div><a class="card-link" href="#surat-masuk">Lihat Semua Surat</a></div><div class="chart-card"><div class="pimp-card-head"><div class="pimp-card-head-main"><span class="pimp-card-ico" style="background:color-mix(in srgb,#f59e0b 15%,transparent);color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span><div><h3>Kendala Kasansi Terbaru</h3><p>5 kendala kasansi terbaru yang dilaporkan.</p></div></div></div><div class="pimp-activity-list" id="pimpKendalaTerbaruList">@include('siberad.dashboards.partials.pimpinan-kendala-terbaru-list', ['pimpKendalaTerbaru' => $pimpKendalaTerbaru])</div><a class="card-link" href="#kendala-kasansi">Lihat Semua Kendala</a></div></div>
+</section>
 <section id="monitoring" class="tab-panel"><div class="section-block"><div class="section-head-clean"><div><h2>Riwayat Aktivitas</h2><p>Ringkasan Seluruh Satuan. Pilih “Lihat Aktivitas” untuk membuka daftar laporan secara detail.</p></div></div><div class="satlak-grid">@forelse($monitoringPimpinanSatlak as $m)<article class="satlak-card"><div class="code">{{ $m['kode'] ?? 'SATLAK' }}</div><div class="name">{{ $m['nama'] }}</div><div class="total">{{ $m['total_permintaan'] }}</div><div class="caption">Total permintaan ditugaskan</div><div class="mini-stats"><div class="mini-stat ok"><strong>{{ $m['diterima'] }}</strong><span>Disetujui</span></div><div class="mini-stat bad"><strong>{{ $m['ditolak'] }}</strong><span>Ditolak</span></div><div class="mini-stat wait"><strong>{{ $m['menunggu'] }}</strong><span>Menunggu</span></div></div><a class="card-link" href="#satlak-{{ $m['id'] }}">Lihat Aktivitas</a></article>@empty<div class="muted">Belum ada data Satlak.</div>@endforelse</div></div></section>
 @foreach($monitoringPimpinanSatlak as $m)<section id="satlak-{{ $m['id'] }}" class="tab-panel"><div class="section-block"><div class="section-head-clean"><div><h2>Aktivitas {{ $m['nama'] }}</h2><p>Daftar laporan yang dibuat satuan ini. Data bersifat view-only untuk pimpinan.</p></div></div><div class="clean-table-wrap" data-pending-permintaan="{{ $permintaanLaporan->where('tujuan_satuan_id',$m['id'])->whereNull('laporan_id')->filter(fn($p) => $p->laporans->isEmpty())->concat($riwayatLaporanPimpinan->where('tujuan_satuan_id',$m['id'])->whereNull('laporan_id')->filter(fn($p) => $p->laporans->isEmpty()))->map(fn($p) => ['id' => $p->id, 'subject' => $p->perihal, 'created' => $p->created_at?->translatedFormat('d M Y H:i'), 'ditinjau' => $p->dikerjakan_at?->translatedFormat('d M Y H:i'), 'dibatalkan' => $p->status === \App\Models\PermintaanLaporan::STATUS_DIBATALKAN, 'dibatalkanAt' => $p->dibatalkan_at?->translatedFormat('d M Y H:i'), 'terlambat' => $p->isTerlambat()])->values()->toJson() }}"><table class="clean-table"><thead><tr><th>Perihal</th><th>Tujuan</th><th>Prioritas</th><th>Status</th><th>Tanggal</th><th>Aksi</th></tr></thead><tbody>@forelse($laporanPimpinanSatlak->where('satuan_id',$m['id']) as $l)<tr data-permintaan-created="{{ $l->permintaanLaporan?->created_at?->translatedFormat('d M Y H:i') }}" data-permintaan-ditinjau="{{ $l->permintaanLaporan?->dikerjakan_at?->translatedFormat('d M Y H:i') }}" data-permintaan-status="{{ $l->permintaanLaporan?->status }}" data-permintaan-dibatalkan="{{ $l->permintaanLaporan?->dibatalkan_at?->translatedFormat('d M Y H:i') }}" data-permintaan-terlambat="{{ $l->permintaanLaporan?->isTerlambat() ? '1' : '' }}" data-progres="{{ $l->progres }}" data-updated="{{ $l->updated_at->translatedFormat('d M Y H:i') }}" data-kendala="{{ e($l->kendala ?? '') }}" data-permintaan-id="{{ $l->permintaan_laporan_id }}" data-laporan-id="{{ $l->id }}" data-laporan-status="{{ e($l->status) }}"><td><div class="subject">{{ $l->perihal }}</div><div class="muted">{{ $l->proyek ?? 'Laporan kegiatan' }}</div></td><td>{{ $l->tujuanSatuan->nama ?? '-' }}</td><td>{{ $l->prioritas }}</td><td><span class="status-pill {{ $l->status === \App\Models\Laporan::STATUS_PROGRES ? 'blue' : (str_contains(strtolower($l->status),'tolak') ? 'bad' : ((str_contains(strtolower($l->status),'setuj') || str_contains(strtolower($l->status),'diterima')) ? 'ok' : ((str_contains(strtolower($l->status),'revisi')) ? 'revisi' : 'wait'))) }}">{{ $l->status === \App\Models\Laporan::STATUS_PROGRES ? 'Progres · '.$l->progres.'%' : $l->status }}</span></td><td>{{ $l->created_at->translatedFormat('d M Y H:i') }}</td><td><button type="button" class="detail-btn" onclick="openReportDetail(this)" data-pengirim="{{ e($l->satuan->nama ?? '-') }}" data-tujuan="{{ e($l->tujuanSatuan->nama ?? '-') }}" data-perihal="{{ e($l->perihal) }}" data-prioritas="{{ e($l->prioritas) }}" data-progres="{{ $l->progres }}" data-kendala="{{ e($l->kendala ?? '') }}" data-proyek="{{ e($l->proyek ?? '-') }}" data-tanggal="{{ e($l->created_at->translatedFormat('d M Y H:i')) }}" data-deskripsi="{{ e($l->deskripsi) }}" data-lampiran="{{ $l->semuaLampiran->map(fn($x) => ['url' => asset('storage/'.$x->path), 'nama' => $x->nama_asli])->values()->toJson() }}" data-readonly="1">Detail</button></td></tr>@empty<tr><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada laporan dari satuan ini</div></div></td></tr>@endforelse</tbody></table></div></div></section>@endforeach
 <section id="kendala-kasansi" class="tab-panel deadline-sender-section"><div class="danpus-request-panel"><div class="request-head"><div><h2>Kendala Kasansi</h2><p>Laporan rutin/kendala yang dikirim langsung oleh satuan Kasansi (21 Sansidam) kepada Danpus, tanpa lewat Permintaan Laporan.</p></div></div></div><div class="kcard-grid" id="kcard-grid-masuk">@forelse($kendalaMasuk as $k)@include('siberad.dashboards.partials.kendala-kasansi-row', ['k' => $k])@empty<div class="kcard-empty"><svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="var(--p-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><div class="kcard-empty-title">Belum ada laporan kendala</div><div class="kcard-empty-sub">Kendala dari satuan Kasansi akan muncul di sini.</div></div>@endforelse</div></section>
@@ -2248,13 +2351,343 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
     });
   })();
 
-  const satlakLabels=@json($monitoringPimpinanSatlak->pluck('kode')->values());
-  const satlakTotals=@json($monitoringPimpinanSatlak->pluck('total')->values());
-  const statusData={disetujui:{{ $laporanPimpinanSatlak->filter(fn($l)=>str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count() }},ditolak:{{ $laporanPimpinanSatlak->filter(fn($l)=>str_contains(strtolower((string)$l->status),'tolak'))->count() }},terlambat:{{ $permintaanLaporan->filter(fn($p)=>$p->isTerlambat())->count() }},dibatalkan:{{ $permintaanLaporan->where('status',\App\Models\PermintaanLaporan::STATUS_DIBATALKAN)->count() }}};
+  let pimpTrenData=@json($pimpTrenRentang);
+  let statusData={disetujui:{{ $laporanPimpinanSatlak->filter(fn($l)=>str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count() }},ditolak:{{ $laporanPimpinanSatlak->filter(fn($l)=>str_contains(strtolower((string)$l->status),'tolak'))->count() }},terlambat:{{ $permintaanLaporan->filter(fn($p)=>$p->isTerlambat())->count() }},dibatalkan:{{ $permintaanLaporan->where('status',\App\Models\PermintaanLaporan::STATUS_DIBATALKAN)->count() }}};
   window.siberadCharts = window.siberadCharts || [];
-  function makeStatusChart(id){const el=document.getElementById(id);if(!el||typeof Chart==='undefined')return;const labels=['Disetujui','Ditolak','Terlambat','Dibatalkan'];const colors=['#22c55e','#ef4444','#ff6b6b','#c1121f'];const chart=new Chart(el,{type:'doughnut',data:{labels:labels,datasets:[{data:[statusData.disetujui,statusData.ditolak,statusData.terlambat,statusData.dibatalkan],backgroundColor:colors,borderColor:'transparent',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});window.siberadCharts.push(chart);const legendBox=document.getElementById('statusChartLegend');if(legendBox){legendBox.innerHTML='';labels.forEach((l,i)=>{const item=document.createElement('span');item.className='chart-legend-item';item.innerHTML='<span class="chart-legend-dot" style="background:'+colors[i]+'"></span>'+l;item.addEventListener('click',function(){chart.toggleDataVisibility(i);chart.update();item.classList.toggle('is-hidden',!chart.getDataVisibility(i));});legendBox.appendChild(item);});}}
-  function makeSatlakChart(id){const el=document.getElementById(id);if(!el||typeof Chart==='undefined')return;const inner=document.getElementById('satlakChartInner');if(inner){inner.style.height=Math.max(satlakLabels.length*26,260)+'px'}const barCtx=el.getContext('2d');const gradient=barCtx.createLinearGradient(0,0,el.width||600,0);gradient.addColorStop(0,'#6366f1');gradient.addColorStop(1,'#3b82f6');const maxSatlakTotal=satlakTotals.reduce(function(m,v){return Math.max(m,v||0)},0);const xMaxSatlak=Math.max(100,Math.ceil((maxSatlakTotal+1)/10)*10);window.siberadCharts.push(new Chart(el,{type:'bar',data:{labels:satlakLabels,datasets:[{label:'Jumlah laporan',data:satlakTotals,backgroundColor:gradient,hoverBackgroundColor:'#4f46e5',borderRadius:6,maxBarThickness:20}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{beginAtZero:true,max:xMaxSatlak,ticks:{precision:0,stepSize:10},grid:{color:'rgba(127,127,127,.15)'}},y:{grid:{display:false},ticks:{autoSkip:false,font:{size:11}}}},plugins:{legend:{display:false}}}}))}
-  makeStatusChart('statusChart');makeSatlakChart('satlakChart');
+  // Chart.js gak otomatis ngikutin tema terang/gelap dashboard -- tanpa ini,
+  // teks (tick/legend/tooltip) pakai warna default abu Chart.js sendiri (gak
+  // kebaca di tema gelap) & tooltip bawaan Chart.js SELALU kotak gelap
+  // walau lagi tema terang. Pola yang sama persis kayak "Aktivitas 7 Hari
+  // Terakhir" punya admin.blade.php (var cMuted/cGrid dari getComputedStyle) --
+  // baca dari var CSS `--p-*` yang UDAH otomatis kesesuaikan tema di file ini.
+  if(typeof Chart!=='undefined'){
+    const pimpChartRoot=getComputedStyle(document.documentElement);
+    Chart.defaults.color=pimpChartRoot.getPropertyValue('--p-muted').trim()||'#64748b';
+  }
+  // "Distribusi Status Laporan" = donut Chart.js + label % di luar tiap arc
+  // (plugin inline arcPct). Teks tengah ("Total Laporan" + N) & rincian
+  // per-status (dot, jumlah, pill %, progress bar) dirender server-side dari
+  // $pimpStatusDist -- status 0 tetap muncul di rincian dengan bar kosong.
+  function makeStatusDonut(){
+    const el=document.getElementById('statusDonut');
+    if(!el||typeof Chart==='undefined')return;
+    const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Tooltip terang & ikut tema, sama kayak fix di makeTrenLaporanChart
+    // (default Chart.js selalu kotak gelap apapun temanya).
+    const donutRoot=getComputedStyle(document.documentElement);
+    const donutSurfaceColor=donutRoot.getPropertyValue('--p-surface').trim()||'#fff';
+    const donutTextColor=donutRoot.getPropertyValue('--p-text').trim()||'#17212b';
+    const donutBorderColor=donutRoot.getPropertyValue('--p-border').trim()||'rgba(127,127,127,.15)';
+    const defs=[
+      {label:'Disetujui',color:'#22c55e',count:statusData.disetujui},
+      {label:'Ditolak',color:'#ef4444',count:statusData.ditolak},
+      {label:'Terlambat',color:'#ff6b6b',count:statusData.terlambat},
+      {label:'Dibatalkan',color:'#c1121f',count:statusData.dibatalkan}
+    ];
+    const total=defs.reduce((s,d)=>s+d.count,0);
+    const empty=total<=0;
+    // Label % di luar tiap arc -- angkanya ikut "mengisi" seiring arc tumbuh,
+    // pakai progress animasi Chart (chart.$sbT 0..1).
+    const arcPct={id:'sbArcPct',afterDatasetsDraw(chart){
+      if(empty)return;
+      const t=chart.$sbT==null?1:Math.max(0,Math.min(1,chart.$sbT));
+      const ctx=chart.ctx,meta=chart.getDatasetMeta(0);
+      ctx.save();
+      ctx.font='800 12px '+(getComputedStyle(el).fontFamily||'sans-serif');
+      ctx.textBaseline='middle';
+      meta.data.forEach((arc,i)=>{
+        if(!defs[i].count)return;
+        const pct=Math.round(defs[i].count/total*100);
+        if(pct<4)return;
+        const shown=t>=0.985?pct:Math.round(pct*t);
+        if(shown<1)return;
+        const ang=(arc.startAngle+arc.endAngle)/2;
+        const rr=arc.outerRadius+13;
+        const x=arc.x+Math.cos(ang)*rr,y=arc.y+Math.sin(ang)*rr;
+        ctx.fillStyle=defs[i].color;
+        ctx.textAlign=Math.cos(ang)>-0.1?'left':'right';
+        ctx.fillText(shown+'%',x,y);
+      });
+      ctx.restore();
+    }};
+    const chart=new Chart(el,{
+      type:'doughnut',
+      data:{labels:defs.map(d=>d.label),datasets:[{
+        data:empty?[1]:defs.map(d=>d.count),
+        backgroundColor:empty?['rgba(127,127,127,.16)']:defs.map(d=>d.color),
+        borderColor:'transparent',borderWidth:0,
+        borderRadius:empty?0:7,spacing:empty?0:3,hoverOffset:empty?0:5
+      }]},
+      options:{cutout:'70%',responsive:true,maintainAspectRatio:false,layout:{padding:24},
+        animation:reduce?false:{duration:1100,easing:'easeOutCubic',
+          onProgress:a=>{if(a&&a.chart)a.chart.$sbT=a.numSteps?a.currentStep/a.numSteps:1;},
+          onComplete:a=>{if(a&&a.chart)a.chart.$sbT=1;}},
+        plugins:{legend:{display:false},tooltip:{enabled:!empty,backgroundColor:donutSurfaceColor,titleColor:donutTextColor,bodyColor:donutTextColor,borderColor:donutBorderColor,borderWidth:1,cornerRadius:10,padding:10,usePointStyle:true,titleFont:{weight:'700'},bodyFont:{weight:'600'},callbacks:{label:c=>' '+c.label+': '+c.raw+' ('+Math.round(c.raw/total*100)+'%)'}}}},
+      plugins:[arcPct]
+    });
+    chart.$sbT=reduce?1:0;
+    window.siberadCharts.push(chart);
+    // Refresh realtime: destroy+recreate instance pakai statusData terbaru
+    // (bukan chart.update() manual) -- lebih simpel & aman drpd ngerombak
+    // closure internal arcPct/total/empty di atas, dan REPLAY animasi
+    // "tumbuh" jadi sinyal visual gratis kalau datanya beneran berubah.
+    window.siberadRefreshStatusDonut=function(){
+      const idx=window.siberadCharts.indexOf(chart);
+      if(idx>-1)window.siberadCharts.splice(idx,1);
+      chart.destroy();
+      makeStatusDonut();
+    };
+  }
+  // "Tren Laporan 7/30/90 Hari Terakhir" -- combo bar (Laporan/Surat) + line
+  // (Total Aktivitas = laporan+surat per hari). Data 3 rentang di-embed
+  // sekaligus lewat pimpTrenData, toggle tombol cuma ganti chart.data lalu
+  // chart.update(), tidak ada request ulang ke server.
+  function makeTrenLaporanChart(){
+    const el=document.getElementById('trenLaporanChart');
+    if(!el||typeof Chart==='undefined')return;
+    const mk=function(rangeKey){
+      const rows=pimpTrenData[rangeKey]||[];
+      return {labels:rows.map(function(r){return r.label}),laporan:rows.map(function(r){return r.laporan}),surat:rows.map(function(r){return r.surat}),total:rows.map(function(r){return r.total})};
+    };
+    const cur=mk('7');
+    // Gradasi area di bawah garis "Total Aktivitas" -- niru persis pola
+    // gradient chart "Aktivitas 7 Hari Terakhir" admin.blade.php
+    // (createLinearGradient + addColorStop transparan di bawah), biar
+    // kesan lembut/terang kayak referensi, bukan garis polos doang.
+    const trenCtx=el.getContext('2d');
+    const trenGradient=trenCtx.createLinearGradient(0,0,0,el.height||235);
+    trenGradient.addColorStop(0,'rgba(99,102,241,.28)');
+    trenGradient.addColorStop(1,'rgba(99,102,241,0)');
+    const trenRoot=getComputedStyle(document.documentElement);
+    const trenGridColor=trenRoot.getPropertyValue('--p-border').trim()||'rgba(127,127,127,.15)';
+    const trenSurfaceColor=trenRoot.getPropertyValue('--p-surface').trim()||'#fff';
+    const trenTextColor=trenRoot.getPropertyValue('--p-text').trim()||'#17212b';
+    const chart=new Chart(el,{
+      type:'bar',
+      data:{labels:cur.labels,datasets:[
+        {type:'bar',label:'Laporan',data:cur.laporan,backgroundColor:'#a78bfa',borderRadius:5,maxBarThickness:22,order:2},
+        {type:'bar',label:'Surat',data:cur.surat,backgroundColor:'#93c5fd',borderRadius:5,maxBarThickness:22,order:2},
+        {type:'line',label:'Total Aktivitas',data:cur.total,borderColor:'#6366f1',backgroundColor:trenGradient,tension:.35,pointRadius:3,pointBackgroundColor:'#6366f1',pointHoverRadius:5,borderWidth:2.5,fill:true,order:1}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+        plugins:{legend:{position:'bottom',labels:{boxWidth:10,usePointStyle:true,padding:14}},
+          tooltip:{backgroundColor:trenSurfaceColor,titleColor:trenTextColor,bodyColor:trenTextColor,borderColor:trenGridColor,borderWidth:1,cornerRadius:10,padding:10,boxPadding:5,usePointStyle:true,titleFont:{weight:'700'},bodyFont:{weight:'600'}}},
+        scales:{x:{grid:{display:false},ticks:{autoSkip:true,maxRotation:90,minRotation:0,font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:trenGridColor}}}}
+    });
+    window.siberadCharts.push(chart);
+    let pimpTrenActiveRange='7';
+    function applyRange(rangeKey){
+      const fresh=mk(rangeKey);
+      chart.data.labels=fresh.labels;
+      chart.data.datasets[0].data=fresh.laporan;
+      chart.data.datasets[1].data=fresh.surat;
+      chart.data.datasets[2].data=fresh.total;
+      chart.update();
+    }
+    document.getElementById('trenRangeToggle')?.addEventListener('click',function(e){
+      const btn=e.target.closest('.tren-range-btn');
+      if(!btn)return;
+      this.querySelectorAll('.tren-range-btn').forEach(function(b){b.classList.remove('active')});
+      btn.classList.add('active');
+      pimpTrenActiveRange=btn.dataset.range;
+      applyRange(pimpTrenActiveRange);
+    });
+    // Refresh realtime: pimpTrenData (variabel global, di-assign ulang tiap
+    // poll dapet data segar) dibaca ulang lewat mk(), rentang yang lagi
+    // aktif (7/30 Hari) TETAP kepilih, cuma isinya yang di-refresh.
+    window.siberadRefreshTrenChart=function(){
+      applyRange(pimpTrenActiveRange);
+    };
+  }
+  makeStatusDonut();makeTrenLaporanChart();
+  // "Mengisi perlahan": progress bar rincian (width 0->target via CSS transition,
+  // di-stagger) + angka count-up (Total Laporan di tengah donut, jumlah & persen
+  // tiap baris). Hormati prefers-reduced-motion.
+  (function animateStatusDistrib(){
+    const card=document.querySelector('.status-dist-card');
+    if(!card)return;
+    if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    const bars=card.querySelectorAll('.status-bd-bar-fill');
+    const barTargets=[];
+    bars.forEach(function(b){barTargets.push(b.style.width||'0%');b.style.width='0%';});
+    const nums=[];
+    const center=card.querySelector('.status-donut-center strong');
+    if(center)nums.push({el:center,to:parseInt(center.textContent,10)||0,suf:''});
+    card.querySelectorAll('.status-bd-count').forEach(function(el){nums.push({el:el,to:parseInt(el.textContent,10)||0,suf:''});});
+    card.querySelectorAll('.status-bd-pct').forEach(function(el){nums.push({el:el,to:parseInt(el.textContent,10)||0,suf:'%'});});
+    nums.forEach(function(n){n.el.textContent='0'+n.suf;});
+    requestAnimationFrame(function(){
+      bars.forEach(function(b,i){setTimeout(function(){b.style.width=barTargets[i];},120+i*90);});
+    });
+    const dur=1000,t0=performance.now();
+    (function tick(now){
+      const p=Math.min(1,((now||performance.now())-t0)/dur),e=1-Math.pow(1-p,3);
+      nums.forEach(function(n){n.el.textContent=Math.round(n.to*e)+n.suf;});
+      if(p<1)requestAnimationFrame(tick);
+      else nums.forEach(function(n){n.el.textContent=n.to+n.suf;});
+    })();
+  })();
+  // Kartu KPI Beranda (Total Pelaporan/Surat/Kendala Kasansi): animasi count-up
+  // angka + gunung "tumbuh" dari dasar (scaleY 0->1, transform-origin:bottom)
+  // tiap kali kartu ke-render -- baik pas load pertama (from=0) maupun tiap
+  // kartunya di-refresh realtime (from=nilai lama, biar angka keliatan
+  // "berjalan" ke nilai baru, bukan loncat). Poll 5 dtk, diff string HTML
+  // penuh (isinya kecil, cuma 3 kartu) -- kalau sama persis skip, gak perlu
+  // signature per-kartu kayak syncPimpinanCards().
+  (function(){
+    const wrap=document.getElementById('pimpKpisWrap');
+    if(!wrap)return;
+    const reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // countUp direuse buat animasiin ".kpi-value" (angka besar) MAUPUN
+    // ".kpi-trend span" (angka "+N minggu ini") -- sebelumnya cuma
+    // .kpi-value yang count-up, trend delta cuma "loncat" instan ke nilai
+    // baru pas innerHTML di-swap (angkanya udah realtime krn ikut ke-swap
+    // bareng seluruh kartu, cuma emang belum dianimasiin sendiri).
+    function countUp(el,from,to,dur){
+      if(!el)return;
+      if(from===to){el.textContent=to;return;}
+      const t0=performance.now();
+      let done=false;
+      function finish(){if(done)return;done=true;el.textContent=to;}
+      (function tick(now){
+        if(done)return;
+        const p=Math.min(1,((now||performance.now())-t0)/dur),e=1-Math.pow(1-p,3);
+        el.textContent=Math.round(from+(to-from)*e);
+        if(p<1)requestAnimationFrame(tick);else finish();
+      })();
+      // Jaring pengaman -- kalau rAF gak sempat jalan lagi (tab lagi gak
+      // kebagian frame dll), angka tetap dipaksa ke nilai benar, gak
+      // nyangkut di nilai "from" selamanya.
+      setTimeout(finish,dur+150);
+    }
+    function animatePimpKpis(fromList,trendFromList){
+      const cards=wrap.querySelectorAll('.pimp-kpi');
+      cards.forEach(function(card,i){
+        const valEl=card.querySelector('.kpi-value');
+        const to=parseInt(((valEl&&valEl.textContent)||'0').replace(/[^0-9-]/g,''),10)||0;
+        const trendEl=card.querySelector('.kpi-trend span');
+        const trendTo=parseInt(((trendEl&&trendEl.textContent)||'0').replace(/[^0-9-]/g,''),10)||0;
+        if(reduceMotion){if(valEl)valEl.textContent=to;if(trendEl)trendEl.textContent=trendTo;return;}
+        const deco=card.querySelector('.kpi-deco');
+        if(deco){
+          // Class @keyframes (bukan style.transform+rAF manual) -- animasinya
+          // udah didefinisikan penuh di CSS begitu class ke-attach, gak
+          // gantung nunggu callback rAF kedua buat "membalikkan" ke scaleY(1).
+          // Sebelumnya sempat nyangkut kelihatan gak jalan sama sekali kalau
+          // rAF itu telat/gak sempat jalan (mis. tab belum kebagian frame).
+          deco.classList.remove('is-growing');
+          void deco.offsetWidth;
+          deco.classList.add('is-growing');
+        }
+        const from=(fromList&&typeof fromList[i]==='number')?fromList[i]:0;
+        const trendFrom=(trendFromList&&typeof trendFromList[i]==='number')?trendFromList[i]:0;
+        countUp(valEl,from,to,900);
+        countUp(trendEl,trendFrom,trendTo,900);
+      });
+    }
+    // Cache HTML "fresh" TERAKHIR (bukan baca wrap.innerHTML tiap kali) --
+    // animatePimpKpis() sendiri nempelin class .is-growing ke .kpi-deco
+    // secara permanen (gak pernah dilepas lagi), jadi begitu animasi
+    // pertama jalan, wrap.innerHTML LIVE udah beda selamanya dari HTML
+    // fresh server (yang emang gak pernah punya class itu) -- kalau
+    // dibandingin fresh-vs-live-DOM, hasilnya "berubah" MULU tiap poll
+    // walau data-nya sama sekali gak berubah, animasi jadi jalan terus.
+    // Sama persis kasusnya kayak [[feedback_dom_diff_flicker_gotcha]] --
+    // solusinya sama: cache fresh HTML, bandingin fresh-vs-fresh, jangan
+    // pernah fresh-vs-live-DOM. Ambil snapshot-nya SEBELUM animatePimpKpis()
+    // pertama jalan (biar belum kena polusi class).
+    let lastFreshHtml=wrap.innerHTML.trim();
+    // Section lain yang ikut di-refresh dari SATU response poll yang sama
+    // (bukan poller terpisah -- lihat komentar panjang di
+    // DashboardController::pimpinanKpiRealtime soal kenapa nambah poller
+    // baru berisiko di halaman ini). Sama kayak lastFreshHtml, cache-nya
+    // diambil SEBELUM ada mutasi JS apapun ke elemen-elemen ini.
+    const statusBdWrap=document.getElementById('pimpStatusBdWrap');
+    const donutTotalEl=document.getElementById('pimpDonutTotal');
+    const suratBody=document.getElementById('pimpSuratTerbaruBody');
+    const kendalaList=document.getElementById('pimpKendalaTerbaruList');
+    let lastStatusBdHtml=statusBdWrap?statusBdWrap.innerHTML.trim():'';
+    let lastSuratHtml=suratBody?suratBody.innerHTML.trim():'';
+    let lastKendalaHtml=kendalaList?kendalaList.innerHTML.trim():'';
+    let lastDonutKey=JSON.stringify(statusData);
+    let lastTrenKey=JSON.stringify(pimpTrenData);
+    animatePimpKpis();
+    // SEMPAT dicoba long-poll (request ditahan di server sampai ada
+    // perubahan) biar update kerasa instan -- diukur langsung malah 9-13
+    // detik per request (harusnya maks ~4 detik), gara-gara tab ini udah
+    // punya beberapa poller lain yang jalan tiap 4-5 detik (kendala/surat/
+    // permintaan-laporan/log-aktivitas) dan server dev lokal cuma 1 worker
+    // (lihat komentar lengkap di DashboardController::pimpinanKpiRealtime)
+    // -- request yang ditahan malah bikin semuanya ngantre & lebih lambat.
+    // DIBATALKAN. Balik ke interval biasa, cuma jaraknya dipercepat jadi
+    // 1 detik (dari 5 detik) -- request-nya sendiri cepat & jarang nge-hold
+    // worker, jadi gak nyumbat poller lain, tapi tetap kerasa jauh lebih
+    // cepat dari 5 detik.
+    const kpiEndpoint='{{ route('dashboard.pimpinan-kpi.realtime') }}';
+    let kpiBusy=false;
+    async function syncPimpinanKpis(){
+      if(kpiBusy||document.hidden)return;
+      kpiBusy=true;
+      try{
+        const r=await fetch(kpiEndpoint+'?_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest','Cache-Control':'no-cache'}});
+        if(!r.ok)return;
+        const data=await r.json();
+        if(typeof data.kpis_html==='string'){
+          const fresh=data.kpis_html.trim();
+          if(lastFreshHtml!==fresh){
+            const fromList=Array.prototype.map.call(wrap.querySelectorAll('.pimp-kpi .kpi-value'),function(el){return parseInt((el.textContent||'0').replace(/[^0-9-]/g,''),10)||0;});
+            const trendFromList=Array.prototype.map.call(wrap.querySelectorAll('.pimp-kpi .kpi-trend span'),function(el){return parseInt((el.textContent||'0').replace(/[^0-9-]/g,''),10)||0;});
+            lastFreshHtml=fresh;
+            wrap.innerHTML=fresh;
+            animatePimpKpis(fromList,trendFromList);
+          }
+        }
+        if(statusBdWrap&&typeof data.status_bd_html==='string'){
+          const freshBd=data.status_bd_html.trim();
+          if(lastStatusBdHtml!==freshBd){
+            lastStatusBdHtml=freshBd;
+            statusBdWrap.innerHTML=freshBd;
+          }
+        }
+        if(Array.isArray(data.status_donut_counts)){
+          statusData={disetujui:data.status_donut_counts[0]||0,ditolak:data.status_donut_counts[1]||0,terlambat:data.status_donut_counts[2]||0,dibatalkan:data.status_donut_counts[3]||0};
+          const freshDonutKey=JSON.stringify(statusData);
+          if(lastDonutKey!==freshDonutKey){
+            lastDonutKey=freshDonutKey;
+            window.siberadRefreshStatusDonut&&window.siberadRefreshStatusDonut();
+          }
+        }
+        if(donutTotalEl&&typeof data.status_donut_total!=='undefined'){
+          donutTotalEl.textContent=data.status_donut_total;
+        }
+        if(data.tren_data){
+          const freshTrenKey=JSON.stringify(data.tren_data);
+          if(lastTrenKey!==freshTrenKey){
+            lastTrenKey=freshTrenKey;
+            pimpTrenData=data.tren_data;
+            window.siberadRefreshTrenChart&&window.siberadRefreshTrenChart();
+          }
+        }
+        if(suratBody&&typeof data.surat_terbaru_html==='string'){
+          const freshSurat=data.surat_terbaru_html.trim();
+          if(lastSuratHtml!==freshSurat){
+            lastSuratHtml=freshSurat;
+            suratBody.innerHTML=freshSurat;
+          }
+        }
+        if(kendalaList&&typeof data.kendala_terbaru_html==='string'){
+          const freshKendala=data.kendala_terbaru_html.trim();
+          if(lastKendalaHtml!==freshKendala){
+            lastKendalaHtml=freshKendala;
+            kendalaList.innerHTML=freshKendala;
+          }
+        }
+      }catch(e){}
+      finally{kpiBusy=false;}
+    }
+    window.setInterval(syncPimpinanKpis,1000);
+    document.addEventListener('visibilitychange',function(){if(!document.hidden)syncPimpinanKpis();});
+  })();
 })();
 </script>
 </body>

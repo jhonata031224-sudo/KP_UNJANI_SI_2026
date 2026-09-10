@@ -512,6 +512,142 @@ class DashboardController
     }
 
     /**
+     * Poll realtime buat SELURUH Beranda Pimpinan -- 3 kartu KPI, donut
+     * Distribusi Status, chart Tren Aktivitas, Surat Terbaru, Kendala
+     * Kasansi Terbaru. Digabung jadi SATU response/SATU siklus poll (bukan
+     * bikin poller terpisah per section) -- lihat catatan long-poll di
+     * bawah soal kenapa nambah poller baru di halaman ini berisiko.
+     *
+     * SEMPAT dicoba long-poll (request ditahan sampai ada perubahan, pola
+     * sama kayak LaporanController::tungguPerubahanPermintaan()) supaya
+     * update kerasa instan -- TAPI diukur langsung, hasilnya JAUH lebih
+     * lambat dari dugaan (9-13 detik buat request yang seharusnya maks
+     * ~4 detik), bukan karena query version-nya lambat (diukur terpisah,
+     * cuma ~3ms per iterasi), tapi karena tab dashboard ini SUDAH punya
+     * beberapa poller lain yang jalan otomatis tiap 4-5 detik (kendala,
+     * surat, permintaan-laporan, log-aktivitas) -- di server dev lokal
+     * Windows yang cuma 1 worker (lihat [[project_railway_worker_config]]),
+     * SATU request yang ditahan beberapa detik bikin semua poller lain itu
+     * ngantre di belakangnya, dan hasilnya malah lebih lambat daripada
+     * polling interval biasa. DIBATALKAN, balik ke polling interval pendek
+     * (lihat `syncPimpinanKpis` di laporan-pimpinan.blade.php, tiap 1 detik)
+     * -- request-nya sendiri cepat & jarang nge-hold worker, jadi gak
+     * nyumbat poller lain. Kalau nanti mau coba long-poll lagi, JANGAN di
+     * halaman yang udah banyak poller lain kayak dashboard Pimpinan ini
+     * tanpa multi-worker (production Railway aman, 8 worker).
+     *
+     * Query di sini SENGAJA query baru yang lebih ringkas (bukan reuse query
+     * $laporanPimpinanSatlak/$suratMasuk dkk di pelaporan() di atas) karena
+     * versi di pelaporan() ikut eager-load relasi buat fitur LAIN di halaman
+     * yang sama (mis. Riwayat Aktivitas) -- di sini cuma butuh yang relevan
+     * buat hitungan KPI, biar query poll-nya ringan.
+     */
+    public function pimpinanKpiRealtime(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user()->load('satuan');
+        $satuan = $user->satuan;
+        $kode = $satuan?->kode ? strtoupper(trim($satuan->kode)) : null;
+        abort_unless(in_array($kode, ['DANPUS', 'WADAN'], true), 403);
+
+        $kodeSatuanPelaksanaUrut = array_merge([
+            'URDAL', 'POKANALIS',
+            'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT',
+            'SATLAKKAL', 'SATLAKDAK', 'SATLAKSISOS', 'SATLAKDUKTEK',
+        ], Satuan::KODE_KOTAMA);
+        $satuanPimpinanIds = Satuan::whereIn('kode', $kodeSatuanPelaksanaUrut)->pluck('id');
+
+        $laporanPimpinanSatlak = Laporan::with('lampirans')
+            ->whereIn('satuan_id', $satuanPimpinanIds)
+            ->latest()
+            ->get()
+            ->groupBy(fn ($l) => $l->permintaan_laporan_id ?? 'single-'.$l->id)
+            ->flatMap(function ($group) {
+                $progres = $group->where('status', Laporan::STATUS_PROGRES);
+                $final = $group->reject(fn ($l) => $l->status === Laporan::STATUS_PROGRES)->sortByDesc('id')->take(1);
+                return $progres->merge($final);
+            })
+            ->values();
+
+        $danpusSatuanId = Satuan::where('kode', 'DANPUS')->value('id');
+        $suratMasuk = LaporanSurat::where('tujuan_satuan_id', $satuan->id)->where('status', LaporanSurat::STATUS_MENUNGGU)->get();
+        $suratTerkirim = LaporanSurat::where('satuan_id', $satuan->id)->where('status', LaporanSurat::STATUS_MENUNGGU)->get();
+        $suratArsip = LaporanSurat::where(function ($q) use ($satuan) {
+                $q->where('satuan_id', $satuan->id)->orWhere('tujuan_satuan_id', $satuan->id);
+            })->where('status', LaporanSurat::STATUS_DIKONFIRMASI)->get();
+        $kendalaMasuk = $danpusSatuanId
+            ? LaporanKendala::where('tujuan_satuan_id', $danpusSatuanId)->whereNull('confirmed_at')->where('status', '!=', LaporanKendala::STATUS_MENUNGGU_TEMBUSAN)->get()
+            : collect();
+        $kendalaArsip = $danpusSatuanId
+            ? LaporanKendala::where('tujuan_satuan_id', $danpusSatuanId)->whereNotNull('confirmed_at')->get()
+            : collect();
+
+        $pimpTotalPelaporan = $this->hitungLaporanPerPerihal($laporanPimpinanSatlak);
+
+        // Distribusi Status (donut) -- versi ringkas dari perhitungan yang
+        // sama di laporan-pimpinan.blade.php (Disetujui/Ditolak dari
+        // $laporanPimpinanSatlak, Terlambat/Dibatalkan dari PermintaanLaporan
+        // milik Danpus/Wadan). isTerlambat() cuma butuh kolom polos
+        // (laporan_id/status/deadline_at), jadi query di sini gak perlu
+        // eager-load apa-apa.
+        $permintaanLaporanPimpinan = PermintaanLaporan::whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS', 'WADAN']))->get();
+        $pimpTotalDisetujui = $laporanPimpinanSatlak->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count();
+        $pimpTotalDitolak = $laporanPimpinanSatlak->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count();
+        $pimpTotalTerlambat = $permintaanLaporanPimpinan->filter(fn ($p) => $p->isTerlambat())->count();
+        $pimpTotalDibatalkan = $permintaanLaporanPimpinan->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count();
+        $pimpStatusDist = [
+            ['label' => 'Disetujui', 'color' => '#22c55e', 'labelColor' => '#22c55e', 'count' => $pimpTotalDisetujui],
+            ['label' => 'Ditolak', 'color' => '#ef4444', 'labelColor' => '#ef4444', 'count' => $pimpTotalDitolak],
+            ['label' => 'Terlambat', 'color' => '#ff6b6b', 'labelColor' => '#ff6b6b', 'count' => $pimpTotalTerlambat],
+            ['label' => 'Dibatalkan', 'color' => '#c1121f', 'labelColor' => '#e5484d', 'count' => $pimpTotalDibatalkan],
+        ];
+        $pimpTotalStatus = $pimpTotalDisetujui + $pimpTotalDitolak + $pimpTotalTerlambat + $pimpTotalDibatalkan;
+
+        // Tren Aktivitas 7/30 hari -- sama persis logikanya kayak
+        // $pimpTrenBuat di laporan-pimpinan.blade.php.
+        $pimpSuratSemuaTren = $suratMasuk->concat($suratTerkirim)->concat($suratArsip);
+        $pimpTrenBuat = function (int $n) use ($laporanPimpinanSatlak, $pimpSuratSemuaTren) {
+            return collect(range($n - 1, 0))->map(function ($k) use ($laporanPimpinanSatlak, $pimpSuratSemuaTren) {
+                $day = now()->startOfDay()->subDays($k);
+                $lap = $laporanPimpinanSatlak->filter(fn ($l) => $l->created_at?->isSameDay($day))->count();
+                $sur = $pimpSuratSemuaTren->filter(fn ($s) => $s->created_at?->isSameDay($day))->count();
+                return ['label' => $day->translatedFormat('d M'), 'laporan' => $lap, 'surat' => $sur, 'total' => $lap + $sur];
+            })->values();
+        };
+        $pimpTrenRentang = ['7' => $pimpTrenBuat(7), '30' => $pimpTrenBuat(30)];
+
+        $pimpSuratTerbaru = $pimpSuratSemuaTren->sortByDesc('created_at')->take(5)->values();
+        $pimpKendalaTerbaru = $kendalaMasuk->concat($kendalaArsip)->sortByDesc('created_at')->take(5)->values();
+
+        return response()->json([
+            'kpis_html' => view('siberad.dashboards.partials.pimpinan-kpi-cards', [
+                'pimpTotalPelaporan' => $pimpTotalPelaporan,
+                'laporanPimpinanSatlak' => $laporanPimpinanSatlak,
+                'suratMasuk' => $suratMasuk,
+                'suratTerkirim' => $suratTerkirim,
+                'suratArsip' => $suratArsip,
+                'kendalaMasuk' => $kendalaMasuk,
+                'kendalaArsip' => $kendalaArsip,
+            ])->render(),
+            'status_bd_html' => view('siberad.dashboards.partials.pimpinan-status-distribusi-list', [
+                'pimpStatusDist' => $pimpStatusDist,
+            ])->render(),
+            'status_donut_total' => $pimpTotalStatus,
+            'status_donut_counts' => [$pimpTotalDisetujui, $pimpTotalDitolak, $pimpTotalTerlambat, $pimpTotalDibatalkan],
+            'tren_data' => $pimpTrenRentang,
+            'surat_terbaru_html' => view('siberad.dashboards.partials.pimpinan-surat-terbaru-rows', [
+                'pimpSuratTerbaru' => $pimpSuratTerbaru,
+                'satuan' => $satuan,
+            ])->render(),
+            'kendala_terbaru_html' => view('siberad.dashboards.partials.pimpinan-kendala-terbaru-list', [
+                'pimpKendalaTerbaru' => $pimpKendalaTerbaru,
+            ])->render(),
+            'server_time' => now()->toIso8601String(),
+        ], 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
+    }
+
+    /**
      * "Total Pelaporan" (KPI Admin & Pimpinan, kolom Rekap Laporan, grafik
      * "Laporan per Satuan") dihitung PER PERIHAL -- 1 permintaan_laporan_id
      * (atau 1 baris tunggal tanpa Permintaan, key 'single-<id>') = 1 Perihal

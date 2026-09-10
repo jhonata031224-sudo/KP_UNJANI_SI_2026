@@ -67,6 +67,10 @@ Route::get('/dashboard', DashboardController::class)
     ->middleware('auth')
     ->name('dashboard');
 
+Route::get('/dashboard/pimpinan-kpi/realtime', [DashboardController::class, 'pimpinanKpiRealtime'])
+    ->middleware('auth')
+    ->name('dashboard.pimpinan-kpi.realtime');
+
 Route::post('/laporan', [LaporanController::class, 'store'])
     ->middleware(['auth', 'modul:laporan'])
     ->name('laporan.store');
