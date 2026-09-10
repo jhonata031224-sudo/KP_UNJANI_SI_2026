@@ -4255,79 +4255,50 @@
 
           /* ===== Modal editor pop-up (konten muncul saat kartu pintasan diklik) ===== */
 
-          /* FIX KRITIS: Backdrop-filter pada .sidebar & .topbar membuat new CSS
-             stacking context sehingga elemen position:fixed di luar tidak bisa
-             menembus/overlap mereka, terlepas dari z-index berapapun. Solusi:
-             nonaktifkan backdrop-filter secara sementara saat modal terbuka.
-             class lp-modal-lock sudah ditambahkan ke body oleh lpOpenModal(). */
           body.lp-modal-lock .sidebar,
           body.lp-modal-lock .topbar{
             backdrop-filter:none!important;
             -webkit-backdrop-filter:none!important;
           }
 
-          /* FIX KRITIS #2 (akar masalah sidebar & topbar TIDAK ikut blur
-             sama sekali walau FIX KRITIS di atas sudah dipasang):
-             ".content" (pembungkus form editor tempat modal ini berada)
-             punya "position:relative;z-index:1" -- ini bikin ".content"
-             jadi stacking context SENDIRI. Akibatnya z-index:200000 pada
-             ".lp-landing-modal-backdrop" cuma dibandingkan dengan elemen
-             LAIN di dalam ".content" (menang di situ), TAPI ".content"
-             sebagai satu kesatuan cuma "rank 1" saat dibandingkan dengan
-             ".sidebar" (rank 100010) di level ".shell" -- makanya modal
-             SELALU kalah tampil di belakang sidebar & topbar, seberapa pun
-             tinggi z-index di dalam modal. Solusi: pas modal kebuka,
-             naikkan sementara rank ".content" itu sendiri di atas sidebar
-             (100010) supaya modal yang bersarang di dalamnya baru bisa
-             benar-benar menembus & mem-blur sidebar/topbar. */
           body.lp-modal-lock .content{
             z-index:200001;
           }
 
           .lp-landing-modal-backdrop{
-            position:fixed;inset:0;z-index:200000;
-            background:rgba(15,23,42,.56);
-            backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
-            display:flex;align-items:center;justify-content:center;
-            padding:36px 16px;overflow:hidden;
+            position:fixed!important;inset:0!important;z-index:999999!important;
+            background:rgba(15,23,42,.64)!important;
+            backdrop-filter:blur(8px)!important;-webkit-backdrop-filter:blur(8px)!important;
+            display:flex!important;align-items:center!important;justify-content:center!important;
+            padding:24px 16px!important;overflow:hidden!important;
             opacity:0;pointer-events:none;visibility:hidden;
-            transition:opacity .25s cubic-bezier(.16,1,.3,1),visibility .25s ease;
+            transition:opacity .25s ease,visibility .25s ease;
           }
-          /* CATATAN FIX: sebelumnya backdrop ini pakai overflow-y:auto --
-             itu bikin BACKDROP (bukan body modal) yang jadi ikut bisa
-             discroll, sehingga (1) scrollbar-nya nongol di tepi viewport
-             (nembus lebar layar penuh, bukan di dalam kartu modal yang
-             rounded), dan (2) begitu discroll, flex align-items:center
-             "kalah" sama overflow-nya sehingga kartu modal kelihatan
-             mepet ke atas/bawah layar. Sekarang overflow di backdrop
-             dikunci "hidden" -- kartu modal (.lp-landing-modal-box) SELALU
-             dibatasi max-height di bawah supaya tetap utuh & center,
-             sementara scroll konten yang kepanjangan sepenuhnya jadi
-             tanggung jawab .lp-landing-modal-body (scrollbar-nya otomatis
-             ke-clip ikut sudut rounded box karena box punya
-             overflow:hidden). */
           .lp-landing-modal-backdrop.is-open{
-            opacity:1;pointer-events:auto;visibility:visible;
+            opacity:1!important;pointer-events:auto!important;visibility:visible!important;
           }
+
+          /* Ukuran popup modal SAMA PERSIS untuk ke-6 modal */
           .lp-landing-modal-box{
-            background:var(--panel);border:1px solid var(--border-strong);
-            border-radius:16px;width:100%;max-width:760px;
-            max-height:calc(100vh - 72px);
-            display:flex;flex-direction:column;overflow:hidden;
-            box-shadow:0 32px 80px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.05),0 2px 0 rgba(255,255,255,.04) inset;
+            background:var(--panel)!important;border:1px solid var(--border-strong)!important;
+            border-radius:16px!important;width:92vw!important;max-width:780px!important;
+            height:84vh!important;max-height:680px!important;min-height:500px!important;
+            display:flex!important;flex-direction:column!important;overflow:hidden!important;
+            box-shadow:0 30px 90px rgba(0,0,0,.75),0 0 0 1px rgba(255,255,255,.07)!important;
             transform:scale(.96) translateY(10px);
-            transition:transform .26s cubic-bezier(.16,1,.3,1);
+            transition:transform .25s cubic-bezier(.16,1,.3,1);
+            position:relative!important;
           }
           .lp-landing-modal-backdrop.is-open .lp-landing-modal-box{
             transform:scale(1) translateY(0);
           }
 
-          /* -- Header modal: ringkas, ikon + judul + deskripsi + tombol tutup -- */
+          /* -- Header modal: ringkas, ikon + judul + deskripsi + tombol tutup (tetap di atas) -- */
           .lp-landing-modal-head{
-            flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
-            gap:12px;padding:16px 20px;
-            border-bottom:1px solid var(--border-soft);
-            background:linear-gradient(to bottom,var(--panel-alt),var(--panel));
+            flex:0 0 auto!important;display:flex!important;align-items:center!important;justify-content:space-between!important;
+            gap:14px!important;padding:16px 22px!important;
+            border-bottom:1px solid var(--border-soft)!important;
+            background:linear-gradient(to bottom,var(--panel-alt),var(--panel))!important;
           }
           .lp-landing-modal-head-left{
             display:flex;align-items:center;gap:12px;min-width:0;
@@ -4356,52 +4327,168 @@
             background:var(--red-dim);transform:rotate(90deg);
           }
 
-          /* -- Body modal: scrollable, padding nyaman --
-             Berlaku SERAGAM untuk keenam kartu pintasan (Latar Belakang
-             Beranda, Judul & Deskripsi Utama, Tentang & Profil Instansi,
-             Fitur Unggulan, Informasi Kontak, Sosial Media) -- semuanya
-             dipindahkan ke satu #lpLandingModalBody yang sama, jadi kalau
-             kontennya panjang (mis. "Tentang & Profil Instansi" yang
-             gabungan 4 sub-bagian, atau "Makna Logo" 10 poin), body ini
-             yang men-scroll, BUKAN box modal-nya -- box tetap utuh &
-             center persis seperti contoh SS "Judul & Deskripsi Utama".
-             Ditambah efek fade halus di tepi atas/bawah (scroll shadow)
-             supaya kelihatan jelas "masih ada konten di bawah/atas" saat
-             modal-nya panjang -- bisa di-swipe/scroll ke atas-bawah. */
+          /* -- Body modal: scrollable seragam, scrollbar vertikal aktif & rapi -- */
           .lp-landing-modal-body{
-            flex:1 1 auto;overflow-y:auto;padding:20px 22px;
-            scrollbar-width:thin;scrollbar-color:var(--border-soft) transparent;
-            -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
-            background-image:
-              linear-gradient(var(--panel) 40%, rgba(0,0,0,0)),
-              linear-gradient(rgba(0,0,0,0), var(--panel) 60%) 0 100%,
-              linear-gradient(to bottom, rgba(0,0,0,.10), rgba(0,0,0,0)),
-              linear-gradient(to top, rgba(0,0,0,.10), rgba(0,0,0,0)) 0 100%;
-            background-repeat:no-repeat;
-            background-color:var(--panel);
-            background-size:100% 28px,100% 28px,100% 10px,100% 10px;
-            background-attachment:local,local,scroll,scroll;
+            flex:1 1 auto!important;
+            min-height:0!important; /* Wajib min-height:0 pada flex child agar memicu scrollbar vertikal */
+            height:auto!important;
+            overflow-y:auto!important; /* Scrollbar vertikal aktif */
+            overflow-x:hidden!important;
+            padding:22px 24px!important;
+            scrollbar-width:thin!important;
+            scrollbar-color:var(--gold) rgba(0,0,0,.25)!important;
+            -webkit-overflow-scrolling:touch!important;
+            overscroll-behavior:contain!important;
           }
-          .lp-landing-modal-body::-webkit-scrollbar{width:5px;}
-          .lp-landing-modal-body::-webkit-scrollbar-track{background:transparent;}
-          .lp-landing-modal-body::-webkit-scrollbar-thumb{background:var(--border-soft);border-radius:999px;}
+          .lp-landing-modal-body::-webkit-scrollbar{width:8px!important;}
+          .lp-landing-modal-body::-webkit-scrollbar-track{background:rgba(0,0,0,.2)!important;border-radius:6px!important;}
+          .lp-landing-modal-body::-webkit-scrollbar-thumb{background:var(--gold)!important;border-radius:6px!important;}
+          .lp-landing-modal-body::-webkit-scrollbar-thumb:hover{background:var(--gold-bright,#ffb300)!important;}
+
+          /* Sub-panel di dalam modal (mis. Makna Logo, Moto, Identitas Instansi, Fitur 1..4) */
           .lp-landing-modal-body .lp-tab-panel{
-            display:block!important;padding:0!important;background:none!important;
-            border:none!important;box-shadow:none!important;animation:lpFadeIn .18s ease;
+            display:block!important;
+            background:var(--panel-alt)!important;
+            border:1px solid var(--border-soft)!important;
+            border-radius:12px!important;
+            padding:18px 20px!important;
+            margin-bottom:16px!important;
+            box-shadow:none!important;
+            animation:lpFadeIn .18s ease;
           }
-          .lp-landing-modal-body .lp-tab-panel .panel-head{
-            display:none!important;
-          }
-          .lp-landing-modal-body .lp-tab-panel.panel + .lp-tab-panel.panel{
-            margin-top:18px;padding-top:18px!important;border-top:1px dashed var(--border-soft)!important;
+          .lp-landing-modal-body .lp-tab-panel:last-child{
+            margin-bottom:0!important;
           }
 
-          /* -- Footer modal: compact, info kiri + tombol kanan -- */
+          /* Header sub-panel di dalam modal */
+          .lp-landing-modal-body .panel-head{
+            display:block!important;
+            margin-bottom:14px!important;
+            padding-bottom:10px!important;
+            border-bottom:1px solid var(--border-soft)!important;
+          }
+          /* Khusus panel tunggal (seperti Judul & Deskripsi Utama), sembunyikan panel-head agar tidak dobel */
+          .lp-landing-modal-body .lp-tab-panel:only-child > .panel-head{
+            display:none!important;
+          }
+          .lp-landing-modal-body .panel-head h3{
+            font-size:13.5px!important;
+            font-weight:700!important;
+            color:var(--text)!important;
+            letter-spacing:.02em!important;
+            margin:0 0 4px!important;
+            display:flex!important;
+            align-items:center!important;
+            gap:8px!important;
+          }
+          .lp-landing-modal-body .panel-head h3::before{
+            content:'';
+            width:6px;height:6px;border-radius:50%;
+            background:var(--gold);
+            flex-shrink:0;
+          }
+          .lp-landing-modal-body .panel-head p{
+            font-size:11.5px!important;
+            color:var(--text-muted)!important;
+            margin:0!important;
+            line-height:1.5!important;
+          }
+
+          /* Kartu item di dalam modal (Makna Logo poin 1..10, kartu sosial media, dsb) */
+          .lp-landing-modal-body .lp-card,
+          .lp-landing-modal-body .lp-sosmed-row{
+            background:var(--panel)!important;
+            border:1px solid var(--border-soft)!important;
+            border-radius:10px!important;
+            padding:14px 16px!important;
+            margin-bottom:12px!important;
+          }
+          .lp-landing-modal-body .lp-card:last-child,
+          .lp-landing-modal-body .lp-sosmed-row:last-child{
+            margin-bottom:0!important;
+          }
+          .lp-landing-modal-body .lp-card-title{
+            font-size:11.5px!important;
+            font-weight:700!important;
+            color:var(--gold-bright,#ffb300)!important;
+            margin-bottom:8px!important;
+            text-transform:uppercase!important;
+            letter-spacing:.05em!important;
+            display:flex!important;
+            align-items:center!important;
+            gap:6px!important;
+          }
+          .lp-landing-modal-body .lp-card-desc{
+            font-size:11.5px!important;
+            color:var(--text-muted)!important;
+            margin:0 0 12px!important;
+            line-height:1.5!important;
+          }
+
+          /* Form Grid & Input konsisten di dalam modal */
+          .lp-landing-modal-body .form-grid{
+            display:grid!important;
+            grid-template-columns:repeat(2,minmax(0,1fr))!important;
+            gap:12px 14px!important;
+          }
+          .lp-landing-modal-body .form-field.full{
+            grid-column:1 / -1!important;
+          }
+          .lp-landing-modal-body .form-field label{
+            display:block!important;
+            font-size:12px!important;
+            font-weight:600!important;
+            color:var(--text)!important;
+            margin-bottom:6px!important;
+          }
+          .lp-landing-modal-body .form-field input,
+          .lp-landing-modal-body .form-field textarea,
+          .lp-landing-modal-body .form-field select{
+            width:100%!important;
+            box-sizing:border-box!important;
+            border-radius:8px!important;
+            padding:9px 12px!important;
+            font-size:13px!important;
+            background:var(--surface,#1e2621)!important;
+            border:1px solid var(--border-soft)!important;
+            color:var(--text)!important;
+          }
+          .lp-landing-modal-body .form-field input:focus,
+          .lp-landing-modal-body .form-field textarea:focus{
+            border-color:var(--gold)!important;
+            outline:none!important;
+            box-shadow:0 0 0 2px rgba(255,152,0,.2)!important;
+          }
+          .lp-landing-modal-body .form-field small{
+            display:block!important;
+            font-size:11px!important;
+            color:var(--text-muted)!important;
+            margin-top:4px!important;
+            line-height:1.4!important;
+          }
+          .lp-landing-modal-body .lp-dynamic-section{
+            display:flex!important;
+            flex-direction:column!important;
+            gap:14px!important;
+            margin-top:14px!important;
+          }
+          .lp-landing-modal-body .lp-dynamic-section .lp-card{
+            margin:0!important;
+          }
+          .lp-landing-modal-body .lp-hero-image-row{
+            display:flex!important;
+            align-items:center!important;
+            gap:14px!important;
+            flex-wrap:wrap!important;
+            margin:8px 0!important;
+          }
+
+          /* -- Footer modal: compact, info kiri + tombol kanan (tetap di bawah) -- */
           .lp-landing-modal-foot{
-            flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
-            gap:12px;padding:12px 20px;
-            border-top:1px solid var(--border-soft);
-            background:var(--panel-alt);
+            flex:0 0 auto!important;display:flex!important;align-items:center!important;justify-content:space-between!important;
+            gap:12px!important;padding:13px 22px!important;
+            border-top:1px solid var(--border-soft)!important;
+            background:var(--panel-alt)!important;
           }
           .lp-landing-modal-notice{
             display:flex;align-items:center;gap:6px;
@@ -4414,11 +4501,11 @@
 
           body.lp-modal-lock{overflow:hidden;}
           @media(max-width:640px){
-            .lp-landing-modal-backdrop{padding:0;align-items:flex-end;}
             .lp-landing-modal-box{
-              max-width:100%;max-height:92vh;border-radius:16px 16px 0 0;
+              width:96vw!important;height:90vh!important;max-height:90vh!important;border-radius:14px!important;
             }
-            .lp-landing-modal-head,.lp-landing-modal-body,.lp-landing-modal-foot{padding:14px 16px;}
+            .lp-landing-modal-body .form-grid{grid-template-columns:1fr!important;}
+            .lp-landing-modal-head,.lp-landing-modal-body,.lp-landing-modal-foot{padding:14px 16px!important;}
             .lp-landing-modal-foot{flex-direction:column-reverse;align-items:stretch;gap:10px;}
             .lp-landing-modal-foot-actions{flex-direction:column-reverse;gap:8px;}
             .lp-landing-modal-foot-actions .btn{width:100%;justify-content:center;}
@@ -5092,6 +5179,9 @@
             var overviewCards = form.querySelectorAll('[data-lp-tab]');
             var previewSections = document.querySelectorAll('[data-lp-preview-section]');
             var modalBackdrop = document.getElementById('lpLandingModalBackdrop');
+            if (modalBackdrop && modalBackdrop.parentElement !== document.body) {
+              document.body.appendChild(modalBackdrop);
+            }
             var modalBody = document.getElementById('lpLandingModalBody');
             var modalTitle = document.getElementById('lpLandingModalTitle');
             var modalDesc = document.getElementById('lpLandingModalDesc');
@@ -5157,7 +5247,10 @@
               modalBackdrop.classList.remove('is-open');
               modalBackdrop.setAttribute('aria-hidden', 'true');
               document.body.classList.remove('lp-modal-lock');
-              if (modalBody) modalBody.innerHTML = '';
+              if (modalBody) {
+                modalBody.innerHTML = '';
+                modalBody.scrollTop = 0;
+              }
               if (lpOpenCard) {
                 lpOpenCard.classList.remove('lp-ov-open');
                 lpOpenCard = null;
@@ -5199,6 +5292,7 @@
               document.body.classList.add('lp-modal-lock');
               card.classList.add('lp-ov-open');
               lpOpenCard = card;
+              if (modalBody) modalBody.scrollTop = 0;
 
               var focusName = moved[0].dataset.lpTabPanel;
               previewSections.forEach(function(s){ s.classList.toggle('is-focus', s.dataset.lpPreviewSection === focusName); });
@@ -5217,6 +5311,7 @@
             if (modalSaveBtn) {
               modalSaveBtn.addEventListener('click', function(e){
                 e.preventDefault();
+                if (typeof lpRestorePanelsToStore === 'function') lpRestorePanelsToStore();
                 if (form.requestSubmit) {
                   form.requestSubmit(lpSubmitBtn);
                 } else {
