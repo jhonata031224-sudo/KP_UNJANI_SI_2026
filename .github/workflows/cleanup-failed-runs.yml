@@ -1,0 +1,48 @@
+name: Bersihkan Histori Run Gagal
+
+# Dijalankan manual dari tab Actions -> pilih workflow ini -> Run workflow.
+# Tidak berjalan otomatis, supaya tidak menghapus apa pun tanpa sengaja.
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Hapus run gagal khusus branch ini (kosongkan untuk semua branch)"
+        required: false
+        default: "refactor-fokus-laporan"
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hapus semua run berstatus failure/cancelled
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_FILTER: ${{ github.event.inputs.branch }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -e
+          echo "Mencari run gagal di repo $REPO (branch filter: '${BRANCH_FILTER:-semua}')..."
+
+          for STATUS in failure cancelled; do
+            if [ -n "$BRANCH_FILTER" ]; then
+              IDS=$(gh run list -R "$REPO" --branch "$BRANCH_FILTER" --status "$STATUS" --limit 500 --json databaseId -q '.[].databaseId')
+            else
+              IDS=$(gh run list -R "$REPO" --status "$STATUS" --limit 500 --json databaseId -q '.[].databaseId')
+            fi
+
+            if [ -z "$IDS" ]; then
+              echo "Tidak ada run berstatus $STATUS."
+              continue
+            fi
+
+            for ID in $IDS; do
+              echo "Menghapus run $ID (status: $STATUS)..."
+              gh run delete "$ID" -R "$REPO" || echo "  gagal hapus $ID, lanjut."
+            done
+          done
+
+          echo "Selesai. Cek ulang tab Actions -- run gagal seharusnya sudah hilang."
