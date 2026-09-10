@@ -4275,17 +4275,30 @@
             background:rgba(15,23,42,.56);
             backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
             display:flex;align-items:center;justify-content:center;
-            padding:20px 16px;overflow-y:auto;
+            padding:36px 16px;overflow:hidden;
             opacity:0;pointer-events:none;visibility:hidden;
             transition:opacity .25s cubic-bezier(.16,1,.3,1),visibility .25s ease;
           }
+          /* CATATAN FIX: sebelumnya backdrop ini pakai overflow-y:auto --
+             itu bikin BACKDROP (bukan body modal) yang jadi ikut bisa
+             discroll, sehingga (1) scrollbar-nya nongol di tepi viewport
+             (nembus lebar layar penuh, bukan di dalam kartu modal yang
+             rounded), dan (2) begitu discroll, flex align-items:center
+             "kalah" sama overflow-nya sehingga kartu modal kelihatan
+             mepet ke atas/bawah layar. Sekarang overflow di backdrop
+             dikunci "hidden" -- kartu modal (.lp-landing-modal-box) SELALU
+             dibatasi max-height di bawah supaya tetap utuh & center,
+             sementara scroll konten yang kepanjangan sepenuhnya jadi
+             tanggung jawab .lp-landing-modal-body (scrollbar-nya otomatis
+             ke-clip ikut sudut rounded box karena box punya
+             overflow:hidden). */
           .lp-landing-modal-backdrop.is-open{
             opacity:1;pointer-events:auto;visibility:visible;
           }
           .lp-landing-modal-box{
             background:var(--panel);border:1px solid var(--border-strong);
             border-radius:16px;width:100%;max-width:760px;
-            max-height:calc(100vh - 40px);
+            max-height:calc(100vh - 72px);
             display:flex;flex-direction:column;overflow:hidden;
             box-shadow:0 32px 80px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.05),0 2px 0 rgba(255,255,255,.04) inset;
             transform:scale(.96) translateY(10px);
