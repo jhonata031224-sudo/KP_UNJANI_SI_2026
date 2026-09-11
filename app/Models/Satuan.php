@@ -52,6 +52,8 @@ class Satuan extends Model
     public const MODUL_HAK_AKSES = [
         'laporan' => 'Kirim & Kelola Laporan',
         'monitoring' => 'Monitoring Laporan & Aktivitas',
+        'surat' => 'Surat Menyurat',
+        'kendala' => 'Laporan Kendala',
         'notifikasi' => 'Notifikasi',
     ];
 
@@ -64,6 +66,8 @@ class Satuan extends Model
     public const MODUL_HAK_AKSES_DESKRIPSI = [
         'laporan' => 'Bisa membuat & mengirim laporan kegiatan ke satuan lain, lalu memantau statusnya (menunggu, disetujui, revisi, atau ditolak).',
         'monitoring' => 'Bisa memantau (lihat saja, tanpa mengelola) laporan dan aktivitas dari satuan-satuan lain.',
+        'surat' => 'Akses menu Surat: kirim surat keluar (bagi yang berhak), lihat surat masuk, dan arsip surat yang sudah dikonfirmasi.',
+        'kendala' => 'Akses menu Kendala: kirim laporan kendala ke Danpus (Kasansi), atau lihat tembusan kendala dari satuan lain (Satlak & Sdir).',
         'notifikasi' => 'Menerima notifikasi lonceng otomatis di dashboard saat ada laporan baru, permintaan laporan, atau aktivitas penting lainnya.',
     ];
 
@@ -73,19 +77,27 @@ class Satuan extends Model
      * tidak lagi sama untuk seluruh role.
      */
     public const MODUL_HAK_AKSES_PER_ROLE = [
-        'ADMIN' => ['laporan', 'monitoring', 'notifikasi'],
-        'DANPUS' => ['laporan', 'monitoring', 'notifikasi'],
-        'WADAN' => ['laporan', 'monitoring', 'notifikasi'],
-        'SATLAKKAL' => ['laporan', 'monitoring', 'notifikasi'],
-        'SATLAKSISOS' => ['laporan', 'notifikasi'],
-        'SATLAKDAK' => ['laporan', 'monitoring', 'notifikasi'],
-        'SATLAKDUKTEK' => ['laporan', 'monitoring', 'notifikasi'],
-        'BINFUNG' => ['laporan', 'monitoring', 'notifikasi'],
-        'BINUM' => ['laporan', 'monitoring', 'notifikasi'],
-        'DIKLAT' => ['laporan', 'monitoring', 'notifikasi'],
-        'BINMAT' => ['laporan', 'monitoring', 'notifikasi'],
-        'POKANALIS' => ['laporan', 'monitoring', 'notifikasi'],
-        'URDAL' => ['laporan', 'monitoring', 'notifikasi'],
+        // Admin: tidak ditampilkan di UI hak akses (selalu full akses)
+        'ADMIN'       => ['laporan', 'monitoring', 'surat', 'kendala', 'notifikasi'],
+        // Pimpinan: akses surat & kendala (terima kendala, surat masuk/arsip)
+        'DANPUS'      => ['laporan', 'monitoring', 'surat', 'kendala', 'notifikasi'],
+        'WADAN'       => ['laporan', 'monitoring', 'surat', 'kendala', 'notifikasi'],
+        // 4 Satlak operasional: surat (masuk/arsip) + kendala (tembusan)
+        'SATLAKKAL'   => ['laporan', 'monitoring', 'surat', 'kendala', 'notifikasi'],
+        'SATLAKSISOS' => ['laporan', 'surat', 'kendala', 'notifikasi'],
+        'SATLAKDAK'   => ['laporan', 'monitoring', 'surat', 'kendala', 'notifikasi'],
+        'SATLAKDUKTEK'=> ['laporan', 'monitoring', 'surat', 'kendala', 'notifikasi'],
+        // 4 Sdir/pembinaan: surat (masuk/arsip) + kendala (tembusan)
+        'BINFUNG'     => ['laporan', 'monitoring', 'surat', 'kendala', 'notifikasi'],
+        'BINUM'       => ['laporan', 'monitoring', 'surat', 'kendala', 'notifikasi'],
+        'DIKLAT'      => ['laporan', 'monitoring', 'surat', 'kendala', 'notifikasi'],
+        'BINMAT'      => ['laporan', 'monitoring', 'surat', 'kendala', 'notifikasi'],
+        // Unsur pembantu/pelayanan: surat saja (tidak terlibat alur kendala)
+        'POKANALIS'   => ['laporan', 'monitoring', 'surat', 'notifikasi'],
+        'URDAL'       => ['laporan', 'monitoring', 'surat', 'notifikasi'],
+        // 21 Kasansi (Kotama): surat + kendala (pengirim kendala ke Danpus)
+        // -- key dinamis tidak ada di sini; fallback array_keys(MODUL_HAK_AKSES)
+        // akan meng-include surat & kendala secara otomatis untuk kode Kotama.
     ];
 
     public static function modulHakAksesUntukRole(?string $kode): array
