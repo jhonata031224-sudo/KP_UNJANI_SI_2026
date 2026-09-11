@@ -80,6 +80,12 @@
         #notifDropdown .siberad-notif-item.is-removing{overflow:hidden;transition:background .15s ease,max-height .22s ease,padding .22s ease,opacity .18s ease,border-color .22s ease;max-height:0!important;padding-top:0;padding-bottom:0;opacity:0;border-color:transparent;pointer-events:none;}
         #notifDropdown .siberad-notif-body{min-width:0;}
         #notifDropdown .siberad-notif-item.is-clickable{cursor:pointer;}
+        /* Titik penanda kecil di kiri untuk notif yang BELUM dibaca. Yang
+           sudah dibaca (is-read) diredupin dikit supaya beda dari yang
+           belum, tapi isinya tetap utuh & tetap kelihatan di daftar. */
+        #notifDropdown .siberad-notif-item.is-unread{padding-left:26px;}
+        #notifDropdown .siberad-notif-item.is-unread::before{content:'';position:absolute;left:12px;top:18px;width:7px;height:7px;border-radius:50%;background:var(--gold-bright,#d4af37);}
+        #notifDropdown .siberad-notif-item.is-read p{font-weight:500;color:var(--text-dim);}
         #notifDropdown .siberad-notif-item p{margin:0;font-size:12.5px;font-weight:600;line-height:1.45;color:var(--text);word-break:break-word;}
         #notifDropdown .siberad-notif-item small{display:block;margin-top:4px;font-size:10.5px;font-weight:500;color:var(--text-dim);}
         #notifDropdown .siberad-notif-remove{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:0;border-radius:7px;background:transparent;color:var(--text-dim);cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;transition:background .15s ease,color .15s ease;}
@@ -93,6 +99,7 @@
     }
 
     var deleteUrlBase = '{{ url('/notifikasi') }}/';
+    var readUrlBaseFn = function (id) { return '{{ url('/notifikasi') }}/' + encodeURIComponent(id) + '/baca'; };
     var pollUrl = '{{ route('notifikasi.realtime') }}';
     var csrfMeta = document.querySelector('meta[name="csrf-token"]');
     var csrfToken = csrfMeta ? csrfMeta.content : '{{ csrf_token() }}';
@@ -154,8 +161,8 @@
       // jadi rusak (ParseError "Unclosed '[' does not match ')'"). Makanya
       // array-nya dirakit dulu di variabel biasa di sini, baru @json()
       // dipanggil dengan satu variabel tunggal (tanpa koma di levelnya).
-      $__siberadNotifications = auth()->user()?->unreadNotifications?->take(20)?->map(function ($n) {
-        return ['id' => $n->id, 'message' => $n->data['pesan'] ?? 'Status laporan diperbarui.', 'time' => optional($n->created_at)->diffForHumans(), 'url' => $n->data['url'] ?? null];
+      $__siberadNotifications = auth()->user()?->notifications?->take(20)?->map(function ($n) {
+        return ['id' => $n->id, 'message' => $n->data['pesan'] ?? 'Status laporan diperbarui.', 'time' => optional($n->created_at)->diffForHumans(), 'url' => $n->data['url'] ?? null, 'read' => ! is_null($n->read_at)];
       })->values() ?? [];
     @endphp
     var notifications = @json($__siberadNotifications);
@@ -179,15 +186,50 @@
       return div.innerHTML;
     }
 
+    function unreadCount() {
+      var count = 0;
+      for (var i = 0; i < notifications.length; i++) if (!notifications[i].read) count++;
+      return count;
+    }
+
     function updateBadge() {
       var badge = button.querySelector('.siberad-notif-badge');
       if (!badge) return;
-      if (notifications.length > 0) {
-        badge.textContent = notifications.length > 99 ? '99+' : String(notifications.length);
+      var count = unreadCount();
+      if (count > 0) {
+        badge.textContent = count > 99 ? '99+' : String(count);
         badge.style.display = 'block';
       } else {
         badge.style.display = 'none';
       }
+    }
+
+    // Optimistic sama seperti removeNotification: begitu notifikasi (yang
+    // punya tujuan/url) diklik, badge langsung berkurang di klien & request
+    // tandai-dibaca jalan di background -- tapi item-nya SENGAJA tidak
+    // dihapus dari daftar, cuma diredupin (class .is-read), biar isinya
+    // tetap kelihatan. Kalau request gagal, poll berikutnya (tiap 3 detik)
+    // otomatis munculin lagi statusnya sebagai belum dibaca.
+    function markNotificationRead(id, itemEl) {
+      var target = null;
+      for (var i = 0; i < notifications.length; i++) {
+        if (String(notifications[i].id) === String(id)) { target = notifications[i]; break; }
+      }
+      if (!target || target.read) return;
+      target.read = true;
+      updateBadge();
+      if (itemEl) { itemEl.classList.remove('is-unread'); itemEl.classList.add('is-read'); }
+      fetch(readUrlBaseFn(id), {
+        method: 'PATCH',
+        credentials: 'same-origin',
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': csrfToken
+        }
+      }).then(function (response) {
+        if (response.status === 401) tampilkanSesiBerakhir();
+      }).catch(function () {});
     }
 
     // Optimistic: badge langsung berkurang & request hapusnya jalan di
@@ -278,13 +320,14 @@
         notifications.forEach(function (notification) {
           var item = document.createElement('div');
           item.className = 'siberad-notif-item';
+          if (!notification.read) item.classList.add('is-unread'); else item.classList.add('is-read');
           if (notification.url) {
             item.classList.add('is-clickable');
             item.setAttribute('role', 'button');
             item.setAttribute('tabindex', '0');
-            item.addEventListener('click', function () { goToNotifikasi(notification.url); });
+            item.addEventListener('click', function () { markNotificationRead(notification.id, item); goToNotifikasi(notification.url); });
             item.addEventListener('keydown', function (event) {
-              if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); goToNotifikasi(notification.url); }
+              if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); markNotificationRead(notification.id, item); goToNotifikasi(notification.url); }
             });
           }
           item.innerHTML =

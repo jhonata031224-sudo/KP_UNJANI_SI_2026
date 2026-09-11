@@ -234,6 +234,9 @@ Route::get('/notifikasi/realtime', [NotifikasiController::class, 'realtime'])
 Route::delete('/notifikasi/{notifikasi}', [NotifikasiController::class, 'hapus'])
     ->middleware(['auth', 'modul:notifikasi'])
     ->name('notifikasi.hapus');
+Route::patch('/notifikasi/{notifikasi}/baca', [NotifikasiController::class, 'baca'])
+    ->middleware(['auth', 'modul:notifikasi'])
+    ->name('notifikasi.baca');
 
 // Push subscription (notifikasi di luar sistem/browser tertutup) --
 // sengaja TIDAK diikat modul:notifikasi, karena on/off-nya diatur lewat
