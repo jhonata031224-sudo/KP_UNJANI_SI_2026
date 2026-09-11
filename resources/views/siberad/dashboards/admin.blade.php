@@ -5329,8 +5329,10 @@
               var wrap = document.getElementById('lpPvFitur');
               wrap.innerHTML = '';
               for(var i=0;i<4;i++){
-                var judul = form.querySelector('[data-lp="fitur_judul_'+i+'"]');
-                var desk = form.querySelector('[data-lp="fitur_deskripsi_'+i+'"]');
+                // document, bukan form -- lihat catatan di applyBgType() di
+                // bawah: elemen ini bisa sedang dipindah ke dalam modal.
+                var judul = document.querySelector('[data-lp="fitur_judul_'+i+'"]');
+                var desk = document.querySelector('[data-lp="fitur_deskripsi_'+i+'"]');
                 if(!judul) continue;
                 var card = document.createElement('div');
                 card.className = 'lp-feature-card';
@@ -5346,10 +5348,10 @@
               wrap.innerHTML = '';
               var i = 0;
               while (true) {
-                var platformEl = form.querySelector('[data-lp="sosial_platform_'+i+'"]');
+                var platformEl = document.querySelector('[data-lp="sosial_platform_'+i+'"]');
                 if(!platformEl) break;
-                var labelEl = form.querySelector('[data-lp="sosial_label_'+i+'"]');
-                var urlEl = form.querySelector('[data-lp="sosial_url_'+i+'"]');
+                var labelEl = document.querySelector('[data-lp="sosial_label_'+i+'"]');
+                var urlEl = document.querySelector('[data-lp="sosial_url_'+i+'"]');
                 var url = urlEl ? urlEl.value.trim() : '';
                 if(url){
                   var chip = document.createElement('span');
@@ -5363,23 +5365,30 @@
             }
 
             function updatePreview(){
-              var heroBlurEl = form.querySelector('[data-lp="hero_blur_level"]');
-              var heroOverlayEl = form.querySelector('[data-lp="hero_overlay_intensity"]');
+              // document, bukan form -- panel section yang sedang dibuka di
+              // modal (lihat catatan di applyBgType() di bawah) sudah
+              // dipindah keluar dari <form>, jadi query lewat `form` bisa
+              // balik null utk field yang sedang diedit & bikin baris
+              // `.value` di bawah lempar TypeError (mematikan sisa
+              // pratinjau, padahal modal menjanjikan "otomatis
+              // tersinkronisasi ke Pratinjau Langsung").
+              var heroBlurEl = document.querySelector('[data-lp="hero_blur_level"]');
+              var heroOverlayEl = document.querySelector('[data-lp="hero_overlay_intensity"]');
               var lpPreviewHero = document.getElementById('lpPreviewHero');
               if(lpPreviewHero && heroBlurEl){ lpPreviewHero.style.setProperty('--lp-hero-blur', heroBlurEl.value + 'px'); }
               if(lpPreviewHero && heroOverlayEl){ lpPreviewHero.style.setProperty('--lp-hero-overlay', (heroOverlayEl.value / 100)); }
-              setText('lpPvEyebrow', form.querySelector('[data-lp="hero_eyebrow"]').value, 'PUSSIBERAD SISTEM PENDUKUNG OPERASIONAL');
-              setText('lpPvJudulAwal', form.querySelector('[data-lp="hero_judul_awal"]').value, 'SIBER');
-              setText('lpPvJudulAksen', form.querySelector('[data-lp="hero_judul_aksen"]').value, 'AD');
-              setText('lpPvSubjudul', form.querySelector('[data-lp="hero_subjudul"]').value);
-              setText('lpPvDeskripsi', form.querySelector('[data-lp="hero_deskripsi"]').value);
-              setText('lpPvTentang', form.querySelector('[data-lp="tentang_deskripsi"]').value);
-              setText('lpPvMotoJudul', form.querySelector('[data-lp="tentang_moto_judul"]').value);
-              setText('lpPvMoto', form.querySelector('[data-lp="tentang_moto_deskripsi"]').value);
-              setText('lpPvAlamat', form.querySelector('[data-lp="alamat"]').value);
-              setText('lpPvTelepon', form.querySelector('[data-lp="telepon_kontak"]').value);
-              setText('lpPvEmail', form.querySelector('[data-lp="email_kontak"]').value);
-              setText('lpPvWebsite', form.querySelector('[data-lp="website"]').value);
+              setText('lpPvEyebrow', document.querySelector('[data-lp="hero_eyebrow"]').value, 'PUSSIBERAD SISTEM PENDUKUNG OPERASIONAL');
+              setText('lpPvJudulAwal', document.querySelector('[data-lp="hero_judul_awal"]').value, 'SIBER');
+              setText('lpPvJudulAksen', document.querySelector('[data-lp="hero_judul_aksen"]').value, 'AD');
+              setText('lpPvSubjudul', document.querySelector('[data-lp="hero_subjudul"]').value);
+              setText('lpPvDeskripsi', document.querySelector('[data-lp="hero_deskripsi"]').value);
+              setText('lpPvTentang', document.querySelector('[data-lp="tentang_deskripsi"]').value);
+              setText('lpPvMotoJudul', document.querySelector('[data-lp="tentang_moto_judul"]').value);
+              setText('lpPvMoto', document.querySelector('[data-lp="tentang_moto_deskripsi"]').value);
+              setText('lpPvAlamat', document.querySelector('[data-lp="alamat"]').value);
+              setText('lpPvTelepon', document.querySelector('[data-lp="telepon_kontak"]').value);
+              setText('lpPvEmail', document.querySelector('[data-lp="email_kontak"]').value);
+              setText('lpPvWebsite', document.querySelector('[data-lp="website"]').value);
               renderFitur();
               renderSosial();
             }
@@ -5502,7 +5511,18 @@
             var lpPreviewHeroEl = document.getElementById('lpPreviewHero');
             var lpPreviewVideoEl = document.getElementById('lpPreviewHeroVideo');
             function applyBgType(type){
-              form.querySelectorAll('[data-lp-bg-type-panel]').forEach(function(panel){
+              // PENTING: query dari document, BUKAN dari `form`. Panel ini
+              // (beserta sub-panel Gambar/Video di dalamnya) dipindahkan
+              // (appendChild) ke dalam modal saat diklik, dan modal itu
+              // sendiri sudah dipindah jadi child langsung <body> -- jadi
+              // begitu modal terbuka, sub-panel ini sudah tidak lagi berada
+              // di dalam elemen `form`. Query lewat `form.querySelectorAll`
+              // jadi selalu kosong di dalam modal, sehingga toggle Gambar<->
+              // Video kelihatan macet (radio-nya tetap ke-highlight karena
+              // itu murni CSS :checked, tapi sub-panel yang tampil tidak
+              // pernah ikut ditukar). Query dari `document` aman karena
+              // atribut data-lp-bg-type-panel ini unik untuk section ini.
+              document.querySelectorAll('[data-lp-bg-type-panel]').forEach(function(panel){
                 panel.style.display = (panel.dataset.lpBgTypePanel === type) ? '' : 'none';
               });
               bgTypeRadios.forEach(function(radio){
