@@ -23,6 +23,11 @@ class NotifikasiController extends Controller
                 'id' => $n->id,
                 'message' => $n->data['pesan'] ?? 'Status laporan diperbarui.',
                 'time' => optional($n->created_at)->diffForHumans(),
+                // Dipakai lonceng notifikasi buat langsung buka tab/section
+                // yang relevan begitu notifikasinya diklik -- null kalau
+                // notifikasinya memang tidak punya tujuan spesifik (mis.
+                // pengumuman broadcast Admin).
+                'url' => $n->data['url'] ?? null,
             ])
             ->values();
 

@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\LaporanKendalaTembusan;
+use App\Models\Satuan;
 use App\Models\User;
 use App\Notifications\LaporanKendalaTembusanFeedbackDiterima;
+use App\Support\DecorativeSeparatorCleaner;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -19,6 +22,46 @@ use Illuminate\Http\Request;
  */
 class LaporanKendalaTembusanController extends Controller
 {
+    /**
+     * Dipoll berkala oleh sisi PENERIMA tembusan (4 Satlak/4 Sdir, mis.
+     * Duktek) di card grid #kcard-grid-tembusan & #kcard-grid-tembusan-arsip
+     * -- sebelum ini kartu tembusan cuma dirender sekali pas load halaman
+     * (beda dari lonceng notifikasi yang sudah realtime lewat
+     * NotifikasiController::realtime), jadi kendala baru dari Kasansi baru
+     * kelihatan setelah reload manual. Dipisah dari
+     * LaporanKendalaController::realtime() karena itu khusus Danpus/Wadan
+     * & Kasansi (403 kalau bukan salah satunya), sedangkan role di sini
+     * murni penerima tembusan.
+     */
+    public function realtime(Request $request): JsonResponse
+    {
+        $user = $request->user()->load('satuan');
+        $satuan = $user->satuan;
+        $kode = strtoupper((string) $satuan?->kode);
+        abort_unless($satuan && in_array($kode, Satuan::kodeTembusanKasansi(), true), 403);
+
+        $items = LaporanKendalaTembusan::with(['laporanKendala.satuan', 'laporanKendala.lampirans', 'dibacaOleh'])
+            ->where('satuan_id', $satuan->id)
+            ->latest()
+            ->get();
+
+        $masuk = $items->whereNull('feedback')->values();
+        $arsip = $items->whereNotNull('feedback')->values();
+
+        // Sama seperti items_html di LaporanKendalaController::realtime():
+        // normalisasi manual di sini supaya HTML kartu yang dikirim lewat
+        // JSON polling ini selalu sama persis dengan HTML kartu hasil
+        // render halaman pertama (yang sudah lewat middleware
+        // RemoveDecorativeSeparators), biar tidak kedip terus tanpa
+        // perubahan data beneran -- lihat DecorativeSeparatorCleaner.
+        return response()->json([
+            'masuk_items_html' => DecorativeSeparatorCleaner::clean($masuk->map(fn (LaporanKendalaTembusan $t) => view('siberad.dashboards.partials.laporan-kendala-tembusan-card', ['t' => $t, 'satuan' => $satuan])->render())->implode('')),
+            'arsip_items_html' => DecorativeSeparatorCleaner::clean($arsip->map(fn (LaporanKendalaTembusan $t) => view('siberad.dashboards.partials.laporan-kendala-tembusan-card', ['t' => $t, 'satuan' => $satuan])->render())->implode('')),
+        ], 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
+    }
+
     public function tandaiDibaca(Request $request, LaporanKendalaTembusan $laporanKendalaTembusan): RedirectResponse
     {
         $user = $request->user()->load('satuan');

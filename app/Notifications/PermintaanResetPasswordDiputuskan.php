@@ -30,6 +30,10 @@ class PermintaanResetPasswordDiputuskan extends Notification
             'permintaan_reset_password_id' => $this->permintaan->id,
             'status' => $this->permintaan->status,
             'pesan' => $pesan,
+            // Bukan section tab biasa -- 'profil-password' ditangani khusus
+            // di notification-controls.blade.php buat langsung buka modal
+            // "Pengaturan Akun" > tab Ganti Password milik penerima.
+            'url' => route('dashboard').'#profil-password',
         ];
     }
 }

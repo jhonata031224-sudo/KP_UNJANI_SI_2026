@@ -118,7 +118,7 @@ class DashboardController
             ->whereNotNull('sessions.user_id')
             ->leftJoin('users', 'sessions.user_id', '=', 'users.id')
             ->orderByDesc('sessions.last_activity')
-            ->get(['sessions.id','sessions.ip_address','sessions.user_agent','sessions.last_activity','users.name as user_name']);
+            ->get(['sessions.id','sessions.ip_address','sessions.user_agent','sessions.last_activity','sessions.login_at','users.name as user_name']);
         // Satuan pengirim laporan = semua satuan SELAIN Admin & Pimpinan
         // (Admin cuma pengelola sistem, Pimpinan/Danpus-Wadan cuma
         // menerima & meninjau, bukan pengirim). Dihitung otomatis dari
@@ -164,7 +164,10 @@ class DashboardController
             ->where('status', PermintaanResetPassword::STATUS_MENUNGGU)
             ->latest()
             ->first();
-        $laporanTerkirim = Laporan::with('tujuanSatuan')->where('satuan_id', $satuan->id)->latest()->get();
+        // 'lampirans' ikut di-eager-load (dulu cuma 'tujuanSatuan') --
+        // dibutuhkan hitungLaporanPerPerihal() di bawah buat "Total
+        // Pelaporan" kartu KPI Beranda Satuan (mirror kartu KPI Pimpinan).
+        $laporanTerkirim = Laporan::with(['tujuanSatuan', 'lampirans'])->where('satuan_id', $satuan->id)->latest()->get();
         // Urutan tampil: Admin -> Pimpinan -> Direktorat -> Satuan, lalu
         // urutan tetap per-kode di dalam kategori yang sama (lihat
         // Satuan::kunciUrutSatuan).
@@ -508,7 +511,67 @@ class DashboardController
             ->latest()
             ->get();
 
-        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk','tembusanArsip','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count(), 'ditolak' => $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count(), 'terlambat' => $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count(), 'dibatalkan' => $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count()]]);
+        // ===== 3 kartu KPI Beranda Satuan (Total Pelaporan/Surat/Kendala
+        // Kasansi) -- MIRROR PERSIS kartu KPI Beranda Pimpinan, pakai
+        // partial yang SAMA (partials/pimpinan-kpi-cards.blade.php) supaya
+        // style+algoritma sparkline gak pernah drift antara dua dashboard.
+        // Lihat satuanKpiRealtime() di bawah buat versi poll-nya.
+        // "Total Pelaporan" dihitung PER PERIHAL sama seperti versi
+        // Pimpinan (lihat hitungLaporanPerPerihal). "Total Kendala Kasansi"
+        // digabung dari DUA kemungkinan sumber tergantung peran satuan ini:
+        // Kasansi (21 Kotama) menghitung kendala yang MEREKA KIRIM
+        // ($kendalaTerkirim/$kendalaArsip), sedangkan penerima tembusan (4
+        // Satlak/4 Sdir) menghitung tembusan yang MASUK ke mereka
+        // ($tembusanMasuk/$tembusanArsip) -- kedua pasangan itu SALING
+        // EKSKLUSIF (satuan yang bukan keduanya dapat 4 koleksi kosong
+        // semua, hasil akhirnya 0, itu benar/bukan bug).
+        $satuanTotalPelaporan = $this->hitungLaporanPerPerihal($laporanTerkirim);
+        $kendalaKasansiKpiAktif = $kendalaTerkirim->concat($tembusanMasuk);
+        $kendalaKasansiKpiArsip = $kendalaArsip->concat($tembusanArsip);
+
+        // ===== "Distribusi Status Laporan" (donut) Beranda Satuan -- MIRROR
+        // PERSIS kartu Distribusi Status Laporan Beranda Pimpinan (4
+        // kategori sama: Disetujui/Ditolak/Terlambat/Dibatalkan, warna sama,
+        // partial pimpinan-status-distribusi-list.blade.php dipakai
+        // bareng). Bedanya cuma cakupan datanya: punya Pimpinan seluruh
+        // satuan pelaksana, punya di sini cuma laporan/permintaan MILIK
+        // satuan ini sendiri ($laporanTerkirim/$permintaanLaporanSemua yang
+        // udah ada). Dipisah jadi variabel sendiri (bukan langsung di
+        // dalam array 'stats' di bawah) supaya gak hitung ulang filter yang
+        // sama 2x -- 'stats' di bawah REUSE variabel ini juga.
+        $satuanDisetujui = $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count();
+        $satuanDitolak = $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count();
+        $satuanTerlambat = $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count();
+        $satuanDibatalkan = $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count();
+        $satuanStatusDist = [
+            ['label' => 'Disetujui', 'color' => '#22c55e', 'labelColor' => '#22c55e', 'count' => $satuanDisetujui],
+            ['label' => 'Ditolak', 'color' => '#ef4444', 'labelColor' => '#ef4444', 'count' => $satuanDitolak],
+            ['label' => 'Terlambat', 'color' => '#ff6b6b', 'labelColor' => '#ff6b6b', 'count' => $satuanTerlambat],
+            ['label' => 'Dibatalkan', 'color' => '#c1121f', 'labelColor' => '#e5484d', 'count' => $satuanDibatalkan],
+        ];
+        $satuanTotalStatus = $satuanDisetujui + $satuanDitolak + $satuanTerlambat + $satuanDibatalkan;
+
+        // ===== "Surat Terbaru" & "Kendala Kasansi Terbaru" Beranda Satuan
+        // -- MIRROR PERSIS 2 kartu yang sama di Beranda Pimpinan, reuse
+        // partial yang SAMA (pimpinan-surat-terbaru-rows.blade.php &
+        // pimpinan-kendala-terbaru-list.blade.php) apa adanya.
+        // "Surat Terbaru" = 5 surat (masuk+terkirim+arsip) MILIK SATUAN INI
+        // paling baru -- pola sama persis $pimpSuratTerbaru Pimpinan.
+        $satuanSuratTerbaru = $suratMasuk->concat($suratTerkirim)->concat($suratArsip)->sortByDesc('created_at')->take(5)->values();
+        // "Kendala Kasansi Terbaru" sumbernya tergantung peran (SAMA logic
+        // saling-eksklusif kayak $kendalaKasansiKpiAktif/Arsip di atas),
+        // TAPI partial ini butuh row LaporanKendala ASLI (->perihal/->status/
+        // ->satuan), BUKAN LaporanKendalaTembusan (field-nya beda, gak ada
+        // ->perihal/->status langsung) -- makanya utk penerima tembusan,
+        // di-map ke relasi ->laporanKendala (sudah eager-loaded di atas via
+        // 'laporanKendala.satuan') dulu, BUKAN pakai $tembusanMasukSemua
+        // mentah.
+        $satuanKendalaTerbaruSumber = $isKasansi
+            ? $kendalaTerkirimSemua
+            : $tembusanMasukSemua->pluck('laporanKendala')->filter()->values();
+        $satuanKendalaTerbaru = $satuanKendalaTerbaruSumber->sortByDesc('created_at')->take(5)->values();
+
+        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk','tembusanArsip','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'satuanTotalPelaporan' => $satuanTotalPelaporan, 'kendalaKasansiKpiAktif' => $kendalaKasansiKpiAktif, 'kendalaKasansiKpiArsip' => $kendalaKasansiKpiArsip, 'satuanStatusDist' => $satuanStatusDist, 'satuanTotalStatus' => $satuanTotalStatus, 'satuanSuratTerbaru' => $satuanSuratTerbaru, 'satuanKendalaTerbaru' => $satuanKendalaTerbaru, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $satuanDisetujui, 'ditolak' => $satuanDitolak, 'terlambat' => $satuanTerlambat, 'dibatalkan' => $satuanDibatalkan]]);
     }
 
     /**
@@ -640,6 +703,104 @@ class DashboardController
             ])->render(),
             'kendala_terbaru_html' => view('siberad.dashboards.partials.pimpinan-kendala-terbaru-list', [
                 'pimpKendalaTerbaru' => $pimpKendalaTerbaru,
+            ])->render(),
+            'server_time' => now()->toIso8601String(),
+        ], 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
+    }
+
+    /**
+     * Poll realtime buat 3 kartu KPI Beranda Satuan (Total Pelaporan/Surat/
+     * Kendala Kasansi) -- MIRROR pimpinanKpiRealtime() di atas, cuma
+     * discoped ke satuan yang login sendiri (bukan cakupan seluruh satuan
+     * pelaksana kayak Pimpinan). Query di sini SENGAJA ringkas/tanpa
+     * eager-load relasi yang gak relevan buat KPI, pola sama seperti alasan
+     * di komentar pimpinanKpiRealtime() di atas.
+     */
+    public function satuanKpiRealtime(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user()->load('satuan');
+        $satuan = $user->satuan;
+        $kode = $satuan?->kode ? strtoupper(trim($satuan->kode)) : null;
+        abort_unless($satuan, 403);
+        // Danpus/Wadan pakai endpoint pimpinanKpiRealtime() sendiri (lihat
+        // di atas), Admin gak pernah nyampe ke dashboard Satuan sama
+        // sekali -- endpoint ini murni buat role non-Pimpinan/non-Admin.
+        abort_if(in_array($kode, ['ADMIN', 'DANPUS', 'WADAN'], true), 403);
+
+        $laporanTerkirim = Laporan::with('lampirans')->where('satuan_id', $satuan->id)->get();
+        $satuanTotalPelaporan = $this->hitungLaporanPerPerihal($laporanTerkirim);
+
+        $suratMasuk = LaporanSurat::where('tujuan_satuan_id', $satuan->id)->where('status', LaporanSurat::STATUS_MENUNGGU)->get();
+        $suratTerkirim = LaporanSurat::where('satuan_id', $satuan->id)->where('status', LaporanSurat::STATUS_MENUNGGU)->get();
+        $suratArsip = LaporanSurat::where(function ($q) use ($satuan) {
+                $q->where('satuan_id', $satuan->id)->orWhere('tujuan_satuan_id', $satuan->id);
+            })->where('status', LaporanSurat::STATUS_DIKONFIRMASI)->get();
+
+        // "Total Kendala Kasansi" -- lihat komentar lengkap soal dua sumber
+        // saling eksklusif ini di pelaporan() (KPI render awal) di atas.
+        $isKasansi = in_array($kode, Satuan::KODE_KOTAMA, true);
+        $kendalaTerkirimSemua = $isKasansi
+            ? LaporanKendala::with('satuan')->where('satuan_id', $satuan->id)->get()
+            : collect();
+        $kendalaTerkirim = $kendalaTerkirimSemua->where('status', '!=', LaporanKendala::STATUS_DIKONFIRMASI)->values();
+        $kendalaArsip = $kendalaTerkirimSemua->where('status', LaporanKendala::STATUS_DIKONFIRMASI)->values();
+
+        $isPenerimaTembusan = in_array($kode, Satuan::kodeTembusanKasansi(), true);
+        // 'laporanKendala.satuan' di-eager-load -- dibutuhkan "Kendala
+        // Kasansi Terbaru" di bawah ($k->perihal/$k->status/$k->satuan
+        // datang dari relasi ini, bukan dari LaporanKendalaTembusan
+        // langsung, lihat komentar lengkap di pelaporan()).
+        $tembusanMasukSemua = $isPenerimaTembusan
+            ? LaporanKendalaTembusan::with('laporanKendala.satuan')->where('satuan_id', $satuan->id)->get()
+            : collect();
+        $tembusanMasuk = $tembusanMasukSemua->whereNull('feedback')->values();
+        $tembusanArsip = $tembusanMasukSemua->whereNotNull('feedback')->values();
+
+        // "Distribusi Status Laporan" (donut) -- lihat komentar lengkap di
+        // pelaporan() (KPI render awal) di atas soal 4 kategori & sumbernya.
+        $permintaanLaporanSemua = PermintaanLaporan::where('tujuan_satuan_id', $satuan->id)->get();
+        $satuanDisetujui = $laporanTerkirim->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count();
+        $satuanDitolak = $laporanTerkirim->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count();
+        $satuanTerlambat = $permintaanLaporanSemua->filter(fn ($p) => $p->isTerlambat())->count();
+        $satuanDibatalkan = $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count();
+        $satuanTotalStatus = $satuanDisetujui + $satuanDitolak + $satuanTerlambat + $satuanDibatalkan;
+
+        // "Surat Terbaru" & "Kendala Kasansi Terbaru" -- lihat komentar
+        // lengkap di pelaporan() (KPI render awal) di atas.
+        $satuanSuratTerbaru = $suratMasuk->concat($suratTerkirim)->concat($suratArsip)->sortByDesc('created_at')->take(5)->values();
+        $satuanKendalaTerbaruSumber = $isKasansi
+            ? $kendalaTerkirimSemua
+            : $tembusanMasukSemua->pluck('laporanKendala')->filter()->values();
+        $satuanKendalaTerbaru = $satuanKendalaTerbaruSumber->sortByDesc('created_at')->take(5)->values();
+
+        return response()->json([
+            'kpis_html' => view('siberad.dashboards.partials.pimpinan-kpi-cards', [
+                'pimpTotalPelaporan' => $satuanTotalPelaporan,
+                'laporanPimpinanSatlak' => $laporanTerkirim,
+                'suratMasuk' => $suratMasuk,
+                'suratTerkirim' => $suratTerkirim,
+                'suratArsip' => $suratArsip,
+                'kendalaMasuk' => $kendalaTerkirim->concat($tembusanMasuk),
+                'kendalaArsip' => $kendalaArsip->concat($tembusanArsip),
+            ])->render(),
+            'status_bd_html' => view('siberad.dashboards.partials.pimpinan-status-distribusi-list', [
+                'pimpStatusDist' => [
+                    ['label' => 'Disetujui', 'color' => '#22c55e', 'labelColor' => '#22c55e', 'count' => $satuanDisetujui],
+                    ['label' => 'Ditolak', 'color' => '#ef4444', 'labelColor' => '#ef4444', 'count' => $satuanDitolak],
+                    ['label' => 'Terlambat', 'color' => '#ff6b6b', 'labelColor' => '#ff6b6b', 'count' => $satuanTerlambat],
+                    ['label' => 'Dibatalkan', 'color' => '#c1121f', 'labelColor' => '#e5484d', 'count' => $satuanDibatalkan],
+                ],
+            ])->render(),
+            'status_donut_total' => $satuanTotalStatus,
+            'status_donut_counts' => [$satuanDisetujui, $satuanDitolak, $satuanTerlambat, $satuanDibatalkan],
+            'surat_terbaru_html' => view('siberad.dashboards.partials.pimpinan-surat-terbaru-rows', [
+                'pimpSuratTerbaru' => $satuanSuratTerbaru,
+                'satuan' => $satuan,
+            ])->render(),
+            'kendala_terbaru_html' => view('siberad.dashboards.partials.pimpinan-kendala-terbaru-list', [
+                'pimpKendalaTerbaru' => $satuanKendalaTerbaru,
             ])->render(),
             'server_time' => now()->toIso8601String(),
         ], 200, [

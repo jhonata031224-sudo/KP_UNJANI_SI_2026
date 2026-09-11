@@ -73,6 +73,17 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Paksa simpan sesi SEKARANG (bukan menunggu akhir request seperti
+        // biasanya) supaya baris `sessions` untuk ID sesi yang baru saja
+        // di-regenerate benar-benar sudah ada di database sebelum baris
+        // `login_at` di bawah ini di-update -- kalau tidak, UPDATE ini bisa
+        // saja tidak menyentuh baris manapun (sesi belum ke-persist).
+        $request->session()->save();
+
+        DB::table('sessions')
+            ->where('id', $request->session()->getId())
+            ->update(['login_at' => now()]);
+
         ActivityLog::catat('login', 'Berhasil login ke '.Pengaturan::current()->namaSistem().'.', $request->user());
 
         $request->session()->flash('login_success', $request->user()->name);

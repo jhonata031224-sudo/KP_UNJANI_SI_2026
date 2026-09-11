@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Pengaturan;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -38,6 +39,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // PENTING: Laravel TIDAK otomatis menyinkronkan locale Carbon dengan
+        // config('app.locale'). Tanpa baris ini, semua translatedFormat()
+        // dan diffForHumans() di seluruh sistem (kartu tanggal, "X menit
+        // lalu" pada notifikasi/sesi aktif/log aktivitas, dst) diam-diam
+        // jatuh ke Bahasa Inggris ("Friday", "seconds ago") meskipun
+        // APP_LOCALE sudah diatur ke 'id' -- menyebabkan campur bahasa
+        // Indonesia & Inggris pada tampilan yang sama.
+        Carbon::setLocale(config('app.locale', 'id'));
+
         View::composer('*', function ($view): void {
             // Cache statis per-request: satu halaman bisa merender banyak
             // view/partial (layout + child view), tanpa ini tiap partial

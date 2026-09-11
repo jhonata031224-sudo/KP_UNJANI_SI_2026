@@ -28,6 +28,9 @@ class PermintaanLaporanBaru extends Notification
             'permintaan_laporan_id' => $this->permintaan->id,
             'perihal' => $this->permintaan->perihal,
             'deadline_at' => $this->permintaan->deadline_at->toIso8601String(),
+            // Penerima notifikasi ini satuan tujuan permintaan -- section
+            // #permintaan-laporan di dashboard Satuan mereka.
+            'url' => route('dashboard').'#permintaan-laporan',
         ];
     }
 }

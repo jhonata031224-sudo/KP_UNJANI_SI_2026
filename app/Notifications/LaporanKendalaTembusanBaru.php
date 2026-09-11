@@ -30,6 +30,9 @@ class LaporanKendalaTembusanBaru extends Notification
             'perihal' => $this->kendala->perihal,
             'prioritas' => $this->kendala->prioritas,
             'pesan' => "Tembusan laporan dari {$this->kendala->satuan->nama}: {$this->kendala->perihal}",
+            // Penerima tembusan (Satlak/Sdir) -- section #laporan-tembusan
+            // di dashboard Satuan mereka.
+            'url' => route('dashboard').'#laporan-tembusan',
         ];
     }
 }

@@ -79,6 +79,7 @@
            bisa beda dikit dari tinggi asli & ganggu tampilan normal. */
         #notifDropdown .siberad-notif-item.is-removing{overflow:hidden;transition:background .15s ease,max-height .22s ease,padding .22s ease,opacity .18s ease,border-color .22s ease;max-height:0!important;padding-top:0;padding-bottom:0;opacity:0;border-color:transparent;pointer-events:none;}
         #notifDropdown .siberad-notif-body{min-width:0;}
+        #notifDropdown .siberad-notif-item.is-clickable{cursor:pointer;}
         #notifDropdown .siberad-notif-item p{margin:0;font-size:12.5px;font-weight:600;line-height:1.45;color:var(--text);word-break:break-word;}
         #notifDropdown .siberad-notif-item small{display:block;margin-top:4px;font-size:10.5px;font-weight:500;color:var(--text-dim);}
         #notifDropdown .siberad-notif-remove{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:0;border-radius:7px;background:transparent;color:var(--text-dim);cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;transition:background .15s ease,color .15s ease;}
@@ -145,9 +146,19 @@
     }
     window.siberadTampilkanSesiBerakhir = tampilkanSesiBerakhir;
 
-    var notifications = @json(auth()->user()?->unreadNotifications?->take(20)?->map(function ($n) {
-      return ['id' => $n->id, 'message' => $n->data['pesan'] ?? 'Status laporan diperbarui.', 'time' => optional($n->created_at)->diffForHumans()];
-    })->values() ?? []);
+    @php
+      // PENTING: jangan taruh array literal (yang punya koma) langsung di
+      // dalam @json(...) -- directive @json Blade motong argumennya pakai
+      // explode(',') mentah (buat pisahin opsi encoding/depth opsional),
+      // jadi koma DI DALAM array/closure ikut kepotong dan hasil PHP-nya
+      // jadi rusak (ParseError "Unclosed '[' does not match ')'"). Makanya
+      // array-nya dirakit dulu di variabel biasa di sini, baru @json()
+      // dipanggil dengan satu variabel tunggal (tanpa koma di levelnya).
+      $__siberadNotifications = auth()->user()?->unreadNotifications?->take(20)?->map(function ($n) {
+        return ['id' => $n->id, 'message' => $n->data['pesan'] ?? 'Status laporan diperbarui.', 'time' => optional($n->created_at)->diffForHumans(), 'url' => $n->data['url'] ?? null];
+      })->values() ?? [];
+    @endphp
+    var notifications = @json($__siberadNotifications);
 
     var list = dropdown.querySelector('.siberad-notif-list');
     if (!list) {
@@ -226,6 +237,36 @@
       }
     }
 
+    // Begitu notifikasi diklik, langsung arahkan ke tab/section yang
+    // relevan (bukan cuma nampilin pesan doang) -- lihat window.
+    // siberadGoToSection() yang diexpose masing-masing dashboard (Satuan:
+    // laporan-role.blade.php, Pimpinan: laporan-pimpinan.blade.php, Admin:
+    // dash-script.blade.php). Selama URL-nya masih di halaman /dashboard
+    // yang sama (SPA per-role, semua section sudah ada di DOM), cukup
+    // switch tab di tempat tanpa reload -- baru fallback pindah halaman
+    // penuh kalau ternyata section-nya tidak ditemukan di DOM saat ini
+    // (mis. modul terkait dinonaktifkan Admin utk satuan ini).
+    function goToNotifikasi(url) {
+      if (!url) return;
+      close();
+      var hashId = '';
+      try {
+        var target = new URL(url, window.location.origin);
+        hashId = target.hash ? target.hash.slice(1) : '';
+        if (target.pathname !== window.location.pathname) { window.location.href = url; return; }
+      } catch (e) { window.location.href = url; return; }
+      if (!hashId) return;
+      // Bukan section tab biasa -- buka modal "Pengaturan Akun" > tab
+      // Ganti Password (lihat window.openProfileModal di laporan-role.
+      // blade.php / laporan-pimpinan.blade.php).
+      if (hashId === 'profil-password' && typeof window.openProfileModal === 'function') {
+        window.openProfileModal('profileSettingsView');
+        return;
+      }
+      if (typeof window.siberadGoToSection === 'function' && window.siberadGoToSection(hashId)) return;
+      window.location.href = url;
+    }
+
     function render() {
       list.innerHTML = '';
       if (!notifications.length) {
@@ -237,6 +278,15 @@
         notifications.forEach(function (notification) {
           var item = document.createElement('div');
           item.className = 'siberad-notif-item';
+          if (notification.url) {
+            item.classList.add('is-clickable');
+            item.setAttribute('role', 'button');
+            item.setAttribute('tabindex', '0');
+            item.addEventListener('click', function () { goToNotifikasi(notification.url); });
+            item.addEventListener('keydown', function (event) {
+              if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); goToNotifikasi(notification.url); }
+            });
+          }
           item.innerHTML =
             '<div class="siberad-notif-body"><p>' + escapeHtml(notification.message) + '</p><small>' + escapeHtml(notification.time || '') + '</small></div>';
           var remove = document.createElement('button');

@@ -32,6 +32,12 @@ class LaporanBaruDiterima extends Notification
             'perihal' => $this->laporan->perihal,
             'prioritas' => $this->laporan->prioritas,
             'pesan' => $pesan,
+            // Dipakai lonceng notifikasi buat langsung buka tab yang relevan
+            // (bukan cuma munculin pesan) -- lihat NotifikasiController::realtime()
+            // & window.siberadGoToSection() di laporan-role.blade.php/
+            // laporan-pimpinan.blade.php. id section-nya SAMA persis di kedua
+            // dashboard (Satuan & Pimpinan sama-sama punya #permintaan-laporan).
+            'url' => route('dashboard').'#permintaan-laporan',
         ];
     }
 }

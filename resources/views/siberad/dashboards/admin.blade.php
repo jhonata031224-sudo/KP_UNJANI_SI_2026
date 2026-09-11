@@ -2859,10 +2859,6 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 @elseif($key === 'monitoring')
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                @elseif($key === 'penindakan')
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                @elseif($key === 'publikasi')
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                 @else
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><polyline points="9 14 11 16 15 11"/></svg>
                 @endif
@@ -2890,10 +2886,6 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                   @elseif($key === 'monitoring')
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                  @elseif($key === 'penindakan')
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                  @elseif($key === 'publikasi')
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98m-.01-10.98-6.82 3.98"/></svg>
                   @else
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
                   @endif
@@ -4102,25 +4094,6 @@
               </div>
             </div>
 
-            {{-- ---------- Tombol simpan -- ".lp-form-actions" itu bar
-                 position:fixed nempel dasar viewport (lihat CSS-nya di
-                 bawah), jadi SENGAJA tidak dibungkus ".panel"/".lp-panel"
-                 lagi (dulu memang tidak dibungkus juga, cuma anak langsung
-                 dari kartu "Konten Halaman Landing") -- kalau dibungkus
-                 kartu, kartu kosong itu akan tetap makan tempat mengikuti
-                 alur normal halaman padahal isinya sendiri sudah lepas ke
-                 posisi fixed, jadinya nyisain kotak kosong di bawah kartu
-                 terakhir. ---------- --}}
-            <div class="lp-form-actions">
-              <div class="lp-form-actions-inner">
-                <button class="btn btn-primary" type="submit" id="landingFormSubmitBtn">Simpan Konten Landing</button>
-                <span id="landingFormUploadProgress" style="display:none;margin-left:12px;font-size:13px;color:var(--text-muted);align-items:center;gap:7px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="animation:lpUploadSpin 1s linear infinite;flex-shrink:0"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                  <span id="landingFormUploadProgressText">Mengunggah...</span>
-                </span>
-              </div>
-            </div>
-
           </form>
 
           {{-- ---------- PANEL PRATINJAU (terpisah) ---------- --}}
@@ -4760,8 +4733,18 @@
             background:linear-gradient(to right, var(--gold-bright) 0%, var(--gold-bright) var(--lp-range-fill,0%), var(--border-soft) var(--lp-range-fill,0%), var(--border-soft) 100%) !important;
           }
           .lp-hero-image-row{display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:0;text-align:center;}
-          .lp-hero-image-row video.lp-current-image{width:100%;max-width:360px;object-fit:cover;background:#000;}
-          .lp-hero-image-row .landing-file-picker{align-self:center;flex:0 0 auto;min-width:200px;justify-content:center;}
+          /* Video BG sebelumnya pakai rule generik ".lp-hero-image-row
+             video.lp-current-image{max-width:360px}" -- jauh lebih kecil
+             & beda rasio dari kotak Gambar BG (460x259). Sekarang video
+             dikasih rule khusus per-ID, PERSIS menyamai ukuran & rasio
+             kotak Gambar BG (lihat "#lpHeroImagePreviewImg" di bawah)
+             supaya kotak pratinjau Gambar <-> Video terlihat konsisten
+             saat berpindah tipe. */
+          #lpHeroVideoPreviewVideo{width:460px;height:259px;object-fit:cover;object-position:center;background:#000;}
+          #lpHeroVideoPreviewPlaceholder{width:460px;height:259px;}
+          @media(max-width:760px){#lpHeroVideoPreviewVideo,#lpHeroVideoPreviewPlaceholder{width:100%;max-width:400px;}}
+          @media(max-width:560px){#lpHeroVideoPreviewVideo,#lpHeroVideoPreviewPlaceholder{max-width:340px;}}
+          .lp-hero-image-row .siberad-file-wrap{align-self:center;flex:0 0 auto;min-width:200px;justify-content:center;}
           /* Tombol "Pilih File", preview gambar, & tombol "Hapus Latar
              Belakang" semuanya rata tengah (align-items:center di parent
              .lp-hero-image-row) -- sebelumnya rata kiri lalu preview
@@ -4794,6 +4777,10 @@
           #lpHeroImagePreviewPlaceholder{width:460px;height:259px;}
           @media(max-width:760px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{width:100%;max-width:400px;}}
           @media(max-width:560px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{max-width:340px;}}
+          #strukturOrgForm{max-width:100%;box-sizing:border-box;}
+          #strukturOrgForm .lp-hero-image-row{width:100%;box-sizing:border-box;}
+          @media(max-width:760px){#strukturOrgPreviewImg,#strukturOrgPreviewPlaceholder{width:100%;max-width:360px;}}
+          @media(max-width:560px){#strukturOrgPreviewImg,#strukturOrgPreviewPlaceholder{max-width:100%;}}
           /* Logo: kotak & object-fit:contain (bukan cover) supaya lambang/
              logo utuh terlihat jelas tanpa terpotong, dengan ukuran yang
              pas -- tidak menyisakan ruang kosong berlebihan seperti kotak
@@ -5394,8 +5381,10 @@
               var wrap = document.getElementById('lpPvFitur');
               wrap.innerHTML = '';
               for(var i=0;i<4;i++){
-                var judul = form.querySelector('[data-lp="fitur_judul_'+i+'"]');
-                var desk = form.querySelector('[data-lp="fitur_deskripsi_'+i+'"]');
+                // document, bukan form -- lihat catatan di applyBgType() di
+                // bawah: elemen ini bisa sedang dipindah ke dalam modal.
+                var judul = document.querySelector('[data-lp="fitur_judul_'+i+'"]');
+                var desk = document.querySelector('[data-lp="fitur_deskripsi_'+i+'"]');
                 if(!judul) continue;
                 var card = document.createElement('div');
                 card.className = 'lp-feature-card';
@@ -5411,10 +5400,10 @@
               wrap.innerHTML = '';
               var i = 0;
               while (true) {
-                var platformEl = form.querySelector('[data-lp="sosial_platform_'+i+'"]');
+                var platformEl = document.querySelector('[data-lp="sosial_platform_'+i+'"]');
                 if(!platformEl) break;
-                var labelEl = form.querySelector('[data-lp="sosial_label_'+i+'"]');
-                var urlEl = form.querySelector('[data-lp="sosial_url_'+i+'"]');
+                var labelEl = document.querySelector('[data-lp="sosial_label_'+i+'"]');
+                var urlEl = document.querySelector('[data-lp="sosial_url_'+i+'"]');
                 var url = urlEl ? urlEl.value.trim() : '';
                 if(url){
                   var chip = document.createElement('span');
@@ -5428,8 +5417,15 @@
             }
 
             function updatePreview(){
-              var heroBlurEl = form.querySelector('[data-lp="hero_blur_level"]');
-              var heroOverlayEl = form.querySelector('[data-lp="hero_overlay_intensity"]');
+              // document, bukan form -- panel section yang sedang dibuka di
+              // modal (lihat catatan di applyBgType() di bawah) sudah
+              // dipindah keluar dari <form>, jadi query lewat `form` bisa
+              // balik null utk field yang sedang diedit & bikin baris
+              // `.value` di bawah lempar TypeError (mematikan sisa
+              // pratinjau, padahal modal menjanjikan "otomatis
+              // tersinkronisasi ke Pratinjau Langsung").
+              var heroBlurEl = document.querySelector('[data-lp="hero_blur_level"]');
+              var heroOverlayEl = document.querySelector('[data-lp="hero_overlay_intensity"]');
               var lpPreviewHero = document.getElementById('lpPreviewHero');
               if(lpPreviewHero && heroBlurEl){ lpPreviewHero.style.setProperty('--lp-hero-blur', heroBlurEl.value + 'px'); }
               if(lpPreviewHero && heroOverlayEl){ lpPreviewHero.style.setProperty('--lp-hero-overlay', (heroOverlayEl.value / 100)); }
@@ -5452,18 +5448,18 @@
                 if(imgOverlayEl){ imgOverlayEl.style.opacity = overlayOpacity; }
                 if(vidOverlayEl){ vidOverlayEl.style.opacity = overlayOpacity; }
               }
-              setText('lpPvEyebrow', form.querySelector('[data-lp="hero_eyebrow"]').value, 'PUSSIBERAD SISTEM PENDUKUNG OPERASIONAL');
-              setText('lpPvJudulAwal', form.querySelector('[data-lp="hero_judul_awal"]').value, 'SIBER');
-              setText('lpPvJudulAksen', form.querySelector('[data-lp="hero_judul_aksen"]').value, 'AD');
-              setText('lpPvSubjudul', form.querySelector('[data-lp="hero_subjudul"]').value);
-              setText('lpPvDeskripsi', form.querySelector('[data-lp="hero_deskripsi"]').value);
-              setText('lpPvTentang', form.querySelector('[data-lp="tentang_deskripsi"]').value);
-              setText('lpPvMotoJudul', form.querySelector('[data-lp="tentang_moto_judul"]').value);
-              setText('lpPvMoto', form.querySelector('[data-lp="tentang_moto_deskripsi"]').value);
-              setText('lpPvAlamat', form.querySelector('[data-lp="alamat"]').value);
-              setText('lpPvTelepon', form.querySelector('[data-lp="telepon_kontak"]').value);
-              setText('lpPvEmail', form.querySelector('[data-lp="email_kontak"]').value);
-              setText('lpPvWebsite', form.querySelector('[data-lp="website"]').value);
+              setText('lpPvEyebrow', document.querySelector('[data-lp="hero_eyebrow"]').value, 'PUSSIBERAD SISTEM PENDUKUNG OPERASIONAL');
+              setText('lpPvJudulAwal', document.querySelector('[data-lp="hero_judul_awal"]').value, 'SIBER');
+              setText('lpPvJudulAksen', document.querySelector('[data-lp="hero_judul_aksen"]').value, 'AD');
+              setText('lpPvSubjudul', document.querySelector('[data-lp="hero_subjudul"]').value);
+              setText('lpPvDeskripsi', document.querySelector('[data-lp="hero_deskripsi"]').value);
+              setText('lpPvTentang', document.querySelector('[data-lp="tentang_deskripsi"]').value);
+              setText('lpPvMotoJudul', document.querySelector('[data-lp="tentang_moto_judul"]').value);
+              setText('lpPvMoto', document.querySelector('[data-lp="tentang_moto_deskripsi"]').value);
+              setText('lpPvAlamat', document.querySelector('[data-lp="alamat"]').value);
+              setText('lpPvTelepon', document.querySelector('[data-lp="telepon_kontak"]').value);
+              setText('lpPvEmail', document.querySelector('[data-lp="email_kontak"]').value);
+              setText('lpPvWebsite', document.querySelector('[data-lp="website"]').value);
               renderFitur();
               renderSosial();
             }
@@ -5601,7 +5597,18 @@
             var lpPreviewHeroEl = document.getElementById('lpPreviewHero');
             var lpPreviewVideoEl = document.getElementById('lpPreviewHeroVideo');
             function applyBgType(type){
-              form.querySelectorAll('[data-lp-bg-type-panel]').forEach(function(panel){
+              // PENTING: query dari document, BUKAN dari `form`. Panel ini
+              // (beserta sub-panel Gambar/Video di dalamnya) dipindahkan
+              // (appendChild) ke dalam modal saat diklik, dan modal itu
+              // sendiri sudah dipindah jadi child langsung <body> -- jadi
+              // begitu modal terbuka, sub-panel ini sudah tidak lagi berada
+              // di dalam elemen `form`. Query lewat `form.querySelectorAll`
+              // jadi selalu kosong di dalam modal, sehingga toggle Gambar<->
+              // Video kelihatan macet (radio-nya tetap ke-highlight karena
+              // itu murni CSS :checked, tapi sub-panel yang tampil tidak
+              // pernah ikut ditukar). Query dari `document` aman karena
+              // atribut data-lp-bg-type-panel ini unik untuk section ini.
+              document.querySelectorAll('[data-lp-bg-type-panel]').forEach(function(panel){
                 panel.style.display = (panel.dataset.lpBgTypePanel === type) ? '' : 'none';
               });
               form.querySelectorAll('[data-lp-bg-type-radio]').forEach(function(radio){
@@ -5724,7 +5731,7 @@
                   <td>{{ $sub->user->name ?? '—' }}</td>
                   <td>{{ $sub->user->satuan->nama ?? '—' }}</td>
                   <td>{{ $browser }}</td>
-                  <td>{{ optional($sub->created_at)->format('d M Y H:i') }}</td>
+                  <td>{{ optional($sub->created_at)->translatedFormat('d M Y H:i') }}</td>
                 </tr>
                 @endforeach
               </tbody>
@@ -5773,8 +5780,8 @@
           <form method="POST" action="{{ route('admin.struktur-organisasi.update') }}" enctype="multipart/form-data" id="strukturOrgForm" style="padding:18px 22px">
             @csrf
             <div class="lp-hero-image-row">
-              <img src="{{ $pengaturanStrukturOrgExists ? asset('storage/'.$pengaturan->struktur_organisasi_path) : '' }}" alt="Gambar Struktur Organisasi saat ini" class="lp-current-image" id="strukturOrgPreviewImg" style="max-width:420px;max-height:320px;object-fit:contain;{{ $pengaturanStrukturOrgExists ? '' : 'display:none' }}">
-              <div class="lp-image-placeholder" id="strukturOrgPreviewPlaceholder" style="width:260px;height:160px;{{ $pengaturanStrukturOrgExists ? 'display:none' : '' }}">
+              <img src="{{ $pengaturanStrukturOrgExists ? asset('storage/'.$pengaturan->struktur_organisasi_path) : '' }}" alt="Gambar Struktur Organisasi saat ini" class="lp-current-image" id="strukturOrgPreviewImg" style="width:100%;max-width:420px;max-height:320px;object-fit:contain;{{ $pengaturanStrukturOrgExists ? '' : 'display:none' }}">
+              <div class="lp-image-placeholder" id="strukturOrgPreviewPlaceholder" style="width:100%;max-width:260px;height:160px;{{ $pengaturanStrukturOrgExists ? 'display:none' : '' }}">
                 <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
                 <span>Belum ada gambar struktur organisasi</span>
               </div>
@@ -5916,7 +5923,7 @@
           <div class="tbl-wrap tbl-scroll" style="max-height:420px;">
             <table class="dtbl" id="tblRekapSatuan">
               <colgroup><col style="width:30%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"></colgroup>
-              <thead><tr><th>Satuan</th><th style="text-align:center;">Total Pelaporan</th><th style="text-align:center;">Disetujui</th><th style="text-align:center;">Ditolak</th><th style="text-align:center;">Terlambat</th><th style="text-align:center;">Dibatalkan</th></tr></thead>
+              <thead><tr><th>Satuan</th><th style="text-align:center;">Total Pelaporan</th><th style="text-align:center;">Disetujui</th><th style="text-align:center;">Koreksi</th><th style="text-align:center;">Terlambat</th><th style="text-align:center;">Dibatalkan</th></tr></thead>
               <tbody>
                 @forelse($rekapLaporanSatuan as $s)
                 <tr data-filter-value="{{ $s->kategori }}" data-search-value="{{ strtolower($s->nama.' '.$s->kode) }}">
@@ -5943,7 +5950,7 @@
           <div class="panel-head"><div><h2>Pengguna Aktif</h2><p>Pantau perangkat/browser yang sedang login, dan paksa logout kalau perlu.</p></div></div>
           <div class="tbl-wrap">
             <table class="dtbl" id="tblSesiAktif">
-              <thead><tr><th>Pengguna</th><th>IP Address</th><th>Perangkat / Browser</th><th>Terakhir Aktif</th><th>Aksi</th></tr></thead>
+              <thead><tr><th>Pengguna</th><th>IP Address</th><th>Perangkat / Browser</th><th>Terakhir Aktif</th><th style="text-align:center;">Aksi</th></tr></thead>
               <tbody>
                 @forelse($sesiAktif as $s)@include('siberad.dashboards.partials.sesi-aktif-row', ['s' => $s])@empty
                 <tr class="table-empty-row"><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Tidak ada sesi aktif</div></div></td></tr>
