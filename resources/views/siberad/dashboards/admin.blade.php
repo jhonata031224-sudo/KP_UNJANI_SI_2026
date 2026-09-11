@@ -5821,7 +5821,7 @@
           <div class="tbl-wrap tbl-scroll" style="max-height:420px;">
             <table class="dtbl" id="tblRekapSatuan">
               <colgroup><col style="width:30%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"></colgroup>
-              <thead><tr><th>Satuan</th><th style="text-align:center;">Total Pelaporan</th><th style="text-align:center;">Disetujui</th><th style="text-align:center;">Ditolak</th><th style="text-align:center;">Terlambat</th><th style="text-align:center;">Dibatalkan</th></tr></thead>
+              <thead><tr><th>Satuan</th><th style="text-align:center;">Total Pelaporan</th><th style="text-align:center;">Disetujui</th><th style="text-align:center;">Koreksi</th><th style="text-align:center;">Terlambat</th><th style="text-align:center;">Dibatalkan</th></tr></thead>
               <tbody>
                 @forelse($rekapLaporanSatuan as $s)
                 <tr data-filter-value="{{ $s->kategori }}" data-search-value="{{ strtolower($s->nama.' '.$s->kode) }}">
