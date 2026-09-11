@@ -5629,7 +5629,7 @@
                   <td>{{ $sub->user->name ?? '—' }}</td>
                   <td>{{ $sub->user->satuan->nama ?? '—' }}</td>
                   <td>{{ $browser }}</td>
-                  <td>{{ optional($sub->created_at)->format('d M Y H:i') }}</td>
+                  <td>{{ optional($sub->created_at)->translatedFormat('d M Y H:i') }}</td>
                 </tr>
                 @endforeach
               </tbody>
