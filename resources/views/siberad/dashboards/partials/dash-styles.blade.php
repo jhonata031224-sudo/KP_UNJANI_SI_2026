@@ -445,6 +445,20 @@
   .tbl-wrap.tbl-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
   .tbl-wrap.tbl-scroll::-webkit-scrollbar-thumb:hover{background:var(--gold);}
   table.dtbl tr:hover td{background:var(--hover-tint);}
+
+  /* Pengguna Aktif (#tblSesiAktif): lebar kolom dikunci (table-layout:fixed)
+     supaya tabel TIDAK ikut goyang/reflow tiap "Terakhir Aktif" berubah teks
+     (mis. "3 menit yang lalu" -> "58 detik yang lalu", panjang teks beda).
+     Tanpa ini, browser hitung ulang lebar kolom tiap kali konten berubah. */
+  #tblSesiAktif{table-layout:fixed;}
+  #tblSesiAktif th:nth-child(1),#tblSesiAktif td:nth-child(1){width:22%;}
+  #tblSesiAktif th:nth-child(2),#tblSesiAktif td:nth-child(2){width:14%;}
+  #tblSesiAktif th:nth-child(3),#tblSesiAktif td:nth-child(3){width:28%;}
+  #tblSesiAktif th:nth-child(4),#tblSesiAktif td:nth-child(4){width:18%;}
+  #tblSesiAktif th:nth-child(5),#tblSesiAktif td:nth-child(5){width:18%;}
+  #tblSesiAktif td{overflow:hidden;text-overflow:ellipsis;}
+  #tblSesiAktif th:last-child{text-align:center;}
+
   .status-dot{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:12.5px;}
   .status-dot::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 8px 1px currentColor;animation:statusDotBlink 1.6s ease-in-out infinite;}
   @keyframes statusDotBlink{0%,100%{opacity:1;}50%{opacity:.35;}}
@@ -742,10 +756,10 @@
     .tbl-wrap.tbl-scroll{overflow-y:visible!important;max-height:none!important;}
 
     table.dtbl thead{display:none;}
-    table.dtbl,table.dtbl tbody{display:block;width:100%;}
+    table.dtbl,table.dtbl tbody{display:block;width:100%;table-layout:auto;}
     table.dtbl tr{display:block;background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;padding:4px 14px;margin-bottom:12px;}
     table.dtbl tr:last-child{margin-bottom:0;}
-    table.dtbl td{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:1px solid var(--border-soft);text-align:right;font-size:13px;}
+    table.dtbl td{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:1px solid var(--border-soft);text-align:right;font-size:13px;width:auto!important;overflow:visible;text-overflow:clip;}
     table.dtbl tr:last-child td:last-child{border-bottom:none;}
     table.dtbl td::before{content:attr(data-label);flex-shrink:0;text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);padding-top:1px;}
 

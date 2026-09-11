@@ -118,7 +118,7 @@ class DashboardController
             ->whereNotNull('sessions.user_id')
             ->leftJoin('users', 'sessions.user_id', '=', 'users.id')
             ->orderByDesc('sessions.last_activity')
-            ->get(['sessions.id','sessions.ip_address','sessions.user_agent','sessions.last_activity','users.name as user_name']);
+            ->get(['sessions.id','sessions.ip_address','sessions.user_agent','sessions.last_activity','sessions.login_at','users.name as user_name']);
         // Satuan pengirim laporan = semua satuan SELAIN Admin & Pimpinan
         // (Admin cuma pengelola sistem, Pimpinan/Danpus-Wadan cuma
         // menerima & meninjau, bukan pengirim). Dihitung otomatis dari

@@ -2859,10 +2859,6 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 @elseif($key === 'monitoring')
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                @elseif($key === 'penindakan')
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                @elseif($key === 'publikasi')
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                 @else
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><polyline points="9 14 11 16 15 11"/></svg>
                 @endif
@@ -2890,10 +2886,6 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                   @elseif($key === 'monitoring')
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                  @elseif($key === 'penindakan')
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                  @elseif($key === 'publikasi')
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98m-.01-10.98-6.82 3.98"/></svg>
                   @else
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
                   @endif
@@ -4776,6 +4768,10 @@
           #lpHeroImagePreviewPlaceholder{width:460px;height:259px;}
           @media(max-width:760px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{width:100%;max-width:400px;}}
           @media(max-width:560px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{max-width:340px;}}
+          #strukturOrgForm{max-width:100%;box-sizing:border-box;}
+          #strukturOrgForm .lp-hero-image-row{width:100%;box-sizing:border-box;}
+          @media(max-width:760px){#strukturOrgPreviewImg,#strukturOrgPreviewPlaceholder{width:100%;max-width:360px;}}
+          @media(max-width:560px){#strukturOrgPreviewImg,#strukturOrgPreviewPlaceholder{max-width:100%;}}
           /* Logo: kotak & object-fit:contain (bukan cover) supaya lambang/
              logo utuh terlihat jelas tanpa terpotong, dengan ukuran yang
              pas -- tidak menyisakan ruang kosong berlebihan seperti kotak
@@ -5633,7 +5629,7 @@
                   <td>{{ $sub->user->name ?? '—' }}</td>
                   <td>{{ $sub->user->satuan->nama ?? '—' }}</td>
                   <td>{{ $browser }}</td>
-                  <td>{{ optional($sub->created_at)->format('d M Y H:i') }}</td>
+                  <td>{{ optional($sub->created_at)->translatedFormat('d M Y H:i') }}</td>
                 </tr>
                 @endforeach
               </tbody>
@@ -5682,8 +5678,8 @@
           <form method="POST" action="{{ route('admin.struktur-organisasi.update') }}" enctype="multipart/form-data" id="strukturOrgForm" style="padding:18px 22px">
             @csrf
             <div class="lp-hero-image-row">
-              <img src="{{ $pengaturanStrukturOrgExists ? asset('storage/'.$pengaturan->struktur_organisasi_path) : '' }}" alt="Gambar Struktur Organisasi saat ini" class="lp-current-image" id="strukturOrgPreviewImg" style="max-width:420px;max-height:320px;object-fit:contain;{{ $pengaturanStrukturOrgExists ? '' : 'display:none' }}">
-              <div class="lp-image-placeholder" id="strukturOrgPreviewPlaceholder" style="width:260px;height:160px;{{ $pengaturanStrukturOrgExists ? 'display:none' : '' }}">
+              <img src="{{ $pengaturanStrukturOrgExists ? asset('storage/'.$pengaturan->struktur_organisasi_path) : '' }}" alt="Gambar Struktur Organisasi saat ini" class="lp-current-image" id="strukturOrgPreviewImg" style="width:100%;max-width:420px;max-height:320px;object-fit:contain;{{ $pengaturanStrukturOrgExists ? '' : 'display:none' }}">
+              <div class="lp-image-placeholder" id="strukturOrgPreviewPlaceholder" style="width:100%;max-width:260px;height:160px;{{ $pengaturanStrukturOrgExists ? 'display:none' : '' }}">
                 <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
                 <span>Belum ada gambar struktur organisasi</span>
               </div>
@@ -5825,7 +5821,7 @@
           <div class="tbl-wrap tbl-scroll" style="max-height:420px;">
             <table class="dtbl" id="tblRekapSatuan">
               <colgroup><col style="width:30%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"></colgroup>
-              <thead><tr><th>Satuan</th><th style="text-align:center;">Total Pelaporan</th><th style="text-align:center;">Disetujui</th><th style="text-align:center;">Ditolak</th><th style="text-align:center;">Terlambat</th><th style="text-align:center;">Dibatalkan</th></tr></thead>
+              <thead><tr><th>Satuan</th><th style="text-align:center;">Total Pelaporan</th><th style="text-align:center;">Disetujui</th><th style="text-align:center;">Koreksi</th><th style="text-align:center;">Terlambat</th><th style="text-align:center;">Dibatalkan</th></tr></thead>
               <tbody>
                 @forelse($rekapLaporanSatuan as $s)
                 <tr data-filter-value="{{ $s->kategori }}" data-search-value="{{ strtolower($s->nama.' '.$s->kode) }}">
@@ -5852,7 +5848,7 @@
           <div class="panel-head"><div><h2>Pengguna Aktif</h2><p>Pantau perangkat/browser yang sedang login, dan paksa logout kalau perlu.</p></div></div>
           <div class="tbl-wrap">
             <table class="dtbl" id="tblSesiAktif">
-              <thead><tr><th>Pengguna</th><th>IP Address</th><th>Perangkat / Browser</th><th>Terakhir Aktif</th><th>Aksi</th></tr></thead>
+              <thead><tr><th>Pengguna</th><th>IP Address</th><th>Perangkat / Browser</th><th>Terakhir Aktif</th><th style="text-align:center;">Aksi</th></tr></thead>
               <tbody>
                 @forelse($sesiAktif as $s)@include('siberad.dashboards.partials.sesi-aktif-row', ['s' => $s])@empty
                 <tr class="table-empty-row"><td colspan="5"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Tidak ada sesi aktif</div></div></td></tr>

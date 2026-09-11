@@ -28,14 +28,17 @@
       <span style="color:var(--text-dim);">-</span>
     @endif
   </td>
-  <td class="js-terakhir-aktif">{{ \Carbon\Carbon::createFromTimestamp($s->last_activity)->diffForHumans() }}</td>
+  <td class="js-terakhir-aktif">{{ \Carbon\Carbon::parse($s->login_at ?? \Carbon\Carbon::createFromTimestamp($s->last_activity))->diffForHumans() }}</td>
   <td>
     @if($s->id !== $sesiSayaId)
     <button class="btn btn-ghost-red btn-sm" type="button" onclick="bukaPaksaLogout(this)"
       data-action="{{ route('admin.sessions.destroy', $s->id) }}"
       data-nama="{{ $s->user_name ?? 'Tamu (belum login)' }}">Paksa Logout</button>
     @else
-      <span style="font-size:11.5px;color:var(--text-dim);">—</span>
+      <form method="POST" action="{{ route('logout') }}" class="logout-form" style="display:inline">
+        @csrf
+        <button type="submit" class="btn btn-ghost btn-sm" title="Logout dari sesi Anda saat ini">Logout</button>
+      </form>
     @endif
   </td>
 </tr>
