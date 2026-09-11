@@ -124,44 +124,44 @@ Route::patch('/permintaan-laporan/{permintaanLaporan}/revisi', [PermintaanLapora
 
 // ===== Laporan Kendala Kasansi (21 Sansidam) langsung ke Danpus =====
 Route::post('/laporan-kendala', [LaporanKendalaController::class, 'store'])
-    ->middleware(['auth', 'modul:laporan'])
+    ->middleware(['auth', 'modul:kendala'])
     ->name('laporan-kendala.store');
 Route::get('/laporan-kendala/realtime', [LaporanKendalaController::class, 'realtime'])
-    ->middleware(['auth', 'modul:laporan'])
+    ->middleware(['auth', 'modul:kendala'])
     ->name('laporan-kendala.realtime');
 Route::patch('/laporan-kendala/{laporanKendala}/status', [LaporanKendalaController::class, 'updateStatus'])
-    ->middleware(['auth', 'modul:laporan'])
+    ->middleware(['auth', 'modul:kendala'])
     ->name('laporan-kendala.status');
 Route::patch('/laporan-kendala/{laporanKendala}/teruskan', [LaporanKendalaController::class, 'teruskan'])
-    ->middleware(['auth', 'modul:laporan'])
+    ->middleware(['auth', 'modul:kendala'])
     ->name('laporan-kendala.teruskan');
 Route::delete('/laporan-kendala/{laporanKendala}', [LaporanKendalaController::class, 'destroy'])
-    ->middleware(['auth', 'modul:laporan'])
+    ->middleware(['auth', 'modul:kendala'])
     ->name('laporan-kendala.destroy');
 
 // ===== Surat Kasansi (21 Sansidam) ke SATU tujuan bebas =====
 // Status: menunggu_konfirmasi -> dikonfirmasi (oleh penerima).
 // Surat masuk Arsip Surat pengirim hanya setelah dikonfirmasi.
 Route::post('/laporan-surat', [LaporanSuratController::class, 'store'])
-    ->middleware(['auth', 'modul:laporan'])
+    ->middleware(['auth', 'modul:surat'])
     ->name('laporan-surat.store');
 Route::get('/laporan-surat/realtime', [LaporanSuratController::class, 'realtime'])
-    ->middleware(['auth', 'modul:laporan'])
+    ->middleware(['auth', 'modul:surat'])
     ->name('laporan-surat.realtime');
 Route::patch('/laporan-surat/{laporanSurat}/konfirmasi', [LaporanSuratController::class, 'konfirmasi'])
-    ->middleware(['auth', 'modul:laporan'])
+    ->middleware(['auth', 'modul:surat'])
     ->name('laporan-surat.konfirmasi');
 Route::delete('/laporan-surat/{laporanSurat}', [LaporanSuratController::class, 'destroy'])
-    ->middleware(['auth', 'modul:laporan'])
+    ->middleware(['auth', 'modul:surat'])
     ->name('laporan-surat.destroy');
 
 // ===== Tembusan laporan kendala Kasansi ke 4 Satlak/4 Sdir (info/koordinasi
 // + feedback balik ke Kasansi -- lihat komentar LaporanKendalaTembusanController) =====
 Route::patch('/laporan-kendala-tembusan/{laporanKendalaTembusan}/baca', [LaporanKendalaTembusanController::class, 'tandaiDibaca'])
-    ->middleware(['auth', 'modul:laporan'])
+    ->middleware(['auth', 'modul:kendala'])
     ->name('laporan-kendala-tembusan.baca');
 Route::patch('/laporan-kendala-tembusan/{laporanKendalaTembusan}/feedback', [LaporanKendalaTembusanController::class, 'beriFeedback'])
-    ->middleware(['auth', 'modul:laporan'])
+    ->middleware(['auth', 'modul:kendala'])
     ->name('laporan-kendala-tembusan.feedback');
 
 // ===== Laporan Publikasi ke DANPUS (Satuan Pelaksanaan Siber Sosial) =====
