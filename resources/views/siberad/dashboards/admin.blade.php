@@ -5611,7 +5611,7 @@
               document.querySelectorAll('[data-lp-bg-type-panel]').forEach(function(panel){
                 panel.style.display = (panel.dataset.lpBgTypePanel === type) ? '' : 'none';
               });
-              form.querySelectorAll('[data-lp-bg-type-radio]').forEach(function(radio){
+              document.querySelectorAll('[data-lp-bg-type-radio]').forEach(function(radio){
                 var opt = radio.closest('.lp-bg-type-option');
                 if(opt) opt.classList.toggle('is-active', radio.checked);
               });
@@ -5619,8 +5619,18 @@
               if(lpPreviewVideoEl) lpPreviewVideoEl.style.display = (type === 'video' && lpPreviewVideoEl.getAttribute('src')) ? 'block' : 'none';
             }
             document.addEventListener('change', function(e){
+              // CATATAN PERBAIKAN BUG: guard "form.contains(radio)" di bawah
+              // ini SEBELUMNYA bikin toggle macet begitu modal dibuka --
+              // sama persis root cause-nya dengan applyBgType() di atas:
+              // radio-nya sudah tidak lagi berada di dalam `form` begitu
+              // panel dipindah ke modal, jadi form.contains() selalu balik
+              // false dan listener ini langsung berhenti (return) sebelum
+              // sempat memanggil applyBgType(). Atribut data-lp-bg-type-radio
+              // sudah unik untuk section ini (lihat catatan applyBgType),
+              // jadi guard containment ini dihapus -- cukup pastikan radio-nya
+              // ditemukan.
               var radio = e.target.closest && e.target.closest('[data-lp-bg-type-radio]');
-              if(!radio || !form.contains(radio)) return;
+              if(!radio) return;
               applyBgType(radio.value);
             });
             // Jaring pengaman tambahan: sebagian browser/skema event tertentu
@@ -5630,7 +5640,7 @@
             // status "checked" bawaan browser selesai diperbarui.
             document.addEventListener('click', function(e){
               var opt = e.target.closest && e.target.closest('.lp-bg-type-option');
-              if(!opt || !form.contains(opt)) return;
+              if(!opt) return;
               setTimeout(function(){
                 var checked = opt.querySelector('[data-lp-bg-type-radio]:checked');
                 if(checked) applyBgType(checked.value);
