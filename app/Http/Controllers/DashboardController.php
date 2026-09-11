@@ -174,6 +174,14 @@ class DashboardController
         $kodeSatuanPengirim = Satuan::whereNotIn('kategori', [Satuan::KATEGORI_ADMIN, Satuan::KATEGORI_PIMPINAN])->pluck('kode')->all();
         $laporanRekapMentah = Laporan::whereIn('satuan_id', Satuan::whereIn('kode', $kodeSatuanPengirim)->pluck('id'))->with('lampirans')->get();
         $suratSemuaAdmin = LaporanSurat::get();
+        // Kartu "Aktivitas Terbaru" cuma butuh 5 aksi terbaru -- default
+        // rentang tanggal SAMA kayak yang dipakai admin() (1 hari terakhir),
+        // bukan seluruh histori, biar query-nya ringan tiap poll (1 detik).
+        $logAktivitasTerbaru = ActivityLog::with('user.satuan')
+            ->whereBetween('created_at', [now()->subDays(1)->startOfDay(), now()->endOfDay()])
+            ->latest('created_at')
+            ->take(5)
+            ->get();
 
         $stats = [
             'total_pengguna' => $semuaPengguna->count(),
@@ -191,6 +199,12 @@ class DashboardController
                 'laporanRekapMentah' => $laporanRekapMentah,
                 'suratSemuaAdmin' => $suratSemuaAdmin,
                 'permintaanResetPassword' => $permintaanResetPassword,
+            ])->render(),
+            'reset_password_terbaru_html' => view('siberad.dashboards.partials.admin-reset-password-terbaru-list', [
+                'permintaanResetPasswordTerbaru' => $permintaanResetPassword->take(5),
+            ])->render(),
+            'aktivitas_terbaru_html' => view('siberad.dashboards.partials.admin-aktivitas-terbaru-list', [
+                'logAktivitasTerbaru' => $logAktivitasTerbaru,
             ])->render(),
             'server_time' => now()->toIso8601String(),
         ], 200, [

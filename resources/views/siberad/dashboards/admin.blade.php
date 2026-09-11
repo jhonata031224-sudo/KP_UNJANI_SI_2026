@@ -1049,58 +1049,35 @@
           });
         </script>
 
-        <div class="dash-two-col">
-          <div class="panel activity-panel">
-            <div class="panel-head">
-              <div><h3>Permintaan Ganti Password</h3><p>5 permintaan terbaru.</p></div>
+        {{-- Kartu "Permintaan Ganti Password" & "Aktivitas Terbaru" -- MIRROR
+             style+fungsi kartu "Surat Terbaru"/"Kendala Kasansi Terbaru"
+             Pimpinan/Satuan (chart-card + pimp-card-head + pimp-activity-list,
+             realtime tiap 1 detik + fade-in "is-fresh" pas ada data baru).
+             "Lihat Semua" tetap pakai mekanisme data-tab-link Admin yang
+             sudah ada (BUKAN href="#section-id" punya Pimpinan/Satuan --
+             tab-switcher Admin beda), cuma posisi+style tombolnya udah
+             sama dari awal (btn btn-ghost btn-sm di pimp-card-head). --}}
+        <div class="admin-terbaru-row">
+          <div class="chart-card">
+            <div class="pimp-card-head">
+              <div class="pimp-card-head-main">
+                <span class="pimp-card-ico" style="background:color-mix(in srgb,#f59e0b 15%,transparent);color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span>
+                <div><h3>Permintaan Ganti Password</h3><p>5 permintaan terbaru.</p></div>
+              </div>
               <a href="#" class="btn btn-ghost btn-sm" data-tab-link="reset-password">Lihat Semua</a>
             </div>
-            <ul class="activity-feed">
-              @forelse($permintaanResetPassword->take(5) as $r)
-              @php
-                [$statusWarna, $statusDim] = match ($r->status) {
-                  \App\Models\PermintaanResetPassword::STATUS_DISETUJUI => ['var(--success-bright)', 'var(--success-dim)'],
-                  \App\Models\PermintaanResetPassword::STATUS_DITOLAK => ['var(--red)', 'var(--red-dim)'],
-                  default => ['var(--amber)', 'var(--amber-dim)'],
-                };
-              @endphp
-              <li>
-                <span class="activity-dot" style="background:{{ $statusWarna }};box-shadow:0 0 0 3px {{ $statusDim }};"></span>
-                <div class="activity-body">
-                  <div class="activity-main">
-                    <div class="activity-text">{{ $r->user->name ?? '-' }}</div>
-                    <div class="activity-meta">{{ $r->user->satuan->kode ?? 'Sistem' }} &middot; <span style="color:{{ $statusWarna }};font-weight:700;">{{ $r->status }}</span></div>
-                  </div>
-                  <div class="activity-time">{{ $r->created_at?->diffForHumans() }}</div>
-                </div>
-              </li>
-              @empty
-              <li class="activity-empty">Belum ada permintaan reset password.</li>
-              @endforelse
-            </ul>
+            <div class="pimp-activity-list" id="adminResetPasswordTerbaruList">@include('siberad.dashboards.partials.admin-reset-password-terbaru-list', ['permintaanResetPasswordTerbaru' => $permintaanResetPassword->take(5)])</div>
           </div>
 
-          <div class="panel activity-panel">
-            <div class="panel-head">
-              <div><h3>Aktivitas Terbaru</h3><p>5 aksi terakhir tercatat.</p></div>
+          <div class="chart-card">
+            <div class="pimp-card-head">
+              <div class="pimp-card-head-main">
+                <span class="pimp-card-ico" style="background:color-mix(in srgb,#6366f1 15%,transparent);color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></span>
+                <div><h3>Aktivitas Terbaru</h3><p>5 aksi terakhir tercatat.</p></div>
+              </div>
               <a href="#" class="btn btn-ghost btn-sm" data-tab-link="log-aktivitas">Lihat Semua</a>
             </div>
-            <ul class="activity-feed">
-              @forelse($logAktivitas->take(5) as $log)
-              <li>
-                <span class="activity-dot"></span>
-                <div class="activity-body">
-                  <div class="activity-main">
-                    <div class="activity-text">{{ $log->deskripsi ?: $log->aksi }}</div>
-                    <div class="activity-meta">{{ $log->nama_pengguna ?? 'Sistem' }}</div>
-                  </div>
-                  <div class="activity-time">{{ $log->created_at?->diffForHumans() }}</div>
-                </div>
-              </li>
-              @empty
-              <li class="activity-empty">Belum ada aktivitas tercatat.</li>
-              @endforelse
-            </ul>
+            <div class="pimp-activity-list" id="adminAktivitasTerbaruList">@include('siberad.dashboards.partials.admin-aktivitas-terbaru-list', ['logAktivitasTerbaru' => $logAktivitas->take(5)])</div>
           </div>
         </div>
 
@@ -1147,21 +1124,49 @@
           .chart-mini-icon.green{background:var(--green-dim);color:var(--green-bright);}
           .chart-mini-icon.blue{background:rgba(99,102,241,.14);color:#6366f1;}
 
-          .dash-two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px;}
-          @media(max-width:980px){.dash-two-col{grid-template-columns:1fr;}}
-          .dash-two-col .activity-panel{margin-top:0;height:100%;display:flex;flex-direction:column;}
-          .activity-feed{list-style:none;padding:2px 0 4px;margin:0;}
-          .dash-two-col .activity-feed{flex:1;display:flex;flex-direction:column;justify-content:center;}
-          .activity-feed li{display:flex;gap:12px;padding:13px 10px;border-radius:9px;transition:background .15s ease;}
-          .activity-feed li:hover{background:var(--hover-tint);}
-          .activity-feed li + li{border-top:1px solid var(--border-soft);}
-          .activity-dot{width:7px;height:7px;border-radius:50%;background:var(--gold-bright);margin-top:6px;flex-shrink:0;box-shadow:0 0 0 3px var(--gold-dim);}
-          .activity-body{flex:1;min-width:0;display:flex;justify-content:space-between;align-items:flex-start;gap:14px;}
-          .activity-main{min-width:0;}
-          .activity-text{font-size:13px;color:var(--text);line-height:1.5;}
-          .activity-meta{font-size:11px;color:var(--text-dim);margin-top:3px;}
-          .activity-time{font-size:10.5px;color:var(--text-dim);font-family:var(--mono);white-space:nowrap;flex-shrink:0;padding-top:2px;}
-          .activity-empty{padding:20px 0;text-align:center;color:var(--text-dim);font-size:12.5px;}
+          {{-- Kartu "Permintaan Ganti Password" & "Aktivitas Terbaru" -- MIRROR
+               style+fungsi kartu "Surat Terbaru"/"Kendala Kasansi Terbaru"
+               Pimpinan/Satuan (laporan-pimpinan.blade.php/laporan-role.blade.php,
+               ".chart-card"/".pimp-card-head"/".pimp-activity-list" dkk).
+               Sama alasan kayak blok KPI di atas: CSS disalin+dipetakan ke
+               token dashboard Admin sendiri, BUKAN var(--p-*). Kalau
+               style-nya diubah lagi di Pimpinan/Satuan nanti, salin ulang
+               ke 3 lokasi (Pimpinan/Satuan/Admin). --}}
+          .admin-terbaru-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px}
+          @media(max-width:980px){.admin-terbaru-row{grid-template-columns:1fr}}
+          .chart-card{background:var(--panel);border:1px solid var(--border-soft);border-radius:16px;padding:18px 20px;box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 10px 30px rgba(0,0,0,.25);min-width:0}
+          .pimp-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+          .pimp-card-head-main{display:flex;align-items:flex-start;gap:12px;min-width:0}
+          .pimp-card-head>.btn{align-self:center}
+          .pimp-card-ico{flex:0 0 auto;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center}
+          .pimp-card-ico svg{width:19px;height:19px}
+          .pimp-card-head h3{font-family:var(--display);font-size:16px;margin:0;color:var(--text)}
+          .pimp-card-head p{font-size:11px;color:var(--text-muted);margin:4px 0 0;line-height:1.5}
+          .pimp-activity-list{display:flex;flex-direction:column}
+          .pimp-activity-item{display:flex;align-items:center;gap:12px;padding:13px 0}
+          .pimp-activity-item:first-child{padding-top:0}
+          .pimp-activity-item:last-child{padding-bottom:0}
+          .pimp-activity-item:not(:last-child){border-bottom:1px solid var(--border-soft)}
+          .pimp-activity-body{flex:1;min-width:0}
+          .pimp-activity-title{font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+          .pimp-activity-sub{font-size:11px;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+          .pimp-activity-item .status-pill{flex:0 0 auto;white-space:nowrap}
+          .status-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;font-size:10px;font-weight:800;border:1px solid transparent}
+          .status-pill:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+          .status-pill.wait{color:var(--amber);background:var(--amber-dim);border-color:rgba(224,168,58,.35)}
+          .status-pill.ok{color:var(--success-bright);background:var(--success-dim);border-color:rgba(63,194,125,.28)}
+          .status-pill.bad{color:var(--red);background:var(--red-dim);border-color:rgba(198,40,40,.3)}
+          .kcard-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:48px 20px;text-align:center;color:var(--text-muted)}
+          .kcard-empty-title{font-size:14px;font-weight:700;color:var(--text-muted)}
+          .kcard-empty-sub{font-size:12px;color:var(--text-muted);line-height:1.5;max-width:320px;opacity:.7}
+          .pimp-empty-compact{padding:30px 16px;gap:8px}
+          .pimp-empty-compact .kcard-empty-title{font-size:12.5px}
+          .pimp-empty-compact .kcard-empty-sub{font-size:11px;max-width:260px}
+          {{-- Animasi "baris/item baru" -- MIRROR PERSIS animasi yang sama di
+               Beranda Pimpinan/Satuan (fungsi JS animateTerbaruRows). --}}
+          @keyframes terbaruFreshIn{0%{opacity:0;background-color:rgba(59,130,246,.14)}100%{opacity:1;background-color:transparent}}
+          .pimp-activity-item.is-fresh{animation:terbaruFreshIn .8s ease both}
+          @media(prefers-reduced-motion:reduce){.pimp-activity-item.is-fresh{animation:none}}
         </style>
       </section>
 
@@ -6797,14 +6802,16 @@
 
   <script>
   (function(){
-    // Kartu KPI (Total Pengguna/Satuan/Pelaporan/Surat/Reset Password)
-    // Beranda Admin: animasi count-up angka + gunung "tumbuh" dari dasar +
-    // poll realtime -- MIRROR PERSIS logika yang sama di Beranda
-    // Pimpinan/Satuan (laporan-pimpinan.blade.php/laporan-role.blade.php,
-    // fungsi countUp/animatePimpKpis/animateSatuanKpis/syncPimpinanKpis/
-    // syncSatuanKpis), cuma discoped ke 1 section doang (halaman ini gak
-    // punya donut Distribusi Status/Surat Terbaru/Kendala Terbaru versi
-    // itu di section yang sama) dan nembak endpoint
+    // Kartu KPI (Total Pengguna/Satuan/Pelaporan/Surat/Reset Password) +
+    // "Permintaan Ganti Password"/"Aktivitas Terbaru" Beranda Admin: animasi
+    // count-up angka + gunung "tumbuh" dari dasar + fade-in item baru + poll
+    // realtime -- MIRROR PERSIS logika yang sama di Beranda Pimpinan/Satuan
+    // (laporan-pimpinan.blade.php/laporan-role.blade.php, fungsi countUp/
+    // animatePimpKpis/animateSatuanKpis/animateTerbaruRows/syncPimpinanKpis/
+    // syncSatuanKpis). SATU IIFE/SATU poll buat ketiga section (bukan
+    // 3 poller terpisah), sama alasannya kayak syncSatuanKpis -- discoped
+    // ke halaman ini doang (gak ada donut Distribusi Status versi
+    // pimp-card-head di section yang sama) dan nembak endpoint
     // dashboard.admin-kpi.realtime (5 metrik Admin, bukan 3 metrik
     // Pimpinan/Satuan).
     const wrap=document.getElementById('adminKpisWrap');
@@ -6849,6 +6856,24 @@
     // [[feedback_dom_diff_flicker_gotcha]].
     let lastFreshHtml=wrap.innerHTML.trim();
     animateAdminKpis();
+    // "Permintaan Ganti Password"/"Aktivitas Terbaru" -- swap innerHTML
+    // biasa (bukan dianimasiin kayak KPI yang count-up), tapi item-nya
+    // dikasih fade-in + flash background pas baru dirender -- MIRROR PERSIS
+    // animasi yang sama di Beranda Pimpinan/Satuan (fungsi
+    // animateTerbaruRows).
+    const resetPasswordList=document.getElementById('adminResetPasswordTerbaruList');
+    const aktivitasList=document.getElementById('adminAktivitasTerbaruList');
+    let lastResetPasswordHtml=resetPasswordList?resetPasswordList.innerHTML.trim():'';
+    let lastAktivitasHtml=aktivitasList?aktivitasList.innerHTML.trim():'';
+    function animateTerbaruRows(container,selector){
+      if(!container)return;
+      container.querySelectorAll(selector).forEach(function(el,i){
+        el.style.animationDelay=(i*60)+'ms';
+        el.classList.add('is-fresh');
+      });
+    }
+    animateTerbaruRows(resetPasswordList,'.pimp-activity-item');
+    animateTerbaruRows(aktivitasList,'.pimp-activity-item');
     const kpiEndpoint='{{ route('dashboard.admin-kpi.realtime') }}';
     let kpiBusy=false;
     async function syncAdminKpis(){
@@ -6866,6 +6891,22 @@
             lastFreshHtml=fresh;
             wrap.innerHTML=fresh;
             animateAdminKpis(fromList,trendFromList);
+          }
+        }
+        if(resetPasswordList&&typeof data.reset_password_terbaru_html==='string'){
+          const freshRp=data.reset_password_terbaru_html.trim();
+          if(lastResetPasswordHtml!==freshRp){
+            lastResetPasswordHtml=freshRp;
+            resetPasswordList.innerHTML=freshRp;
+            animateTerbaruRows(resetPasswordList,'.pimp-activity-item');
+          }
+        }
+        if(aktivitasList&&typeof data.aktivitas_terbaru_html==='string'){
+          const freshAk=data.aktivitas_terbaru_html.trim();
+          if(lastAktivitasHtml!==freshAk){
+            lastAktivitasHtml=freshAk;
+            aktivitasList.innerHTML=freshAk;
+            animateTerbaruRows(aktivitasList,'.pimp-activity-item');
           }
         }
       }catch(e){}
