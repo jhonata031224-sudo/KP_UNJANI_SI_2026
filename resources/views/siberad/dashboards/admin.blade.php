@@ -4727,8 +4727,18 @@
             background:linear-gradient(to right, var(--gold-bright) 0%, var(--gold-bright) var(--lp-range-fill,0%), var(--border-soft) var(--lp-range-fill,0%), var(--border-soft) 100%) !important;
           }
           .lp-hero-image-row{display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:0;text-align:center;}
-          .lp-hero-image-row video.lp-current-image{width:100%;max-width:360px;object-fit:cover;background:#000;}
-          .lp-hero-image-row .landing-file-picker{align-self:center;flex:0 0 auto;min-width:200px;justify-content:center;}
+          /* Video BG sebelumnya pakai rule generik ".lp-hero-image-row
+             video.lp-current-image{max-width:360px}" -- jauh lebih kecil
+             & beda rasio dari kotak Gambar BG (460x259). Sekarang video
+             dikasih rule khusus per-ID, PERSIS menyamai ukuran & rasio
+             kotak Gambar BG (lihat "#lpHeroImagePreviewImg" di bawah)
+             supaya kotak pratinjau Gambar <-> Video terlihat konsisten
+             saat berpindah tipe. */
+          #lpHeroVideoPreviewVideo{width:460px;height:259px;object-fit:cover;object-position:center;background:#000;}
+          #lpHeroVideoPreviewPlaceholder{width:460px;height:259px;}
+          @media(max-width:760px){#lpHeroVideoPreviewVideo,#lpHeroVideoPreviewPlaceholder{width:100%;max-width:400px;}}
+          @media(max-width:560px){#lpHeroVideoPreviewVideo,#lpHeroVideoPreviewPlaceholder{max-width:340px;}}
+          .lp-hero-image-row .siberad-file-wrap{align-self:center;flex:0 0 auto;min-width:200px;justify-content:center;}
           /* Tombol "Pilih File", preview gambar, & tombol "Hapus Latar
              Belakang" semuanya rata tengah (align-items:center di parent
              .lp-hero-image-row) -- sebelumnya rata kiri lalu preview
