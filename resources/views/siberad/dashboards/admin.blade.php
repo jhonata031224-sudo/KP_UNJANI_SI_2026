@@ -3812,7 +3812,10 @@
                     <label for="lpHeroImage" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Gambar Latar Beranda</label>
                     <div class="lp-hero-image-row">
                       <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturanHeroExists ? '1' : '0' }}" data-label-existing="Ganti Gambar">
-                      <img src="{{ $pengaturanHeroExists ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}">
+                      <div class="lp-hero-preview-frame" id="lpHeroImagePreviewFrame" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}">
+                        <img src="{{ $pengaturanHeroExists ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="filter:blur({{ $pengaturanHeroBlur }}px);">
+                        <div class="lp-hero-preview-overlay" id="lpHeroImagePreviewOverlay" style="opacity:{{ $pengaturanHeroOverlay / 100 }};"></div>
+                      </div>
                       <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturanHeroExists ? 'display:none' : '' }}">
                         <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
                         <span>Belum ada gambar latar belakang</span>
@@ -3827,7 +3830,10 @@
                     <label for="lpHeroVideo" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Video Latar Beranda</label>
                     <div class="lp-hero-image-row">
                       <input id="lpHeroVideo" name="hero_video" type="file" accept="video/mp4,video/webm,video/quicktime,.mov" data-lp-video="hero_video" data-has-current="{{ $pengaturanHeroVideoExists ? '1' : '0' }}" data-label-existing="Ganti Video">
-                      <video src="{{ $pengaturanHeroVideoExists ? asset('storage/'.$pengaturan->hero_video_path) : '' }}" class="lp-current-image" id="lpHeroVideoPreviewVideo" muted loop autoplay playsinline style="{{ $pengaturanHeroVideoExists ? '' : 'display:none' }}"></video>
+                      <div class="lp-hero-preview-frame" id="lpHeroVideoPreviewFrame" style="{{ $pengaturanHeroVideoExists ? '' : 'display:none' }}">
+                        <video src="{{ $pengaturanHeroVideoExists ? asset('storage/'.$pengaturan->hero_video_path) : '' }}" class="lp-current-image" id="lpHeroVideoPreviewVideo" muted loop autoplay playsinline style="filter:blur({{ $pengaturanHeroBlur }}px);"></video>
+                        <div class="lp-hero-preview-overlay" id="lpHeroVideoPreviewOverlay" style="opacity:{{ $pengaturanHeroOverlay / 100 }};"></div>
+                      </div>
                       <div class="lp-image-placeholder" id="lpHeroVideoPreviewPlaceholder" style="{{ $pengaturanHeroVideoExists ? 'display:none' : '' }}">
                         <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m10 9 5 3-5 3z"></path></svg>
                         <span>Belum ada video latar belakang</span>
@@ -4336,14 +4342,14 @@
             overflow-x:hidden!important;
             padding:22px 24px!important;
             scrollbar-width:thin!important;
-            scrollbar-color:var(--border-strong) rgba(0,0,0,.25)!important;
+            scrollbar-color:var(--text-dim) rgba(0,0,0,.25)!important;
             -webkit-overflow-scrolling:touch!important;
             overscroll-behavior:contain!important;
           }
           .lp-landing-modal-body::-webkit-scrollbar{width:8px!important;}
           .lp-landing-modal-body::-webkit-scrollbar-track{background:rgba(0,0,0,.2)!important;border-radius:6px!important;}
-          .lp-landing-modal-body::-webkit-scrollbar-thumb{background:var(--border-strong)!important;border-radius:6px!important;}
-          .lp-landing-modal-body::-webkit-scrollbar-thumb:hover{background:var(--gold)!important;}
+          .lp-landing-modal-body::-webkit-scrollbar-thumb{background:var(--text-dim)!important;border-radius:6px!important;}
+          .lp-landing-modal-body::-webkit-scrollbar-thumb:hover{background:var(--text-muted)!important;}
 
           /* Sub-panel di dalam modal (mis. Makna Logo, Moto, Identitas Instansi, Fitur 1..4) */
           .lp-landing-modal-body .lp-tab-panel{
@@ -4762,8 +4768,20 @@
              digeser pakai margin-left, sekarang cukup center semua & margin
              kiri itu dihapus supaya gak nambah geser dari titik tengah. */
           .lp-hero-image-row .lp-current-image,
-          .lp-hero-image-row .lp-image-placeholder{align-self:center;margin:0;}
+          .lp-hero-image-row .lp-image-placeholder,
+          .lp-hero-image-row .lp-hero-preview-frame{align-self:center;margin:0;}
           .lp-current-image{display:block;border-radius:9px;border:1px solid var(--border-soft);}
+          /* Bungkus <img>/<video> pratinjau supaya bisa ditumpuk sama layer
+             overlay warna (.lp-hero-preview-overlay) -- blur dipasang
+             langsung sebagai CSS filter di <img>/<video>-nya sendiri, tapi
+             overlay warna butuh elemen terpisah di atasnya karena filter
+             CSS tidak bisa "mewarnai" transparan seperti overlay gradasi. */
+          .lp-hero-preview-frame{position:relative;display:inline-block;border-radius:9px;overflow:hidden;}
+          .lp-hero-preview-frame .lp-current-image{border:1px solid var(--border-soft);}
+          .lp-hero-preview-overlay{
+            position:absolute;inset:0;pointer-events:none;
+            background-image:linear-gradient(160deg, color-mix(in srgb, var(--panel-2) 85%, transparent), color-mix(in srgb, var(--bg-deep) 75%, transparent));
+          }
           .lp-image-placeholder{box-sizing:border-box;border-radius:12px;border:2px dashed var(--border-strong);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:14px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
           .lp-image-placeholder svg{display:block;flex-shrink:0;}
           .lp-delete-img-btn{align-self:center;min-height:32px;height:32px;padding:0 13px;font-size:11px;}
@@ -5415,6 +5433,25 @@
               var lpPreviewHero = document.getElementById('lpPreviewHero');
               if(lpPreviewHero && heroBlurEl){ lpPreviewHero.style.setProperty('--lp-hero-blur', heroBlurEl.value + 'px'); }
               if(lpPreviewHero && heroOverlayEl){ lpPreviewHero.style.setProperty('--lp-hero-overlay', (heroOverlayEl.value / 100)); }
+              // Sinkron juga ke pratinjau gambar/video BESAR di dalam modal
+              // "Latar Belakang Beranda" sendiri (bukan cuma di panel
+              // Pratinjau Langsung yang letaknya terpisah) -- supaya efek
+              // blur & overlay-nya langsung kelihatan begitu slider digeser,
+              // tanpa perlu simpan dulu.
+              if(heroBlurEl){
+                var blurCss = 'blur(' + heroBlurEl.value + 'px)';
+                var imgEl = document.getElementById('lpHeroImagePreviewImg');
+                var vidEl = document.getElementById('lpHeroVideoPreviewVideo');
+                if(imgEl){ imgEl.style.filter = blurCss; }
+                if(vidEl){ vidEl.style.filter = blurCss; }
+              }
+              if(heroOverlayEl){
+                var overlayOpacity = heroOverlayEl.value / 100;
+                var imgOverlayEl = document.getElementById('lpHeroImagePreviewOverlay');
+                var vidOverlayEl = document.getElementById('lpHeroVideoPreviewOverlay');
+                if(imgOverlayEl){ imgOverlayEl.style.opacity = overlayOpacity; }
+                if(vidOverlayEl){ vidOverlayEl.style.opacity = overlayOpacity; }
+              }
               setText('lpPvEyebrow', form.querySelector('[data-lp="hero_eyebrow"]').value, 'PUSSIBERAD SISTEM PENDUKUNG OPERASIONAL');
               setText('lpPvJudulAwal', form.querySelector('[data-lp="hero_judul_awal"]').value, 'SIBER');
               setText('lpPvJudulAksen', form.querySelector('[data-lp="hero_judul_aksen"]').value, 'AD');
@@ -5463,6 +5500,7 @@
                 var file = this.files && this.files[0];
                 var heroEl = document.getElementById('lpPreviewHero');
                 var previewImg = document.getElementById('lpHeroImagePreviewImg');
+                var previewFrame = document.getElementById('lpHeroImagePreviewFrame');
                 var placeholder = document.getElementById('lpHeroImagePreviewPlaceholder');
                 if(!file){ heroEl.style.setProperty('--lp-hero-photo', 'none'); return; }
                 var reader = new FileReader();
@@ -5470,7 +5508,8 @@
                   heroEl.style.setProperty('--lp-hero-photo', 'url(' + e.target.result + ')');
                   // Tampilkan pratinjau BG realtime di sebelah tombol pilih file,
                   // gantikan kotak "belum ada gambar" begitu file dipilih.
-                  if(previewImg){ previewImg.src = e.target.result; previewImg.style.display = 'block'; }
+                  if(previewImg){ previewImg.src = e.target.result; }
+                  if(previewFrame){ previewFrame.style.display = ''; }
                   if(placeholder){ placeholder.style.display = 'none'; }
                 };
                 reader.readAsDataURL(file);
@@ -5534,9 +5573,11 @@
 
             function tampilkanPratinjauVideoHero(file, url){
               var previewVideo = document.getElementById('lpHeroVideoPreviewVideo');
+              var previewFrame = document.getElementById('lpHeroVideoPreviewFrame');
               var placeholder = document.getElementById('lpHeroVideoPreviewPlaceholder');
               var lpPreviewVideo = document.getElementById('lpPreviewHeroVideo');
-              if(previewVideo){ previewVideo.src = url; previewVideo.style.display = 'block'; }
+              if(previewVideo){ previewVideo.src = url; }
+              if(previewFrame){ previewFrame.style.display = ''; }
               if(placeholder){ placeholder.style.display = 'none'; }
               // Ikut tampilkan di panel Pratinjau Langsung kalau tipe latar
               // yang sedang aktif memang video.
