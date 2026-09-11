@@ -7,8 +7,6 @@ use App\Models\ActivityLog;
 use App\Models\Laporan;
 use App\Models\LaporanKendala;
 use App\Models\LaporanMonitoring;
-use App\Models\LaporanPenindakan;
-use App\Models\LaporanPublikasi;
 use App\Models\PermintaanLaporan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,24 +45,6 @@ class ResetDataLaporanController extends Controller
             'tables' => [
                 ['table' => 'laporan_monitoring_lampirans', 'file_column' => 'path'],
                 ['table' => 'laporan_monitorings', 'file_column' => null],
-            ],
-        ],
-        'penindakan' => [
-            'label' => 'Laporan Penindakan (Insiden Siber)',
-            'desc' => 'Laporan penanganan insiden siber, rincian ancaman, dan berkas bukti forensik.',
-            'icon' => 'shield-alert',
-            'tables' => [
-                ['table' => 'laporan_penindakan_buktis', 'file_column' => 'path'],
-                ['table' => 'laporan_penindakans', 'file_column' => null],
-            ],
-        ],
-        'publikasi' => [
-            'label' => 'Laporan Publikasi',
-            'desc' => 'Laporan publikasi konten, platform media sosial, dan dokumen lampiran.',
-            'icon' => 'share-2',
-            'tables' => [
-                ['table' => 'laporan_publikasi_dokumens', 'file_column' => 'path'],
-                ['table' => 'laporan_publikasis', 'file_column' => null],
             ],
         ],
         'permintaan' => [
@@ -114,8 +94,6 @@ class ResetDataLaporanController extends Controller
         $detail = [
             'laporan' => [],
             'monitoring' => [],
-            'penindakan' => [],
-            'publikasi' => [],
             'permintaan' => [],
         ];
 
@@ -177,46 +155,7 @@ class ResetDataLaporanController extends Controller
                 ];
             }
 
-            // 3. Kategori: Penindakan Insiden Siber
-            $penindakans = LaporanPenindakan::with(['satuan', 'user'])->latest('id')->limit(150)->get();
-            foreach ($penindakans as $row) {
-                $detail['penindakan'][] = [
-                    'key' => 'penindakan:'.$row->id,
-                    'id' => $row->id,
-                    'tipe' => 'penindakan',
-                    'subtipe' => 'Insiden Siber',
-                    'subtipe_badge' => 'red',
-                    'judul' => $row->perihal ?: ($row->jenis_ancaman ?: 'Penindakan #'.$row->id),
-                    'satuan' => $row->satuan->nama ?? ($row->satuan->kode ?? '-'),
-                    'user' => $row->user->name ?? '-',
-                    'tanggal' => $row->created_at ? $row->created_at->format('d M Y H:i') : '-',
-                    'status' => $row->status ?: 'Terkirim',
-                    'lampiran' => false,
-                    'ts' => $row->created_at ? $row->created_at->timestamp : 0,
-                ];
-            }
-
-            // 4. Kategori: Laporan Publikasi
-            $publikasis = LaporanPublikasi::with(['satuan', 'user'])->latest('id')->limit(150)->get();
-            foreach ($publikasis as $row) {
-                $platform = $row->platform ? ucfirst($row->platform) : 'Publikasi';
-                $detail['publikasi'][] = [
-                    'key' => 'publikasi:'.$row->id,
-                    'id' => $row->id,
-                    'tipe' => 'publikasi',
-                    'subtipe' => 'Publikasi '.$platform,
-                    'subtipe_badge' => 'purple',
-                    'judul' => $row->judul ?: 'Publikasi #'.$row->id,
-                    'satuan' => $row->satuan->nama ?? ($row->satuan->kode ?? '-'),
-                    'user' => $row->user->name ?? '-',
-                    'tanggal' => $row->created_at ? $row->created_at->format('d M Y H:i') : '-',
-                    'status' => $row->status ?: 'Terkirim',
-                    'lampiran' => false,
-                    'ts' => $row->created_at ? $row->created_at->timestamp : 0,
-                ];
-            }
-
-            // 5. Kategori: Permintaan Laporan & Task
+            // 3. Kategori: Permintaan Laporan & Task
             $permintaans = PermintaanLaporan::with(['tujuanSatuan', 'pembuat'])->latest('id')->limit(150)->get();
             foreach ($permintaans as $row) {
                 $detail['permintaan'][] = [
@@ -307,30 +246,6 @@ class ResetDataLaporanController extends Controller
                                     Storage::disk('public')->delete($p);
                                 });
                                 DB::table('laporan_monitoring_lampirans')->where('laporan_monitoring_id', $id)->delete();
-                                $row->delete();
-                                $totalTerhapus++;
-                            }
-                            break;
-
-                        case 'penindakan':
-                            $row = LaporanPenindakan::find($id);
-                            if ($row) {
-                                DB::table('laporan_penindakan_buktis')->where('laporan_penindakan_id', $id)->pluck('path')->filter()->each(function ($p) {
-                                    Storage::disk('public')->delete($p);
-                                });
-                                DB::table('laporan_penindakan_buktis')->where('laporan_penindakan_id', $id)->delete();
-                                $row->delete();
-                                $totalTerhapus++;
-                            }
-                            break;
-
-                        case 'publikasi':
-                            $row = LaporanPublikasi::find($id);
-                            if ($row) {
-                                DB::table('laporan_publikasi_dokumens')->where('laporan_publikasi_id', $id)->pluck('path')->filter()->each(function ($p) {
-                                    Storage::disk('public')->delete($p);
-                                });
-                                DB::table('laporan_publikasi_dokumens')->where('laporan_publikasi_id', $id)->delete();
                                 $row->delete();
                                 $totalTerhapus++;
                             }
