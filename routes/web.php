@@ -157,6 +157,9 @@ Route::delete('/laporan-surat/{laporanSurat}', [LaporanSuratController::class, '
 
 // ===== Tembusan laporan kendala Kasansi ke 4 Satlak/4 Sdir (info/koordinasi
 // + feedback balik ke Kasansi -- lihat komentar LaporanKendalaTembusanController) =====
+Route::get('/laporan-kendala-tembusan/realtime', [LaporanKendalaTembusanController::class, 'realtime'])
+    ->middleware(['auth', 'modul:kendala'])
+    ->name('laporan-kendala-tembusan.realtime');
 Route::patch('/laporan-kendala-tembusan/{laporanKendalaTembusan}/baca', [LaporanKendalaTembusanController::class, 'tandaiDibaca'])
     ->middleware(['auth', 'modul:kendala'])
     ->name('laporan-kendala-tembusan.baca');
