@@ -4088,25 +4088,6 @@
               </div>
             </div>
 
-            {{-- ---------- Tombol simpan -- ".lp-form-actions" itu bar
-                 position:fixed nempel dasar viewport (lihat CSS-nya di
-                 bawah), jadi SENGAJA tidak dibungkus ".panel"/".lp-panel"
-                 lagi (dulu memang tidak dibungkus juga, cuma anak langsung
-                 dari kartu "Konten Halaman Landing") -- kalau dibungkus
-                 kartu, kartu kosong itu akan tetap makan tempat mengikuti
-                 alur normal halaman padahal isinya sendiri sudah lepas ke
-                 posisi fixed, jadinya nyisain kotak kosong di bawah kartu
-                 terakhir. ---------- --}}
-            <div class="lp-form-actions">
-              <div class="lp-form-actions-inner">
-                <button class="btn btn-primary" type="submit" id="landingFormSubmitBtn">Simpan Konten Landing</button>
-                <span id="landingFormUploadProgress" style="display:none;margin-left:12px;font-size:13px;color:var(--text-muted);align-items:center;gap:7px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="animation:lpUploadSpin 1s linear infinite;flex-shrink:0"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                  <span id="landingFormUploadProgressText">Mengunggah...</span>
-                </span>
-              </div>
-            </div>
-
           </form>
 
           {{-- ---------- PANEL PRATINJAU (terpisah) ---------- --}}
