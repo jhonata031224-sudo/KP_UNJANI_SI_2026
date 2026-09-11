@@ -100,6 +100,7 @@
 
     var deleteUrlBase = '{{ url('/notifikasi') }}/';
     var readUrlBaseFn = function (id) { return '{{ url('/notifikasi') }}/' + encodeURIComponent(id) + '/baca'; };
+    var hapusSemuaUrl = '{{ route('notifikasi.hapus-semua') }}';
     var pollUrl = '{{ route('notifikasi.realtime') }}';
     var csrfMeta = document.querySelector('meta[name="csrf-token"]');
     var csrfToken = csrfMeta ? csrfMeta.content : '{{ csrf_token() }}';
@@ -279,7 +280,72 @@
       }
     }
 
-    // Begitu notifikasi diklik, langsung arahkan ke tab/section yang
+    // Dialog konfirmasi "Hapus Semua" -- dibuat sekali & dipakai ulang,
+    // ngikutin pola .confirm-overlay/.confirm-box yang sudah ada di seluruh
+    // aplikasi (styling globalnya di partials/dash-styles.blade.php), biar
+    // tombolnya konsisten walau dipasang dari 2 partial beda (Admin lewat
+    // admin-ui-consistency.blade.php, Pimpinan/Satuan lewat
+    // satlak-notification-close-text.blade.php).
+    function ensureHapusSemuaOverlay() {
+      var overlay = document.getElementById('notifHapusSemuaOverlay');
+      if (overlay) return overlay;
+      overlay = document.createElement('div');
+      overlay.className = 'confirm-overlay';
+      overlay.id = 'notifHapusSemuaOverlay';
+      overlay.innerHTML = '<div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="notifHapusSemuaTitle">' +
+        '<div class="confirm-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg></div>' +
+        '<h3 id="notifHapusSemuaTitle">Hapus Semua Notifikasi?</h3>' +
+        '<p>Semua notifikasi di daftar ini akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.</p>' +
+        '<div class="confirm-actions"><button type="button" class="btn" id="notifHapusSemuaBatal">Batal</button><button type="button" class="btn btn-primary" id="notifHapusSemuaYa">Ya, Hapus Semua</button></div>' +
+        '</div>';
+      document.body.appendChild(overlay);
+      function tutupOverlay() { overlay.classList.remove('open'); }
+      overlay.querySelector('#notifHapusSemuaBatal').addEventListener('click', tutupOverlay);
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) tutupOverlay(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay.classList.contains('open')) tutupOverlay(); });
+      overlay.querySelector('#notifHapusSemuaYa').addEventListener('click', function () {
+        tutupOverlay();
+        eksekusiHapusSemua();
+      });
+      return overlay;
+    }
+
+    // Optimistic sama seperti removeNotification/markNotificationRead:
+    // daftar & badge langsung dikosongkan di klien, request hapus-semuanya
+    // jalan di background. Kalau gagal, poll berikutnya (tiap 3 detik)
+    // otomatis munculin lagi notifikasi yang ternyata belum kehapus.
+    function eksekusiHapusSemua() {
+      notifications = [];
+      render();
+      fetch(hapusSemuaUrl, {
+        method: 'DELETE',
+        credentials: 'same-origin',
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': csrfToken
+        }
+      }).then(function (response) {
+        if (response.status === 401) tampilkanSesiBerakhir();
+      }).catch(function () {});
+    }
+
+    // Dipanggil dari tombol "Hapus Semua" yang dipasang di sebelah "Tutup"
+    // (lihat partials/admin-ui-consistency.blade.php untuk Admin &
+    // partials/satlak-notification-close-text.blade.php untuk Pimpinan/
+    // Satuan) -- diexpose lewat window karena kedua partial itu adalah IIFE
+    // terpisah yang tidak punya akses ke closure `notifications` di sini.
+    window.siberadHapusSemuaNotifikasi = function () {
+      if (!notifications.length) {
+        window.siberadShowToast && window.siberadShowToast('info', 'Tidak ada notifikasi untuk dihapus.');
+        return;
+      }
+      var overlay = ensureHapusSemuaOverlay();
+      overlay.offsetHeight; // force reflow biar animasi open konsisten (lihat pola sesiBerakhirOverlay)
+      overlay.classList.add('open');
+    };
+
+
     // relevan (bukan cuma nampilin pesan doang) -- lihat window.
     // siberadGoToSection() yang diexpose masing-masing dashboard (Satuan:
     // laporan-role.blade.php, Pimpinan: laporan-pimpinan.blade.php, Admin:

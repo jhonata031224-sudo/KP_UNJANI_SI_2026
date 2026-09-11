@@ -90,4 +90,17 @@ class NotifikasiController extends Controller
 
         return response()->json(['status' => 'ok']);
     }
+
+    /**
+     * Hapus SEMUA notifikasi milik user (dipanggil dari tombol "Hapus
+     * Semua" di sebelah "Tutup" pada dropdown lonceng). Tidak butuh
+     * pengecekan kepemilikan per-item kayak hapus()/baca() karena query-nya
+     * sendiri sudah dibatasi ke notifikasi milik user yang login.
+     */
+    public function hapusSemua(Request $request): JsonResponse
+    {
+        $request->user()->notifications()->delete();
+
+        return response()->json(['status' => 'ok']);
+    }
 }
