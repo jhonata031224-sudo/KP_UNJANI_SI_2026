@@ -35,7 +35,7 @@
       data-action="{{ route('admin.sessions.destroy', $s->id) }}"
       data-nama="{{ $s->user_name ?? 'Tamu (belum login)' }}">Paksa Logout</button>
     @else
-      <form method="POST" action="{{ route('logout') }}" style="display:inline" onsubmit="return window.confirm('Logout dari sesi ini sekarang?');">
+      <form method="POST" action="{{ route('logout') }}" class="logout-form" style="display:inline">
         @csrf
         <button type="submit" class="btn btn-ghost btn-sm" title="Logout dari sesi Anda saat ini">Logout</button>
       </form>
