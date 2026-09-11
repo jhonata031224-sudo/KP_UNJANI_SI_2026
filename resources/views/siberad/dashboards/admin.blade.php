@@ -1006,33 +1006,7 @@
           </div>
         </div>
 
-        <div class="kpi-grid">
-          <div class="stat-card kpi-card">
-            <div class="lbl">Total Pengguna</div>
-            <div class="val">{{ $stats['total_pengguna'] }}</div>
-            <div class="sub">Akun terdaftar di sistem</div>
-          </div>
-          <div class="stat-card kpi-card">
-            <div class="lbl">Total Satuan</div>
-            <div class="val">{{ $stats['total_satuan'] }}</div>
-            <div class="sub">Termasuk Admin</div>
-          </div>
-          <div class="stat-card kpi-card">
-            <div class="lbl">Total Pelaporan</div>
-            <div class="val">{{ $stats['total_laporan'] }}</div>
-            <div class="sub">Laporan tercatat di sistem</div>
-          </div>
-          <div class="stat-card kpi-card">
-            <div class="lbl">Total Surat</div>
-            <div class="val">{{ $stats['total_surat'] }}</div>
-            <div class="sub">Surat tercatat di sistem</div>
-          </div>
-          <div class="stat-card kpi-card wait">
-            <div class="lbl">Reset Password</div>
-            <div class="val">{{ $stats['reset_password_pending'] }}</div>
-            <div class="sub">Menunggu diverifikasi</div>
-          </div>
-        </div>
+        <div id="adminKpisWrap">@include('siberad.dashboards.partials.admin-kpi-cards', ['stats' => $stats, 'semuaPengguna' => $semuaPengguna, 'semuaSatuan' => $semuaSatuan, 'laporanRekapMentah' => $laporanRekapMentah, 'suratSemuaAdmin' => $suratSemuaAdmin, 'permintaanResetPassword' => $permintaanResetPassword])</div>
 
         <div class="panel chart-box">
           <div class="panel-head"><div><h3>Statistik Sistem</h3><p>Sebaran akun per kategori, status laporan, dan tren aktivitas 7 hari terakhir.</p></div></div>
@@ -1131,13 +1105,37 @@
         </div>
 
         <style>
-          .kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:26px;}
-          @media(max-width:980px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
-          .kpi-card .lbl{font-weight:800;}
-          .kpi-card .val{font-family:var(--mono);color:var(--text);}
-          .kpi-card.wait .val{color:#f59e0b;}
-          .kpi-card.ok .val{color:#22c55e;}
-          .kpi-card.bad .val{color:#ef4444;}
+          {{-- Kartu KPI Beranda Admin -- MIRROR style+fungsi kartu KPI Beranda
+               Pimpinan/Satuan (laporan-pimpinan.blade.php/laporan-role.blade.php,
+               ".pimp-kpis"/".pimp-kpi" dkk). Sama alasan kayak CSS Satuan:
+               disalin+dipetakan ke token dashboard Admin sendiri
+               (var(--panel)/var(--border-soft)/var(--text)/var(--text-muted)),
+               BUKAN var(--p-*) (lapisan alias itu cuma ada di halaman
+               Pimpinan). Kalau style kartu KPI diubah lagi nanti, salin
+               ulang perubahannya ke 3 lokasi (Pimpinan/Satuan/Admin). --}}
+          .pimp-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:26px}
+          .pimp-kpi{position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--border-soft);border-radius:18px;padding:20px 22px;box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 10px 30px rgba(0,0,0,.25);min-width:0}
+          .pimp-kpi>:not(.kpi-deco){position:relative;z-index:1}
+          .pimp-kpi .kpi-deco{position:absolute;right:0;bottom:0;width:68%;height:60%;z-index:0;color:var(--kpi-accent);fill:currentColor;opacity:.15;pointer-events:none;transform-origin:bottom;transform:scaleY(1)}
+          @keyframes kpiDecoGrow{0%{transform:scaleY(0)}55%{transform:scaleY(1.12)}100%{transform:scaleY(1)}}
+          .kpi-deco.is-growing{animation:kpiDecoGrow .9s cubic-bezier(.33,1,.68,1) both}
+          @media(prefers-reduced-motion:reduce){.kpi-deco.is-growing{animation:none}}
+          .pimp-kpi .kpi-top{display:flex;align-items:center;gap:12px}
+          .pimp-kpi .kpi-badge{flex:0 0 auto;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--kpi-accent) 15%,transparent);color:var(--kpi-accent)}
+          .pimp-kpi .kpi-badge svg{width:22px;height:22px}
+          .pimp-kpi .kpi-eyebrow{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted);line-height:1.3}
+          .pimp-kpi .kpi-eyebrow b{font-weight:800;color:var(--text)}
+          .pimp-kpi .kpi-value{font-family:var(--display);font-size:38px;font-weight:800;line-height:1;margin-top:16px;color:var(--text)}
+          .pimp-kpi .kpi-desc{font-size:13px;color:var(--text-muted);margin-top:8px}
+          .pimp-kpi .kpi-trend{display:flex;align-items:center;gap:5px;margin-top:12px;font-family:var(--mono);font-size:13px;font-weight:800;color:var(--text-muted)}
+          .pimp-kpi .kpi-trend svg{width:14px;height:14px;display:none}
+          .pimp-kpi .kpi-trend.is-up{color:var(--kpi-accent)}
+          .pimp-kpi .kpi-trend.is-up svg{display:block}
+          .pimp-kpi .kpi-trend-cap{font-size:11px;color:var(--text-muted);margin-top:2px}
+          .admin-kpis{grid-template-columns:repeat(5,minmax(0,1fr))}
+          @media(max-width:1200px){.admin-kpis{grid-template-columns:repeat(3,1fr)}}
+          @media(max-width:980px){.admin-kpis{grid-template-columns:repeat(2,1fr)}}
+          @media(max-width:560px){.admin-kpis{grid-template-columns:1fr}}
 
           .chart-mini-link{cursor:pointer;}
           .chart-mini-link:hover,.chart-mini-link:focus-visible{border-color:var(--gold-bright);box-shadow:0 6px 18px rgba(0,0,0,.18);}
@@ -6693,6 +6691,87 @@
       window.addEventListener('load', sesuaikanTinggiChartRekap);
       sesuaikanTinggiChartRekap();
     }
+  })();
+  </script>
+
+  <script>
+  (function(){
+    // Kartu KPI (Total Pengguna/Satuan/Pelaporan/Surat/Reset Password)
+    // Beranda Admin: animasi count-up angka + gunung "tumbuh" dari dasar +
+    // poll realtime -- MIRROR PERSIS logika yang sama di Beranda
+    // Pimpinan/Satuan (laporan-pimpinan.blade.php/laporan-role.blade.php,
+    // fungsi countUp/animatePimpKpis/animateSatuanKpis/syncPimpinanKpis/
+    // syncSatuanKpis), cuma discoped ke 1 section doang (halaman ini gak
+    // punya donut Distribusi Status/Surat Terbaru/Kendala Terbaru versi
+    // itu di section yang sama) dan nembak endpoint
+    // dashboard.admin-kpi.realtime (5 metrik Admin, bukan 3 metrik
+    // Pimpinan/Satuan).
+    const wrap=document.getElementById('adminKpisWrap');
+    if(!wrap)return;
+    const reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function countUp(el,from,to,dur){
+      if(!el)return;
+      if(from===to){el.textContent=to;return;}
+      const t0=performance.now();
+      let done=false;
+      function finish(){if(done)return;done=true;el.textContent=to;}
+      (function tick(now){
+        if(done)return;
+        const p=Math.min(1,((now||performance.now())-t0)/dur),e=1-Math.pow(1-p,3);
+        el.textContent=Math.round(from+(to-from)*e);
+        if(p<1)requestAnimationFrame(tick);else finish();
+      })();
+      setTimeout(finish,dur+150);
+    }
+    function animateAdminKpis(fromList,trendFromList){
+      const cards=wrap.querySelectorAll('.pimp-kpi');
+      cards.forEach(function(card,i){
+        const valEl=card.querySelector('.kpi-value');
+        const to=parseInt(((valEl&&valEl.textContent)||'0').replace(/[^0-9-]/g,''),10)||0;
+        const trendEl=card.querySelector('.kpi-trend span');
+        const trendTo=parseInt(((trendEl&&trendEl.textContent)||'0').replace(/[^0-9-]/g,''),10)||0;
+        if(reduceMotion){if(valEl)valEl.textContent=to;if(trendEl)trendEl.textContent=trendTo;return;}
+        const deco=card.querySelector('.kpi-deco');
+        if(deco){
+          deco.classList.remove('is-growing');
+          void deco.offsetWidth;
+          deco.classList.add('is-growing');
+        }
+        const from=(fromList&&typeof fromList[i]==='number')?fromList[i]:0;
+        const trendFrom=(trendFromList&&typeof trendFromList[i]==='number')?trendFromList[i]:0;
+        countUp(valEl,from,to,900);
+        countUp(trendEl,trendFrom,trendTo,900);
+      });
+    }
+    // Cache HTML "fresh" TERAKHIR (bukan baca wrap.innerHTML tiap kali) --
+    // sama persis alasannya kayak versi Pimpinan/Satuan, lihat
+    // [[feedback_dom_diff_flicker_gotcha]].
+    let lastFreshHtml=wrap.innerHTML.trim();
+    animateAdminKpis();
+    const kpiEndpoint='{{ route('dashboard.admin-kpi.realtime') }}';
+    let kpiBusy=false;
+    async function syncAdminKpis(){
+      if(kpiBusy||document.hidden)return;
+      kpiBusy=true;
+      try{
+        const r=await fetch(kpiEndpoint+'?_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest','Cache-Control':'no-cache'}});
+        if(!r.ok)return;
+        const data=await r.json();
+        if(typeof data.kpis_html==='string'){
+          const fresh=data.kpis_html.trim();
+          if(lastFreshHtml!==fresh){
+            const fromList=Array.prototype.map.call(wrap.querySelectorAll('.pimp-kpi .kpi-value'),function(el){return parseInt((el.textContent||'0').replace(/[^0-9-]/g,''),10)||0;});
+            const trendFromList=Array.prototype.map.call(wrap.querySelectorAll('.pimp-kpi .kpi-trend span'),function(el){return parseInt((el.textContent||'0').replace(/[^0-9-]/g,''),10)||0;});
+            lastFreshHtml=fresh;
+            wrap.innerHTML=fresh;
+            animateAdminKpis(fromList,trendFromList);
+          }
+        }
+      }catch(e){}
+      finally{kpiBusy=false;}
+    }
+    window.setInterval(syncAdminKpis,1000);
+    document.addEventListener('visibilitychange',function(){if(!document.hidden)syncAdminKpis();});
   })();
   </script>
 

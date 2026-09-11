@@ -75,6 +75,10 @@ Route::get('/dashboard/satuan-kpi/realtime', [DashboardController::class, 'satua
     ->middleware('auth')
     ->name('dashboard.satuan-kpi.realtime');
 
+Route::get('/dashboard/admin-kpi/realtime', [DashboardController::class, 'adminKpiRealtime'])
+    ->middleware('auth')
+    ->name('dashboard.admin-kpi.realtime');
+
 Route::post('/laporan', [LaporanController::class, 'store'])
     ->middleware(['auth', 'modul:laporan'])
     ->name('laporan.store');

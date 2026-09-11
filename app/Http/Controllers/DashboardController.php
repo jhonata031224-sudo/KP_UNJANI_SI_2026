@@ -154,7 +154,48 @@ class DashboardController
 
                 return $s;
             });
-        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','aktivitasTujuhHari','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan','logDari','logSampai','daftarPushSubscription') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'resetDataDetails' => ResetDataLaporanController::ambilDetailPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah), 'total_surat' => LaporanSurat::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
+        // Dipakai partial admin-kpi-cards.blade.php buat hitung sparkline 7
+        // hari terakhir kartu KPI "Total Surat" (jumlah keseluruhan sistem,
+        // sama seperti $stats['total_surat'] di bawah).
+        $suratSemuaAdmin = LaporanSurat::get();
+
+        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','aktivitasTujuhHari','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan','logDari','logSampai','daftarPushSubscription','laporanRekapMentah','suratSemuaAdmin') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'resetDataDetails' => ResetDataLaporanController::ambilDetailPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah), 'total_surat' => LaporanSurat::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
+    }
+
+    public function adminKpiRealtime(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user()->load('satuan');
+        $kode = $user->satuan?->kode ? strtoupper(trim($user->satuan->kode)) : null;
+        abort_unless($kode === 'ADMIN', 403);
+
+        $semuaPengguna = User::terurutOrganisasi();
+        $semuaSatuan = Satuan::terurut();
+        $permintaanResetPassword = PermintaanResetPassword::with(['user.satuan', 'diprosesOleh'])->latest()->get();
+        $kodeSatuanPengirim = Satuan::whereNotIn('kategori', [Satuan::KATEGORI_ADMIN, Satuan::KATEGORI_PIMPINAN])->pluck('kode')->all();
+        $laporanRekapMentah = Laporan::whereIn('satuan_id', Satuan::whereIn('kode', $kodeSatuanPengirim)->pluck('id'))->with('lampirans')->get();
+        $suratSemuaAdmin = LaporanSurat::get();
+
+        $stats = [
+            'total_pengguna' => $semuaPengguna->count(),
+            'total_satuan' => $semuaSatuan->count(),
+            'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah),
+            'total_surat' => $suratSemuaAdmin->count(),
+            'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count(),
+        ];
+
+        return response()->json([
+            'kpis_html' => view('siberad.dashboards.partials.admin-kpi-cards', [
+                'stats' => $stats,
+                'semuaPengguna' => $semuaPengguna,
+                'semuaSatuan' => $semuaSatuan,
+                'laporanRekapMentah' => $laporanRekapMentah,
+                'suratSemuaAdmin' => $suratSemuaAdmin,
+                'permintaanResetPassword' => $permintaanResetPassword,
+            ])->render(),
+            'server_time' => now()->toIso8601String(),
+        ], 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
     }
 
     private function pelaporan($user, $satuan, ?string $kode, array $modulAktif): View
