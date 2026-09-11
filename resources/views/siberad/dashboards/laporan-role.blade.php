@@ -120,12 +120,9 @@
 .surat-arah-masuk{color:var(--green)}
 .surat-arah-keluar{color:#3b82f6}
 .pimp-activity-list{display:flex;flex-direction:column}
-.pimp-activity-item{display:flex;align-items:flex-start;gap:12px;padding:13px 0}
+.pimp-activity-item{display:flex;align-items:center;gap:12px;padding:13px 0}
 .pimp-activity-item:first-child{padding-top:0}
 .pimp-activity-item:last-child{padding-bottom:0}
-.pimp-activity-ico{flex:0 0 auto;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center}
-.pimp-activity-ico svg{width:16px;height:16px}
-.pimp-activity-ico-kendala{background:color-mix(in srgb,#f59e0b 15%,transparent);color:#f59e0b}
 .pimp-activity-body{flex:1;min-width:0}
 .pimp-activity-title{font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pimp-activity-sub{font-size:11px;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
