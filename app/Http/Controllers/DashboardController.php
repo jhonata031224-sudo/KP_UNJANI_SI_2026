@@ -551,7 +551,27 @@ class DashboardController
         ];
         $satuanTotalStatus = $satuanDisetujui + $satuanDitolak + $satuanTerlambat + $satuanDibatalkan;
 
-        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk','tembusanArsip','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'satuanTotalPelaporan' => $satuanTotalPelaporan, 'kendalaKasansiKpiAktif' => $kendalaKasansiKpiAktif, 'kendalaKasansiKpiArsip' => $kendalaKasansiKpiArsip, 'satuanStatusDist' => $satuanStatusDist, 'satuanTotalStatus' => $satuanTotalStatus, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $satuanDisetujui, 'ditolak' => $satuanDitolak, 'terlambat' => $satuanTerlambat, 'dibatalkan' => $satuanDibatalkan]]);
+        // ===== "Surat Terbaru" & "Kendala Kasansi Terbaru" Beranda Satuan
+        // -- MIRROR PERSIS 2 kartu yang sama di Beranda Pimpinan, reuse
+        // partial yang SAMA (pimpinan-surat-terbaru-rows.blade.php &
+        // pimpinan-kendala-terbaru-list.blade.php) apa adanya.
+        // "Surat Terbaru" = 5 surat (masuk+terkirim+arsip) MILIK SATUAN INI
+        // paling baru -- pola sama persis $pimpSuratTerbaru Pimpinan.
+        $satuanSuratTerbaru = $suratMasuk->concat($suratTerkirim)->concat($suratArsip)->sortByDesc('created_at')->take(5)->values();
+        // "Kendala Kasansi Terbaru" sumbernya tergantung peran (SAMA logic
+        // saling-eksklusif kayak $kendalaKasansiKpiAktif/Arsip di atas),
+        // TAPI partial ini butuh row LaporanKendala ASLI (->perihal/->status/
+        // ->satuan), BUKAN LaporanKendalaTembusan (field-nya beda, gak ada
+        // ->perihal/->status langsung) -- makanya utk penerima tembusan,
+        // di-map ke relasi ->laporanKendala (sudah eager-loaded di atas via
+        // 'laporanKendala.satuan') dulu, BUKAN pakai $tembusanMasukSemua
+        // mentah.
+        $satuanKendalaTerbaruSumber = $isKasansi
+            ? $kendalaTerkirimSemua
+            : $tembusanMasukSemua->pluck('laporanKendala')->filter()->values();
+        $satuanKendalaTerbaru = $satuanKendalaTerbaruSumber->sortByDesc('created_at')->take(5)->values();
+
+        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk','tembusanArsip','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'satuanTotalPelaporan' => $satuanTotalPelaporan, 'kendalaKasansiKpiAktif' => $kendalaKasansiKpiAktif, 'kendalaKasansiKpiArsip' => $kendalaKasansiKpiArsip, 'satuanStatusDist' => $satuanStatusDist, 'satuanTotalStatus' => $satuanTotalStatus, 'satuanSuratTerbaru' => $satuanSuratTerbaru, 'satuanKendalaTerbaru' => $satuanKendalaTerbaru, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $satuanDisetujui, 'ditolak' => $satuanDitolak, 'terlambat' => $satuanTerlambat, 'dibatalkan' => $satuanDibatalkan]]);
     }
 
     /**
@@ -722,14 +742,18 @@ class DashboardController
         // saling eksklusif ini di pelaporan() (KPI render awal) di atas.
         $isKasansi = in_array($kode, Satuan::KODE_KOTAMA, true);
         $kendalaTerkirimSemua = $isKasansi
-            ? LaporanKendala::where('satuan_id', $satuan->id)->get()
+            ? LaporanKendala::with('satuan')->where('satuan_id', $satuan->id)->get()
             : collect();
         $kendalaTerkirim = $kendalaTerkirimSemua->where('status', '!=', LaporanKendala::STATUS_DIKONFIRMASI)->values();
         $kendalaArsip = $kendalaTerkirimSemua->where('status', LaporanKendala::STATUS_DIKONFIRMASI)->values();
 
         $isPenerimaTembusan = in_array($kode, Satuan::kodeTembusanKasansi(), true);
+        // 'laporanKendala.satuan' di-eager-load -- dibutuhkan "Kendala
+        // Kasansi Terbaru" di bawah ($k->perihal/$k->status/$k->satuan
+        // datang dari relasi ini, bukan dari LaporanKendalaTembusan
+        // langsung, lihat komentar lengkap di pelaporan()).
         $tembusanMasukSemua = $isPenerimaTembusan
-            ? LaporanKendalaTembusan::where('satuan_id', $satuan->id)->get()
+            ? LaporanKendalaTembusan::with('laporanKendala.satuan')->where('satuan_id', $satuan->id)->get()
             : collect();
         $tembusanMasuk = $tembusanMasukSemua->whereNull('feedback')->values();
         $tembusanArsip = $tembusanMasukSemua->whereNotNull('feedback')->values();
@@ -742,6 +766,14 @@ class DashboardController
         $satuanTerlambat = $permintaanLaporanSemua->filter(fn ($p) => $p->isTerlambat())->count();
         $satuanDibatalkan = $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count();
         $satuanTotalStatus = $satuanDisetujui + $satuanDitolak + $satuanTerlambat + $satuanDibatalkan;
+
+        // "Surat Terbaru" & "Kendala Kasansi Terbaru" -- lihat komentar
+        // lengkap di pelaporan() (KPI render awal) di atas.
+        $satuanSuratTerbaru = $suratMasuk->concat($suratTerkirim)->concat($suratArsip)->sortByDesc('created_at')->take(5)->values();
+        $satuanKendalaTerbaruSumber = $isKasansi
+            ? $kendalaTerkirimSemua
+            : $tembusanMasukSemua->pluck('laporanKendala')->filter()->values();
+        $satuanKendalaTerbaru = $satuanKendalaTerbaruSumber->sortByDesc('created_at')->take(5)->values();
 
         return response()->json([
             'kpis_html' => view('siberad.dashboards.partials.pimpinan-kpi-cards', [
@@ -763,6 +795,13 @@ class DashboardController
             ])->render(),
             'status_donut_total' => $satuanTotalStatus,
             'status_donut_counts' => [$satuanDisetujui, $satuanDitolak, $satuanTerlambat, $satuanDibatalkan],
+            'surat_terbaru_html' => view('siberad.dashboards.partials.pimpinan-surat-terbaru-rows', [
+                'pimpSuratTerbaru' => $satuanSuratTerbaru,
+                'satuan' => $satuan,
+            ])->render(),
+            'kendala_terbaru_html' => view('siberad.dashboards.partials.pimpinan-kendala-terbaru-list', [
+                'pimpKendalaTerbaru' => $satuanKendalaTerbaru,
+            ])->render(),
             'server_time' => now()->toIso8601String(),
         ], 200, [
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',

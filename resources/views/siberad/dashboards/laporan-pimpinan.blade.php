@@ -306,6 +306,15 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 .pimp-mini-table th:nth-child(5),.pimp-mini-table td:nth-child(5){width:21%;overflow:visible;text-align:center}
 .pimp-mini-table .surat-arah{justify-content:center}
 .pimp-mini-table .status-badge,.pimp-mini-table .satuan-pill{font-size:9.5px;padding:3px 7px}
+{{-- "Menunggu" di tabel mini ini HARUS ikut warna BIRU yang beneran dipakai
+     di kartu Surat Keluar/Surat Masuk/Arsip Surat & modal Detail Surat
+     (lihat partials/surat-card-styles.blade.php, selector
+     ".status-badge.status-menunggu.surat-file-card-badge") -- BUKAN warna
+     oranye di aturan umum ".status-badge.status-menunggu" di atas (itu
+     fallback lama, dipakai juga oleh badge Kendala Terkirim/Tembusan yang
+     TIDAK boleh ikut kesenggol). Scoped ke .pimp-mini-table spesifik. Sama
+     fix-nya kayak di laporan-role.blade.php (Satuan). --}}
+.pimp-mini-table .status-badge.status-menunggu{color:#2476ad;background:rgba(52,152,219,.1);border-color:rgba(52,152,219,.25)}
 .surat-arah{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;white-space:nowrap}
 .surat-arah-masuk{color:var(--p-green)}
 .surat-arah-keluar{color:#3b82f6}
@@ -323,6 +332,18 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 .pimp-activity-title{font-size:13px;font-weight:700;color:var(--p-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pimp-activity-sub{font-size:11px;color:var(--p-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pimp-activity-item .status-pill{flex:0 0 auto;white-space:nowrap}
+{{-- Animasi "baris/item baru" buat Surat Terbaru & Kendala Kasansi Terbaru
+     -- keduanya di-swap innerHTML polos tiap poll realtime (murni display,
+     lihat komentar syncPimpinanKpis), TANPA animasi apapun sebelumnya.
+     Fade-in + flash background (bukan pakai transform, biar aman dipakai
+     di <tr> juga) -- dipicu manual dari JS (animateTerbaruRows) tiap kali
+     kontennya baru dirender, baik pas load pertama maupun abis di-swap
+     realtime, SAMA PERSIS pola "animate on load AND on refresh" yang udah
+     dipakai kartu KPI/donut di atas. --}}
+@keyframes terbaruFreshIn{0%{opacity:0;background-color:rgba(59,130,246,.14)}100%{opacity:1;background-color:transparent}}
+.pimp-mini-table tbody tr.is-fresh{animation:terbaruFreshIn .8s ease both}
+.pimp-activity-item.is-fresh{animation:terbaruFreshIn .8s ease both}
+@media(prefers-reduced-motion:reduce){.pimp-mini-table tbody tr.is-fresh,.pimp-activity-item.is-fresh{animation:none}}
 @media(max-width:700px){.pimp-card-head{flex-direction:column}}
 .status-donut-wrap{position:relative;width:100%;height:230px;margin:6px 0 2px}
 .status-donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;pointer-events:none}
@@ -2606,6 +2627,19 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
     let lastKendalaHtml=kendalaList?kendalaList.innerHTML.trim():'';
     let lastDonutKey=JSON.stringify(statusData);
     let lastTrenKey=JSON.stringify(pimpTrenData);
+    // Fade-in + flash "baris/item baru" buat Surat Terbaru & Kendala
+    // Kasansi Terbaru -- dipanggil abis konten section itu dirender ulang
+    // (load pertama DAN tiap swap realtime), stagger 60ms per baris/item
+    // (pola sama kayak stagger progress bar Distribusi Status di atas).
+    function animateTerbaruRows(container,selector){
+      if(!container)return;
+      container.querySelectorAll(selector).forEach(function(el,i){
+        el.style.animationDelay=(i*60)+'ms';
+        el.classList.add('is-fresh');
+      });
+    }
+    animateTerbaruRows(suratBody,'tr');
+    animateTerbaruRows(kendalaList,'.pimp-activity-item');
     animatePimpKpis();
     // SEMPAT dicoba long-poll (request ditahan di server sampai ada
     // perubahan) biar update kerasa instan -- diukur langsung malah 9-13
@@ -2668,6 +2702,7 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
           if(lastSuratHtml!==freshSurat){
             lastSuratHtml=freshSurat;
             suratBody.innerHTML=freshSurat;
+            animateTerbaruRows(suratBody,'tr');
           }
         }
         if(kendalaList&&typeof data.kendala_terbaru_html==='string'){
@@ -2675,6 +2710,7 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
           if(lastKendalaHtml!==freshKendala){
             lastKendalaHtml=freshKendala;
             kendalaList.innerHTML=freshKendala;
+            animateTerbaruRows(kendalaList,'.pimp-activity-item');
           }
         }
       }catch(e){}
