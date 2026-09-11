@@ -153,12 +153,17 @@ class LaporanKendalaController extends Controller
             // "menembuskan" ke satuan lain (mis. sesama Kasansi) yang belum
             // didukung, dan dibatasi maksimal 2 satuan per laporan supaya
             // tembusan tetap fokus/tidak disebar ke semua 8 satuan sekaligus.
-            'tembusan_ke' => ['nullable', 'array', 'max:1'],
+            // Tembusan WAJIB dalam alur baru: Kasansi → Tembusan → Danpus.
+            // Tembusan harus membalas dulu sebelum Kasansi bisa upload dokumen
+            // dan meneruskan ke Danpus -- min:1 & required memaksa user memilih.
+            'tembusan_ke' => ['required', 'array', 'min:1', 'max:1'],
             'tembusan_ke.*' => ['string', 'in:'.implode(',', Satuan::kodeTembusanKasansi())],
         ], [
-            'lampiran.required' => 'Lampiran wajib diisi untuk mengirim laporan kendala ke Danpus.',
-            'lampiran.min' => 'Lampiran wajib diisi untuk mengirim laporan kendala ke Danpus.',
-            'tembusan_ke.max' => 'Tembusan maksimal 1 satuan saja.',
+            'lampiran.required'   => 'Lampiran wajib diisi untuk mengirim laporan kendala.',
+            'lampiran.min'        => 'Lampiran wajib diisi untuk mengirim laporan kendala.',
+            'tembusan_ke.required' => 'Tembusan wajib dipilih. Pilih 1 satuan penerima tembusan.',
+            'tembusan_ke.min'     => 'Tembusan wajib dipilih minimal 1 satuan.',
+            'tembusan_ke.max'     => 'Tembusan maksimal 1 satuan saja.',
         ]);
 
         $totalLampiranBytes = collect($request->file('lampiran', []))->filter()->sum(fn ($file) => $file->getSize());
@@ -193,17 +198,14 @@ class LaporanKendalaController extends Controller
             ];
         });
 
-        // Kode -> id satuan tembusan yang dipilih, dedup dan buang yang
-        // ternyata tidak ketemu di database (mis. satuan sudah dihapus).
-        $satuanTembusan = ! empty($validated['tembusan_ke'])
-            ? Satuan::whereIn('kode', array_unique($validated['tembusan_ke']))->get()
-            : collect();
+        // Tembusan WAJIB dalam alur baru -- validasi di atas sudah memaksa
+        // min:1, jadi $satuanTembusan dijamin tidak pernah kosong di sini.
+        $satuanTembusan = Satuan::whereIn('kode', array_unique($validated['tembusan_ke']))->get();
+        abort_if($satuanTembusan->isEmpty(), 422, 'Satuan tembusan yang dipilih tidak ditemukan.');
 
-        // Ada tembusan dipilih -> laporan MAMPIR dulu ke tembusan (belum
-        // sampai/actionable ke Danpus) sampai minimal satu tembusan kasih
-        // feedback dan Kasansi menekan "Kirim ke Danpus" lewat teruskan().
-        // Tanpa tembusan, tetap langsung Menunggu seperti alur lama.
-        $adaTembusan = $satuanTembusan->isNotEmpty();
+        // Alur baru selalu lewat tembusan: status awal Menunggu Balasan,
+        // Danpus baru diberi tahu setelah Kasansi upload dokumen & teruskan.
+        $adaTembusan = true;
 
         $kendala = null;
         DB::transaction(function () use (&$kendala, $satuanAsal, $user, $tujuan, $validated, $lampiranDisimpan, $satuanTembusan, $adaTembusan) {
@@ -230,43 +232,97 @@ class LaporanKendalaController extends Controller
             }
         });
 
-        // Danpus baru diberi tahu begitu laporan BENAR-BENAR sampai ke
-        // mereka. Kalau ada tembusan dipilih, itu terjadi belakangan lewat
-        // teruskan() -- di sini cukup diam dulu.
-        if (! $adaTembusan) {
-            foreach (User::where('satuan_id', $tujuan->id)->get() as $penerima) {
-                $penerima->notify(new LaporanKendalaBaruDiterima($kendala));
-            }
+        // Danpus BELUM diberi tahu -- laporan mampir ke tembusan dulu.
+        // Tembusan diberi notifikasi agar segera membalas ke Kasansi.
+        foreach (User::whereIn('satuan_id', $satuanTembusan->pluck('id'))->get() as $penerimaTembusan) {
+            $penerimaTembusan->notify(new LaporanKendalaTembusanBaru($kendala));
         }
 
-        // Notifikasi TERPISAH ke satuan tujuan tembusan -- pesannya beda
-        // (LaporanKendalaTembusanBaru, bukan LaporanKendalaBaruDiterima)
-        // supaya jelas ini cuma info koordinasi & diminta feedback, bukan
-        // sesuatu yang perlu diputuskan seperti punya DANPUS.
-        if ($adaTembusan) {
-            foreach (User::whereIn('satuan_id', $satuanTembusan->pluck('id'))->get() as $penerimaTembusan) {
-                $penerimaTembusan->notify(new LaporanKendalaTembusanBaru($kendala));
-            }
-        }
-
-        ActivityLog::catat('laporan-kendala.create', "Mengirim laporan kendala \"{$kendala->perihal}\" ke {$tujuan->nama}.", $user, [
+        ActivityLog::catat('laporan-kendala.create', "Mengirim laporan kendala \"{$kendala->perihal}\" ke tembusan ({$satuanTembusan->pluck('nama')->implode(', ')}) sebelum diteruskan ke {$tujuan->nama}.", $user, [
             'laporan_kendala_id' => $kendala->id,
-            'tujuan_satuan' => $tujuan->nama,
-            'prioritas' => $kendala->prioritas,
-            'tembusan_ke' => $satuanTembusan->pluck('nama')->all(),
+            'tujuan_satuan'      => $tujuan->nama,
+            'prioritas'          => $kendala->prioritas,
+            'tembusan_ke'        => $satuanTembusan->pluck('nama')->all(),
         ]);
 
-        return back()->with('status', $adaTembusan
-            ? 'Laporan kendala terkirim ke tembusan ('.$satuanTembusan->count().' satuan). Laporan akan diteruskan ke '.$tujuan->nama.' setelah ada feedback dari tembusan.'
-            : 'Laporan kendala berhasil dikirim ke '.$tujuan->nama.'.');
+        return back()->with('status',
+            'Laporan kendala terkirim ke tembusan ('.$satuanTembusan->pluck('nama_singkat')->implode(', ').'). '.
+            'Tunggu balasan dari tembusan, lalu upload dokumen sebelum meneruskan ke '.$tujuan->nama.'.'
+        );
     }
 
     /**
-     * Kasansi meneruskan laporan kendala yang sempat mampir di tembusan
-     * (status Menunggu Tembusan) ke Danpus, setelah minimal satu satuan
-     * tembusan memberi feedback. Satu-satunya cara status berubah dari
-     * Menunggu Tembusan jadi Menunggu -- baru di titik ini Danpus diberi
-     * tahu (lihat komentar store() dan LaporanKendalaTembusanController).
+     * Kasansi upload dokumen setelah membaca balasan/dokumen dari tembusan.
+     * Ini adalah tahap antara: tembusan sudah membalas → Kasansi siapkan
+     * dokumen → baru bisa teruskan ke Danpus. Dokumen disimpan di kolom
+     * dokumen_kasansi_path pada laporan_kendalas (bukan di tabel lampirans,
+     * karena ini dokumen hasil "siap kirim" bukan lampiran awal).
+     */
+    public function uploadDokumenKasansi(Request $request, LaporanKendala $laporanKendala): RedirectResponse
+    {
+        $validated = $request->validate([
+            'dokumen_kasansi' => ['required', 'file', 'max:10240'],
+        ], [
+            'dokumen_kasansi.required' => 'Dokumen wajib dipilih sebelum dikirim ke Danpus.',
+        ]);
+
+        $user = $request->user()->load('satuan');
+        $satuan = $user->satuan;
+        abort_unless($satuan, 403, 'Akun belum terhubung ke satuan.');
+        abort_unless(
+            in_array(strtoupper((string) $satuan->kode), Satuan::KODE_KOTAMA, true),
+            403,
+            'Hanya Kasansi yang dapat mengupload dokumen kendala.'
+        );
+        abort_unless(
+            (int) $laporanKendala->satuan_id === (int) $satuan->id,
+            403,
+            'Laporan kendala ini bukan milik satuan Anda.'
+        );
+        abort_unless(
+            $laporanKendala->status === LaporanKendala::STATUS_MENUNGGU_TEMBUSAN,
+            422,
+            'Laporan kendala ini tidak sedang di tahap menunggu balasan tembusan.'
+        );
+
+        // Pastikan minimal satu tembusan sudah membalas (feedback teks atau dokumen)
+        $laporanKendala->load('tembusans');
+        abort_unless(
+            $laporanKendala->tembusans->contains(fn ($t) => $t->sudahMembalas()),
+            422,
+            'Tunggu balasan dari minimal satu tembusan sebelum upload dokumen.'
+        );
+
+        $file = $request->file('dokumen_kasansi');
+        $path = $file->store('dokumen-kendala-kasansi', 'public');
+        abort_if(! $path, 500, 'Gagal menyimpan dokumen ke server. Coba lagi.');
+
+        // Hapus dokumen lama kalau sudah pernah upload sebelumnya (replace)
+        if ($laporanKendala->dokumen_kasansi_path) {
+            Storage::disk('public')->delete($laporanKendala->dokumen_kasansi_path);
+        }
+
+        $laporanKendala->update([
+            'dokumen_kasansi_path'  => $path,
+            'dokumen_kasansi_nama'  => $file->getClientOriginalName(),
+            'dokumen_kasansi_at'    => now(),
+            'dokumen_kasansi_oleh'  => $user->id,
+        ]);
+
+        ActivityLog::catat('laporan-kendala.upload-dokumen', "Upload dokumen \"{$file->getClientOriginalName()}\" untuk kendala \"{$laporanKendala->perihal}\" siap dikirim ke Danpus.", $user, [
+            'laporan_kendala_id'   => $laporanKendala->id,
+            'dokumen_kasansi_nama' => $file->getClientOriginalName(),
+        ]);
+
+        return back()->with('status', 'Dokumen berhasil diupload. Sekarang klik "Kirim ke Danpus" untuk meneruskan laporan.');
+    }
+
+    /**
+     * Kasansi meneruskan laporan kendala ke Danpus setelah:
+     *   1. Minimal satu tembusan sudah membalas
+     *   2. Kasansi sudah upload dokumen lewat uploadDokumenKasansi()
+     *
+     * Baru di titik ini Danpus diberi tahu lewat notifikasi.
      */
     public function teruskan(Request $request, LaporanKendala $laporanKendala): RedirectResponse
     {
@@ -283,29 +339,42 @@ class LaporanKendalaController extends Controller
             422,
             'Laporan kendala ini tidak sedang menunggu tembusan.'
         );
+
+        $laporanKendala->load('tembusans');
+
+        // Pastikan minimal satu tembusan sudah membalas
         abort_unless(
-            $laporanKendala->tembusans()->whereNotNull('feedback')->exists(),
+            $laporanKendala->tembusans->contains(fn ($t) => $t->sudahMembalas()),
             422,
-            'Tunggu feedback dari minimal satu tembusan sebelum meneruskan ke Danpus.'
+            'Tunggu balasan dari minimal satu tembusan sebelum meneruskan ke Danpus.'
+        );
+
+        // Pastikan Kasansi sudah upload dokumen
+        abort_unless(
+            filled($laporanKendala->dokumen_kasansi_path),
+            422,
+            'Upload dokumen terlebih dahulu sebelum meneruskan ke Danpus.'
         );
 
         $laporanKendala->update([
-            'status' => LaporanKendala::STATUS_MENUNGGU,
-            'diteruskan_at' => now(),
+            'status'          => LaporanKendala::STATUS_MENUNGGU,
+            'diteruskan_at'   => now(),
             'diteruskan_oleh' => $user->id,
         ]);
 
+        // Baru di sini Danpus diberi tahu -- laporan resmi "sampai" ke mereka
         $tujuan = $laporanKendala->tujuanSatuan;
         foreach (User::where('satuan_id', $tujuan->id)->get() as $penerima) {
             $penerima->notify(new LaporanKendalaBaruDiterima($laporanKendala));
         }
 
-        ActivityLog::catat('laporan-kendala.teruskan', "Meneruskan laporan kendala \"{$laporanKendala->perihal}\" ke {$tujuan->nama} setelah feedback tembusan.", $user, [
-            'laporan_kendala_id' => $laporanKendala->id,
-            'tujuan_satuan' => $tujuan->nama,
+        ActivityLog::catat('laporan-kendala.teruskan', "Meneruskan laporan kendala \"{$laporanKendala->perihal}\" beserta dokumen ke {$tujuan->nama} setelah balasan tembusan.", $user, [
+            'laporan_kendala_id'   => $laporanKendala->id,
+            'tujuan_satuan'        => $tujuan->nama,
+            'dokumen_kasansi_nama' => $laporanKendala->dokumen_kasansi_nama,
         ]);
 
-        return back()->with('status', 'Laporan kendala berhasil diteruskan ke '.$tujuan->nama.'.');
+        return back()->with('status', 'Laporan kendala dan dokumen berhasil diteruskan ke '.$tujuan->nama.'.');
     }
 
     public function updateStatus(Request $request, LaporanKendala $laporanKendala): RedirectResponse

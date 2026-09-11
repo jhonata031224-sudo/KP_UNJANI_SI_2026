@@ -11,6 +11,7 @@ use App\Support\DecorativeSeparatorCleaner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Sisi PENERIMA tembusan (4 Satlak/4 Sdir) laporan kendala Kasansi. Dua aksi
@@ -129,11 +130,71 @@ class LaporanKendalaTembusanController extends Controller
             }
         }
 
-        ActivityLog::catat('laporan-kendala-tembusan.feedback', "Memberi feedback tembusan untuk laporan kendala \"{$laporanKendala?->perihal}\".", $user, [
+        ActivityLog::catat('laporan-kendala-tembusan.feedback', "Memberi balasan teks untuk laporan kendala \"{$laporanKendala?->perihal}\".", $user, [
             'laporan_kendala_tembusan_id' => $laporanKendalaTembusan->id,
-            'laporan_kendala_id' => $laporanKendalaTembusan->laporan_kendala_id,
+            'laporan_kendala_id'          => $laporanKendalaTembusan->laporan_kendala_id,
         ]);
 
-        return back()->with('status', 'Feedback berhasil dikirim ke '.($laporanKendala?->satuan?->nama ?? 'Kasansi').'.');
+        return back()->with('status', 'Balasan berhasil dikirim ke '.($laporanKendala?->satuan?->nama ?? 'Kasansi').'.');
+    }
+
+    /**
+     * Satuan penerima tembusan mengirim DOKUMEN balasan ke Kasansi --
+     * misalnya laporan personel yang diminta Kasansi di isi kendala.
+     * Bisa dilakukan bersama atau terpisah dari feedback teks (beriFeedback).
+     * Dokumen bisa di-replace (upload ulang akan menimpa file lama).
+     */
+    public function kirimDokumenBalasan(Request $request, LaporanKendalaTembusan $laporanKendalaTembusan): RedirectResponse
+    {
+        $validated = $request->validate([
+            'dokumen_balasan' => ['required', 'file', 'max:10240'],
+        ], [
+            'dokumen_balasan.required' => 'Pilih file dokumen yang akan dikirim ke Kasansi.',
+        ]);
+
+        $user = $request->user()->load('satuan');
+        $satuan = $user->satuan;
+        abort_unless($satuan, 403, 'Akun belum terhubung ke satuan.');
+        abort_unless(
+            (int) $laporanKendalaTembusan->satuan_id === (int) $satuan->id,
+            403,
+            'Tembusan ini bukan untuk satuan Anda.'
+        );
+
+        $file = $request->file('dokumen_balasan');
+        $path = $file->store('dokumen-balasan-tembusan', 'public');
+        abort_if(! $path, 500, 'Gagal menyimpan dokumen ke server. Coba lagi.');
+
+        // Hapus dokumen lama kalau sudah pernah upload (replace)
+        if ($laporanKendalaTembusan->dokumen_balasan_path) {
+            Storage::disk('public')->delete($laporanKendalaTembusan->dokumen_balasan_path);
+        }
+
+        $laporanKendalaTembusan->update([
+            'dokumen_balasan_path'  => $path,
+            'dokumen_balasan_nama'  => $file->getClientOriginalName(),
+            'dokumen_balasan_at'    => now(),
+            'dokumen_balasan_oleh'  => $user->id,
+            // Kirim dokumen otomatis menandai "sudah dibaca" juga
+            'dibaca_at'             => $laporanKendalaTembusan->dibaca_at ?? now(),
+            'dibaca_oleh'           => $laporanKendalaTembusan->dibaca_oleh ?? $user->id,
+        ]);
+
+        $laporanKendala = $laporanKendalaTembusan->laporanKendala()->with('satuan')->first();
+
+        // Notifikasi ke Kasansi bahwa dokumen balasan sudah dikirim
+        if ($laporanKendala) {
+            foreach (User::where('satuan_id', $laporanKendala->satuan_id)->get() as $penerima) {
+                $penerima->notify(new LaporanKendalaTembusanFeedbackDiterima($laporanKendalaTembusan, $satuan));
+            }
+        }
+
+        ActivityLog::catat('laporan-kendala-tembusan.dokumen-balasan', "Mengirim dokumen \"{$file->getClientOriginalName()}\" sebagai balasan tembusan kendala \"{$laporanKendala?->perihal}\".", $user, [
+            'laporan_kendala_tembusan_id' => $laporanKendalaTembusan->id,
+            'laporan_kendala_id'          => $laporanKendalaTembusan->laporan_kendala_id,
+            'dokumen_balasan_nama'        => $file->getClientOriginalName(),
+        ]);
+
+        return back()->with('status', 'Dokumen berhasil dikirim ke '.($laporanKendala?->satuan?->nama ?? 'Kasansi').'.');
     }
 }

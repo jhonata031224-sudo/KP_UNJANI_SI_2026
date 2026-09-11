@@ -40,11 +40,16 @@ class LaporanKendala extends Model
         'confirmed_by',
         'diteruskan_at',
         'diteruskan_oleh',
+        'dokumen_kasansi_path',
+        'dokumen_kasansi_nama',
+        'dokumen_kasansi_at',
+        'dokumen_kasansi_oleh',
     ];
 
     protected $casts = [
-        'confirmed_at' => 'datetime',
-        'diteruskan_at' => 'datetime',
+        'confirmed_at'      => 'datetime',
+        'diteruskan_at'     => 'datetime',
+        'dokumen_kasansi_at' => 'datetime',
     ];
 
     public const STATUS_MENUNGGU_TEMBUSAN = 'Menunggu Balasan';
@@ -127,13 +132,24 @@ class LaporanKendala extends Model
     }
 
     /**
-     * True kalau laporan ini sedang mampir di tembusan (Menunggu Tembusan)
-     * DAN minimal satu satuan tembusan sudah memberi feedback -- artinya
-     * Kasansi sudah boleh menekan "Kirim ke Danpus".
+     * True kalau laporan ini sedang mampir di tembusan (Menunggu Balasan)
+     * DAN minimal satu satuan tembusan sudah membalas (teks atau dokumen) --
+     * artinya Kasansi sudah bisa baca balasan dan upload dokumen.
+     */
+    public function siapUploadDokumen(): bool
+    {
+        return $this->status === self::STATUS_MENUNGGU_TEMBUSAN
+            && $this->tembusans->contains(fn (LaporanKendalaTembusan $t) => $t->sudahMembalas());
+    }
+
+    /**
+     * True kalau Kasansi sudah upload dokumen balasan -- artinya tombol
+     * "Kirim Dokumen ke Danpus" boleh ditampilkan.
      */
     public function siapDiteruskan(): bool
     {
         return $this->status === self::STATUS_MENUNGGU_TEMBUSAN
-            && $this->tembusans->contains(fn (LaporanKendalaTembusan $t) => filled($t->feedback));
+            && $this->siapUploadDokumen()
+            && filled($this->dokumen_kasansi_path);
     }
 }

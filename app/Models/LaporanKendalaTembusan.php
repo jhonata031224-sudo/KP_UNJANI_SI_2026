@@ -28,11 +28,16 @@ class LaporanKendalaTembusan extends Model
         'feedback',
         'feedback_at',
         'feedback_oleh',
+        'dokumen_balasan_path',
+        'dokumen_balasan_nama',
+        'dokumen_balasan_at',
+        'dokumen_balasan_oleh',
     ];
 
     protected $casts = [
-        'dibaca_at' => 'datetime',
-        'feedback_at' => 'datetime',
+        'dibaca_at'          => 'datetime',
+        'feedback_at'        => 'datetime',
+        'dokumen_balasan_at' => 'datetime',
     ];
 
     public function laporanKendala(): BelongsTo
@@ -53,5 +58,20 @@ class LaporanKendalaTembusan extends Model
     public function feedbackOleh(): BelongsTo
     {
         return $this->belongsTo(User::class, 'feedback_oleh');
+    }
+
+    public function dokumenBalasanOleh(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'dokumen_balasan_oleh');
+    }
+
+    /**
+     * True kalau tembusan ini sudah mengirim balasan (feedback teks ATAU
+     * dokumen) ke Kasansi -- dipakai untuk menentukan apakah Kasansi
+     * sudah bisa meneruskan ke Danpus.
+     */
+    public function sudahMembalas(): bool
+    {
+        return filled($this->feedback) || filled($this->dokumen_balasan_path);
     }
 }

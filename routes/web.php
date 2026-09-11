@@ -139,6 +139,9 @@ Route::patch('/laporan-kendala/{laporanKendala}/status', [LaporanKendalaControll
 Route::patch('/laporan-kendala/{laporanKendala}/teruskan', [LaporanKendalaController::class, 'teruskan'])
     ->middleware(['auth', 'modul:kendala'])
     ->name('laporan-kendala.teruskan');
+Route::post('/laporan-kendala/{laporanKendala}/upload-dokumen', [LaporanKendalaController::class, 'uploadDokumenKasansi'])
+    ->middleware(['auth', 'modul:kendala'])
+    ->name('laporan-kendala.upload-dokumen');
 Route::delete('/laporan-kendala/{laporanKendala}', [LaporanKendalaController::class, 'destroy'])
     ->middleware(['auth', 'modul:kendala'])
     ->name('laporan-kendala.destroy');
@@ -170,6 +173,9 @@ Route::patch('/laporan-kendala-tembusan/{laporanKendalaTembusan}/baca', [Laporan
 Route::patch('/laporan-kendala-tembusan/{laporanKendalaTembusan}/feedback', [LaporanKendalaTembusanController::class, 'beriFeedback'])
     ->middleware(['auth', 'modul:kendala'])
     ->name('laporan-kendala-tembusan.feedback');
+Route::post('/laporan-kendala-tembusan/{laporanKendalaTembusan}/dokumen-balasan', [LaporanKendalaTembusanController::class, 'kirimDokumenBalasan'])
+    ->middleware(['auth', 'modul:kendala'])
+    ->name('laporan-kendala-tembusan.dokumen-balasan');
 
 // ===== Laporan Publikasi ke DANPUS (Satuan Pelaksanaan Siber Sosial) =====
 Route::post('/laporan-publikasi', [LaporanPublikasiController::class, 'store'])

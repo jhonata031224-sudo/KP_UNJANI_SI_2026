@@ -1,7 +1,9 @@
 {{-- CARD: Tembusan Kendala (sisi penerima tembusan / 4 Satlak & 4 Sdir) --}}
 @php
-  $statusBadgeClass = $t->dibaca_at ? 'status-dikonfirmasi' : 'status-menunggu';
-  $balasanSudah = (bool) $t->feedback;
+  $statusBadgeClass  = $t->dibaca_at ? 'status-dikonfirmasi' : 'status-menunggu';
+  $sudahFeedbackTeks = filled($t->feedback);
+  $sudahDokBalasan   = filled($t->dokumen_balasan_path);
+  $sudahMembalas     = $t->sudahMembalas();
 @endphp
 <div class="kcard" data-tembusan-id="{{ $t->id }}" data-search="{{ strtolower($t->laporanKendala->perihal.' '.($t->laporanKendala->satuan->nama ?? '')) }}" data-prioritas="{{ $t->laporanKendala->prioritas }}">
   <div class="kcard-header">
@@ -22,12 +24,23 @@
   </div>
 
   <div class="kcard-tembusan">
-    <span class="kcard-tembusan-label">Balasan Anda</span>
+    <span class="kcard-tembusan-label">Balasan ke Kasansi</span>
+    {{-- Status balasan teks --}}
     <div class="kcard-tembusan-item">
-      @if($balasanSudah)
-        <span class="kcard-tembusan-status replied">Sudah diberi</span>
+      <span style="font-size:10px;color:var(--text-muted);font-weight:600">Teks</span>
+      @if($sudahFeedbackTeks)
+        <span class="kcard-tembusan-status replied">Terkirim</span>
       @else
-        <span class="kcard-tembusan-status waiting">Menunggu…</span>
+        <span class="kcard-tembusan-status waiting">Belum</span>
+      @endif
+    </div>
+    {{-- Status dokumen balasan --}}
+    <div class="kcard-tembusan-item">
+      <span style="font-size:10px;color:var(--text-muted);font-weight:600">Dokumen</span>
+      @if($sudahDokBalasan)
+        <span class="kcard-tembusan-status replied">{{ $t->dokumen_balasan_nama }}</span>
+      @else
+        <span class="kcard-tembusan-status waiting">Belum dikirim</span>
       @endif
     </div>
   </div>
@@ -37,7 +50,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
       {{ $t->laporanKendala->created_at->translatedFormat('d M Y H:i') }}
     </span>
-    <div class="kcard-actions">
+    <div class="kcard-actions" style="flex-wrap:wrap;gap:6px">
       <button type="button" class="kcard-btn kcard-btn-detail" onclick="openReportDetail(this)"
         data-pengirim="{{ e($t->laporanKendala->satuan->nama ?? '-') }}"
         data-tujuan="DANPUS (tembusan ke {{ e($satuan->nama) }})"
@@ -53,17 +66,43 @@
         data-feedback-existing="{{ e($t->feedback ?? '') }}"
         data-csrf="{{ csrf_token() }}"
         data-readonly="1"
-        data-readonly-text="Ini tembusan kendala (info/koordinasi) dari {{ e($t->laporanKendala->satuan->nama ?? '-') }} ke DANPUS — Kasansi menunggu feedback Anda sebelum meneruskannya.">
+        data-readonly-text="Tembusan kendala dari {{ e($t->laporanKendala->satuan->nama ?? '-') }}. Kirim balasan teks dan/atau dokumen kepada Kasansi.">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        Lihat Detail
+        Lihat &amp; Balas
       </button>
+
+      {{-- Tombol tandai dibaca --}}
       @if(! $t->dibaca_at)
         <form method="POST" action="{{ route('laporan-kendala-tembusan.baca', $t->id) }}" style="display:inline-flex">
           @csrf @method('PATCH')
-          <button type="submit" class="kcard-btn kcard-btn-approve">
+          <button type="submit" class="kcard-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             Tandai Dibaca
           </button>
+        </form>
+      @endif
+
+      {{-- Tombol kirim dokumen balasan (upload file langsung dari card) --}}
+      @if(! $sudahDokBalasan)
+        <form method="POST" action="{{ route('laporan-kendala-tembusan.dokumen-balasan', $t->id) }}"
+              enctype="multipart/form-data" style="display:inline-flex">
+          @csrf
+          <label class="kcard-btn kcard-btn-approve" style="cursor:pointer" title="Kirim dokumen balasan ke Kasansi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 12v6"/><path d="M9 15h6"/></svg>
+            Kirim Dokumen
+            <input type="file" name="dokumen_balasan" style="display:none" onchange="this.closest('form').submit()">
+          </label>
+        </form>
+      @else
+        {{-- Sudah ada dokumen → tombol ganti --}}
+        <form method="POST" action="{{ route('laporan-kendala-tembusan.dokumen-balasan', $t->id) }}"
+              enctype="multipart/form-data" style="display:inline-flex">
+          @csrf
+          <label class="kcard-btn" style="cursor:pointer;background:var(--panel-alt);border:1px solid var(--border)" title="Ganti dokumen balasan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Ganti Dok.
+            <input type="file" name="dokumen_balasan" style="display:none" onchange="this.closest('form').submit()">
+          </label>
         </form>
       @endif
     </div>
