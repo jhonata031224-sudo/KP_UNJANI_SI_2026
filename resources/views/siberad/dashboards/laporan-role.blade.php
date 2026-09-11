@@ -943,13 +943,23 @@ document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>{const m
         borderRadius:empty?0:7,spacing:empty?0:3,hoverOffset:empty?0:5
       }]},
       options:{cutout:'70%',responsive:true,maintainAspectRatio:false,layout:{padding:24},
+        // "Tumbuh dari 0%" ($sbT) SENGAJA cuma jalan sekali (dikunci lewat
+        // $sbGrown) -- animation.onProgress/onComplete ini kepanggil
+        // ulang setiap kali arc-nya "membesar" pas di-hover (efek
+        // hoverOffset), bukan cuma pas animasi awal load. Tanpa guard ini,
+        // hover ke arc bikin $sbT ke-reset ke pecahan kecil, dan kalau
+        // animasi hover-keluarnya kepotong (gerakan kursor cepat), nyangkut
+        // di situ -- label %-nya arcPct jadi salah terus sampai chart
+        // di-refresh ulang. MIRROR fix yang sama persis di
+        // laporan-pimpinan.blade.php (makeStatusDonut).
         animation:reduce?false:{duration:1100,easing:'easeOutCubic',
-          onProgress:a=>{if(a&&a.chart)a.chart.$sbT=a.numSteps?a.currentStep/a.numSteps:1;},
-          onComplete:a=>{if(a&&a.chart)a.chart.$sbT=1;}},
+          onProgress:a=>{if(a&&a.chart&&!a.chart.$sbGrown)a.chart.$sbT=a.numSteps?a.currentStep/a.numSteps:1;},
+          onComplete:a=>{if(a&&a.chart){a.chart.$sbT=1;a.chart.$sbGrown=true;}}},
         plugins:{legend:{display:false},tooltip:{enabled:!empty,backgroundColor:donutSurfaceColor,titleColor:donutTextColor,bodyColor:donutTextColor,borderColor:donutBorderColor,borderWidth:1,cornerRadius:10,padding:10,usePointStyle:true,titleFont:{weight:'700'},bodyFont:{weight:'600'},callbacks:{label:c=>' '+c.label+': '+c.raw+' ('+Math.round(c.raw/total*100)+'%)'}}}},
       plugins:[arcPct]
     });
     chart.$sbT=reduce?1:0;
+    chart.$sbGrown=!!reduce;
     window.siberadCharts=window.siberadCharts||[];
     window.siberadCharts.push(chart);
     // Refresh realtime: destroy+recreate instance pakai statusData terbaru,
