@@ -4336,14 +4336,14 @@
             overflow-x:hidden!important;
             padding:22px 24px!important;
             scrollbar-width:thin!important;
-            scrollbar-color:var(--gold) rgba(0,0,0,.25)!important;
+            scrollbar-color:var(--border-strong) rgba(0,0,0,.25)!important;
             -webkit-overflow-scrolling:touch!important;
             overscroll-behavior:contain!important;
           }
           .lp-landing-modal-body::-webkit-scrollbar{width:8px!important;}
           .lp-landing-modal-body::-webkit-scrollbar-track{background:rgba(0,0,0,.2)!important;border-radius:6px!important;}
-          .lp-landing-modal-body::-webkit-scrollbar-thumb{background:var(--gold)!important;border-radius:6px!important;}
-          .lp-landing-modal-body::-webkit-scrollbar-thumb:hover{background:var(--gold-bright,#ffb300)!important;}
+          .lp-landing-modal-body::-webkit-scrollbar-thumb{background:var(--border-strong)!important;border-radius:6px!important;}
+          .lp-landing-modal-body::-webkit-scrollbar-thumb:hover{background:var(--gold)!important;}
 
           /* Sub-panel di dalam modal (mis. Makna Logo, Moto, Identitas Instansi, Fitur 1..4) */
           .lp-landing-modal-body .lp-tab-panel{
@@ -5545,22 +5545,48 @@
 
             // Toggle panel Gambar <-> Video sesuai radio "hero_bg_type" yang
             // dipilih, plus sinkronkan latar di panel Pratinjau Langsung.
-            var bgTypeRadios = form.querySelectorAll('[data-lp-bg-type-radio]');
+            //
+            // CATATAN PERBAIKAN BUG: sebelumnya listener "change" dipasang
+            // satu-satu ke tiap radio (bgTypeRadios.forEach(...)) saat panel
+            // ini masih berada di dalam #lpPanelsStore. Begitu panel yang
+            // sama dipindah (appendChild) ke dalam modal lewat lpOpenModal(),
+            // radio berpindah tempat tapi listener HARUSNYA tetap menempel --
+            // namun pada praktiknya highlight tombol GAMBAR/VIDEO tetap
+            // berubah (itu murni CSS ":has(input:checked)"), sedangkan
+            // panel kontennya tidak ikut berganti, tanda listener "change"-
+            // nya tidak lagi terpicu. Diganti jadi event delegation di
+            // `document` (elemen yang TIDAK PERNAH ikut berpindah), supaya
+            // toggle panel tetap jalan berapa kali pun modalnya dibuka-tutup.
             var lpPreviewHeroEl = document.getElementById('lpPreviewHero');
             var lpPreviewVideoEl = document.getElementById('lpPreviewHeroVideo');
             function applyBgType(type){
               form.querySelectorAll('[data-lp-bg-type-panel]').forEach(function(panel){
                 panel.style.display = (panel.dataset.lpBgTypePanel === type) ? '' : 'none';
               });
-              bgTypeRadios.forEach(function(radio){
+              form.querySelectorAll('[data-lp-bg-type-radio]').forEach(function(radio){
                 var opt = radio.closest('.lp-bg-type-option');
                 if(opt) opt.classList.toggle('is-active', radio.checked);
               });
               if(lpPreviewHeroEl) lpPreviewHeroEl.classList.toggle('lp-hero-bg-video', type === 'video');
               if(lpPreviewVideoEl) lpPreviewVideoEl.style.display = (type === 'video' && lpPreviewVideoEl.getAttribute('src')) ? 'block' : 'none';
             }
-            bgTypeRadios.forEach(function(radio){
-              radio.addEventListener('change', function(){ if(this.checked) applyBgType(this.value); });
+            document.addEventListener('change', function(e){
+              var radio = e.target.closest && e.target.closest('[data-lp-bg-type-radio]');
+              if(!radio || !form.contains(radio)) return;
+              applyBgType(radio.value);
+            });
+            // Jaring pengaman tambahan: sebagian browser/skema event tertentu
+            // kadang tidak selalu membubble-kan "change" dari radio custom
+            // (yang inputnya disembunyikan lewat CSS) sampai ke document.
+            // Klik pada label tombolnya dipantau juga, dicek sesaat setelah
+            // status "checked" bawaan browser selesai diperbarui.
+            document.addEventListener('click', function(e){
+              var opt = e.target.closest && e.target.closest('.lp-bg-type-option');
+              if(!opt || !form.contains(opt)) return;
+              setTimeout(function(){
+                var checked = opt.querySelector('[data-lp-bg-type-radio]:checked');
+                if(checked) applyBgType(checked.value);
+              }, 0);
             });
             var initialBgTypeRadio = form.querySelector('[data-lp-bg-type-radio]:checked');
             applyBgType(initialBgTypeRadio ? initialBgTypeRadio.value : 'gambar');
