@@ -41,7 +41,16 @@
 (function(){
 'use strict';
 if(window.__ADMIN_REPORT_CENTER__)return;window.__ADMIN_REPORT_CENTER__=true;
-var ENDPOINTS={users:@json(route('admin.laporan.report-center.users')),activities:@json(route('admin.laporan.report-center.activities')),userExcel:@json(route('admin.laporan.export-pengguna')),activityExcel:@json(route('admin.laporan.export-aktivitas')),userPdf:@json(route('admin.laporan.cetak',['jenis'=>'pengguna'])),activityPdf:@json(route('admin.laporan.cetak',['jenis'=>'aktivitas']))};
+@php
+  // PENTING: @json() Blade motong argumennya pakai explode(',') mentah
+  // (buat pisahin opsi encoding/depth opsional) tanpa peduli nesting --
+  // jadi route(...) dengan argumen array kayak ['jenis'=>'pengguna'] yang
+  // punya koma di dalamnya bikin hasil PHP-nya rusak (ParseError). Makanya
+  // dua URL cetak ini dirakit dulu di variabel biasa, baru di-@json().
+  $__userPdfUrl = route('admin.laporan.cetak', ['jenis' => 'pengguna']);
+  $__activityPdfUrl = route('admin.laporan.cetak', ['jenis' => 'aktivitas']);
+@endphp
+var ENDPOINTS={users:@json(route('admin.laporan.report-center.users')),activities:@json(route('admin.laporan.report-center.activities')),userExcel:@json(route('admin.laporan.export-pengguna')),activityExcel:@json(route('admin.laporan.export-aktivitas')),userPdf:@json($__userPdfUrl),activityPdf:@json($__activityPdfUrl)};
 function norm(v){return String(v||'').replace(/\s+/g,' ').trim().toLowerCase()}
 function relevant(el){var t=norm(el.textContent);return t.includes('export pengguna')||t.includes('export aktivitas')||t.includes('cetak pengguna')||t.includes('cetak aktivitas')}
 function findRoot(){var heading=[].slice.call(document.querySelectorAll('h1,h2,h3,h4,strong')).find(function(el){return norm(el.textContent)==='laporan pengguna & aktivitas'});if(!heading)return null;heading.textContent='Data Laporan';var root=heading;for(var i=0;i<8&&root;i++,root=root.parentElement){if([].slice.call(root.querySelectorAll('a,button')).filter(relevant).length>=4)return root}return heading.parentElement}

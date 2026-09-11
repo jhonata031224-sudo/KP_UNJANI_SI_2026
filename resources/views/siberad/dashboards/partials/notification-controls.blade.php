@@ -146,9 +146,19 @@
     }
     window.siberadTampilkanSesiBerakhir = tampilkanSesiBerakhir;
 
-    var notifications = @json(auth()->user()?->unreadNotifications?->take(20)?->map(function ($n) {
-      return ['id' => $n->id, 'message' => $n->data['pesan'] ?? 'Status laporan diperbarui.', 'time' => optional($n->created_at)->diffForHumans(), 'url' => $n->data['url'] ?? null];
-    })->values() ?? []);
+    @php
+      // PENTING: jangan taruh array literal (yang punya koma) langsung di
+      // dalam @json(...) -- directive @json Blade motong argumennya pakai
+      // explode(',') mentah (buat pisahin opsi encoding/depth opsional),
+      // jadi koma DI DALAM array/closure ikut kepotong dan hasil PHP-nya
+      // jadi rusak (ParseError "Unclosed '[' does not match ')'"). Makanya
+      // array-nya dirakit dulu di variabel biasa di sini, baru @json()
+      // dipanggil dengan satu variabel tunggal (tanpa koma di levelnya).
+      $__siberadNotifications = auth()->user()?->unreadNotifications?->take(20)?->map(function ($n) {
+        return ['id' => $n->id, 'message' => $n->data['pesan'] ?? 'Status laporan diperbarui.', 'time' => optional($n->created_at)->diffForHumans(), 'url' => $n->data['url'] ?? null];
+      })->values() ?? [];
+    @endphp
+    var notifications = @json($__siberadNotifications);
 
     var list = dropdown.querySelector('.siberad-notif-list');
     if (!list) {
