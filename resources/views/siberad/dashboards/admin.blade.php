@@ -4937,6 +4937,30 @@
           @media (max-width:1100px){
             .lp-preview{zoom:.78;width:128.2051%;}
           }
+
+          /* Mode rasio sempit (mobile/tablet kecil): kartu "Pratinjau Langsung"
+             tetap merender landing page pada lebar wajarnya (bukan dipaksa
+             mengecil sampai kepotong), lalu framenya dikasih scroll horizontal
+             supaya Admin bisa geser scrollbar untuk melihat sisi yang tidak
+             muat -- BUKAN diubah jadi ikut menyempit/terpotong seperti sebelumnya.
+             Sengaja dibatasi @media ini saja, jadi tampilan desktop (>900px)
+             di atas tetap persis seperti semula, tidak ikut berubah. */
+          @media (max-width:900px){
+            .lp-browser-frame{
+              overflow-x:auto;
+              overflow-y:hidden;
+              -webkit-overflow-scrolling:touch;
+              scrollbar-width:thin;
+              scrollbar-color:var(--border-strong) transparent;
+            }
+            .lp-browser-frame::-webkit-scrollbar{height:9px;}
+            .lp-browser-frame::-webkit-scrollbar-track{background:transparent;}
+            .lp-browser-frame::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:999px;}
+            .lp-browser-frame::-webkit-scrollbar-thumb:hover{background:var(--gold);}
+            .lp-browser-bar{min-width:640px;}
+            .lp-preview{zoom:1;width:640px;min-width:640px;}
+          }
+
           .lp-browser-bar{display:flex;align-items:center;gap:6px;padding:10px 12px;background:var(--panel-alt);border-bottom:1px solid var(--border-soft);}
           .lp-browser-dot{width:8px;height:8px;border-radius:50%;background:var(--border-strong);}
           .lp-browser-url{
