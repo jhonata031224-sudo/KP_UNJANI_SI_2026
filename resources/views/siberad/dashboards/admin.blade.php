@@ -3802,7 +3802,10 @@
                     <label for="lpHeroImage" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Gambar Latar Beranda</label>
                     <div class="lp-hero-image-row">
                       <input id="lpHeroImage" name="hero_image" type="file" accept="image/*" data-lp-image="hero_image" data-has-current="{{ $pengaturanHeroExists ? '1' : '0' }}" data-label-existing="Ganti Gambar">
-                      <img src="{{ $pengaturanHeroExists ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}">
+                      <div class="lp-hero-preview-frame" id="lpHeroImagePreviewFrame" style="{{ $pengaturanHeroExists ? '' : 'display:none' }}">
+                        <img src="{{ $pengaturanHeroExists ? asset('storage/'.$pengaturan->hero_image_path) : '' }}" alt="Gambar beranda saat ini" class="lp-current-image" id="lpHeroImagePreviewImg" style="filter:blur({{ $pengaturanHeroBlur }}px);">
+                        <div class="lp-hero-preview-overlay" id="lpHeroImagePreviewOverlay" style="opacity:{{ $pengaturanHeroOverlay / 100 }};"></div>
+                      </div>
                       <div class="lp-image-placeholder" id="lpHeroImagePreviewPlaceholder" style="{{ $pengaturanHeroExists ? 'display:none' : '' }}">
                         <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
                         <span>Belum ada gambar latar belakang</span>
@@ -3817,7 +3820,10 @@
                     <label for="lpHeroVideo" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Video Latar Beranda</label>
                     <div class="lp-hero-image-row">
                       <input id="lpHeroVideo" name="hero_video" type="file" accept="video/mp4,video/webm,video/quicktime,.mov" data-lp-video="hero_video" data-has-current="{{ $pengaturanHeroVideoExists ? '1' : '0' }}" data-label-existing="Ganti Video">
-                      <video src="{{ $pengaturanHeroVideoExists ? asset('storage/'.$pengaturan->hero_video_path) : '' }}" class="lp-current-image" id="lpHeroVideoPreviewVideo" muted loop autoplay playsinline style="{{ $pengaturanHeroVideoExists ? '' : 'display:none' }}"></video>
+                      <div class="lp-hero-preview-frame" id="lpHeroVideoPreviewFrame" style="{{ $pengaturanHeroVideoExists ? '' : 'display:none' }}">
+                        <video src="{{ $pengaturanHeroVideoExists ? asset('storage/'.$pengaturan->hero_video_path) : '' }}" class="lp-current-image" id="lpHeroVideoPreviewVideo" muted loop autoplay playsinline style="filter:blur({{ $pengaturanHeroBlur }}px);"></video>
+                        <div class="lp-hero-preview-overlay" id="lpHeroVideoPreviewOverlay" style="opacity:{{ $pengaturanHeroOverlay / 100 }};"></div>
+                      </div>
                       <div class="lp-image-placeholder" id="lpHeroVideoPreviewPlaceholder" style="{{ $pengaturanHeroVideoExists ? 'display:none' : '' }}">
                         <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m10 9 5 3-5 3z"></path></svg>
                         <span>Belum ada video latar belakang</span>
@@ -4307,14 +4313,14 @@
             overflow-x:hidden!important;
             padding:22px 24px!important;
             scrollbar-width:thin!important;
-            scrollbar-color:var(--gold) rgba(0,0,0,.25)!important;
+            scrollbar-color:var(--text-dim) rgba(0,0,0,.25)!important;
             -webkit-overflow-scrolling:touch!important;
             overscroll-behavior:contain!important;
           }
           .lp-landing-modal-body::-webkit-scrollbar{width:8px!important;}
           .lp-landing-modal-body::-webkit-scrollbar-track{background:rgba(0,0,0,.2)!important;border-radius:6px!important;}
-          .lp-landing-modal-body::-webkit-scrollbar-thumb{background:var(--gold)!important;border-radius:6px!important;}
-          .lp-landing-modal-body::-webkit-scrollbar-thumb:hover{background:var(--gold-bright,#ffb300)!important;}
+          .lp-landing-modal-body::-webkit-scrollbar-thumb{background:var(--text-dim)!important;border-radius:6px!important;}
+          .lp-landing-modal-body::-webkit-scrollbar-thumb:hover{background:var(--text-muted)!important;}
 
           /* Sub-panel di dalam modal (mis. Makna Logo, Moto, Identitas Instansi, Fitur 1..4) */
           .lp-landing-modal-body .lp-tab-panel{
@@ -4743,8 +4749,20 @@
              digeser pakai margin-left, sekarang cukup center semua & margin
              kiri itu dihapus supaya gak nambah geser dari titik tengah. */
           .lp-hero-image-row .lp-current-image,
-          .lp-hero-image-row .lp-image-placeholder{align-self:center;margin:0;}
+          .lp-hero-image-row .lp-image-placeholder,
+          .lp-hero-image-row .lp-hero-preview-frame{align-self:center;margin:0;}
           .lp-current-image{display:block;border-radius:9px;border:1px solid var(--border-soft);}
+          /* Bungkus <img>/<video> pratinjau supaya bisa ditumpuk sama layer
+             overlay warna (.lp-hero-preview-overlay) -- blur dipasang
+             langsung sebagai CSS filter di <img>/<video>-nya sendiri, tapi
+             overlay warna butuh elemen terpisah di atasnya karena filter
+             CSS tidak bisa "mewarnai" transparan seperti overlay gradasi. */
+          .lp-hero-preview-frame{position:relative;display:inline-block;border-radius:9px;overflow:hidden;}
+          .lp-hero-preview-frame .lp-current-image{border:1px solid var(--border-soft);}
+          .lp-hero-preview-overlay{
+            position:absolute;inset:0;pointer-events:none;
+            background-image:linear-gradient(160deg, color-mix(in srgb, var(--panel-2) 85%, transparent), color-mix(in srgb, var(--bg-deep) 75%, transparent));
+          }
           .lp-image-placeholder{box-sizing:border-box;border-radius:12px;border:2px dashed var(--border-strong);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:14px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
           .lp-image-placeholder svg{display:block;flex-shrink:0;}
           .lp-delete-img-btn{align-self:center;min-height:32px;height:32px;padding:0 13px;font-size:11px;}
@@ -4922,6 +4940,30 @@
           @media (max-width:1100px){
             .lp-preview{zoom:.78;width:128.2051%;}
           }
+
+          /* Mode rasio sempit (mobile/tablet kecil): kartu "Pratinjau Langsung"
+             tetap merender landing page pada lebar wajarnya (bukan dipaksa
+             mengecil sampai kepotong), lalu framenya dikasih scroll horizontal
+             supaya Admin bisa geser scrollbar untuk melihat sisi yang tidak
+             muat -- BUKAN diubah jadi ikut menyempit/terpotong seperti sebelumnya.
+             Sengaja dibatasi @media ini saja, jadi tampilan desktop (>900px)
+             di atas tetap persis seperti semula, tidak ikut berubah. */
+          @media (max-width:900px){
+            .lp-browser-frame{
+              overflow-x:auto;
+              overflow-y:hidden;
+              -webkit-overflow-scrolling:touch;
+              scrollbar-width:thin;
+              scrollbar-color:var(--border-strong) transparent;
+            }
+            .lp-browser-frame::-webkit-scrollbar{height:9px;}
+            .lp-browser-frame::-webkit-scrollbar-track{background:transparent;}
+            .lp-browser-frame::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:999px;}
+            .lp-browser-frame::-webkit-scrollbar-thumb:hover{background:var(--gold);}
+            .lp-browser-bar{min-width:640px;}
+            .lp-preview{zoom:1;width:640px;min-width:640px;}
+          }
+
           .lp-browser-bar{display:flex;align-items:center;gap:6px;padding:10px 12px;background:var(--panel-alt);border-bottom:1px solid var(--border-soft);}
           .lp-browser-dot{width:8px;height:8px;border-radius:50%;background:var(--border-strong);}
           .lp-browser-url{
@@ -5385,6 +5427,25 @@
               var lpPreviewHero = document.getElementById('lpPreviewHero');
               if(lpPreviewHero && heroBlurEl){ lpPreviewHero.style.setProperty('--lp-hero-blur', heroBlurEl.value + 'px'); }
               if(lpPreviewHero && heroOverlayEl){ lpPreviewHero.style.setProperty('--lp-hero-overlay', (heroOverlayEl.value / 100)); }
+              // Sinkron juga ke pratinjau gambar/video BESAR di dalam modal
+              // "Latar Belakang Beranda" sendiri (bukan cuma di panel
+              // Pratinjau Langsung yang letaknya terpisah) -- supaya efek
+              // blur & overlay-nya langsung kelihatan begitu slider digeser,
+              // tanpa perlu simpan dulu.
+              if(heroBlurEl){
+                var blurCss = 'blur(' + heroBlurEl.value + 'px)';
+                var imgEl = document.getElementById('lpHeroImagePreviewImg');
+                var vidEl = document.getElementById('lpHeroVideoPreviewVideo');
+                if(imgEl){ imgEl.style.filter = blurCss; }
+                if(vidEl){ vidEl.style.filter = blurCss; }
+              }
+              if(heroOverlayEl){
+                var overlayOpacity = heroOverlayEl.value / 100;
+                var imgOverlayEl = document.getElementById('lpHeroImagePreviewOverlay');
+                var vidOverlayEl = document.getElementById('lpHeroVideoPreviewOverlay');
+                if(imgOverlayEl){ imgOverlayEl.style.opacity = overlayOpacity; }
+                if(vidOverlayEl){ vidOverlayEl.style.opacity = overlayOpacity; }
+              }
               setText('lpPvEyebrow', document.querySelector('[data-lp="hero_eyebrow"]').value, 'PUSSIBERAD SISTEM PENDUKUNG OPERASIONAL');
               setText('lpPvJudulAwal', document.querySelector('[data-lp="hero_judul_awal"]').value, 'SIBER');
               setText('lpPvJudulAksen', document.querySelector('[data-lp="hero_judul_aksen"]').value, 'AD');
@@ -5433,6 +5494,7 @@
                 var file = this.files && this.files[0];
                 var heroEl = document.getElementById('lpPreviewHero');
                 var previewImg = document.getElementById('lpHeroImagePreviewImg');
+                var previewFrame = document.getElementById('lpHeroImagePreviewFrame');
                 var placeholder = document.getElementById('lpHeroImagePreviewPlaceholder');
                 if(!file){ heroEl.style.setProperty('--lp-hero-photo', 'none'); return; }
                 var reader = new FileReader();
@@ -5440,7 +5502,8 @@
                   heroEl.style.setProperty('--lp-hero-photo', 'url(' + e.target.result + ')');
                   // Tampilkan pratinjau BG realtime di sebelah tombol pilih file,
                   // gantikan kotak "belum ada gambar" begitu file dipilih.
-                  if(previewImg){ previewImg.src = e.target.result; previewImg.style.display = 'block'; }
+                  if(previewImg){ previewImg.src = e.target.result; }
+                  if(previewFrame){ previewFrame.style.display = ''; }
                   if(placeholder){ placeholder.style.display = 'none'; }
                 };
                 reader.readAsDataURL(file);
@@ -5504,9 +5567,11 @@
 
             function tampilkanPratinjauVideoHero(file, url){
               var previewVideo = document.getElementById('lpHeroVideoPreviewVideo');
+              var previewFrame = document.getElementById('lpHeroVideoPreviewFrame');
               var placeholder = document.getElementById('lpHeroVideoPreviewPlaceholder');
               var lpPreviewVideo = document.getElementById('lpPreviewHeroVideo');
-              if(previewVideo){ previewVideo.src = url; previewVideo.style.display = 'block'; }
+              if(previewVideo){ previewVideo.src = url; }
+              if(previewFrame){ previewFrame.style.display = ''; }
               if(placeholder){ placeholder.style.display = 'none'; }
               // Ikut tampilkan di panel Pratinjau Langsung kalau tipe latar
               // yang sedang aktif memang video.
@@ -5515,7 +5580,18 @@
 
             // Toggle panel Gambar <-> Video sesuai radio "hero_bg_type" yang
             // dipilih, plus sinkronkan latar di panel Pratinjau Langsung.
-            var bgTypeRadios = form.querySelectorAll('[data-lp-bg-type-radio]');
+            //
+            // CATATAN PERBAIKAN BUG: sebelumnya listener "change" dipasang
+            // satu-satu ke tiap radio (bgTypeRadios.forEach(...)) saat panel
+            // ini masih berada di dalam #lpPanelsStore. Begitu panel yang
+            // sama dipindah (appendChild) ke dalam modal lewat lpOpenModal(),
+            // radio berpindah tempat tapi listener HARUSNYA tetap menempel --
+            // namun pada praktiknya highlight tombol GAMBAR/VIDEO tetap
+            // berubah (itu murni CSS ":has(input:checked)"), sedangkan
+            // panel kontennya tidak ikut berganti, tanda listener "change"-
+            // nya tidak lagi terpicu. Diganti jadi event delegation di
+            // `document` (elemen yang TIDAK PERNAH ikut berpindah), supaya
+            // toggle panel tetap jalan berapa kali pun modalnya dibuka-tutup.
             var lpPreviewHeroEl = document.getElementById('lpPreviewHero');
             var lpPreviewVideoEl = document.getElementById('lpPreviewHeroVideo');
             function applyBgType(type){
@@ -5533,15 +5609,40 @@
               document.querySelectorAll('[data-lp-bg-type-panel]').forEach(function(panel){
                 panel.style.display = (panel.dataset.lpBgTypePanel === type) ? '' : 'none';
               });
-              bgTypeRadios.forEach(function(radio){
+              document.querySelectorAll('[data-lp-bg-type-radio]').forEach(function(radio){
                 var opt = radio.closest('.lp-bg-type-option');
                 if(opt) opt.classList.toggle('is-active', radio.checked);
               });
               if(lpPreviewHeroEl) lpPreviewHeroEl.classList.toggle('lp-hero-bg-video', type === 'video');
               if(lpPreviewVideoEl) lpPreviewVideoEl.style.display = (type === 'video' && lpPreviewVideoEl.getAttribute('src')) ? 'block' : 'none';
             }
-            bgTypeRadios.forEach(function(radio){
-              radio.addEventListener('change', function(){ if(this.checked) applyBgType(this.value); });
+            document.addEventListener('change', function(e){
+              // CATATAN PERBAIKAN BUG: guard "form.contains(radio)" di bawah
+              // ini SEBELUMNYA bikin toggle macet begitu modal dibuka --
+              // sama persis root cause-nya dengan applyBgType() di atas:
+              // radio-nya sudah tidak lagi berada di dalam `form` begitu
+              // panel dipindah ke modal, jadi form.contains() selalu balik
+              // false dan listener ini langsung berhenti (return) sebelum
+              // sempat memanggil applyBgType(). Atribut data-lp-bg-type-radio
+              // sudah unik untuk section ini (lihat catatan applyBgType),
+              // jadi guard containment ini dihapus -- cukup pastikan radio-nya
+              // ditemukan.
+              var radio = e.target.closest && e.target.closest('[data-lp-bg-type-radio]');
+              if(!radio) return;
+              applyBgType(radio.value);
+            });
+            // Jaring pengaman tambahan: sebagian browser/skema event tertentu
+            // kadang tidak selalu membubble-kan "change" dari radio custom
+            // (yang inputnya disembunyikan lewat CSS) sampai ke document.
+            // Klik pada label tombolnya dipantau juga, dicek sesaat setelah
+            // status "checked" bawaan browser selesai diperbarui.
+            document.addEventListener('click', function(e){
+              var opt = e.target.closest && e.target.closest('.lp-bg-type-option');
+              if(!opt) return;
+              setTimeout(function(){
+                var checked = opt.querySelector('[data-lp-bg-type-radio]:checked');
+                if(checked) applyBgType(checked.value);
+              }, 0);
             });
             var initialBgTypeRadio = form.querySelector('[data-lp-bg-type-radio]:checked');
             applyBgType(initialBgTypeRadio ? initialBgTypeRadio.value : 'gambar');
