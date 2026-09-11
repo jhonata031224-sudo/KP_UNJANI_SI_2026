@@ -4776,6 +4776,10 @@
           #lpHeroImagePreviewPlaceholder{width:460px;height:259px;}
           @media(max-width:760px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{width:100%;max-width:400px;}}
           @media(max-width:560px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{max-width:340px;}}
+          #strukturOrgForm{max-width:100%;box-sizing:border-box;}
+          #strukturOrgForm .lp-hero-image-row{width:100%;box-sizing:border-box;}
+          @media(max-width:760px){#strukturOrgPreviewImg,#strukturOrgPreviewPlaceholder{width:100%;max-width:360px;}}
+          @media(max-width:560px){#strukturOrgPreviewImg,#strukturOrgPreviewPlaceholder{max-width:100%;}}
           /* Logo: kotak & object-fit:contain (bukan cover) supaya lambang/
              logo utuh terlihat jelas tanpa terpotong, dengan ukuran yang
              pas -- tidak menyisakan ruang kosong berlebihan seperti kotak
@@ -5682,8 +5686,8 @@
           <form method="POST" action="{{ route('admin.struktur-organisasi.update') }}" enctype="multipart/form-data" id="strukturOrgForm" style="padding:18px 22px">
             @csrf
             <div class="lp-hero-image-row">
-              <img src="{{ $pengaturanStrukturOrgExists ? asset('storage/'.$pengaturan->struktur_organisasi_path) : '' }}" alt="Gambar Struktur Organisasi saat ini" class="lp-current-image" id="strukturOrgPreviewImg" style="max-width:420px;max-height:320px;object-fit:contain;{{ $pengaturanStrukturOrgExists ? '' : 'display:none' }}">
-              <div class="lp-image-placeholder" id="strukturOrgPreviewPlaceholder" style="width:260px;height:160px;{{ $pengaturanStrukturOrgExists ? 'display:none' : '' }}">
+              <img src="{{ $pengaturanStrukturOrgExists ? asset('storage/'.$pengaturan->struktur_organisasi_path) : '' }}" alt="Gambar Struktur Organisasi saat ini" class="lp-current-image" id="strukturOrgPreviewImg" style="width:100%;max-width:420px;max-height:320px;object-fit:contain;{{ $pengaturanStrukturOrgExists ? '' : 'display:none' }}">
+              <div class="lp-image-placeholder" id="strukturOrgPreviewPlaceholder" style="width:100%;max-width:260px;height:160px;{{ $pengaturanStrukturOrgExists ? 'display:none' : '' }}">
                 <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="m4.5 18 5-5.5 3 3 3.5-4L20.5 18"></path></svg>
                 <span>Belum ada gambar struktur organisasi</span>
               </div>
