@@ -792,6 +792,18 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
   }
   document.querySelectorAll('.side-link[href^="#"],.side-sub-link[href^="#"],.card-link[href^="#"],.btn.btn-ghost[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const id=a.getAttribute('href').slice(1);if(document.getElementById(id)){e.preventDefault();const navLink=document.querySelector('.side-link[href="#'+id+'"],.side-sub-link[href="#'+id+'"]')||a;showSection(id,navLink)}}));
 
+  // Dipanggil dari lonceng notifikasi (notification-controls.blade.php)
+  // buat langsung buka section yang relevan begitu notifikasi diklik --
+  // kembar window.siberadGoToSection() di laporan-role.blade.php, versi
+  // dashboard Pimpinan.
+  window.siberadGoToSection=function(id){
+    if(!document.getElementById(id))return false;
+    const link=document.querySelector('.side-link[href="#'+id+'"],.side-sub-link[href="#'+id+'"]');
+    showSection(id,link);
+    document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});
+    return true;
+  };
+
   // Tombol "Lihat" di tabel Permintaan Laporan -- bawa ke tab Log Aktivitas
   // satuan tujuan permintaan itu, terus kalau laporannya udah pernah dikirim
   // (ketemu baris dengan data-permintaan-id yang sama), disorot & di-scroll

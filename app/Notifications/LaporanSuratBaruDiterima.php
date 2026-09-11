@@ -29,6 +29,10 @@ class LaporanSuratBaruDiterima extends Notification
             'perihal' => $this->surat->perihal,
             'prioritas' => $this->surat->prioritas,
             'pesan' => "Surat baru dari {$this->surat->satuan->nama}: {$this->surat->perihal}",
+            // Section #surat-masuk ada persis sama di dashboard Satuan
+            // maupun Pimpinan, jadi aman dipakai apa adanya utk siapapun
+            // penerimanya.
+            'url' => route('dashboard').'#surat-masuk',
         ];
     }
 }

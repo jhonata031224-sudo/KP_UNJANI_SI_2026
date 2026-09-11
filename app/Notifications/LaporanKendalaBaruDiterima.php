@@ -28,6 +28,9 @@ class LaporanKendalaBaruDiterima extends Notification
             'perihal' => $this->kendala->perihal,
             'prioritas' => $this->kendala->prioritas,
             'pesan' => "Laporan kendala baru dari {$this->kendala->satuan->nama}: {$this->kendala->perihal}",
+            // Penerima notifikasi ini SELALU Danpus -- section #kendala-kasansi
+            // di dashboard Pimpinan (lihat DashboardController::pelaporan()).
+            'url' => route('dashboard').'#kendala-kasansi',
         ];
     }
 }

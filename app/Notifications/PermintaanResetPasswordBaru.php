@@ -28,6 +28,9 @@ class PermintaanResetPasswordBaru extends Notification
         return [
             'permintaan_reset_password_id' => $this->permintaan->id,
             'pesan' => "Permintaan ganti password dari {$nama} ({$satuan}) perlu ditinjau.",
+            // Penerima notifikasi ini selalu Admin -- tab "reset-password"
+            // (data-tab-panel) di dashboard Admin.
+            'url' => route('dashboard').'#reset-password',
         ];
     }
 }

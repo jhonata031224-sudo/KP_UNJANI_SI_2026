@@ -34,6 +34,10 @@ class LaporanKendalaTembusanFeedbackDiterima extends Notification
             'satuan_pemberi_feedback' => $this->satuanPemberiFeedback->nama,
             'perihal' => $kendala->perihal ?? '-',
             'pesan' => "{$this->satuanPemberiFeedback->nama} memberi feedback pada laporan kendala \"{$kendala->perihal}\" -- sudah bisa diteruskan ke Danpus.",
+            // Penerima notifikasi ini Kasansi (satuan pengirim kendala) --
+            // section #kirim-laporan-kendala ("Kirim Kendala") di dashboard
+            // Satuan mereka, tempat tombol "Kirim ke Danpus" berada.
+            'url' => route('dashboard').'#kirim-laporan-kendala',
         ];
     }
 }
