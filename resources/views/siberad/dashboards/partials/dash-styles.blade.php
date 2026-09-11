@@ -411,10 +411,18 @@
 
   .dash-hero{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:18px;margin-bottom:24px;padding:24px 26px;position:relative;background:linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--panel);border:1px solid var(--border-soft);border-radius:12px;box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 10px 30px rgba(0,0,0,.25);}
   .dash-hero::before{content:"";position:absolute;top:0;left:14px;right:14px;height:1px;background:linear-gradient(90deg, transparent, var(--border-strong), transparent);}
-  .dash-hero-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:8px;}
-  .dash-hero h2{font-family:var(--display);font-size:26px;font-weight:700;margin-bottom:6px;}
+  {{-- Eyebrow font-weight & ukuran nama (h2) disamakan ke Beranda Pimpinan
+       (.pimp-eyebrow/.pimp-hero h1, implementasi terpisah sendiri di
+       laporan-pimpinan.blade.php) -- sebelumnya eyebrow gak nyetel
+       font-weight sama sekali (jatuh ke normal, beda dari Pimpinan yang
+       800) & nama satuan cuma 26px/22px (Pimpinan 30px/25px). Ini file
+       SHARED (dipakai Admin & Satuan/laporan-role.blade.php), jadi fix-nya
+       otomatis kena ke keduanya sekaligus, gak perlu override terpisah di
+       2 tempat. --}}
+  .dash-hero-eyebrow{font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:8px;}
+  .dash-hero h2{font-family:var(--display);font-size:30px;font-weight:700;margin-bottom:6px;}
   .dash-hero p{font-size:13px;color:var(--text-muted);}
-  @media(max-width:700px){.dash-hero{padding:20px;}.dash-hero h2{font-size:22px;}}
+  @media(max-width:700px){.dash-hero{padding:20px;}.dash-hero h2{font-size:25px;}}
 
   .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
   .stat-card{padding:19px;position:relative;background:linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--panel);border:1px solid var(--border-soft);border-radius:12px;box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 10px 30px rgba(0,0,0,.25);}
