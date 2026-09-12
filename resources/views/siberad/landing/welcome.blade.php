@@ -765,8 +765,12 @@
   .about{padding:90px 0;border-top:1px solid var(--border-soft);}
   .about-top{display:grid;grid-template-columns:.7fr 1.3fr;gap:56px;align-items:center;margin-bottom:56px;}
   @media (max-width:900px){ .about-top{grid-template-columns:1fr;gap:36px;} }
+  .about-crest-wrap{
+    display:flex;flex-direction:column;align-items:center;gap:12px;
+    width:100%;max-width:220px;margin:0 auto;
+  }
   .about-crest{
-    position:relative;width:100%;max-width:220px;margin:0 auto;
+    position:relative;width:100%;
     border-radius:50%;overflow:hidden;border:1px solid var(--border-strong);
     box-shadow:0 0 0 10px rgba(212,175,55,.05), 0 24px 60px rgba(0,0,0,.5);
     /* .about-crest sekarang elemen <button> (supaya bisa diklik utk modal
@@ -778,11 +782,22 @@
   .about-crest:hover{transform:translateY(-3px);box-shadow:0 0 0 10px rgba(212,175,55,.09), 0 28px 70px rgba(0,0,0,.55);}
   .about-crest:focus-visible{outline:2px solid var(--gold);outline-offset:4px;}
   .about-crest img{width:100%;display:block;}
+  .about-crest-hint{
+    margin:0;font-size:11.5px;font-weight:600;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--gold);opacity:.75;
+    text-align:center;cursor:default;
+    animation:hint-pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes hint-pulse{
+    0%,100%{opacity:.65;}
+    50%{opacity:1;}
+  }
   /* Modal Makna Logo dinonaktifkan sementara di mobile (lihat juga guard
      maknaIsMobile() di script bawah) -- lambang tetap tampil, cuma tidak
      bisa diklik/dibuka di layar <=760px. */
   @media (max-width:760px){
     .about-crest{cursor:default;pointer-events:none;}
+    .about-crest-hint{display:none;}
   }
 
   /* ================= MODAL: MAKNA LOGO ================= */
@@ -1360,9 +1375,15 @@
       <div class="wrap">
         <div class="about-top" data-reveal>
           @if ($lpLogoUrl)
-            <button type="button" class="about-crest" id="maknaLogoTrigger" aria-haspopup="dialog" aria-label="Lihat makna lambang Pussiberad">
-              <img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad" id="maknaLogoSourceImg">
-            </button>
+            <div class="about-crest-wrap">
+              <button type="button" class="about-crest" id="maknaLogoTrigger" aria-haspopup="dialog" aria-label="Lihat makna lambang Pussiberad">
+                <img src="{{ $lpLogoUrl }}" alt="Lambang Pussiberad" id="maknaLogoSourceImg">
+              </button>
+              <p class="about-crest-hint">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M15 15l-2 5L9 9l11 4-5 2z"/></svg>
+                Klik Logo Untuk Lihat Makna
+              </p>
+            </div>
           @else
             <div class="about-crest"></div>
           @endif
