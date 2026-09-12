@@ -783,9 +783,13 @@
   .about-crest:focus-visible{outline:2px solid var(--gold);outline-offset:4px;}
   .about-crest img{width:100%;display:block;}
   .about-crest-hint{
-    margin:0;font-size:11.5px;font-weight:600;letter-spacing:.06em;
-    text-transform:uppercase;color:var(--gold);opacity:.75;
+    margin:0;font-size:11px;font-weight:700;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--gold);
     text-align:center;cursor:default;
+    border:1.5px solid var(--gold);
+    border-radius:6px;
+    padding:5px 12px;
+    background:rgba(212,175,55,.08);
     animation:hint-pulse 2.5s ease-in-out infinite;
   }
   @keyframes hint-pulse{
