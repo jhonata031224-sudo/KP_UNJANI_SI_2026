@@ -338,12 +338,13 @@ window.renderLampiranPreview=function(list,container){var IMG_EXT=['jpg','jpeg',
     var prioritasSelect=document.getElementById('monitorPrioritas-'+prefix);
     var countText=document.getElementById('monitorCount-'+prefix);
     var noMatch=document.getElementById('monitorNoMatch-'+prefix);
+    var prioritasKpi=document.getElementById('monitorPrioritasKpi-'+prefix);
     var total=cards.length;
     function apply(){
       var q=((searchInput&&searchInput.value)||'').trim().toLowerCase();
       var st=(statusSelect&&statusSelect.value)||'';
       var pr=(prioritasSelect&&prioritasSelect.value)||'';
-      var shown=0;
+      var shown=0,prioritasCount=0;
       cards.forEach(function(card){
         var matchQ=!q||(card.dataset.search||'').indexOf(q)!==-1;
         var matchSt=!st||card.dataset.statusCat===st;
@@ -351,9 +352,16 @@ window.renderLampiranPreview=function(list,container){var IMG_EXT=['jpg','jpeg',
         var visible=matchQ&&matchSt&&matchPr;
         card.style.display=visible?'':'none';
         if(visible) shown++;
+        // Panel KPI "Prioritas" ikut nilai dropdown Prioritas yang lagi
+        // dipilih -- kalau "Semua prioritas" (pr kosong), hitungannya total
+        // semua laporan; kalau pilih salah satu (Tinggi/Sedang/Rendah),
+        // hitung yang prioritasnya cocok. Sengaja TIDAK ikut search/status
+        // (murni angka per-prioritas), biar tetap jadi acuan independen.
+        if(!pr||card.dataset.prioritas===pr) prioritasCount++;
       });
       if(countText) countText.textContent='Menampilkan '+shown+' dari '+total+' laporan';
       if(noMatch) noMatch.style.display=shown===0?'flex':'none';
+      if(prioritasKpi) prioritasKpi.textContent=prioritasCount;
     }
     searchInput&&searchInput.addEventListener('input',apply);
     statusSelect&&statusSelect.addEventListener('change',apply);

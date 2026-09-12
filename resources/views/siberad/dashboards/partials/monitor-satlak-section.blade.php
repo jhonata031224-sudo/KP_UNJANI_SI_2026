@@ -31,8 +31,8 @@
       <span class="monitor-kpi-value tone-blue">{{ $stat['progres'] }}</span>
     </div>
     <div class="panel monitor-kpi">
-      <span class="monitor-kpi-label">Prioritas Tinggi</span>
-      <span class="monitor-kpi-value tone-red">{{ $stat['prioritas_tinggi'] }}</span>
+      <span class="monitor-kpi-label">Prioritas</span>
+      <span class="monitor-kpi-value tone-red" id="monitorPrioritasKpi-{{ $prefix }}">{{ $stat['total'] }}</span>
     </div>
   </div>
 
