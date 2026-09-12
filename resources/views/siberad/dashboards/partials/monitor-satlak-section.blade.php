@@ -17,24 +17,22 @@
     <p>{{ $deskripsi }}</p>
   </div>
 
-  <div class="panel monitor-kpi-panel">
-    <div class="monitor-kpi-row">
-      <div class="monitor-kpi">
-        <span class="monitor-kpi-label">Total Laporan</span>
-        <span class="monitor-kpi-value">{{ $stat['total'] }}</span>
-      </div>
-      <div class="monitor-kpi">
-        <span class="monitor-kpi-label">Menunggu</span>
-        <span class="monitor-kpi-value tone-amber">{{ $stat['menunggu'] }}</span>
-      </div>
-      <div class="monitor-kpi">
-        <span class="monitor-kpi-label">Progres</span>
-        <span class="monitor-kpi-value tone-blue">{{ $stat['progres'] }}</span>
-      </div>
-      <div class="monitor-kpi">
-        <span class="monitor-kpi-label">Prioritas Tinggi</span>
-        <span class="monitor-kpi-value tone-red">{{ $stat['prioritas_tinggi'] }}</span>
-      </div>
+  <div class="monitor-kpi-row">
+    <div class="panel monitor-kpi">
+      <span class="monitor-kpi-label">Total Laporan</span>
+      <span class="monitor-kpi-value">{{ $stat['total'] }}</span>
+    </div>
+    <div class="panel monitor-kpi">
+      <span class="monitor-kpi-label">Menunggu</span>
+      <span class="monitor-kpi-value tone-amber">{{ $stat['menunggu'] }}</span>
+    </div>
+    <div class="panel monitor-kpi">
+      <span class="monitor-kpi-label">Progres</span>
+      <span class="monitor-kpi-value tone-blue">{{ $stat['progres'] }}</span>
+    </div>
+    <div class="panel monitor-kpi">
+      <span class="monitor-kpi-label">Prioritas Tinggi</span>
+      <span class="monitor-kpi-value tone-red">{{ $stat['prioritas_tinggi'] }}</span>
     </div>
   </div>
 
