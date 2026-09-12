@@ -23,16 +23,20 @@
       <span class="monitor-kpi-value">{{ $stat['total'] }}</span>
     </div>
     <div class="panel monitor-kpi">
-      <span class="monitor-kpi-label">Menunggu</span>
+      <span class="monitor-kpi-label">Menunggu Persetujuan Danpus</span>
       <span class="monitor-kpi-value tone-amber">{{ $stat['menunggu'] }}</span>
     </div>
     <div class="panel monitor-kpi">
       <span class="monitor-kpi-label">Progres</span>
       <span class="monitor-kpi-value tone-blue">{{ $stat['progres'] }}</span>
     </div>
-    <div class="panel monitor-kpi">
+    <div class="panel monitor-kpi monitor-kpi-prio">
       <span class="monitor-kpi-label">Prioritas</span>
-      <span class="monitor-kpi-value tone-red" id="monitorPrioritasKpi-{{ $prefix }}">{{ $stat['total'] }}</span>
+      <div class="monitor-kpi-prio-row">
+        <span class="monitor-kpi-prio-item prio-tinggi"><span class="monitor-kpi-prio-dot"></span>Tinggi <b>{{ $stat['prioritas_tinggi'] }}</b></span>
+        <span class="monitor-kpi-prio-item prio-sedang"><span class="monitor-kpi-prio-dot"></span>Sedang <b>{{ $stat['prioritas_sedang'] }}</b></span>
+        <span class="monitor-kpi-prio-item prio-rendah"><span class="monitor-kpi-prio-dot"></span>Rendah <b>{{ $stat['prioritas_rendah'] }}</b></span>
+      </div>
     </div>
   </div>
 
