@@ -783,14 +783,20 @@
   .about-crest:focus-visible{outline:2px solid var(--gold);outline-offset:4px;}
   .about-crest img{width:100%;display:block;}
   .about-crest-hint{
+    position:relative;
     margin:0;font-size:11px;font-weight:700;letter-spacing:.07em;
     text-transform:uppercase;color:var(--gold);
     text-align:center;cursor:default;
-    border:1.5px solid var(--gold);
-    border-radius:6px;
-    padding:5px 12px;
-    background:rgba(212,175,55,.08);
+    background:linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--panel);
+    border:1px solid var(--border-soft);
+    border-radius:12px;
+    padding:8px 16px;
+    box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 10px 30px rgba(0,0,0,.25);
     animation:hint-pulse 2.5s ease-in-out infinite;
+  }
+  .about-crest-hint::before{
+    content:"";position:absolute;top:0;left:14px;right:14px;height:1px;
+    background:linear-gradient(90deg, transparent, var(--border-strong), transparent);
   }
   @keyframes hint-pulse{
     0%,100%{opacity:.65;}
