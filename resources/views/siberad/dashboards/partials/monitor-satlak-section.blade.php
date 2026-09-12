@@ -43,7 +43,10 @@
 
   @if($laporan->isNotEmpty())
   <div class="monitor-toolbar">
-    <input type="search" id="monitorSearch-{{ $prefix }}" placeholder="Cari perihal…" autocomplete="off">
+    <div class="monitor-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+      <input type="search" id="monitorSearch-{{ $prefix }}" placeholder="Cari perihal atau satuan tujuan..." aria-label="Cari perihal atau satuan tujuan..." autocomplete="off">
+    </div>
     <select id="monitorStatus-{{ $prefix }}" aria-label="Filter status">
       <option value="">Semua status</option>
       <option value="menunggu">Menunggu</option>
