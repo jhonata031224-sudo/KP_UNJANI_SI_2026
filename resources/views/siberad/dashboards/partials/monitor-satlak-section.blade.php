@@ -3,7 +3,7 @@
   Params wajib:
     $sectionId  : id anchor tab, mis. 'monitoring-kal'
     $prefix     : suffix unik utk id elemen filter, mis. 'kal'
-    $judul      : judul section, mis. 'Satlak Kal — Penangkalan'
+    $judul      : judul section, mis. 'Satlak Kal (Penangkalan)'
     $deskripsi  : deskripsi singkat di bawah judul
     $namaSatlak : nama satlak utk teks banner mode pemantauan
     $laporan    : koleksi Laporan milik satlak ini
@@ -13,32 +13,34 @@
 --}}
 <section id="{{ $sectionId }}" class="tab-panel">
   <div class="section-head panel">
-    <h2>{!! $judul !!}</h2>
+    <h2>{{ $judul }}</h2>
     <p>{{ $deskripsi }}</p>
   </div>
 
-  <div class="monitor-kpi-row">
-    <div class="monitor-kpi">
-      <span class="monitor-kpi-label">Total Laporan</span>
-      <span class="monitor-kpi-value">{{ $stat['total'] }}</span>
-    </div>
-    <div class="monitor-kpi">
-      <span class="monitor-kpi-label">Menunggu</span>
-      <span class="monitor-kpi-value tone-amber">{{ $stat['menunggu'] }}</span>
-    </div>
-    <div class="monitor-kpi">
-      <span class="monitor-kpi-label">Progres</span>
-      <span class="monitor-kpi-value tone-blue">{{ $stat['progres'] }}</span>
-    </div>
-    <div class="monitor-kpi">
-      <span class="monitor-kpi-label">Prioritas Tinggi</span>
-      <span class="monitor-kpi-value tone-red">{{ $stat['prioritas_tinggi'] }}</span>
+  <div class="panel monitor-kpi-panel">
+    <div class="monitor-kpi-row">
+      <div class="monitor-kpi">
+        <span class="monitor-kpi-label">Total Laporan</span>
+        <span class="monitor-kpi-value">{{ $stat['total'] }}</span>
+      </div>
+      <div class="monitor-kpi">
+        <span class="monitor-kpi-label">Menunggu</span>
+        <span class="monitor-kpi-value tone-amber">{{ $stat['menunggu'] }}</span>
+      </div>
+      <div class="monitor-kpi">
+        <span class="monitor-kpi-label">Progres</span>
+        <span class="monitor-kpi-value tone-blue">{{ $stat['progres'] }}</span>
+      </div>
+      <div class="monitor-kpi">
+        <span class="monitor-kpi-label">Prioritas Tinggi</span>
+        <span class="monitor-kpi-value tone-red">{{ $stat['prioritas_tinggi'] }}</span>
+      </div>
     </div>
   </div>
 
   <div class="monitor-mode-banner">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
-    <span>Mode pemantauan — Duktek hanya dapat melihat aktivitas laporan {{ $namaSatlak }}.</span>
+    <span>Mode pemantauan Duktek hanya dapat melihat aktivitas laporan {{ $namaSatlak }}.</span>
   </div>
 
   @if($laporan->isNotEmpty())
