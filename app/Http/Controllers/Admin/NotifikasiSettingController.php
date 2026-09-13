@@ -52,22 +52,25 @@ class NotifikasiSettingController extends Controller
         $validated = $request->validate([
             'judul' => ['required', 'string', 'max:100'],
             'pesan' => ['required', 'string', 'max:500'],
+            'kategori' => ['required', 'string', 'in:maintenance,keterangan'],
         ], [
             'judul.required' => 'Judul pengumuman wajib diisi.',
             'pesan.required' => 'Isi pesan wajib diisi.',
             'judul.max' => 'Judul maksimal 100 karakter.',
             'pesan.max' => 'Isi pesan maksimal 500 karakter.',
+            'kategori.required' => 'Kategori pengumuman wajib dipilih.',
+            'kategori.in' => 'Kategori pengumuman tidak valid.',
         ]);
 
         $penerima = User::all();
 
-        NotificationFacade::send($penerima, new PengumumanBroadcastAdmin($validated['judul'], $validated['pesan']));
+        NotificationFacade::send($penerima, new PengumumanBroadcastAdmin($validated['judul'], $validated['pesan'], $validated['kategori']));
 
         ActivityLog::catat(
             'setelan.notifikasi.broadcast',
             "Mengirim pengumuman \"{$validated['judul']}\" ke {$penerima->count()} pengguna.",
             null,
-            ['judul' => $validated['judul'], 'pesan' => $validated['pesan'], 'jumlah_penerima' => $penerima->count()]
+            ['judul' => $validated['judul'], 'pesan' => $validated['pesan'], 'kategori' => $validated['kategori'], 'jumlah_penerima' => $penerima->count()]
         );
 
         return back()->with('status', "Pengumuman terkirim ke {$penerima->count()} pengguna.");

@@ -5679,6 +5679,15 @@
           .sn-field label{display:block;font-size:11.5px;font-weight:700;color:var(--text-muted);margin-bottom:5px;}
           .sn-field input[type="text"],.sn-field textarea{width:100%;box-sizing:border-box;border:1px solid var(--border-soft);border-radius:9px;padding:9px 12px;font-family:var(--body);font-size:12.5px;background:var(--panel-alt);color:var(--text);}
           .sn-field textarea{resize:vertical;min-height:80px;}
+          .sn-kategori-row{display:flex;gap:10px;flex-wrap:wrap;}
+          .sn-kategori-opt{flex:1 1 200px;position:relative;cursor:pointer;}
+          .sn-kategori-opt input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;}
+          .sn-kategori-opt-card{border:1.5px solid var(--border-soft);border-radius:10px;padding:10px 12px;transition:border-color .15s ease,background .15s ease;}
+          .sn-kategori-opt-title{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--text);}
+          .sn-kategori-opt-title svg{width:15px;height:15px;flex-shrink:0;}
+          .sn-kategori-opt-desc{font-size:10.5px;color:var(--text-muted);margin-top:4px;line-height:1.5;}
+          .sn-kategori-opt input:checked ~ .sn-kategori-opt-card{border-color:var(--gold,#FF9800);background:var(--gold-dim,rgba(201,122,0,.08));}
+          .sn-kategori-opt input:checked ~ .sn-kategori-opt-card .sn-kategori-opt-title{color:var(--gold-bright,#FF9800);}
           .sn-sub-table{width:100%;border-collapse:collapse;font-size:12px;}
           .sn-sub-table th{text-align:left;padding:9px 14px;color:var(--text-muted);font-weight:700;font-size:11px;border-bottom:1px solid var(--border-soft);}
           .sn-sub-table td{padding:9px 14px;border-bottom:1px solid var(--border-soft);color:var(--text);}
@@ -5709,6 +5718,25 @@
           <div class="panel-head"><div><h3>Kirim Pengumuman ke Semua Pengguna</h3><p>Pesan akan masuk ke lonceng notifikasi semua pengguna, dan ke notifikasi OS (push) bagi yang sudah mengizinkan.</p></div></div>
           <form method="POST" action="{{ route('admin.setelan.notifikasi.broadcast') }}" class="sn-broadcast-form">
             @csrf
+            <div class="sn-field">
+              <label>Kategori Pengumuman</label>
+              <div class="sn-kategori-row">
+                <label class="sn-kategori-opt">
+                  <input type="radio" name="kategori" value="keterangan" checked>
+                  <div class="sn-kategori-opt-card">
+                    <div class="sn-kategori-opt-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>Keterangan</div>
+                    <div class="sn-kategori-opt-desc">Info umum, sekadar pemberitahuan. Di lonceng penerima tidak ditandai "belum dibaca" & tidak bisa diklik.</div>
+                  </div>
+                </label>
+                <label class="sn-kategori-opt">
+                  <input type="radio" name="kategori" value="maintenance">
+                  <div class="sn-kategori-opt-card">
+                    <div class="sn-kategori-opt-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a2 2 0 0 0 2.8 2.8l6-6a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.8-2.8Z"></path></svg>Maintenance</div>
+                    <div class="sn-kategori-opt-desc">Pemeliharaan sistem/butuh perhatian. Ditandai "belum dibaca" & bisa diklik penerima utk buka detail lengkap.</div>
+                  </div>
+                </label>
+              </div>
+            </div>
             <div class="sn-field">
               <label for="snJudul">Judul</label>
               <input type="text" id="snJudul" name="judul" maxlength="100" placeholder="Contoh: Pemeliharaan Sistem" required>

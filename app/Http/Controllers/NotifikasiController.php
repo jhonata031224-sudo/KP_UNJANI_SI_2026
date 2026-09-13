@@ -43,6 +43,13 @@ class NotifikasiController extends Controller
                 // notifikasi jenis ini diklik (bukan pindah tab/section).
                 'title' => $n->data['judul'] ?? null,
                 'tipe' => $n->data['tipe'] ?? null,
+                // Kategori pengumuman Admin ('maintenance' / 'keterangan')
+                // -- null kalau notifikasi bukan tipe pengumuman_admin, atau
+                // kalau ini pengumuman lama yang dikirim sebelum kolom
+                // kategori ini ada (default-nya diperlakukan sebagai
+                // 'maintenance' di sisi frontend, lihat notification-
+                // controls.blade.php, supaya perilaku lama tetap sama).
+                'kategori' => $n->data['kategori'] ?? null,
                 // Dipakai buat nge-redupin tampilan item yang sudah dibaca
                 // di dropdown & buat mastiin item itu tidak ikut dihitung
                 // ulang ke badge pas hasil poll ini nimpa state di klien.

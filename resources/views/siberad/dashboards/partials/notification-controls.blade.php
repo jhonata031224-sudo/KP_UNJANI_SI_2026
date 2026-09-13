@@ -183,7 +183,7 @@
       // array-nya dirakit dulu di variabel biasa di sini, baru @json()
       // dipanggil dengan satu variabel tunggal (tanpa koma di levelnya).
       $__siberadNotifications = auth()->user()?->notifications?->take(20)?->map(function ($n) {
-        return ['id' => $n->id, 'message' => $n->data['pesan'] ?? 'Status laporan diperbarui.', 'time' => optional($n->created_at)->diffForHumans(), 'url' => $n->data['url'] ?? null, 'title' => $n->data['judul'] ?? null, 'tipe' => $n->data['tipe'] ?? null, 'read' => ! is_null($n->read_at)];
+        return ['id' => $n->id, 'message' => $n->data['pesan'] ?? 'Status laporan diperbarui.', 'time' => optional($n->created_at)->diffForHumans(), 'url' => $n->data['url'] ?? null, 'title' => $n->data['judul'] ?? null, 'tipe' => $n->data['tipe'] ?? null, 'kategori' => $n->data['kategori'] ?? null, 'read' => ! is_null($n->read_at)];
       })->values() ?? [];
     @endphp
     var notifications = @json($__siberadNotifications);
@@ -207,9 +207,20 @@
       return div.innerHTML;
     }
 
+    // Notif pengumuman kategori 'keterangan' sengaja TIDAK PERNAH dianggap
+    // "belum dibaca" -- tidak ada titik oranye & tidak diklik sama sekali
+    // (lihat render()), jadi wajar kalau flag `read`-nya di server tetap
+    // false selamanya (tidak ada aksi klik yang bisa nge-trigger markAsRead).
+    // Kalau tetap dihitung di sini, badge lonceng jadi nyangkut kehitung
+    // terus padahal secara visual tidak pernah ditandai belum dibaca.
+    function hitungSebagaiUnread(n) {
+      if (n.tipe === 'pengumuman_admin' && n.kategori === 'keterangan') return false;
+      return !n.read;
+    }
+
     function unreadCount() {
       var count = 0;
-      for (var i = 0; i < notifications.length; i++) if (!notifications[i].read) count++;
+      for (var i = 0; i < notifications.length; i++) if (hitungSebagaiUnread(notifications[i])) count++;
       return count;
     }
 
@@ -441,12 +452,25 @@
         notifications.forEach(function (notification) {
           var item = document.createElement('div');
           item.className = 'siberad-notif-item';
-          if (!notification.read) item.classList.add('is-unread'); else item.classList.add('is-read');
           // Pengumuman broadcast Admin (lihat App\Notifications\
-          // PengumumanBroadcastAdmin) tidak punya tujuan/url spesifik --
-          // begitu diklik, tampilkan isi lengkapnya lewat modal, bukan
-          // pindah tab/section seperti notifikasi lain.
-          if (notification.tipe === 'pengumuman_admin') {
+          // PengumumanBroadcastAdmin) punya 2 kategori:
+          // - 'maintenance' (atau kategori kosong/null -- pengumuman lama
+          //   sebelum kolom kategori ini ada, diperlakukan sama supaya
+          //   perilaku yang sudah jalan tidak berubah): tetap ditandai
+          //   belum-dibaca & bisa diklik utk buka modal penjelasan.
+          // - 'keterangan': sekadar info umum -- TIDAK pernah ditandai
+          //   belum-dibaca (tidak ada titik oranye) & TIDAK bisa diklik
+          //   sama sekali, cuma tampil sebagai teks biasa.
+          var isPengumuman = notification.tipe === 'pengumuman_admin';
+          var isKeteranganSaja = isPengumuman && notification.kategori === 'keterangan';
+          if (isKeteranganSaja) {
+            item.classList.add('is-read');
+          } else if (!notification.read) {
+            item.classList.add('is-unread');
+          } else {
+            item.classList.add('is-read');
+          }
+          if (isPengumuman && !isKeteranganSaja) {
             item.classList.add('is-clickable');
             item.setAttribute('role', 'button');
             item.setAttribute('tabindex', '0');
@@ -455,7 +479,7 @@
             item.addEventListener('keydown', function (event) {
               if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); bukaPengumuman(); }
             });
-          } else if (notification.url) {
+          } else if (!isPengumuman && notification.url) {
             item.classList.add('is-clickable');
             item.setAttribute('role', 'button');
             item.setAttribute('tabindex', '0');

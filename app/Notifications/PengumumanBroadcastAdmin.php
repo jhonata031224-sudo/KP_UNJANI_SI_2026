@@ -13,7 +13,7 @@ use Illuminate\Notifications\Notification;
  */
 class PengumumanBroadcastAdmin extends Notification
 {
-    public function __construct(public string $judul, public string $pesan)
+    public function __construct(public string $judul, public string $pesan, public string $kategori = 'keterangan')
     {
     }
 
@@ -28,6 +28,15 @@ class PengumumanBroadcastAdmin extends Notification
             'judul' => $this->judul,
             'pesan' => $this->pesan,
             'tipe' => 'pengumuman_admin',
+            // Kategori pengumuman -- dipakai frontend (notification-controls.
+            // blade.php) buat nentuin dua hal: (1) apakah item dikasih titik
+            // penanda "belum dibaca" atau tidak, dan (2) apakah item bisa
+            // diklik utk buka modal penjelasan atau cuma teks info biasa.
+            // 'maintenance'  = ada tindak lanjut/perlu perhatian -> tetap
+            //                  ditandai belum dibaca & bisa diklik (modal).
+            // 'keterangan'   = sekadar info umum, tidak perlu ditandai
+            //                  belum dibaca & tidak bisa diklik sama sekali.
+            'kategori' => $this->kategori,
         ];
     }
 }
