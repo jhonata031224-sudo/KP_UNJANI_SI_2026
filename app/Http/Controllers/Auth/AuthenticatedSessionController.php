@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
@@ -84,11 +85,77 @@ class AuthenticatedSessionController extends Controller
             ->where('id', $request->session()->getId())
             ->update(['login_at' => now()]);
 
+        // Lookup geo berdasarkan IP klien saat login.
+        // ip-api.com: gratis, tanpa API key, mendukung IPv4 & IPv6.
+        // Gagal secara senyap (timeout/IP private/lokal) — sesi tetap jalan,
+        // kolom geo hanya kosong dan UI menampilkan "–".
+        $this->simpanGeoSesi(
+            $request->session()->getId(),
+            $request->ip()
+        );
+
         ActivityLog::catat('login', 'Berhasil login ke '.Pengaturan::current()->namaSistem().'.', $request->user());
 
         $request->session()->flash('login_success', $request->user()->name);
 
         return redirect()->intended(route('dashboard'));
+    }
+
+    /**
+     * Lookup geo dari IP dan simpan ke kolom geo_* di tabel sessions.
+     *
+     * Menggunakan ip-api.com (HTTP) — endpoint gratis tanpa API key,
+     * rate-limit 45 req/menit per IP server (cukup untuk instansi).
+     * IP loopback / private (127.x, 10.x, 192.168.x, ::1) dilewati
+     * langsung tanpa hit API karena pasti tidak ada data kotanya.
+     */
+    private function simpanGeoSesi(string $sesiId, string $ip): void
+    {
+        // IP private / loopback — tidak ada data geo yang bisa diambil
+        if (
+            $ip === '127.0.0.1' ||
+            $ip === '::1' ||
+            str_starts_with($ip, '10.') ||
+            str_starts_with($ip, '192.168.') ||
+            preg_match('/^172\.(1[6-9]|2\d|3[01])\./', $ip)
+        ) {
+            DB::table('sessions')
+                ->where('id', $sesiId)
+                ->update([
+                    'geo_kota'   => 'Jaringan Lokal',
+                    'geo_region' => null,
+                    'geo_negara' => null,
+                    'geo_isp'    => null,
+                ]);
+            return;
+        }
+
+        try {
+            $resp = Http::timeout(4)->get("http://ip-api.com/json/{$ip}", [
+                'fields' => 'status,city,regionName,country,isp,lat,lon',
+                'lang'   => 'id',
+            ]);
+
+            if ($resp->successful()) {
+                $data = $resp->json();
+
+                if (($data['status'] ?? '') === 'success') {
+                    DB::table('sessions')
+                        ->where('id', $sesiId)
+                        ->update([
+                            'geo_kota'   => $data['city']       ?? null,
+                            'geo_region' => $data['regionName'] ?? null,
+                            'geo_negara' => $data['country']    ?? null,
+                            'geo_isp'    => $data['isp']        ?? null,
+                            'geo_lat'    => isset($data['lat']) ? (float) $data['lat'] : null,
+                            'geo_lon'    => isset($data['lon']) ? (float) $data['lon'] : null,
+                        ]);
+                }
+            }
+        } catch (\Throwable) {
+            // Timeout atau tidak bisa keluar ke internet — biarkan saja,
+            // kolom geo tetap NULL dan UI menampilkan "–".
+        }
     }
 
     /**

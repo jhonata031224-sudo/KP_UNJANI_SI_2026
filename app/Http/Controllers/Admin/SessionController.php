@@ -25,7 +25,20 @@ class SessionController extends Controller
             ->whereNotNull('sessions.user_id')
             ->leftJoin('users', 'sessions.user_id', '=', 'users.id')
             ->orderByDesc('sessions.last_activity')
-            ->get(['sessions.id', 'sessions.ip_address', 'sessions.user_agent', 'sessions.last_activity', 'sessions.login_at', 'users.name as user_name']);
+            ->get([
+                'sessions.id',
+                'sessions.ip_address',
+                'sessions.user_agent',
+                'sessions.last_activity',
+                'sessions.login_at',
+                'sessions.geo_kota',
+                'sessions.geo_region',
+                'sessions.geo_negara',
+                'sessions.geo_isp',
+                'sessions.geo_lat',
+                'sessions.geo_lon',
+                'users.name as user_name',
+            ]);
 
         return response()->json([
             'items_html' => $sesiAktif->map(fn ($s) => view('siberad.dashboards.partials.sesi-aktif-row', ['s' => $s, 'sesiSayaId' => $request->session()->getId()])->render())->implode(''),

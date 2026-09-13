@@ -454,18 +454,23 @@
   .tbl-wrap.tbl-scroll::-webkit-scrollbar-thumb:hover{background:var(--gold);}
   table.dtbl tr:hover td{background:var(--hover-tint);}
 
-  /* Pengguna Aktif (#tblSesiAktif): lebar kolom dikunci (table-layout:fixed)
+  /* Pengguna Aktif (#tblSesiAktif): 6 kolom — lebar dikunci (table-layout:fixed)
      supaya tabel TIDAK ikut goyang/reflow tiap "Terakhir Aktif" berubah teks
      (mis. "3 menit yang lalu" -> "58 detik yang lalu", panjang teks beda).
      Tanpa ini, browser hitung ulang lebar kolom tiap kali konten berubah. */
   #tblSesiAktif{table-layout:fixed;}
-  #tblSesiAktif th:nth-child(1),#tblSesiAktif td:nth-child(1){width:22%;}
-  #tblSesiAktif th:nth-child(2),#tblSesiAktif td:nth-child(2){width:14%;}
-  #tblSesiAktif th:nth-child(3),#tblSesiAktif td:nth-child(3){width:28%;}
-  #tblSesiAktif th:nth-child(4),#tblSesiAktif td:nth-child(4){width:18%;}
-  #tblSesiAktif th:nth-child(5),#tblSesiAktif td:nth-child(5){width:18%;}
+  #tblSesiAktif th:nth-child(1),#tblSesiAktif td:nth-child(1){width:18%;}  /* Pengguna      */
+  #tblSesiAktif th:nth-child(2),#tblSesiAktif td:nth-child(2){width:12%;}  /* IP Address    */
+  #tblSesiAktif th:nth-child(3),#tblSesiAktif td:nth-child(3){width:22%;}  /* Perangkat     */
+  #tblSesiAktif th:nth-child(4),#tblSesiAktif td:nth-child(4){width:22%;}  /* Titik Lokasi  */
+  #tblSesiAktif th:nth-child(5),#tblSesiAktif td:nth-child(5){width:14%;}  /* Terakhir Aktif*/
+  #tblSesiAktif th:nth-child(6),#tblSesiAktif td:nth-child(6){width:12%;}  /* Aksi          */
   #tblSesiAktif td{overflow:hidden;text-overflow:ellipsis;}
-  #tblSesiAktif th:last-child{text-align:center;}
+  #tblSesiAktif th:last-child,#tblSesiAktif td:last-child{text-align:center;}
+  /* Kolom Titik Lokasi: link Google Maps — hint muncul saat hover */
+  #tblSesiAktif a.geo-maps-link{display:flex;align-items:flex-start;gap:5px;text-decoration:none;color:inherit;border-radius:6px;padding:3px 4px;margin:-3px -4px;transition:background .15s;}
+  #tblSesiAktif a.geo-maps-link:hover{background:var(--hover-tint);}
+  #tblSesiAktif a.geo-maps-link:hover .geo-maps-hint{opacity:1!important;}
 
   .status-dot{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:12.5px;}
   .status-dot::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 8px 1px currentColor;animation:statusDotBlink 1.6s ease-in-out infinite;}
@@ -781,19 +786,21 @@
     #tblSatuan td:nth-child(5),
     #tblRiwayatBackup td:nth-child(5),
     #tblResetPassword td:nth-child(4),
-    #tblSesiAktif td:nth-child(5){flex-direction:column;align-items:stretch;text-align:left;}
+    #tblSesiAktif td:nth-child(6){flex-direction:column;align-items:stretch;text-align:left;}
     #tblPengguna td:nth-child(5)::before,
     #tblSatuan td:nth-child(5)::before,
     #tblRiwayatBackup td:nth-child(5)::before,
     #tblResetPassword td:nth-child(4)::before,
-    #tblSesiAktif td:nth-child(5)::before{margin-bottom:8px;}
+    #tblSesiAktif td:nth-child(6)::before{margin-bottom:8px;}
     table.dtbl .btn-row{justify-content:flex-end;}
     table.dtbl .btn-row .table-action-btn{flex:1;text-align:center;}
 
     /* kolom "Perangkat/Browser" (Pengguna Aktif) isinya beberapa baris teks
        -- ditumpuk ke bawah label juga biar tidak sempit ke kanan */
-    #tblSesiAktif td:nth-child(3){flex-direction:column;align-items:flex-start;text-align:left;}
-    #tblSesiAktif td:nth-child(3)::before{margin-bottom:6px;}
+    #tblSesiAktif td:nth-child(3),
+    #tblSesiAktif td:nth-child(4){flex-direction:column;align-items:flex-start;text-align:left;}
+    #tblSesiAktif td:nth-child(3)::before,
+    #tblSesiAktif td:nth-child(4)::before{margin-bottom:6px;}
 
     /* Label tiap kolom, urut sesuai <thead> tabel masing-masing */
     #tblPengguna td:nth-child(1)::before{content:"Nama";}
@@ -841,8 +848,9 @@
 
     #tblSesiAktif td:nth-child(1)::before{content:"Pengguna";}
     #tblSesiAktif td:nth-child(2)::before{content:"IP Address";}
-    #tblSesiAktif td:nth-child(4)::before{content:"Terakhir Aktif";}
-    #tblSesiAktif td:nth-child(5)::before{content:"Aksi";}
+    #tblSesiAktif td:nth-child(4)::before{content:"Titik Lokasi";}
+    #tblSesiAktif td:nth-child(5)::before{content:"Terakhir Aktif";}
+    #tblSesiAktif td:nth-child(6)::before{content:"Aksi";}
   }
 </style>
 <script>
