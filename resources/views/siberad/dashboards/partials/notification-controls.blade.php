@@ -94,6 +94,26 @@
         #notifDropdown .siberad-notif-empty-runtime{padding:30px 18px 26px;text-align:center;color:var(--text-muted);}
         #notifDropdown .siberad-notif-empty-runtime svg{width:32px;height:32px;stroke:var(--text-dim);margin:0 auto 12px;display:block;}
         #notifDropdown .siberad-notif-empty-runtime p{margin:0;font-size:12px;line-height:1.55;}
+        /* Modal "Pengumuman" -- dibuka saat notifikasi tipe pengumuman_admin
+           (lihat App\Notifications\PengumumanBroadcastAdmin) diklik. Dibuat
+           self-contained di sini (bukan pakai .report-modal punya
+           laporan-role/laporan-pimpinan) karena partial ini juga dipasang di
+           dashboard Admin, yang tidak punya CSS itu. */
+        .siberad-pengumuman-overlay{position:fixed;inset:0;z-index:100210;background:rgba(2,4,6,.6);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s ease;box-sizing:border-box;}
+        :root[data-theme="light"] .siberad-pengumuman-overlay{background:rgba(60,50,20,.35);}
+        .siberad-pengumuman-overlay.open{opacity:1;visibility:visible;pointer-events:auto;}
+        .siberad-pengumuman-card{width:min(440px,100%);background:var(--panel,var(--p-surface,#fff));border:1px solid var(--border-soft,var(--p-border,#e2e8f0));border-radius:18px;padding:26px 26px 24px;box-shadow:0 25px 70px rgba(0,0,0,.35);box-sizing:border-box;transform:translateY(14px) scale(.97);transition:transform .2s ease;text-align:center;}
+        .siberad-pengumuman-overlay.open .siberad-pengumuman-card{transform:translateY(0) scale(1);}
+        .siberad-pengumuman-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border-soft,var(--p-border,#e2e8f0));background:transparent;color:var(--text-dim,var(--p-muted,#64748b));cursor:pointer;transition:border-color .2s ease,color .2s ease,transform .2s ease;}
+        .siberad-pengumuman-close:hover{border-color:var(--red,#c83b3b);color:var(--red,#c83b3b);transform:rotate(90deg);}
+        .siberad-pengumuman-close svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;display:block;}
+        .siberad-pengumuman-icon{width:54px;height:54px;margin:0 auto 16px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--gold-dim,rgba(201,122,0,.12));color:var(--gold-bright,var(--p-accent,#c97a00));}
+        .siberad-pengumuman-icon svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+        .siberad-pengumuman-title{margin:0 0 10px;font-family:var(--display,inherit);font-size:18px;font-weight:800;color:var(--text,var(--p-text,#17212b));line-height:1.35;}
+        .siberad-pengumuman-body{margin:0;font-size:13px;line-height:1.7;color:var(--text-muted,var(--p-muted,#64748b));white-space:pre-wrap;text-align:left;}
+        .siberad-pengumuman-actions{margin-top:20px;}
+        .siberad-pengumuman-actions button{width:100%;border:0;border-radius:10px;padding:11px;font-size:13px;font-weight:700;color:#fff;background:var(--gold-bright,var(--p-accent,#c97a00));cursor:pointer;transition:filter .15s ease,transform .15s ease;}
+        .siberad-pengumuman-actions button:hover{filter:brightness(1.08);transform:translateY(-1px);}
       `;
       document.head.appendChild(style);
     }
@@ -163,7 +183,7 @@
       // array-nya dirakit dulu di variabel biasa di sini, baru @json()
       // dipanggil dengan satu variabel tunggal (tanpa koma di levelnya).
       $__siberadNotifications = auth()->user()?->notifications?->take(20)?->map(function ($n) {
-        return ['id' => $n->id, 'message' => $n->data['pesan'] ?? 'Status laporan diperbarui.', 'time' => optional($n->created_at)->diffForHumans(), 'url' => $n->data['url'] ?? null, 'read' => ! is_null($n->read_at)];
+        return ['id' => $n->id, 'message' => $n->data['pesan'] ?? 'Status laporan diperbarui.', 'time' => optional($n->created_at)->diffForHumans(), 'url' => $n->data['url'] ?? null, 'title' => $n->data['judul'] ?? null, 'tipe' => $n->data['tipe'] ?? null, 'read' => ! is_null($n->read_at)];
       })->values() ?? [];
     @endphp
     var notifications = @json($__siberadNotifications);
@@ -375,6 +395,41 @@
       window.location.href = url;
     }
 
+    // Modal "Pengumuman" -- dibuka begitu notifikasi tipe pengumuman_admin
+    // (broadcast manual dari Admin lewat Setelan -> Notifikasi) diklik.
+    // Dibuat sekali & dipakai ulang, isinya ditimpa tiap kali dibuka sesuai
+    // judul & isi pengumuman yang diklik.
+    function ensurePengumumanModal() {
+      var overlay = document.getElementById('siberadPengumumanOverlay');
+      if (overlay) return overlay;
+      overlay = document.createElement('div');
+      overlay.className = 'siberad-pengumuman-overlay';
+      overlay.id = 'siberadPengumumanOverlay';
+      overlay.style.position = 'fixed';
+      overlay.innerHTML = '<div class="siberad-pengumuman-card" role="alertdialog" aria-modal="true" aria-labelledby="siberadPengumumanTitle" style="position:relative;">' +
+        '<button type="button" class="siberad-pengumuman-close" id="siberadPengumumanClose" aria-label="Tutup"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>' +
+        '<div class="siberad-pengumuman-icon"><svg viewBox="0 0 24 24"><path d="M3 11l18-5v14L3 15v-4Z"></path><path d="M7 15v5a2 2 0 0 0 2 2h1"></path></svg></div>' +
+        '<h3 class="siberad-pengumuman-title" id="siberadPengumumanTitle"></h3>' +
+        '<p class="siberad-pengumuman-body" id="siberadPengumumanBody"></p>' +
+        '<div class="siberad-pengumuman-actions"><button type="button" id="siberadPengumumanTutup">Tutup</button></div>' +
+        '</div>';
+      document.body.appendChild(overlay);
+      function tutupOverlay() { overlay.classList.remove('open'); }
+      overlay.querySelector('#siberadPengumumanClose').addEventListener('click', tutupOverlay);
+      overlay.querySelector('#siberadPengumumanTutup').addEventListener('click', tutupOverlay);
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) tutupOverlay(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay.classList.contains('open')) tutupOverlay(); });
+      return overlay;
+    }
+
+    function tampilkanPengumuman(judul, pesan) {
+      var overlay = ensurePengumumanModal();
+      overlay.querySelector('#siberadPengumumanTitle').textContent = judul || 'Pengumuman';
+      overlay.querySelector('#siberadPengumumanBody').textContent = pesan || '';
+      overlay.offsetHeight; // force reflow biar animasi open konsisten (lihat pola sesiBerakhirOverlay)
+      overlay.classList.add('open');
+    }
+
     function render() {
       list.innerHTML = '';
       if (!notifications.length) {
@@ -387,7 +442,20 @@
           var item = document.createElement('div');
           item.className = 'siberad-notif-item';
           if (!notification.read) item.classList.add('is-unread'); else item.classList.add('is-read');
-          if (notification.url) {
+          // Pengumuman broadcast Admin (lihat App\Notifications\
+          // PengumumanBroadcastAdmin) tidak punya tujuan/url spesifik --
+          // begitu diklik, tampilkan isi lengkapnya lewat modal, bukan
+          // pindah tab/section seperti notifikasi lain.
+          if (notification.tipe === 'pengumuman_admin') {
+            item.classList.add('is-clickable');
+            item.setAttribute('role', 'button');
+            item.setAttribute('tabindex', '0');
+            var bukaPengumuman = function () { markNotificationRead(notification.id, item); tampilkanPengumuman(notification.title, notification.message); };
+            item.addEventListener('click', bukaPengumuman);
+            item.addEventListener('keydown', function (event) {
+              if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); bukaPengumuman(); }
+            });
+          } else if (notification.url) {
             item.classList.add('is-clickable');
             item.setAttribute('role', 'button');
             item.setAttribute('tabindex', '0');

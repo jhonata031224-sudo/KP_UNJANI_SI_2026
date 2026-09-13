@@ -37,6 +37,12 @@ class NotifikasiController extends Controller
                 // notifikasinya memang tidak punya tujuan spesifik (mis.
                 // pengumuman broadcast Admin).
                 'url' => $n->data['url'] ?? null,
+                // Judul & tipe khusus pengumuman broadcast Admin (lihat
+                // App\Notifications\PengumumanBroadcastAdmin) -- dipakai
+                // frontend buat nampilin modal penjelasan penuh begitu
+                // notifikasi jenis ini diklik (bukan pindah tab/section).
+                'title' => $n->data['judul'] ?? null,
+                'tipe' => $n->data['tipe'] ?? null,
                 // Dipakai buat nge-redupin tampilan item yang sudah dibaca
                 // di dropdown & buat mastiin item itu tidak ikut dihitung
                 // ulang ke badge pas hasil poll ini nimpa state di klien.
