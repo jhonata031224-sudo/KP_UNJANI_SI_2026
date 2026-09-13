@@ -113,43 +113,42 @@
         .siberad-pengumuman-card{width:min(440px,100%);background:var(--panel,var(--p-surface,#fff));border:1px solid var(--border-soft,var(--p-border,#e2e8f0));border-radius:18px;box-shadow:0 25px 70px rgba(0,0,0,.4);box-sizing:border-box;overflow:hidden;transform:translateY(14px) scale(.97);transition:transform .2s ease;}
         .siberad-pengumuman-overlay.open .siberad-pengumuman-card{transform:translateY(0) scale(1);}
         .siberad-pengumuman-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.35);background:rgba(6,9,12,.25);backdrop-filter:blur(2px);color:#fff;cursor:pointer;transition:border-color .2s ease,color .2s ease,transform .2s ease,background .2s ease;z-index:3;}
+        :root[data-theme="light"] .siberad-pengumuman-close{border-color:rgba(90,70,10,.25);background:rgba(255,255,255,.55);color:var(--text,#22281f);}
         .siberad-pengumuman-close:hover{border-color:var(--red,#c83b3b);color:var(--red,#c83b3b);background:rgba(6,9,12,.5);transform:rotate(90deg);}
+        :root[data-theme="light"] .siberad-pengumuman-close:hover{background:rgba(255,255,255,.75);}
         .siberad-pengumuman-close svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;display:block;}
         /* Banner statis -- gradasi gelap + grid tipis ala blueprint teknik
            (bukan garis diagonal hazard, tidak bergerak) + siku HUD di dua
            sudut + ikon kunci pas raksasa transparan sebagai watermark. */
         .siberad-pengumuman-banner{position:relative;height:104px;background:linear-gradient(150deg,#0c1116 0%,#171016 60%,#1c1108 100%);overflow:hidden;flex-shrink:0;}
+        :root[data-theme="light"] .siberad-pengumuman-banner{background:linear-gradient(150deg,var(--panel-2,#faf8ef) 0%,var(--gold-dim,rgba(255,152,0,.16)) 100%);}
         .siberad-pengumuman-banner::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,152,0,.14) 1px,transparent 1px),linear-gradient(90deg,rgba(255,152,0,.14) 1px,transparent 1px);background-size:16px 16px;-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.9),transparent 92%);mask-image:linear-gradient(180deg,rgba(0,0,0,.9),transparent 92%);}
+        :root[data-theme="light"] .siberad-pengumuman-banner::before{background-image:linear-gradient(rgba(150,110,10,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(150,110,10,.16) 1px,transparent 1px);}
         .siberad-pengumuman-banner-icon-bg{position:absolute;right:-14px;top:50%;transform:translateY(-52%) rotate(12deg);width:96px;height:96px;color:rgba(255,152,0,.14);}
         .siberad-pengumuman-banner-icon-bg svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.2;}
         .siberad-pengumuman-corner{position:absolute;width:16px;height:16px;border-color:rgba(255,152,0,.55);}
         .siberad-pengumuman-corner.tl{top:10px;left:10px;border-top:1.5px solid;border-left:1.5px solid;}
         .siberad-pengumuman-corner.br{bottom:10px;right:10px;border-bottom:1.5px solid;border-right:1.5px solid;}
-        .siberad-pengumuman-icon-wrap{position:absolute;left:26px;bottom:-28px;width:60px;height:60px;z-index:2;}
+        .siberad-pengumuman-icon-wrap{position:absolute;left:50%;bottom:-28px;width:60px;height:60px;z-index:2;transform:translateX(-50%);}
         .siberad-pengumuman-icon-ring{position:absolute;inset:-5px;border-radius:50%;border:1px solid var(--border-soft,rgba(217,146,11,.3));}
         .siberad-pengumuman-icon{position:relative;width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--panel,#11181f);border:1px solid var(--border,rgba(217,146,11,.3));color:var(--gold-bright,#ff9800);box-shadow:0 6px 18px rgba(0,0,0,.35);}
         .siberad-pengumuman-icon svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
-        .siberad-pengumuman-content{padding:38px 24px 22px 100px;}
+        .siberad-pengumuman-content{padding:38px 24px 22px;text-align:center;}
         .siberad-pengumuman-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono,monospace);font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:var(--gold-dim,rgba(255,152,0,.14));color:var(--gold-bright,#ff9800);border:1px solid var(--border,rgba(217,146,11,.3));border-radius:999px;padding:5px 12px;}
         .siberad-pengumuman-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
         .siberad-pengumuman-title{margin:12px 0 0;font-family:var(--display,inherit);font-size:19px;font-weight:700;color:var(--text,var(--p-text,#17212b));line-height:1.35;}
         .siberad-pengumuman-details{list-style:none;margin:16px 0 0;padding:0;border-top:1px solid var(--border-soft,rgba(217,146,11,.16));}
-        .siberad-pengumuman-details li{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border-soft,rgba(217,146,11,.16));font-size:12.5px;}
+        .siberad-pengumuman-details li{display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border-soft,rgba(217,146,11,.16));font-size:12.5px;}
         .siberad-pengumuman-details li svg{width:14px;height:14px;stroke:var(--gold-bright,#ff9800);fill:none;stroke-width:1.8;flex-shrink:0;}
         .siberad-pengumuman-details .label{color:var(--text-dim,var(--p-muted,#77736c));font-family:var(--mono,monospace);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;}
-        .siberad-pengumuman-details .value{margin-left:auto;color:var(--text,var(--p-text,#17212b));font-weight:600;text-align:right;}
+        .siberad-pengumuman-details .value{color:var(--text,var(--p-text,#17212b));font-weight:600;}
         .siberad-pengumuman-eyebrow{margin:20px 0 8px;font-family:var(--mono,monospace);font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim,var(--p-muted,#77736c));}
-        .siberad-pengumuman-body-wrap{background:var(--gold-dim,rgba(255,152,0,.08));border:1px solid var(--border-soft,rgba(217,146,11,.16));border-left:3px solid var(--gold-bright,#ff9800);border-radius:0 10px 10px 0;padding:14px 16px;}
-        .siberad-pengumuman-body{margin:0;font-size:13px;line-height:1.7;color:var(--text-muted,var(--p-muted,#64748b));white-space:pre-wrap;}
-        .siberad-pengumuman-actions{padding:20px 24px 24px 100px;}
+        .siberad-pengumuman-body-wrap{background:var(--gold-dim,rgba(255,152,0,.08));border:1px solid var(--border-soft,rgba(217,146,11,.16));border-radius:10px;padding:14px 16px;}
+        .siberad-pengumuman-body{margin:0;font-size:13px;line-height:1.7;color:var(--text-muted,var(--p-muted,#64748b));white-space:pre-wrap;text-align:center;}
+        .siberad-pengumuman-actions{padding:20px 24px 24px;}
         .siberad-pengumuman-actions button{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;padding:12px;font-size:13px;font-weight:700;color:#0c1116;background:var(--gold-bright,var(--p-accent,#c97a00));cursor:pointer;transition:filter .15s ease,transform .15s ease;}
         .siberad-pengumuman-actions button svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
         .siberad-pengumuman-actions button:hover{filter:brightness(1.08);transform:translateY(-1px);}
-        @media (max-width:420px){
-          .siberad-pengumuman-content{padding-left:24px;}
-          .siberad-pengumuman-actions{padding-left:24px;}
-          .siberad-pengumuman-icon-wrap{left:50%;transform:translateX(-50%);}
-        }
       `;
       document.head.appendChild(style);
     }
@@ -473,7 +472,7 @@
           '<p class="siberad-pengumuman-eyebrow">Isi Pengumuman</p>' +
           '<div class="siberad-pengumuman-body-wrap"><p class="siberad-pengumuman-body" id="siberadPengumumanBody"></p></div>' +
         '</div>' +
-        '<div class="siberad-pengumuman-actions"><button type="button" id="siberadPengumumanTutup"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Mengerti, Tutup</button></div>' +
+        '<div class="siberad-pengumuman-actions"><button type="button" id="siberadPengumumanTutup"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Saya Mengerti</button></div>' +
         '</div>';
       document.body.appendChild(overlay);
       function tutupOverlay() { overlay.classList.remove('open'); }
