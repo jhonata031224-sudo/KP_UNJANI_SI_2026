@@ -1271,6 +1271,11 @@
           </button>
           <input class="login-input captcha-input" id="loginCaptcha" name="captcha" type="text" autocomplete="off" placeholder="Masukan Captcha" required>
         </div>
+        {{-- Diisi via JS dari navigator.geolocation sebelum submit (lihat --}}
+        {{-- ambilGpsSekali()). Kosong kalau GPS ditolak/timeout -- server --}}
+        {{-- fallback ke geo-IP. --}}
+        <input type="hidden" id="gpsLat" name="gps_lat">
+        <input type="hidden" id="gpsLon" name="gps_lon">
         <button class="btn btn-primary login-submit" type="submit">{{ $lp['login']['submit_label'] }}</button>
       </form>
       <div class="login-foot">
@@ -1776,12 +1781,54 @@
     });
   })();
 
+  // ---------- ambil titik GPS sekali sebelum submit (maks 6 detik) ----------
+  // Dibungkus Promise manual (bukan cuma opsi `timeout` bawaan geolocation)
+  // karena sebagian browser lambat "menyerah" walau opsi timeout sudah diisi
+  // -- timer sendiri di sini menjamin submit tidak pernah tertahan lebih
+  // dari `maksMs`. Kalau izin ditolak, browser tidak mendukung, atau
+  // timeout, resolve(null) -- form tetap lanjut submit tanpa GPS, dan
+  // server fallback ke geo-IP (lihat AuthenticatedSessionController).
+  function ambilGpsSekali(maksMs){
+    return new Promise((resolve) => {
+      if(!('geolocation' in navigator)){ resolve(null); return; }
+      let selesai = false;
+      const timer = setTimeout(() => {
+        if(selesai) return;
+        selesai = true;
+        resolve(null);
+      }, maksMs);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          if(selesai) return;
+          selesai = true;
+          clearTimeout(timer);
+          resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+        },
+        () => {
+          if(selesai) return;
+          selesai = true;
+          clearTimeout(timer);
+          resolve(null);
+        },
+        { enableHighAccuracy: true, timeout: maksMs, maximumAge: 0 }
+      );
+    });
+  }
+
   // ---------- submit login via AJAX (biar gagal login tidak refresh halaman) ----------
   loginForm.addEventListener('submit', async function(e){
     e.preventDefault();
     const submitBtn = loginForm.querySelector('.login-submit');
     submitBtn.disabled = true;
     try{
+      // Sisipkan koordinat GPS (kalau berhasil didapat) ke hidden input
+      // SEBELUM FormData dibaca di bawah, supaya ikut terkirim ke server.
+      const gps = await ambilGpsSekali(6000);
+      if(gps){
+        document.getElementById('gpsLat').value = gps.lat;
+        document.getElementById('gpsLon').value = gps.lon;
+      }
+
       const res = await fetch(loginForm.action, {
         method: 'POST',
         headers: { 'Accept': 'application/json' },

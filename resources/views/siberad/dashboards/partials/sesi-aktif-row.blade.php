@@ -9,6 +9,7 @@
     $geoIsp    = $s->geo_isp    ?? null;
     $geoLat    = isset($s->geo_lat) ? (float) $s->geo_lat : null;
     $geoLon    = isset($s->geo_lon) ? (float) $s->geo_lon : null;
+    $geoSumber = $s->geo_sumber ?? null; // 'gps' | 'ip' | 'lokal' | null
 
     // Baris pertama: Kota + Region (kalau beda dengan kota)
     $lokasiParts  = array_filter([$geoKota, ($geoRegion && $geoRegion !== $geoKota) ? $geoRegion : null]);
@@ -17,7 +18,7 @@
     // URL Google Maps — pakai koordinat kalau ada, fallback ke nama kota
     $mapsUrl = null;
     if ($geoLat !== null && $geoLon !== null) {
-        // Pin presisi berdasarkan koordinat IP
+        // Pin presisi berdasarkan koordinat GPS/IP
         $mapsUrl = "https://maps.google.com/?q={$geoLat},{$geoLon}";
     } elseif ($lokasiBaris1) {
         // Fallback: search nama kota di Maps
@@ -25,7 +26,10 @@
     }
 
     $isLokal = ($geoKota === 'Jaringan Lokal');
-    $adaGeo  = $geoKota !== null || $geoRegion !== null || $geoNegara !== null;
+    // Tetap dianggap "ada geo" walau nama kota belum sempat ke-reverse-
+    // geocode (mis. GPS masuk tapi Nominatim gagal/timeout) -- koordinat
+    // presisinya sendiri sudah cukup untuk pin Maps.
+    $adaGeo  = $geoKota !== null || $geoRegion !== null || $geoNegara !== null || ($geoLat !== null && $geoLon !== null);
 @endphp
 <tr data-session-id="{{ $s->id }}">
   <td>
@@ -83,6 +87,22 @@
           @if($lokasiBaris1)
             <span style="display:block;font-size:13px;color:var(--text-body);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
               {{ $lokasiBaris1 }}
+              @if($geoSumber === 'gps')
+                <span style="display:inline-block;margin-left:4px;padding:1px 6px;border-radius:999px;font-size:9.5px;font-weight:700;letter-spacing:.03em;background:rgba(34,197,94,.15);color:#22c55e;vertical-align:middle;"
+                      title="Titik lokasi presisi dari GPS perangkat">GPS</span>
+              @elseif($geoSumber === 'ip')
+                <span style="display:inline-block;margin-left:4px;padding:1px 6px;border-radius:999px;font-size:9.5px;font-weight:700;letter-spacing:.03em;background:var(--gold-dim);color:var(--gold-bright);vertical-align:middle;"
+                      title="Perkiraan lokasi dari alamat IP (GPS tidak tersedia)">IP</span>
+              @endif
+            </span>
+          @elseif($geoLat !== null && $geoLon !== null)
+            {{-- Koordinat ada tapi nama kota belum sempat ke-reverse-geocode --}}
+            <span style="display:block;font-size:13px;color:var(--text-body);font-weight:500;">
+              {{ number_format($geoLat, 5) }}, {{ number_format($geoLon, 5) }}
+              @if($geoSumber === 'gps')
+                <span style="display:inline-block;margin-left:4px;padding:1px 6px;border-radius:999px;font-size:9.5px;font-weight:700;letter-spacing:.03em;background:rgba(34,197,94,.15);color:#22c55e;vertical-align:middle;"
+                      title="Titik lokasi presisi dari GPS perangkat">GPS</span>
+              @endif
             </span>
           @endif
           @if($geoNegara)

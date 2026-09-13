@@ -37,6 +37,7 @@ class SessionController extends Controller
                 'sessions.geo_isp',
                 'sessions.geo_lat',
                 'sessions.geo_lon',
+                'sessions.geo_sumber',
                 'users.name as user_name',
             ]);
 
