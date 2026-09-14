@@ -491,6 +491,17 @@
     font-family:var(--mono);font-size:10.5px;color:var(--text-dim);
     display:flex;align-items:center;gap:8px;letter-spacing:.03em;
   }
+  .login-location-note{
+    margin:2px 0 14px;padding:9px 11px;border-radius:8px;
+    background:var(--gold-dim);border:1px solid var(--border);
+    font-family:var(--mono);font-size:10px;line-height:1.5;color:var(--text-muted);
+    display:flex;align-items:flex-start;gap:7px;letter-spacing:.02em;
+  }
+  .login-location-note svg{flex-shrink:0;margin-top:1px;color:var(--gold);}
+  .login-location-note.is-denied{
+    background:rgba(220,60,60,.12);border-color:rgba(220,60,60,.4);color:#e5a3a3;
+  }
+  .login-location-note.is-denied svg{color:#e5a3a3;}
 
   /* ================= HERO ================= */
   /* Sengaja TIDAK fallback ke foto bawaan (images/hero-lapangan-mabesad.jpg)
@@ -1272,10 +1283,15 @@
           <input class="login-input captcha-input" id="loginCaptcha" name="captcha" type="text" autocomplete="off" placeholder="Masukan Captcha" required>
         </div>
         {{-- Diisi via JS dari navigator.geolocation sebelum submit (lihat --}}
-        {{-- ambilGpsSekali()). Kosong kalau GPS ditolak/timeout -- server --}}
-        {{-- fallback ke geo-IP. --}}
+        {{-- ambilGpsSekali()). Akses lokasi WAJIB -- kalau kosong (ditolak/ --}}
+        {{-- tidak didukung/timeout), submit dibatalkan di JS sebelum sempat --}}
+        {{-- ke server, dan server juga menolaknya kalau tetap terkirim kosong. --}}
         <input type="hidden" id="gpsLat" name="gps_lat">
         <input type="hidden" id="gpsLon" name="gps_lon">
+        <p class="login-location-note" id="loginLocationNote">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          Sistem mewajibkan akses lokasi (GPS). Izinkan permintaan lokasi pada browser saat diminta.
+        </p>
         <button class="btn btn-primary login-submit" type="submit">{{ $lp['login']['submit_label'] }}</button>
       </form>
       <div class="login-foot">
@@ -1784,31 +1800,39 @@
   // ---------- ambil titik GPS sekali sebelum submit (maks 6 detik) ----------
   // Dibungkus Promise manual (bukan cuma opsi `timeout` bawaan geolocation)
   // karena sebagian browser lambat "menyerah" walau opsi timeout sudah diisi
-  // -- timer sendiri di sini menjamin submit tidak pernah tertahan lebih
-  // dari `maksMs`. Kalau izin ditolak, browser tidak mendukung, atau
-  // timeout, resolve(null) -- form tetap lanjut submit tanpa GPS, dan
-  // server fallback ke geo-IP (lihat AuthenticatedSessionController).
+  // -- timer sendiri di sini menjamin proses tidak pernah tertahan lebih
+  // dari `maksMs`.
+  //
+  // Akses lokasi sekarang WAJIB untuk login, jadi hasil di sini menentukan
+  // apakah form boleh disubmit sama sekali (lihat pemanggilnya di bawah).
+  // Selalu resolve ke objek beranotasi status, tidak pernah melempar error:
+  //   { ok:true,  lat, lon }
+  //   { ok:false, alasan:'unsupported' }  -- browser tidak punya geolocation
+  //   { ok:false, alasan:'denied' }       -- user menolak izin
+  //   { ok:false, alasan:'timeout' }      -- tidak merespons dalam maksMs
+  //   { ok:false, alasan:'error' }        -- gagal lain (posisi tak tersedia, dst)
   function ambilGpsSekali(maksMs){
     return new Promise((resolve) => {
-      if(!('geolocation' in navigator)){ resolve(null); return; }
+      if(!('geolocation' in navigator)){ resolve({ ok:false, alasan:'unsupported' }); return; }
       let selesai = false;
       const timer = setTimeout(() => {
         if(selesai) return;
         selesai = true;
-        resolve(null);
+        resolve({ ok:false, alasan:'timeout' });
       }, maksMs);
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           if(selesai) return;
           selesai = true;
           clearTimeout(timer);
-          resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+          resolve({ ok:true, lat: pos.coords.latitude, lon: pos.coords.longitude });
         },
-        () => {
+        (err) => {
           if(selesai) return;
           selesai = true;
           clearTimeout(timer);
-          resolve(null);
+          // code 1 === PERMISSION_DENIED (spesifikasi Geolocation API)
+          resolve({ ok:false, alasan: err && err.code === 1 ? 'denied' : 'error' });
         },
         { enableHighAccuracy: true, timeout: maksMs, maximumAge: 0 }
       );
@@ -1816,18 +1840,47 @@
   }
 
   // ---------- submit login via AJAX (biar gagal login tidak refresh halaman) ----------
+  const loginLocationNote = document.getElementById('loginLocationNote');
+  const loginLocationNoteDefault = loginLocationNote ? loginLocationNote.innerHTML : '';
+
+  function pesanLokasiGagal(alasan){
+    switch(alasan){
+      case 'denied':
+        return 'Akses lokasi ditolak. Anda wajib mengizinkan lokasi untuk bisa login -- aktifkan izin lokasi untuk situs ini di pengaturan browser, lalu coba lagi.';
+      case 'unsupported':
+        return 'Browser ini tidak mendukung akses lokasi, sehingga tidak bisa login. Gunakan browser lain yang mendukung layanan lokasi.';
+      case 'timeout':
+        return 'Permintaan lokasi tidak merespons. Pastikan GPS/layanan lokasi perangkat aktif, lalu coba login lagi.';
+      default:
+        return 'Gagal mengambil lokasi perangkat. Pastikan layanan lokasi aktif, lalu coba login lagi.';
+    }
+  }
+
   loginForm.addEventListener('submit', async function(e){
     e.preventDefault();
     const submitBtn = loginForm.querySelector('.login-submit');
     submitBtn.disabled = true;
     try{
-      // Sisipkan koordinat GPS (kalau berhasil didapat) ke hidden input
-      // SEBELUM FormData dibaca di bawah, supaya ikut terkirim ke server.
+      // Akses lokasi WAJIB -- kalau gagal (ditolak/timeout/tidak didukung),
+      // form TIDAK dikirim sama sekali ke server. Ini cuma lapis UX; server
+      // (AuthenticatedSessionController) tetap memvalidasi gps_lat/gps_lon
+      // secara independen sebagai penegakan sesungguhnya, jadi permintaan
+      // ini tidak bisa dilewati lewat DevTools atau klien lain.
       const gps = await ambilGpsSekali(6000);
-      if(gps){
-        document.getElementById('gpsLat').value = gps.lat;
-        document.getElementById('gpsLon').value = gps.lon;
+      if(!gps.ok){
+        siberadShowToast('error', pesanLokasiGagal(gps.alasan));
+        if(loginLocationNote){
+          loginLocationNote.classList.add('is-denied');
+          loginLocationNote.textContent = pesanLokasiGagal(gps.alasan);
+        }
+        return; // `finally` di bawah tetap mengaktifkan kembali tombol submit
       }
+      if(loginLocationNote){
+        loginLocationNote.classList.remove('is-denied');
+        loginLocationNote.innerHTML = loginLocationNoteDefault;
+      }
+      document.getElementById('gpsLat').value = gps.lat;
+      document.getElementById('gpsLon').value = gps.lon;
 
       const res = await fetch(loginForm.action, {
         method: 'POST',

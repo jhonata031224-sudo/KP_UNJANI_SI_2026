@@ -25,6 +25,18 @@ class AuthenticatedSessionController extends Controller
             'username' => ['required', 'string'],
             'password' => ['required', 'string'],
             'captcha' => ['required', 'string'],
+            // Akses lokasi (GPS) sekarang WAJIB untuk semua pengguna saat
+            // login -- kalau browser menolak/tidak mengirim koordinat,
+            // permintaan ini gagal validasi dan login ditolak sebelum
+            // kredensial sempat dicek. Lihat ambilGpsSekali() di
+            // welcome.blade.php untuk sisi klien yang mengumpulkan nilai ini.
+            'gps_lat' => ['required', 'numeric', 'between:-90,90'],
+            'gps_lon' => ['required', 'numeric', 'between:-180,180'],
+        ], [
+            'gps_lat.required' => 'Anda harus mengizinkan akses lokasi untuk masuk ke sistem.',
+            'gps_lon.required' => 'Anda harus mengizinkan akses lokasi untuk masuk ke sistem.',
+            'gps_lat.numeric' => 'Data lokasi tidak valid. Coba muat ulang halaman dan izinkan akses lokasi.',
+            'gps_lon.numeric' => 'Data lokasi tidak valid. Coba muat ulang halaman dan izinkan akses lokasi.',
         ]);
 
         $captchaBenar = hash_equals(
@@ -85,34 +97,17 @@ class AuthenticatedSessionController extends Controller
             ->where('id', $request->session()->getId())
             ->update(['login_at' => now()]);
 
-        // Titik lokasi sesi: prioritaskan GPS perangkat (jauh lebih presisi
-        // daripada geo-IP) yang dikirim browser lewat hidden input gps_lat/
-        // gps_lon (lihat ambilGpsSekali() di welcome.blade.php). Kalau GPS
-        // tidak ada -- izin ditolak, browser tidak mendukung, atau timeout
-        // 6 detik -- fallback ke geo-IP seperti sebelumnya.
-        $gpsLat = $request->input('gps_lat');
-        $gpsLon = $request->input('gps_lon');
-
-        if (
-            is_numeric($gpsLat) && is_numeric($gpsLon)
-            && (float) $gpsLat >= -90 && (float) $gpsLat <= 90
-            && (float) $gpsLon >= -180 && (float) $gpsLon <= 180
-        ) {
-            $this->simpanGeoSesiDariGps(
-                $request->session()->getId(),
-                (float) $gpsLat,
-                (float) $gpsLon
-            );
-        } else {
-            // Lookup geo berdasarkan IP klien saat login.
-            // ip-api.com: gratis, tanpa API key, mendukung IPv4 & IPv6.
-            // Gagal secara senyap (timeout/IP private/lokal) — sesi tetap
-            // jalan, kolom geo hanya kosong dan UI menampilkan "–".
-            $this->simpanGeoSesi(
-                $request->session()->getId(),
-                $request->ip()
-            );
-        }
+        // Titik lokasi sesi: GPS perangkat sekarang WAJIB (divalidasi di atas
+        // sebelum baris ini tercapai), jadi selalu tersedia dan presisinya
+        // jauh lebih baik daripada geo-IP. Fallback geo-IP lama
+        // (simpanGeoSesi()) sengaja dipertahankan di bawah sebagai
+        // referensi/jaring pengaman kalau suatu saat wajib-GPS dilonggarkan
+        // lagi, tapi tidak lagi dipanggil di jalur normal ini.
+        $this->simpanGeoSesiDariGps(
+            $request->session()->getId(),
+            (float) $credentials['gps_lat'],
+            (float) $credentials['gps_lon']
+        );
 
         ActivityLog::catat('login', 'Berhasil login ke '.Pengaturan::current()->namaSistem().'.', $request->user());
 
@@ -128,6 +123,11 @@ class AuthenticatedSessionController extends Controller
      * rate-limit 45 req/menit per IP server (cukup untuk instansi).
      * IP loopback / private (127.x, 10.x, 192.168.x, ::1) dilewati
      * langsung tanpa hit API karena pasti tidak ada data kotanya.
+     *
+     * CATATAN: sejak izin lokasi (GPS) diwajibkan saat login, method ini
+     * tidak lagi dipanggil di jalur normal (lihat store() di atas) karena
+     * request tanpa GPS valid sudah ditolak lebih dulu oleh validasi.
+     * Dibiarkan di sini sebagai referensi/jaring pengaman.
      */
     private function simpanGeoSesi(string $sesiId, string $ip): void
     {
