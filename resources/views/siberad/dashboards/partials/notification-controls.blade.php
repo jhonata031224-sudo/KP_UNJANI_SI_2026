@@ -242,14 +242,16 @@
       return div.innerHTML;
     }
 
-    // Notif pengumuman kategori 'keterangan' sengaja TIDAK PERNAH dianggap
-    // "belum dibaca" -- tidak ada titik oranye & tidak diklik sama sekali
-    // (lihat render()), jadi wajar kalau flag `read`-nya di server tetap
-    // false selamanya (tidak ada aksi klik yang bisa nge-trigger markAsRead).
-    // Kalau tetap dihitung di sini, badge lonceng jadi nyangkut kehitung
-    // terus padahal secara visual tidak pernah ditandai belum dibaca.
+    // Notif pengumuman kategori 'keterangan' TETAP ikut dihitung di angka
+    // badge lonceng (jadi bertambah tiap ada notif Keterangan baru) --
+    // walaupun secara visual tetap tidak pernah ditandai "belum dibaca"
+    // (tidak ada titik oranye) & tetap TIDAK bisa diklik sama sekali
+    // (lihat render()). Karena kategori ini memang tidak pernah bisa
+    // ditandai dibaca (tidak ada aksi klik yang trigger markAsRead), flag
+    // `read`-nya di server tetap false selamanya -- konsekuensinya, angka
+    // badge yang berasal dari notif Keterangan tidak akan pernah berkurang
+    // sendiri (beda dgn notif biasa yang berkurang saat diklik/dibaca).
     function hitungSebagaiUnread(n) {
-      if (n.tipe === 'pengumuman_admin' && n.kategori === 'keterangan') return false;
       return !n.read;
     }
 

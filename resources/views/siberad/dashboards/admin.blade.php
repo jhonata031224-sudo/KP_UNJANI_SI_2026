@@ -867,17 +867,15 @@
 
   <main class="main">
     @php
-      // Badge notifikasi awal (server-rendered, sebelum JS polling jalan)
-      // sengaja MENGECUALIKAN pengumuman kategori 'keterangan' dari hitungan
-      // -- notif jenis itu memang tidak pernah bisa diklik/ditandai dibaca
-      // (lihat notification-controls.blade.php: hitungSebagaiUnread() &
-      // render()), jadi kalau ikut dihitung di sini badge akan nyangkut
-      // "belum dibaca" selamanya walau secara visual tidak pernah ditandai
-      // begitu. Logikanya disamakan persis dengan hitungSebagaiUnread() di
-      // sisi client supaya angka awal (sebelum poll pertama) tidak beda.
-      $snUnreadNotifCount = auth()->user()?->unreadNotifications
-          ->reject(fn ($n) => ($n->data['tipe'] ?? null) === 'pengumuman_admin' && ($n->data['kategori'] ?? null) === 'keterangan')
-          ->count() ?? 0;
+      // Badge notifikasi awal (server-rendered, sebelum JS polling jalan).
+      // Pengumuman kategori 'keterangan' TETAP ikut dihitung di sini --
+      // walau notif jenis itu memang tidak pernah bisa diklik/ditandai
+      // dibaca (lihat notification-controls.blade.php: hitungSebagaiUnread()
+      // & render()), sehingga andilnya ke angka ini tidak akan pernah
+      // berkurang sendiri. Logikanya disamakan persis dengan
+      // hitungSebagaiUnread() di sisi client supaya angka awal (sebelum
+      // poll pertama) tidak beda.
+      $snUnreadNotifCount = auth()->user()?->unreadNotifications->count() ?? 0;
     @endphp
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:12px;">
