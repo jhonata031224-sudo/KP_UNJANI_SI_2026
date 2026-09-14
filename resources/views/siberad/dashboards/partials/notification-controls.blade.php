@@ -220,8 +220,51 @@
       $__siberadNotifications = auth()->user()?->notifications?->take(20)?->map(function ($n) {
         return ['id' => $n->id, 'message' => $n->data['pesan'] ?? 'Status laporan diperbarui.', 'time' => optional($n->created_at)->diffForHumans(), 'url' => $n->data['url'] ?? null, 'title' => $n->data['judul'] ?? null, 'tipe' => $n->data['tipe'] ?? null, 'kategori' => $n->data['kategori'] ?? null, 'read' => ! is_null($n->read_at)];
       })->values() ?? [];
+
+      // Suara notifikasi (diatur Admin lewat menu Lainnya -> Notifikasi,
+      // lihat NotifikasiSettingController::updateSuara) -- verifikasi file
+      // benar-benar ada di disk dulu, sama seperti pola $notifSoundExists
+      // di admin.blade.php, supaya path "dangling" (file terhapus manual
+      // di server) tidak bikin browser nyoba fetch audio yang 404.
+      $__siberadPengaturanNotifSound = $pengaturan ?? \App\Models\Pengaturan::current();
+      $__siberadNotifSoundExists = ($__siberadPengaturanNotifSound->notifikasi_sound_path ?? null)
+        && \Illuminate\Support\Facades\Storage::disk('public')->exists($__siberadPengaturanNotifSound->notifikasi_sound_path);
+      $__siberadNotifSoundUrl = $__siberadNotifSoundExists
+        ? asset('storage/'.$__siberadPengaturanNotifSound->notifikasi_sound_path)
+        : null;
     @endphp
     var notifications = @json($__siberadNotifications);
+    var NOTIF_SOUND_URL = @json($__siberadNotifSoundUrl);
+
+    // Objek Audio dibuat SEKALI & dipakai ulang tiap ada notifikasi baru
+    // (bukan `new Audio()` tiap kali) supaya file-nya sudah ter-preload di
+    // browser dan tidak ada jeda saat diputar. Kalau Admin belum
+    // mengunggah suara apapun, NOTIF_SOUND_URL null -> variabel ini tetap
+    // null & pemutaran di bawah otomatis dilewati (silent, tidak error).
+    var notifSoundAudio = NOTIF_SOUND_URL ? new Audio(NOTIF_SOUND_URL) : null;
+    if (notifSoundAudio) notifSoundAudio.preload = 'auto';
+
+    // Kumpulan id notifikasi yang SUDAH pernah dilihat klien ini -- dipakai
+    // buat bedain notifikasi yang BENAR-BENAR baru (dari poll berikutnya)
+    // vs notifikasi lama yang sudah ada sejak halaman pertama dimuat.
+    // Baseline diisi dari data awal supaya sound TIDAK bunyi begitu saja
+    // pas halaman baru dibuka (yang wajar cuma bunyi utk notif yang
+    // datang SETELAH pengguna sedang membuka dashboard).
+    var notifKnownIds = {};
+    notifications.forEach(function (n) { notifKnownIds[String(n.id)] = true; });
+
+    function mainkanSuaraNotifikasi() {
+      if (!notifSoundAudio) return;
+      try {
+        notifSoundAudio.currentTime = 0;
+        var p = notifSoundAudio.play();
+        // Browser modern bisa menolak autoplay kalau belum pernah ada
+        // interaksi pengguna sama sekali di tab ini -- ditangkap diam-diam
+        // (bukan error ke user) karena ini cuma enhancement, bukan fitur
+        // krusial yang boleh mengganggu alur lain kalau gagal.
+        if (p && typeof p.catch === 'function') p.catch(function () {});
+      } catch (e) {}
+    }
 
     var list = dropdown.querySelector('.siberad-notif-list');
     if (!list) {
@@ -640,6 +683,21 @@
           return response.json();
         }).then(function (data) {
           if (!data || !Array.isArray(data.notifications)) return;
+
+          // Deteksi notifikasi yang BENAR-BENAR baru (id belum pernah
+          // tercatat di notifKnownIds) SEBELUM notifications ditimpa --
+          // kalau ada minimal satu, mainkan suara sekali (bukan per-item,
+          // biar tidak numpuk bunyi berkali-kali kalau beberapa notif
+          // masuk bersamaan dalam satu jeda poll 3 detik).
+          var adaNotifikasiBaru = false;
+          data.notifications.forEach(function (n) {
+            if (!notifKnownIds[String(n.id)]) {
+              notifKnownIds[String(n.id)] = true;
+              adaNotifikasiBaru = true;
+            }
+          });
+          if (adaNotifikasiBaru) mainkanSuaraNotifikasi();
+
           notifications = data.notifications;
           render();
         }).catch(function () {}).finally(function () { polling = false; });

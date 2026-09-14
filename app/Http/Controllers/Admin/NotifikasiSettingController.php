@@ -11,6 +11,7 @@ use App\Notifications\PengumumanBroadcastAdmin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
+use Illuminate\Support\Facades\Storage;
 
 class NotifikasiSettingController extends Controller
 {
@@ -101,5 +102,66 @@ class NotifikasiSettingController extends Controller
         );
 
         return back()->with('status', "Pengumuman terkirim ke {$labelTujuan} ({$penerima->count()} pengguna).");
+    }
+
+    /**
+     * Admin mengunggah SATU file suara (mp3/wav/ogg) yang lalu diputar
+     * otomatis di navbar SEMUA dashboard (Admin, Danpus/Wadan, dan
+     * seluruh role Satuan) setiap kali ada notifikasi baru masuk ke
+     * lonceng in-app -- lihat partials/notification-controls.blade.php,
+     * fungsi poll() yang membandingkan id notifikasi baru vs yang sudah
+     * pernah dilihat sebelum memutar audio ini.
+     */
+    public function updateSuara(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'notifikasi_suara' => ['required', 'file', 'mimes:mp3,wav,ogg,mpga', 'max:2048'],
+        ], [
+            'notifikasi_suara.required' => 'Pilih file suara terlebih dahulu.',
+            'notifikasi_suara.mimes' => 'File yang diunggah harus berformat MP3, WAV, atau OGG.',
+            'notifikasi_suara.max' => 'Ukuran file maksimal 2 MB.',
+        ]);
+
+        $pengaturan = Pengaturan::current();
+
+        // Sama seperti bug logo/struktur-organisasi yang sudah diperbaiki
+        // di tempat lain (lihat StrukturOrganisasiController::update()):
+        // disk 'public' disetel throw=false, jadi kalau penulisan file
+        // gagal di level filesystem, store() tetap "sukses" tanpa
+        // exception. Verifikasi manual di sini supaya path yang tidak
+        // benar-benar ada di disk tidak ikut disimpan ke kolom.
+        $path = $request->file('notifikasi_suara')->store('notifikasi-suara', 'public');
+
+        if (! $path || ! Storage::disk('public')->exists($path) || Storage::disk('public')->size($path) < 1) {
+            if ($path) Storage::disk('public')->delete($path);
+
+            return back()->with('error',
+                'File suara notifikasi GAGAL disimpan ke server (storage tidak bisa ditulis). '
+                .'Coba upload ulang; kalau gagal terus, cek log server / kapasitas volume Railway.'
+            );
+        }
+
+        if ($pengaturan->notifikasi_sound_path) {
+            Storage::disk('public')->delete($pengaturan->notifikasi_sound_path);
+        }
+
+        $pengaturan->update(['notifikasi_sound_path' => $path]);
+
+        ActivityLog::catat('setelan.notifikasi.suara.update', 'Memperbarui suara notifikasi.');
+
+        return back()->with('status', 'Suara notifikasi berhasil disimpan. Akan berbunyi di semua dashboard saat ada notifikasi baru.');
+    }
+
+    public function destroySuara(Request $request): RedirectResponse
+    {
+        $pengaturan = Pengaturan::current();
+
+        if ($pengaturan->notifikasi_sound_path) {
+            Storage::disk('public')->delete($pengaturan->notifikasi_sound_path);
+            $pengaturan->update(['notifikasi_sound_path' => null]);
+            ActivityLog::catat('setelan.notifikasi.suara.destroy', 'Menghapus suara notifikasi.');
+        }
+
+        return back()->with('status', 'Suara notifikasi berhasil dihapus. Notifikasi baru tidak akan berbunyi lagi.');
     }
 }
