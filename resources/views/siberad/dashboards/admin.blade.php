@@ -35,6 +35,29 @@
   .chart-mini .chart-legend-item{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;color:var(--text-muted);white-space:nowrap;cursor:pointer;user-select:none;}
   .chart-mini .chart-legend-item.is-hidden{text-decoration:line-through;opacity:.5;}
   .chart-mini .chart-legend-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
+  {{-- Radar "Pengguna per Kategori Satuan" -- chart di kiri, rincian
+       per-kategori (dot+nama+jumlah) di kanan, niru referensi gambar yang
+       diminta user. Kartu ini berdiri sendiri full-width (lihat baris
+       terpisah di atas .chart-box-grid), jadi chart-wrap dikasih tinggi
+       lebih besar (260px) daripada 178px bawaan .chart-mini yang buat tile
+       kecil di grid. --}}
+  .radar-card .chart-wrap{height:260px;}
+  .radar-card-body{display:flex;align-items:center;gap:28px;flex-wrap:wrap;}
+  .radar-card-body .chart-wrap{flex:1 1 320px;min-width:260px;}
+  .radar-legend-list{flex:1 1 220px;display:flex;flex-direction:column;gap:14px;min-width:200px;}
+  .radar-legend-row{display:flex;align-items:center;gap:8px;}
+  .radar-legend-dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto;}
+  .radar-legend-label{flex:0 0 auto;font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;}
+  {{-- Penghubung ANTARA nama kategori & angkanya -- 3 percobaan sebelumnya
+       (garis dari titik chart, garis titik-titik gaya daftar isi, progress
+       bar terisi) gak dipakai lagi ("jelek"/"kurang pas"/progress bar tanpa
+       persen kesannya nyiratin ukuran tapi gak logis buat angka mentah).
+       Sekarang garis solid tipis POLOS (bukan "terisi" sebagian kayak bar --
+       gak ada makna persentase/completion yang bisa disalahartikan), cuma
+       penghubung visual doang, mengabur di kedua ujung (gradient) biar
+       nempel rapi ke dot & angka, bukan garis kaku penuh. --}}
+  .radar-legend-connector{flex:1;min-width:16px;align-self:center;height:1px;background:linear-gradient(90deg,transparent,var(--border-strong) 15%,var(--border-strong) 85%,transparent);}
+  .radar-legend-value{flex:0 0 auto;font-family:var(--mono);font-size:15px;font-weight:800;color:var(--text);}
   @media(max-width:980px){.chart-box-grid{grid-template-columns:1fr;}.chart-mini .chart-wrap{height:198px;}}
 
   /* ===== toggle "Lihat Detail per Satuan" di header chart Total Pelaporan
@@ -1046,15 +1069,32 @@
         @endphp
         {{-- "Pengguna per Kategori Satuan" SENGAJA dipisah jadi baris sendiri
              (bukan ikut grid 2 kolom di bawah) -- niru posisi Pimpinan, donut
-             "Distribusi Status Laporan" + "Aktivitas 7 Hari Terakhir" duduk
-             sejajar 2 kolom, chart lain-lain baris terpisah sendiri. --}}
-        <div class="chart-mini chart-mini-link chart-box" data-tab-link="pengguna" role="button" tabindex="0" title="Lihat Daftar Pengguna">
-          <div class="chart-mini-head">
-            <div class="chart-mini-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-            <div><h4>Pengguna per Kategori Satuan</h4><p>Sebaran akun berdasarkan kategori.</p></div>
+             "Distribusi Status Laporan" + "Tren Aktivitas" duduk sejajar 2
+             kolom, chart lain-lain baris terpisah sendiri. --}}
+        {{-- Radar (bukan doughnut lagi) -- sesuai referensi gambar yang
+             diminta user: chart di kiri, rincian per-kategori (dot+nama+
+             jumlah) di kanan, bukan legend titik yang wrap di bawah chart
+             kayak sebelumnya. Ikon+warna (ungu #8b5cf6) SENGAJA disamakan
+             ke kartu KPI "Total Pengguna" (admin-kpi-cards.blade.php,
+             accent #8b5cf6) -- chart ini kan soal pengguna juga, jadi
+             ikonnya (sama-sama ikon orang) + warnanya nyambung sama KPI
+             itu, bukan warna gold default. Wrapper + header SEKARANG
+             .chart-card/.pimp-card-head (bukan .chart-mini/.chart-mini-head
+             lagi) -- biar background/border/padding-nya SAMA PERSIS kayak
+             kartu "Distribusi Status Laporan"/"Tren Aktivitas" di
+             bawahnya (dulu .chart-mini pakai var(--panel-alt), beda dari
+             .chart-card yang var(--panel), keliatan beda kartunya). --}}
+        <div class="chart-card chart-mini-link chart-box radar-card" data-tab-link="pengguna" role="button" tabindex="0" title="Lihat Daftar Pengguna">
+          <div class="pimp-card-head">
+            <div class="pimp-card-head-main">
+              <span class="pimp-card-ico" style="background:rgba(139,92,246,.14);color:#8b5cf6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+              <div><h3>Pengguna per Kategori Satuan</h3><p>Sebaran akun berdasarkan kategori.</p></div>
+            </div>
           </div>
-          <div class="chart-wrap"><canvas id="chartKategoriSatuan"></canvas></div>
-          <div class="chart-legend" id="chartKategoriSatuanLegend"></div>
+          <div class="radar-card-body">
+            <div class="chart-wrap"><canvas id="chartKategoriSatuan"></canvas></div>
+            <div class="radar-legend-list" id="chartKategoriSatuanLegend"></div>
+          </div>
         </div>
 
         <div class="chart-box-grid chart-box">
@@ -1077,22 +1117,31 @@
               </div>
             </div>
             <div class="status-donut-wrap"><canvas id="chartStatusLaporan"></canvas><div class="status-donut-center"><span>Total Laporan</span><strong id="adminDonutTotal">{{ $adminTotalStatus }}</strong></div></div>
-            @include('siberad.dashboards.partials.pimpinan-status-distribusi-list', ['pimpStatusDist' => $adminStatusDist])
+            <div id="adminStatusBdWrap">@include('siberad.dashboards.partials.pimpinan-status-distribusi-list', ['pimpStatusDist' => $adminStatusDist])</div>
           </div>
 
-          {{-- "Aktivitas 7 Hari Terakhir" -- MIRROR style kartu "Tren Aktivitas"
-               Pimpinan (chart-card+pimp-card-head, tooltip ikut tema), TAPI
-               TANPA dataset batang (Laporan/Surat) punya Pimpinan -- data
-               Admin di sini cuma 1 seri (jumlah ActivityLog per hari), jadi
-               dari awal udah cocok sebagai garis polos + gradient area
-               doang, gak ada yang perlu "dihapus battangnya" di data-nya
-               sendiri, cuma pembungkusnya yang disamakan ke gaya kartu
-               Pimpinan (dulu pakai .chart-mini-head yang lebih kecil/padat). --}}
+          {{-- "Tren Aktivitas" (dulu "Aktivitas 7 Hari Terakhir") -- MIRROR
+               style kartu "Tren Aktivitas" Pimpinan (chart-card+pimp-card-head,
+               tooltip ikut tema, TOGGLE 7/30 Hari), TAPI TANPA dataset batang
+               (Laporan/Surat) punya Pimpinan -- data Admin di sini cuma 1
+               seri (jumlah ActivityLog per hari), jadi dari awal udah cocok
+               sebagai garis polos + gradient area doang, gak ada yang perlu
+               "dihapus battangnya" di data-nya sendiri. Nama diganti dari
+               "Aktivitas 7 Hari Terakhir" -- sekarang ada opsi 30 hari juga,
+               nama lama jadi gak akurat lagi. Toggle-nya SENGAJA
+               e.stopPropagation() di JS (lihat init chart) -- kartu ini
+               sendiri clickable (data-tab-link="log-aktivitas"), tanpa itu
+               klik tombol toggle bakal ikut ke-anggep klik kartu & pindah
+               tab. --}}
           <div class="chart-card pimp-tren-card chart-mini-link" data-tab-link="log-aktivitas" role="button" tabindex="0" title="Lihat Riwayat Aktivitas">
             <div class="pimp-card-head">
               <div class="pimp-card-head-main">
                 <span class="pimp-card-ico" style="background:color-mix(in srgb,#6366f1 15%,transparent);color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
-                <div><h3>Aktivitas 7 Hari Terakhir</h3><p>Jumlah aksi tercatat per hari.</p></div>
+                <div><h3>Tren Aktivitas</h3><p>Jumlah aksi tercatat per hari, 7 atau 30 hari terakhir.</p></div>
+              </div>
+              <div class="tren-range-toggle" id="adminTrenRangeToggle">
+                <button type="button" class="tren-range-btn active" data-range="7">7 Hari</button>
+                <button type="button" class="tren-range-btn" data-range="30">30 Hari</button>
               </div>
             </div>
             <div class="chart-wrap"><canvas id="chartAktivitasMingguan"></canvas></div>
@@ -1196,13 +1245,23 @@
                besar, canvas-nya juga butuh lebih tinggi biar proporsinya
                enak dilihat. --}}
           .chart-card .chart-wrap{height:230px;}
-          {{-- .pimp-tren-card bikin kartu "Aktivitas 7 Hari Terakhir" ikut
+          {{-- .pimp-tren-card bikin kartu "Tren Aktivitas" ikut
                meregang setinggi kartu donut di sebelahnya (sibling di grid
                2 kolom yang sama) -- MIRROR PERSIS .pimp-tren-card Pimpinan,
                cuma target child-nya .chart-wrap (bukan .chart-box, lihat
                komentar penamaan di atas). --}}
           .pimp-tren-card{display:flex;flex-direction:column;height:100%;}
           .pimp-tren-card .chart-wrap{flex:1;min-height:0;height:auto;}
+          {{-- Toggle "7 Hari"/"30 Hari" kartu "Tren Aktivitas" -- MIRROR
+               PERSIS .tren-range-toggle/.tren-range-btn Pimpinan
+               (laporan-pimpinan.blade.php), token dipetakan ke punya Admin
+               (var(--p-surface-2)->var(--panel-alt), var(--p-border)->
+               var(--border-soft), var(--p-muted)->var(--text-muted)) --
+               warna aktif TETAP literal #6366f1 (sama kayak Pimpinan, juga
+               sama kayak warna ikon kartu ini). --}}
+          .tren-range-toggle{display:flex;gap:3px;background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:999px;padding:3px;flex:0 0 auto;}
+          .tren-range-btn{border:0;background:transparent;color:var(--text-muted);font-size:11px;font-weight:700;padding:6px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;font-family:inherit;}
+          .tren-range-btn.active{background:#6366f1;color:#fff;}
           .status-donut-wrap{position:relative;width:100%;height:230px;margin:6px 0 2px;}
           .status-donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;pointer-events:none;}
           .status-donut-center span{font-size:11px;color:var(--text-muted);}
@@ -6693,50 +6752,93 @@
     Chart.defaults.font.family = "'JetBrains Mono', monospace";
     Chart.defaults.font.size = 11;
 
-    var doughnutOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '62%',
-      plugins: { legend: { display: false } }
-    };
-
-    function renderDoughnut(canvasId, labels, values, colors) {
+    // ===== Grafik 1: Pengguna per Kategori Satuan -- radar (bukan doughnut
+    // lagi), sesuai referensi gambar yang diminta user: 5 sumbu (Admin,
+    // Unsur Pimpinan, Unsur Pembantu Pimpinan, Unsur Pelayanan, Unsur
+    // Pelaksana -- urutannya dari backend lewat $radarUrutan di
+    // DashboardController::admin(), bukan ikut urutan $semuaSatuan begitu
+    // saja) + rincian di samping (dot warna + nama + jumlah). Satu warna
+    // konsisten (UNGU #8b5cf6, samain ke accent kartu KPI "Total Pengguna" --
+    // lihat komentar ikon di markup) buat garis/isian polygon-nya (niru
+    // referensi: garis radar 1 warna, TIAP SUMBU baru dikasih warna beda di
+    // dot rincian sampingnya doang) -- beda dari renderDoughnut() lama yang
+    // mewarnai tiap potongan beda-beda. =====
+    var cUnguPengguna = '#8b5cf6';
+    // Instance chart disimpan (bukan cuma "new Chart()" lepas) supaya poll
+    // realtime bisa destroy+recreate pas datanya beneran berubah -- MIRROR
+    // pola window.siberadRefreshStatusDonut Pimpinan: destroy+recreate
+    // (bukan chart.update() manual) sekalian jadi sinyal visual "data
+    // berubah" lewat animasi masuk yang replay.
+    var radarChartInstance = null;
+    function renderRadar(canvasId, labels, values, colors) {
       var el = document.getElementById(canvasId);
-      if (!el) return;
-      var chart = new Chart(el, {
-        type: 'doughnut',
-        data: { labels: labels, datasets: [{ data: values, backgroundColor: colors, borderColor: 'transparent' }] },
-        options: doughnutOptions
+      if (!el || typeof Chart === 'undefined') return;
+      if (radarChartInstance) { radarChartInstance.destroy(); radarChartInstance = null; }
+      radarChartInstance = new Chart(el, {
+        type: 'radar',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: 'rgba(139,92,246,.18)',
+            borderColor: cUnguPengguna, borderWidth: 2,
+            pointBackgroundColor: cUnguPengguna, pointBorderColor: cSurface, pointBorderWidth: 2,
+            pointRadius: 4, pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: cSurface, titleColor: cText, bodyColor: cText,
+              borderColor: cGrid, borderWidth: 1, cornerRadius: 10, padding: 10,
+              titleFont: { weight: '700' }, bodyFont: { weight: '600' }
+            }
+          },
+          scales: {
+            r: {
+              beginAtZero: true,
+              ticks: { precision: 0, backdropColor: 'transparent', color: cMuted },
+              grid: { color: cGrid },
+              angleLines: { color: cGrid },
+              pointLabels: { color: cText, font: { size: 11, weight: '700' } }
+            }
+          }
+        }
       });
       var legendBox = document.getElementById(canvasId + 'Legend');
       if (!legendBox) return;
       legendBox.innerHTML = '';
+      // Garis solid tipis POLOS (bukan bar terisi) sebagai penghubung visual
+      // label<->angka -- lihat komentar .radar-legend-connector, sengaja
+      // gak proporsional ke apapun biar gak nyiratin persentase yang gak
+      // ada datanya.
       labels.forEach(function (label, i) {
-        var item = document.createElement('span');
-        item.className = 'chart-legend-item';
-        item.innerHTML = '<span class="chart-legend-dot" style="background:' + colors[i] + '"></span>' + label;
-        item.addEventListener('click', function (e) {
-          e.stopPropagation();
-          chart.toggleDataVisibility(i);
-          chart.update();
-          item.classList.toggle('is-hidden', !chart.getDataVisibility(i));
-        });
-        legendBox.appendChild(item);
+        var row = document.createElement('div');
+        row.className = 'radar-legend-row';
+        row.innerHTML = '<span class="radar-legend-dot" style="background:' + colors[i] + '"></span><span class="radar-legend-label">' + label + '</span><span class="radar-legend-connector"></span><span class="radar-legend-value">' + values[i] + '</span>';
+        legendBox.appendChild(row);
       });
     }
-
-    // ===== Grafik 1: Pengguna per Kategori Satuan (warna literal — urutan
-    // grup dari backend dijamin selalu Admin, Pimpinan, Unsur Pelayanan,
-    // Unsur Pembantu Pimpinan, Direktorat, Satlak, Kotama lewat
-    // Satuan::prioritasKategori(), bukan ikut urutan $semuaSatuan begitu
-    // saja) =====
     var distribusiKategori = @json($distribusiPenggunaKategori);
-    renderDoughnut(
+    var radarWarna = [cUnguPengguna, '#6366f1', '#0ea5e9', '#22c55e', '#f59e0b'];
+    renderRadar(
       'chartKategoriSatuan',
       distribusiKategori.map(function (d) { return d.kategori; }),
       distribusiKategori.map(function (d) { return d.jumlah; }),
-      [cGold, '#6366f1', '#0ea5e9', '#a855f7', '#22c55e', '#f59e0b', '#ec4899']
+      radarWarna
     );
+    // Dipanggil dari syncAdminKpis() (poll realtime) tiap data radar_kategori
+    // dari server beda dari sebelumnya.
+    window.siberadRefreshRadarKategori = function (fresh) {
+      renderRadar(
+        'chartKategoriSatuan',
+        fresh.map(function (d) { return d.kategori; }),
+        fresh.map(function (d) { return d.jumlah; }),
+        radarWarna
+      );
+    };
 
     // ===== Grafik 2: Distribusi Status Laporan -- MIRROR PERSIS donut
     // "Distribusi Status Laporan" Pimpinan (makeStatusDonut() di
@@ -6749,9 +6851,14 @@
     // data TETAP hijau/merah/oren literal (bukan var(--green-bright) yang
     // di-repurpose jadi gold di dark mode). =====
     var statusLaporan = @json($statusLaporanSistem);
+    // Instance chart disimpan (bukan "var chart" lokal) supaya bisa
+    // destroy+recreate pas poll realtime dapet data baru -- MIRROR pola
+    // window.siberadRefreshStatusDonut Pimpinan persis.
+    var adminStatusDonutInstance = null;
     function makeAdminStatusDonut() {
       var el = document.getElementById('chartStatusLaporan');
       if (!el || typeof Chart === 'undefined') return;
+      if (adminStatusDonutInstance) { adminStatusDonutInstance.destroy(); adminStatusDonutInstance = null; }
       var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       var defs = [
         { label: 'Disetujui', color: '#22c55e', count: statusLaporan.disetujui },
@@ -6786,7 +6893,7 @@
           ctx.restore();
         }
       };
-      var chart = new Chart(el, {
+      adminStatusDonutInstance = new Chart(el, {
         type: 'doughnut',
         data: {
           labels: defs.map(function (d) { return d.label; }),
@@ -6819,10 +6926,20 @@
         },
         plugins: [arcPct]
       });
-      chart.$sbT = reduce ? 1 : 0;
-      chart.$sbGrown = !!reduce;
+      adminStatusDonutInstance.$sbT = reduce ? 1 : 0;
+      adminStatusDonutInstance.$sbGrown = !!reduce;
     }
     makeAdminStatusDonut();
+    // Dipanggil dari syncAdminKpis() (poll realtime) tiap data status_laporan
+    // dari server beda dari sebelumnya -- destroy+recreate chart (animasi
+    // "tumbuh" replay jadi sinyal data berubah), rincian bawahnya (#adminStatusBdWrap)
+    // + total tengah donut di-swap langsung oleh syncAdminKpis() sendiri
+    // (BUKAN di sini) sama seperti pola status_bd_html/status_donut_total
+    // Pimpinan.
+    window.siberadRefreshAdminStatusDonut = function (fresh) {
+      statusLaporan = fresh;
+      makeAdminStatusDonut();
+    };
     // "Mengisi perlahan" -- count-up angka tengah/rincian + progress bar
     // rincian (width 0->target), MIRROR PERSIS animateStatusDistrib()
     // Pimpinan. Discope ke .status-dist-card biar gak kesenggol elemen
@@ -6852,21 +6969,36 @@
       })();
     })();
 
-    // ===== Grafik 3: Aktivitas 7 Hari Terakhir =====
-    var aktivitasMingguan = @json($aktivitasTujuhHari);
+    // ===== Grafik 3: Tren Aktivitas (dulu "Aktivitas 7 Hari Terakhir",
+    // sekarang ada toggle 7/30 Hari kayak "Tren Aktivitas" Pimpinan) -- data
+    // 2 rentang di-embed sekaligus lewat trenAktivitasData ({'7':[...],
+    // '30':[...]}), toggle tombol cuma ganti chart.data lalu chart.update(),
+    // TANPA request ulang ke server -- MIRROR persis pola applyRange()
+    // makeTrenLaporanChart Pimpinan. =====
+    var trenAktivitasData = @json($trenAktivitas);
+    var trenAktivitasActiveRange = '7';
+    function mkTrenAktivitas(rangeKey) {
+      var rows = trenAktivitasData[rangeKey] || [];
+      return {
+        labels: rows.map(function (r) { return r.label; }),
+        jumlah: rows.map(function (r) { return r.jumlah; })
+      };
+    }
     var elAktivitas = document.getElementById('chartAktivitasMingguan');
+    var aktivitasChartInstance = null;
     if (elAktivitas) {
       var aktivitasCtx = elAktivitas.getContext('2d');
       var aktivitasGradient = aktivitasCtx.createLinearGradient(0, 0, 0, elAktivitas.height || 220);
       aktivitasGradient.addColorStop(0, 'rgba(99,102,241,.35)');
       aktivitasGradient.addColorStop(1, 'rgba(99,102,241,0)');
-      new Chart(elAktivitas, {
+      var curTrenAktivitas = mkTrenAktivitas(trenAktivitasActiveRange);
+      aktivitasChartInstance = new Chart(elAktivitas, {
         type: 'line',
         data: {
-          labels: aktivitasMingguan.map(function (a) { return a.label; }),
+          labels: curTrenAktivitas.labels,
           datasets: [{
             label: 'Aktivitas',
-            data: aktivitasMingguan.map(function (a) { return a.jumlah; }),
+            data: curTrenAktivitas.jumlah,
             borderColor: '#6366f1',
             backgroundColor: aktivitasGradient,
             fill: true,
@@ -6891,12 +7023,52 @@
             }
           },
           scales: {
-            x: { grid: { display: false } },
+            // ticks.maxRotation:90 (bukan cuma autoSkip default) -- MIRROR
+            // "Tren Laporan" Pimpinan. Tanpa ini, 30 label ("30 Hari") gak
+            // muat sejajar horizontal di lebar kartu, Chart.js autoSkip
+            // motong sampai cuma ~separuh yang kelihatan (kesannya cuma ada
+            // 15 hari data, padahal datanya lengkap 30 -- cuma LABEL-nya
+            // yang disembunyiin). Dikasih rotasi vertikal, semua/hampir
+            // semua 30 label muat ditampilkan.
+            x: { grid: { display: false }, ticks: { autoSkip: true, maxRotation: 90, minRotation: 0, font: { size: 10 } } },
             y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: cGrid } }
           }
         }
       });
     }
+    function applyTrenAktivitasRange(rangeKey) {
+      if (!aktivitasChartInstance) return;
+      var fresh = mkTrenAktivitas(rangeKey);
+      aktivitasChartInstance.data.labels = fresh.labels;
+      aktivitasChartInstance.data.datasets[0].data = fresh.jumlah;
+      aktivitasChartInstance.update();
+    }
+    var trenAktivitasToggleEl = document.getElementById('adminTrenRangeToggle');
+    if (trenAktivitasToggleEl) {
+      trenAktivitasToggleEl.addEventListener('click', function (e) {
+        var btn = e.target.closest('.tren-range-btn');
+        if (!btn) return;
+        // Kartu ini SENDIRI clickable (data-tab-link="log-aktivitas") --
+        // tanpa stopPropagation, klik tombol toggle ikut ke-anggep klik
+        // kartu & pindah tab ke "Riwayat Aktivitas".
+        e.stopPropagation();
+        this.querySelectorAll('.tren-range-btn').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        trenAktivitasActiveRange = btn.dataset.range;
+        applyTrenAktivitasRange(trenAktivitasActiveRange);
+      });
+    }
+    // Dipanggil dari syncAdminKpis() (poll realtime) tiap data tren_aktivitas
+    // dari server beda dari sebelumnya -- trenAktivitasData (variabel di
+    // atas) di-assign ulang dapet data segar, rentang yang lagi aktif (7/30
+    // Hari) TETAP kepilih, cuma isinya yang di-refresh -- MIRROR
+    // siberadRefreshTrenChart Pimpinan persis. Update-in-place (chart.data +
+    // chart.update(), BUKAN destroy+recreate) -- chart line ini gak punya
+    // growth-guard animasi khusus kayak donut/radar jadi gak perlu direplay.
+    window.siberadRefreshTrenAktivitas = function (fresh) {
+      trenAktivitasData = fresh;
+      applyTrenAktivitasRange(trenAktivitasActiveRange);
+    };
 
     // ===== Grafik 4: Rekap Total Pelaporan per Satuan (termasuk 21 Kotama) =====
     // Horizontal bar (bukan vertikal) supaya dengan 35+ satuan, nama satuan
@@ -7138,6 +7310,19 @@
     const aktivitasList=document.getElementById('adminAktivitasTerbaruList');
     let lastResetPasswordHtml=resetPasswordList?resetPasswordList.innerHTML.trim():'';
     let lastAktivitasHtml=aktivitasList?aktivitasList.innerHTML.trim():'';
+    // 3 chart kecil Beranda (radar "Pengguna per Kategori Satuan", donut
+    // "Distribusi Status Laporan", "Tren Aktivitas") -- fungsi refresh-nya
+    // (window.siberadRefreshRadarKategori/AdminStatusDonut/TrenAktivitas)
+    // didefinisikan di <script> LAIN
+    // (blok init Chart.js di atas, closure beda) makanya ditempel ke
+    // `window`, bukan dipanggil langsung -- signature "data lama" di sini
+    // SENGAJA diinisialisasi ulang dari data PHP yang sama (bukan baca
+    // variabel closure lain yang gak kejangkau dari sini).
+    const adminStatusBdWrap=document.getElementById('adminStatusBdWrap');
+    const adminDonutTotalEl=document.getElementById('adminDonutTotal');
+    let lastRadarKey=JSON.stringify(@json($distribusiPenggunaKategori));
+    let lastStatusLaporanKey=JSON.stringify(@json($statusLaporanSistem));
+    let lastTrenAktivitasKey=JSON.stringify(@json($trenAktivitas));
     function animateTerbaruRows(container,selector){
       if(!container)return;
       container.querySelectorAll(selector).forEach(function(el,i){
@@ -7210,6 +7395,33 @@
             aktivitasList.innerHTML=freshAk;
             animateTerbaruRows(aktivitasList,'.pimp-activity-item');
             tickRelativeTimes();
+          }
+        }
+        if(Array.isArray(data.radar_kategori)){
+          const freshRadarKey=JSON.stringify(data.radar_kategori);
+          if(lastRadarKey!==freshRadarKey){
+            lastRadarKey=freshRadarKey;
+            window.siberadRefreshRadarKategori&&window.siberadRefreshRadarKategori(data.radar_kategori);
+          }
+        }
+        if(data.status_laporan&&typeof data.status_laporan==='object'){
+          const freshStatusKey=JSON.stringify(data.status_laporan);
+          if(lastStatusLaporanKey!==freshStatusKey){
+            lastStatusLaporanKey=freshStatusKey;
+            window.siberadRefreshAdminStatusDonut&&window.siberadRefreshAdminStatusDonut(data.status_laporan);
+          }
+        }
+        if(adminStatusBdWrap&&typeof data.status_bd_html==='string'){
+          adminStatusBdWrap.innerHTML=data.status_bd_html;
+        }
+        if(adminDonutTotalEl&&typeof data.status_donut_total!=='undefined'){
+          adminDonutTotalEl.textContent=data.status_donut_total;
+        }
+        if(data.tren_aktivitas&&typeof data.tren_aktivitas==='object'){
+          const freshTrenAktivitasKey=JSON.stringify(data.tren_aktivitas);
+          if(lastTrenAktivitasKey!==freshTrenAktivitasKey){
+            lastTrenAktivitasKey=freshTrenAktivitasKey;
+            window.siberadRefreshTrenAktivitas&&window.siberadRefreshTrenAktivitas(data.tren_aktivitas);
           }
         }
       }catch(e){}

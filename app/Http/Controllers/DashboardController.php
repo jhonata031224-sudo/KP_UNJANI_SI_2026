@@ -44,7 +44,6 @@ class DashboardController
         // Logika urut-nya di User::terurutOrganisasi() -- dipakai juga di
         // respons AJAX Tambah/Ubah/Hapus Pengguna biar urutannya konsisten
         // tanpa reload.
-        $prioritasKategori = Satuan::prioritasKategori();
         $semuaPengguna = User::terurutOrganisasi();
         // Urutan satuan (dipakai tab "Data Satuan" & "Hak Akses Pengguna")
         // SELALU ikut jenjang organisasi resmi lewat Satuan::kunciUrutSatuan()
@@ -57,39 +56,14 @@ class DashboardController
         // Tambah/Ubah Satuan biar urutannya konsisten tanpa reload.
         $semuaSatuan = Satuan::terurut();
         $permintaanResetPassword = PermintaanResetPassword::with(['user.satuan', 'diprosesOleh'])->latest()->get();
-        $labelKategori = [Satuan::KATEGORI_SATLAK => 'Satlak', Satuan::KATEGORI_DIREKTORAT => 'Direktorat', Satuan::KATEGORI_PIMPINAN => 'Pimpinan', Satuan::KATEGORI_ADMIN => 'Admin', Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan', Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan', Satuan::KATEGORI_KOTAMA => 'Kasansi'];
-        // Urutan grup di sini SENGAJA dipastikan lewat prioritasKategori
-        // (bukan ikut urutan asli $semuaSatuan begitu saja), soalnya grafik
-        // "Pengguna per Kategori Satuan" pasangin warna berdasarkan posisi --
-        // kalau urutannya berubah-ubah, warnanya ikut kacau kepasang ke
-        // kategori yang salah.
-        $distribusiPenggunaKategori = $semuaSatuan->groupBy('kategori')
-            ->sortBy(fn ($group, $kategori) => $prioritasKategori[$kategori] ?? 9)
-            ->map(fn ($group, $kategori) => ['kategori' => $labelKategori[$kategori] ?? ucfirst($kategori), 'jumlah' => $group->sum('users_count')])
-            ->values();
-        $statusLaporanSistem = [
-            // Laporan bisa diputuskan lewat 2 jalur (Danpus ATAU Wadan, lihat
-            // LaporanController::updateStatus) -- status akhirnya "Disetujui
-            // DANPUS"/"Disetujui WADAN" (begitu juga Ditolak). Dulu cuma cek
-            // varian DANPUS doang, jadi laporan yang diputuskan Wadan gak
-            // ikut kehitung di sini walau udah kehitung di Distribusi Status
-            // Laporan versi Pimpinan (yang pakai str_contains 'setuj'/'tolak',
-            // otomatis nangkep kedua varian).
-            'disetujui' => Laporan::whereIn('status', ['Disetujui DANPUS', 'Disetujui WADAN'])->count(),
-            'ditolak' => Laporan::whereIn('status', ['Ditolak DANPUS', 'Ditolak WADAN'])->count(),
-            // Samain persis sama kondisi PermintaanLaporan::isTerlambat(),
-            // ditulis sebagai query (bukan ->get()->filter()) karena ini
-            // hitungan seluruh sistem, bisa banyak baris.
-            'terlambat' => PermintaanLaporan::whereNull('laporan_id')
-                ->whereNotIn('status', [PermintaanLaporan::STATUS_SELESAI, PermintaanLaporan::STATUS_PEMERIKSAAN, PermintaanLaporan::STATUS_DIBATALKAN])
-                ->where('deadline_at', '<', now())
-                ->count(),
-            'dibatalkan' => PermintaanLaporan::where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count(),
-        ];
-        $aktivitasTujuhHari = collect(range(6, 0))->map(function ($i) {
-            $tanggal = now()->subDays($i);
-            return ['label' => $tanggal->translatedFormat('d M'), 'jumlah' => ActivityLog::whereDate('created_at', $tanggal->toDateString())->count()];
-        })->values();
+        // 3 chart kecil Beranda (radar/donut/tren) -- diekstrak ke method
+        // private (bukan dihitung inline di sini) SUPAYA adminKpiRealtime()
+        // di bawah bisa manggil algoritma yang SAMA PERSIS buat refresh
+        // realtime-nya, gak ada 2 salinan logika yang gampang drift kalau
+        // salah satu diubah lupa yang satu lagi.
+        $distribusiPenggunaKategori = $this->distribusiPenggunaKategoriRadar($semuaSatuan);
+        $statusLaporanSistem = $this->statusLaporanSistem();
+        $trenAktivitas = $this->trenAktivitas();
         // Log aktivitas defaultnya cuma nampilin kemarin-hari ini (1 hari
         // terakhir) -- total baris di tabel activity_logs bakal terus
         // bertambah seiring waktu, jadi kalau ditarik semua sekaligus (atau
@@ -176,7 +150,7 @@ class DashboardController
         // sama seperti $stats['total_surat'] di bawah).
         $suratSemuaAdmin = LaporanSurat::get();
 
-        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','aktivitasTujuhHari','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan','logDari','logSampai','laporanRekapMentah','suratSemuaAdmin') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'resetDataDetails' => ResetDataLaporanController::ambilDetailPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah), 'total_surat' => LaporanSurat::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
+        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','trenAktivitas','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan','logDari','logSampai','laporanRekapMentah','suratSemuaAdmin') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'resetDataDetails' => ResetDataLaporanController::ambilDetailPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah), 'total_surat' => LaporanSurat::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
     }
 
     public function adminKpiRealtime(Request $request): \Illuminate\Http\JsonResponse
@@ -207,6 +181,19 @@ class DashboardController
             'total_surat' => $suratSemuaAdmin->count(),
             'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count(),
         ];
+        // 3 chart kecil Beranda (radar "Pengguna per Kategori Satuan", donut
+        // "Distribusi Status Laporan", "Tren Aktivitas") -- dulu cuma
+        // dirender sekali pas load awal (admin()), sekarang ikut di-refresh
+        // tiap poll juga lewat method private yang sama biar gak ada 2
+        // salinan logika (lihat komentar di distribusiPenggunaKategoriRadar/
+        // statusLaporanSistem/trenAktivitas).
+        $statusLaporanSistem = $this->statusLaporanSistem();
+        $adminStatusDist = [
+            ['label' => 'Disetujui',  'color' => '#22c55e', 'labelColor' => '#22c55e', 'count' => $statusLaporanSistem['disetujui']],
+            ['label' => 'Ditolak',    'color' => '#ef4444', 'labelColor' => '#ef4444', 'count' => $statusLaporanSistem['ditolak']],
+            ['label' => 'Terlambat',  'color' => '#ff6b6b', 'labelColor' => '#ff6b6b', 'count' => $statusLaporanSistem['terlambat']],
+            ['label' => 'Dibatalkan', 'color' => '#c1121f', 'labelColor' => '#e5484d', 'count' => $statusLaporanSistem['dibatalkan']],
+        ];
 
         return response()->json([
             'kpis_html' => view('siberad.dashboards.partials.admin-kpi-cards', [
@@ -223,6 +210,13 @@ class DashboardController
             'aktivitas_terbaru_html' => view('siberad.dashboards.partials.admin-aktivitas-terbaru-list', [
                 'logAktivitasTerbaru' => $logAktivitasTerbaru,
             ])->render(),
+            'radar_kategori' => $this->distribusiPenggunaKategoriRadar($semuaSatuan),
+            'status_laporan' => $statusLaporanSistem,
+            'status_donut_total' => array_sum($statusLaporanSistem),
+            'status_bd_html' => view('siberad.dashboards.partials.pimpinan-status-distribusi-list', [
+                'pimpStatusDist' => $adminStatusDist,
+            ])->render(),
+            'tren_aktivitas' => $this->trenAktivitas(),
             'server_time' => now()->toIso8601String(),
         ], 200, [
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
@@ -904,5 +898,84 @@ class DashboardController
             ->groupBy(fn (Laporan $l) => $l->permintaan_laporan_id ?? 'single-'.$l->id)
             ->filter(fn ($group) => $group->contains(fn (Laporan $l) => $l->semuaLampiran->isNotEmpty()))
             ->count();
+    }
+
+    /**
+     * Data radar "Pengguna per Kategori Satuan" Beranda Admin -- 5 sumbu,
+     * BUKAN 7 kategori asli Satuan::KATEGORI_* apa adanya. Direktorat (4
+     * Sdir) + Unsur Pembantu Pimpinan (Pok Analis) SENGAJA digabung jadi 1
+     * sumbu "Unsur Pembantu Pimpinan" (sama-sama "membantu Danpus", lihat
+     * komentar Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN), Pimpinan dilabeli
+     * "Unsur Pimpinan", Satlak dilabeli "Unsur Pelaksana" -- sesuai
+     * referensi gambar yang diminta user. Kotama (21 Sansidam) SENGAJA
+     * tidak ikut, referensinya cuma minta 5 sumbu ini. Dipakai admin() (render
+     * awal) & adminKpiRealtime() (poll) -- SATU sumber biar gak drift.
+     */
+    private function distribusiPenggunaKategoriRadar(Collection $semuaSatuan): Collection
+    {
+        $radarKategoriMap = [
+            Satuan::KATEGORI_ADMIN => 'Admin',
+            Satuan::KATEGORI_PIMPINAN => 'Unsur Pimpinan',
+            Satuan::KATEGORI_DIREKTORAT => 'Unsur Pembantu Pimpinan',
+            Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
+            Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+            Satuan::KATEGORI_SATLAK => 'Unsur Pelaksana',
+        ];
+        $radarUrutan = ['Admin', 'Unsur Pimpinan', 'Unsur Pembantu Pimpinan', 'Unsur Pelayanan', 'Unsur Pelaksana'];
+
+        return $semuaSatuan->filter(fn ($s) => isset($radarKategoriMap[$s->kategori]))
+            ->groupBy(fn ($s) => $radarKategoriMap[$s->kategori])
+            ->map(fn ($group, $label) => ['kategori' => $label, 'jumlah' => $group->sum('users_count')])
+            ->sortBy(fn ($row) => array_search($row['kategori'], $radarUrutan))
+            ->values();
+    }
+
+    /**
+     * Data donut "Distribusi Status Laporan" Beranda Admin (disetujui/
+     * ditolak/terlambat/dibatalkan, seluruh sistem). Dipakai admin() (render
+     * awal) & adminKpiRealtime() (poll) -- SATU sumber biar gak drift.
+     */
+    private function statusLaporanSistem(): array
+    {
+        return [
+            // Laporan bisa diputuskan lewat 2 jalur (Danpus ATAU Wadan, lihat
+            // LaporanController::updateStatus) -- status akhirnya "Disetujui
+            // DANPUS"/"Disetujui WADAN" (begitu juga Ditolak). Dulu cuma cek
+            // varian DANPUS doang, jadi laporan yang diputuskan Wadan gak
+            // ikut kehitung di sini walau udah kehitung di Distribusi Status
+            // Laporan versi Pimpinan (yang pakai str_contains 'setuj'/'tolak',
+            // otomatis nangkep kedua varian).
+            'disetujui' => Laporan::whereIn('status', ['Disetujui DANPUS', 'Disetujui WADAN'])->count(),
+            'ditolak' => Laporan::whereIn('status', ['Ditolak DANPUS', 'Ditolak WADAN'])->count(),
+            // Samain persis sama kondisi PermintaanLaporan::isTerlambat(),
+            // ditulis sebagai query (bukan ->get()->filter()) karena ini
+            // hitungan seluruh sistem, bisa banyak baris.
+            'terlambat' => PermintaanLaporan::whereNull('laporan_id')
+                ->whereNotIn('status', [PermintaanLaporan::STATUS_SELESAI, PermintaanLaporan::STATUS_PEMERIKSAAN, PermintaanLaporan::STATUS_DIBATALKAN])
+                ->where('deadline_at', '<', now())
+                ->count(),
+            'dibatalkan' => PermintaanLaporan::where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count(),
+        ];
+    }
+
+    /**
+     * Data chart "Tren Aktivitas" Beranda Admin (dulu "Aktivitas 7 Hari
+     * Terakhir", sekarang ada toggle 7/30 hari niru "Tren Aktivitas"
+     * Pimpinan -- array 2 rentang dikirim sekaligus, toggle tombol di
+     * frontend cuma ganti chart.data lalu chart.update(), TANPA request
+     * ulang ke server). Dipakai admin() (render awal) & adminKpiRealtime()
+     * (poll) -- SATU sumber biar gak drift.
+     */
+    private function trenAktivitas(): array
+    {
+        $build = function (int $n) {
+            return collect(range($n - 1, 0))->map(function ($i) {
+                $tanggal = now()->subDays($i);
+
+                return ['label' => $tanggal->translatedFormat('d M'), 'jumlah' => ActivityLog::whereDate('created_at', $tanggal->toDateString())->count()];
+            })->values();
+        };
+
+        return ['7' => $build(7), '30' => $build(30)];
     }
 }
