@@ -14,31 +14,29 @@ use Illuminate\Support\Facades\Notification as NotificationFacade;
 class NotifikasiSettingController extends Controller
 {
     /**
-     * Nyalakan/matikan fitur push notification utk SELURUH pengguna
-     * sekaligus (menu Admin -> Setelan -> Notifikasi). Tidak menyentuh
-     * notifikasi lonceng in-app (channel database) -- itu tetap jalan
-     * seperti biasa, yang dimatikan cuma sisi push (notifikasi OS di
-     * luar sistem).
+     * Fitur push notification WAJIB selalu aktif untuk seluruh pengguna --
+     * dianggap krusial (mis. notifikasi kendala/laporan darurat) sehingga
+     * tidak boleh dimatikan siapapun, termasuk Admin. Endpoint ini sengaja
+     * DIPERTAHANKAN (bukan dihapus) supaya request lama/eksternal ke rute
+     * ini tidak 404, tapi apapun yang dikirim akan selalu dipaksa menjadi
+     * aktif -- efeknya toggle "mati" sudah tidak punya jalan lagi, baik
+     * dari UI (lihat admin.blade.php, switch sekarang dikunci/disabled)
+     * maupun dari request manual ke rute ini.
      */
     public function updateToggle(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'aktif' => ['required', 'boolean'],
+        $request->validate([
+            'aktif' => ['sometimes', 'boolean'],
         ]);
 
         $pengaturan = Pengaturan::current();
-        $pengaturan->update(['notifikasi_push_aktif' => $validated['aktif']]);
-
-        ActivityLog::catat(
-            $validated['aktif'] ? 'setelan.notifikasi.aktifkan' : 'setelan.notifikasi.matikan',
-            $validated['aktif']
-                ? 'Mengaktifkan fitur push notification untuk seluruh pengguna.'
-                : 'Mematikan fitur push notification untuk seluruh pengguna.'
-        );
+        if (! $pengaturan->notifikasi_push_aktif) {
+            $pengaturan->update(['notifikasi_push_aktif' => true]);
+        }
 
         return back()->with(
             'status',
-            $validated['aktif'] ? 'Fitur notifikasi push diaktifkan.' : 'Fitur notifikasi push dimatikan.'
+            'Fitur push notifikasi bersifat wajib aktif dan tidak bisa dimatikan.'
         );
     }
 

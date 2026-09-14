@@ -12,7 +12,6 @@ use App\Models\LaporanSurat;
 use App\Models\Pengaturan;
 use App\Models\PermintaanLaporan;
 use App\Models\PermintaanResetPassword;
-use App\Models\PushSubscription;
 use App\Models\Satuan;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -106,12 +105,6 @@ class DashboardController
             ->latest('created_at')
             ->get();
         $daftarBackup = app(BackupController::class)->index();
-        // Daftar pengguna yang sudah mengizinkan push notification --
-        // ditampilkan di menu Setelan -> Notifikasi supaya Admin bisa
-        // lihat cakupannya sebelum kirim pengumuman broadcast.
-        $daftarPushSubscription = PushSubscription::with('user.satuan')
-            ->latest('created_at')
-            ->get();
         // Hanya sesi yang benar-benar terautentikasi yang ditampilkan.
         // Baris guest dengan user_id NULL tidak termasuk sesi login aktif.
         $sesiAktif = DB::table('sessions')
@@ -173,7 +166,7 @@ class DashboardController
         // sama seperti $stats['total_surat'] di bawah).
         $suratSemuaAdmin = LaporanSurat::get();
 
-        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','aktivitasTujuhHari','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan','logDari','logSampai','daftarPushSubscription','laporanRekapMentah','suratSemuaAdmin') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'resetDataDetails' => ResetDataLaporanController::ambilDetailPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah), 'total_surat' => LaporanSurat::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
+        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','aktivitasTujuhHari','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan','logDari','logSampai','laporanRekapMentah','suratSemuaAdmin') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'resetDataDetails' => ResetDataLaporanController::ambilDetailPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah), 'total_surat' => LaporanSurat::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
     }
 
     public function adminKpiRealtime(Request $request): \Illuminate\Http\JsonResponse
