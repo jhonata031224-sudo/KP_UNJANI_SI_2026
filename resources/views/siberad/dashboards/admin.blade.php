@@ -21,7 +21,10 @@
     --surface:rgba(255,255,255,.9);--hover-tint:rgba(15,23,42,.035);
   }
   .chart-box{margin-bottom:26px;}
-  .chart-box-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  {{-- 2 kolom (bukan 3 lagi) -- "Pengguna per Kategori Satuan" dipisah user
+       jadi baris sendiri di bawah, niru posisi Pimpinan (donut+tren 2 kolom
+       sejajar, chart lain-lain baris terpisah). --}}
+  .chart-box-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
   .chart-mini{background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:12px;padding:16px;transition:border-color .15s ease,box-shadow .15s ease,background-color .15s ease;}
   .chart-mini:hover{border-color:var(--border-strong);box-shadow:0 6px 16px rgba(0,0,0,.12);}
   .chart-mini-head{margin-bottom:10px;}
@@ -1019,39 +1022,78 @@
 
         <div id="adminKpisWrap">@include('siberad.dashboards.partials.admin-kpi-cards', ['stats' => $stats, 'semuaPengguna' => $semuaPengguna, 'semuaSatuan' => $semuaSatuan, 'laporanRekapMentah' => $laporanRekapMentah, 'suratSemuaAdmin' => $suratSemuaAdmin, 'permintaanResetPassword' => $permintaanResetPassword])</div>
 
-        {{-- Panel pembungkus "Statistik Sistem" (1 border besar ngerangkul 3
-             chart-mini) SENGAJA dihapus atas permintaan user -- dia mau 3
-             kartu chart ini berdiri sendiri-sendiri (gak "nyatu"), niru gaya
-             Pimpinan/Satuan yang tiap chart udah punya .chart-card sendiri
-             tanpa panel pembungkus tambahan. .chart-mini masing-masing sudah
-             punya border/background sendiri, jadi cukup dibiarkan jadi child
-             langsung -- class "chart-box" dipindah ke sini (bukan dihapus)
-             biar margin-bottom:26px bawaannya (lihat .chart-box{margin-bottom:
-             26px} di atas) tetap kepakai walau panel pembungkusnya hilang. --}}
+        {{-- Panel pembungkus "Statistik Sistem" (1 border besar ngerangkul
+             ketiga chart) SENGAJA dihapus atas permintaan user -- dia mau
+             chart-chart ini berdiri sendiri-sendiri (gak "nyatu") & posisinya
+             niru Pimpinan: "Distribusi Status Laporan" + "Aktivitas 7 Hari
+             Terakhir" duduk sejajar 2 kolom (lihat .chart-box-grid di bawah),
+             "Pengguna per Kategori Satuan" baris sendiri di atasnya. Class
+             "chart-box" (margin-bottom:26px) dipindah ke tiap wrapper baris
+             (bukan dihapus) biar spacing antar-baris tetap kepakai walau
+             panel pembungkus besarnya hilang. --}}
+        @php
+          // Data rincian donut "Distribusi Status Laporan" -- SAMA PERSIS
+          // bentuknya kayak $pimpStatusDist punya Pimpinan (partials/
+          // pimpinan-status-distribusi-list.blade.php, reuse langsung di
+          // bawah), sumber angkanya dari $statusLaporanSistem yang udah ada.
+          $adminStatusDist = [
+            ['label' => 'Disetujui',  'color' => '#22c55e', 'labelColor' => '#22c55e', 'count' => $statusLaporanSistem['disetujui']],
+            ['label' => 'Ditolak',    'color' => '#ef4444', 'labelColor' => '#ef4444', 'count' => $statusLaporanSistem['ditolak']],
+            ['label' => 'Terlambat',  'color' => '#ff6b6b', 'labelColor' => '#ff6b6b', 'count' => $statusLaporanSistem['terlambat']],
+            ['label' => 'Dibatalkan', 'color' => '#c1121f', 'labelColor' => '#e5484d', 'count' => $statusLaporanSistem['dibatalkan']],
+          ];
+          $adminTotalStatus = collect($adminStatusDist)->sum('count');
+        @endphp
+        {{-- "Pengguna per Kategori Satuan" SENGAJA dipisah jadi baris sendiri
+             (bukan ikut grid 2 kolom di bawah) -- niru posisi Pimpinan, donut
+             "Distribusi Status Laporan" + "Aktivitas 7 Hari Terakhir" duduk
+             sejajar 2 kolom, chart lain-lain baris terpisah sendiri. --}}
+        <div class="chart-mini chart-mini-link chart-box" data-tab-link="pengguna" role="button" tabindex="0" title="Lihat Daftar Pengguna">
+          <div class="chart-mini-head">
+            <div class="chart-mini-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <div><h4>Pengguna per Kategori Satuan</h4><p>Sebaran akun berdasarkan kategori.</p></div>
+          </div>
+          <div class="chart-wrap"><canvas id="chartKategoriSatuan"></canvas></div>
+          <div class="chart-legend" id="chartKategoriSatuanLegend"></div>
+        </div>
+
         <div class="chart-box-grid chart-box">
 
-          <div class="chart-mini chart-mini-link" data-tab-link="pengguna" role="button" tabindex="0" title="Lihat Daftar Pengguna">
-            <div class="chart-mini-head">
-              <div class="chart-mini-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-              <div><h4>Pengguna per Kategori Satuan</h4><p>Sebaran akun berdasarkan kategori.</p></div>
+          {{-- "Distribusi Status Laporan" -- MIRROR PERSIS style+fungsi donut
+               "Distribusi Status Laporan" Pimpinan (laporan-pimpinan.blade.php,
+               .status-dist-card/.status-donut-wrap/.status-donut-center dkk):
+               donut 70% cutout + label % di luar tiap arc (bukan cuma legend
+               titik kayak sebelumnya) + teks total di tengah + rincian
+               dot/nama/jumlah/bar/persen di bawahnya. Rincian-nya REUSE
+               langsung partial pimpinan-status-distribusi-list.blade.php
+               (markup-nya generik, sudah dipakai lintas partial lain juga --
+               cuma butuh variabel $pimpStatusDist, diisi $adminStatusDist
+               punya Admin). --}}
+          <div class="chart-card compact chart-mini-link status-dist-card" data-tab-link="rekap-laporan" role="button" tabindex="0" title="Lihat Ringkasan Data">
+            <div class="pimp-card-head">
+              <div class="pimp-card-head-main">
+                <span class="pimp-card-ico" style="background:color-mix(in srgb,#22c55e 15%,transparent);color:#22c55e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"></path></svg></span>
+                <div><h3>Distribusi Status Laporan</h3><p>Proporsi status seluruh laporan di sistem.</p></div>
+              </div>
             </div>
-            <div class="chart-wrap"><canvas id="chartKategoriSatuan"></canvas></div>
-            <div class="chart-legend" id="chartKategoriSatuanLegend"></div>
+            <div class="status-donut-wrap"><canvas id="chartStatusLaporan"></canvas><div class="status-donut-center"><span>Total Laporan</span><strong id="adminDonutTotal">{{ $adminTotalStatus }}</strong></div></div>
+            @include('siberad.dashboards.partials.pimpinan-status-distribusi-list', ['pimpStatusDist' => $adminStatusDist])
           </div>
 
-          <div class="chart-mini chart-mini-link" data-tab-link="rekap-laporan" role="button" tabindex="0" title="Lihat Ringkasan Data">
-            <div class="chart-mini-head">
-              <div class="chart-mini-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-              <div><h4>Distribusi Status Laporan</h4><p>Proporsi status seluruh laporan di sistem.</p></div>
-            </div>
-            <div class="chart-wrap"><canvas id="chartStatusLaporan"></canvas></div>
-            <div class="chart-legend" id="chartStatusLaporanLegend"></div>
-          </div>
-
-          <div class="chart-mini chart-mini-link" data-tab-link="log-aktivitas" role="button" tabindex="0" title="Lihat Riwayat Aktivitas">
-            <div class="chart-mini-head">
-              <div class="chart-mini-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-              <div><h4>Aktivitas 7 Hari Terakhir</h4><p>Jumlah aksi tercatat per hari.</p></div>
+          {{-- "Aktivitas 7 Hari Terakhir" -- MIRROR style kartu "Tren Aktivitas"
+               Pimpinan (chart-card+pimp-card-head, tooltip ikut tema), TAPI
+               TANPA dataset batang (Laporan/Surat) punya Pimpinan -- data
+               Admin di sini cuma 1 seri (jumlah ActivityLog per hari), jadi
+               dari awal udah cocok sebagai garis polos + gradient area
+               doang, gak ada yang perlu "dihapus battangnya" di data-nya
+               sendiri, cuma pembungkusnya yang disamakan ke gaya kartu
+               Pimpinan (dulu pakai .chart-mini-head yang lebih kecil/padat). --}}
+          <div class="chart-card pimp-tren-card chart-mini-link" data-tab-link="log-aktivitas" role="button" tabindex="0" title="Lihat Riwayat Aktivitas">
+            <div class="pimp-card-head">
+              <div class="pimp-card-head-main">
+                <span class="pimp-card-ico" style="background:color-mix(in srgb,#6366f1 15%,transparent);color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+                <div><h3>Aktivitas 7 Hari Terakhir</h3><p>Jumlah aksi tercatat per hari.</p></div>
+              </div>
             </div>
             <div class="chart-wrap"><canvas id="chartAktivitasMingguan"></canvas></div>
           </div>
@@ -1140,6 +1182,41 @@
           .chart-mini-icon.amber{background:var(--amber-dim);color:var(--amber);}
           .chart-mini-icon.green{background:var(--green-dim);color:var(--green-bright);}
           .chart-mini-icon.blue{background:rgba(99,102,241,.14);color:#6366f1;}
+
+          {{-- Kartu "Distribusi Status Laporan" (donut) & "Aktivitas 7 Hari
+               Terakhir" (chart-card, bukan chart-mini lagi) -- MIRROR
+               style+fungsi kartu "Distribusi Status Laporan"/"Tren Aktivitas"
+               Pimpinan (laporan-pimpinan.blade.php, .status-donut-wrap/
+               .status-bd* dkk). Sama alasan kayak blok KPI/Terbaru di atas:
+               CSS disalin+dipetakan ke token dashboard Admin sendiri
+               (var(--panel)/var(--border-soft)/var(--text)/var(--text-muted)/
+               var(--panel-alt)), BUKAN var(--p-*). .chart-wrap di dalam
+               .chart-card SENGAJA dikasih tinggi sendiri (230px, beda dari
+               178px punya .chart-mini .chart-wrap) -- kartu chart-card lebih
+               besar, canvas-nya juga butuh lebih tinggi biar proporsinya
+               enak dilihat. --}}
+          .chart-card .chart-wrap{height:230px;}
+          {{-- .pimp-tren-card bikin kartu "Aktivitas 7 Hari Terakhir" ikut
+               meregang setinggi kartu donut di sebelahnya (sibling di grid
+               2 kolom yang sama) -- MIRROR PERSIS .pimp-tren-card Pimpinan,
+               cuma target child-nya .chart-wrap (bukan .chart-box, lihat
+               komentar penamaan di atas). --}}
+          .pimp-tren-card{display:flex;flex-direction:column;height:100%;}
+          .pimp-tren-card .chart-wrap{flex:1;min-height:0;height:auto;}
+          .status-donut-wrap{position:relative;width:100%;height:230px;margin:6px 0 2px;}
+          .status-donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;pointer-events:none;}
+          .status-donut-center span{font-size:11px;color:var(--text-muted);}
+          .status-donut-center strong{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--text);line-height:1;}
+          .status-bd{display:flex;flex-direction:column;gap:12px;margin-top:14px;padding-top:16px;border-top:1px solid var(--border-soft);}
+          .status-bd-row{display:grid;grid-template-columns:10px 1fr auto minmax(90px,1.6fr) auto;align-items:center;gap:10px;}
+          .status-bd-row.is-zero{opacity:.5;}
+          .status-bd-dot{width:10px;height:10px;border-radius:50%;}
+          .status-bd-name{font-size:12.5px;font-weight:700;color:var(--text);white-space:nowrap;}
+          .status-bd-count{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--text);text-align:right;}
+          .status-bd-pct{font-family:var(--mono);font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap;text-align:center;}
+          .status-bd-bar{position:relative;height:9px;border-radius:999px;background:var(--panel-alt);border:1px solid var(--border-soft);overflow:hidden;}
+          .status-bd-bar-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;transition:width .9s cubic-bezier(.22,1,.36,1);}
+          @media(prefers-reduced-motion:reduce){.status-bd-bar-fill{transition:none;}}
 
           {{-- Kartu "Permintaan Ganti Password" & "Aktivitas Terbaru" -- MIRROR
                style+fungsi kartu "Surat Terbaru"/"Kendala Kasansi Terbaru"
@@ -6606,6 +6683,11 @@
     // rgba(255,255,255,.06) hardcode yang nyaris tak kelihatan di tema
     // terang (background putih vs garis putih transparan).
     var cGrid = root.getPropertyValue('--border').trim() || 'rgba(148,163,184,.35)';
+    // Dipakai buat tooltip Chart.js ikut tema (bukan kotak gelap bawaan
+    // Chart.js yang selalu sama apapun temanya) -- pola sama persis kayak
+    // donutRoot/trenRoot di makeStatusDonut/makeTrenLaporanChart Pimpinan.
+    var cSurface = root.getPropertyValue('--panel').trim() || '#fff';
+    var cText = root.getPropertyValue('--text').trim() || '#17212b';
 
     Chart.defaults.color = cMuted;
     Chart.defaults.font.family = "'JetBrains Mono', monospace";
@@ -6656,16 +6738,119 @@
       [cGold, '#6366f1', '#0ea5e9', '#a855f7', '#22c55e', '#f59e0b', '#ec4899']
     );
 
-    // ===== Grafik 2: Distribusi Status Laporan (data asli, warna tetap
-    // hijau/merah/oren — bukan var(--green-bright) yang di-repurpose jadi
-    // gold di dark mode) =====
+    // ===== Grafik 2: Distribusi Status Laporan -- MIRROR PERSIS donut
+    // "Distribusi Status Laporan" Pimpinan (makeStatusDonut() di
+    // laporan-pimpinan.blade.php): 70% cutout, label % di luar tiap arc
+    // (plugin arcPct) yang "tumbuh" bareng animasi awal, tooltip ikut tema
+    // (bukan renderDoughnut() generik lagi kayak Grafik 1/4 -- itu dulu
+    // dipakai buat semua doughnut termasuk ini, tapi versi ini sekarang
+    // butuh detail lebih: teks tengah, arc %, growth-guard biar hover gak
+    // bikin animasi %-nya nyangkut, lihat komentar arcPct Pimpinan). Warna
+    // data TETAP hijau/merah/oren literal (bukan var(--green-bright) yang
+    // di-repurpose jadi gold di dark mode). =====
     var statusLaporan = @json($statusLaporanSistem);
-    renderDoughnut(
-      'chartStatusLaporan',
-      ['Disetujui', 'Ditolak', 'Terlambat', 'Dibatalkan'],
-      [statusLaporan.disetujui, statusLaporan.ditolak, statusLaporan.terlambat, statusLaporan.dibatalkan],
-      ['#22c55e', '#ef4444', '#ff6b6b', '#c1121f']
-    );
+    function makeAdminStatusDonut() {
+      var el = document.getElementById('chartStatusLaporan');
+      if (!el || typeof Chart === 'undefined') return;
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var defs = [
+        { label: 'Disetujui', color: '#22c55e', count: statusLaporan.disetujui },
+        { label: 'Ditolak', color: '#ef4444', count: statusLaporan.ditolak },
+        { label: 'Terlambat', color: '#ff6b6b', count: statusLaporan.terlambat },
+        { label: 'Dibatalkan', color: '#c1121f', count: statusLaporan.dibatalkan }
+      ];
+      var total = defs.reduce(function (s, d) { return s + d.count; }, 0);
+      var empty = total <= 0;
+      var arcPct = {
+        id: 'sbArcPctAdmin',
+        afterDatasetsDraw: function (chart) {
+          if (empty) return;
+          var t = chart.$sbT == null ? 1 : Math.max(0, Math.min(1, chart.$sbT));
+          var ctx = chart.ctx, meta = chart.getDatasetMeta(0);
+          ctx.save();
+          ctx.font = '800 12px ' + (getComputedStyle(el).fontFamily || 'sans-serif');
+          ctx.textBaseline = 'middle';
+          meta.data.forEach(function (arc, i) {
+            if (!defs[i].count) return;
+            var pct = Math.round(defs[i].count / total * 100);
+            if (pct < 4) return;
+            var shown = t >= 0.985 ? pct : Math.round(pct * t);
+            if (shown < 1) return;
+            var ang = (arc.startAngle + arc.endAngle) / 2;
+            var rr = arc.outerRadius + 13;
+            var x = arc.x + Math.cos(ang) * rr, y = arc.y + Math.sin(ang) * rr;
+            ctx.fillStyle = defs[i].color;
+            ctx.textAlign = Math.cos(ang) > -0.1 ? 'left' : 'right';
+            ctx.fillText(shown + '%', x, y);
+          });
+          ctx.restore();
+        }
+      };
+      var chart = new Chart(el, {
+        type: 'doughnut',
+        data: {
+          labels: defs.map(function (d) { return d.label; }),
+          datasets: [{
+            data: empty ? [1] : defs.map(function (d) { return d.count; }),
+            backgroundColor: empty ? ['rgba(127,127,127,.16)'] : defs.map(function (d) { return d.color; }),
+            borderColor: 'transparent', borderWidth: 0,
+            borderRadius: empty ? 0 : 7, spacing: empty ? 0 : 3, hoverOffset: empty ? 0 : 5
+          }]
+        },
+        options: {
+          cutout: '70%', responsive: true, maintainAspectRatio: false, layout: { padding: 24 },
+          // $sbGrown SENGAJA mengunci animasi "tumbuh" cuma sekali -- tanpa
+          // guard ini, onProgress/onComplete kepanggil ulang tiap arc
+          // "membesar" pas di-hover (hoverOffset), bukan cuma pas load awal.
+          animation: reduce ? false : {
+            duration: 1100, easing: 'easeOutCubic',
+            onProgress: function (a) { if (a && a.chart && !a.chart.$sbGrown) a.chart.$sbT = a.numSteps ? a.currentStep / a.numSteps : 1; },
+            onComplete: function (a) { if (a && a.chart) { a.chart.$sbT = 1; a.chart.$sbGrown = true; } }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              enabled: !empty, backgroundColor: cSurface, titleColor: cText, bodyColor: cText,
+              borderColor: cGrid, borderWidth: 1, cornerRadius: 10, padding: 10, usePointStyle: true,
+              titleFont: { weight: '700' }, bodyFont: { weight: '600' },
+              callbacks: { label: function (c) { return ' ' + c.label + ': ' + c.raw + ' (' + Math.round(c.raw / total * 100) + '%)'; } }
+            }
+          }
+        },
+        plugins: [arcPct]
+      });
+      chart.$sbT = reduce ? 1 : 0;
+      chart.$sbGrown = !!reduce;
+    }
+    makeAdminStatusDonut();
+    // "Mengisi perlahan" -- count-up angka tengah/rincian + progress bar
+    // rincian (width 0->target), MIRROR PERSIS animateStatusDistrib()
+    // Pimpinan. Discope ke .status-dist-card biar gak kesenggol elemen
+    // ".status-bd-count/.status-bd-pct" lain kalau suatu saat ada lagi.
+    (function animateAdminStatusDistrib() {
+      var card = document.querySelector('.status-dist-card');
+      if (!card) return;
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var bars = card.querySelectorAll('.status-bd-bar-fill');
+      var barTargets = [];
+      bars.forEach(function (b) { barTargets.push(b.style.width || '0%'); b.style.width = '0%'; });
+      var nums = [];
+      var center = card.querySelector('.status-donut-center strong');
+      if (center) nums.push({ el: center, to: parseInt(center.textContent, 10) || 0, suf: '' });
+      card.querySelectorAll('.status-bd-count').forEach(function (el) { nums.push({ el: el, to: parseInt(el.textContent, 10) || 0, suf: '' }); });
+      card.querySelectorAll('.status-bd-pct').forEach(function (el) { nums.push({ el: el, to: parseInt(el.textContent, 10) || 0, suf: '%' }); });
+      nums.forEach(function (n) { n.el.textContent = '0' + n.suf; });
+      requestAnimationFrame(function () {
+        bars.forEach(function (b, i) { setTimeout(function () { b.style.width = barTargets[i]; }, 120 + i * 90); });
+      });
+      var dur = 1000, t0 = performance.now();
+      (function tick(now) {
+        var p = Math.min(1, ((now || performance.now()) - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+        nums.forEach(function (n) { n.el.textContent = Math.round(n.to * e) + n.suf; });
+        if (p < 1) requestAnimationFrame(tick);
+        else nums.forEach(function (n) { n.el.textContent = n.to + n.suf; });
+      })();
+    })();
 
     // ===== Grafik 3: Aktivitas 7 Hari Terakhir =====
     var aktivitasMingguan = @json($aktivitasTujuhHari);
@@ -6695,7 +6880,16 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: {
+            legend: { display: false },
+            // Tooltip ikut tema (bukan kotak gelap bawaan Chart.js) -- MIRROR
+            // style tooltip "Tren Aktivitas" Pimpinan (makeTrenLaporanChart).
+            tooltip: {
+              backgroundColor: cSurface, titleColor: cText, bodyColor: cText,
+              borderColor: cGrid, borderWidth: 1, cornerRadius: 10, padding: 10, boxPadding: 5,
+              usePointStyle: true, titleFont: { weight: '700' }, bodyFont: { weight: '600' }
+            }
+          },
           scales: {
             x: { grid: { display: false } },
             y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: cGrid } }

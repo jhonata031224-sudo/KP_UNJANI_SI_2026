@@ -68,8 +68,15 @@ class DashboardController
             ->map(fn ($group, $kategori) => ['kategori' => $labelKategori[$kategori] ?? ucfirst($kategori), 'jumlah' => $group->sum('users_count')])
             ->values();
         $statusLaporanSistem = [
-            'disetujui' => Laporan::where('status', 'Disetujui DANPUS')->count(),
-            'ditolak' => Laporan::where('status', 'Ditolak DANPUS')->count(),
+            // Laporan bisa diputuskan lewat 2 jalur (Danpus ATAU Wadan, lihat
+            // LaporanController::updateStatus) -- status akhirnya "Disetujui
+            // DANPUS"/"Disetujui WADAN" (begitu juga Ditolak). Dulu cuma cek
+            // varian DANPUS doang, jadi laporan yang diputuskan Wadan gak
+            // ikut kehitung di sini walau udah kehitung di Distribusi Status
+            // Laporan versi Pimpinan (yang pakai str_contains 'setuj'/'tolak',
+            // otomatis nangkep kedua varian).
+            'disetujui' => Laporan::whereIn('status', ['Disetujui DANPUS', 'Disetujui WADAN'])->count(),
+            'ditolak' => Laporan::whereIn('status', ['Ditolak DANPUS', 'Ditolak WADAN'])->count(),
             // Samain persis sama kondisi PermintaanLaporan::isTerlambat(),
             // ditulis sebagai query (bukan ->get()->filter()) karena ini
             // hitungan seluruh sistem, bisa banyak baris.
@@ -146,8 +153,11 @@ class DashboardController
             ->with('lampirans')
             ->get();
         $rekapLaporanSatuan = Satuan::whereIn('kode', $kodeSatuanPengirim)->withCount([
-            'laporanTerkirim as laporan_disetujui' => fn ($q) => $q->where('status', 'Disetujui DANPUS'),
-            'laporanTerkirim as laporan_ditolak' => fn ($q) => $q->where('status', 'Ditolak DANPUS'),
+            // whereIn (bukan cuma varian DANPUS) -- sama alasannya kayak
+            // $statusLaporanSistem di atas, laporan yang diputuskan lewat
+            // jalur Wadan jangan sampai gak kehitung di sini.
+            'laporanTerkirim as laporan_disetujui' => fn ($q) => $q->whereIn('status', ['Disetujui DANPUS', 'Disetujui WADAN']),
+            'laporanTerkirim as laporan_ditolak' => fn ($q) => $q->whereIn('status', ['Ditolak DANPUS', 'Ditolak WADAN']),
             // Samain persis sama kondisi PermintaanLaporan::isTerlambat().
             'permintaanLaporanMasuk as laporan_terlambat' => fn ($q) => $q->whereNull('laporan_id')
                 ->whereNotIn('status', [PermintaanLaporan::STATUS_SELESAI, PermintaanLaporan::STATUS_PEMERIKSAAN, PermintaanLaporan::STATUS_DIBATALKAN])
