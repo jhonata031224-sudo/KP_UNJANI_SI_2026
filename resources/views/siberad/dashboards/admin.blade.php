@@ -7,6 +7,15 @@
 <title>Admin — {{ $pengaturan?->namaSistem() ?? 'SIBERAD' }}</title>
 <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-pussiberad.jpg') }}">
 @include('siberad.dashboards.partials.dash-styles')
+{{-- Kartu "Data Pelaporan" (Arsip Data) niru persis gaya kartu Permintaan
+     Laporan Pimpinan/Satuan (.deadline-sender-item/.dcard-*) -- partial ini
+     MURNI CSS (dipakai bareng laporan-pimpinan.blade.php & laporan-role.blade.php,
+     tanpa JS di dalamnya), aman di-include di sini juga. Variabel --p-* yang
+     dipakainya sudah dibungkus fallback ke token dasar (var(--panel-alt) dkk)
+     yang memang sudah ada di Admin, KECUALI beberapa warna solid yang sudah
+     hardcode hex/rgba -- jadi tetap tampil benar tanpa perlu definisi --p-*
+     tambahan di sini. --}}
+@include('siberad.dashboards.partials.permintaan-laporan-deadline-styles')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   /* Samakan palet mode terang dengan dashboard Pimpinan (abu-abu netral/putih), bukan cream bawaan. */
@@ -257,6 +266,16 @@
   .dl-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;}
   .dl-foot p{font-size:11.5px;color:var(--text-dim);}
   @media(max-width:640px){.dl-section-head{flex-direction:column;}.dl-download{align-self:stretch;}.dl-download-btn{width:100%;justify-content:center;}.dl-search-row{flex-direction:column;align-items:stretch;}.dl-search-count{margin-left:0;}.dl-foot{flex-direction:column;align-items:stretch;text-align:center;}}
+
+  /* Kartu "Data Pelaporan" -- niru .deadline-sender-item/.dcard-* punya
+     Pimpinan/Satuan (permintaan-laporan-deadline-styles.blade.php di atas),
+     tapi READ-ONLY (arsip/audit Admin, bukan antrian kerja) -- tanpa pin,
+     menu titik-3, atau tombol Lihat Detail/Lihat Progres yang butuh
+     modal+JS punya dashboard Pimpinan/Satuan yang tidak dimuat di sini. */
+  .dl-satuan-pill{display:inline-flex;align-items:center;border-radius:8px;padding:4px 9px;font-size:10px;font-weight:800;letter-spacing:.03em;color:var(--gold-bright);background:var(--gold-dim);border:1px solid var(--border);white-space:nowrap;}
+  .dl-arsip-pill{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:10px;font-weight:800;border:1px solid transparent;white-space:nowrap;}
+  .dl-arsip-pill.archived{color:var(--success-bright);background:var(--success-dim);border-color:rgba(63,194,125,.28);}
+  .dl-arsip-pill.active{color:var(--text-dim);background:var(--panel-alt);border-color:var(--border-soft);}
 </style>
 </head>
 <body>
@@ -3565,35 +3584,82 @@
               <span class="dl-search-count" data-dl-count="tblDlPelaporan"></span>
             </div>
 
-            <div class="tbl-wrap tbl-scroll" style="max-height:420px;">
-              <table class="dtbl" id="tblDlPelaporan">
-                <thead><tr><th>No</th><th>Perihal</th><th>Tujuan Satuan</th><th>Status</th><th>Arsip</th><th>Dibuat</th></tr></thead>
-                <tbody>
-                  @forelse($semuaPelaporan as $i => $pl)
-                  @php
-                    $kategoriLabelDlPelaporan = match ($pl->tujuanSatuan->kategori ?? null) {
-                      \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
-                      \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
-                      \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
-                      \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
-                      \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
-                      \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
-                      default => 'Satlak',
-                    };
-                  @endphp
-                  <tr data-filter-value="{{ $kategoriLabelDlPelaporan }}" data-search-value="{{ strtolower($pl->perihal.' '.($pl->tujuanSatuan->nama ?? '').' '.$pl->statusTampilan()) }}">
-                    <td>{{ $i + 1 }}</td>
-                    <td><strong>{{ $pl->perihal }}</strong></td>
-                    <td>{{ $pl->tujuanSatuan->nama_keterangan ?? '-' }}</td>
-                    <td><span class="badge">{{ $pl->statusTampilan() }}</span></td>
-                    <td><span class="badge">{{ $pl->archived_at ? 'Sudah Diarsipkan' : 'Belum Diarsipkan' }}</span></td>
-                    <td style="white-space:nowrap;" data-tanggal="{{ $pl->created_at?->format('Y-m-d') }}">{{ $pl->created_at?->format('d/m/Y H:i') }}</td>
-                  </tr>
-                  @empty
-                  <tr><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M12 11h4"></path><path d="M12 16h4"></path><path d="M8 11h.01"></path><path d="M8 16h.01"></path></svg><div class="empty-state-title">Belum ada permintaan laporan</div></div></td></tr>
-                  @endforelse
-                </tbody>
-              </table>
+            <div class="tbl-wrap tbl-scroll" style="max-height:640px;">
+              <div class="deadline-sender-list" id="tblDlPelaporan">
+                @forelse($semuaPelaporan as $pl)
+                @php
+                  $kategoriLabelDlPelaporan = match ($pl->tujuanSatuan->kategori ?? null) {
+                    \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
+                    \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
+                    \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+                    \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
+                    \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+                    \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
+                    default => 'Satlak',
+                  };
+                  // Status & warna kartu niru PERSIS logika
+                  // permintaan-laporan-pimpinan-card.blade.php (BUKAN
+                  // $pl->statusTampilan() yang cuma 7 label datar) -- biar
+                  // kartu Arsip Data Admin ini konsisten visual DAN maknanya
+                  // dengan kartu asli yang dilihat Pimpinan, termasuk
+                  // membedakan Selesai->Disetujui vs Ditolak yang
+                  // statusTampilan() tidak bedakan (dipakai ekspor CSV/PDF,
+                  // sengaja dibiarkan pakai statusTampilan() -- teks polos
+                  // sudah cukup jelas buat file, gak butuh warna).
+                  if ($pl->status === \App\Models\PermintaanLaporan::STATUS_DIBATALKAN) {
+                      $plStatus = 'Dibatalkan'; $plStatusClass = 'bad';
+                  } elseif ($pl->status === \App\Models\PermintaanLaporan::STATUS_PEMERIKSAAN) {
+                      $plStatus = 'Menunggu'; $plStatusClass = 'blue';
+                  } elseif ($pl->status === \App\Models\PermintaanLaporan::STATUS_SELESAI) {
+                      $plHasilAkhir = strtolower($pl->laporan?->status ?? '');
+                      if (str_contains($plHasilAkhir, 'tolak')) { $plStatus = 'Ditolak'; $plStatusClass = 'bad'; }
+                      else { $plStatus = 'Disetujui'; $plStatusClass = 'ok'; }
+                  } elseif ($pl->isSedangRevisi()) { $plStatus = 'Revisi'; $plStatusClass = 'revisi'; }
+                  elseif ($pl->isTerlambat()) { $plStatus = 'Terlambat'; $plStatusClass = 'bad'; }
+                  elseif ($pl->status === \App\Models\PermintaanLaporan::STATUS_BELUM) { $plStatus = 'Terbaru'; $plStatusClass = 'new'; }
+                  else { $plStatus = 'Sedang diproses'; $plStatusClass = 'wait'; }
+                  $plPrioClass = 'prio-'.strtolower($pl->prioritas);
+                  $plTasksTotal = $pl->tasks->count();
+                  $plTasksDone = $pl->tasks->where('selesai', true)->count();
+                @endphp
+                <article class="deadline-sender-item" data-filter-value="{{ $kategoriLabelDlPelaporan }}" data-search-value="{{ strtolower($pl->perihal.' '.($pl->tujuanSatuan->nama ?? '').' '.$plStatus) }}" data-tanggal="{{ $pl->created_at?->format('Y-m-d') }}">
+                  <div class="dcard-head">
+                    <div class="dcard-icon {{ $plPrioClass }}">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="m9 14 2 2 4-4"></path></svg>
+                    </div>
+                  </div>
+                  <div class="dcard-body">
+                    <div class="deadline-sender-title">{{ $pl->perihal }}</div>
+                    <span class="deadline-pill dcard-status-pill {{ $plStatusClass }}">{{ $plStatus }}</span>
+                    <span class="dl-satuan-pill">{{ $pl->tujuanSatuan->kode ?? $pl->tujuanSatuan->nama ?? '-' }}</span>
+                    <span class="dl-arsip-pill {{ $pl->archived_at ? 'archived' : 'active' }}">{{ $pl->archived_at ? 'Sudah Diarsipkan' : 'Belum Diarsipkan' }}</span>
+                  </div>
+                  <div class="dcard-progress">
+                    <div class="dcard-progress-head"><span class="dcard-progress-label">Progres</span><span class="dcard-progress-value">{{ $pl->progres }}%</span></div>
+                    <div class="dcard-progress-track"><div class="dcard-progress-fill" style="width:{{ min(100, max(0, (int) $pl->progres)) }}%"></div></div>
+                  </div>
+                  <div class="dcard-footer">
+                    <span class="dcard-tasks-summary">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                      @if($plTasksTotal > 0)
+                        {{ $plTasksDone }}/{{ $plTasksTotal }} tugas selesai
+                      @else
+                        Prioritas {{ $pl->prioritas }}
+                      @endif
+                    </span>
+                    <span class="dcard-deadline-pill" title="Dibuat {{ $pl->created_at?->translatedFormat('d M Y H:i') }}">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+                      {{ $pl->created_at?->format('d/m/Y') }}
+                    </span>
+                  </div>
+                </article>
+                @empty
+                <div class="empty-state">
+                  <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M12 11h4"></path><path d="M12 16h4"></path><path d="M8 11h.01"></path><path d="M8 16h.01"></path></svg>
+                  <div class="empty-state-title">Belum ada permintaan laporan</div>
+                </div>
+                @endforelse
+              </div>
             </div>
 
             <div class="dl-foot">
@@ -3636,27 +3702,42 @@
         // "X data ditampilkan" -- beda dari format global "X dari Y data" supaya
         // sama persis dengan rancangan.
         function dlHitungTampil(tableId) {
+          var cfg = dlCfg(tableId);
+          var isCards = !!cfg && cfg.type === 'cards';
           var table = document.getElementById(tableId);
           var countEl = document.querySelector('[data-dl-count="' + tableId + '"]');
           if (!table) return;
-          var rows = Array.prototype.slice.call(table.querySelectorAll('tbody tr[data-search-value]'));
-          var visible = rows.filter(function (tr) { return tr.style.display !== 'none'; });
+          var rows = Array.prototype.slice.call(table.querySelectorAll('[data-search-value]'));
+          var visible = rows.filter(function (el) { return el.style.display !== 'none'; });
           if (countEl) countEl.textContent = visible.length + ' data ditampilkan';
 
-          // Tabel ini gak punya baris ".empty-state" buat kasus "ada data tapi
-          // kefilter jadi 0" (beda dari baris fallback forelse statis yang cuma
-          // dirender kalau memang belum ada data sama sekali) -- makanya dulu search yang
-          // gak nemu apa-apa cuma bikin tabel kelihatan kosong polos, tanpa
-          // pesan/kotak apapun (cuma angka "0 data ditampilkan" yang berubah).
-          // Sama kayak pola ensureEmptyRow() di danpus-report-table-filter.blade.php.
-          var emptyRow = table.querySelector('tbody > tr.dl-filter-empty-row');
+          // Tabel/grid ini gak punya baris/kartu ".empty-state" buat kasus "ada
+          // data tapi kefilter jadi 0" (beda dari fallback forelse statis yang
+          // cuma dirender kalau memang belum ada data sama sekali) -- makanya
+          // dulu search yang gak nemu apa-apa cuma bikin tampilan kosong
+          // polos, tanpa pesan/kotak apapun (cuma angka "0 data ditampilkan"
+          // yang berubah). Sama kayak pola ensureEmptyRow() di
+          // danpus-report-table-filter.blade.php -- versi kartu (isCards)
+          // nyisipin <div class="empty-state"> langsung (grid-column:1/-1
+          // sudah diatur di permintaan-laporan-deadline-styles.blade.php),
+          // versi tabel tetap <tr><td colspan> seperti semula.
+          var emptyRow = isCards
+            ? table.querySelector(':scope > .dl-filter-empty-row')
+            : table.querySelector('tbody > tr.dl-filter-empty-row');
           if (rows.length && !visible.length) {
             if (!emptyRow) {
-              var colCount = table.querySelectorAll('thead th').length || 1;
-              emptyRow = document.createElement('tr');
-              emptyRow.className = 'dl-filter-empty-row';
-              emptyRow.innerHTML = '<td colspan="' + colCount + '"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada data yang cocok dengan pencarian/filter.</div></div></td>';
-              table.querySelector('tbody').appendChild(emptyRow);
+              if (isCards) {
+                emptyRow = document.createElement('div');
+                emptyRow.className = 'empty-state dl-filter-empty-row';
+                emptyRow.innerHTML = '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada data yang cocok dengan pencarian/filter.</div>';
+                table.appendChild(emptyRow);
+              } else {
+                var colCount = table.querySelectorAll('thead th').length || 1;
+                emptyRow = document.createElement('tr');
+                emptyRow.className = 'dl-filter-empty-row';
+                emptyRow.innerHTML = '<td colspan="' + colCount + '"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada data yang cocok dengan pencarian/filter.</div></div></td>';
+                table.querySelector('tbody').appendChild(emptyRow);
+              }
             }
             emptyRow.style.display = '';
           } else if (emptyRow) {
@@ -3680,10 +3761,15 @@
         // Pelaporan) dalam SATU array supaya nambah tabel baru ke depannya
         // cukup nambah 1 entri di sini, gak perlu ubah tiap fungsi di bawah
         // satu-satu (dulu mentok 2 tabel yang di-hardcode lewat ternary).
+        // type 'table' (default) = <table><tbody><tr data-search-value>...
+        // type 'cards' = <div id=..><article data-search-value>... (kartu
+        // "Data Pelaporan", niru gaya Permintaan Laporan Pimpinan/Satuan) --
+        // dlHitungTampil/dlSaringTanggal di bawah baca field ini buat tau
+        // cara nyari baris/kartu & nyisipin empty-state yang benar.
         var dlTables = [
-          { id: 'tblDlPengguna',  section: 'dl-pengguna',  dari: 'dlPenggunaDari',  sampai: 'dlPenggunaSampai',  reset: 'dlPenggunaReset' },
-          { id: 'tblDlAktivitas', section: 'dl-aktivitas', dari: 'dlAktivitasDari', sampai: 'dlAktivitasSampai', reset: 'dlAktivitasReset' },
-          { id: 'tblDlPelaporan', section: 'dl-pelaporan', dari: 'dlPelaporanDari', sampai: 'dlPelaporanSampai', reset: 'dlPelaporanReset' },
+          { id: 'tblDlPengguna',  section: 'dl-pengguna',  dari: 'dlPenggunaDari',  sampai: 'dlPenggunaSampai',  reset: 'dlPenggunaReset', type: 'table' },
+          { id: 'tblDlAktivitas', section: 'dl-aktivitas', dari: 'dlAktivitasDari', sampai: 'dlAktivitasSampai', reset: 'dlAktivitasReset', type: 'table' },
+          { id: 'tblDlPelaporan', section: 'dl-pelaporan', dari: 'dlPelaporanDari', sampai: 'dlPelaporanSampai', reset: 'dlPelaporanReset', type: 'cards' },
         ];
         function dlCfg(tableId) {
           for (var i = 0; i < dlTables.length; i++) { if (dlTables[i].id === tableId) return dlTables[i]; }
@@ -3717,18 +3803,26 @@
           var q = searchEl ? searchEl.value.trim().toLowerCase() : '';
           var f = filterEl ? filterEl.value : '';
 
-          table.querySelectorAll('tbody tr[data-search-value]').forEach(function (tr) {
+          table.querySelectorAll('[data-search-value]').forEach(function (tr) {
             // filter teks
             var cocokTeks = !q || tr.getAttribute('data-search-value').indexOf(q) !== -1;
 
             // filter kategori (dropdown "Semua Kategori", sama seperti tabel lain)
             var cocokFilter = !f || tr.getAttribute('data-filter-value') === f;
 
-            // filter tanggal — baca dari kolom pertama (td:first-child)
+            // filter tanggal — baris tabel biasa baca dari kolom pertama
+            // (td[data-tanggal]/td:first-child), kartu "Data Pelaporan" punya
+            // data-tanggal langsung di elemennya sendiri (tr === article di
+            // situ, gak ada <td> sama sekali).
             var cocokTgl = true;
             if (dari || sampai) {
-              var td = tr.querySelector('td[data-tanggal]') || tr.querySelector('td:first-child');
-              var raw = td ? (td.getAttribute('data-tanggal') || td.textContent.trim()) : '';
+              var raw = '';
+              if (tr.hasAttribute('data-tanggal')) {
+                raw = tr.getAttribute('data-tanggal');
+              } else {
+                var td = tr.querySelector('td[data-tanggal]') || tr.querySelector('td:first-child');
+                raw = td ? (td.getAttribute('data-tanggal') || td.textContent.trim()) : '';
+              }
               // Coba parse ISO (YYYY-MM-DD) atau format lokal dd/MM/YYYY
               var tgl = null;
               if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
