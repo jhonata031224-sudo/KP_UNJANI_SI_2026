@@ -16,6 +16,16 @@
      hardcode hex/rgba -- jadi tetap tampil benar tanpa perlu definisi --p-*
      tambahan di sini. --}}
 @include('siberad.dashboards.partials.permintaan-laporan-deadline-styles')
+<style>
+/* Token --p-* punya laporan-pimpinan.blade.php/laporan-role.blade.php (dipakai
+   modal "Lihat Detail"/"Lihat Progres" punya Pimpinan yang dipinjam persis di
+   bawah, bagian "Data Pelaporan") -- SAMA PERSIS definisinya (disalin apa
+   adanya), supaya warna/permukaan modal itu identik di sini. Admin sendiri
+   TIDAK pernah pakai nama --p-* di CSS-nya sendiri, jadi aman didefinisikan
+   global tanpa nabrak apa-apa. */
+:root{--p-bg:#f5f7f9;--p-surface:#fff;--p-surface-2:#f8fafc;--p-border:#e2e8f0;--p-text:#17212b;--p-muted:#64748b;--p-accent:#FF9800;--p-green:#16834b;--p-red:#c83b3b;--p-yellow:#b77900;--p-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 10px 30px rgba(0,0,0,.25)}
+:root:not([data-theme="light"]){--p-bg:var(--bg);--p-surface:var(--panel);--p-surface-2:var(--panel-alt);--p-border:var(--border);--p-text:var(--text);--p-muted:var(--text-muted);--p-accent:var(--gold-bright);--p-green:var(--success-bright);--p-red:var(--red);--p-yellow:var(--amber);--p-shadow:0 10px 30px rgba(0,0,0,.18)}
+</style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   /* Samakan palet mode terang dengan dashboard Pimpinan (abu-abu netral/putih), bukan cream bawaan. */
@@ -267,15 +277,6 @@
   .dl-foot p{font-size:11.5px;color:var(--text-dim);}
   @media(max-width:640px){.dl-section-head{flex-direction:column;}.dl-download{align-self:stretch;}.dl-download-btn{width:100%;justify-content:center;}.dl-search-row{flex-direction:column;align-items:stretch;}.dl-search-count{margin-left:0;}.dl-foot{flex-direction:column;align-items:stretch;text-align:center;}}
 
-  /* Kartu "Data Pelaporan" -- niru .deadline-sender-item/.dcard-* punya
-     Pimpinan/Satuan (permintaan-laporan-deadline-styles.blade.php di atas),
-     tapi READ-ONLY (arsip/audit Admin, bukan antrian kerja) -- tanpa pin,
-     menu titik-3, atau tombol Lihat Detail/Lihat Progres yang butuh
-     modal+JS punya dashboard Pimpinan/Satuan yang tidak dimuat di sini. */
-  .dl-satuan-pill{display:inline-flex;align-items:center;border-radius:8px;padding:4px 9px;font-size:10px;font-weight:800;letter-spacing:.03em;color:var(--gold-bright);background:var(--gold-dim);border:1px solid var(--border);white-space:nowrap;}
-  .dl-arsip-pill{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:10px;font-weight:800;border:1px solid transparent;white-space:nowrap;}
-  .dl-arsip-pill.archived{color:var(--success-bright);background:var(--success-dim);border-color:rgba(63,194,125,.28);}
-  .dl-arsip-pill.active{color:var(--text-dim);background:var(--panel-alt);border-color:var(--border-soft);}
 </style>
 </head>
 <body>
@@ -3621,6 +3622,29 @@
                   $plPrioClass = 'prio-'.strtolower($pl->prioritas);
                   $plTasksTotal = $pl->tasks->count();
                   $plTasksDone = $pl->tasks->where('selesai', true)->count();
+                  // Pill deadline & tombol Lihat Detail/Lihat Progres -- SAMA
+                  // PERSIS logikanya dengan permintaan-laporan-pimpinan-card.blade.php
+                  // (lihat catatan panjang di partial modalnya, ditaruh setelah
+                  // </script> panel Arsip Data).
+                  $plDeadlineHidden = !in_array($plStatus, ['Terbaru', 'Sedang diproses', 'Terlambat', 'Revisi'], true);
+                  $plDeadlineClass = $pl->isTerlambat() ? 'bad' : ($pl->deadline_at && $pl->deadline_at->diffInHours(now()) <= 24 ? 'near' : 'normal');
+                  $plCatatanPenolakan = trim((string) ($pl->laporans
+                      ->filter(fn ($l) => (str_contains(strtolower((string) $l->status), 'tolak') || str_contains(strtolower((string) $l->status), 'revisi')) && trim((string) $l->catatan) !== '')
+                      ->sortByDesc('id')
+                      ->first()?->catatan ?? ''));
+                  $plTasksJson = $pl->tasks->sortBy('urutan')->values()->map(function ($task) {
+                      $taskLaporan = $task->laporans->sortByDesc('id')->first();
+                      return [
+                          'deskripsi' => $task->deskripsi,
+                          'detail' => $task->detail,
+                          'selesai' => (bool) $task->selesai,
+                          'laporan' => $taskLaporan ? [
+                              'deskripsi' => $taskLaporan->deskripsi,
+                              'kendala' => $taskLaporan->kendala,
+                              'lampiran' => $taskLaporan->semuaLampiran->map(fn ($x) => ['url' => asset('storage/'.$x->path), 'nama' => $x->nama_asli])->values(),
+                          ] : null,
+                      ];
+                  })->values()->toJson();
                 @endphp
                 <article class="deadline-sender-item" data-filter-value="{{ $kategoriLabelDlPelaporan }}" data-search-value="{{ strtolower($pl->perihal.' '.($pl->tujuanSatuan->nama ?? '').' '.$plStatus) }}" data-tanggal="{{ $pl->created_at?->format('Y-m-d') }}">
                   <div class="dcard-head">
@@ -3631,8 +3655,7 @@
                   <div class="dcard-body">
                     <div class="deadline-sender-title">{{ $pl->perihal }}</div>
                     <span class="deadline-pill dcard-status-pill {{ $plStatusClass }}">{{ $plStatus }}</span>
-                    <span class="dl-satuan-pill">{{ $pl->tujuanSatuan->kode ?? $pl->tujuanSatuan->nama ?? '-' }}</span>
-                    <span class="dl-arsip-pill {{ $pl->archived_at ? 'archived' : 'active' }}">{{ $pl->archived_at ? 'Sudah Diarsipkan' : 'Belum Diarsipkan' }}</span>
+                    <span class="satuan-pill">{{ $pl->tujuanSatuan->kode ?? $pl->tujuanSatuan->nama ?? '-' }}</span>
                   </div>
                   <div class="dcard-progress">
                     <div class="dcard-progress-head"><span class="dcard-progress-label">Progres</span><span class="dcard-progress-value">{{ $pl->progres }}%</span></div>
@@ -3647,10 +3670,35 @@
                         Prioritas {{ $pl->prioritas }}
                       @endif
                     </span>
-                    <span class="dcard-deadline-pill" title="Dibuat {{ $pl->created_at?->translatedFormat('d M Y H:i') }}">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
-                      {{ $pl->created_at?->format('d/m/Y') }}
+                    @unless($plDeadlineHidden)
+                    <span class="dcard-deadline-pill {{ $plDeadlineClass }}" title="{{ $pl->deadline_at?->translatedFormat('d M Y H:i') }}">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                      {{ $pl->deadline_at?->diffForHumans(null, \Carbon\CarbonInterface::DIFF_ABSOLUTE) ?? '-' }}
                     </span>
+                    @endunless
+                  </div>
+                  <div class="dcard-status-area">
+                    <div class="deadline-actions">
+                      <button type="button" class="deadline-secondary small" onclick="openPermintaanDetailModal(this)"
+                        data-tujuan="{{ e($pl->tujuanSatuan->nama ?? '-') }}"
+                        data-tujuan-kode="{{ e($pl->tujuanSatuan->kode ?? '') }}"
+                        data-deadline="{{ e($pl->deadline_at?->translatedFormat('d M Y H:i')) }}"
+                        data-perihal="{{ e($pl->perihal) }}"
+                        data-kategori="{{ e($pl->kategori ?: '-') }}"
+                        data-prioritas="{{ e($pl->prioritas) }}"
+                        data-status="{{ $plStatus }}"
+                        data-status-class="{{ $plStatusClass }}"
+                        data-instruksi="{{ e($pl->instruksi ?? '') }}"
+                        data-catatan="{{ e($plCatatanPenolakan) }}"
+                      >Lihat Detail</button>
+                      <button type="button" class="deadline-primary small" onclick="openPimpinanProgres(this)"
+                        data-perihal="{{ e($pl->perihal) }}"
+                        data-tasks="{{ $plTasksJson }}"
+                        data-status="{{ $plStatus }}"
+                        data-riwayat="1"
+                        data-permintaan-id="{{ $pl->id }}"
+                      >Lihat Progres</button>
+                    </div>
                   </div>
                 </article>
                 @empty
@@ -3951,6 +3999,308 @@
           if (filterEl) filterEl.addEventListener('change', function () { dlUpdateDownloadLinks(tableId, dariId, sampaiId); });
           if (resetBtn) resetBtn.addEventListener('click', function () { dlUpdateDownloadLinks(tableId, dariId, sampaiId); });
         });
+      })();
+      </script>
+
+      {{-- ===== Modal "Lihat Detail" & "Lihat Progres" (kartu Data Pelaporan) =====
+           Versi READ-ONLY dari #permintaanDetailModal/#pimpinanProgresModal/
+           #pimpinanTaskDetailModal punya laporan-pimpinan.blade.php -- HTML,
+           CSS, dan JS-nya disalin apa adanya dari sana (termasuk fungsi
+           openPimpinanProgres() yang TIDAK diubah SAMA SEKALI), supaya
+           tampilan & perilakunya identik. Bedanya cuma 2:
+           (1) openPermintaanDetailModal() versi sini gak bangun tombol
+               "Lihat Aktivitas" di footer (cuma "Tutup") -- fitur itu butuh
+               window.danpusLihatAktivitas yang tidak dimuat di Admin.
+           (2) Kartu Data Pelaporan SELALU kirim data-riwayat="1" ke
+               openPimpinanProgres() -- flag yang SAMA yang dipakai versi
+               Riwayat Laporan Pimpinan buat bikin modal "Lihat Progres"
+               read-only total (tanpa Tolak/Terima/Batalkan/Edit Deadline/
+               Revisi); openPimpinanProgres() sendiri sudah py`nya cabang
+               `if(riwayat==='1'){ /* kosong */ }` yang otomatis skip SEMUA
+               tombol aksi begitu flag ini dikirim, jadi fungsinya bisa
+               dipakai apa adanya tanpa modifikasi. --}}
+      <style>
+      .priority-tag{display:inline-flex;align-items:center;border-radius:999px;padding:5px 10px;font-size:10px;font-weight:800;border:1px solid transparent;white-space:nowrap}
+      .report-modal{position:fixed;inset:0;background:rgba(15,23,42,.48);display:flex;align-items:center;justify-content:center;padding:20px;z-index:1000;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s ease}
+      .report-modal.open{opacity:1;visibility:visible;pointer-events:auto}
+      .report-modal-card{width:min(760px,100%);max-height:90vh;overflow:auto;background:var(--p-surface);border:1px solid var(--p-border);border-radius:16px;padding:22px;box-shadow:0 25px 70px rgba(15,23,42,.22);box-sizing:border-box;transform:translateY(14px) scale(.97);transition:transform .2s ease}
+      .report-modal.open .report-modal-card{transform:translateY(0) scale(1)}
+      .report-modal-head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px}
+      .report-modal-head h3{margin:0;font-family:var(--display);font-size:20px}
+      .report-modal-close{flex-shrink:0;width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;border:1px solid var(--p-border);background:transparent;color:var(--p-muted);cursor:pointer;transition:border-color .2s ease,color .2s ease,transform .2s ease}
+      .report-modal-close:hover{border-color:var(--p-red);color:var(--p-red);transform:rotate(90deg);}
+      .report-modal-close svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;}
+      .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      .detail-item{padding:12px;border:1px solid var(--p-border);border-radius:9px;background:var(--p-surface-2)}
+      .detail-item.full{grid-column:1/-1}
+      .detail-label{font-size:9px;text-transform:uppercase;color:var(--p-muted);font-weight:800;letter-spacing:.06em;margin-bottom:5px}
+      .detail-value{font-size:12px;line-height:1.65;white-space:pre-wrap;color:var(--p-text)}
+      .modal-actions{display:flex;justify-content:flex-end;margin-top:16px}
+      .action-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+      .action-row button{border:1px solid transparent;border-radius:8px;padding:8px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:filter .15s ease,transform .15s ease,background .15s ease,color .15s ease}
+      .action-row button:active{transform:scale(.96)}
+      .satuan-pill{display:inline-flex;align-items:center;border-radius:8px;padding:4px 9px;font-size:10px;font-weight:800;letter-spacing:.03em;color:var(--p-accent);background:rgba(201,122,0,.1);border:1px solid rgba(201,122,0,.22);white-space:nowrap}
+      .request-deadline{display:inline-flex;align-items:center;gap:5px;font-weight:700}
+      .request-deadline svg{width:13px;height:13px;flex-shrink:0;opacity:.75}
+      #permintaanDetailModal{display:none;visibility:visible;background:rgba(15,23,42,.28);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:100200;padding:24px;transition:opacity .22s ease}
+      #permintaanDetailModal.pl-mounted{display:flex}
+      #permintaanDetailModal .report-modal-card{max-height:min(86vh,760px);padding:20px;border-radius:18px;box-shadow:0 24px 70px rgba(15,23,42,.24);transform:translateY(10px) scale(.985);transition:transform .22s ease;will-change:transform}
+      #permintaanDetailModal.open .report-modal-card{transform:translateY(0) scale(1)}
+      #permintaanDetailModal .report-modal-head h3{font-size:22px;font-weight:700;letter-spacing:.01em}
+      #permintaanDetailModal .detail-grid{gap:12px}
+      #permintaanDetailModal .detail-item{padding:11px;border-radius:8px}
+      #permintaanDetailModal .detail-label{font-size:10px;font-weight:700;letter-spacing:.05em}
+      #permintaanDetailModal .detail-value{font-size:13px;line-height:1.6}
+      #permintaanDetailModal .modal-actions{gap:8px;flex-wrap:wrap;margin-top:18px}
+      #permintaanDetailModal .modal-actions .action-row{gap:8px;justify-content:flex-end}
+      #permintaanDetailModal .action-row .pl-btn-ghost{border:1px solid var(--p-border);background:transparent;color:var(--p-text);font-family:var(--mono);font-weight:600;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;padding:9px 15px;border-radius:8px;transition:border-color .15s ease,color .15s ease,transform .15s ease}
+      #permintaanDetailModal .action-row .pl-btn-ghost:hover{border-color:var(--p-accent);color:var(--p-accent);transform:translateY(-1px)}
+      #pimpinanProgresModal{display:none;visibility:visible;background:rgba(0,0,0,.55);transition:opacity .22s ease}
+      #pimpinanProgresModal.pl-mounted{display:flex}
+      #pimpinanProgresModal .report-modal-card{width:min(720px,100%);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.25);transform:translateY(10px) scale(.985);transition:width .2s ease,transform .22s ease}
+      #pimpinanProgresModal.pl-progres-has-steps .report-modal-card{width:min(940px,100%)}
+      #pimpinanProgresModal.open .report-modal-card{transform:translateY(0) scale(1)}
+      #pimpinanProgresModal .kirim-laporan-modal-head{align-items:center}
+      #pimpinanProgresModal .task-detail-btn{margin-left:auto;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;border:1px solid color-mix(in srgb,var(--p-accent) 45%,var(--p-border));background:color-mix(in srgb,var(--p-accent) 10%,var(--p-surface-2));color:var(--p-accent);border-radius:9px;padding:8px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s ease,transform .15s ease,border-color .15s ease}
+      #pimpinanProgresModal .task-detail-btn:hover{background:color-mix(in srgb,var(--p-accent) 20%,var(--p-surface-2));transform:translateY(-1px)}
+      #pimpinanProgresModal .task-detail-btn svg{width:14px;height:14px;flex-shrink:0}
+      #pimpinanProgresModal .task-detail-btn[hidden]{display:none}
+      #pimpinanTaskDetailModal .report-modal-card{width:min(480px,100%)}
+      #pimpinanTaskDetailModal .task-detail-modal-sub{margin:2px 0 12px;font-size:12px;color:var(--p-muted);line-height:1.55}
+      #pimpinanTaskDetailModal .task-detail-modal-body{font-size:13px;line-height:1.7;white-space:pre-wrap;color:var(--p-text);border:1px solid var(--p-border);border-radius:10px;background:var(--p-surface-2);padding:13px 15px;max-height:56vh;overflow-y:auto}
+      #pimpinanProgresModal .form-grid{gap:14px}
+      #pimpinanProgresModal .form-field{gap:7px}
+      #pimpinanProgresModal .form-field label{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
+      #pimpinanProgresModal .form-field textarea{width:100%;box-sizing:border-box;background:var(--panel-alt);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:10px 11px;font:inherit;font-size:13px;resize:none;min-height:120px}
+      #pimpinanProgresModal .kirim-laporan-form-card{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:18px 20px;padding:20px;border:1px solid var(--border-soft);border-radius:14px;background:var(--panel-alt)}
+      #pimpinanProgresModal .wizard-step-pending{cursor:pointer}
+      </style>
+      <div class="report-modal" id="permintaanDetailModal"><div class="report-modal-card"><div class="report-modal-head"><div><h3>Detail Permintaan Laporan</h3><p style="margin:4px 0 0;font-size:12px;color:var(--p-muted);font-weight:400;">Detail permintaan laporan yang dikirim kepada satuan.</p></div></div><div class="detail-grid"><div class="detail-item"><div class="detail-label">Tujuan</div><div class="detail-value" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><span id="permintaanDetailTujuan">-</span><span class="satuan-pill" id="permintaanDetailTujuanKode" style="display:none;"></span></div></div><div class="detail-item"><div class="detail-label">Deadline</div><div class="detail-value request-deadline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span id="permintaanDetailDeadline">-</span></div></div><div class="detail-item"><div class="detail-label">Perihal</div><div class="detail-value" id="permintaanDetailPerihal">-</div></div><div class="detail-item"><div class="detail-label">Kategori</div><div class="detail-value" id="permintaanDetailKategori">-</div></div><div class="detail-item"><div class="detail-label">Prioritas</div><div class="detail-value"><span class="priority-tag" id="permintaanDetailPrioritas">-</span></div></div><div class="detail-item"><div class="detail-label">Status</div><div class="detail-value"><span class="deadline-pill" id="permintaanDetailStatus">-</span></div></div><div class="detail-item full"><div class="detail-label">Instruksi</div><div class="detail-value" id="permintaanDetailInstruksi">-</div></div><div class="detail-item full" id="permintaanDetailCatatanWrap" style="display:none;"><div class="detail-label">Catatan / Keterangan</div><div class="detail-value" id="permintaanDetailCatatan" style="white-space:pre-line;">-</div></div></div><div class="modal-actions" id="permintaanDetailActions"></div></div></div>
+      <div class="report-modal" id="pimpinanProgresModal"><div class="report-modal-card"><div class="kirim-laporan-wizard-body"><div class="kirim-laporan-wizard-topbar wizard-topbar-visible"><button type="button" class="wizard-topbar-nav wizard-topbar-nav-prev" id="pimpinanProgresPrev" aria-label="Task sebelumnya" hidden><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg></button><ol class="wizard-step-list" id="pimpinanProgresSteps"></ol><button type="button" class="wizard-topbar-nav wizard-topbar-nav-next" id="pimpinanProgresNext" aria-label="Task selanjutnya" hidden><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg></button></div><div class="kirim-laporan-wizard-panel"><div class="kirim-laporan-modal-head"><span class="kirim-laporan-modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="m9 14 2 2 4-4"></path></svg></span><span><h3 id="pimpinanProgresTitle" style="margin:0 0 4px;">Lihat Progres</h3><p id="pimpinanProgresDesc" style="margin:0;font-size:12px;color:var(--p-muted);line-height:1.5;">Checklist tugas untuk permintaan ini.</p></span><button type="button" id="pimpinanTaskDetailBtn" class="task-detail-btn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>Detail Task</button></div><div class="form-grid"><div class="kirim-laporan-form-card"><div class="form-field"><label><svg class="form-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Isi Laporan</label><textarea id="pimpinanProgresDeskripsi" readonly></textarea></div><div class="form-field"><label><svg class="form-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Kendala/Alasan</label><textarea id="pimpinanProgresKendala" readonly></textarea></div><div class="form-field full"><label><svg class="form-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>Lampiran</label><div class="lampiran-file-list" id="pimpinanProgresLampiran"><div class="lampiran-file-list-empty">Belum ada file yang diupload</div></div></div></div><div class="form-field full" id="pimpinanProgresActions" style="display:flex;flex-direction:row;justify-content:flex-end;gap:8px;margin-top:4px;"><button type="button" class="btn" id="pimpinanProgresTutupBtn">Tutup</button></div></div></div></div></div>
+      <div class="report-modal" id="pimpinanTaskDetailModal" style="z-index:100300"><div class="report-modal-card"><div class="report-modal-head"><h3>Detail Task</h3></div><p class="task-detail-modal-sub">Instruksi rinci dari Pimpinan untuk task yang dikerjakan satuan.</p><div class="task-detail-modal-body" id="pimpinanTaskDetailModalBody">-</div><div class="modal-actions"><button type="button" class="btn" id="pimpinanTaskDetailModalClose">Tutup</button></div></div></div>
+      <script>
+      (function(){
+      window.openPermintaanDetailModal=function(button){
+        const modal=document.getElementById('permintaanDetailModal');
+        document.getElementById('permintaanDetailTujuan').textContent=button.dataset.tujuan||'-';
+        const tujuanKodeEl=document.getElementById('permintaanDetailTujuanKode');
+        if(button.dataset.tujuanKode){tujuanKodeEl.textContent=button.dataset.tujuanKode;tujuanKodeEl.style.display='inline-flex';}else{tujuanKodeEl.style.display='none';}
+        document.getElementById('permintaanDetailDeadline').textContent=button.dataset.deadline||'-';
+        document.getElementById('permintaanDetailPerihal').textContent=button.dataset.perihal||'-';
+        document.getElementById('permintaanDetailKategori').textContent=button.dataset.kategori||'-';
+        const prioEl=document.getElementById('permintaanDetailPrioritas');
+        prioEl.textContent=button.dataset.prioritas||'-';
+        prioEl.className='priority-tag pl-prio-violet'+(button.dataset.prioritas?' prio-'+button.dataset.prioritas.toLowerCase():'');
+        const statusEl=document.getElementById('permintaanDetailStatus');
+        statusEl.textContent=button.dataset.status||'-';
+        statusEl.className='deadline-pill '+(button.dataset.statusClass||'');
+        document.getElementById('permintaanDetailInstruksi').textContent=button.dataset.instruksi||'-';
+        const catatanPenolakan=(button.dataset.catatan||'').trim();
+        const catatanWrap=document.getElementById('permintaanDetailCatatanWrap');
+        const catatanEl=document.getElementById('permintaanDetailCatatan');
+        if(catatanWrap&&catatanEl){
+          if(catatanPenolakan){catatanEl.textContent=catatanPenolakan;catatanWrap.style.display='';}
+          else{catatanEl.textContent='-';catatanWrap.style.display='none';}
+        }
+        const actionsEl=document.getElementById('permintaanDetailActions');
+        const row=document.createElement('div');row.className='action-row';
+        // Versi Admin (Arsip Data) SENGAJA cuma "Tutup" -- gak ada "Lihat
+        // Aktivitas" (butuh window.danpusLihatAktivitas milik dashboard
+        // Pimpinan, tidak dimuat di sini).
+        const tutupBtn=document.createElement('button');tutupBtn.type='button';tutupBtn.className='btn pl-btn-ghost';tutupBtn.textContent='Tutup';
+        tutupBtn.addEventListener('click',function(){tutupPermintaanDetailModal();});
+        row.appendChild(tutupBtn);
+        actionsEl.innerHTML='';actionsEl.appendChild(row);
+        if(modal){
+          modal.classList.remove('open');
+          modal.classList.add('pl-mounted');
+          void modal.offsetWidth;
+          requestAnimationFrame(function(){modal.classList.add('open');});
+        }
+      };
+      window.tutupPermintaanDetailModal=function(){
+        const m=document.getElementById('permintaanDetailModal');
+        if(!m)return;
+        m.classList.remove('open');
+        setTimeout(function(){if(!m.classList.contains('open'))m.classList.remove('pl-mounted');},240);
+      };
+      document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('permintaanDetailModal')?.classList.contains('open'))tutupPermintaanDetailModal()});
+
+      // openPimpinanProgres() DISALIN APA ADANYA dari laporan-pimpinan.blade.php
+      // -- lihat catatan panjang di atas kenapa aman dipakai tanpa modifikasi
+      // (cabang riwayat==='1' bikin SEMUA tombol aksi ke-skip otomatis).
+      window.openPimpinanProgres=function(button,refresh){
+        const modal=document.getElementById('pimpinanProgresModal');
+        let tasks=[],ppItems=null,ppDefault=0;
+        try{tasks=button.dataset.tasks?JSON.parse(button.dataset.tasks):[];}catch(e){tasks=[];}
+        if(modal)modal.dataset.plPid=button.dataset.permintaanId||'';
+        const stepsEl=document.getElementById('pimpinanProgresSteps');
+        const descEl=document.getElementById('pimpinanProgresDesc');
+        const detailBtnEl=document.getElementById('pimpinanTaskDetailBtn');
+        const detailBodyEl=document.getElementById('pimpinanTaskDetailModalBody');
+        const deskTa=document.getElementById('pimpinanProgresDeskripsi');
+        const kendalaTa=document.getElementById('pimpinanProgresKendala');
+        const lampiranEl=document.getElementById('pimpinanProgresLampiran');
+        const stepPrev=document.getElementById('pimpinanProgresPrev');
+        const stepNext=document.getElementById('pimpinanProgresNext');
+        function refreshStepNav(){
+          if(!stepPrev||!stepNext)return;
+          const of=stepsEl.scrollWidth>stepsEl.clientWidth+1;
+          stepPrev.hidden=!of;stepNext.hidden=!of;
+          if(!of)return;
+          stepPrev.disabled=stepsEl.scrollLeft<=0;
+          stepNext.disabled=stepsEl.scrollLeft+stepsEl.clientWidth>=stepsEl.scrollWidth-1;
+        }
+        if(stepPrev&&stepPrev.dataset.navBound!=='1'){
+          stepPrev.dataset.navBound='1';
+          const pageScroll=function(d){stepsEl.scrollBy({left:d*Math.max(stepsEl.clientWidth-60,120),behavior:'smooth'});};
+          stepPrev.addEventListener('click',function(){pageScroll(-1);});
+          stepNext.addEventListener('click',function(){pageScroll(1);});
+          stepsEl.addEventListener('scroll',refreshStepNav);
+          window.addEventListener('resize',refreshStepNav);
+        }
+        function showTask(idx,items){
+          if(modal)modal.dataset.plStep=idx;
+          items.forEach(function(el,i){el.classList.toggle('wizard-step-current',i===idx);el.classList.remove('wizard-step-marker-in');});
+          const cur=items[idx];
+          if(cur){
+            requestAnimationFrame(function(){requestAnimationFrame(function(){if(cur.classList.contains('wizard-step-current'))cur.classList.add('wizard-step-marker-in');});});
+            cur.scrollIntoView({inline:'nearest',block:'nearest'});
+          }
+          const t=tasks[idx];
+          const lap=t&&t.laporan;
+          const td=(t&&t.detail)||'';
+          if(detailBodyEl)detailBodyEl.textContent=td||'Detail task tidak tersedia.';
+          if(detailBtnEl)detailBtnEl.hidden=!td;
+          document.getElementById('pimpinanTaskDetailModal')?.classList.remove('open');
+          descEl.textContent=lap?'Checkpoint ini sudah dikerjakan satuan.':'Task ini belum dikerjakan satuan.';
+          deskTa.value=lap?(lap.deskripsi||''):'';
+          kendalaTa.value=lap?(lap.kendala||''):'';
+          lampiranEl.innerHTML='';
+          const lampiran=lap?(lap.lampiran||[]):[];
+          if(lampiran.length){
+            lampiran.forEach(function(x){
+              const row=document.createElement('div');row.className='lampiran-file-row';
+              const b=(window.siberadLampiranBadge&&window.siberadLampiranBadge(x.nama||x.url))||{text:'FILE',cls:'lfx-other'};
+              const icon=document.createElement('span');icon.className='lampiran-file-row-icon '+b.cls;icon.textContent=b.text;
+              const info=document.createElement('span');info.className='lampiran-file-row-info';
+              const a=document.createElement('a');a.className='lampiran-file-row-name';a.href=x.url;a.target='_blank';a.rel='noopener';a.textContent=x.nama||'Lihat lampiran';
+              const size=document.createElement('span');size.className='lampiran-file-row-size';size.textContent='Tersimpan';
+              info.appendChild(a);info.appendChild(size);
+              row.appendChild(icon);row.appendChild(info);
+              lampiranEl.appendChild(row);
+            });
+          }else{
+            const empty=document.createElement('div');empty.className='lampiran-file-list-empty';empty.textContent='Belum ada file yang diupload';
+            lampiranEl.appendChild(empty);
+          }
+        }
+        stepsEl.innerHTML='';
+        if(!tasks.length){
+          descEl.textContent='Tidak ada task untuk permintaan ini.';
+          if(detailBodyEl)detailBodyEl.textContent='Detail task tidak tersedia.';
+          if(detailBtnEl)detailBtnEl.hidden=true;
+          document.getElementById('pimpinanTaskDetailModal')?.classList.remove('open');
+          deskTa.value='';kendalaTa.value='';lampiranEl.innerHTML='';
+          if(stepPrev)stepPrev.hidden=true;
+          if(stepNext)stepNext.hidden=true;
+        }else{
+          let activeAssigned=false,defaultIdx=tasks.length-1;
+          const items=tasks.map(function(t,i){
+            let isActiveTask=false;
+            if(t.selesai){}else if(!activeAssigned){activeAssigned=true;defaultIdx=i;isActiveTask=true;}
+            const state=t.selesai?'done':(isActiveTask?'active':'pending');
+            const li=document.createElement('li');
+            li.className='wizard-step wizard-step-'+state;
+            li.title=t.deskripsi||'';
+            const dot=document.createElement('span');dot.className='wizard-step-dot';
+            if(t.selesai){dot.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>';}
+            else{dot.textContent=String(i+1);}
+            const label=document.createElement('span');label.className='wizard-step-label';label.textContent=t.deskripsi||('Task '+(i+1));
+            li.appendChild(dot);li.appendChild(label);
+            li.setAttribute('role','button');li.tabIndex=0;
+            stepsEl.appendChild(li);
+            return li;
+          });
+          items.forEach(function(li,i){
+            li.addEventListener('click',function(){showTask(i,items)});
+            li.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();showTask(i,items)}});
+          });
+          let startIdx=defaultIdx;
+          if(refresh){const p=parseInt((modal&&modal.dataset.plStep)||'',10);if(!isNaN(p))startIdx=Math.max(0,Math.min(p,items.length-1));}
+          ppItems=items;ppDefault=startIdx;
+        }
+        const progresActions=document.getElementById('pimpinanProgresActions');
+        if(progresActions){
+          progresActions.querySelectorAll('.pl-progres-action').forEach(function(b){b.remove();});
+          const statusP=button.dataset.status||'';
+          let actionBtn=null;
+          if(button.dataset.riwayat==='1'){
+            // Admin (Arsip Data) SELALU kirim riwayat="1" -- modal ini jadi
+            // read-only total, cuma tombol "Tutup".
+          }else if(statusP==='Dibatalkan'||statusP==='Terlambat'){
+            actionBtn=document.createElement('button');actionBtn.type='button';actionBtn.className='btn btn-edit-permintaan pl-progres-action';actionBtn.textContent='Edit Deadline';
+            actionBtn.dataset.permintaanId=button.dataset.permintaanId||'';actionBtn.dataset.perihal=button.dataset.perihal||'';actionBtn.dataset.deadline=button.dataset.deadlineRaw||'';actionBtn.dataset.editable=button.dataset.editable||'0';actionBtn.dataset.alasan=button.dataset.alasan||'';
+            actionBtn.addEventListener('click',function(){window.bukaEditDeadlinePermintaan&&window.bukaEditDeadlinePermintaan(actionBtn);});
+          }else if(statusP==='Sedang diproses'||statusP==='Terbaru'){
+            actionBtn=document.createElement('button');actionBtn.type='button';actionBtn.className='btn btn-batalkan-permintaan pl-progres-action';actionBtn.textContent='Batalkan';
+            actionBtn.dataset.permintaanId=button.dataset.permintaanId||'';actionBtn.dataset.perihal=button.dataset.perihal||'';
+            actionBtn.addEventListener('click',function(){window.bukaBatalkanPermintaan&&window.bukaBatalkanPermintaan(actionBtn);});
+          }else if(statusP==='Ditolak'){
+            actionBtn=document.createElement('button');actionBtn.type='button';actionBtn.className='btn btn-revisi-permintaan pl-progres-action';actionBtn.textContent='Revisi';
+            actionBtn.dataset.laporanId=button.dataset.laporanId||'';
+            actionBtn.addEventListener('click',function(){window.bukaRevisiLaporanPimpinan&&window.bukaRevisiLaporanPimpinan(actionBtn);});
+          }else if(statusP==='Menunggu'){
+            const lid=button.dataset.laporanId||'';
+            const tolakBtn=document.createElement('button');tolakBtn.type='button';tolakBtn.className='btn pl-progres-action pl-progres-reject';tolakBtn.textContent='Tolak';
+            tolakBtn.addEventListener('click',function(){window.bukaTolakLaporanPimpinan&&window.bukaTolakLaporanPimpinan(lid);});
+            const terimaBtn=document.createElement('button');terimaBtn.type='button';terimaBtn.className='btn pl-progres-action pl-progres-approve';terimaBtn.textContent='Terima';
+            terimaBtn.addEventListener('click',function(){window.bukaTerimaLaporanPimpinan&&window.bukaTerimaLaporanPimpinan(lid);});
+            progresActions.appendChild(tolakBtn);progresActions.appendChild(terimaBtn);
+          }
+          if(actionBtn)progresActions.appendChild(actionBtn);
+        }
+        if(modal){
+          modal.classList.toggle('pl-progres-has-steps',tasks.length>0);
+          if(refresh){
+            if(ppItems&&ppItems.length)showTask(ppDefault,ppItems);
+            else{modal.dataset.plStep='';}
+            refreshStepNav();
+          }else{
+            modal.classList.remove('open');
+            modal.classList.add('pl-mounted');
+            void modal.offsetWidth;
+            requestAnimationFrame(function(){
+              modal.classList.add('open');
+              requestAnimationFrame(function(){
+                if(ppItems&&ppItems.length)showTask(ppDefault,ppItems);
+                refreshStepNav();
+              });
+            });
+          }
+        }
+      };
+      window.tutupPimpinanProgres=function(){
+        const m=document.getElementById('pimpinanProgresModal');
+        if(!m)return;
+        m.classList.remove('open');
+        setTimeout(function(){if(!m.classList.contains('open'))m.classList.remove('pl-mounted');},240);
+      };
+      document.getElementById('pimpinanProgresTutupBtn')?.addEventListener('click',()=>tutupPimpinanProgres());
+      document.addEventListener('keydown',e=>{
+        if(e.key!=='Escape')return;
+        if(!document.getElementById('pimpinanProgresModal')?.classList.contains('open'))return;
+        if(document.getElementById('pimpinanTaskDetailModal')?.classList.contains('open'))return;
+        tutupPimpinanProgres();
+      });
+      (function(){
+        const tdm=document.getElementById('pimpinanTaskDetailModal');
+        if(!tdm)return;
+        const close=()=>tdm.classList.remove('open');
+        document.getElementById('pimpinanTaskDetailBtn')?.addEventListener('click',()=>tdm.classList.add('open'));
+        document.getElementById('pimpinanTaskDetailModalClose')?.addEventListener('click',close);
+        document.addEventListener('keydown',e=>{if(e.key==='Escape'&&tdm.classList.contains('open'))close();});
+      })();
       })();
       </script>
 
