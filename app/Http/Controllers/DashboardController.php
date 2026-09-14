@@ -92,7 +92,10 @@ class DashboardController
         // nge-filter kalau request()->is('dashboard') DAN role DANPUS/WADAN
         // -- Admin (kode ADMIN) tidak kena, jadi query polos ini otomatis
         // sudah termasuk yang arsip juga.
-        $semuaPelaporan = PermintaanLaporan::with(['tujuanSatuan', 'laporan'])->latest()->get();
+        // Eager-load 'laporans' (jamak, dipakai isSedangRevisi()) & 'tasks'
+        // (dipakai hitung "x/y tugas selesai" di kartu) -- tanpa ini kartu
+        // Blade di admin.blade.php bakal lazy-load keduanya PER BARIS (N+1).
+        $semuaPelaporan = PermintaanLaporan::with(['tujuanSatuan', 'laporan', 'laporans', 'tasks'])->latest()->get();
         $daftarBackup = app(BackupController::class)->index();
         // Hanya sesi yang benar-benar terautentikasi yang ditampilkan.
         // Baris guest dengan user_id NULL tidak termasuk sesi login aktif.
