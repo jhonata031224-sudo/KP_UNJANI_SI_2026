@@ -1021,37 +1021,43 @@
 
         <div id="adminKpisWrap">@include('siberad.dashboards.partials.admin-kpi-cards', ['stats' => $stats, 'semuaPengguna' => $semuaPengguna, 'semuaSatuan' => $semuaSatuan, 'laporanRekapMentah' => $laporanRekapMentah, 'suratSemuaAdmin' => $suratSemuaAdmin, 'permintaanResetPassword' => $permintaanResetPassword])</div>
 
-        <div class="panel chart-box">
-          <div class="panel-head"><div><h3>Statistik Sistem</h3><p>Sebaran akun per kategori, status laporan, dan tren aktivitas 7 hari terakhir.</p></div></div>
-          <div class="chart-box-grid">
+        {{-- Panel pembungkus "Statistik Sistem" (1 border besar ngerangkul 3
+             chart-mini) SENGAJA dihapus atas permintaan user -- dia mau 3
+             kartu chart ini berdiri sendiri-sendiri (gak "nyatu"), niru gaya
+             Pimpinan/Satuan yang tiap chart udah punya .chart-card sendiri
+             tanpa panel pembungkus tambahan. .chart-mini masing-masing sudah
+             punya border/background sendiri, jadi cukup dibiarkan jadi child
+             langsung -- class "chart-box" dipindah ke sini (bukan dihapus)
+             biar margin-bottom:26px bawaannya (lihat .chart-box{margin-bottom:
+             26px} di atas) tetap kepakai walau panel pembungkusnya hilang. --}}
+        <div class="chart-box-grid chart-box">
 
-            <div class="chart-mini chart-mini-link" data-tab-link="pengguna" role="button" tabindex="0" title="Lihat Daftar Pengguna">
-              <div class="chart-mini-head">
-                <div class="chart-mini-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-                <div><h4>Pengguna per Kategori Satuan</h4><p>Sebaran akun berdasarkan kategori.</p></div>
-              </div>
-              <div class="chart-wrap"><canvas id="chartKategoriSatuan"></canvas></div>
-              <div class="chart-legend" id="chartKategoriSatuanLegend"></div>
+          <div class="chart-mini chart-mini-link" data-tab-link="pengguna" role="button" tabindex="0" title="Lihat Daftar Pengguna">
+            <div class="chart-mini-head">
+              <div class="chart-mini-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div><h4>Pengguna per Kategori Satuan</h4><p>Sebaran akun berdasarkan kategori.</p></div>
             </div>
-
-            <div class="chart-mini chart-mini-link" data-tab-link="rekap-laporan" role="button" tabindex="0" title="Lihat Ringkasan Data">
-              <div class="chart-mini-head">
-                <div class="chart-mini-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-                <div><h4>Distribusi Status Laporan</h4><p>Proporsi status seluruh laporan di sistem.</p></div>
-              </div>
-              <div class="chart-wrap"><canvas id="chartStatusLaporan"></canvas></div>
-              <div class="chart-legend" id="chartStatusLaporanLegend"></div>
-            </div>
-
-            <div class="chart-mini chart-mini-link" data-tab-link="log-aktivitas" role="button" tabindex="0" title="Lihat Riwayat Aktivitas">
-              <div class="chart-mini-head">
-                <div class="chart-mini-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-                <div><h4>Aktivitas 7 Hari Terakhir</h4><p>Jumlah aksi tercatat per hari.</p></div>
-              </div>
-              <div class="chart-wrap"><canvas id="chartAktivitasMingguan"></canvas></div>
-            </div>
-
+            <div class="chart-wrap"><canvas id="chartKategoriSatuan"></canvas></div>
+            <div class="chart-legend" id="chartKategoriSatuanLegend"></div>
           </div>
+
+          <div class="chart-mini chart-mini-link" data-tab-link="rekap-laporan" role="button" tabindex="0" title="Lihat Ringkasan Data">
+            <div class="chart-mini-head">
+              <div class="chart-mini-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+              <div><h4>Distribusi Status Laporan</h4><p>Proporsi status seluruh laporan di sistem.</p></div>
+            </div>
+            <div class="chart-wrap"><canvas id="chartStatusLaporan"></canvas></div>
+            <div class="chart-legend" id="chartStatusLaporanLegend"></div>
+          </div>
+
+          <div class="chart-mini chart-mini-link" data-tab-link="log-aktivitas" role="button" tabindex="0" title="Lihat Riwayat Aktivitas">
+            <div class="chart-mini-head">
+              <div class="chart-mini-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+              <div><h4>Aktivitas 7 Hari Terakhir</h4><p>Jumlah aksi tercatat per hari.</p></div>
+            </div>
+            <div class="chart-wrap"><canvas id="chartAktivitasMingguan"></canvas></div>
+          </div>
+
         </div>
 
         <script>
