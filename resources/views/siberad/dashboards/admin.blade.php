@@ -213,7 +213,7 @@
 .role-akses-action-head,.role-akses-action{text-align:center!important;vertical-align:middle!important}
 </style>
 <style>
-  /* ===== Data Laporan (submenu Monitoring) ===== */
+  /* ===== Arsip Data (submenu Monitoring, dulu "Data Laporan") ===== */
   .dl-head{display:flex;align-items:flex-start;gap:14px;}
   .dl-head-panel{margin-bottom:20px;}
   .dl-head-icon{flex:0 0 auto;width:46px;height:46px;border-radius:12px;background:var(--gold-dim);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gold-bright);}
@@ -351,7 +351,7 @@
           </div>
           <div class="help-topic-body">
             <div class="help-topic-title">Monitoring</div>
-            <div class="help-topic-desc">Ringkasan Data (rekap &amp; grafik seluruh satuan), Data Laporan (daftar lengkap + ekspor), dan Pengguna Aktif (daftar yang sedang login).</div>
+            <div class="help-topic-desc">Ringkasan Data (rekap &amp; grafik seluruh satuan), Arsip Data (daftar lengkap + ekspor), dan Pengguna Aktif (daftar yang sedang login).</div>
           </div>
         </div>
         <div class="help-topic">
@@ -737,7 +737,7 @@
         <div class="side-subnav"><div>
           <span class="side-subnav-label">Monitoring</span>
           <a href="#" class="side-sub-link" data-tab-link="rekap-laporan" title="Ringkasan Data"><span class="sub-dot"></span>Ringkasan Data</a>
-          <a href="#" class="side-sub-link" data-tab-link="laporan-admin" title="Data Laporan"><span class="sub-dot"></span>Data Laporan</a>
+          <a href="#" class="side-sub-link" data-tab-link="laporan-admin" title="Arsip Data"><span class="sub-dot"></span>Arsip Data</a>
           <a href="#" class="side-sub-link" data-tab-link="sesi-aktif" title="Pengguna Aktif"><span class="sub-dot"></span>Pengguna Aktif</a>
         </div></div>
       </div>
@@ -2756,7 +2756,7 @@
             var resetBtn = document.getElementById('logFilterReset');
             if (resetBtn) {
               resetBtn.addEventListener('click', function () {
-                // Samakan dengan Data Laporan: "Dari" & "Sampai" sama-sama
+                // Samakan dengan Arsip Data: "Dari" & "Sampai" sama-sama
                 // dikosongkan (tanpa batas tanggal sama sekali).
                 dariInput.value = '';
                 sampaiInput.value = '';
@@ -3320,7 +3320,7 @@
         </script>
       </section>
 
-      {{-- ===== DATA LAPORAN ===== --}}
+      {{-- ===== ARSIP DATA (dulu "Data Laporan") ===== --}}
       <section class="tab-panel" data-tab-panel="laporan-admin">
         <div class="panel dl-head-panel">
           <div class="dl-head">
@@ -3328,7 +3328,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>
             </div>
             <div>
-              <h2>Data Laporan</h2>
+              <h2>Arsip Data</h2>
               <p>Rekap data pengguna dan aktivitas sistem, siap diekspor. Unduh dalam format CSV (bisa dibuka Excel) atau cetak sebagai PDF.</p>
             </div>
           </div>
@@ -3517,7 +3517,7 @@
 
       <script>
       (function () {
-        // Toggle sub-tab Data Pengguna / Data Aktivitas di dalam panel Data Laporan.
+        // Toggle sub-tab Data Pengguna / Data Aktivitas di dalam panel Arsip Data.
         var tabs = document.querySelectorAll('.dl-tab');
         tabs.forEach(function (tab) {
           tab.addEventListener('click', function () {
@@ -3544,7 +3544,7 @@
           document.querySelectorAll('.dl-download.open').forEach(function (o) { o.classList.remove('open'); });
         });
 
-        // Hitung jumlah data yang tampil untuk kedua tabel Data Laporan, format
+        // Hitung jumlah data yang tampil untuk kedua tabel Arsip Data, format
         // "X data ditampilkan" -- beda dari format global "X dari Y data" supaya
         // sama persis dengan rancangan.
         function dlHitungTampil(tableId) {
@@ -3594,7 +3594,7 @@
           dlHitungTampil(id);
         });
 
-        // ── Filter tanggal + refresh untuk Data Laporan ──────────────────────
+        // ── Filter tanggal + refresh untuk Arsip Data ──────────────────────
         function parseLocalDate(str) {
           if (!str) return null;
           var p = str.split('-');
@@ -3708,7 +3708,7 @@
         buatResetHandler('dlPenggunaDari',  'dlPenggunaSampai',  'tblDlPengguna');
         buatResetHandler('dlAktivitasDari', 'dlAktivitasSampai', 'tblDlAktivitas');
 
-        // Dropdown filter kategori Data Laporan (Data Pengguna & Data Aktivitas)
+        // Dropdown filter kategori Arsip Data (Data Pengguna & Data Aktivitas)
         ['tblDlPengguna', 'tblDlAktivitas'].forEach(function (id) {
           var cfg = id === 'tblDlPengguna'
             ? ['dlPenggunaDari', 'dlPenggunaSampai']
