@@ -270,7 +270,12 @@
 
     function start(){
         if(!document.getElementById('riwayat')&&!document.getElementById('masuk'))return;
-        poll();timer=window.setInterval(poll,2500);
+        // 3 detik (bukan 2.5 detik) -- endpoint log-aktivitas/realtime ini JUGA
+        // dipoll dari sisi Pimpinan (danpus-laporan-request-realtime, 2 detik).
+        // Kalau tab Satuan & Pimpinan dibuka bareng, gabungan keduanya numpuk
+        // ke server dev lokal yang cuma 1 worker -- lihat komentar di
+        // danpus-laporan-request-realtime.blade.php.
+        poll();timer=window.setInterval(poll,3000);
         // syncRequestList() sengaja DIPISAH dari siklus poll() 2500ms di atas
         // (dulu dipanggil bareng di situ) -- endpoint yang sama JUGA sudah
         // dipoll independen tiap 3000ms oleh permintaan-laporan-realtime.blade.php
