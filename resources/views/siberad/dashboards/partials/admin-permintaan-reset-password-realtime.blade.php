@@ -5,16 +5,18 @@
   var url = @json(route('admin.permintaan-reset-password.realtime'));
   var lastSeen = 0, polling = false, initial = true;
 
-  // Tab admin lain (display:none, BUKAN di-unmount) tidak perlu ikut nge-
-  // fetch data yang tidak kelihatan -- poll otomatis lanjut lagi begitu
-  // admin balik ke tab ini.
-  function tabIniAktif() {
-    var panel = document.querySelector('[data-tab-panel="reset-password"]');
-    return !panel || panel.classList.contains('active');
-  }
-
+  // DULU ada gate tabIniAktif() (poll cuma jalan kalau tab "Permintaan
+  // Ganti Password" lagi aktif) -- niatnya hemat resource, tapi efeknya
+  // toast "Ada permintaan ganti password baru" SAMA SEKALI gak muncul
+  // selama admin buka tab LAIN (mis. Dashboard), dan begitu pindah ke tab
+  // ini pun harus nunggu sampai 1 siklus interval penuh (dulu 4 detik)
+  // sebelum data+toast-nya nongol -- notifikasi jadi kerasa "delay"/gak
+  // reliable. Dihapus total -- poller ini sekarang jalan terus di
+  // background APAPUN tab yang lagi aktif, sama kayak mayoritas poller
+  // lain (syncAdminKpis dkk), biar toast beneran realtime kapan pun admin
+  // lagi di halaman manapun (dilaporkan user 2026-09-14).
   function poll() {
-    if (polling || !tabIniAktif()) return;
+    if (polling) return;
     polling = true;
     fetch(url + '?since=' + (initial ? 0 : lastSeen) + '&_=' + Date.now(), { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
       .then(function (r) { return r.ok ? r.json() : null; })
@@ -53,6 +55,12 @@
       .finally(function () { polling = false; });
   }
 
-  setInterval(poll, 4000);
+  // Poll pertama LANGSUNG jalan (dulu nunggu interval pertama, nambah delay
+  // start-up) -- initial=true di sini masih menjaga poll pertama ini gak
+  // nge-toast buat request LAMA yang udah ada sebelum halaman dibuka, cuma
+  // buat nyamain baseline lastSeen. Interval 3 detik (dulu 4) biar sejalan
+  // sama standar poll fitur lain (audit polling 2026-09-14).
+  poll();
+  setInterval(poll, 3000);
 })();
 </script>

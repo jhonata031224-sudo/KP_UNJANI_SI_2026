@@ -644,6 +644,12 @@
           render();
         }).catch(function () {}).finally(function () { polling = false; });
       }
+      // Poll pertama LANGSUNG jalan (dulu murni nunggu interval pertama) --
+      // `notifications` di atas udah di-seed dari render server, jadi
+      // panggilan langsung ini aman (gak flicker), cuma mempercepat begitu
+      // ADA notifikasi baru yang kejadian pas navbar ini baru dimuat (audit
+      // polling menyeluruh 2026-09-14).
+      poll();
       pollTimer = window.setInterval(poll, POLL_INTERVAL_MS);
     }
   }

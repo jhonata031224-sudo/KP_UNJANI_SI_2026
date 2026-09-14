@@ -2782,6 +2782,14 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
     // jalan BARENGAN sama syncAdminKpis/syncSatuanKpis/danpus-laporan-request-
     // realtime kalau beberapa dashboard dibuka sekaligus, numpuk request
     // bikin lag. tickRelativeTimes TETAP 1 detik (client-only, no network).
+    // Dulu cuma setInterval tanpa poll langsung -- begitu tab ini dibuka,
+    // KPI/donut/tren/surat/kendala di sini nunggu 2 detik dulu sebelum
+    // sempat nyegerin diri. lastFreshHtml/dst di atas udah di-seed dari
+    // HTML render server, jadi panggilan langsung ini aman (gak flicker
+    // kalau belum ada perubahan) -- cuma mempercepat begitu ADA perubahan
+    // yang kejadian pas Pimpinan lagi transisi ke tab ini (audit polling
+    // 2026-09-14).
+    syncPimpinanKpis();
     window.setInterval(syncPimpinanKpis,2000);
     document.addEventListener('visibilitychange',function(){if(!document.hidden){syncPimpinanKpis();tickRelativeTimes();}});
   })();

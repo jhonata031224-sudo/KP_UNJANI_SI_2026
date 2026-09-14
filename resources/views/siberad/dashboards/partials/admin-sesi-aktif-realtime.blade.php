@@ -10,16 +10,14 @@
   // bikin semua baris ikut kedip pas dashboard baru dibuka.
   var animate = false;
 
-  // Tab admin lain (display:none, BUKAN di-unmount) tidak perlu ikut nge-
-  // fetch data yang tidak kelihatan -- poll otomatis lanjut lagi begitu
-  // admin balik ke tab ini.
-  function tabIniAktif() {
-    var panel = document.querySelector('[data-tab-panel="sesi-aktif"]');
-    return !panel || panel.classList.contains('active');
-  }
-
+  // DULU ada gate tabIniAktif() (poll cuma jalan kalau tab "Sesi Aktif"
+  // lagi aktif) -- niatnya hemat resource, tapi efeknya daftar sesi jadi
+  // basi (stale) selama admin buka tab LAIN, sama persis kayak bug yang
+  // dilaporkan user di admin-permintaan-reset-password-realtime.blade.php.
+  // Dihapus total -- poller ini sekarang jalan terus di background apapun
+  // tab yang aktif (audit polling menyeluruh, dilaporkan user 2026-09-14).
   function poll() {
-    if (busy || !tabIniAktif()) return;
+    if (busy) return;
     busy = true;
     fetch(url + '?_=' + Date.now(), { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
       .then(function (r) { return r.ok ? r.json() : null; })

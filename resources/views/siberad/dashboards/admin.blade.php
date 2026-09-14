@@ -7441,6 +7441,15 @@
     // dibuka sekaligus -- semua nembak tiap 1 detik bikin request-nya numpuk
     // & keseluruhan situs kerasa lag. tickRelativeTimes TETAP 1 detik (client-
     // only, gak ada network call, jadi gak nyumbang beban server).
+    // Dulu cuma setInterval tanpa poll langsung -- begitu admin buka tab
+    // Dashboard, KPI/chart/list di sini nunggu 2 detik dulu sebelum sempat
+    // nyegerin diri, walau datanya sendiri udah kebentuk dari render
+    // server. lastFreshHtml/lastResetPasswordHtml/dst di atas udah di-seed
+    // dari HTML yang sama, jadi panggilan langsung ini aman (gak bikin
+    // flicker kalau memang belum ada perubahan) -- cuma mempercepat begitu
+    // ADA perubahan yang kejadian pas admin lagi transisi ke tab ini
+    // (audit polling 2026-09-14).
+    syncAdminKpis();
     window.setInterval(syncAdminKpis,2000);
     document.addEventListener('visibilitychange',function(){if(!document.hidden){syncAdminKpis();tickRelativeTimes();}});
   })();

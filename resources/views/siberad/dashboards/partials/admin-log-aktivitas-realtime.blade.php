@@ -34,17 +34,15 @@
     return sampai.value >= tanggalLokalHariIni();
   }
 
-  // Tab admin lain (display:none, BUKAN di-unmount) tidak perlu ikut nge-
-  // fetch data yang tidak kelihatan -- hemat network/CPU selagi admin lagi
-  // buka tab LAIN (mis. Dashboard), poll otomatis lanjut lagi begitu admin
-  // balik ke tab ini (delay paling lama cuma 1 siklus interval).
-  function tabIniAktif() {
-    var panel = document.querySelector('[data-tab-panel="log-aktivitas"]');
-    return !panel || panel.classList.contains('active');
-  }
-
+  // DULU ada gate tabIniAktif() (poll cuma jalan kalau tab "Riwayat
+  // Aktivitas" lagi aktif) -- niatnya hemat resource, tapi efeknya toast
+  // "Ada X aktivitas baru tercatat." SAMA SEKALI gak muncul selama admin
+  // buka tab LAIN (mis. Dashboard), sama persis kayak bug yang dilaporkan
+  // user di admin-permintaan-reset-password-realtime.blade.php. Dihapus
+  // total -- poller ini sekarang jalan terus di background apapun tab yang
+  // aktif (audit polling menyeluruh, dilaporkan user 2026-09-14).
   function ambilAktivitasBaru() {
-    if (!tabIniAktif() || !sedangLihatHariIni()) return;
+    if (!sedangLihatHariIni()) return;
     fetch(url + '?after_id=' + lastId, { headers: { Accept: 'application/json' } })
       .then(function (res) { return res.ok ? res.json() : null; })
       .then(function (data) {
@@ -93,6 +91,10 @@
       .catch(function () {});
   }
 
+  // Poll pertama LANGSUNG jalan (dulu murni nunggu interval pertama) --
+  // begitu tab Riwayat Aktivitas dibuka, tabel langsung disegarkan tanpa
+  // nunggu sampai 5 detik (audit polling 2026-09-14).
+  ambilAktivitasBaru();
   setInterval(ambilAktivitasBaru, 5000);
 })();
 </script>
