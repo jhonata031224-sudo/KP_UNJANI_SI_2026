@@ -866,6 +866,19 @@
   </script>
 
   <main class="main">
+    @php
+      // Badge notifikasi awal (server-rendered, sebelum JS polling jalan)
+      // sengaja MENGECUALIKAN pengumuman kategori 'keterangan' dari hitungan
+      // -- notif jenis itu memang tidak pernah bisa diklik/ditandai dibaca
+      // (lihat notification-controls.blade.php: hitungSebagaiUnread() &
+      // render()), jadi kalau ikut dihitung di sini badge akan nyangkut
+      // "belum dibaca" selamanya walau secara visual tidak pernah ditandai
+      // begitu. Logikanya disamakan persis dengan hitungSebagaiUnread() di
+      // sisi client supaya angka awal (sebelum poll pertama) tidak beda.
+      $snUnreadNotifCount = auth()->user()?->unreadNotifications
+          ->reject(fn ($n) => ($n->data['tipe'] ?? null) === 'pengumuman_admin' && ($n->data['kategori'] ?? null) === 'keterangan')
+          ->count() ?? 0;
+    @endphp
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:12px;">
         <button class="menu-btn" id="menuBtn" type="button">☰</button>
@@ -882,7 +895,7 @@
               <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" style="fill:var(--gold-dim) !important;stroke:var(--gold-bright) !important;"></path>
               <path d="M13.73 21a2 2 0 0 1-3.46 0" style="fill:none !important;stroke:var(--gold-bright) !important;"></path>
             </svg>
-            <span class="siberad-notif-badge" style="{{ auth()->user()?->unreadNotifications->count() ? '' : 'display:none;' }}">{{ auth()->user()?->unreadNotifications->count() > 99 ? '99+' : auth()->user()?->unreadNotifications->count() }}</span>
+            <span class="siberad-notif-badge" style="{{ $snUnreadNotifCount ? '' : 'display:none;' }}">{{ $snUnreadNotifCount > 99 ? '99+' : $snUnreadNotifCount }}</span>
           </button>
 
           <div class="profile-dropdown" id="notifDropdown" role="menu" aria-label="Notifikasi">
