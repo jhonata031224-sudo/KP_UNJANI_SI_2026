@@ -56,6 +56,7 @@
 
         // API balikin urutan terbaru dulu; balik supaya yang paling baru
         // tetap tampil paling atas tabel secara kronologis.
+        var jumlahBaru = 0;
         data.log.slice().reverse().forEach(function (l) {
           if (tbody.querySelector('[data-log-id="' + l.id + '"]')) return;
           var tr = document.createElement('tr');
@@ -69,11 +70,23 @@
             '<td style="color:var(--text-muted);">' + escapeHtml(l.deskripsi) + '</td>' +
             '<td style="color:var(--text-dim);">' + escapeHtml(l.ip) + '</td>';
           tbody.insertBefore(tr, tbody.firstChild);
+          jumlahBaru++;
         });
 
         // Tanpa ini, baris baru tetap kelihatan walau lagi ada kata kunci
         // pencarian/filter kategori aktif yang seharusnya menyembunyikannya.
         if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblLogAktivitas');
+
+        // Admin dulu SATU-SATUNYA role yang gak dapat toast pop-up buat
+        // aktivitas/laporan baru masuk (Pimpinan sudah punya lewat
+        // log-aktivitas-realtime.blade.php, "Ada X laporan baru masuk.") --
+        // gak butuh guard "poll pertama" kayak punya Pimpinan karena lastId
+        // di sini SELALU diturunkan dari baris yang SUDAH kerender
+        // server-side (bukan fetch ulang "semua sejak 0"), jadi baris yang
+        // nyisip lewat sini pasti beneran baru (audit polling 2026-09-14).
+        if (jumlahBaru > 0 && window.siberadShowToast) {
+          window.siberadShowToast('success', jumlahBaru === 1 ? 'Ada 1 aktivitas baru tercatat.' : 'Ada ' + jumlahBaru + ' aktivitas baru tercatat.');
+        }
 
         lastId = data.max_id;
       })

@@ -85,7 +85,13 @@
         if(typeof data.masuk_items_html==='string') newMasuk=syncGrid(gridMasuk,data.masuk_items_html,emptyMasuk);
         if(typeof data.arsip_items_html==='string') syncGrid(gridArsip,data.arsip_items_html,emptyArsip);
         if(animateSync && newMasuk>0 && window.siberadShowToast){
-          window.siberadShowToast('success', newMasuk===1?'Ada 1 kendala baru masuk dari Kasansi.':'Ada '+newMasuk+' kendala baru masuk dari Kasansi.');
+          // Teks SENGAJA beda dari toast kendala langsung punya Pimpinan
+          // (danpus-kendala-kasansi-realtime.blade.php, "Ada X kendala baru
+          // masuk dari Kasansi.") -- ini data TEMBUSAN (kendala yang
+          // di-CC ke satuan ini), bukan kendala langsung. Sebelumnya
+          // teksnya identik persis, jadi kalau 2 event ini kejadian
+          // berdekatan keliatan kayak toast duplikat/telat (audit 2026-09-14).
+          window.siberadShowToast('success', newMasuk===1?'Ada 1 tembusan kendala baru masuk dari Kasansi.':'Ada '+newMasuk+' tembusan kendala baru masuk dari Kasansi.');
         }
         animateSync=true;
       }).catch(function(){}).finally(function(){busy=false;});

@@ -31,6 +31,10 @@
           }
         }
         if(!initial&&inserted>0&&window.siberadShowToast){
+          // Teks ini kendala LANGSUNG (bukan tembusan) -- lihat
+          // tembusan-kendala-realtime.blade.php (Satuan) buat toast serupa
+          // tapi datanya beda, teksnya sengaja dibedain biar gak keliatan
+          // kayak duplikat kalau 2 event ini kejadian berdekatan.
           window.siberadShowToast('success', inserted===1?'Ada 1 kendala baru masuk dari Kasansi.':'Ada '+inserted+' kendala baru masuk dari Kasansi.');
         }
         if(typeof data.latest_id==='number')lastSeen=Math.max(lastSeen,data.latest_id);

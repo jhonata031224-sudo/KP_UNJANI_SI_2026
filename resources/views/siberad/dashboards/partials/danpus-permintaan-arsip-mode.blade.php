@@ -710,14 +710,20 @@ function initDanpusArchiveMode(){
  rebind();syncEmptyState();initCardFilter();
 
  // Riwayat Laporan (#riwayat) -- kartu awal dari server: bind menu/pin + filter,
- // lalu ikut disegarkan tiap siklus loadHistory() (interval 5 dtk di bawah).
+ // lalu ikut disegarkan tiap siklus loadHistory() (interval 3 dtk di bawah).
  if(riwayatList){
    bindRiwayatMenus();bindRiwayatPinButtons();initRiwayatCardFilter();syncRiwayatEmptyState();
    new MutationObserver(function(){bindRiwayatMenus();bindRiwayatPinButtons();}).observe(riwayatList,{childList:true});
  }
 
- loadHistory();window.setInterval(()=>{if(!document.hidden&&!busy)loadHistory()},5000);
- syncPimpinanCards();window.setInterval(syncPimpinanCards,4000);
+ // loadHistory (dulu 5dt) & syncPimpinanCards (dulu 4dt) DISAMAKAN ke 3dt --
+ // sama-sama nembak endpoint permintaan-laporan.realtime yang JUGA dipoll
+ // 3dt dari sisi Satuan (permintaan-laporan-realtime.blade.php/
+ // laporan-role-realtime-sync.blade.php). Sebelumnya beda-beda (3/4/5/6dt)
+ // bikin kartu aktif & riwayat di 1 halaman yang sama ke-refresh di waktu
+ // beda-beda, kerasa "nggak sinkron" (audit 2026-09-14).
+ loadHistory();window.setInterval(()=>{if(!document.hidden&&!busy)loadHistory()},3000);
+ syncPimpinanCards();window.setInterval(syncPimpinanCards,3000);
  document.addEventListener('visibilitychange',function(){if(!document.hidden)syncPimpinanCards();});
 
  // Dipakai setelah aksi AJAX (Batalkan / Edit Deadline dari modal Lihat

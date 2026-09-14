@@ -892,7 +892,6 @@
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){siberadEnhanceFileInputs();});}else{siberadEnhanceFileInputs();}
 </script>
 <script>
-  var siberadToastQueue = [];
   function siberadShowToast(type, message){
     var stack = document.getElementById('siberadToastStack');
     if(!stack){ stack=document.createElement('div'); stack.id='siberadToastStack'; stack.className='toast-stack'; document.body.appendChild(stack); }
@@ -908,25 +907,21 @@
     toast.style.top = '0px';
     stack.prepend(toast);
     siberadRelayoutToasts(stack);
-    var entry = { el: toast, leaving: false, readyAt: Date.now() + 3000 };
-    siberadToastQueue.push(entry);
-    function tryLeave(){
-      if(entry.leaving) return;
-      if(Date.now() < entry.readyAt) return;
-      var idx = siberadToastQueue.indexOf(entry);
-      if(idx > 0 && siberadToastQueue.slice(0, idx).some(function(e){ return !e.leaving; })) return;
-      entry.leaving = true;
+    // Tiap toast hilang di TIMERNYA SENDIRI (3 detik), TIDAK NUNGGU toast
+    // lain yang lebih lama selesai mulai menghilang duluan -- dulu ada
+    // antrian FIFO (siberadToastQueue, poll tiap 100ms per toast) yang
+    // ngeblok toast baru sampai SEMUA toast lebih lama udah mulai
+    // menghilang. Di kondisi banyak poller realtime jalan bareng (main
+    // thread browser kadang sibuk), setTimeout toast lama bisa telat
+    // dieksekusi & nge-block toast baru yang harusnya udah siap hilang
+    // duluan -- kerasa kayak notifikasi "numpuk"/delay. Dihapus total biar
+    // tiap toast independen tanpa saling nunggu (audit polling 2026-09-14).
+    setTimeout(function(){
       toast.classList.add('leaving');
       setTimeout(function(){
         toast.remove();
-        var i = siberadToastQueue.indexOf(entry);
-        if(i > -1) siberadToastQueue.splice(i, 1);
         siberadRelayoutToasts(stack);
       }, 400);
-    }
-    setTimeout(function poll(){
-      tryLeave();
-      if(!entry.leaving) setTimeout(poll, 100);
     }, 3000);
   }
   function siberadRelayoutToasts(stack){

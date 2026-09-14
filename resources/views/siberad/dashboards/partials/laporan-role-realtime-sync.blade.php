@@ -276,15 +276,19 @@
         // ke server dev lokal yang cuma 1 worker -- lihat komentar di
         // danpus-laporan-request-realtime.blade.php.
         poll();timer=window.setInterval(poll,3000);
-        // syncRequestList() sengaja DIPISAH dari siklus poll() 2500ms di atas
-        // (dulu dipanggil bareng di situ) -- endpoint yang sama JUGA sudah
-        // dipoll independen tiap 3000ms oleh permintaan-laporan-realtime.blade.php
-        // (yang nanganin item BARU+toast). Kalau syncRequestList() (yang cuma
-        // nanganin update/hapus item LAMA, lihat komentar di atas) ikut nempel
-        // di 2500ms, query ke endpoint yang sama jadi 2x lipat buat data yang
-        // tumpang-tindih. Interval lebih santai di sini masih cukup responsif
-        // buat update status (bukan insert-baru yang butuh terasa instan).
-        syncRequestList();window.setInterval(syncRequestList,6000);
+        // syncRequestList() sengaja DIPISAH dari siklus poll() di atas (dulu
+        // dipanggil bareng di situ) -- endpoint yang sama JUGA dipoll
+        // independen oleh permintaan-laporan-realtime.blade.php (yang
+        // nanganin item BARU+toast). DULU sengaja dibikin lebih santai
+        // (6 detik) biar query ke endpoint yang sama gak 2x lipat -- tapi
+        // itu bikin item LAMA (status berubah/dihapus) bisa keliatan nyantol
+        // sampai 3 detik lebih lama dari item BARU yang insert di 3 detik,
+        // kerasa "nggak sinkron". Sekarang DISAMAKAN 3 detik biar 2 bagian
+        // (item baru vs item lama) di kartu yang sama selalu segar bareng --
+        // trade-off-nya request ke endpoint ini jadi lebih sering, tapi
+        // query-nya sendiri ringan (audit 2026-09-14: standardisasi semua
+        // poller permintaan-laporan.realtime ke 3 detik).
+        syncRequestList();window.setInterval(syncRequestList,3000);
         document.addEventListener('visibilitychange',function(){if(!document.hidden)poll();});window.addEventListener('focus',poll);
     }
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();

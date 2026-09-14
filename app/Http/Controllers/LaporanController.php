@@ -52,11 +52,12 @@ class LaporanController extends Controller
         $includeRequests = $request->query('requests', '1') !== '0';
         // Deteksi permintaan BARU (eager-load tambahan + render partial) di
         // luar $includeRequests -- danpus-laporan-request-realtime.blade.php
-        // poll endpoint ini tiap 1200ms (PALING SERING di seluruh sistem)
-        // TAPI cuma baca request_states (status permintaan yang SUDAH ada),
-        // tidak pernah insert baris baru. Tanpa gate terpisah ini,
-        // eager-load tasks.laporans + render partial per item bakal
-        // kebayar sia-sia di poller itu tiap 1.2 detik.
+        // poll endpoint ini tiap 2000ms (dulu 1200ms, diperlambat waktu
+        // audit polling 2026-09-14 -- lihat komentar interval di file itu
+        // sendiri) TAPI cuma baca request_states (status permintaan yang
+        // SUDAH ada), tidak pernah insert baris baru. Tanpa gate terpisah
+        // ini, eager-load tasks.laporans + render partial per item bakal
+        // kebayar sia-sia tiap siklus poll itu.
         $includeNewRequests = $request->query('requests_new', '1') !== '0';
         // Beda tujuan sama $includeNewRequests di atas -- itu cuma nangkep
         // ITEM YANG BELUM PERNAH TAMPIL (cursor-based). Baris yang SUDAH ada
@@ -151,13 +152,12 @@ class LaporanController extends Controller
         );
 
         // Sengaja di-gate sama $includeReports (SAMA seperti $items di atas) --
-        // danpus-laporan-request-realtime.blade.php poll tiap 1200ms (paling
-        // sering di seluruh sistem) manggil endpoint ini dengan
-        // ?reports=0&requests=1 justru KARENA cuma butuh request_states,
-        // TIDAK PERNAH baca 'stats'/'total_laporan'/'total_disetujui'/
-        // 'total_ditolak' sama sekali -- tanpa gate ini, query & looping
-        // berat di atas kebayar sia-sia tiap 1.2 detik buat hasil yang
-        // langsung dibuang si pemanggil.
+        // danpus-laporan-request-realtime.blade.php poll tiap 2000ms
+        // manggil endpoint ini dengan ?reports=0&requests=1 justru KARENA
+        // cuma butuh request_states, TIDAK PERNAH baca 'stats'/
+        // 'total_laporan'/'total_disetujui'/'total_ditolak' sama sekali --
+        // tanpa gate ini, query & looping berat di atas kebayar sia-sia
+        // tiap siklus poll itu buat hasil yang langsung dibuang si pemanggil.
         if ($includeReports) {
             $semuaStatus = Laporan::whereIn('satuan_id', $satuanIds)->get(['satuan_id', 'status']);
             $statsBySatuan = collect($satuanIds)->mapWithKeys(function ($satuanId) use ($semuaStatus) {
