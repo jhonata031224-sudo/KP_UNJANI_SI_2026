@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Pengaturan;
-use App\Models\PermintaanLaporan;
 use App\Models\Satuan;
 use App\Models\User;
 use App\Support\SimpleXlsx;
@@ -99,35 +98,6 @@ class ReportController extends Controller
             ['Waktu', 'Pengguna', 'Satuan', 'Aksi', 'Deskripsi', 'Detail', 'IP Address'],
             $rows,
             [23, 32, 26, 30, 70, 46, 22],
-        );
-    }
-
-    /**
-     * Export permintaan laporan (dari Pimpinan ke satuan) sebagai XLSX --
-     * SEMUA data, baik yang sudah diarsipkan Pimpinan maupun yang masih
-     * aktif, sama seperti isi tabel "Data Pelaporan" pada tab Arsip Data.
-     *
-     * Menerima query 'q', 'kategori', 'dari', 'sampai' — sama seperti
-     * exportUsersExcel()/exportActivityExcel(), supaya hasil unduhan
-     * konsisten dengan filter yang aktif di tabel.
-     */
-    public function exportPelaporanExcel(Request $request)
-    {
-        $pelaporan = $this->filteredPelaporan($request);
-        $rows = $pelaporan->map(fn ($p) => [
-            $p->perihal ?: '-',
-            $p->tujuanSatuan?->nama ?: '-',
-            $p->statusTampilan(),
-            $p->archived_at ? 'Sudah Diarsipkan' : 'Belum Diarsipkan',
-            $p->created_at?->format('d/m/Y H:i') ?: '-',
-        ])->all();
-
-        return SimpleXlsx::download(
-            'laporan-pelaporan-'.now()->format('Ymd_His').'.xlsx',
-            'Data Pelaporan',
-            ['Perihal', 'Tujuan Satuan', 'Status', 'Arsip', 'Dibuat'],
-            $rows,
-            [40, 34, 22, 20, 22],
         );
     }
 
@@ -243,9 +213,6 @@ class ReportController extends Controller
             'log' => $jenis === 'aktivitas'
                 ? $this->filteredActivityLog($request)
                 : collect(),
-            'semuaPelaporan' => $jenis === 'pelaporan'
-                ? $this->filteredPelaporan($request)
-                : collect(),
             'dicetakOleh' => $request->user(),
             'dicetakPada' => now(),
         ]);
@@ -331,53 +298,6 @@ class ReportController extends Controller
         }
 
         return $log->values();
-    }
-
-    /**
-     * SEMUA permintaan laporan (dari Pimpinan ke satuan), baik yang sudah
-     * diarsipkan maupun belum -- disaring dengan query 'q' (perihal/tujuan
-     * satuan/status), 'kategori' (label kategori satuan TUJUAN), serta
-     * rentang tanggal dibuat 'dari'/'sampai'. Dipakai bersama oleh export
-     * Excel & cetak PDF supaya keduanya konsisten dengan filter yang aktif
-     * di tabel "Data Pelaporan".
-     *
-     * TIDAK perlu withoutGlobalScope -- global scope
-     * hideArchivedOnPimpinanDashboard di model PermintaanLaporan cuma
-     * berlaku utk request /dashboard milik role DANPUS/WADAN, bukan utk
-     * endpoint export/cetak Admin ini, jadi baris arsip otomatis ikut.
-     */
-    private function filteredPelaporan(Request $request)
-    {
-        $pelaporan = PermintaanLaporan::with(['tujuanSatuan', 'laporan'])->latest()->get();
-
-        $q = mb_strtolower(trim((string) $request->query('q', '')));
-        $kategori = trim((string) $request->query('kategori', ''));
-        $dari = $request->filled('dari') ? Carbon::parse($request->query('dari'))->startOfDay() : null;
-        $sampai = $request->filled('sampai') ? Carbon::parse($request->query('sampai'))->endOfDay() : null;
-
-        if ($q !== '') {
-            $pelaporan = $pelaporan->filter(function ($p) use ($q) {
-                $haystack = mb_strtolower(trim(implode(' ', [
-                    $p->perihal, $p->tujuanSatuan->nama ?? '', $p->statusTampilan(),
-                ])));
-
-                return str_contains($haystack, $q);
-            });
-        }
-
-        if ($kategori !== '') {
-            $pelaporan = $pelaporan->filter(fn ($p) => $this->kategoriLabel($p->tujuanSatuan->kategori ?? null) === $kategori);
-        }
-
-        if ($dari) {
-            $pelaporan = $pelaporan->filter(fn ($p) => $p->created_at && $p->created_at->gte($dari));
-        }
-
-        if ($sampai) {
-            $pelaporan = $pelaporan->filter(fn ($p) => $p->created_at && $p->created_at->lte($sampai));
-        }
-
-        return $pelaporan->values();
     }
 
     /**

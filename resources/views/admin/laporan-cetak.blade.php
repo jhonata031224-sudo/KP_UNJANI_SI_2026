@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ $jenis === 'pengguna' ? 'Cetak Laporan Pengguna' : ($jenis === 'aktivitas' ? 'Cetak Riwayat Aktivitas' : 'Cetak Data Pelaporan') }} — {{ $pengaturan?->namaSistem() ?? 'SIBERAD' }}</title>
+<title>{{ $jenis === 'pengguna' ? 'Cetak Laporan Pengguna' : 'Cetak Riwayat Aktivitas' }} — {{ $pengaturan?->namaSistem() ?? 'SIBERAD' }}</title>
 <style>
   body{font-family:Georgia,'Times New Roman',serif;color:#111;margin:36px;}
   header{display:flex;align-items:center;gap:14px;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:18px;}
@@ -28,7 +28,7 @@
     @endif
     <div>
       <h1>{{ $pengaturan->nama_instansi }}</h1>
-      <p>{{ $jenis === 'pengguna' ? 'Laporan Daftar Pengguna Sistem '.($pengaturan?->namaSistem() ?? 'SIBERAD') : ($jenis === 'aktivitas' ? 'Laporan Riwayat Aktivitas Sistem '.($pengaturan?->namaSistem() ?? 'SIBERAD') : 'Laporan Data Pelaporan Sistem '.($pengaturan?->namaSistem() ?? 'SIBERAD')) }}</p>
+      <p>{{ $jenis === 'pengguna' ? 'Laporan Daftar Pengguna Sistem '.($pengaturan?->namaSistem() ?? 'SIBERAD') : 'Laporan Riwayat Aktivitas Sistem '.($pengaturan?->namaSistem() ?? 'SIBERAD') }}</p>
     </div>
   </header>
 
@@ -44,7 +44,7 @@
     </tbody>
   </table>
   </div>
-  @elseif($jenis === 'aktivitas')
+  @else
   <h2>Riwayat Aktivitas ({{ $log->count() }})</h2>
   <div class="tbl-scroll-wrap">
   <table>
@@ -52,18 +52,6 @@
     <tbody>
       @foreach($log as $l)
       <tr><td>{{ $l->created_at?->format('d/m/Y H:i') }}</td><td>{{ $l->nama_pengguna ?? '-' }}</td><td>{{ $l->user?->satuan?->nama ?? '-' }}</td><td>{{ $l->aksi }}</td><td>{{ $l->deskripsi }}</td></tr>
-      @endforeach
-    </tbody>
-  </table>
-  </div>
-  @else
-  <h2>Data Pelaporan ({{ $semuaPelaporan->count() }})</h2>
-  <div class="tbl-scroll-wrap">
-  <table>
-    <thead><tr><th>Perihal</th><th>Tujuan Satuan</th><th>Status</th><th>Arsip</th><th>Dibuat</th></tr></thead>
-    <tbody>
-      @foreach($semuaPelaporan as $p)
-      <tr><td>{{ $p->perihal }}</td><td>{{ $p->tujuanSatuan->nama ?? '-' }}</td><td>{{ $p->statusTampilan() }}</td><td>{{ $p->archived_at ? 'Sudah Diarsipkan' : 'Belum Diarsipkan' }}</td><td>{{ $p->created_at?->format('d/m/Y H:i') }}</td></tr>
       @endforeach
     </tbody>
   </table>

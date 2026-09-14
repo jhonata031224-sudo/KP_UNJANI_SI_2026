@@ -3542,62 +3542,43 @@
             <div class="dl-section-head">
               <div>
                 <h3>Data Pelaporan</h3>
-                <p>Permintaan laporan dari Pimpinan ke satuan, baik yang sudah diarsipkan maupun belum, yang dapat dilihat dan diunduh.</p>
-              </div>
-              <div class="dl-download" data-dropdown>
-                <button type="button" class="btn btn-primary btn-sm dl-download-btn" data-dropdown-toggle>
-                  Unduh
-                  <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
-                </button>
-                <div class="dl-download-menu">
-                  <a href="{{ route('admin.laporan.export-pelaporan') }}" data-dl-base-href="{{ route('admin.laporan.export-pelaporan') }}"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Unduh CSV / Excel</a>
-                  <a href="{{ route('admin.laporan.cetak', 'pelaporan') }}" data-dl-base-href="{{ route('admin.laporan.cetak', 'pelaporan') }}" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>Unduh PDF</a>
-                </div>
+                <p>Permintaan laporan dari Pimpinan ke satuan, baik yang sudah diarsipkan maupun belum.</p>
               </div>
             </div>
 
-            <div class="dl-search-row">
-              <div class="table-search-wrap" style="max-width:280px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
-                <input type="text" class="table-search" data-dl-search="tblDlPelaporan" placeholder="Cari perihal atau tujuan satuan...">
+            {{-- Search+filter+sort di sini SENGAJA dibuat SAMA PERSIS dengan
+                 punya Pimpinan (initRiwayatCardFilter() di
+                 danpus-permintaan-arsip-mode.blade.php) -- class .rpt-filter-*
+                 sama (CSS-nya di-include lewat danpus-report-table-filter.blade.php
+                 di bawah), tanpa filter tanggal/kategori/tombol Unduh yang
+                 memang tidak ada di kartu Pimpinan. --}}
+            <div class="rpt-filter-bar" id="dlPelaporanFilterBar">
+              <div class="rpt-filter-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+                <input type="search" autocomplete="off" id="dlPelaporanSearch" placeholder="Cari perihal atau tujuan satuan..." aria-label="Cari perihal atau tujuan satuan...">
               </div>
-              <div class="dl-date-filter">
-                <label for="dlPelaporanDari">Dari</label>
-                <input type="date" id="dlPelaporanDari" class="table-filter" max="{{ now()->format('Y-m-d') }}">
-              </div>
-              <div class="dl-date-filter">
-                <label for="dlPelaporanSampai">Sampai</label>
-                <input type="date" id="dlPelaporanSampai" class="table-filter" max="{{ now()->format('Y-m-d') }}" value="{{ now()->format('Y-m-d') }}">
-              </div>
-              <select class="table-filter dl-kategori-filter" data-dl-filter="tblDlPelaporan">
-                <option value="">Semua Kategori</option>
-                <option value="Admin">Admin</option>
-                <option value="Pimpinan">Pimpinan</option>
-                <option value="Unsur Pelayanan">Unsur Pelayanan</option>
-                <option value="Unsur Pembantu Pimpinan">Unsur Pembantu Pimpinan</option>
-                <option value="Direktorat">Direktorat</option>
-                <option value="Satlak">Satlak</option>
-                <option value="Kasansi">Kasansi</option>
+              <select class="rpt-filter-select" id="dlPelaporanStatusFilter" aria-label="Filter status">
+                <option value="all">Semua Status</option>
+                <option value="Terbaru">Terbaru</option>
+                <option value="Sedang diproses">Sedang diproses</option>
+                <option value="Menunggu">Menunggu</option>
+                <option value="Revisi">Revisi</option>
+                <option value="Terlambat">Terlambat</option>
+                <option value="Dibatalkan">Dibatalkan</option>
+                <option value="Disetujui">Disetujui</option>
+                <option value="Ditolak">Ditolak</option>
               </select>
-              <button type="button" class="dl-filter-reset" id="dlPelaporanReset" title="Reset filter tanggal">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
-              </button>
-              <span class="dl-search-count" data-dl-count="tblDlPelaporan"></span>
+              <select class="rpt-filter-select" id="dlPelaporanSort" aria-label="Urutkan">
+                <option value="terbaru">Dibuat Terbaru</option>
+                <option value="terlama">Dibuat Terlama</option>
+              </select>
+              <span class="rpt-filter-count" id="dlPelaporanCount"></span>
             </div>
 
             <div class="tbl-wrap tbl-scroll" style="max-height:640px;">
               <div class="deadline-sender-list" id="tblDlPelaporan">
                 @forelse($semuaPelaporan as $pl)
                 @php
-                  $kategoriLabelDlPelaporan = match ($pl->tujuanSatuan->kategori ?? null) {
-                    \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
-                    \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
-                    \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
-                    \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
-                    \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
-                    \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
-                    default => 'Satlak',
-                  };
                   // Status & warna kartu niru PERSIS logika
                   // permintaan-laporan-pimpinan-card.blade.php (BUKAN
                   // $pl->statusTampilan() yang cuma 7 label datar) -- biar
@@ -3646,7 +3627,7 @@
                       ];
                   })->values()->toJson();
                 @endphp
-                <article class="deadline-sender-item" data-filter-value="{{ $kategoriLabelDlPelaporan }}" data-search-value="{{ strtolower($pl->perihal.' '.($pl->tujuanSatuan->nama ?? '').' '.$plStatus) }}" data-tanggal="{{ $pl->created_at?->format('Y-m-d') }}">
+                <article class="deadline-sender-item" data-status="{{ $plStatus }}" data-search="{{ strtolower($pl->perihal.' '.($pl->tujuanSatuan->nama ?? '')) }}" data-created-at="{{ $pl->created_at?->timestamp ?? 0 }}">
                   <div class="dcard-head">
                     <div class="dcard-icon {{ $plPrioClass }}">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="m9 14 2 2 4-4"></path></svg>
@@ -3750,42 +3731,27 @@
         // "X data ditampilkan" -- beda dari format global "X dari Y data" supaya
         // sama persis dengan rancangan.
         function dlHitungTampil(tableId) {
-          var cfg = dlCfg(tableId);
-          var isCards = !!cfg && cfg.type === 'cards';
           var table = document.getElementById(tableId);
           var countEl = document.querySelector('[data-dl-count="' + tableId + '"]');
           if (!table) return;
-          var rows = Array.prototype.slice.call(table.querySelectorAll('[data-search-value]'));
-          var visible = rows.filter(function (el) { return el.style.display !== 'none'; });
+          var rows = Array.prototype.slice.call(table.querySelectorAll('tbody tr[data-search-value]'));
+          var visible = rows.filter(function (tr) { return tr.style.display !== 'none'; });
           if (countEl) countEl.textContent = visible.length + ' data ditampilkan';
 
-          // Tabel/grid ini gak punya baris/kartu ".empty-state" buat kasus "ada
-          // data tapi kefilter jadi 0" (beda dari fallback forelse statis yang
-          // cuma dirender kalau memang belum ada data sama sekali) -- makanya
-          // dulu search yang gak nemu apa-apa cuma bikin tampilan kosong
-          // polos, tanpa pesan/kotak apapun (cuma angka "0 data ditampilkan"
-          // yang berubah). Sama kayak pola ensureEmptyRow() di
-          // danpus-report-table-filter.blade.php -- versi kartu (isCards)
-          // nyisipin <div class="empty-state"> langsung (grid-column:1/-1
-          // sudah diatur di permintaan-laporan-deadline-styles.blade.php),
-          // versi tabel tetap <tr><td colspan> seperti semula.
-          var emptyRow = isCards
-            ? table.querySelector(':scope > .dl-filter-empty-row')
-            : table.querySelector('tbody > tr.dl-filter-empty-row');
+          // Tabel ini gak punya baris ".empty-state" buat kasus "ada data tapi
+          // kefilter jadi 0" (beda dari baris fallback forelse statis yang cuma
+          // dirender kalau memang belum ada data sama sekali) -- makanya dulu search yang
+          // gak nemu apa-apa cuma bikin tabel kelihatan kosong polos, tanpa
+          // pesan/kotak apapun (cuma angka "0 data ditampilkan" yang berubah).
+          // Sama kayak pola ensureEmptyRow() di danpus-report-table-filter.blade.php.
+          var emptyRow = table.querySelector('tbody > tr.dl-filter-empty-row');
           if (rows.length && !visible.length) {
             if (!emptyRow) {
-              if (isCards) {
-                emptyRow = document.createElement('div');
-                emptyRow.className = 'empty-state dl-filter-empty-row';
-                emptyRow.innerHTML = '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada data yang cocok dengan pencarian/filter.</div>';
-                table.appendChild(emptyRow);
-              } else {
-                var colCount = table.querySelectorAll('thead th').length || 1;
-                emptyRow = document.createElement('tr');
-                emptyRow.className = 'dl-filter-empty-row';
-                emptyRow.innerHTML = '<td colspan="' + colCount + '"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada data yang cocok dengan pencarian/filter.</div></div></td>';
-                table.querySelector('tbody').appendChild(emptyRow);
-              }
+              var colCount = table.querySelectorAll('thead th').length || 1;
+              emptyRow = document.createElement('tr');
+              emptyRow.className = 'dl-filter-empty-row';
+              emptyRow.innerHTML = '<td colspan="' + colCount + '"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada data yang cocok dengan pencarian/filter.</div></div></td>';
+              table.querySelector('tbody').appendChild(emptyRow);
             }
             emptyRow.style.display = '';
           } else if (emptyRow) {
@@ -3805,19 +3771,16 @@
           dlHitungTampil(tableId);
         }
 
-        // Konfigurasi 3 tabel Arsip Data (Data Pengguna/Data Aktivitas/Data
-        // Pelaporan) dalam SATU array supaya nambah tabel baru ke depannya
-        // cukup nambah 1 entri di sini, gak perlu ubah tiap fungsi di bawah
-        // satu-satu (dulu mentok 2 tabel yang di-hardcode lewat ternary).
-        // type 'table' (default) = <table><tbody><tr data-search-value>...
-        // type 'cards' = <div id=..><article data-search-value>... (kartu
-        // "Data Pelaporan", niru gaya Permintaan Laporan Pimpinan/Satuan) --
-        // dlHitungTampil/dlSaringTanggal di bawah baca field ini buat tau
-        // cara nyari baris/kartu & nyisipin empty-state yang benar.
+        // Konfigurasi tabel Arsip Data (Data Pengguna/Data Aktivitas) dalam
+        // SATU array supaya nambah tabel baru ke depannya cukup nambah 1
+        // entri di sini, gak perlu ubah tiap fungsi di bawah satu-satu
+        // (dulu di-hardcode lewat ternary). "Data Pelaporan" TIDAK make
+        // sistem ini -- itu grid kartu dengan search+filter+sort SENDIRI
+        // (lihat initDlPelaporanFilter() di bawah, niru persis
+        // initRiwayatCardFilter() Pimpinan, bukan tabel Dari/Sampai/Unduh).
         var dlTables = [
-          { id: 'tblDlPengguna',  section: 'dl-pengguna',  dari: 'dlPenggunaDari',  sampai: 'dlPenggunaSampai',  reset: 'dlPenggunaReset', type: 'table' },
-          { id: 'tblDlAktivitas', section: 'dl-aktivitas', dari: 'dlAktivitasDari', sampai: 'dlAktivitasSampai', reset: 'dlAktivitasReset', type: 'table' },
-          { id: 'tblDlPelaporan', section: 'dl-pelaporan', dari: 'dlPelaporanDari', sampai: 'dlPelaporanSampai', reset: 'dlPelaporanReset', type: 'cards' },
+          { id: 'tblDlPengguna',  section: 'dl-pengguna',  dari: 'dlPenggunaDari',  sampai: 'dlPenggunaSampai',  reset: 'dlPenggunaReset' },
+          { id: 'tblDlAktivitas', section: 'dl-aktivitas', dari: 'dlAktivitasDari', sampai: 'dlAktivitasSampai', reset: 'dlAktivitasReset' },
         ];
         function dlCfg(tableId) {
           for (var i = 0; i < dlTables.length; i++) { if (dlTables[i].id === tableId) return dlTables[i]; }
@@ -3858,19 +3821,11 @@
             // filter kategori (dropdown "Semua Kategori", sama seperti tabel lain)
             var cocokFilter = !f || tr.getAttribute('data-filter-value') === f;
 
-            // filter tanggal — baris tabel biasa baca dari kolom pertama
-            // (td[data-tanggal]/td:first-child), kartu "Data Pelaporan" punya
-            // data-tanggal langsung di elemennya sendiri (tr === article di
-            // situ, gak ada <td> sama sekali).
+            // filter tanggal — baca dari kolom pertama (td:first-child)
             var cocokTgl = true;
             if (dari || sampai) {
-              var raw = '';
-              if (tr.hasAttribute('data-tanggal')) {
-                raw = tr.getAttribute('data-tanggal');
-              } else {
-                var td = tr.querySelector('td[data-tanggal]') || tr.querySelector('td:first-child');
-                raw = td ? (td.getAttribute('data-tanggal') || td.textContent.trim()) : '';
-              }
+              var td = tr.querySelector('td[data-tanggal]') || tr.querySelector('td:first-child');
+              var raw = td ? (td.getAttribute('data-tanggal') || td.textContent.trim()) : '';
               // Coba parse ISO (YYYY-MM-DD) atau format lokal dd/MM/YYYY
               var tgl = null;
               if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
@@ -3999,6 +3954,75 @@
           if (filterEl) filterEl.addEventListener('change', function () { dlUpdateDownloadLinks(tableId, dariId, sampaiId); });
           if (resetBtn) resetBtn.addEventListener('click', function () { dlUpdateDownloadLinks(tableId, dariId, sampaiId); });
         });
+      })();
+      </script>
+
+      {{-- Search+filter+sort kartu "Data Pelaporan" -- CSS .rpt-filter-* &
+           JS di bawah niru PERSIS initRiwayatCardFilter() punya Pimpinan
+           (danpus-permintaan-arsip-mode.blade.php): search box + dropdown
+           status + dropdown urutan + counter "X dari Y data" + empty-state
+           pencarian. Sengaja CSS-nya disalin langsung (bukan @include
+           danpus-report-table-filter.blade.php) supaya gak ikut narik JS
+           initReportFilter()/boot() punya file itu yang emang buat tabel
+           Pimpinan lain (gak dipakai di sini, walau sebenarnya aman no-op
+           karena section id-nya gak ada di Admin -- tetap lebih bersih
+           kalau gak usah dimuat sama sekali). Beda dari kartu Riwayat
+           Pimpinan: TANPA pin/tandai (gak ada tombolnya di kartu versi
+           Admin ini) & TANPA animasi FLIP reorder (cuma reorder polos). --}}
+      <style>
+      .rpt-filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 14px}
+      .rpt-filter-search{position:relative;width:330px;max-width:100%}
+      .rpt-filter-search svg{position:absolute;left:11px;top:50%;width:16px;height:16px;transform:translateY(-50%);color:var(--text-muted);pointer-events:none}
+      .rpt-filter-search input{box-sizing:border-box;width:100%;height:38px;border:1px solid var(--border);border-radius:9px;outline:0;background:var(--panel-alt);color:var(--text);font:inherit;font-size:12px;padding:8px 11px 8px 35px}
+      .rpt-filter-search input:focus{border-color:var(--gold-bright);box-shadow:0 0 0 3px rgba(201,122,0,.10)}
+      .rpt-filter-search input::placeholder{color:var(--text-muted)}
+      .rpt-filter-count{font-size:10px;color:var(--text-muted);white-space:nowrap;margin-left:auto}
+      @media(max-width:700px){.rpt-filter-bar{gap:7px}.rpt-filter-search{width:100%}.rpt-filter-count{width:100%;margin-left:0}}
+      </style>
+      <script>
+      (function(){
+        function initDlPelaporanFilter(){
+          var list=document.getElementById('tblDlPelaporan');
+          var bar=document.getElementById('dlPelaporanFilterBar');
+          if(!list||!bar)return;
+          var input=document.getElementById('dlPelaporanSearch');
+          var statusSelect=document.getElementById('dlPelaporanStatusFilter');
+          var sortSelect=document.getElementById('dlPelaporanSort');
+          var count=document.getElementById('dlPelaporanCount');
+
+          var emptyBox=document.createElement('div');
+          emptyBox.className='empty-state';emptyBox.style.display='none';
+          emptyBox.innerHTML='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada permintaan laporan yang sesuai dengan pencarian/filter.</div>';
+          list.parentNode.insertBefore(emptyBox,list.nextSibling);
+
+          function apply(){
+            var items=Array.prototype.slice.call(list.querySelectorAll(':scope > article.deadline-sender-item'));
+            items.sort(function(a,b){
+              var diff=Number(a.dataset.createdAt)-Number(b.dataset.createdAt);
+              return sortSelect.value==='terlama'?diff:-diff;
+            });
+            var needsReorder=items.some(function(item,i){return item.nextElementSibling!==(items[i+1]||null)});
+            if(needsReorder)items.forEach(function(item){list.appendChild(item);});
+
+            var q=(input.value||'').trim().toLowerCase();
+            var statusFilter=statusSelect.value;
+            var visible=0;
+            items.forEach(function(item){
+              var matchesSearch=!q||(item.dataset.search||'').indexOf(q)!==-1;
+              var matchesStatus=statusFilter==='all'||item.dataset.status===statusFilter;
+              var match=matchesSearch&&matchesStatus;
+              item.style.display=match?'':'none';
+              if(match)visible++;
+            });
+            count.textContent=visible+' dari '+items.length+' data';
+            emptyBox.style.display=(items.length>0&&visible===0)?'block':'none';
+          }
+          input.addEventListener('input',apply);
+          statusSelect.addEventListener('change',apply);
+          sortSelect.addEventListener('change',apply);
+          apply();
+        }
+        if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initDlPelaporanFilter);else initDlPelaporanFilter();
       })();
       </script>
 

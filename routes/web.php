@@ -320,11 +320,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/laporan/aktivitas-terbaru', [ReportController::class, 'aktivitasTerbaru'])->name('laporan.aktivitas-terbaru');
     Route::get('/log-aktivitas/rentang', [ReportController::class, 'logAktivitasRentang'])->name('log-aktivitas.rentang');
     Route::get('/laporan/cetak/{jenis}', [ReportController::class, 'printView'])
-        ->whereIn('jenis', ['pengguna', 'aktivitas', 'pelaporan'])
+        ->whereIn('jenis', ['pengguna', 'aktivitas'])
         ->name('laporan.cetak');
     Route::get('/laporan/export/pengguna', [ReportController::class, 'exportUsersExcel'])->name('laporan.export-pengguna');
     Route::get('/laporan/export/aktivitas', [ReportController::class, 'exportActivityExcel'])->name('laporan.export-aktivitas');
-    Route::get('/laporan/export/pelaporan', [ReportController::class, 'exportPelaporanExcel'])->name('laporan.export-pelaporan');
     Route::get('/sessions/realtime', [SessionController::class, 'realtime'])->name('sessions.realtime');
     Route::delete('/sessions/{id}', [SessionController::class, 'destroy'])->name('sessions.destroy');
     Route::get('/permintaan-reset-password/realtime', [AdminPermintaanResetPasswordController::class, 'realtime'])->name('permintaan-reset-password.realtime');
