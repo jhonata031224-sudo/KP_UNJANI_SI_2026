@@ -1304,11 +1304,18 @@
           .pimp-activity-title{font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
           .pimp-activity-sub{font-size:11px;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
           .pimp-activity-item .status-pill{flex:0 0 auto;white-space:nowrap}
-          .status-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;font-size:10px;font-weight:800;border:1px solid transparent}
-          .status-pill:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+          {{-- :before dot dihapus atas permintaan user -- pill di sini cuma
+               teks polos, gak pakai titik warna di depannya kayak
+               status-pill Pimpinan/Satuan. --}}
+          .status-pill{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:10px;font-weight:800;border:1px solid transparent}
           .status-pill.wait{color:var(--amber);background:var(--amber-dim);border-color:rgba(224,168,58,.35)}
           .status-pill.ok{color:var(--success-bright);background:var(--success-dim);border-color:rgba(63,194,125,.28)}
           .status-pill.bad{color:var(--red);background:var(--red-dim);border-color:rgba(198,40,40,.3)}
+          {{-- Dipakai khusus "Menunggu" kartu Permintaan Ganti Password atas
+               permintaan user -- warna sama persis .status-pill.blue/
+               .deadline-pill.blue Pimpinan (#2476ad), belum ada di CSS Admin
+               sebelumnya karena Admin cuma punya 3 state (wait/ok/bad). --}}
+          .status-pill.blue{color:#2476ad;background:rgba(52,152,219,.1);border-color:rgba(52,152,219,.25)}
           .kcard-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:48px 20px;text-align:center;color:var(--text-muted)}
           .kcard-empty-title{font-size:14px;font-weight:700;color:var(--text-muted)}
           .kcard-empty-sub{font-size:12px;color:var(--text-muted);line-height:1.5;max-width:320px;opacity:.7}
