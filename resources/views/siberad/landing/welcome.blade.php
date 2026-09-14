@@ -491,17 +491,6 @@
     font-family:var(--mono);font-size:10.5px;color:var(--text-dim);
     display:flex;align-items:center;gap:8px;letter-spacing:.03em;
   }
-  .login-location-note{
-    margin:2px 0 14px;padding:9px 11px;border-radius:8px;
-    background:var(--gold-dim);border:1px solid var(--border);
-    font-family:var(--mono);font-size:10px;line-height:1.5;color:var(--text-muted);
-    display:flex;align-items:flex-start;gap:7px;letter-spacing:.02em;
-  }
-  .login-location-note svg{flex-shrink:0;margin-top:1px;color:var(--gold);}
-  .login-location-note.is-denied{
-    background:rgba(220,60,60,.12);border-color:rgba(220,60,60,.4);color:#e5a3a3;
-  }
-  .login-location-note.is-denied svg{color:#e5a3a3;}
 
   /* ================= HERO ================= */
   /* Sengaja TIDAK fallback ke foto bawaan (images/hero-lapangan-mabesad.jpg)
@@ -1288,10 +1277,6 @@
         {{-- ke server, dan server juga menolaknya kalau tetap terkirim kosong. --}}
         <input type="hidden" id="gpsLat" name="gps_lat">
         <input type="hidden" id="gpsLon" name="gps_lon">
-        <p class="login-location-note" id="loginLocationNote">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-          Sistem mewajibkan akses lokasi (GPS). Izinkan permintaan lokasi pada browser saat diminta.
-        </p>
         <button class="btn btn-primary login-submit" type="submit">{{ $lp['login']['submit_label'] }}</button>
       </form>
       <div class="login-foot">
@@ -1840,9 +1825,6 @@
   }
 
   // ---------- submit login via AJAX (biar gagal login tidak refresh halaman) ----------
-  const loginLocationNote = document.getElementById('loginLocationNote');
-  const loginLocationNoteDefault = loginLocationNote ? loginLocationNote.innerHTML : '';
-
   function pesanLokasiGagal(alasan){
     switch(alasan){
       case 'denied':
@@ -1869,15 +1851,7 @@
       const gps = await ambilGpsSekali(6000);
       if(!gps.ok){
         siberadShowToast('error', pesanLokasiGagal(gps.alasan));
-        if(loginLocationNote){
-          loginLocationNote.classList.add('is-denied');
-          loginLocationNote.textContent = pesanLokasiGagal(gps.alasan);
-        }
         return; // `finally` di bawah tetap mengaktifkan kembali tombol submit
-      }
-      if(loginLocationNote){
-        loginLocationNote.classList.remove('is-denied');
-        loginLocationNote.innerHTML = loginLocationNoteDefault;
       }
       document.getElementById('gpsLat').value = gps.lat;
       document.getElementById('gpsLon').value = gps.lon;
