@@ -37,6 +37,12 @@
     @if($s->id === $sesiSayaId)
       <span class="badge">Sesi Anda</span>
     @endif
+    @if($s->anomali_multi_lokasi ?? false)
+      <span class="badge red badge-plain"
+            title="Akun ini aktif login secara BERSAMAAN dari lokasi yang berjarak sekitar {{ number_format($s->anomali_jarak_km, 0) }} km ({{ $s->anomali_sesi_lain }}). Kemungkinan akun dipakai lebih dari satu orang/perangkat -- segera periksa.">
+        🚨 2 Lokasi Sekaligus
+      </span>
+    @endif
   </td>
   <td>{{ $s->ip_address ?? '-' }}</td>
   <td style="max-width:300px;">

@@ -27,6 +27,7 @@ class SessionController extends Controller
             ->orderByDesc('sessions.last_activity')
             ->get([
                 'sessions.id',
+                'sessions.user_id',
                 'sessions.ip_address',
                 'sessions.user_agent',
                 'sessions.last_activity',
@@ -40,6 +41,7 @@ class SessionController extends Controller
                 'sessions.geo_sumber',
                 'users.name as user_name',
             ]);
+        $sesiAktif = \App\Helpers\SesiAnomaliDetector::tandai($sesiAktif);
 
         return response()->json([
             'items_html' => $sesiAktif->map(fn ($s) => view('siberad.dashboards.partials.sesi-aktif-row', ['s' => $s, 'sesiSayaId' => $request->session()->getId()])->render())->implode(''),
