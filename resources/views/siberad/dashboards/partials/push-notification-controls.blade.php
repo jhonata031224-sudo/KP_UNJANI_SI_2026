@@ -125,11 +125,24 @@
         });
       }
 
-      // Belum pernah ditanya -- dulu di sini ditampilkan tombol "Aktifkan
-      // Notifikasi" per-user. Tombol itu SENGAJA dihapus: aktif/nonaktifnya
-      // fitur push sekarang murni dikendalikan admin lewat Pengaturan ->
-      // Notifikasi (lihat Pengaturan::current()->notifikasi_push_aktif di
-      // InjectWebPushUi), jadi tidak perlu lagi kontrol per-user di sisi ini.
+      // Belum pernah ditanya (Notification.permission === 'default') --
+      // langsung minta izin otomatis begitu halaman dimuat, TANPA tombol.
+      // Dulu ada tombol "Aktifkan Notifikasi" yang jadi pemicu manual (baca
+      // riwayat git commit ff56a11a), tapi tombol itu SENGAJA dihapus:
+      // aktif/nonaktifnya fitur push sekarang murni dikendalikan admin
+      // lewat Pengaturan -> Notifikasi (lihat Pengaturan::current()->
+      // notifikasi_push_aktif di InjectWebPushUi). Masalahnya, begitu
+      // tombol itu hilang, TIDAK ADA LAGI yang manggil
+      // Notification.requestPermission() -- akibatnya push tidak pernah
+      // ke-subscribe utk pengguna yang browsernya masih status "default"
+      // (belum pernah ditanya sama sekali), jadi notifikasi push memang
+      // TIDAK PERNAH muncul di luar sistem buat mereka. requestPermission()
+      // di sini menggantikan trigger dari tombol yang sudah dihapus itu.
+      else if (Notification.permission === 'default') {
+        Notification.requestPermission().then(function (permission) {
+          if (permission === 'granted') doSubscribe(registration).catch(function () {});
+        }).catch(function () {});
+      }
     }).catch(function () {
       // Gagal daftar service worker (mis. browser lawas) -- diam saja,
       // fitur notifikasi in-app (lonceng) tetap jalan seperti biasa.
