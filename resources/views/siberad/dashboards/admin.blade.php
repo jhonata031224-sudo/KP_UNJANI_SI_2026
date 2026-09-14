@@ -3978,6 +3978,22 @@
       .rpt-filter-search input::placeholder{color:var(--text-muted)}
       .rpt-filter-count{font-size:10px;color:var(--text-muted);white-space:nowrap;margin-left:auto}
       @media(max-width:700px){.rpt-filter-bar{gap:7px}.rpt-filter-search{width:100%}.rpt-filter-count{width:100%;margin-left:0}}
+
+      {{-- Kartu Data Pelaporan kelihatan "menyatu" ke panel putih pembungkusnya
+           -- BUKAN soal row-gap/box-shadow (keduanya sudah benar, sudah
+           dicek lewat getComputedStyle: row-gap 64px & box-shadow ada).
+           Penyebabnya: tema terang Admin punya --panel (#fff) & --panel-alt
+           (#f8fafc, warna kartu) yang SENGAJA dibikin nyaris sama (palet
+           "abu-abu netral/putih" dari sesi sebelumnya, beda dari Pimpinan
+           yang krem vs abu-abu = kontras alami) -- jadi kartu & panel di
+           belakangnya kebaca 1 warna polos. Kasih "tray" (latar --bg + garis
+           tepi) di belakang grid supaya kartunya tetap kebaca terpisah, dan
+           perkuat border kartu ke border-strong (bukan border-soft bawaan
+           .deadline-sender-item) biar gak cuma mengandalkan beda warna latar
+           yang tipis. --}}
+      <style>
+      #tblDlPelaporan{background:var(--bg);border:1px solid var(--border-soft);border-radius:14px;padding:22px 20px 8px;}
+      #tblDlPelaporan .deadline-sender-item{border-color:var(--border-strong);}
       </style>
       <script>
       (function(){
