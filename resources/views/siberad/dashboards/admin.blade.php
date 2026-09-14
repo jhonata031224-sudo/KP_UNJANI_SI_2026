@@ -3575,7 +3575,12 @@
               <span class="rpt-filter-count" id="dlPelaporanCount"></span>
             </div>
 
-            <div class="tbl-wrap tbl-scroll" style="max-height:640px;">
+            {{-- TANPA .tbl-wrap.tbl-scroll (max-height+overflow-y:auto) yang
+                 dipakai 2 tabel lain -- itu bikin box scroll internal sendiri
+                 yang scrollbar-nya nempel dempet ke tepi kanan (kelihatan
+                 sempit/aneh, beda dari kartu Pimpinan yang ngalir bebas ikut
+                 tinggi halaman, gak dibungkus box terpisah). Kartu di sini
+                 biarkan tumbuh natural, ikut discroll bareng halaman. --}}
               <div class="deadline-sender-list" id="tblDlPelaporan">
                 @forelse($semuaPelaporan as $pl)
                 @php
@@ -3689,7 +3694,6 @@
                 </div>
                 @endforelse
               </div>
-            </div>
 
             <div class="dl-foot">
               <p>Data ditampilkan langsung dari database sistem.</p>
@@ -3992,7 +3996,15 @@
            .deadline-sender-item) biar gak cuma mengandalkan beda warna latar
            yang tipis. --}}
       <style>
-      #tblDlPelaporan{background:var(--bg);border:1px solid var(--border-soft);border-radius:14px;padding:22px 20px 8px;}
+      {{-- padding-top 60px (bukan cuma ~22px) -- .dcard-icon punya
+           margin-top:-42px (buat efek "ngambang" nongol di atas kartunya
+           sendiri, lihat permintaan-laporan-deadline-styles.blade.php).
+           Padding tray yang lebih tipis dari 42px bikin ikon baris PERTAMA
+           nongol MELEWATI tepi atas tray, nabrak ke rpt-filter-bar
+           (search/filter) di atasnya -- kelihatan dempet/nyatu lagi walau
+           dari sisi lain (bukan ke panel, tapi ke search bar). 60px = 42px
+           (margin ikon) + ~18px jarak aman. --}}
+      #tblDlPelaporan{background:var(--bg);border:1px solid var(--border-soft);border-radius:14px;padding:60px 20px 8px;}
       #tblDlPelaporan .deadline-sender-item{border-color:var(--border-strong);}
       </style>
       <script>
