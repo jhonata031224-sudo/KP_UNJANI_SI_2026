@@ -137,6 +137,33 @@
       .catch(function () {});
   }
 
+  // ------------------------------------------------------------------
+  // API manual untuk tombol "Aktifkan Notifikasi" di menu notifikasi
+  // (lonceng) -- lihat partials/push-permission-menu.blade.php.
+  // ------------------------------------------------------------------
+  // init() di bawah SUDAH otomatis manggil Notification.requestPermission()
+  // begitu halaman dimuat kalau izinnya masih 'default'. Tapi banyak browser
+  // (terutama Chrome versi baru) diam-diam MEMBLOKIR/menahan prompt izin
+  // notifikasi yang tidak dipicu langsung oleh interaksi user (klik/tap) --
+  // alih-alih prompt native muncul, browser cuma membiarkan izinnya tetap
+  // 'default' tanpa menunjukkan apa pun ke user. Akibatnya, buat sebagian
+  // pengguna permintaan otomatis itu efektifnya tidak pernah kelihatan.
+  // Dua fungsi berikut diexpose ke window supaya tombol manual di menu
+  // notifikasi punya cara yang pasti (dipicu klik user) untuk memicu ulang
+  // prompt izin tsb, dan supaya UI tombol itu tahu status izin saat ini.
+  window.siberadPushPermissionState = function () {
+    return ('Notification' in window) ? Notification.permission : 'unsupported';
+  };
+
+  window.siberadRequestPushPermission = function () {
+    return Notification.requestPermission().then(function (permission) {
+      if (permission !== 'granted') return permission;
+      return navigator.serviceWorker.register('/sw.js').then(function (registration) {
+        return doSubscribeAndConfirm(registration).then(function () { return 'granted'; });
+      }).catch(function () { return 'granted'; });
+    });
+  };
+
   function init() {
     if (Notification.permission === 'denied') return; // browser sendiri yang blokir prompt ulang, jangan paksa
 
@@ -170,18 +197,12 @@
       }
 
       // Belum pernah ditanya (Notification.permission === 'default') --
-      // langsung minta izin otomatis begitu halaman dimuat, TANPA tombol.
-      // Dulu ada tombol "Aktifkan Notifikasi" yang jadi pemicu manual (baca
-      // riwayat git commit ff56a11a), tapi tombol itu SENGAJA dihapus:
-      // aktif/nonaktifnya fitur push sekarang murni dikendalikan admin
-      // lewat Pengaturan -> Notifikasi (lihat Pengaturan::current()->
-      // notifikasi_push_aktif di InjectWebPushUi). Masalahnya, begitu
-      // tombol itu hilang, TIDAK ADA LAGI yang manggil
-      // Notification.requestPermission() -- akibatnya push tidak pernah
-      // ke-subscribe utk pengguna yang browsernya masih status "default"
-      // (belum pernah ditanya sama sekali), jadi notifikasi push memang
-      // TIDAK PERNAH muncul di luar sistem buat mereka. requestPermission()
-      // di sini menggantikan trigger dari tombol yang sudah dihapus itu.
+      // tetap dicoba minta izin otomatis begitu halaman dimuat (untuk
+      // browser yang masih mengizinkan prompt tanpa interaksi user).
+      // Untuk browser yang menahan/blokir prompt otomatis ini (lihat
+      // catatan di window.siberadRequestPushPermission di atas), user
+      // tetap punya jalan pasti lewat tombol "Aktifkan Notifikasi" di
+      // menu notifikasi (partials/push-permission-menu.blade.php).
       else if (Notification.permission === 'default') {
         Notification.requestPermission().then(function (permission) {
           if (permission === 'granted') doSubscribeAndConfirm(registration);
