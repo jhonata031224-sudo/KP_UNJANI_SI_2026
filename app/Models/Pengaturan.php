@@ -13,7 +13,7 @@ class Pengaturan extends Model
         'hero_blur_level','hero_overlay_intensity',
         'fitur','tentang_deskripsi','tentang_nama_resmi','tentang_nama_lama','tentang_fungsi_utama',
         'tentang_moto_judul','tentang_moto_deskripsi','website','sosial_media','landing_content',
-        'notifikasi_push_aktif','struktur_organisasi_path','makna_logo',
+        'notifikasi_push_aktif','struktur_organisasi_path','makna_logo','notifikasi_sound_path',
     ];
 
     protected $casts = [

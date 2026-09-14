@@ -6001,6 +6001,85 @@
         })();
         </script>
 
+        @php
+          // Verifikasi file suara benar-benar ada di disk, bukan cuma
+          // percaya kolom notifikasi_sound_path terisi -- sama seperti
+          // pola $pengaturanStrukturOrgExists di atas (path bisa
+          // "dangling" kalau upload gagal senyap atau file terhapus
+          // manual di server).
+          $notifSoundExists = ($pengaturan->notifikasi_sound_path ?? null)
+            && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->notifikasi_sound_path);
+        @endphp
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel-head"><div><h3>Suara Notifikasi</h3><p>Pasang satu file suara yang akan otomatis berbunyi di navbar semua dashboard (Admin, Pimpinan, dan semua Satuan) setiap kali ada notifikasi baru masuk ke lonceng.</p></div></div>
+          <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;">
+            @if($notifSoundExists)
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:11px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-ghost btn-sm" id="notifSoundPlayBtn" style="display:flex;align-items:center;gap:6px;">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  Putar Contoh
+                </button>
+                <span style="font-size:12px;color:var(--text-muted);flex:1;min-width:120px;">Suara notifikasi sudah terpasang.</span>
+                <audio id="notifSoundPreview" src="{{ asset('storage/'.$pengaturan->notifikasi_sound_path) }}" preload="none"></audio>
+              </div>
+            @else
+              <div class="kcard-empty" style="padding:20px 14px;">
+                <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="var(--text-dim)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                <div class="kcard-empty-title">Belum ada suara notifikasi</div>
+                <div class="kcard-empty-sub">Notifikasi masih senyap sampai kamu unggah satu file suara di bawah.</div>
+              </div>
+            @endif
+
+            <form method="POST" action="{{ route('admin.setelan.notifikasi.suara.update') }}" enctype="multipart/form-data" id="notifSoundForm" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              @csrf
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer" for="notifSoundInput">{{ $notifSoundExists ? 'Ganti Suara' : 'Pilih File Suara' }}</label>
+              <input id="notifSoundInput" name="notifikasi_suara" type="file" accept="audio/mpeg,audio/wav,audio/ogg,.mp3,.wav,.ogg" hidden required>
+              <span id="notifSoundFileName" style="font-size:12px;color:var(--text-muted)"></span>
+              <button type="submit" class="btn btn-primary btn-sm" id="notifSoundSubmitBtn" disabled>Simpan Suara</button>
+              @if($notifSoundExists)
+                <button type="button" class="btn btn-ghost-red btn-sm" id="notifSoundDeleteBtn">Hapus Suara</button>
+              @endif
+            </form>
+            <form method="POST" action="{{ route('admin.setelan.notifikasi.suara.destroy') }}" id="notifSoundDeleteForm" style="display:none">
+              @csrf @method('DELETE')
+            </form>
+            <span style="font-size:11px;color:var(--text-dim)">Format MP3, WAV, atau OGG, maksimal 2 MB. Gunakan nada singkat (1&ndash;2 detik) supaya tidak mengganggu.</span>
+          </div>
+
+          <script>
+          (function () {
+            var input = document.getElementById('notifSoundInput');
+            var fileName = document.getElementById('notifSoundFileName');
+            var submitBtn = document.getElementById('notifSoundSubmitBtn');
+            var deleteBtn = document.getElementById('notifSoundDeleteBtn');
+            var deleteForm = document.getElementById('notifSoundDeleteForm');
+            var playBtn = document.getElementById('notifSoundPlayBtn');
+            var preview = document.getElementById('notifSoundPreview');
+
+            if (input) {
+              input.addEventListener('change', function () {
+                var file = input.files && input.files[0];
+                if (submitBtn) submitBtn.disabled = !file;
+                if (fileName) fileName.textContent = file ? file.name : '';
+              });
+            }
+            if (deleteBtn && deleteForm) {
+              deleteBtn.addEventListener('click', function () {
+                if (window.confirm('Hapus suara notifikasi ini? Notifikasi baru tidak akan berbunyi lagi sampai Admin mengunggah suara baru.')) {
+                  deleteForm.submit();
+                }
+              });
+            }
+            if (playBtn && preview) {
+              playBtn.addEventListener('click', function () {
+                preview.currentTime = 0;
+                preview.play().catch(function () {});
+              });
+            }
+          })();
+          </script>
+        </div>
+
       </section>
 
       {{-- ===== KELOLA SISTEM -> STRUKTUR ORGANISASI ===== --}}

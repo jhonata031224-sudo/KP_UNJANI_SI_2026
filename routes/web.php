@@ -333,6 +333,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/reset-data-laporan', [ResetDataLaporanController::class, 'destroy'])->name('reset-data-laporan.destroy');
     Route::patch('/setelan/notifikasi/toggle', [NotifikasiSettingController::class, 'updateToggle'])->name('setelan.notifikasi.toggle');
     Route::post('/setelan/notifikasi/broadcast', [NotifikasiSettingController::class, 'broadcast'])->name('setelan.notifikasi.broadcast');
+    Route::post('/setelan/notifikasi/suara', [NotifikasiSettingController::class, 'updateSuara'])->name('setelan.notifikasi.suara.update');
+    Route::delete('/setelan/notifikasi/suara', [NotifikasiSettingController::class, 'destroySuara'])->name('setelan.notifikasi.suara.destroy');
     Route::post('/struktur-organisasi', [StrukturOrganisasiController::class, 'update'])->name('struktur-organisasi.update');
     Route::delete('/struktur-organisasi', [StrukturOrganisasiController::class, 'destroy'])->name('struktur-organisasi.destroy');
 });
