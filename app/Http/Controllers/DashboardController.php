@@ -85,6 +85,14 @@ class DashboardController
             ->whereBetween('created_at', [$logDari, $logSampai])
             ->latest('created_at')
             ->get();
+        // Tab "Data Pelaporan" (Arsip Data) -- SEMUA permintaan laporan dari
+        // Pimpinan ke satuan, baik yang sudah diarsipkan (archived_at
+        // terisi) MAUPUN yang masih aktif/belum diarsipkan. Global scope
+        // hideArchivedOnPimpinanDashboard di model PermintaanLaporan cuma
+        // nge-filter kalau request()->is('dashboard') DAN role DANPUS/WADAN
+        // -- Admin (kode ADMIN) tidak kena, jadi query polos ini otomatis
+        // sudah termasuk yang arsip juga.
+        $semuaPelaporan = PermintaanLaporan::with(['tujuanSatuan', 'laporan'])->latest()->get();
         $daftarBackup = app(BackupController::class)->index();
         // Hanya sesi yang benar-benar terautentikasi yang ditampilkan.
         // Baris guest dengan user_id NULL tidak termasuk sesi login aktif.
@@ -150,7 +158,7 @@ class DashboardController
         // sama seperti $stats['total_surat'] di bawah).
         $suratSemuaAdmin = LaporanSurat::get();
 
-        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','trenAktivitas','logAktivitas','daftarBackup','sesiAktif','rekapLaporanSatuan','logDari','logSampai','laporanRekapMentah','suratSemuaAdmin') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'resetDataDetails' => ResetDataLaporanController::ambilDetailPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah), 'total_surat' => LaporanSurat::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
+        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','trenAktivitas','logAktivitas','semuaPelaporan','daftarBackup','sesiAktif','rekapLaporanSatuan','logDari','logSampai','laporanRekapMentah','suratSemuaAdmin') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'resetDataDetails' => ResetDataLaporanController::ambilDetailPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah), 'total_surat' => LaporanSurat::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
     }
 
     public function adminKpiRealtime(Request $request): \Illuminate\Http\JsonResponse

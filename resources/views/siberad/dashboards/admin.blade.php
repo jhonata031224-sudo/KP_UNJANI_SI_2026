@@ -3329,7 +3329,7 @@
             </div>
             <div>
               <h2>Arsip Data</h2>
-              <p>Rekap data pengguna dan aktivitas sistem, siap diekspor. Unduh dalam format CSV (bisa dibuka Excel) atau cetak sebagai PDF.</p>
+              <p>Rekap data pengguna, aktivitas, dan pelaporan sistem, siap diekspor. Unduh dalam format CSV (bisa dibuka Excel) atau cetak sebagai PDF.</p>
             </div>
           </div>
         </div>
@@ -3343,6 +3343,10 @@
             <button type="button" class="dl-tab" data-dl-tab="dl-aktivitas">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
               Data Aktivitas
+            </button>
+            <button type="button" class="dl-tab" data-dl-tab="dl-pelaporan">
+              <svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+              Data Pelaporan
             </button>
           </div>
 
@@ -3512,12 +3516,96 @@
               <p>Data ditampilkan langsung dari database sistem.</p>
             </div>
           </div>
+
+          {{-- ----- Sub-tab: Data Pelaporan ----- --}}
+          <div class="dl-section" data-dl-section="dl-pelaporan">
+            <div class="dl-section-head">
+              <div>
+                <h3>Data Pelaporan</h3>
+                <p>Permintaan laporan dari Pimpinan ke satuan, baik yang sudah diarsipkan maupun belum, yang dapat dilihat dan diunduh.</p>
+              </div>
+              <div class="dl-download" data-dropdown>
+                <button type="button" class="btn btn-primary btn-sm dl-download-btn" data-dropdown-toggle>
+                  Unduh
+                  <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="dl-download-menu">
+                  <a href="{{ route('admin.laporan.export-pelaporan') }}" data-dl-base-href="{{ route('admin.laporan.export-pelaporan') }}"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Unduh CSV / Excel</a>
+                  <a href="{{ route('admin.laporan.cetak', 'pelaporan') }}" data-dl-base-href="{{ route('admin.laporan.cetak', 'pelaporan') }}" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>Unduh PDF</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="dl-search-row">
+              <div class="table-search-wrap" style="max-width:280px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+                <input type="text" class="table-search" data-dl-search="tblDlPelaporan" placeholder="Cari perihal atau tujuan satuan...">
+              </div>
+              <div class="dl-date-filter">
+                <label for="dlPelaporanDari">Dari</label>
+                <input type="date" id="dlPelaporanDari" class="table-filter" max="{{ now()->format('Y-m-d') }}">
+              </div>
+              <div class="dl-date-filter">
+                <label for="dlPelaporanSampai">Sampai</label>
+                <input type="date" id="dlPelaporanSampai" class="table-filter" max="{{ now()->format('Y-m-d') }}" value="{{ now()->format('Y-m-d') }}">
+              </div>
+              <select class="table-filter dl-kategori-filter" data-dl-filter="tblDlPelaporan">
+                <option value="">Semua Kategori</option>
+                <option value="Admin">Admin</option>
+                <option value="Pimpinan">Pimpinan</option>
+                <option value="Unsur Pelayanan">Unsur Pelayanan</option>
+                <option value="Unsur Pembantu Pimpinan">Unsur Pembantu Pimpinan</option>
+                <option value="Direktorat">Direktorat</option>
+                <option value="Satlak">Satlak</option>
+                <option value="Kasansi">Kasansi</option>
+              </select>
+              <button type="button" class="dl-filter-reset" id="dlPelaporanReset" title="Reset filter tanggal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+              </button>
+              <span class="dl-search-count" data-dl-count="tblDlPelaporan"></span>
+            </div>
+
+            <div class="tbl-wrap tbl-scroll" style="max-height:420px;">
+              <table class="dtbl" id="tblDlPelaporan">
+                <thead><tr><th>No</th><th>Perihal</th><th>Tujuan Satuan</th><th>Status</th><th>Arsip</th><th>Dibuat</th></tr></thead>
+                <tbody>
+                  @forelse($semuaPelaporan as $i => $pl)
+                  @php
+                    $kategoriLabelDlPelaporan = match ($pl->tujuanSatuan->kategori ?? null) {
+                      \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
+                      \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
+                      \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+                      \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
+                      \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+                      \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
+                      default => 'Satlak',
+                    };
+                  @endphp
+                  <tr data-filter-value="{{ $kategoriLabelDlPelaporan }}" data-search-value="{{ strtolower($pl->perihal.' '.($pl->tujuanSatuan->nama ?? '').' '.$pl->statusTampilan()) }}">
+                    <td>{{ $i + 1 }}</td>
+                    <td><strong>{{ $pl->perihal }}</strong></td>
+                    <td>{{ $pl->tujuanSatuan->nama_keterangan ?? '-' }}</td>
+                    <td><span class="badge">{{ $pl->statusTampilan() }}</span></td>
+                    <td><span class="badge">{{ $pl->archived_at ? 'Sudah Diarsipkan' : 'Belum Diarsipkan' }}</span></td>
+                    <td style="white-space:nowrap;" data-tanggal="{{ $pl->created_at?->format('Y-m-d') }}">{{ $pl->created_at?->format('d/m/Y H:i') }}</td>
+                  </tr>
+                  @empty
+                  <tr><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M12 11h4"></path><path d="M12 16h4"></path><path d="M8 11h.01"></path><path d="M8 16h.01"></path></svg><div class="empty-state-title">Belum ada permintaan laporan</div></div></td></tr>
+                  @endforelse
+                </tbody>
+              </table>
+            </div>
+
+            <div class="dl-foot">
+              <p>Data ditampilkan langsung dari database sistem.</p>
+            </div>
+          </div>
         </div>
       </section>
 
       <script>
       (function () {
-        // Toggle sub-tab Data Pengguna / Data Aktivitas di dalam panel Arsip Data.
+        // Toggle sub-tab Data Pengguna / Data Aktivitas / Data Pelaporan di dalam panel Arsip Data.
         var tabs = document.querySelectorAll('.dl-tab');
         tabs.forEach(function (tab) {
           tab.addEventListener('click', function () {
@@ -3588,10 +3676,24 @@
           dlHitungTampil(tableId);
         }
 
-        ['tblDlPengguna', 'tblDlAktivitas'].forEach(function (id) {
-          var input = document.querySelector('[data-dl-search="' + id + '"]');
-          if (input) input.addEventListener('input', function () { dlSaringGabungan(id); });
-          dlHitungTampil(id);
+        // Konfigurasi 3 tabel Arsip Data (Data Pengguna/Data Aktivitas/Data
+        // Pelaporan) dalam SATU array supaya nambah tabel baru ke depannya
+        // cukup nambah 1 entri di sini, gak perlu ubah tiap fungsi di bawah
+        // satu-satu (dulu mentok 2 tabel yang di-hardcode lewat ternary).
+        var dlTables = [
+          { id: 'tblDlPengguna',  section: 'dl-pengguna',  dari: 'dlPenggunaDari',  sampai: 'dlPenggunaSampai',  reset: 'dlPenggunaReset' },
+          { id: 'tblDlAktivitas', section: 'dl-aktivitas', dari: 'dlAktivitasDari', sampai: 'dlAktivitasSampai', reset: 'dlAktivitasReset' },
+          { id: 'tblDlPelaporan', section: 'dl-pelaporan', dari: 'dlPelaporanDari', sampai: 'dlPelaporanSampai', reset: 'dlPelaporanReset' },
+        ];
+        function dlCfg(tableId) {
+          for (var i = 0; i < dlTables.length; i++) { if (dlTables[i].id === tableId) return dlTables[i]; }
+          return null;
+        }
+
+        dlTables.forEach(function (t) {
+          var input = document.querySelector('[data-dl-search="' + t.id + '"]');
+          if (input) input.addEventListener('input', function () { dlSaringGabungan(t.id); });
+          dlHitungTampil(t.id);
         });
 
         // ── Filter tanggal + refresh untuk Arsip Data ──────────────────────
@@ -3651,39 +3753,32 @@
 
         // Override dlSaring untuk gabungkan teks + tanggal
         function dlSaringGabungan(tableId) {
-          if (tableId === 'tblDlPengguna')  dlSaringTanggal('tblDlPengguna',  'dlPenggunaDari',  'dlPenggunaSampai');
-          if (tableId === 'tblDlAktivitas') dlSaringTanggal('tblDlAktivitas', 'dlAktivitasDari', 'dlAktivitasSampai');
+          var cfg = dlCfg(tableId);
+          if (cfg) dlSaringTanggal(cfg.id, cfg.dari, cfg.sampai);
         }
 
         // Pasang listener pada input tanggal
-        [
-          ['dlPenggunaDari',   'dlPenggunaSampai',   'tblDlPengguna'],
-          ['dlAktivitasDari',  'dlAktivitasSampai',  'tblDlAktivitas'],
-        ].forEach(function (cfg) {
-          var dariEl   = document.getElementById(cfg[0]);
-          var sampaiEl = document.getElementById(cfg[1]);
-          var tid      = cfg[2];
-          [dariEl, sampaiEl].forEach(function (el) {
-            if (el) el.addEventListener('change', function () { dlSaringTanggal(tid, cfg[0], cfg[1]); });
+        dlTables.forEach(function (t) {
+          [document.getElementById(t.dari), document.getElementById(t.sampai)].forEach(function (el) {
+            if (el) el.addEventListener('change', function () { dlSaringTanggal(t.id, t.dari, t.sampai); });
           });
         });
 
         // Override listener search supaya juga jalankan filter tanggal
-        ['tblDlPengguna', 'tblDlAktivitas'].forEach(function (id) {
-          var input = document.querySelector('[data-dl-search="' + id + '"]');
+        dlTables.forEach(function (t) {
+          var input = document.querySelector('[data-dl-search="' + t.id + '"]');
           if (input) {
             // hapus listener lama (cloneNode), pasang yang baru
             var fresh = input.cloneNode(true);
             input.parentNode.replaceChild(fresh, input);
-            fresh.addEventListener('input', function () { dlSaringGabungan(id); });
+            fresh.addEventListener('input', function () { dlSaringGabungan(t.id); });
           }
         });
 
         // Tombol refresh/reset tanggal
         function buatResetHandler(dariId, sampaiId, tableId) {
-          var btn = document.getElementById(
-            tableId === 'tblDlPengguna' ? 'dlPenggunaReset' : 'dlAktivitasReset'
-          );
+          var cfg = dlCfg(tableId);
+          var btn = cfg ? document.getElementById(cfg.reset) : null;
           if (!btn) return;
           btn.addEventListener('click', function () {
             var dariEl   = document.getElementById(dariId);
@@ -3705,16 +3800,12 @@
             btn.classList.add('spinning');
           });
         }
-        buatResetHandler('dlPenggunaDari',  'dlPenggunaSampai',  'tblDlPengguna');
-        buatResetHandler('dlAktivitasDari', 'dlAktivitasSampai', 'tblDlAktivitas');
+        dlTables.forEach(function (t) { buatResetHandler(t.dari, t.sampai, t.id); });
 
-        // Dropdown filter kategori Arsip Data (Data Pengguna & Data Aktivitas)
-        ['tblDlPengguna', 'tblDlAktivitas'].forEach(function (id) {
-          var cfg = id === 'tblDlPengguna'
-            ? ['dlPenggunaDari', 'dlPenggunaSampai']
-            : ['dlAktivitasDari', 'dlAktivitasSampai'];
-          var filterEl = document.querySelector('[data-dl-filter="' + id + '"]');
-          if (filterEl) filterEl.addEventListener('change', function () { dlSaringTanggal(id, cfg[0], cfg[1]); });
+        // Dropdown filter kategori Arsip Data (Data Pengguna / Data Aktivitas / Data Pelaporan)
+        dlTables.forEach(function (t) {
+          var filterEl = document.querySelector('[data-dl-filter="' + t.id + '"]');
+          if (filterEl) filterEl.addEventListener('change', function () { dlSaringTanggal(t.id, t.dari, t.sampai); });
         });
 
         // ── Sinkronkan link "Unduh" (CSV/Excel & PDF) dengan filter aktif ──
@@ -3722,7 +3813,8 @@
         // tanpa ini tombol Unduh selalu mengambil SELURUH data dari server
         // walau kategori/tanggal/pencarian sedang dipilih. Query string yang
         // sama ('q', 'kategori', 'dari', 'sampai') dibaca ulang di
-        // ReportController (exportUsersExcel/exportActivityExcel/printView).
+        // ReportController (exportUsersExcel/exportActivityExcel/
+        // exportPelaporanExcel/printView).
         function dlBuildQuery(tableId, dariId, sampaiId) {
           var search = document.querySelector('[data-dl-search="' + tableId + '"]');
           var dariEl = document.getElementById(dariId);
@@ -3737,8 +3829,8 @@
         }
 
         function dlUpdateDownloadLinks(tableId, dariId, sampaiId) {
-          var sectionId = tableId === 'tblDlPengguna' ? 'dl-pengguna' : 'dl-aktivitas';
-          var section = document.querySelector('[data-dl-section="' + sectionId + '"]');
+          var cfg = dlCfg(tableId);
+          var section = cfg ? document.querySelector('[data-dl-section="' + cfg.section + '"]') : null;
           if (!section) return;
           var qs = dlBuildQuery(tableId, dariId, sampaiId);
           section.querySelectorAll('.dl-download-menu a[data-dl-base-href]').forEach(function (a) {
@@ -3747,13 +3839,8 @@
           });
         }
 
-        var dlDownloadTargets = [
-          ['tblDlPengguna', 'dlPenggunaDari', 'dlPenggunaSampai'],
-          ['tblDlAktivitas', 'dlAktivitasDari', 'dlAktivitasSampai'],
-        ];
-
-        dlDownloadTargets.forEach(function (cfg) {
-          var tableId = cfg[0], dariId = cfg[1], sampaiId = cfg[2];
+        dlTables.forEach(function (t) {
+          var tableId = t.id, dariId = t.dari, sampaiId = t.sampai;
 
           // Set awal saat halaman dimuat (mis. filter "Sampai" default hari ini).
           dlUpdateDownloadLinks(tableId, dariId, sampaiId);
@@ -3762,7 +3849,7 @@
           var dariEl = document.getElementById(dariId);
           var sampaiEl = document.getElementById(sampaiId);
           var filterEl = document.querySelector('[data-dl-filter="' + tableId + '"]');
-          var resetBtn = document.getElementById(tableId === 'tblDlPengguna' ? 'dlPenggunaReset' : 'dlAktivitasReset');
+          var resetBtn = document.getElementById(t.reset);
 
           if (search) search.addEventListener('input', function () { dlUpdateDownloadLinks(tableId, dariId, sampaiId); });
           if (dariEl) dariEl.addEventListener('change', function () { dlUpdateDownloadLinks(tableId, dariId, sampaiId); });
