@@ -308,8 +308,20 @@
     doc.querySelectorAll('.stats-grid .stat').forEach((el, i) => {
       const x = (c.stats || [])[i];
       if (x) {
-        setText(el.querySelector('.stat-num'), x.number);
-        setText(el.querySelector('.stat-label'), x.label);
+        // FIX: elemen tujuan (.stat-num / .stat-label) sudah ketemu lewat
+        // el.querySelector() di atas -- harusnya langsung diisi teksnya,
+        // BUKAN dilempar lagi ke setText(doc, selector, value) yang minta
+        // 3 argumen (doc, selector CSS, value). Sebelumnya cuma dikasih 2
+        // argumen, jadi elemen yang sudah ketemu itu kepakai sebagai
+        // pengganti `doc`, dan `x.number`/`x.label` (angka/teks) kepakai
+        // sebagai pengganti `selector` -- begitu querySelector() dipanggil
+        // dengan angka (mis. 34) sebagai selector, browser langsung lempar
+        // "Uncaught SyntaxError: '34' is not a valid selector" dan bikin
+        // seluruh preview berhenti di tengah jalan.
+        const statNum = el.querySelector('.stat-num');
+        const statLabel = el.querySelector('.stat-label');
+        if (statNum) statNum.textContent = x.number ?? '';
+        if (statLabel) statLabel.textContent = x.label ?? '';
       }
     });
 
