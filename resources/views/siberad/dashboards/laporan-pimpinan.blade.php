@@ -2676,6 +2676,32 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
     animateTerbaruRows(suratBody,'tr');
     animateTerbaruRows(kendalaList,'.pimp-activity-item');
     animatePimpKpis();
+    // Jam relatif (".pimp-activity-time[data-ts]") kartu "Kendala Kasansi
+    // Terbaru" SENGAJA di-tick di sini (bukan ikut dikirim server tiap
+    // poll) -- lihat penjelasan lengkap di komentar atas
+    // pimpinan-kendala-terbaru-list.blade.php. Cuma update textContent, GAK
+    // nyentuh innerHTML/class, jadi detik jalan terus tanpa memicu animasi
+    // fade-in ulang / flicker.
+    function formatRelatifID(detik){
+      if(detik<5)return'Baru saja';
+      const unit=[['tahun',31536000],['bulan',2592000],['minggu',604800],['hari',86400],['jam',3600],['menit',60],['detik',1]];
+      for(let i=0;i<unit.length;i++){
+        const n=Math.floor(detik/unit[i][1]);
+        if(n>=1)return n+' '+unit[i][0]+' yang lalu';
+      }
+      return'Baru saja';
+    }
+    function tickRelativeTimes(){
+      if(document.hidden)return;
+      kendalaList&&kendalaList.querySelectorAll('.pimp-activity-time[data-ts]').forEach(function(el){
+        const ts=parseInt(el.getAttribute('data-ts'),10);
+        if(!ts)return;
+        const text=formatRelatifID(Math.max(0,Math.floor(Date.now()/1000-ts)));
+        if(el.textContent!==text)el.textContent=text;
+      });
+    }
+    tickRelativeTimes();
+    window.setInterval(tickRelativeTimes,1000);
     // SEMPAT dicoba long-poll (request ditahan di server sampai ada
     // perubahan) biar update kerasa instan -- diukur langsung malah 9-13
     // detik per request (harusnya maks ~4 detik), gara-gara tab ini udah
@@ -2746,13 +2772,14 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
             lastKendalaHtml=freshKendala;
             kendalaList.innerHTML=freshKendala;
             animateTerbaruRows(kendalaList,'.pimp-activity-item');
+            tickRelativeTimes();
           }
         }
       }catch(e){}
       finally{kpiBusy=false;}
     }
     window.setInterval(syncPimpinanKpis,1000);
-    document.addEventListener('visibilitychange',function(){if(!document.hidden)syncPimpinanKpis();});
+    document.addEventListener('visibilitychange',function(){if(!document.hidden){syncPimpinanKpis();tickRelativeTimes();}});
   })();
 })();
 </script>

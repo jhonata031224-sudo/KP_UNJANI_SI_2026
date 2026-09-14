@@ -6902,6 +6902,34 @@
     }
     animateTerbaruRows(resetPasswordList,'.pimp-activity-item');
     animateTerbaruRows(aktivitasList,'.pimp-activity-item');
+    // Jam relatif (".pimp-activity-time[data-ts]") kartu "Permintaan Ganti
+    // Password" & "Aktivitas Terbaru" SENGAJA di-tick di sini (bukan ikut
+    // dikirim server tiap poll) -- lihat penjelasan lengkap di komentar atas
+    // admin-reset-password-terbaru-list.blade.php/admin-aktivitas-terbaru-list.blade.php.
+    // Cuma update textContent, GAK nyentuh innerHTML/class, jadi detik jalan
+    // terus tanpa memicu animasi fade-in ulang / flicker.
+    function formatRelatifID(detik){
+      if(detik<5)return'Baru saja';
+      const unit=[['tahun',31536000],['bulan',2592000],['minggu',604800],['hari',86400],['jam',3600],['menit',60],['detik',1]];
+      for(let i=0;i<unit.length;i++){
+        const n=Math.floor(detik/unit[i][1]);
+        if(n>=1)return n+' '+unit[i][0]+' yang lalu';
+      }
+      return'Baru saja';
+    }
+    function tickRelativeTimes(){
+      if(document.hidden)return;
+      [resetPasswordList,aktivitasList].forEach(function(container){
+        container&&container.querySelectorAll('.pimp-activity-time[data-ts]').forEach(function(el){
+          const ts=parseInt(el.getAttribute('data-ts'),10);
+          if(!ts)return;
+          const text=formatRelatifID(Math.max(0,Math.floor(Date.now()/1000-ts)));
+          if(el.textContent!==text)el.textContent=text;
+        });
+      });
+    }
+    tickRelativeTimes();
+    window.setInterval(tickRelativeTimes,1000);
     const kpiEndpoint='{{ route('dashboard.admin-kpi.realtime') }}';
     let kpiBusy=false;
     async function syncAdminKpis(){
@@ -6927,6 +6955,7 @@
             lastResetPasswordHtml=freshRp;
             resetPasswordList.innerHTML=freshRp;
             animateTerbaruRows(resetPasswordList,'.pimp-activity-item');
+            tickRelativeTimes();
           }
         }
         if(aktivitasList&&typeof data.aktivitas_terbaru_html==='string'){
@@ -6935,13 +6964,14 @@
             lastAktivitasHtml=freshAk;
             aktivitasList.innerHTML=freshAk;
             animateTerbaruRows(aktivitasList,'.pimp-activity-item');
+            tickRelativeTimes();
           }
         }
       }catch(e){}
       finally{kpiBusy=false;}
     }
     window.setInterval(syncAdminKpis,1000);
-    document.addEventListener('visibilitychange',function(){if(!document.hidden)syncAdminKpis();});
+    document.addEventListener('visibilitychange',function(){if(!document.hidden){syncAdminKpis();tickRelativeTimes();}});
   })();
   </script>
 

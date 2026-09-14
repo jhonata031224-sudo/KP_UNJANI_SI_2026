@@ -1,10 +1,25 @@
 {{-- Isi kartu "Kendala Kasansi Terbaru" -- dipakai render awal &
-     poll realtime (DashboardController::pimpinanKpiRealtime). Variabel
-     wajib: $pimpKendalaTerbaru (5 LaporanKendala terbaru). Waktu pakai
-     diffForHumans() (relatif, "X menit lalu") biar kerasa "terbaru" --
-     tanggal lengkap tetep ada di attribute title (hover) buat presisi.
-     Karena payload di-render ulang server tiap poll (1 detik), teks
-     relatif ini OTOMATIS nyegerin sendiri tanpa perlu ticker JS terpisah.
+     poll realtime (DashboardController::pimpinanKpiRealtime, dipakai juga
+     versi Satuan lewat syncSatuanKpis di laporan-role.blade.php). Variabel
+     wajib: $pimpKendalaTerbaru (5 LaporanKendala terbaru). Waktu relatif
+     (".pimp-activity-time") SENGAJA dikosongkan di server dan diisi +
+     di-tick client-side lewat data-ts (fungsi tickRelativeTimes, DIDUPLIKASI
+     di laporan-pimpinan.blade.php DAN laporan-role.blade.php karena masing-
+     masing punya poller sendiri) -- tanggal lengkap tetep ada di attribute
+     title (hover) buat presisi.
+
+     DULU teks ini dirender langsung pakai diffForHumans() dengan asumsi
+     "payload di-render ulang server tiap poll (1 detik) jadi otomatis
+     nyegerin sendiri" -- ternyata itu JUSTRU biang kedip-kedip:
+     diffForHumans() di bawah 1 menit menghasilkan "X detik yang lalu" yang
+     beda tiap detik, bikin string HTML hasil poll "beda" tiap detik ->
+     innerHTML di-swap ulang -> animasi fade-in ke SEMUA baris retrigger
+     tiap detik (lihat [[feedback_dom_diff_flicker_gotcha]], kasus sama
+     kejadian di kartu "Aktivitas Terbaru"/"Permintaan Ganti Password"
+     Admin). data-ts (statis selama log-nya sama) + ticker JS misahin "data
+     beneran berubah" (baris baru/hilang, tetap realtime) dari "jam jalan"
+     (kosmetik doang, gak perlu swap+animasi ulang).
+
      Status SENGAJA pakai label MENTAH $k->status ('Menunggu'/'Ditindaklanjuti'/
      'Selesai'/'Ditolak'/'Dikonfirmasi', field yg sama persis dipakai
      partials/kendala-kasansi-row.blade.php & arsip-kendala-kasansi) +
@@ -22,4 +37,4 @@
      chain var(--p-muted, var(--text-muted, ...)) -- partial ini dipakai
      bareng juga oleh laporan-role.blade.php (Satuan) yang gak punya var
      --p-muted sendiri, cuma --text-muted. --}}
-@forelse($pimpKendalaTerbaru as $k)<div class="pimp-activity-item"><div class="pimp-activity-body"><div class="pimp-activity-title">{{ $k->perihal }}</div><div class="pimp-activity-sub" title="{{ $k->created_at->translatedFormat('d M Y, H:i') }}">Oleh {{ $k->satuan->nama ?? '-' }} &middot; {{ $k->created_at->diffForHumans() }}</div></div><span class="status-pill {{ in_array($k->status, ['Ditindaklanjuti', 'Selesai', 'Dikonfirmasi'], true) ? 'ok' : ($k->status === 'Ditolak' ? 'bad' : 'wait') }}">{{ $k->status }}</span></div>@empty<div class="kcard-empty pimp-empty-compact"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--p-muted, var(--text-muted, currentColor))" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><div class="kcard-empty-title">Belum ada kendala kasansi</div><div class="kcard-empty-sub">Kendala yang dilaporkan satuan Kasansi akan muncul di sini.</div></div>@endforelse
+@forelse($pimpKendalaTerbaru as $k)<div class="pimp-activity-item"><div class="pimp-activity-body"><div class="pimp-activity-title">{{ $k->perihal }}</div><div class="pimp-activity-sub" title="{{ $k->created_at->translatedFormat('d M Y, H:i') }}">Oleh {{ $k->satuan->nama ?? '-' }} &middot; <span class="pimp-activity-time" data-ts="{{ $k->created_at->timestamp }}"></span></div></div><span class="status-pill {{ in_array($k->status, ['Ditindaklanjuti', 'Selesai', 'Dikonfirmasi'], true) ? 'ok' : ($k->status === 'Ditolak' ? 'bad' : 'wait') }}">{{ $k->status }}</span></div>@empty<div class="kcard-empty pimp-empty-compact"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--p-muted, var(--text-muted, currentColor))" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><div class="kcard-empty-title">Belum ada kendala kasansi</div><div class="kcard-empty-sub">Kendala yang dilaporkan satuan Kasansi akan muncul di sini.</div></div>@endforelse
