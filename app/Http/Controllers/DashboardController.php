@@ -105,6 +105,7 @@ class DashboardController
             ->orderByDesc('sessions.last_activity')
             ->get([
                 'sessions.id',
+                'sessions.user_id',
                 'sessions.ip_address',
                 'sessions.user_agent',
                 'sessions.last_activity',
@@ -118,6 +119,7 @@ class DashboardController
                 'sessions.geo_sumber',
                 'users.name as user_name',
             ]);
+        $sesiAktif = \App\Helpers\SesiAnomaliDetector::tandai($sesiAktif);
         // Satuan pengirim laporan = semua satuan SELAIN Admin & Pimpinan
         // (Admin cuma pengelola sistem, Pimpinan/Danpus-Wadan cuma
         // menerima & meninjau, bukan pengirim). Dihitung otomatis dari
