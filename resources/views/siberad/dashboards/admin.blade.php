@@ -5664,45 +5664,115 @@
           <p>Fitur push notification (notifikasi yang muncul di luar sistem/tab tertutup) selalu aktif untuk seluruh pengguna dan tidak dapat dimatikan. Kirim pengumuman ke semua pengguna dari sini.</p>
         </div>
 
+        @php
+          // Kategori satuan yang bisa dipilih spesifik sebagai tujuan
+          // pengumuman (opsi "Satuan Tertentu") -- sengaja TIDAK termasuk
+          // 'pimpinan' (sudah ada opsi cepat "Pimpinan" sendiri) maupun
+          // 'admin' (bukan target pengumuman). Urutan & label sama dengan
+          // yang dipakai di form "Permintaan Laporan" Pimpinan supaya
+          // konsisten.
+          $snTujuanKategoriMap = [
+            \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+            \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
+            \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+            \App\Models\Satuan::KATEGORI_SATLAK => 'Satlak',
+            \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
+          ];
+          $snSatuanByKategori = $semuaSatuan->groupBy('kategori');
+          $snSatuanByKategoriJson = collect($snTujuanKategoriMap)->keys()->mapWithKeys(function ($snKey) use ($snSatuanByKategori) {
+            return [$snKey => $snSatuanByKategori->get($snKey, collect())->map(fn ($s) => ['id' => $s->id, 'nama' => $s->nama])->values()];
+          });
+        @endphp
+
         <style>
-          .sn-broadcast-form{display:flex;flex-direction:column;gap:12px;padding:18px 22px;}
+          .sn-broadcast-form{display:flex;flex-direction:column;gap:18px;padding:18px 22px;}
           .sn-field label{display:block;font-size:11.5px;font-weight:700;color:var(--text-muted);margin-bottom:5px;}
-          .sn-field input[type="text"],.sn-field textarea{width:100%;box-sizing:border-box;border:1px solid var(--border-soft);border-radius:9px;padding:9px 12px;font-family:var(--body);font-size:12.5px;background:var(--panel-alt);color:var(--text);}
+          .sn-field input[type="text"],.sn-field select,.sn-field textarea{width:100%;box-sizing:border-box;border:1px solid var(--border-soft);border-radius:9px;padding:9px 12px;font-family:var(--body);font-size:12.5px;background:var(--panel-alt);color:var(--text);}
           .sn-field textarea{resize:vertical;min-height:80px;}
-          .sn-kategori-row{display:flex;gap:10px;flex-wrap:wrap;}
-          .sn-kategori-opt{flex:1 1 200px;position:relative;cursor:pointer;}
-          .sn-kategori-opt input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;}
-          .sn-kategori-opt-card{border:1.5px solid var(--border-soft);border-radius:10px;padding:10px 12px;transition:border-color .15s ease,background .15s ease;}
-          .sn-kategori-opt-title{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--text);}
-          .sn-kategori-opt-title svg{width:15px;height:15px;flex-shrink:0;}
-          .sn-kategori-opt-desc{font-size:10.5px;color:var(--text-muted);margin-top:4px;line-height:1.5;}
-          .sn-kategori-opt input:checked ~ .sn-kategori-opt-card{border-color:var(--gold,#FF9800);background:var(--gold-dim,rgba(201,122,0,.08));}
-          .sn-kategori-opt input:checked ~ .sn-kategori-opt-card .sn-kategori-opt-title{color:var(--gold-bright,#FF9800);}
+          .sn-field select:disabled{opacity:.55;cursor:not-allowed;}
+          .sn-panel-row{display:flex;gap:14px;flex-wrap:wrap;}
+          .sn-opt-panel{flex:1 1 220px;position:relative;cursor:pointer;}
+          .sn-opt-panel input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;}
+          .sn-opt-panel-card{height:100%;box-sizing:border-box;background:linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--panel-alt);border:1.5px solid var(--border-soft);border-radius:12px;padding:14px 16px;box-shadow:0 6px 18px rgba(0,0,0,.12);transition:border-color .15s ease,background .15s ease,box-shadow .15s ease,transform .15s ease;}
+          .sn-opt-panel-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--text);}
+          .sn-opt-panel-title svg{width:16px;height:16px;flex-shrink:0;}
+          .sn-opt-panel-desc{font-size:11px;color:var(--text-muted);margin-top:5px;line-height:1.5;}
+          .sn-opt-panel input:checked ~ .sn-opt-panel-card{border-color:var(--gold,#FF9800);background:var(--gold-dim,rgba(201,122,0,.08));box-shadow:0 8px 22px rgba(0,0,0,.18);transform:translateY(-1px);}
+          .sn-opt-panel input:checked ~ .sn-opt-panel-card .sn-opt-panel-title{color:var(--gold-bright,#FF9800);}
+          .sn-satuan-picker{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;padding:14px 16px;border:1px dashed var(--border-soft);border-radius:12px;background:var(--panel-alt);}
+          .sn-satuan-picker .sn-field{flex:1 1 220px;margin:0;}
         </style>
 
         <div class="panel" style="margin-top:16px;">
-          <div class="panel-head"><div><h3>Kirim Pengumuman ke Semua Pengguna</h3><p>Pesan akan masuk ke lonceng notifikasi semua pengguna, dan ke notifikasi OS (push) bagi yang sudah mengizinkan.</p></div></div>
-          <form method="POST" action="{{ route('admin.setelan.notifikasi.broadcast') }}" class="sn-broadcast-form">
+          <div class="panel-head"><div><h3>Kirim Pengumuman</h3><p>Pesan akan masuk ke lonceng notifikasi penerima, dan ke notifikasi OS (push) bagi yang sudah mengizinkan.</p></div></div>
+          <form method="POST" action="{{ route('admin.setelan.notifikasi.broadcast') }}" class="sn-broadcast-form" id="snBroadcastForm">
             @csrf
             <div class="sn-field">
               <label>Kategori Pengumuman</label>
-              <div class="sn-kategori-row">
-                <label class="sn-kategori-opt">
+              <div class="sn-panel-row">
+                <label class="sn-opt-panel">
                   <input type="radio" name="kategori" value="keterangan" checked>
-                  <div class="sn-kategori-opt-card">
-                    <div class="sn-kategori-opt-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>Keterangan</div>
-                    <div class="sn-kategori-opt-desc">Info umum, sekadar pemberitahuan. Di lonceng penerima tidak ditandai "belum dibaca" & tidak bisa diklik.</div>
+                  <div class="sn-opt-panel-card">
+                    <div class="sn-opt-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>Keterangan</div>
+                    <div class="sn-opt-panel-desc">Info umum, sekadar pemberitahuan. Di lonceng penerima tidak ditandai "belum dibaca" & tidak bisa diklik.</div>
                   </div>
                 </label>
-                <label class="sn-kategori-opt">
+                <label class="sn-opt-panel">
                   <input type="radio" name="kategori" value="maintenance">
-                  <div class="sn-kategori-opt-card">
-                    <div class="sn-kategori-opt-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a2 2 0 0 0 2.8 2.8l6-6a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.8-2.8Z"></path></svg>Maintenance</div>
-                    <div class="sn-kategori-opt-desc">Pemeliharaan sistem/butuh perhatian. Ditandai "belum dibaca" & bisa diklik penerima utk buka detail lengkap.</div>
+                  <div class="sn-opt-panel-card">
+                    <div class="sn-opt-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a2 2 0 0 0 2.8 2.8l6-6a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.8-2.8Z"></path></svg>Maintenance</div>
+                    <div class="sn-opt-panel-desc">Pemeliharaan sistem/butuh perhatian. Ditandai "belum dibaca" & bisa diklik penerima utk buka detail lengkap.</div>
                   </div>
                 </label>
               </div>
             </div>
+
+            <div class="sn-field">
+              <label>Tujuan Pengumuman</label>
+              <div class="sn-panel-row">
+                <label class="sn-opt-panel">
+                  <input type="radio" name="tujuan" value="semua" checked data-sn-tujuan-radio>
+                  <div class="sn-opt-panel-card">
+                    <div class="sn-opt-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Semua Pengguna</div>
+                    <div class="sn-opt-panel-desc">Terkirim ke seluruh pengguna yang terdaftar di sistem.</div>
+                  </div>
+                </label>
+                <label class="sn-opt-panel">
+                  <input type="radio" name="tujuan" value="pimpinan" data-sn-tujuan-radio>
+                  <div class="sn-opt-panel-card">
+                    <div class="sn-opt-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6Z"></path></svg>Pimpinan</div>
+                    <div class="sn-opt-panel-desc">Hanya Danpus & Wadan yang menerima.</div>
+                  </div>
+                </label>
+                <label class="sn-opt-panel">
+                  <input type="radio" name="tujuan" value="satuan" data-sn-tujuan-radio>
+                  <div class="sn-opt-panel-card">
+                    <div class="sn-opt-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path></svg>Satuan Tertentu</div>
+                    <div class="sn-opt-panel-desc">Pilih satu satuan spesifik sebagai penerima.</div>
+                  </div>
+                </label>
+              </div>
+
+              <div class="sn-satuan-picker" id="snSatuanPicker" style="display:none;">
+                <div class="sn-field">
+                  <label for="snKategoriSatuan">Kategori Satuan</label>
+                  <select id="snKategoriSatuan">
+                    <option value="">Pilih kategori...</option>
+                    @foreach($snTujuanKategoriMap as $snKey => $snLabel)
+                      @continue(($snSatuanByKategori->get($snKey) ?? collect())->isEmpty())
+                      <option value="{{ $snKey }}">{{ $snLabel }}</option>
+                    @endforeach
+                  </select>
+                </div>
+                <div class="sn-field">
+                  <label for="snSatuanId">Pilih Satuan</label>
+                  <select name="satuan_id" id="snSatuanId" disabled>
+                    <option value="">Pilih kategori dulu...</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <div class="sn-field">
               <label for="snJudul">Judul</label>
               <input type="text" id="snJudul" name="judul" maxlength="100" placeholder="Contoh: Pemeliharaan Sistem" required>
@@ -5712,10 +5782,64 @@
               <textarea id="snPesan" name="pesan" maxlength="500" placeholder="Tulis isi pengumuman di sini..." required></textarea>
             </div>
             <div>
-              <button type="submit" class="btn btn-primary btn-sm">Kirim ke Semua Pengguna</button>
+              <button type="submit" class="btn btn-primary btn-sm">Kirim Pengumuman</button>
             </div>
           </form>
         </div>
+
+        <script>
+        (function () {
+          var picker = document.getElementById('snSatuanPicker');
+          var kategoriSelect = document.getElementById('snKategoriSatuan');
+          var satuanSelect = document.getElementById('snSatuanId');
+          var tujuanRadios = document.querySelectorAll('[data-sn-tujuan-radio]');
+          if (!picker || !kategoriSelect || !satuanSelect || !tujuanRadios.length) return;
+
+          var SATUAN_BY_KATEGORI = @json($snSatuanByKategoriJson);
+
+          function toggleSatuanPicker() {
+            var current = document.querySelector('[data-sn-tujuan-radio]:checked');
+            var tampilkan = !!current && current.value === 'satuan';
+            picker.style.display = tampilkan ? '' : 'none';
+            satuanSelect.required = tampilkan;
+            if (!tampilkan) {
+              kategoriSelect.value = '';
+              satuanSelect.innerHTML = '<option value="">Pilih kategori dulu...</option>';
+              satuanSelect.disabled = true;
+            }
+          }
+
+          tujuanRadios.forEach(function (radio) {
+            radio.addEventListener('change', toggleSatuanPicker);
+          });
+
+          kategoriSelect.addEventListener('change', function () {
+            var daftar = SATUAN_BY_KATEGORI[kategoriSelect.value] || [];
+            satuanSelect.innerHTML = '';
+            if (!daftar.length) {
+              satuanSelect.disabled = true;
+              var kosong = document.createElement('option');
+              kosong.value = '';
+              kosong.textContent = 'Tidak ada satuan pada kategori ini';
+              satuanSelect.appendChild(kosong);
+              return;
+            }
+            satuanSelect.disabled = false;
+            var placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Pilih satuan...';
+            satuanSelect.appendChild(placeholder);
+            daftar.forEach(function (item) {
+              var opt = document.createElement('option');
+              opt.value = item.id;
+              opt.textContent = item.nama;
+              satuanSelect.appendChild(opt);
+            });
+          });
+
+          toggleSatuanPicker();
+        })();
+        </script>
 
       </section>
 
