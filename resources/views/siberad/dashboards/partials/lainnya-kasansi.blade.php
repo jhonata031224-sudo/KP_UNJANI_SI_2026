@@ -25,15 +25,6 @@
 .notif-setting-row-desc{font-size:11.5px;color:var(--text-muted);line-height:1.5;margin-top:2px}
 .notif-setting-row-right{flex-shrink:0}
 
-/* Toggle switch */
-.notif-toggle{position:relative;display:inline-flex;align-items:center;cursor:pointer;user-select:none}
-.notif-toggle input{position:absolute;opacity:0;width:1px;height:1px}
-.notif-toggle-track{width:46px;height:26px;border-radius:99px;background:var(--border-strong);transition:background .2s ease;position:relative}
-.notif-toggle input:checked+.notif-toggle-track{background:var(--gold-bright)}
-.notif-toggle-track::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s cubic-bezier(.4,0,.2,1)}
-.notif-toggle input:checked+.notif-toggle-track::after{transform:translateX(20px)}
-.notif-toggle input:disabled+.notif-toggle-track{opacity:.45;cursor:not-allowed}
-
 /* Status badge notif */
 .notif-status-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:99px;font-size:11px;font-weight:700;border:1px solid transparent}
 .notif-status-pill.aktif{background:rgba(22,131,75,.12);border-color:rgba(22,131,75,.3);color:var(--green-bright,#16834b)}
@@ -74,7 +65,7 @@
             <b>Notifikasi diblokir browser.</b> Kamu sudah menonaktifkan izin notifikasi di browser ini. Untuk mengaktifkan kembali, buka pengaturan browser dan izinkan notifikasi dari situs ini, lalu muat ulang halaman.
         </div>
         <div class="notif-permission-box default" id="notifPermDefault">
-            <b>Izin notifikasi belum diberikan.</b> Aktifkan tombol di bawah untuk meminta izin notifikasi dari browser.
+            <b>Izin notifikasi belum diberikan.</b> Browser akan meminta izin secara otomatis saat kamu membuka {{ $pengaturan?->namaSistem() ?? "SIBERAD" }}.
         </div>
 
         <div class="notif-help-box">
@@ -92,56 +83,17 @@
                 </div>
                 <div class="notif-setting-row-body">
                     <div class="notif-setting-row-label">Notifikasi Push (di luar sistem)</div>
-                    <div class="notif-setting-row-desc">Terima notifikasi di tray OS meski {{ $pengaturan?->namaSistem() ?? "SIBERAD" }} tidak dibuka. Berlaku untuk semua perangkat yang terhubung.</div>
-                </div>
-                <div class="notif-setting-row-right" style="display:flex;align-items:center;gap:10px">
-                    <span class="notif-status-pill" id="notifPushPill">
-                        <svg viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
-                        <span id="notifPushPillText">Memuat…</span>
-                    </span>
-                    <label class="notif-toggle" id="notifPushToggleLabel" title="Aktifkan/matikan notifikasi push">
-                        <input type="checkbox" id="notifPushToggle"
-                            {{ $user->notif_push_enabled ? 'checked' : '' }}
-                            @if(! ($pengaturan->notifikasi_push_aktif ?? true)) disabled @endif>
-                        <span class="notif-toggle-track"></span>
-                    </label>
-                </div>
-            </div>
-
-            {{-- Row 2: Status global admin (readonly info) --}}
-            <div class="notif-setting-row">
-                <div class="notif-setting-row-icon" style="background:var(--panel-alt);color:var(--text-muted)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2"/>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                    </svg>
-                </div>
-                <div class="notif-setting-row-body">
-                    <div class="notif-setting-row-label">Status Global (dikelola Admin)</div>
-                    <div class="notif-setting-row-desc">
-                        @if($pengaturan->notifikasi_push_aktif ?? true)
-                            Push notification sedang <b style="color:var(--green-bright,#16834b)">aktif</b> secara global. Tombol di atas dapat kamu gunakan.
-                        @else
-                            Push notification sedang <b style="color:var(--red)">dimatikan</b> oleh Admin. Pengaturan pribadimu tidak berpengaruh sementara ini.
-                        @endif
-                    </div>
+                    <div class="notif-setting-row-desc">Terima notifikasi di tray OS meski {{ $pengaturan?->namaSistem() ?? "SIBERAD" }} tidak dibuka. Selalu aktif untuk semua pengguna &mdash; dianggap penting (mis. notifikasi kendala/laporan darurat) sehingga tidak dapat dimatikan secara manual.</div>
                 </div>
                 <div class="notif-setting-row-right">
-                    @if($pengaturan->notifikasi_push_aktif ?? true)
-                        <span class="notif-status-pill aktif">
-                            <svg viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
-                            Aktif
-                        </span>
-                    @else
-                        <span class="notif-status-pill mati">
-                            <svg viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
-                            Nonaktif
-                        </span>
-                    @endif
+                    <span class="notif-status-pill aktif">
+                        <svg viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
+                        Selalu Aktif
+                    </span>
                 </div>
             </div>
 
-            {{-- Row 3: Notifikasi in-app (lonceng) - selalu aktif --}}
+            {{-- Row 2: Notifikasi in-app (lonceng) - selalu aktif --}}
             <div class="notif-setting-row">
                 <div class="notif-setting-row-icon" style="background:rgba(22,131,75,.1);color:var(--green-bright,#16834b)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -218,167 +170,29 @@
     </div>
 </section>
 
-{{-- ===== Script: toggle notifikasi push ===== --}}
+{{-- ===== Script: info status izin notifikasi browser =====
+     Push notification sekarang wajib selalu aktif (lihat
+     UserNotifikasiController::toggle & Row 1 di atas yang sudah jadi
+     status baca-saja "Selalu Aktif"), jadi TIDAK ADA LAGI toggle/manual
+     subscribe-unsubscribe di sini. Satu-satunya yang masih relevan
+     ditampilkan di panel ini adalah status izin notifikasi BROWSER
+     (denied/default) sebagai informasi -- proses minta izin & subscribe
+     otomatisnya sendiri sudah ditangani sekali di awal oleh script global
+     push-notification-controls.blade.php (di-inject ke semua dashboard
+     lewat InjectWebPushUi), bukan di sini. --}}
 <script>
 (function () {
     'use strict';
 
-    var TOGGLE_URL = @json(route('notifikasi.toggle-user'));
-    var SUBSCRIBE_URL = @json(route('push.subscribe'));
-    var UNSUBSCRIBE_URL = @json(route('push.unsubscribe'));
-    var VAPID_KEY = @json(config('webpush.vapid.publicKey'));
-    var GLOBAL_AKTIF = @json((bool)($pengaturan->notifikasi_push_aktif ?? true));
-
-    var toggle = document.getElementById('notifPushToggle');
-    var pill   = document.getElementById('notifPushPill');
-    var pillTxt = document.getElementById('notifPushPillText');
     var permDenied  = document.getElementById('notifPermDenied');
     var permDefault = document.getElementById('notifPermDefault');
 
-    if (!toggle) return;
+    if (!('Notification' in window)) return;
 
-    function csrfToken() {
-        var m = document.querySelector('meta[name="csrf-token"]');
-        return m ? m.content : '';
-    }
-
-    function postJson(url, body) {
-        return fetch(url, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken()
-            },
-            body: JSON.stringify(body || {})
-        });
-    }
-
-    function urlBase64ToUint8Array(b64) {
-        var pad = '='.repeat((4 - b64.length % 4) % 4);
-        var b = (b64 + pad).replace(/-/g, '+').replace(/_/g, '/');
-        var raw = atob(b);
-        var out = new Uint8Array(raw.length);
-        for (var i = 0; i < raw.length; ++i) out[i] = raw.charCodeAt(i);
-        return out;
-    }
-
-    function syncPill(enabled) {
-        if (enabled && GLOBAL_AKTIF) {
-            pill.className = 'notif-status-pill aktif';
-            pillTxt.textContent = 'Aktif';
-        } else if (!GLOBAL_AKTIF) {
-            pill.className = 'notif-status-pill mati';
-            pillTxt.textContent = 'Diblokir Admin';
-        } else {
-            pill.className = 'notif-status-pill mati';
-            pillTxt.textContent = 'Nonaktif';
-        }
-    }
-
-    // Inisialisasi pill sesuai state awal checkbox
-    syncPill(toggle.checked);
-
-    // Tampilkan peringatan permission browser
-    function checkBrowserPermission() {
-        if (!('Notification' in window)) return;
-        if (Notification.permission === 'denied') {
-            if (permDenied) permDenied.style.display = 'block';
-            toggle.disabled = true;
-        } else if (Notification.permission === 'default') {
-            if (permDefault) permDefault.style.display = 'block';
-        }
-    }
-    checkBrowserPermission();
-
-    function subscribePush() {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window) || !VAPID_KEY) return;
-        navigator.serviceWorker.register('/sw.js').then(function (reg) {
-            return reg.pushManager.getSubscription().then(function (existing) {
-                if (existing) {
-                    return postJson(SUBSCRIBE_URL, subscribePayload(existing));
-                }
-                return reg.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(VAPID_KEY)
-                }).then(function (sub) {
-                    return postJson(SUBSCRIBE_URL, subscribePayload(sub));
-                });
-            });
-        }).catch(function () {});
-    }
-
-    function subscribePayload(sub) {
-        var j = sub.toJSON();
-        return { endpoint: j.endpoint, keys: j.keys };
-    }
-
-    function unsubscribePush() {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-        navigator.serviceWorker.getRegistration().then(function (reg) {
-            if (!reg) return;
-            return reg.pushManager.getSubscription().then(function (sub) {
-                if (!sub) return;
-                postJson(UNSUBSCRIBE_URL, { endpoint: sub.endpoint }).catch(function(){});
-                return sub.unsubscribe().catch(function(){});
-            });
-        }).catch(function(){});
-    }
-
-    toggle.addEventListener('change', function () {
-        var enabled = toggle.checked;
-
-        // Minta izin browser kalau belum (hanya saat diaktifkan)
-        if (enabled && 'Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission().then(function (perm) {
-                if (perm !== 'granted') {
-                    toggle.checked = false;
-                    syncPill(false);
-                    if (permDenied) permDenied.style.display = 'block';
-                    return;
-                }
-                if (permDefault) permDefault.style.display = 'none';
-                simpanToggle(true);
-            });
-            return;
-        }
-
-        simpanToggle(enabled);
-    });
-
-    function simpanToggle(enabled) {
-        toggle.disabled = true;
-
-        postJson(TOGGLE_URL, { enabled: enabled }).then(function (res) {
-            return res.json();
-        }).then(function (data) {
-            toggle.disabled = GLOBAL_AKTIF ? false : true;
-            toggle.checked = data.enabled;
-            syncPill(data.enabled);
-
-            // Sinkron subscription browser
-            if (data.enabled) {
-                subscribePush();
-            } else if (data.unsubscribe_browser) {
-                unsubscribePush();
-            }
-
-            if (window.siberadShowToast) {
-                window.siberadShowToast(
-                    data.enabled ? 'success' : 'info',
-                    data.enabled ? 'Notifikasi push diaktifkan.' : 'Notifikasi push dimatikan.'
-                );
-            }
-        }).catch(function () {
-            // Rollback UI kalau gagal
-            toggle.checked = !enabled;
-            syncPill(!enabled);
-            toggle.disabled = GLOBAL_AKTIF ? false : true;
-            if (window.siberadShowToast) {
-                window.siberadShowToast('error', 'Gagal menyimpan pengaturan notifikasi.');
-            }
-        });
+    if (Notification.permission === 'denied') {
+        if (permDenied) permDenied.style.display = 'block';
+    } else if (Notification.permission === 'default') {
+        if (permDefault) permDefault.style.display = 'block';
     }
 })();
 </script>
