@@ -866,6 +866,19 @@
   </script>
 
   <main class="main">
+    @php
+      // Badge notifikasi awal (server-rendered, sebelum JS polling jalan)
+      // sengaja MENGECUALIKAN pengumuman kategori 'keterangan' dari hitungan
+      // -- notif jenis itu memang tidak pernah bisa diklik/ditandai dibaca
+      // (lihat notification-controls.blade.php: hitungSebagaiUnread() &
+      // render()), jadi kalau ikut dihitung di sini badge akan nyangkut
+      // "belum dibaca" selamanya walau secara visual tidak pernah ditandai
+      // begitu. Logikanya disamakan persis dengan hitungSebagaiUnread() di
+      // sisi client supaya angka awal (sebelum poll pertama) tidak beda.
+      $snUnreadNotifCount = auth()->user()?->unreadNotifications
+          ->reject(fn ($n) => ($n->data['tipe'] ?? null) === 'pengumuman_admin' && ($n->data['kategori'] ?? null) === 'keterangan')
+          ->count() ?? 0;
+    @endphp
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:12px;">
         <button class="menu-btn" id="menuBtn" type="button">☰</button>
@@ -882,7 +895,7 @@
               <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" style="fill:var(--gold-dim) !important;stroke:var(--gold-bright) !important;"></path>
               <path d="M13.73 21a2 2 0 0 1-3.46 0" style="fill:none !important;stroke:var(--gold-bright) !important;"></path>
             </svg>
-            <span class="siberad-notif-badge" style="{{ auth()->user()?->unreadNotifications->count() ? '' : 'display:none;' }}">{{ auth()->user()?->unreadNotifications->count() > 99 ? '99+' : auth()->user()?->unreadNotifications->count() }}</span>
+            <span class="siberad-notif-badge" style="{{ $snUnreadNotifCount ? '' : 'display:none;' }}">{{ $snUnreadNotifCount > 99 ? '99+' : $snUnreadNotifCount }}</span>
           </button>
 
           <div class="profile-dropdown" id="notifDropdown" role="menu" aria-label="Notifikasi">
@@ -5661,82 +5674,118 @@
       <section class="tab-panel" data-tab-panel="setelan-notifikasi">
         <div class="section-head panel">
           <h2>Setelan Notifikasi</h2>
-          <p>Kelola fitur push notification (notifikasi yang muncul di luar sistem/tab tertutup) untuk seluruh pengguna sekaligus.</p>
+          <p>Fitur push notification (notifikasi yang muncul di luar sistem/tab tertutup) selalu aktif untuk seluruh pengguna dan tidak dapat dimatikan. Kirim pengumuman ke semua pengguna dari sini.</p>
         </div>
+
+        @php
+          // Kategori satuan yang bisa dipilih spesifik sebagai tujuan
+          // pengumuman (opsi "Satuan Tertentu") -- sengaja TIDAK termasuk
+          // 'pimpinan' (sudah ada opsi cepat "Pimpinan" sendiri) maupun
+          // 'admin' (bukan target pengumuman). Urutan & label sama dengan
+          // yang dipakai di form "Permintaan Laporan" Pimpinan supaya
+          // konsisten.
+          $snTujuanKategoriMap = [
+            \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+            \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
+            \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+            \App\Models\Satuan::KATEGORI_SATLAK => 'Satlak',
+            \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
+          ];
+          $snSatuanByKategori = $semuaSatuan->groupBy('kategori');
+          $snSatuanByKategoriJson = collect($snTujuanKategoriMap)->keys()->mapWithKeys(function ($snKey) use ($snSatuanByKategori) {
+            return [$snKey => $snSatuanByKategori->get($snKey, collect())->map(fn ($s) => ['id' => $s->id, 'nama' => $s->nama])->values()];
+          });
+        @endphp
 
         <style>
-          .sn-switch-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;flex-wrap:wrap;}
-          .sn-switch-row-main{display:flex;flex-direction:column;gap:3px;min-width:220px;}
-          .sn-switch-row-title{font-size:13px;font-weight:700;color:var(--text);}
-          .sn-switch-row-desc{font-size:11.5px;color:var(--text-muted);}
-          .sn-switch{position:relative;display:inline-flex;flex-shrink:0;width:44px;height:25px;}
-          .sn-switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;}
-          .sn-switch-track{position:absolute;inset:0;border-radius:999px;background:var(--border-strong,#c9c9c9);transition:background .18s ease;}
-          .sn-switch-thumb{position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .18s ease;}
-          .sn-switch input:checked ~ .sn-switch-track{background:var(--gold,#FF9800);}
-          .sn-switch input:checked ~ .sn-switch-thumb{transform:translateX(19px);}
-          .sn-broadcast-form{display:flex;flex-direction:column;gap:12px;padding:18px 22px;}
+          .sn-broadcast-form{display:flex;flex-direction:column;gap:18px;padding:18px 22px;}
           .sn-field label{display:block;font-size:11.5px;font-weight:700;color:var(--text-muted);margin-bottom:5px;}
-          .sn-field input[type="text"],.sn-field textarea{width:100%;box-sizing:border-box;border:1px solid var(--border-soft);border-radius:9px;padding:9px 12px;font-family:var(--body);font-size:12.5px;background:var(--panel-alt);color:var(--text);}
+          .sn-field input[type="text"],.sn-field select,.sn-field textarea{width:100%;box-sizing:border-box;border:1px solid var(--border-soft);border-radius:9px;padding:9px 12px;font-family:var(--body);font-size:12.5px;background:var(--panel-alt);color:var(--text);}
           .sn-field textarea{resize:vertical;min-height:80px;}
-          .sn-kategori-row{display:flex;gap:10px;flex-wrap:wrap;}
-          .sn-kategori-opt{flex:1 1 200px;position:relative;cursor:pointer;}
-          .sn-kategori-opt input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;}
-          .sn-kategori-opt-card{border:1.5px solid var(--border-soft);border-radius:10px;padding:10px 12px;transition:border-color .15s ease,background .15s ease;}
-          .sn-kategori-opt-title{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--text);}
-          .sn-kategori-opt-title svg{width:15px;height:15px;flex-shrink:0;}
-          .sn-kategori-opt-desc{font-size:10.5px;color:var(--text-muted);margin-top:4px;line-height:1.5;}
-          .sn-kategori-opt input:checked ~ .sn-kategori-opt-card{border-color:var(--gold,#FF9800);background:var(--gold-dim,rgba(201,122,0,.08));}
-          .sn-kategori-opt input:checked ~ .sn-kategori-opt-card .sn-kategori-opt-title{color:var(--gold-bright,#FF9800);}
-          .sn-sub-table{width:100%;border-collapse:collapse;font-size:12px;}
-          .sn-sub-table th{text-align:left;padding:9px 14px;color:var(--text-muted);font-weight:700;font-size:11px;border-bottom:1px solid var(--border-soft);}
-          .sn-sub-table td{padding:9px 14px;border-bottom:1px solid var(--border-soft);color:var(--text);}
-          .sn-sub-table tr:last-child td{border-bottom:none;}
-          .sn-empty{padding:22px;text-align:center;color:var(--text-muted);font-size:12.5px;}
+          .sn-field select:disabled{opacity:.55;cursor:not-allowed;}
+          .sn-panel-row{display:flex;gap:14px;flex-wrap:wrap;}
+          .sn-opt-panel{flex:1 1 220px;position:relative;cursor:pointer;}
+          .sn-opt-panel input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;}
+          .sn-opt-panel-card{height:100%;box-sizing:border-box;background:linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--panel-alt);border:1.5px solid var(--border-soft);border-radius:12px;padding:14px 16px;box-shadow:0 6px 18px rgba(0,0,0,.12);transition:border-color .15s ease,background .15s ease,box-shadow .15s ease,transform .15s ease;}
+          .sn-opt-panel-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--text);}
+          .sn-opt-panel-title svg{width:16px;height:16px;flex-shrink:0;}
+          .sn-opt-panel-desc{font-size:11px;color:var(--text-muted);margin-top:5px;line-height:1.5;}
+          .sn-opt-panel input:checked ~ .sn-opt-panel-card{border-color:var(--gold,#FF9800);background:var(--gold-dim,rgba(201,122,0,.08));box-shadow:0 8px 22px rgba(0,0,0,.18);transform:translateY(-1px);}
+          .sn-opt-panel input:checked ~ .sn-opt-panel-card .sn-opt-panel-title{color:var(--gold-bright,#FF9800);}
+          .sn-satuan-picker{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;padding:14px 16px;border:1px dashed var(--border-soft);border-radius:12px;background:var(--panel-alt);}
+          .sn-satuan-picker .sn-field{flex:1 1 220px;margin:0;}
         </style>
 
-        <div class="panel">
-          <div class="panel-head"><div><h3>Saklar Global</h3><p>Kalau dimatikan, tombol "Aktifkan Notifikasi" tidak muncul di halaman manapun dan tidak ada push yang dikirim ke siapapun. Notifikasi lonceng di dalam sistem tetap berjalan seperti biasa.</p></div></div>
-          <form method="POST" action="{{ route('admin.setelan.notifikasi.toggle') }}" id="formNotifikasiToggle">
-            @csrf @method('PATCH')
-            <input type="hidden" name="aktif" id="notifikasiToggleValue" value="{{ $pengaturan->notifikasi_push_aktif ? '1' : '0' }}">
-            <div class="sn-switch-row">
-              <div class="sn-switch-row-main">
-                <span class="sn-switch-row-title">Fitur Push Notifikasi</span>
-                <span class="sn-switch-row-desc" id="notifikasiToggleDesc">{{ $pengaturan->notifikasi_push_aktif ? 'Sedang aktif untuk seluruh pengguna.' : 'Sedang dimatikan untuk seluruh pengguna.' }}</span>
-              </div>
-              <label class="sn-switch">
-                <input type="checkbox" id="notifikasiToggleCheckbox" @checked($pengaturan->notifikasi_push_aktif)>
-                <span class="sn-switch-track"></span>
-                <span class="sn-switch-thumb"></span>
-              </label>
-            </div>
-          </form>
-        </div>
-
         <div class="panel" style="margin-top:16px;">
-          <div class="panel-head"><div><h3>Kirim Pengumuman ke Semua Pengguna</h3><p>Pesan akan masuk ke lonceng notifikasi semua pengguna, dan ke notifikasi OS (push) bagi yang sudah mengizinkan.</p></div></div>
-          <form method="POST" action="{{ route('admin.setelan.notifikasi.broadcast') }}" class="sn-broadcast-form">
+          <div class="panel-head"><div><h3>Kirim Pengumuman</h3><p>Pesan akan masuk ke lonceng notifikasi penerima, dan ke notifikasi OS (push) bagi yang sudah mengizinkan.</p></div></div>
+          <form method="POST" action="{{ route('admin.setelan.notifikasi.broadcast') }}" class="sn-broadcast-form" id="snBroadcastForm">
             @csrf
             <div class="sn-field">
               <label>Kategori Pengumuman</label>
-              <div class="sn-kategori-row">
-                <label class="sn-kategori-opt">
+              <div class="sn-panel-row">
+                <label class="sn-opt-panel">
                   <input type="radio" name="kategori" value="keterangan" checked>
-                  <div class="sn-kategori-opt-card">
-                    <div class="sn-kategori-opt-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>Keterangan</div>
-                    <div class="sn-kategori-opt-desc">Info umum, sekadar pemberitahuan. Di lonceng penerima tidak ditandai "belum dibaca" & tidak bisa diklik.</div>
+                  <div class="sn-opt-panel-card">
+                    <div class="sn-opt-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>Keterangan</div>
+                    <div class="sn-opt-panel-desc">Info umum, sekadar pemberitahuan. Di lonceng penerima tidak ditandai "belum dibaca" & tidak bisa diklik.</div>
                   </div>
                 </label>
-                <label class="sn-kategori-opt">
+                <label class="sn-opt-panel">
                   <input type="radio" name="kategori" value="maintenance">
-                  <div class="sn-kategori-opt-card">
-                    <div class="sn-kategori-opt-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a2 2 0 0 0 2.8 2.8l6-6a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.8-2.8Z"></path></svg>Maintenance</div>
-                    <div class="sn-kategori-opt-desc">Pemeliharaan sistem/butuh perhatian. Ditandai "belum dibaca" & bisa diklik penerima utk buka detail lengkap.</div>
+                  <div class="sn-opt-panel-card">
+                    <div class="sn-opt-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a2 2 0 0 0 2.8 2.8l6-6a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.8-2.8Z"></path></svg>Maintenance</div>
+                    <div class="sn-opt-panel-desc">Pemeliharaan sistem/butuh perhatian. Ditandai "belum dibaca" & bisa diklik penerima utk buka detail lengkap.</div>
                   </div>
                 </label>
               </div>
             </div>
+
+            <div class="sn-field">
+              <label>Tujuan Pengumuman</label>
+              <div class="sn-panel-row">
+                <label class="sn-opt-panel">
+                  <input type="radio" name="tujuan" value="semua" checked data-sn-tujuan-radio>
+                  <div class="sn-opt-panel-card">
+                    <div class="sn-opt-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Semua Pengguna</div>
+                    <div class="sn-opt-panel-desc">Terkirim ke seluruh pengguna yang terdaftar di sistem.</div>
+                  </div>
+                </label>
+                <label class="sn-opt-panel">
+                  <input type="radio" name="tujuan" value="pimpinan" data-sn-tujuan-radio>
+                  <div class="sn-opt-panel-card">
+                    <div class="sn-opt-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6Z"></path></svg>Pimpinan</div>
+                    <div class="sn-opt-panel-desc">Hanya Danpus & Wadan yang menerima.</div>
+                  </div>
+                </label>
+                <label class="sn-opt-panel">
+                  <input type="radio" name="tujuan" value="satuan" data-sn-tujuan-radio>
+                  <div class="sn-opt-panel-card">
+                    <div class="sn-opt-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path></svg>Satuan Tertentu</div>
+                    <div class="sn-opt-panel-desc">Pilih satu satuan spesifik sebagai penerima.</div>
+                  </div>
+                </label>
+              </div>
+
+              <div class="sn-satuan-picker" id="snSatuanPicker" style="display:none;">
+                <div class="sn-field">
+                  <label for="snKategoriSatuan">Kategori Satuan</label>
+                  <select id="snKategoriSatuan">
+                    <option value="">Pilih kategori...</option>
+                    @foreach($snTujuanKategoriMap as $snKey => $snLabel)
+                      @continue(($snSatuanByKategori->get($snKey) ?? collect())->isEmpty())
+                      <option value="{{ $snKey }}">{{ $snLabel }}</option>
+                    @endforeach
+                  </select>
+                </div>
+                <div class="sn-field">
+                  <label for="snSatuanId">Pilih Satuan</label>
+                  <select name="satuan_id" id="snSatuanId" disabled>
+                    <option value="">Pilih kategori dulu...</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <div class="sn-field">
               <label for="snJudul">Judul</label>
               <input type="text" id="snJudul" name="judul" maxlength="100" placeholder="Contoh: Pemeliharaan Sistem" required>
@@ -5746,67 +5795,65 @@
               <textarea id="snPesan" name="pesan" maxlength="500" placeholder="Tulis isi pengumuman di sini..." required></textarea>
             </div>
             <div>
-              <button type="submit" class="btn btn-primary btn-sm">Kirim ke Semua Pengguna</button>
+              <button type="submit" class="btn btn-primary btn-sm">Kirim Pengumuman</button>
             </div>
           </form>
         </div>
 
-        <div class="panel" style="margin-top:16px;">
-          <div class="panel-head"><div><h3>Pengguna yang Mengaktifkan Notifikasi</h3><p>Daftar perangkat yang sudah mengizinkan push notification ({{ $daftarPushSubscription->count() }} perangkat).</p></div></div>
-          @if($daftarPushSubscription->isEmpty())
-          <div class="sn-empty">Belum ada pengguna yang mengaktifkan notifikasi push.</div>
-          @else
-          <div style="overflow-x:auto;">
-            <table class="sn-sub-table">
-              <thead><tr><th>Nama</th><th>Satuan</th><th>Perangkat/Browser</th><th>Diaktifkan</th></tr></thead>
-              <tbody>
-                @foreach($daftarPushSubscription as $sub)
-                @php
-                  $ua = (string) ($sub->user_agent ?? '');
-                  $browser = 'Tidak diketahui';
-                  foreach (['Edg' => 'Edge','OPR' => 'Opera','Chrome' => 'Chrome','Firefox' => 'Firefox','Safari' => 'Safari'] as $needle => $label) {
-                      if (str_contains($ua, $needle)) { $browser = $label; break; }
-                  }
-                @endphp
-                <tr>
-                  <td>{{ $sub->user->name ?? '—' }}</td>
-                  <td>{{ $sub->user->satuan->nama ?? '—' }}</td>
-                  <td>{{ $browser }}</td>
-                  <td>{{ optional($sub->created_at)->translatedFormat('d M Y H:i') }}</td>
-                </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
-          @endif
-        </div>
-
         <script>
         (function () {
-          var panel = document.querySelector('[data-tab-panel="setelan-notifikasi"]');
-          if (!panel) return;
+          var picker = document.getElementById('snSatuanPicker');
+          var kategoriSelect = document.getElementById('snKategoriSatuan');
+          var satuanSelect = document.getElementById('snSatuanId');
+          var tujuanRadios = document.querySelectorAll('[data-sn-tujuan-radio]');
+          if (!picker || !kategoriSelect || !satuanSelect || !tujuanRadios.length) return;
 
-          var checkbox = document.getElementById('notifikasiToggleCheckbox');
-          var hiddenValue = document.getElementById('notifikasiToggleValue');
-          var desc = document.getElementById('notifikasiToggleDesc');
-          var form = document.getElementById('formNotifikasiToggle');
-          if (!checkbox || !hiddenValue || !form) return;
+          var SATUAN_BY_KATEGORI = @json($snSatuanByKategoriJson);
 
-          checkbox.addEventListener('change', function () {
-            var akanAktif = checkbox.checked;
-            var pesanKonfirmasi = akanAktif
-              ? 'Aktifkan fitur push notifikasi untuk seluruh pengguna?'
-              : 'Matikan fitur push notifikasi untuk seluruh pengguna? Tidak ada notifikasi push yang akan terkirim ke perangkat manapun.';
-            if (!window.confirm(pesanKonfirmasi)) {
-              checkbox.checked = !akanAktif;
+          function toggleSatuanPicker() {
+            var current = document.querySelector('[data-sn-tujuan-radio]:checked');
+            var tampilkan = !!current && current.value === 'satuan';
+            picker.style.display = tampilkan ? '' : 'none';
+            satuanSelect.required = tampilkan;
+            if (!tampilkan) {
+              kategoriSelect.value = '';
+              satuanSelect.innerHTML = '<option value="">Pilih kategori dulu...</option>';
+              satuanSelect.disabled = true;
+            }
+          }
+
+          tujuanRadios.forEach(function (radio) {
+            radio.addEventListener('change', toggleSatuanPicker);
+          });
+
+          kategoriSelect.addEventListener('change', function () {
+            var daftar = SATUAN_BY_KATEGORI[kategoriSelect.value] || [];
+            satuanSelect.innerHTML = '';
+            if (!daftar.length) {
+              satuanSelect.disabled = true;
+              var kosong = document.createElement('option');
+              kosong.value = '';
+              kosong.textContent = 'Tidak ada satuan pada kategori ini';
+              satuanSelect.appendChild(kosong);
               return;
             }
-            hiddenValue.value = akanAktif ? '1' : '0';
-            if (desc) desc.textContent = akanAktif ? 'Sedang aktif untuk seluruh pengguna.' : 'Sedang dimatikan untuk seluruh pengguna.';
-            form.submit();
+            satuanSelect.disabled = false;
+            var placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Pilih satuan...';
+            satuanSelect.appendChild(placeholder);
+            daftar.forEach(function (item) {
+              var opt = document.createElement('option');
+              opt.value = item.id;
+              opt.textContent = item.nama;
+              satuanSelect.appendChild(opt);
+            });
           });
+
+          toggleSatuanPicker();
         })();
         </script>
+
       </section>
 
       {{-- ===== KELOLA SISTEM -> STRUKTUR ORGANISASI ===== --}}

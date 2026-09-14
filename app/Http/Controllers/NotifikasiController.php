@@ -59,7 +59,14 @@ class NotifikasiController extends Controller
 
         return response()->json([
             'notifications' => $notifications,
-            'unread_count' => $user->unreadNotifications()->count(),
+            // Sama seperti hitungSebagaiUnread() di notification-controls.
+            // blade.php: pengumuman kategori 'keterangan' TIDAK pernah ikut
+            // dihitung "belum dibaca" (tidak pernah bisa ditandai dibaca
+            // karena memang tidak bisa diklik), supaya field ini konsisten
+            // dengan badge yang dirender di client kalau suatu saat dipakai.
+            'unread_count' => $user->unreadNotifications
+                ->reject(fn (DatabaseNotification $n) => ($n->data['tipe'] ?? null) === 'pengumuman_admin' && ($n->data['kategori'] ?? null) === 'keterangan')
+                ->count(),
         ], 200, [
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
         ]);
