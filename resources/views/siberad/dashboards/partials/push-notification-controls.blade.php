@@ -108,19 +108,63 @@
     });
   };
 
+  // Key localStorage untuk mencatat kapan terakhir subscription dikonfirmasi
+  // ke server. Dipakai supaya tiap page load tidak langsung kirim POST ke
+  // SUBSCRIBE_URL (boros request), tapi tetap periodik refresh supaya baris
+  // push_subscriptions di server tidak stale/hilang karena push service
+  // (FCM/Mozilla) mengganti endpoint setelah browser update atau device restart.
+  var CONFIRM_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 jam
+  var LAST_CONFIRM_KEY = 'siberad_push_confirmed_at';
+
+  function shouldConfirmToServer() {
+    try {
+      var last = parseInt(localStorage.getItem(LAST_CONFIRM_KEY) || '0', 10);
+      return (Date.now() - last) > CONFIRM_INTERVAL_MS;
+    } catch (e) { return true; }
+  }
+
+  function markConfirmed() {
+    try { localStorage.setItem(LAST_CONFIRM_KEY, String(Date.now())); } catch (e) {}
+  }
+
+  function doSubscribeAndConfirm(registration) {
+    return doSubscribe(registration).then(function () { markConfirmed(); }).catch(function () {});
+  }
+
+  function confirmExistingToServer(existing) {
+    return postJson(SUBSCRIBE_URL, subscribeKeyPayload(existing))
+      .then(function () { markConfirmed(); })
+      .catch(function () {});
+  }
+
   function init() {
     if (Notification.permission === 'denied') return; // browser sendiri yang blokir prompt ulang, jangan paksa
 
     navigator.serviceWorker.register('/sw.js').then(function (registration) {
-      // Sudah pernah diizinkan sebelumnya (device/browser ini) -> pastikan
-      // subscription-nya masih tersimpan di server, tanpa nge-prompt lagi
-      // (browser tidak akan munculkan dialog izin kalau sudah granted).
+      // Sudah pernah diizinkan sebelumnya (device/browser ini).
       if (Notification.permission === 'granted') {
         registration.pushManager.getSubscription().then(function (existing) {
           if (existing) {
-            postJson(SUBSCRIBE_URL, subscribeKeyPayload(existing)).catch(function () {});
+            // Subscription masih ada di browser. Konfirmasi ke server hanya
+            // kalau sudah lebih dari CONFIRM_INTERVAL_MS sejak terakhir
+            // dikonfirmasi -- supaya baris push_subscriptions di server tidak
+            // hilang/kadaluarsa tanpa user harus reload manual, tapi juga
+            // tidak membanjiri server dengan POST tiap page load.
+            //
+            // Catatan: ini WAJIB juga dijalankan pada page load pertama
+            // (shouldConfirmToServer() = true karena localStorage kosong)
+            // supaya subscription lama yang mungkin sudah ada di browser
+            // tapi belum/sudah tidak tersimpan di server (mis. setelah server
+            // deploy ulang, atau baris DB terhapus karena 404/410 dari push
+            // service) langsung terdaftar ulang tanpa perlu user klik apapun.
+            if (shouldConfirmToServer()) {
+              confirmExistingToServer(existing);
+            }
           } else {
-            doSubscribe(registration).catch(function () {});
+            // Subscription hilang dari browser (mis. browser update, clear
+            // site data, atau push service reset endpoint) -- subscribe ulang
+            // tanpa perlu minta izin lagi (izin sudah 'granted').
+            doSubscribeAndConfirm(registration);
           }
         });
       }
@@ -140,7 +184,7 @@
       // di sini menggantikan trigger dari tombol yang sudah dihapus itu.
       else if (Notification.permission === 'default') {
         Notification.requestPermission().then(function (permission) {
-          if (permission === 'granted') doSubscribe(registration).catch(function () {});
+          if (permission === 'granted') doSubscribeAndConfirm(registration);
         }).catch(function () {});
       }
     }).catch(function () {

@@ -8,27 +8,31 @@ use Illuminate\Http\Request;
 class UserNotifikasiController extends Controller
 {
     /**
-     * Toggle preferensi push notification per-user (on/off).
-     * Dipanggil via AJAX dari panel Notifikasi di sidebar Kasansi.
-     * Kalau dimatikan: subscription push di DB tidak dihapus, tapi
-     * WebPushChannel akan skip user ini saat ngirim push.
+     * Sama seperti NotifikasiSettingController::updateToggle (saklar global
+     * admin) -- fitur push notification per-user WAJIB selalu aktif dan
+     * tidak boleh dimatikan siapapun, termasuk oleh pemilik akun itu sendiri.
+     * Endpoint ini sengaja DIPERTAHANKAN (bukan dihapus) supaya request
+     * lama/eksternal ke rute ini tidak 404, tapi apapun yang dikirim akan
+     * selalu dipaksa menjadi aktif -- efeknya toggle "mati" sudah tidak
+     * punya jalan lagi, baik dari UI (lihat lainnya-kasansi.blade.php,
+     * toggle-nya sudah diganti jadi status baca-saja "Selalu Aktif") maupun
+     * dari request manual ke rute ini.
      */
     public function toggle(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'enabled' => ['required', 'boolean'],
+        $request->validate([
+            'enabled' => ['sometimes', 'boolean'],
         ]);
 
         $user = $request->user();
-        $user->update(['notif_push_enabled' => $validated['enabled']]);
+        if (! $user->notif_push_enabled) {
+            $user->update(['notif_push_enabled' => true]);
+        }
 
-        // Kalau user nonaktifkan notif, cabut semua push subscription di browser
-        // supaya benar-benar tidak ada push yang masuk (bukan cuma skip di server).
-        // Ini dilakukan lewat response flag -- JS yang handle unsubscribe di sisi browser.
         return response()->json([
-            'ok'      => true,
-            'enabled' => (bool) $user->notif_push_enabled,
-            'unsubscribe_browser' => ! $validated['enabled'],
+            'ok' => true,
+            'enabled' => true,
+            'unsubscribe_browser' => false,
         ]);
     }
 }

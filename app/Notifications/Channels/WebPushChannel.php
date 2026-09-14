@@ -67,28 +67,56 @@ class WebPushChannel
                         'endpoint' => $subscription->endpoint,
                         'publicKey' => $subscription->public_key,
                         'authToken' => $subscription->auth_token,
-                        'contentEncoding' => $subscription->content_encoding ?: 'aesgcm',
+                        // Fallback WAJIB "aes128gcm", bukan "aesgcm" -- lihat
+                        // catatan panjang di PushSubscriptionController::store().
+                        // Baris lama (data existing sebelum fix ini) mungkin
+                        // masih tersimpan "aesgcm" di DB; migrasi
+                        // 2026_09_14_000003 sudah membetulkan itu, tapi
+                        // fallback ini tetap dijaga benar untuk baris yang
+                        // entah kenapa masih null.
+                        'contentEncoding' => $subscription->content_encoding ?: 'aes128gcm',
                     ]),
                     json_encode($payload)
                 );
             }
 
+            $successCount = 0;
             foreach ($webPush->flush() as $report) {
                 if ($report->isSuccess()) {
+                    $successCount++;
                     continue;
                 }
 
                 $statusCode = $report->getResponse()?->getStatusCode();
 
+                // 404/410: push service membuang endpoint ini (browser
+                // uninstall, device ganti, atau subscription dicabut user
+                // langsung dari OS). Hapus dari DB supaya tidak dikirim
+                // terus ke endpoint mati -- user akan re-subscribe otomatis
+                // saat membuka sistem berikutnya.
                 if (in_array($statusCode, [404, 410], true)) {
-                    PushSubscription::where('endpoint', $report->getEndpoint())->delete();
+                    $deleted = PushSubscription::where('endpoint', $report->getEndpoint())->delete();
+                    Log::info('Web push: endpoint kadaluarsa dihapus dari DB.', [
+                        'notifiable_id' => $notifiable->id ?? null,
+                        'status' => $statusCode,
+                        'deleted_rows' => $deleted,
+                    ]);
                     continue;
                 }
 
                 Log::warning('Gagal mengirim web push notification.', [
-                    'endpoint' => $report->getEndpoint(),
+                    'notifiable_id' => $notifiable->id ?? null,
+                    'endpoint_tail' => substr($report->getEndpoint(), -40),
                     'status' => $statusCode,
                     'reason' => $report->getReason(),
+                ]);
+            }
+
+            if ($successCount > 0) {
+                Log::info('Web push notification terkirim.', [
+                    'notifiable_id' => $notifiable->id ?? null,
+                    'notification' => class_basename($notification),
+                    'success_count' => $successCount,
                 ]);
             }
         } catch (\Throwable $e) {
