@@ -2778,7 +2778,11 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
       }catch(e){}
       finally{kpiBusy=false;}
     }
-    window.setInterval(syncPimpinanKpis,1000);
+    // 2 detik (bukan 1 detik) -- server dev lokal cuma 1 worker, poller ini
+    // jalan BARENGAN sama syncAdminKpis/syncSatuanKpis/danpus-laporan-request-
+    // realtime kalau beberapa dashboard dibuka sekaligus, numpuk request
+    // bikin lag. tickRelativeTimes TETAP 1 detik (client-only, no network).
+    window.setInterval(syncPimpinanKpis,2000);
     document.addEventListener('visibilitychange',function(){if(!document.hidden){syncPimpinanKpis();tickRelativeTimes();}});
   })();
 })();

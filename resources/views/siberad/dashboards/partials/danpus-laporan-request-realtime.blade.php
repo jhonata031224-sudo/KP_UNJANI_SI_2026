@@ -196,7 +196,11 @@
     function start(){
         if(!document.querySelector('.danpus-activity-log'))return;
         poll();
-        window.setInterval(poll,1200);
+        // 2 detik (bukan 1.2 detik) -- ini poller PALING sering di seluruh
+        // sistem, dan server dev lokal cuma 1 worker. Jalan barengan sama
+        // syncPimpinanKpis/syncAdminKpis/syncSatuanKpis kalau beberapa
+        // dashboard dibuka sekaligus numpuk request & bikin situs kerasa lag.
+        window.setInterval(poll,2000);
         document.addEventListener('visibilitychange',function(){if(!document.hidden)poll();});
         window.addEventListener('focus',poll);
     }

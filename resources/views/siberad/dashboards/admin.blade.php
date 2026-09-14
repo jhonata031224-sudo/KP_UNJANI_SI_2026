@@ -7021,7 +7021,14 @@
       }catch(e){}
       finally{kpiBusy=false;}
     }
-    window.setInterval(syncAdminKpis,1000);
+    // Interval poll KPI/Terbaru sengaja 2 detik (bukan 1 detik lagi) -- server
+    // dev lokal cuma 1 worker (lihat komentar di DashboardController::
+    // adminKpiRealtime), dan poller ini jalan BARENGAN sama syncPimpinanKpis/
+    // syncSatuanKpis/danpus-laporan-request-realtime kalau beberapa dashboard
+    // dibuka sekaligus -- semua nembak tiap 1 detik bikin request-nya numpuk
+    // & keseluruhan situs kerasa lag. tickRelativeTimes TETAP 1 detik (client-
+    // only, gak ada network call, jadi gak nyumbang beban server).
+    window.setInterval(syncAdminKpis,2000);
     document.addEventListener('visibilitychange',function(){if(!document.hidden){syncAdminKpis();tickRelativeTimes();}});
   })();
   </script>

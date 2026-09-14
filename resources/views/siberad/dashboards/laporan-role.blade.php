@@ -1253,7 +1253,11 @@ document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>{const m
     }catch(e){}
     finally{kpiBusy=false;}
   }
-  window.setInterval(syncSatuanKpis,1000);
+  // 2 detik (bukan 1 detik) -- server dev lokal cuma 1 worker, poller ini
+  // jalan BARENGAN sama syncAdminKpis/syncPimpinanKpis/danpus-laporan-request-
+  // realtime kalau beberapa dashboard dibuka sekaligus, numpuk request bikin
+  // lag. tickRelativeTimes TETAP 1 detik (client-only, no network).
+  window.setInterval(syncSatuanKpis,2000);
   document.addEventListener('visibilitychange',function(){if(!document.hidden){syncSatuanKpis();tickRelativeTimes();}});
 })();
 </script>
