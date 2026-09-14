@@ -67,7 +67,14 @@ class WebPushChannel
                         'endpoint' => $subscription->endpoint,
                         'publicKey' => $subscription->public_key,
                         'authToken' => $subscription->auth_token,
-                        'contentEncoding' => $subscription->content_encoding ?: 'aesgcm',
+                        // Fallback WAJIB "aes128gcm", bukan "aesgcm" -- lihat
+                        // catatan panjang di PushSubscriptionController::store().
+                        // Baris lama (data existing sebelum fix ini) mungkin
+                        // masih tersimpan "aesgcm" di DB; migrasi
+                        // 2026_09_14_000003 sudah membetulkan itu, tapi
+                        // fallback ini tetap dijaga benar untuk baris yang
+                        // entah kenapa masih null.
+                        'contentEncoding' => $subscription->content_encoding ?: 'aes128gcm',
                     ]),
                     json_encode($payload)
                 );

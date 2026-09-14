@@ -30,7 +30,19 @@ class PushSubscriptionController extends Controller
             [
                 'public_key' => $validated['keys']['p256dh'],
                 'auth_token' => $validated['keys']['auth'],
-                'content_encoding' => 'aesgcm',
+                // WAJIB "aes128gcm" (RFC 8291), BUKAN "aesgcm" (skema draft lama).
+                // Browser modern (Chrome/Firefox/Edge/Safari) HANYA mendekripsi
+                // payload push yang dienkripsi dengan aes128gcm -- lihat MDN
+                // PushManager.supportedContentEncodings: "User agents must
+                // support the aes128gcm content coding defined in RFC 8291".
+                // Sebelumnya field ini di-hardcode "aesgcm" (skema lama), jadi
+                // WebPushChannel berhasil ngirim ke push service (respons tetap
+                // sukses, tidak ada error di log), tapi browser penerima gagal
+                // mendekripsi payload-nya secara DIAM-DIAM -- notifikasi push
+                // tidak pernah muncul di tray OS walau semuanya "terlihat"
+                // berhasil di sisi server. Ini root cause laporan "notif tidak
+                // muncul di penerima saat di luar sistem".
+                'content_encoding' => 'aes128gcm',
                 'user_agent' => substr((string) $request->userAgent(), 0, 500),
             ]
         );
