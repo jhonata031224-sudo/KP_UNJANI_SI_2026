@@ -462,33 +462,67 @@ class DashboardController
             // masih MENUNGGU -- yang sudah dikonfirmasi pindah ke $suratArsip
             // di bawah (niru pola Surat Keluar: begitu dikonfirmasi, otomatis
             // pindah ke Arsip Surat, bukan nyangkut selamanya di Surat Masuk).
-            $suratMasuk = LaporanSurat::with('satuan')
+            $isDanpusKode = $kode === 'DANPUS';
+            $suratMasukUtama = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
                 ->where('tujuan_satuan_id', $satuan->id)
                 ->where('status', LaporanSurat::STATUS_MENUNGGU)
+                ->where('is_selesai', false)
+                ->when($isDanpusKode, function ($q) use ($satuan) {
+                    $q->whereHas('riwayats', function ($rq) use ($satuan) {
+                        $rq->where('penerima_satuan_id', $satuan->id);
+                    });
+                })
                 ->latest()
                 ->get();
 
-            // ===== Menu Surat Danpus/Wadan: FULL sama seperti Kasansi --
-            // Danpus/Wadan juga bisa Surat Keluar (bukan cuma terima),
-            // lihat LaporanSuratController::store() yang sudah
-            // mengizinkan $kodeAsal DANPUS/WADAN selain KODE_KOTAMA.
-            $suratTerkirim = LaporanSurat::with('tujuanSatuan')
-                ->where('satuan_id', $satuan->id)
-                ->where('status', LaporanSurat::STATUS_MENUNGGU)
-                ->latest()
-                ->get();
-            // Arsip Surat gabungan dua arah -- lihat komentar panjang di
-            // role() untuk $suratArsip, pola & alasannya identik persis.
-            $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan'])
-                ->where(function ($q) use ($satuan) {
-                    $q->where('satuan_id', $satuan->id)
-                        ->orWhere('tujuan_satuan_id', $satuan->id);
+            $suratTembusanMasuk = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
+                ->where('is_selesai', false)
+                ->whereHas('tembusans', function ($tq) use ($satuan) {
+                    $tq->where('satuan_id', $satuan->id)
+                       ->whereNull('dikonfirmasi_at');
                 })
-                ->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
+                ->where('tujuan_satuan_id', '!=', $satuan->id)
                 ->latest()
                 ->get();
-            // Pilihan tujuan di form Surat Keluar: seluruh satuan lain di
-            // sistem selain diri sendiri dan ADMIN (sama seperti Kasansi).
+
+            $suratMasuk = $suratMasukUtama->concat($suratTembusanMasuk)->unique('id')->values();
+
+            // ===== Menu Surat Danpus/Wadan =====
+            $suratTerkirim = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
+                ->where('satuan_id', $satuan->id)
+                ->where('is_selesai', false)
+                ->latest()
+                ->get();
+
+            $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
+                ->where(function ($q) use ($satuan) {
+                    $q->where(function ($sub) use ($satuan) {
+                        $sub->where('satuan_id', $satuan->id)
+                            ->orWhere('tujuan_satuan_id', $satuan->id);
+                    })
+                    ->where(function ($st) {
+                        $st->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
+                           ->orWhere('is_selesai', true);
+                    });
+                })
+                ->orWhere(function ($q) use ($satuan) {
+                    $q->whereHas('tembusans', function ($tq) use ($satuan) {
+                        $tq->where('satuan_id', $satuan->id)
+                           ->whereNotNull('dikonfirmasi_at');
+                    });
+                })
+                ->orWhere(function ($q) use ($satuan) {
+                    $q->where('is_selesai', true)
+                      ->whereHas('tembusans', function ($tq) use ($satuan) {
+                          $tq->where('satuan_id', $satuan->id)
+                             ->where('jenis', LaporanSuratTembusan::JENIS_HASIL_RC);
+                      });
+                })
+                ->latest()
+                ->get()
+                ->unique('id')
+                ->values();
+
             $satuanSuratTujuanPilihan = Satuan::where('id', '!=', $satuan->id)->where('kode', '!=', 'ADMIN')->get()->sortBy($urutkanSatuan)->values();
 
             // DANPUS & WADAN dulunya 1 view bareng (laporan-danpus-shell & laporan-wadan-shell).
@@ -560,44 +594,64 @@ class DashboardController
             || in_array($kode, Satuan::KODE_UNSUR_PELAYANAN, true)
             || in_array($kode, Satuan::KODE_UNSUR_PEMBANTU_PIMPINAN, true);
         $suratTerkirim = $bisaKirimSurat
-            ? LaporanSurat::with('tujuanSatuan')
+            ? LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
                 ->where('satuan_id', $satuan->id)
-                ->where('status', \App\Models\LaporanSurat::STATUS_MENUNGGU)
+                ->where('is_selesai', false)
                 ->latest()
                 ->get()
             : collect();
-        // Arsip Surat SEKARANG gabungan dua arah -- surat yang DIKIRIM satuan
-        // ini dan sudah dikonfirmasi penerima, DITAMBAH surat yang MASUK ke
-        // satuan ini dan sudah DIA SENDIRI konfirmasi (dulu surat masuk yang
-        // dikonfirmasi cuma diam di Surat Masuk selamanya, gak pernah pindah
-        // kemana-mana -- sekarang niru pola Surat Keluar -> Arsip Surat).
-        // SENGAJA gak digating $bisaKirimSurat lagi (beda dari suratTerkirim
-        // di atas) -- satuan APAPUN bisa nerima & konfirmasi surat masuk,
-        // jadi arsipnya juga harus kebentuk buat semua role, bukan cuma yang
-        // bisa Surat Keluar.
-        $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan'])
+
+        $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
             ->where(function ($q) use ($satuan) {
-                $q->where('satuan_id', $satuan->id)
-                    ->orWhere('tujuan_satuan_id', $satuan->id);
+                $q->where(function ($sub) use ($satuan) {
+                    $sub->where('satuan_id', $satuan->id)
+                        ->orWhere('tujuan_satuan_id', $satuan->id);
+                })
+                ->where(function ($st) {
+                    $st->where('status', \App\Models\LaporanSurat::STATUS_DIKONFIRMASI)
+                       ->orWhere('is_selesai', true);
+                });
             })
-            ->where('status', \App\Models\LaporanSurat::STATUS_DIKONFIRMASI)
+            ->orWhere(function ($q) use ($satuan) {
+                $q->whereHas('tembusans', function ($tq) use ($satuan) {
+                    $tq->where('satuan_id', $satuan->id)
+                       ->whereNotNull('dikonfirmasi_at');
+                });
+            })
+            ->orWhere(function ($q) use ($satuan) {
+                $q->where('is_selesai', true)
+                  ->whereHas('tembusans', function ($tq) use ($satuan) {
+                      $tq->where('satuan_id', $satuan->id)
+                         ->where('jenis', LaporanSuratTembusan::JENIS_HASIL_RC);
+                  });
+            })
             ->latest()
-            ->get();
-        // Pilihan tujuan di form Surat Keluar: seluruh satuan lain di
-        // sistem selain diri sendiri dan ADMIN.
+            ->get()
+            ->unique('id')
+            ->values();
+
         $satuanSuratTujuanPilihan = $bisaKirimSurat
             ? Satuan::where('id', '!=', $satuan->id)->where('kode', '!=', 'ADMIN')->get()->sortBy($urutkanSatuan)->values()
             : collect();
-        // Surat Masuk: satuan APAPUN bisa jadi tujuan surat, jadi selalu
-        // disiapkan buat semua role. Cuma yang masih MENUNGGU -- yang sudah
-        // dikonfirmasi pindah ke $suratArsip di atas (niru persis pola
-        // Surat Keluar: begitu dikonfirmasi, otomatis pindah ke Arsip Surat,
-        // bukan nyangkut selamanya di Surat Masuk).
-        $suratMasuk = LaporanSurat::with('satuan')
+
+        $suratMasukUtama = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
             ->where('tujuan_satuan_id', $satuan->id)
             ->where('status', \App\Models\LaporanSurat::STATUS_MENUNGGU)
+            ->where('is_selesai', false)
             ->latest()
             ->get();
+
+        $suratTembusanMasuk = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
+            ->where('is_selesai', false)
+            ->whereHas('tembusans', function ($tq) use ($satuan) {
+                $tq->where('satuan_id', $satuan->id)
+                   ->whereNull('dikonfirmasi_at');
+            })
+            ->where('tujuan_satuan_id', '!=', $satuan->id)
+            ->latest()
+            ->get();
+
+        $suratMasuk = $suratMasukUtama->concat($suratTembusanMasuk)->unique('id')->values();
 
         // ===== 3 kartu KPI Beranda Satuan (Total Pelaporan/Surat/Kendala
         // Kasansi) -- MIRROR PERSIS kartu KPI Beranda Pimpinan, pakai

@@ -100,6 +100,12 @@ class LaporanSurat extends Model
         'UMP',
     ];
 
+    const STATUS_SELESAI      = 'selesai';
+    const STATUS_DITERUSKAN   = 'diteruskan';
+
+    const DISPOSISI_WADAN_OPTIONS = self::DISPOSISI_DANPUS_OPTIONS;
+    const TINDAKAN_WADAN_OPTIONS   = self::TINDAKAN_DANPUS_OPTIONS;
+
     protected $fillable = [
         'satuan_id',
         'user_id',
@@ -110,16 +116,26 @@ class LaporanSurat extends Model
         'prioritas',
         'disposisi',
         'tindakan',
+        'siklus',
+        'disposisi_terakhir',
+        'tindakan_terakhir',
         'lampiran_path',
         'lampiran_nama_asli',
         'status',
+        'is_selesai',
+        'selesai_at',
+        'selesai_oleh',
         'dikonfirmasi_at',
         'dikonfirmasi_oleh',
     ];
 
     protected $casts = [
-        'dikonfirmasi_at' => 'datetime',
-        'tindakan'        => 'array',
+        'dikonfirmasi_at'   => 'datetime',
+        'selesai_at'        => 'datetime',
+        'is_selesai'        => 'boolean',
+        'siklus'            => 'integer',
+        'tindakan'          => 'array',
+        'tindakan_terakhir' => 'array',
     ];
 
     public function satuan(): BelongsTo
@@ -142,9 +158,29 @@ class LaporanSurat extends Model
         return $this->belongsTo(User::class, 'dikonfirmasi_oleh');
     }
 
+    public function selesaiOleh(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'selesai_oleh');
+    }
+
+    public function riwayats(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(LaporanSuratRiwayat::class, 'laporan_surat_id')->oldest();
+    }
+
+    public function tembusans(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(LaporanSuratTembusan::class, 'laporan_surat_id');
+    }
+
     public function isDikonfirmasi(): bool
     {
-        return $this->status === self::STATUS_DIKONFIRMASI;
+        return $this->status === self::STATUS_DIKONFIRMASI || $this->isSelesai();
+    }
+
+    public function isSelesai(): bool
+    {
+        return (bool) $this->is_selesai || $this->status === self::STATUS_SELESAI;
     }
 
     /**
@@ -176,16 +212,26 @@ class LaporanSurat extends Model
 
     public function labelStatus(): string
     {
+        if ($this->isSelesai()) {
+            return 'Selesai';
+        }
+
         return match ($this->status) {
             self::STATUS_DIKONFIRMASI => 'Dikonfirmasi',
+            self::STATUS_DITERUSKAN   => 'Diteruskan',
             default                   => 'Menunggu Konfirmasi',
         };
     }
 
     public function badgeClass(): string
     {
+        if ($this->isSelesai()) {
+            return 'status-disetujui';
+        }
+
         return match ($this->status) {
             self::STATUS_DIKONFIRMASI => 'status-dikonfirmasi',
+            self::STATUS_DITERUSKAN   => 'status-sedang',
             default                   => 'status-menunggu',
         };
     }

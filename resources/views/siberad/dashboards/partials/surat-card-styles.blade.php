@@ -197,3 +197,29 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initAllSuratCardSearch);else initAllSuratCardSearch();
 })();
 </script>
+<style>
+/* ── Tombol aksi tambahan untuk alur surat ────────────────────────── */
+.btn-success{background:rgba(22,163,74,.14);color:#16a34a;border-color:rgba(22,163,74,.28);font-weight:700}
+.btn-success:hover{background:rgba(22,163,74,.24);border-color:rgba(22,163,74,.45)}
+.btn-warning{background:rgba(217,119,6,.13);color:#b45309;border-color:rgba(217,119,6,.28);font-weight:700}
+.btn-warning:hover{background:rgba(217,119,6,.22);border-color:rgba(217,119,6,.45)}
+/* Badge warna biru muda untuk jenis Tembusan Info */
+.status-badge.status-info{background:rgba(59,130,246,.11);color:#2563eb;border-color:rgba(59,130,246,.24)}
+/* ── Form fields di modal Teruskan ───────────────────────────────── */
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:7px}
+.form-select,.form-input{width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface,var(--panel));color:var(--text);font:inherit;font-size:13.5px;transition:border-color .15s}
+.form-select:focus,.form-input:focus{outline:none;border-color:var(--primary,#6d5bff)}
+.form-textarea{width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface,var(--panel));color:var(--text);font:inherit;font-size:13.5px;min-height:80px;transition:border-color .15s}
+.form-textarea:focus{outline:none;border-color:var(--primary,#6d5bff)}
+/* ── Tombol close X (icon-only) di modal teruskan ────────────────── */
+.btn-icon-close{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;flex-shrink:0;transition:background .15s,color .15s}
+.btn-icon-close:hover{background:var(--border-soft);color:var(--text)}
+/* ── Modal Teruskan layout ───────────────────────────────────────── */
+#suratTeruskanModal .report-modal-head{flex-wrap:nowrap;align-items:flex-start;gap:12px}
+/* Label hover tindakan checklist */
+.surat-tindakan-check-label:hover{background:var(--gold-dim)}
+/* Tombol aksi di modal detail -- flex-wrap agar tidak overflow */
+#suratDetailActions{flex-wrap:wrap;gap:8px}
+#suratDetailActions .btn{flex-shrink:0}
+</style>
