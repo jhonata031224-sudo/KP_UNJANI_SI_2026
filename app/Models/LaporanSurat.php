@@ -52,6 +52,54 @@ class LaporanSurat extends Model
         self::PRIORITAS_DANPUS_RAHASIA,
     ];
 
+    /**
+     * Daftar pilihan "Disposisi" (siapa yang harus menangani surat) &
+     * "Tindakan" (apa yang harus dilakukan penerima) khusus form Buat
+     * Surat Baru milik Danpus -- lihat LaporanSuratController::store().
+     * Daftar ini DIAMBIL PERSIS dari lembar fisik "Disposisi
+     * Wadanpussiberad" (kolom "Kepada Yth" utk Disposisi, dan daftar
+     * checklist tindakan di bawah judul formnya) -- SENGAJA tidak
+     * ditambah/dikurang supaya konsisten dengan lembar fisik yang dipakai
+     * satuan.
+     */
+    const DISPOSISI_DANPUS_OPTIONS = [
+        'DIRBINFUNG',
+        'DIRBINUM',
+        'DIRBINMAT',
+        'DIRBINDIKLAT',
+        'DANSATLAK DUKTEKSI',
+        'DANSATLAK KALSI',
+        'DANSATLAK DAKSI',
+        'DANSATLAK SIBERSOS',
+        'KAPOK ANALIS',
+        'KABAGURDAL',
+        'POKMIN',
+    ];
+
+    const TINDAKAN_DANPUS_OPTIONS = [
+        'SESUAI JUK KOMANDAN',
+        'ACC',
+        'PEDOMAN',
+        'SEBAGAI BAHAN',
+        'PELAJARI',
+        'KOORDINASIKAN',
+        'CATAT',
+        'HADIR',
+        'WAKILI',
+        'INGATKAN',
+        'SARAN',
+        'MENGHADAP',
+        'LAPORKAN HASILNYA',
+        'IKUTI PERKEMBANGANNYA',
+        'SIAPKAN',
+        'SELESAIKAN',
+        'INFOKAN',
+        'ARSIP',
+        'UDL',
+        'UDK',
+        'UMP',
+    ];
+
     protected $fillable = [
         'satuan_id',
         'user_id',
@@ -60,6 +108,8 @@ class LaporanSurat extends Model
         'kategori',
         'deskripsi',
         'prioritas',
+        'disposisi',
+        'tindakan',
         'lampiran_path',
         'lampiran_nama_asli',
         'status',
@@ -69,6 +119,7 @@ class LaporanSurat extends Model
 
     protected $casts = [
         'dikonfirmasi_at' => 'datetime',
+        'tindakan'        => 'array',
     ];
 
     public function satuan(): BelongsTo

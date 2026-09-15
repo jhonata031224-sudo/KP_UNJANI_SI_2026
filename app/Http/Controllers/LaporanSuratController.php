@@ -140,15 +140,32 @@ class LaporanSuratController extends Controller
             ? ['required', 'in:'.implode(',', LaporanSurat::PRIORITAS_DANPUS)]
             : ['required', 'in:Tinggi,Sedang,Rendah'];
 
+        // Fondasi "Disposisi & Tindakan" -- SENGAJA hanya wajib di form
+        // Danpus (lihat surat-form Buat Surat Baru khusus laporan-danpus).
+        // Satuan lain TETAP pakai form lama tanpa dua field ini, jadi
+        // rule-nya 'nullable' supaya request mereka tidak ikut divalidasi.
+        $disposisiRules = $isDanpus
+            ? ['required', 'string', 'in:'.implode(',', LaporanSurat::DISPOSISI_DANPUS_OPTIONS)]
+            : ['nullable'];
+        $tindakanRules = $isDanpus
+            ? ['required', 'array', 'min:1']
+            : ['nullable', 'array'];
+
         $validated = $request->validate([
             'tujuan_satuan_id' => ['required', 'integer', 'exists:satuans,id'],
             'perihal'          => ['required', 'string', 'max:255'],
             'kategori'         => ['required', 'string', 'max:255'],
             'deskripsi'        => ['required', 'string', 'max:10000'],
             'prioritas'        => $prioritasRules,
+            'disposisi'        => $disposisiRules,
+            'tindakan'         => $tindakanRules,
+            'tindakan.*'       => ['string', 'in:'.implode(',', LaporanSurat::TINDAKAN_DANPUS_OPTIONS)],
             'lampiran'         => ['required', 'file', 'max:10240'],
         ], [
             'tujuan_satuan_id.required' => 'Tujuan surat wajib dipilih.',
+            'disposisi.required'       => 'Disposisi wajib dipilih.',
+            'tindakan.required'        => 'Tindakan wajib dipilih.',
+            'tindakan.min'             => 'Pilih minimal satu tindakan.',
             'lampiran.required'         => 'Lampiran wajib diisi untuk mengirim Surat.',
         ]);
 
@@ -172,6 +189,8 @@ class LaporanSuratController extends Controller
             'kategori'            => $validated['kategori'] ?? null,
             'deskripsi'           => $validated['deskripsi'],
             'prioritas'           => $validated['prioritas'],
+            'disposisi'           => $validated['disposisi'] ?? null,
+            'tindakan'            => $validated['tindakan'] ?? null,
             'lampiran_path'       => $lampiranPath,
             'lampiran_nama_asli'  => $lampiranFile->getClientOriginalName(),
             'status'              => LaporanSurat::STATUS_MENUNGGU,
