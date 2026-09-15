@@ -9,6 +9,7 @@ use App\Models\Laporan;
 use App\Models\LaporanKendala;
 use App\Models\LaporanKendalaTembusan;
 use App\Models\LaporanSurat;
+use App\Models\LaporanSuratTembusan;
 use App\Models\Pengaturan;
 use App\Models\PermintaanLaporan;
 use App\Models\PermintaanResetPassword;
