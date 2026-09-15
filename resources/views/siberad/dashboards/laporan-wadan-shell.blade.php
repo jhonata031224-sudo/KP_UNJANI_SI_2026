@@ -1,4 +1,4 @@
-@include('siberad.dashboards.laporan-pimpinan')
+@include('siberad.dashboards.laporan-wadan')
 @include('siberad.dashboards.partials.log-aktivitas-realtime')
 @include('siberad.dashboards.partials.danpus-sidebar-submenu-cleanup')
 @include('siberad.dashboards.partials.danpus-laporan-request-realtime')

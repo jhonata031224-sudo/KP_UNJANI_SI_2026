@@ -491,7 +491,13 @@ class DashboardController
             // sistem selain diri sendiri dan ADMIN (sama seperti Kasansi).
             $satuanSuratTujuanPilihan = Satuan::where('id', '!=', $satuan->id)->where('kode', '!=', 'ADMIN')->get()->sortBy($urutkanSatuan)->values();
 
-            return view('siberad.dashboards.laporan-pimpinan-shell', compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporanPimpinan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk','kendalaArsip','suratMasuk','suratTerkirim','suratArsip','satuanSuratTujuanPilihan') + ['pengaturan' => Pengaturan::current()]);
+            // DANPUS & WADAN dulunya 1 view bareng (laporan-danpus-shell & laporan-wadan-shell).
+            // Sekarang dipisah jadi file sendiri-sendiri (isi & wewenang
+            // TETAP SAMA persis) supaya perombakan menu Surat ke depan bisa
+            // digarap per satuan tanpa saling nyenggol.
+            $shellPimpinan = $kode === 'WADAN' ? 'siberad.dashboards.laporan-wadan-shell' : 'siberad.dashboards.laporan-danpus-shell';
+
+            return view($shellPimpinan, compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporanPimpinan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk','kendalaArsip','suratMasuk','suratTerkirim','suratArsip','satuanSuratTujuanPilihan') + ['pengaturan' => Pengaturan::current()]);
         }
         // Terlambat/Dibatalkan dihitung dari SELURUH permintaan laporan yang
         // ditujukan ke satuan ini, bukan $permintaanLaporan (yang sengaja
@@ -675,7 +681,7 @@ class DashboardController
      * SATU request yang ditahan beberapa detik bikin semua poller lain itu
      * ngantre di belakangnya, dan hasilnya malah lebih lambat daripada
      * polling interval biasa. DIBATALKAN, balik ke polling interval pendek
-     * (lihat `syncPimpinanKpis` di laporan-pimpinan.blade.php, tiap 1 detik)
+     * (lihat `syncPimpinanKpis` di laporan-danpus.blade.php & laporan-wadan.blade.php, tiap 1 detik)
      * -- request-nya sendiri cepat & jarang nge-hold worker, jadi gak
      * nyumbat poller lain. Kalau nanti mau coba long-poll lagi, JANGAN di
      * halaman yang udah banyak poller lain kayak dashboard Pimpinan ini
@@ -729,7 +735,7 @@ class DashboardController
         $pimpTotalPelaporan = $this->hitungLaporanPerPerihal($laporanPimpinanSatlak);
 
         // Distribusi Status (donut) -- versi ringkas dari perhitungan yang
-        // sama di laporan-pimpinan.blade.php (Disetujui/Ditolak dari
+        // sama di laporan-danpus.blade.php & laporan-wadan.blade.php (Disetujui/Ditolak dari
         // $laporanPimpinanSatlak, Terlambat/Dibatalkan dari PermintaanLaporan
         // milik Danpus/Wadan). isTerlambat() cuma butuh kolom polos
         // (laporan_id/status/deadline_at), jadi query di sini gak perlu
@@ -748,7 +754,7 @@ class DashboardController
         $pimpTotalStatus = $pimpTotalDisetujui + $pimpTotalDitolak + $pimpTotalTerlambat + $pimpTotalDibatalkan;
 
         // Tren Aktivitas 7/30 hari -- sama persis logikanya kayak
-        // $pimpTrenBuat di laporan-pimpinan.blade.php.
+        // $pimpTrenBuat di laporan-danpus.blade.php & laporan-wadan.blade.php.
         $pimpSuratSemuaTren = $suratMasuk->concat($suratTerkirim)->concat($suratArsip);
         $pimpTrenBuat = function (int $n) use ($laporanPimpinanSatlak, $pimpSuratSemuaTren) {
             return collect(range($n - 1, 0))->map(function ($k) use ($laporanPimpinanSatlak, $pimpSuratSemuaTren) {

@@ -1,0 +1,27 @@
+@include('siberad.dashboards.laporan-danpus')
+@include('siberad.dashboards.partials.log-aktivitas-realtime')
+@include('siberad.dashboards.partials.danpus-sidebar-submenu-cleanup')
+@include('siberad.dashboards.partials.danpus-laporan-request-realtime')
+@include('siberad.dashboards.partials.danpus-ringkasan-submenu-hide')
+@include('siberad.dashboards.partials.danpus-activity-dropdown')
+@include('siberad.dashboards.partials.danpus-log-search')
+@include('siberad.dashboards.partials.danpus-report-table-filter')
+@include('siberad.dashboards.partials.styled-select')
+@include('siberad.dashboards.partials.satlak-notification-close-text')
+@include('siberad.dashboards.partials.global-shell-enhancements')
+@include('siberad.dashboards.partials.danpus-monitoring-text-fix')
+@include('siberad.dashboards.partials.profile-description-hide')
+@include('siberad.dashboards.partials.responsive-content-alignment')
+@include('siberad.dashboards.partials.sidebar-header-surface')
+@include('siberad.dashboards.partials.danpus-permintaan-arsip-mode')
+{{-- danpus-history-detail-fix & danpus-history-status-filter-match DIHAPUS:
+     keduanya khusus struktur TABEL Riwayat lama (#status .clean-table /
+     #riwayat .dtbl). Riwayat Pimpinan sekarang kartu (#riwayat, lihat
+     danpus-permintaan-arsip-mode -> initRiwayatCardFilter/syncRiwayatCards),
+     jadi kedua partial itu inert / malah bikin konflik <select> filter. --}}
+@include('siberad.dashboards.partials.danpus-kendala-kasansi-realtime')
+{{-- Surat Keluar/Arsip Surat/Surat Masuk Pimpinan sebelumnya SAMA SEKALI
+     gak realtime (partial ini gak pernah di-include di sini) -- id
+     container (#suratTerkirimGrid/#suratArsipBody/#suratMasukGrid) sama
+     persis kayak dashboard Satuan, jadi partial yang sama dipakai bareng. --}}
+@include('siberad.dashboards.partials.surat-terkirim-realtime')
