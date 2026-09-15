@@ -38,14 +38,19 @@
     $canConfirmTembusan = $isTembusan && ! $sudahKonfirmasiTembusan;
 
     // Boleh teruskan? (Wadan sudah konfirmasi, surat berstatus dikonfirmasi, belum selesai)
-    $canTeruskan = $isWadan && $isTujuanUtama && $sudahDikonfirmasi && ! $s->isSelesai();
+    $riwayatCount = $s->riwayats->count();
+    $adaLaporanSatrap = $s->riwayats->contains(function ($r) use ($satuan) {
+        return (int) $r->pengirim_satuan_id !== (int) $satuan->id && $r->aksi === \App\Models\LaporanSuratRiwayat::AKSI_SURAT_KELUAR;
+    });
 
-    // Boleh kembalikan ke Danpus? (Wadan setelah menerima laporan dari Satrap)
-    // Syarat: Wadan adalah tujuan, sudah dikonfirmasi
-    $canKeDanpus = $isWadan && $isTujuanUtama && $sudahDikonfirmasi && ! $s->isSelesai();
+    // Wadan meneruskan ke Satrap: jika surat baru dari Danpus atau belum ada laporan balik
+    $canTeruskan = $isWadan && $isTujuanUtama && $sudahDikonfirmasi && ! $s->isSelesai() && ! $adaLaporanSatrap;
 
-    // Boleh selesaikan / disposisi ulang? (Danpus sudah konfirmasi, ada riwayat penerusan)
-    $canSelesai        = $isDanpus && $isTujuanUtama && $sudahDikonfirmasi && ! $s->isSelesai() && $s->riwayats->count() > 1;
+    // Wadan meneruskan ke Danpus: jika sudah ada laporan balik dari Satrap / alur sudah berjalan
+    $canKeDanpus = $isWadan && $isTujuanUtama && $sudahDikonfirmasi && ! $s->isSelesai() && ($adaLaporanSatrap || $riwayatCount >= 2);
+
+    // Danpus: hanya jika surat masuk kembali ke Danpus setelah alur berjalan (riwayat >= 2)
+    $canSelesai        = $isDanpus && $isTujuanUtama && $sudahDikonfirmasi && ! $s->isSelesai() && $riwayatCount >= 2;
     $canDisposisiUlang = $canSelesai;
 
     // Badge status kartu
@@ -88,6 +93,7 @@
     <div class="surat-file-card-meta"><span class="surat-file-card-meta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span><div><div class="surat-file-card-meta-label">Tanggal Dibuat</div><div class="surat-file-card-meta-value">{{ $s->created_at->translatedFormat('d M Y H:i') }}</div></div></div>
     <div class="surat-file-card-divider"></div>
     <button type="button" class="surat-file-card-btn" onclick="openSuratDetail(this)"
+        data-context="masuk"
         data-perihal="{{ e($s->perihal) }}"
         data-tujuan="{{ e($satuan->nama ?? '-') }}"
         data-tujuan-kode="{{ e($satuan->kode ?? '') }}"

@@ -1,4 +1,4 @@
-<div class="report-modal" id="suratDetailModal"><div class="report-modal-card"><div class="report-modal-head"><div style="min-width:0"><h3 style="margin:0 0 4px">Detail Surat</h3><p id="suratDetailDari" style="margin:0;font-size:12px;color:var(--text-muted)">-</p></div></div><div class="surat-detail-body"><div class="surat-detail-col surat-detail-col-left"><div class="surat-detail-item"><div><div class="surat-detail-item-label">Tujuan</div><div class="surat-detail-item-value" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span id="suratDetailTujuan">-</span><span class="satuan-pill" id="suratDetailTujuanKode" style="display:none"></span></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Perihal</div><div class="surat-detail-item-value" id="suratDetailPerihal">-</div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Kategori</div><div class="surat-detail-item-value" id="suratDetailKategori">-</div></div></div><div class="surat-detail-item-row"><div class="surat-detail-item"><div><div class="surat-detail-item-label">Prioritas</div><div class="surat-detail-item-value"><span class="priority-tag" id="suratDetailPrioritas">-</span></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Status</div><div class="surat-detail-item-value"><span class="status-badge" id="suratDetailStatusText">-</span></div></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Ringkasan</div><div class="surat-detail-item-value" id="suratDetailRingkasan">-</div></div></div>
+<div class="report-modal" id="suratDetailModal"><div class="report-modal-card"><div class="report-modal-head"><div style="min-width:0"><h3 id="suratDetailJudul" style="margin:0 0 4px">Detail Surat</h3><p id="suratDetailDari" style="margin:0;font-size:12px;color:var(--text-muted)">-</p></div></div><div class="surat-detail-body"><div class="surat-detail-col surat-detail-col-left"><div class="surat-detail-item"><div><div class="surat-detail-item-label">Tujuan</div><div class="surat-detail-item-value" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span id="suratDetailTujuan">-</span><span class="satuan-pill" id="suratDetailTujuanKode" style="display:none"></span></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Perihal</div><div class="surat-detail-item-value" id="suratDetailPerihal">-</div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Kategori</div><div class="surat-detail-item-value" id="suratDetailKategori">-</div></div></div><div class="surat-detail-item-row"><div class="surat-detail-item"><div><div class="surat-detail-item-label">Prioritas</div><div class="surat-detail-item-value"><span class="priority-tag" id="suratDetailPrioritas">-</span></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Status</div><div class="surat-detail-item-value"><span class="status-badge" id="suratDetailStatusText">-</span></div></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Ringkasan</div><div class="surat-detail-item-value" id="suratDetailRingkasan">-</div></div></div>
 {{-- Panel Disposisi & Tindakan --}}
 <div class="surat-detail-item" id="suratDetailDisposisiPanel" style="display:none"><div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px"><div class="surat-detail-item-label">Disposisi</div><div class="surat-detail-item-value" id="suratDetailDisposisiVal" style="font-weight:600;color:var(--primary)">-</div><div class="surat-detail-item-label" style="margin-top:8px">Tindakan</div><div id="suratDetailTindakanWrap" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div></div></div>
 </div><div class="surat-detail-col surat-detail-col-right"><div class="surat-detail-panel"><div class="surat-detail-panel-title">Riwayat Alur</div><div class="surat-detail-timeline" id="suratDetailTimeline"></div></div><div class="surat-detail-panel" id="suratDetailDokumenPanel" hidden><div class="surat-detail-panel-title">Dokumen</div><div id="suratDetailDokumenWrap"></div></div></div></div>
@@ -35,7 +35,20 @@ window.openSuratDetail = function(button){
   var card = button.closest('.surat-file-card');
   modal.dataset.openSuratId = card ? (card.dataset.suratId || '') : '';
 
-  document.getElementById('suratDetailDari').textContent = 'Dari ' + (button.dataset.dari || '-');
+  var context = button.dataset.context || 'masuk';
+  var judulEl = document.getElementById('suratDetailJudul');
+  var subDariEl = document.getElementById('suratDetailDari');
+  if (context === 'keluar') {
+    if (judulEl) judulEl.textContent = 'Detail Surat Keluar';
+    if (subDariEl) subDariEl.textContent = 'Kepada ' + (button.dataset.tujuan || '-');
+  } else if (context === 'arsip') {
+    if (judulEl) judulEl.textContent = 'Detail Arsip Surat';
+    if (subDariEl) subDariEl.textContent = button.dataset.dari ? ('Dari ' + button.dataset.dari) : ('Kepada ' + (button.dataset.tujuan || '-'));
+  } else {
+    if (judulEl) judulEl.textContent = 'Detail Surat Masuk';
+    if (subDariEl) subDariEl.textContent = 'Dari ' + (button.dataset.dari || '-');
+  }
+
   document.getElementById('suratDetailTujuan').textContent = button.dataset.tujuan || '-';
   var tujuanKode = document.getElementById('suratDetailTujuanKode');
   tujuanKode.textContent = button.dataset.tujuanKode || '';
@@ -182,111 +195,109 @@ window.openSuratDetail = function(button){
   }
 
   // ── Tombol Aksi Kontekstual ───────────────────────────────────────────────
-  var csrf = button.dataset.csrf || '';
+  var btnKonfirmasi          = document.getElementById('suratDetailKonfirmasi');
+  var btnKonfirmasiTembusan  = document.getElementById('suratDetailKonfirmasiTembusan');
+  var btnTeruskan            = document.getElementById('suratDetailTeruskan');
+  var btnKeDanpus            = document.getElementById('suratDetailKeDanpus');
+  var btnSelesai             = document.getElementById('suratDetailSelesai');
+  var btnDisposisiUlang      = document.getElementById('suratDetailDisposisiUlang');
 
-  // 1. Konfirmasi penerima utama
-  var btnKonfirmasi = document.getElementById('suratDetailKonfirmasi');
-  if (button.dataset.canConfirm === '1') {
-    btnKonfirmasi.hidden = false;
-    btnKonfirmasi.onclick = function(){
-      if (typeof window.bukaKonfirmasiSurat === 'function') {
-        window.bukaKonfirmasiSurat(button.dataset.confirmAction, button.dataset.confirmToken, button.dataset.dari);
-      } else {
-        // Fallback form submit langsung
+  // Reset semua action buttons terlebih dahulu (default: tersembunyi)
+  btnKonfirmasi.hidden = true; btnKonfirmasi.onclick = null;
+  btnKonfirmasiTembusan.hidden = true; btnKonfirmasiTembusan.onclick = null;
+  btnTeruskan.hidden = true; btnTeruskan.onclick = null;
+  btnKeDanpus.hidden = true; btnKeDanpus.onclick = null;
+  btnSelesai.hidden = true; btnSelesai.onclick = null;
+  btnDisposisiUlang.hidden = true; btnDisposisiUlang.onclick = null;
+
+  // Tombol aksi HANYA muncul pada SURAT MASUK sesuai peran & kondisi surat.
+  // Pada Surat Keluar dan Arsip, HANYA tombol "Tutup" yang ditampilkan.
+  if (context === 'masuk') {
+    var csrf = button.dataset.csrf || '';
+
+    // 1. Konfirmasi penerima utama (Surat baru masuk, belum di-ACC)
+    if (button.dataset.canConfirm === '1') {
+      btnKonfirmasi.hidden = false;
+      btnKonfirmasi.onclick = function(){
+        if (typeof window.bukaKonfirmasiSurat === 'function') {
+          window.bukaKonfirmasiSurat(button.dataset.confirmAction, button.dataset.confirmToken, button.dataset.dari);
+        } else {
+          var f = document.createElement('form');
+          f.method = 'POST'; f.action = button.dataset.confirmAction;
+          f.innerHTML = '<input name="_token" value="' + (button.dataset.confirmToken || csrf) + '"><input name="_method" value="PATCH">';
+          document.body.appendChild(f); f.submit();
+        }
+      };
+    }
+
+    // 2. Konfirmasi tembusan / view only (Urdal / penerima tembusan)
+    if (button.dataset.canConfirmTembusan === '1') {
+      btnKonfirmasiTembusan.hidden = false;
+      btnKonfirmasiTembusan.onclick = function(){
         var f = document.createElement('form');
-        f.method = 'POST'; f.action = button.dataset.confirmAction;
-        f.innerHTML = '<input name="_token" value="' + button.dataset.confirmToken + '"><input name="_method" value="PATCH">';
+        f.method = 'POST'; f.action = button.dataset.confirmTembusanAction;
+        f.innerHTML = '<input name="_token" value="' + csrf + '"><input name="_method" value="PATCH">';
         document.body.appendChild(f); f.submit();
-      }
-    };
-  } else {
-    btnKonfirmasi.hidden = true; btnKonfirmasi.onclick = null;
-  }
+      };
+    }
 
-  // 2. Konfirmasi tembusan / view only
-  var btnKonfirmasiTembusan = document.getElementById('suratDetailKonfirmasiTembusan');
-  if (button.dataset.canConfirmTembusan === '1') {
-    btnKonfirmasiTembusan.hidden = false;
-    btnKonfirmasiTembusan.onclick = function(){
-      var f = document.createElement('form');
-      f.method = 'POST'; f.action = button.dataset.confirmTembusanAction;
-      f.innerHTML = '<input name="_token" value="' + csrf + '"><input name="_method" value="PATCH">';
-      document.body.appendChild(f); f.submit();
-    };
-  } else {
-    btnKonfirmasiTembusan.hidden = true; btnKonfirmasiTembusan.onclick = null;
-  }
+    // 3. Disposisi & Teruskan (Wadan → Satrap)
+    if (button.dataset.canTeruskan === '1') {
+      btnTeruskan.hidden = false;
+      btnTeruskan.onclick = function(){
+        if (typeof window.bukaSuratTeruskanModal === 'function') {
+          window.bukaSuratTeruskanModal({
+            action   : button.dataset.teruskanAction,
+            method   : 'POST',
+            title    : 'Disposisi & Teruskan Surat',
+            sub      : 'Pilih satuan tujuan, disposisi, dan tindakan yang harus dilaksanakan.',
+            btnLabel : 'Teruskan Surat',
+          });
+        }
+      };
+    }
 
-  // 3. Disposisi & Teruskan (Wadan → Satrap)
-  var btnTeruskan = document.getElementById('suratDetailTeruskan');
-  if (button.dataset.canTeruskan === '1') {
-    btnTeruskan.hidden = false;
-    btnTeruskan.onclick = function(){
-      if (typeof window.bukaSuratTeruskanModal === 'function') {
-        window.bukaSuratTeruskanModal({
-          action   : button.dataset.teruskanAction,
-          method   : 'POST',
-          title    : 'Disposisi & Teruskan Surat',
-          sub      : 'Pilih satuan tujuan, disposisi, dan tindakan yang harus dilaksanakan.',
-          btnLabel : 'Teruskan Surat',
-        });
-      }
-    };
-  } else {
-    btnTeruskan.hidden = true; btnTeruskan.onclick = null;
-  }
+    // 4. Kembalikan ke Danpus (Wadan setelah menerima laporan hasil Satrap)
+    if (button.dataset.canKeDanpus === '1') {
+      btnKeDanpus.hidden = false;
+      btnKeDanpus.onclick = function(){
+        if (confirm('Teruskan surat ini kembali ke Danpus untuk keputusan akhir?')) {
+          var f = document.createElement('form');
+          f.method = 'POST'; f.action = button.dataset.keDanpusAction;
+          f.innerHTML = '<input name="_token" value="' + csrf + '">';
+          document.body.appendChild(f); f.submit();
+        }
+      };
+    }
 
-  // 4. Kembalikan ke Danpus (Wadan)
-  var btnKeDanpus = document.getElementById('suratDetailKeDanpus');
-  if (button.dataset.canKeDanpus === '1' && button.dataset.canTeruskan !== '1') {
-    // Tampilkan hanya jika bisa ke-danpus tapi tombol teruskan sudah ditampilkan beda konteks
-    // (misalnya: setelah diteruskan ke penindakan, Wadan menerima laporan balik)
-    btnKeDanpus.hidden = false;
-    btnKeDanpus.onclick = function(){
-      if (confirm('Teruskan surat ini kembali ke Danpus untuk keputusan akhir?')) {
-        var f = document.createElement('form');
-        f.method = 'POST'; f.action = button.dataset.keDanpusAction;
-        f.innerHTML = '<input name="_token" value="' + csrf + '">';
-        document.body.appendChild(f); f.submit();
-      }
-    };
-  } else {
-    btnKeDanpus.hidden = true; btnKeDanpus.onclick = null;
-  }
+    // 5. Selesai (Danpus - Surat selesai & RC ke Urdal)
+    if (button.dataset.canSelesai === '1') {
+      btnSelesai.hidden = false;
+      btnSelesai.onclick = function(){
+        if (confirm('Konfirmasi surat ini sebagai SELESAI? Hasil / RC akan otomatis diteruskan ke Urdal.')) {
+          var f = document.createElement('form');
+          f.method = 'POST'; f.action = button.dataset.selesaiAction;
+          f.innerHTML = '<input name="_token" value="' + csrf + '">';
+          document.body.appendChild(f); f.submit();
+        }
+      };
+    }
 
-  // 5. Selesai (Danpus)
-  var btnSelesai = document.getElementById('suratDetailSelesai');
-  if (button.dataset.canSelesai === '1') {
-    btnSelesai.hidden = false;
-    btnSelesai.onclick = function(){
-      if (confirm('Konfirmasi surat ini sebagai SELESAI? Hasil / RC akan otomatis diteruskan ke Urdal.')) {
-        var f = document.createElement('form');
-        f.method = 'POST'; f.action = button.dataset.selesaiAction;
-        f.innerHTML = '<input name="_token" value="' + csrf + '">';
-        document.body.appendChild(f); f.submit();
-      }
-    };
-  } else {
-    btnSelesai.hidden = true; btnSelesai.onclick = null;
-  }
-
-  // 6. Disposisi Ulang (Danpus - siklus baru)
-  var btnDisposisiUlang = document.getElementById('suratDetailDisposisiUlang');
-  if (button.dataset.canDisposisiUlang === '1') {
-    btnDisposisiUlang.hidden = false;
-    btnDisposisiUlang.onclick = function(){
-      if (typeof window.bukaSuratTeruskanModal === 'function') {
-        window.bukaSuratTeruskanModal({
-          action   : button.dataset.disposisiUlangAction,
-          method   : 'POST',
-          title    : 'Tindakan / Disposisi Baru',
-          sub      : 'Buat siklus disposisi baru. Riwayat siklus sebelumnya tetap tersimpan.',
-          btnLabel : 'Kirim Disposisi Baru',
-        });
-      }
-    };
-  } else {
-    btnDisposisiUlang.hidden = true; btnDisposisiUlang.onclick = null;
+    // 6. Disposisi Ulang (Danpus - siklus baru)
+    if (button.dataset.canDisposisiUlang === '1') {
+      btnDisposisiUlang.hidden = false;
+      btnDisposisiUlang.onclick = function(){
+        if (typeof window.bukaSuratTeruskanModal === 'function') {
+          window.bukaSuratTeruskanModal({
+            action   : button.dataset.disposisiUlangAction,
+            method   : 'POST',
+            title    : 'Tindakan / Disposisi Baru',
+            sub      : 'Buat siklus disposisi baru. Riwayat siklus sebelumnya tetap tersimpan.',
+            btnLabel : 'Kirim Disposisi Baru',
+          });
+        }
+      };
+    }
   }
 
   modal.dataset.openSuratSig = button.outerHTML.replace(/>\s+</g,'><').trim();
