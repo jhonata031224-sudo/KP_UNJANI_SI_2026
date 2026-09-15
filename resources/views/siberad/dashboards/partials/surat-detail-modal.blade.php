@@ -21,7 +21,12 @@ window.openSuratDetail = function(button){
   var sudahDikonfirmasi = button.dataset.status === 'Dikonfirmasi';
   statusEl.textContent = sudahDikonfirmasi ? 'Dikonfirmasi' : 'Menunggu';
   statusEl.className = 'status-badge ' + (sudahDikonfirmasi ? 'status-dikonfirmasi' : 'status-menunggu');
-  document.getElementById('suratDetailRingkasan').textContent = button.dataset.deskripsi || '-';
+  var ringkasanEl = document.getElementById('suratDetailRingkasan');
+  var isRingkasanRahasia = button.dataset.rahasia === '1' && !button.dataset.deskripsi;
+  ringkasanEl.textContent = isRingkasanRahasia
+    ? 'Ringkasan bersifat rahasia dan tidak ditampilkan.'
+    : (button.dataset.deskripsi || '-');
+  ringkasanEl.classList.toggle('surat-ringkasan-rahasia', isRingkasanRahasia);
 
   var checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
   var timeline = document.getElementById('suratDetailTimeline');

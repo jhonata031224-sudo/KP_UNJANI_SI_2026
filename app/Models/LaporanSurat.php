@@ -27,6 +27,31 @@ class LaporanSurat extends Model
     const STATUS_MENUNGGU    = 'menunggu_konfirmasi';
     const STATUS_DIKONFIRMASI = 'dikonfirmasi';
 
+    /**
+     * Fondasi alur "Surat dari Danpus": prioritas KHUSUS dipakai saat
+     * pengirim surat adalah Danpus (lihat LaporanSuratController::store()).
+     * Satuan lain (Kasansi, Satlak, Sdir, Urdal, Pok Analis, Wadan, dst)
+     * TETAP pakai skema lama Tinggi/Sedang/Rendah -- TIDAK diubah.
+     *
+     * Pemetaan istilah lama -> baru (khusus sisi Danpus):
+     *   Rendah -> Biasa   | Sedang -> Kilat  | Tinggi -> Rahasia
+     *
+     * Prioritas cuma ditentukan Danpus sekali, pas surat pertama dibuat
+     * (lewat store()) -- SENGAJA tidak ada route/aksi buat mengubah
+     * prioritas surat yang sudah ada (lihat komentar di
+     * LaporanSuratController), jadi begitu surat terkirim ke satuan/
+     * pejabat lain, penerima otomatis tidak bisa mengubahnya.
+     */
+    const PRIORITAS_DANPUS_BIASA   = 'Biasa';
+    const PRIORITAS_DANPUS_KILAT   = 'Kilat';
+    const PRIORITAS_DANPUS_RAHASIA = 'Rahasia';
+
+    const PRIORITAS_DANPUS = [
+        self::PRIORITAS_DANPUS_BIASA,
+        self::PRIORITAS_DANPUS_KILAT,
+        self::PRIORITAS_DANPUS_RAHASIA,
+    ];
+
     protected $fillable = [
         'satuan_id',
         'user_id',
@@ -69,6 +94,33 @@ class LaporanSurat extends Model
     public function isDikonfirmasi(): bool
     {
         return $this->status === self::STATUS_DIKONFIRMASI;
+    }
+
+    /**
+     * Surat prioritas "Rahasia" (khusus surat dari Danpus, lihat
+     * PRIORITAS_DANPUS_RAHASIA di atas).
+     */
+    public function isRahasia(): bool
+    {
+        return $this->prioritas === self::PRIORITAS_DANPUS_RAHASIA;
+    }
+
+    /**
+     * Isi ringkasan surat yang boleh ditampilkan ke satuan $viewerSatuanId.
+     * Aturan ringkasan (fondasi alur surat Danpus):
+     *   - Biasa & Kilat -> ringkasan tetap ditampilkan ke siapapun.
+     *   - Rahasia       -> ringkasan dikosongkan buat siapapun SELAIN
+     *                      satuan pengirim asli (satuan_id) -- penerima
+     *                      cuma lihat surat sudah masuk (perihal, kategori,
+     *                      lampiran, dll) tanpa isi ringkasannya.
+     */
+    public function ringkasanUntuk(?int $viewerSatuanId): string
+    {
+        if ($this->isRahasia() && (int) $viewerSatuanId !== (int) $this->satuan_id) {
+            return '';
+        }
+
+        return (string) $this->deskripsi;
     }
 
     public function labelStatus(): string

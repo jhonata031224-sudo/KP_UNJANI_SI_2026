@@ -29,6 +29,14 @@ use Illuminate\Support\Facades\Storage;
  *     Detail (bukan tombol terpisah di baris tabel) -- lihat
  *     surat-masuk-row.blade.php & window.bukaKonfirmasiSurat().
  *   - Setelah dikonfirmasi, surat pindah ke Arsip Surat sisi pengirim.
+ *
+ * Fondasi alur surat Danpus (prioritas Biasa/Kilat/Rahasia -- lihat
+ * LaporanSurat::PRIORITAS_DANPUS & LaporanSurat::ringkasanUntuk()):
+ * prioritas HANYA ditentukan Danpus sekali di store() saat surat pertama
+ * dibuat. Class ini SENGAJA tidak punya aksi update/edit prioritas surat
+ * yang sudah ada -- konfirmasi() cuma mengubah status, bukan isi surat --
+ * jadi begitu surat diterima satuan/pejabat lain, penerima otomatis tidak
+ * bisa mengubah prioritas yang sudah ditetapkan Danpus.
  */
 class LaporanSuratController extends Controller
 {
@@ -121,12 +129,23 @@ class LaporanSuratController extends Controller
             'Hanya Kasansi, Satlak, Sdir, Urdal, Pok Analis, atau Danpus/Wadan yang dapat mengirim Surat.'
         );
 
+        // Fondasi alur "Surat dari Danpus" -- prioritas Danpus pakai istilah
+        // baru (Biasa/Kilat/Rahasia, lihat LaporanSurat::PRIORITAS_DANPUS),
+        // sedangkan satuan lain (Kasansi, Satlak, Sdir, Urdal, Pok Analis,
+        // Wadan, dst) TETAP pakai skema lama Tinggi/Sedang/Rendah seperti
+        // sebelumnya -- SENGAJA tidak diubah biar gak merusak fitur yang
+        // sudah ada di sisi non-Danpus.
+        $isDanpus       = $kodeAsal === 'DANPUS';
+        $prioritasRules = $isDanpus
+            ? ['required', 'in:'.implode(',', LaporanSurat::PRIORITAS_DANPUS)]
+            : ['required', 'in:Tinggi,Sedang,Rendah'];
+
         $validated = $request->validate([
             'tujuan_satuan_id' => ['required', 'integer', 'exists:satuans,id'],
             'perihal'          => ['required', 'string', 'max:255'],
             'kategori'         => ['required', 'string', 'max:255'],
             'deskripsi'        => ['required', 'string', 'max:10000'],
-            'prioritas'        => ['required', 'in:Tinggi,Sedang,Rendah'],
+            'prioritas'        => $prioritasRules,
             'lampiran'         => ['required', 'file', 'max:10240'],
         ], [
             'tujuan_satuan_id.required' => 'Tujuan surat wajib dipilih.',

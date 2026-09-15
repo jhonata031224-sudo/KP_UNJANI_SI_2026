@@ -19,6 +19,12 @@
 .surat-file-card[data-prioritas="Rendah"] .surat-file-card-icon{background:color-mix(in srgb,#8b5cf6 16%,var(--panel));color:#8b5cf6}
 .surat-file-card[data-prioritas="Sedang"] .surat-file-card-icon{background:color-mix(in srgb,#a855f7 16%,var(--panel));color:#a855f7}
 .surat-file-card[data-prioritas="Tinggi"] .surat-file-card-icon{background:color-mix(in srgb,#6d28d9 16%,var(--panel));color:#6d28d9}
+/* Fondasi alur surat Danpus -- prioritas Biasa/Kilat/Rahasia (lihat
+   LaporanSurat::PRIORITAS_DANPUS), TERPISAH dari Rendah/Sedang/Tinggi di
+   atas yang tetap dipakai satuan lain. */
+.surat-file-card[data-prioritas="Biasa"] .surat-file-card-icon{background:color-mix(in srgb,#3b82f6 16%,var(--panel));color:#3b82f6}
+.surat-file-card[data-prioritas="Kilat"] .surat-file-card-icon{background:color-mix(in srgb,#f59e0b 16%,var(--panel));color:#f59e0b}
+.surat-file-card[data-prioritas="Rahasia"] .surat-file-card-icon{background:color-mix(in srgb,#dc2626 16%,var(--panel));color:#dc2626}
 .surat-file-card-badge{align-self:flex-start;margin-bottom:14px}
 .status-badge.status-menunggu.surat-file-card-badge,
 #suratDetailModal .status-badge.status-menunggu{color:#2476ad;background:rgba(52,152,219,.1);border-color:rgba(52,152,219,.25)}
@@ -51,6 +57,14 @@
 .surat-detail-item-value .priority-tag.prio-rendah{color:#8b5cf6;background:color-mix(in srgb,#8b5cf6 12%,transparent);border-color:color-mix(in srgb,#8b5cf6 35%,transparent)}
 .surat-detail-item-value .priority-tag.prio-sedang{color:#a855f7;background:color-mix(in srgb,#a855f7 12%,transparent);border-color:color-mix(in srgb,#a855f7 35%,transparent)}
 .surat-detail-item-value .priority-tag.prio-tinggi{color:#6d28d9;background:color-mix(in srgb,#6d28d9 12%,transparent);border-color:color-mix(in srgb,#6d28d9 35%,transparent)}
+/* Fondasi alur surat Danpus -- prioritas Biasa/Kilat/Rahasia, TERPISAH
+   dari prio-rendah/sedang/tinggi di atas yang tetap dipakai satuan lain. */
+.surat-detail-item-value .priority-tag.prio-biasa{color:#3b82f6;background:color-mix(in srgb,#3b82f6 12%,transparent);border-color:color-mix(in srgb,#3b82f6 35%,transparent)}
+.surat-detail-item-value .priority-tag.prio-kilat{color:#f59e0b;background:color-mix(in srgb,#f59e0b 12%,transparent);border-color:color-mix(in srgb,#f59e0b 35%,transparent)}
+.surat-detail-item-value .priority-tag.prio-rahasia{color:#dc2626;background:color-mix(in srgb,#dc2626 12%,transparent);border-color:color-mix(in srgb,#dc2626 35%,transparent)}
+/* Ringkasan surat Rahasia yang disembunyikan (lihat LaporanSurat::ringkasanUntuk()) */
+.surat-detail-item-value.surat-ringkasan-rahasia,
+#suratDetailRingkasan.surat-ringkasan-rahasia{font-style:italic;color:var(--text-muted)}
 .surat-detail-panel{border:1px solid var(--border-soft);border-radius:12px;padding:16px;background:var(--panel-alt);margin-bottom:14px}
 .surat-detail-panel:last-child{margin-bottom:0}
 .surat-detail-panel-title{font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:0 0 14px}
