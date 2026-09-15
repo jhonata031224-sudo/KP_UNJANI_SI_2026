@@ -158,6 +158,21 @@ Route::get('/laporan-surat/realtime', [LaporanSuratController::class, 'realtime'
 Route::patch('/laporan-surat/{laporanSurat}/konfirmasi', [LaporanSuratController::class, 'konfirmasi'])
     ->middleware(['auth', 'modul:surat'])
     ->name('laporan-surat.konfirmasi');
+Route::post('/laporan-surat/{laporanSurat}/teruskan', [LaporanSuratController::class, 'teruskan'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.teruskan');
+Route::post('/laporan-surat/{laporanSurat}/ke-danpus', [LaporanSuratController::class, 'kembalikanKeDanpus'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.ke-danpus');
+Route::post('/laporan-surat/{laporanSurat}/selesai', [LaporanSuratController::class, 'selesai'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.selesai');
+Route::post('/laporan-surat/{laporanSurat}/disposisi-ulang', [LaporanSuratController::class, 'disposisiUlang'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.disposisi-ulang');
+Route::patch('/laporan-surat/{laporanSurat}/konfirmasi-tembusan', [LaporanSuratController::class, 'konfirmasiTembusan'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.konfirmasi-tembusan');
 Route::delete('/laporan-surat/{laporanSurat}', [LaporanSuratController::class, 'destroy'])
     ->middleware(['auth', 'modul:surat'])
     ->name('laporan-surat.destroy');

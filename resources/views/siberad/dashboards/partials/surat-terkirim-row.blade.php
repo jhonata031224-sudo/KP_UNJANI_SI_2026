@@ -1,6 +1,26 @@
+@php
+    // Status surat keluar: Diteruskan, Menunggu Konfirmasi, dsb.
+    $badgeCls   = $s->badgeClass();
+    $badgeLabel = $s->labelStatus();
+
+    // Riwayat untuk timeline
+    $riwayats    = $s->riwayats;
+    $riwayatJson = $riwayats->map(fn ($r) => [
+        'aksi'          => $r->labelAksi(),
+        'pengirim'      => $r->pengirimSatuan->nama ?? '-',
+        'penerima'      => $r->penerimaSatuan->nama ?? null,
+        'catatan'       => $r->catatan,
+        'disposisi'     => $r->disposisi,
+        'tindakan'      => $r->tindakan,
+        'lampiran_url'  => $r->lampiran_path ? asset('storage/' . $r->lampiran_path) : null,
+        'lampiran_nama' => $r->lampiran_nama_asli,
+        'tanggal'       => $r->created_at->translatedFormat('d M Y H:i'),
+        'siklus'        => $r->siklus,
+    ])->toJson();
+@endphp
 <div class="surat-file-card" data-surat-id="{{ $s->id }}" data-created-at="{{ $s->created_at->timestamp }}" data-search="{{ strtolower($s->perihal.' '.($s->tujuanSatuan->nama ?? '').' '.($s->tujuanSatuan->kode ?? '')) }}" data-prioritas="{{ $s->prioritas }}">
     <div class="surat-file-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
-    <span class="status-badge status-menunggu surat-file-card-badge">Menunggu</span>
+    <span class="status-badge {{ $badgeCls }} surat-file-card-badge">{{ $badgeLabel }}</span>
     <div class="surat-file-card-title">{{ $s->perihal }}</div>
     <div><div class="surat-file-card-dari-label">Kepada</div><div class="surat-file-card-dari-value"><span>{{ $s->tujuanSatuan->nama ?? '-' }}</span><span class="satuan-pill">{{ $s->tujuanSatuan->kode ?? $s->tujuanSatuan->nama ?? '-' }}</span></div></div>
     <div class="surat-file-card-divider"></div>
@@ -23,6 +43,17 @@
         data-lampiran-url="{{ $s->lampiran_path ? asset('storage/'.$s->lampiran_path) : '' }}"
         data-lampiran-nama="{{ $s->lampiran_path ? ($s->lampiran_nama_asli ?: basename($s->lampiran_path)) : '' }}"
         data-lampiran-size="{{ $s->lampiran_size ?? '' }}"
+        data-surat-id="{{ $s->id }}"
+        data-is-selesai="{{ $s->isSelesai() ? '1' : '0' }}"
+        data-siklus="{{ $s->siklus }}"
+        data-disposisi="{{ e($s->disposisi_terakhir ?? $s->disposisi ?? '') }}"
+        data-tindakan="{{ e(json_encode($s->tindakan_terakhir ?? $s->tindakan ?? [])) }}"
+        data-riwayat="{{ e($riwayatJson) }}"
         data-can-confirm="0"
+        data-can-confirm-tembusan="0"
+        data-can-teruskan="0"
+        data-can-ke-danpus="0"
+        data-can-selesai="0"
+        data-can-disposisi-ulang="0"
     >Lihat Detail</button>
 </div>
