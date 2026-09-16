@@ -167,16 +167,19 @@ class LaporanSuratController extends Controller
             ? ['required', 'in:'.implode(',', LaporanSurat::PRIORITAS_DANPUS)]
             : ['required', 'in:Tinggi,Sedang,Rendah,Biasa,Kilat,Rahasia'];
 
+        // Disposisi surat awal Danpus SELALU "WADAN" -- field-nya di form udah
+        // dikunci/disable, jadi validasinya juga cuma nerima nilai itu (bukan
+        // lagi daftar DISPOSISI_DANPUS_OPTIONS punya Wadan).
         $disposisiRules = $isDanpus
-            ? ['required', 'string', 'in:'.implode(',', LaporanSurat::DISPOSISI_DANPUS_OPTIONS)]
+            ? ['required', 'string', 'in:'.LaporanSurat::DISPOSISI_AWAL_DANPUS]
             : ['nullable', 'string'];
         $tindakanRules = $isDanpus
             ? ['required', 'array', 'min:1']
             : ['nullable', 'array'];
-        // Rahasia (khusus Danpus): kolom "Isi Ringkasan Surat" disembunyikan
-        // & opsional di form -- isinya toh nggak pernah ditampilkan ke
-        // penerima (lihat LaporanSurat::ringkasanUntuk()).
-        $deskripsiRules = ($isDanpus && $request->input('prioritas') === LaporanSurat::PRIORITAS_DANPUS_RAHASIA)
+        // Isi Ringkasan Surat: opsional buat Danpus (baik Rahasia maupun
+        // prioritas lain) -- isinya toh nggak pernah dipaksa wajib lagi
+        // sejak field ini dibikin opsional di form Buat Surat Danpus.
+        $deskripsiRules = $isDanpus
             ? ['nullable', 'string', 'max:10000']
             : ['required', 'string', 'max:10000'];
 
