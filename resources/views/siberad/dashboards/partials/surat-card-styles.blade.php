@@ -91,7 +91,12 @@
 .surat-detail-dokumen-download svg{width:15px;height:15px}
 #suratDetailModal .modal-actions{gap:8px;margin-top:20px}
 #suratDetailKonfirmasi{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border-color:transparent}
-#suratDetailKonfirmasi[hidden]{display:none}
+/* PENTING: .btn{display:inline-flex} (dash-styles) menang atas atribut
+   [hidden] bawaan browser karena origin author > user-agent, jadi TIAP
+   tombol aksi modal Detail Surat butuh override eksplisit ini -- kalau
+   nambah tombol baru di surat-detail-modal.blade.php, tambahkan juga
+   id-nya di selector bawah ini. */
+#suratDetailModal .modal-actions .btn[hidden]{display:none!important}
 @media(max-width:700px){.surat-detail-body{grid-template-columns:1fr}.surat-detail-col-left{border-right:none;padding-right:0;padding-bottom:20px;border-bottom:1px solid var(--border-soft);margin-bottom:20px}}
 </style>
 <script>
