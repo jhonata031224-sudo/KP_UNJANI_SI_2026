@@ -22,10 +22,12 @@
         // Cabang paralel: satuan yang ikut menerima di waktu yang sama (view_only / tembusan)
         $tembusanStep = $tembusanPerRiwayat->get($r->id, collect());
         $paralel = $tembusanStep->map(fn ($t) => [
-            'satuan'      => $t->satuan->nama ?? '-',
-            'satuan_kode' => $t->satuan->kode ?? '-',
-            'jenis'       => $t->jenis,
-            'label_jenis' => $t->labelJenis(),
+            'satuan'          => $t->satuan->nama ?? '-',
+            'satuan_kode'     => $t->satuan->kode ?? '-',
+            'jenis'           => $t->jenis,
+            'label_jenis'     => $t->labelJenis(),
+            'sudah_konfirmasi'=> $t->dikonfirmasi_at !== null,
+            'dikonfirmasi_at' => $t->dikonfirmasi_at ? $t->dikonfirmasi_at->translatedFormat('d M Y H:i') : null,
         ])->values()->toArray();
 
         return [

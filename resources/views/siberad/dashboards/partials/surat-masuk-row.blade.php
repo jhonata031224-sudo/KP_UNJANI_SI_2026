@@ -93,10 +93,12 @@
         // tapi bukan penerima utama -- ditampilkan sebagai "parallel" di timeline
         $tembusanStep = $tembusanPerRiwayat->get($r->id, collect());
         $paralel = $tembusanStep->map(fn ($t) => [
-            'satuan'      => $t->satuan->nama ?? '-',
-            'satuan_kode' => $t->satuan->kode ?? '-',
-            'jenis'       => $t->jenis, // view_only | tembusan | hasil_rc
-            'label_jenis' => $t->labelJenis(),
+            'satuan'          => $t->satuan->nama ?? '-',
+            'satuan_kode'     => $t->satuan->kode ?? '-',
+            'jenis'           => $t->jenis, // view_only | tembusan | hasil_rc
+            'label_jenis'     => $t->labelJenis(),
+            'sudah_konfirmasi'=> $t->dikonfirmasi_at !== null,
+            'dikonfirmasi_at' => $t->dikonfirmasi_at ? $t->dikonfirmasi_at->translatedFormat('d M Y H:i') : null,
         ])->values()->toArray();
 
         return [

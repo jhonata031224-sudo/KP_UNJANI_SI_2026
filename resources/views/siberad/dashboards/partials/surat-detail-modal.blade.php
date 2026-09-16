@@ -350,6 +350,12 @@ window.openSuratDetail = function(button){
                   '</div>' +
                   '<div style="font-size:12px;font-weight:600;color:var(--text)">' + escHtml(p.satuan) + '</div>' +
                   (p.satuan_kode ? '<div style="font-size:10px;color:var(--text-muted);margin-top:1px">' + escHtml(p.satuan_kode) + ' — Hanya lihat</div>' : '') +
+                  // Status konfirmasi tembusan/view-only INI SENDIRI (mis. Urdal
+                  // sudah klik "Konfirmasi Mengetahui" atau belum) -- terpisah
+                  // dari status konfirmasi penerima utama di sebelahnya.
+                  (p.sudah_konfirmasi
+                    ? '<div style="display:inline-flex;align-items:center;gap:3px;margin-top:5px;padding:1px 7px;border-radius:999px;font-size:9.5px;font-weight:800;background:rgba(61,186,126,.14);color:#2e9e68;border:1px solid rgba(61,186,126,.35)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:9px;height:9px"><path d="M5 13l4 4L19 7"/></svg> Dikonfirmasi' + (p.dikonfirmasi_at ? ' • ' + escHtml(p.dikonfirmasi_at) : '') + '</div>'
+                    : '<div style="display:inline-flex;align-items:center;margin-top:5px;padding:1px 7px;border-radius:999px;font-size:9.5px;font-weight:800;background:rgba(224,168,58,.14);color:#c99a2e;border:1px solid rgba(224,168,58,.35)">Menunggu Konfirmasi</div>') +
                 '</div>'
               );
             }).join('') +
