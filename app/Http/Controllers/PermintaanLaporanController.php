@@ -39,6 +39,12 @@ class PermintaanLaporanController extends Controller
         return in_array($kode, ['DANPUS', 'WADAN'], true);
     }
 
+    private function isAdmin(Request $request): bool
+    {
+        $kode = strtoupper((string) $request->user()->load('satuan')->satuan?->kode);
+        return $kode === 'ADMIN';
+    }
+
     private function isPengirim(Request $request): bool
     {
         $kode = strtoupper((string) $request->user()->load('satuan')->satuan?->kode);
@@ -108,6 +114,25 @@ class PermintaanLaporanController extends Controller
                 'items_html' => view('siberad.dashboards.partials.permintaan-laporan-pimpinan-realtime-items', [
                     'permintaanLaporan' => $items,
                     'satuan' => $request->user()->loadMissing('satuan')->satuan,
+                ])->render(),
+                'server_time' => now()->toIso8601String(),
+            ], 200, [
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            ]);
+        }
+
+        // Kartu "Data Pelaporan" (Arsip Data Admin) -- SEMUA permintaan
+        // laporan lintas satuan, diarsipkan maupun belum (Admin cuma
+        // view-only, gak ada aksi arsip/batal dari sini). Sama seperti
+        // dua jalur di atas: HTML kartu langsung, klien yang diff per kartu.
+        if ($this->isAdmin($request) && $request->boolean('admin')) {
+            $items = PermintaanLaporan::with(['tujuanSatuan', 'laporan', 'laporans', 'tasks.laporans'])
+                ->latest()
+                ->get();
+
+            return response()->json([
+                'items_html' => view('siberad.dashboards.partials.admin-data-pelaporan-realtime-items', [
+                    'semuaPelaporan' => $items,
                 ])->render(),
                 'server_time' => now()->toIso8601String(),
             ], 200, [
