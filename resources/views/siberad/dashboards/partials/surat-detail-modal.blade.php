@@ -16,30 +16,9 @@
         });
         $wadanTindakanOptions = \App\Models\LaporanSurat::TINDAKAN_WADAN_OPTIONS;
     @endphp
-    {{-- Form inline Disposisi & Tindakan (mode simpel Wadan, langsung teruskan) --}}
-    <div class="surat-detail-item" id="suratDetailWadanForm" style="display:none"><div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
-        <div class="form-group" style="margin-bottom:14px">
-            <label class="form-label" for="suratDetailWadanDisposisi">Disposisi <span style="color:var(--red)">*</span></label>
-            <select id="suratDetailWadanDisposisi" class="form-select">
-                <option value="">— Pilih Satuan Tujuan —</option>
-                @foreach($wadanDisposisiSatuan as $st)
-                    <option value="{{ $st->id }}" data-label="{{ e($st->nama) }}">{{ $st->nama }} ({{ $st->kode }})</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="form-group">
-            <label class="form-label">Tindakan <span style="color:var(--red)">*</span> <span style="font-size:11px;color:var(--text-muted);font-weight:400">(Pilih minimal satu)</span></label>
-            <div id="suratDetailWadanTindakanGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-top:6px;max-height:200px;overflow-y:auto;padding:2px 0;border:1px solid transparent;border-radius:10px">
-                @foreach($wadanTindakanOptions as $opt)
-                    <label class="surat-tindakan-check-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:4px 6px;border-radius:6px;transition:background .15s">
-                        <input type="checkbox" value="{{ $opt }}" class="surat-detail-wadan-tindakan-check" style="width:15px;height:15px;accent-color:var(--primary);cursor:pointer;flex-shrink:0">
-                        <span>{{ $opt }}</span>
-                    </label>
-                @endforeach
-            </div>
-            <span id="suratDetailWadanTindakanError" style="display:none;align-items:center;gap:6px;color:var(--red);font-size:10.5px;margin-top:4px">Tindakan wajib dipilih (minimal satu).</span>
-        </div>
-    </div></div>
+    {{-- Form Disposisi & Tindakan mode simpel Wadan dipindah ke sub-modal
+         #wadanDisposisiModal (muncul setelah klik tombol "Konfirmasi"),
+         lihat blok di bawah setelah penutup modal utama. --}}
 @endif
 </div><div class="surat-detail-col surat-detail-col-right"><div class="surat-detail-panel"><div class="surat-detail-panel-title">Riwayat Alur</div><div class="surat-detail-timeline" id="suratDetailTimeline"></div></div><div class="surat-detail-panel" id="suratDetailDokumenPanel" hidden><div class="surat-detail-panel-title">Dokumen</div><div id="suratDetailDokumenWrap"></div></div></div></div>
 <div class="modal-actions" id="suratDetailActions">
@@ -64,15 +43,133 @@
     <button type="button" class="btn btn-warning" id="suratDetailDisposisiUlang" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Tindakan / Disposisi Baru
     </button>
-    {{-- Konfirmasi Wadan: muncul saat surat belum dikonfirmasi, surat TETAP di Surat Masuk setelah klik --}}
+    {{-- Konfirmasi Wadan (mode simpel): klik membuka sub-modal #wadanDisposisiModal
+         berisi form Disposisi & Tindakan + tombol "Disposisi & Teruskan". --}}
     <button type="button" class="btn btn-secondary" id="suratDetailKonfirmasiWadan" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><path d="M5 13l4 4L19 7"/></svg>Konfirmasi
     </button>
-    {{-- Teruskan Surat (Wadan - mode simpel: konfirmasi + disposisi + tindakan sekaligus) --}}
-    <button type="button" class="btn btn-primary" id="suratDetailTeruskanSimpel" hidden>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Disposisi &amp; Teruskan
-    </button>
 </div></div></div>
+
+@if($isWadanDashboard)
+{{-- ═══════════════════════════════════════════════════
+     SUB-MODAL: DISPOSISI & TERUSKAN (mode simpel Wadan)
+     Muncul setelah Wadan klik "Konfirmasi" di modal Surat Masuk.
+     ═══════════════════════════════════════════════════ --}}
+<div class="report-modal" id="wadanDisposisiModal">
+    <div class="report-modal-card" style="max-width:560px">
+        <div class="report-modal-head">
+            <div style="min-width:0">
+                <h3 style="margin:0 0 4px">Disposisi &amp; Teruskan Surat</h3>
+                <p style="margin:0;font-size:12px;color:var(--text-muted)">Pilih satuan tujuan dan tindakan yang harus dilaksanakan sebelum meneruskan.</p>
+            </div>
+            <button type="button" class="btn-icon-close" id="wadanDisposisiClose" aria-label="Tutup" style="margin-left:auto">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px">
+            <label class="form-label" for="wadanDisposisiSatuanSel">Disposisi <span style="color:var(--red)">*</span></label>
+            <select id="wadanDisposisiSatuanSel" class="form-select">
+                <option value="">— Pilih Satuan Tujuan —</option>
+                @foreach($wadanDisposisiSatuan as $st)
+                    <option value="{{ $st->id }}" data-label="{{ e($st->nama) }}">{{ $st->nama }} ({{ $st->kode }})</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Tindakan <span style="color:var(--red)">*</span> <span style="font-size:11px;color:var(--text-muted);font-weight:400">(Pilih minimal satu)</span></label>
+            <div id="wadanDisposisiTindakanGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-top:6px;max-height:220px;overflow-y:auto;padding:2px 0;border:1px solid transparent;border-radius:10px">
+                @foreach($wadanTindakanOptions as $opt)
+                    <label class="surat-tindakan-check-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:4px 6px;border-radius:6px;transition:background .15s">
+                        <input type="checkbox" value="{{ $opt }}" class="wadan-disposisi-tindakan-check" style="width:15px;height:15px;accent-color:var(--primary);cursor:pointer;flex-shrink:0">
+                        <span>{{ $opt }}</span>
+                    </label>
+                @endforeach
+            </div>
+            <span id="wadanDisposisiTindakanError" style="display:none;align-items:center;gap:6px;color:var(--red);font-size:10.5px;margin-top:4px">Tindakan wajib dipilih (minimal satu).</span>
+        </div>
+
+        <div class="modal-actions" style="gap:10px">
+            <button type="button" class="btn" id="wadanDisposisiBatal">Batal</button>
+            <button type="button" class="btn btn-primary" id="wadanDisposisiSubmit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Disposisi &amp; Teruskan
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+    var modal = document.getElementById('wadanDisposisiModal');
+    if (!modal) return;
+
+    var sel        = document.getElementById('wadanDisposisiSatuanSel');
+    var grid       = document.getElementById('wadanDisposisiTindakanGrid');
+    var errEl      = document.getElementById('wadanDisposisiTindakanError');
+    var currentAction = '';
+    var currentCsrf   = '';
+
+    function close(){ modal.classList.remove('open'); }
+
+    document.getElementById('wadanDisposisiClose').addEventListener('click', close);
+    document.getElementById('wadanDisposisiBatal').addEventListener('click', close);
+    modal.addEventListener('click', function(e){ if (e.target === modal) close(); });
+    document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape' && modal.classList.contains('open')) close();
+    });
+
+    // Dipanggil dari surat-detail-modal saat tombol "Konfirmasi" (mode simpel Wadan) diklik
+    window.bukaWadanDisposisiModal = function(opts){
+        currentAction = opts.action || '';
+        currentCsrf   = opts.csrf || '';
+
+        sel.value = '';
+        sel.style.borderColor = '';
+        grid.querySelectorAll('.wadan-disposisi-tindakan-check').forEach(function(c){ c.checked = false; });
+        grid.style.borderColor = 'transparent';
+        grid.style.boxShadow = 'none';
+        errEl.style.display = 'none';
+
+        modal.classList.add('open');
+    };
+
+    document.getElementById('wadanDisposisiSubmit').addEventListener('click', function(){
+        var tujuanId = sel.value;
+        var tindakanChecked = Array.prototype.map.call(grid.querySelectorAll('.wadan-disposisi-tindakan-check:checked'), function(c){ return c.value; });
+        var valid = true;
+
+        if (!tujuanId) {
+            sel.style.borderColor = 'var(--red)';
+            valid = false;
+        } else {
+            sel.style.borderColor = '';
+        }
+
+        if (tindakanChecked.length === 0) {
+            grid.style.borderColor = 'var(--red)';
+            grid.style.boxShadow = '0 0 0 3px color-mix(in srgb,var(--red) 15%,transparent)';
+            errEl.style.display = 'flex';
+            valid = false;
+        }
+
+        if (!valid || !currentAction) return;
+
+        var selectedOpt = sel.options[sel.selectedIndex];
+        var disposisiLabel = selectedOpt ? (selectedOpt.dataset.label || selectedOpt.textContent) : '';
+
+        var f = document.createElement('form');
+        f.method = 'POST'; f.action = currentAction;
+        var html = '<input name="_token" value="' + String(currentCsrf).replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '">';
+        html += '<input name="tujuan_satuan_id" value="' + String(tujuanId).replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '">';
+        html += '<input name="disposisi" value="' + String(disposisiLabel).replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '">';
+        tindakanChecked.forEach(function(t){
+            html += '<input name="tindakan[]" value="' + String(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '">';
+        });
+        f.innerHTML = html;
+        document.body.appendChild(f); f.submit();
+    });
+})();
+</script>
+@endif
 
 <script>
 window.openSuratDetail = function(button){
@@ -336,108 +433,44 @@ window.openSuratDetail = function(button){
   var btnKeDanpus            = document.getElementById('suratDetailKeDanpus');
   var btnSelesai             = document.getElementById('suratDetailSelesai');
   var btnDisposisiUlang      = document.getElementById('suratDetailDisposisiUlang');
-  var btnTeruskanSimpel      = document.getElementById('suratDetailTeruskanSimpel');
   var btnTutup               = document.getElementById('suratDetailTutup');
-  var wadanForm              = document.getElementById('suratDetailWadanForm');
-  var wadanDisposisiSel      = document.getElementById('suratDetailWadanDisposisi');
-  var wadanTindakanGrid      = document.getElementById('suratDetailWadanTindakanGrid');
-  var wadanTindakanError     = document.getElementById('suratDetailWadanTindakanError');
 
   // Reset semua action buttons terlebih dahulu (default: tersembunyi)
   btnKonfirmasi.hidden = true; btnKonfirmasi.onclick = null;
   btnKonfirmasiTembusan.hidden = true; btnKonfirmasiTembusan.onclick = null;
-  if (btnKonfirmasiWadan) { btnKonfirmasiWadan.hidden = true; btnKonfirmasiWadan.onclick = null; }
+  if (btnKonfirmasiWadan) {
+    btnKonfirmasiWadan.hidden = true; btnKonfirmasiWadan.onclick = null;
+    btnKonfirmasiWadan.disabled = false; btnKonfirmasiWadan.style.opacity = ''; btnKonfirmasiWadan.style.cursor = '';
+    btnKonfirmasiWadan.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><path d="M5 13l4 4L19 7"/></svg>Konfirmasi';
+  }
   btnTeruskan.hidden = true; btnTeruskan.onclick = null;
   btnKeDanpus.hidden = true; btnKeDanpus.onclick = null;
   btnSelesai.hidden = true; btnSelesai.onclick = null;
   btnDisposisiUlang.hidden = true; btnDisposisiUlang.onclick = null;
-  if (btnTeruskanSimpel) { btnTeruskanSimpel.hidden = true; btnTeruskanSimpel.onclick = null; }
   if (btnTutup) btnTutup.hidden = false;
-  if (wadanForm) wadanForm.style.display = 'none';
-  if (wadanDisposisiSel) wadanDisposisiSel.value = '';
-  if (wadanTindakanGrid) {
-    wadanTindakanGrid.querySelectorAll('.surat-detail-wadan-tindakan-check').forEach(function(c){ c.checked = false; });
-    wadanTindakanGrid.style.borderColor = 'transparent';
-    wadanTindakanGrid.style.boxShadow = 'none';
-  }
-  if (wadanTindakanError) wadanTindakanError.style.display = 'none';
 
   // Tombol aksi HANYA muncul pada SURAT MASUK sesuai peran & kondisi surat.
   // Pada Surat Keluar dan Arsip, HANYA tombol "Tutup" (X) yang ditampilkan.
   if (context === 'masuk' && wadanSimple) {
-    // ── Mode simpel Wadan: form Disposisi & Tindakan selalu tampil.
-    //    Tombol "Konfirmasi" muncul jika surat belum dikonfirmasi Wadan.
-    //    Tombol "Disposisi & Teruskan" selalu muncul.
-    //    Tombol Tutup lama disembunyikan, cukup pakai ikon X di header.
+    // ── Mode simpel Wadan: satu-satunya aksi di modal utama adalah tombol
+    //    "Konfirmasi". Klik tombol ini TIDAK langsung menyimpan apa pun --
+    //    ia cuma membuka sub-modal #wadanDisposisiModal berisi form
+    //    Disposisi & Tindakan. Konfirmasi + Teruskan baru benar-benar
+    //    tersimpan saat Wadan submit "Disposisi & Teruskan" di sub-modal
+    //    tsb (backend otomatis menandai surat terkonfirmasi lalu
+    //    meneruskannya sekaligus).
     if (btnTutup) btnTutup.hidden = true;
-    if (wadanForm) wadanForm.style.display = '';
 
-    // Tombol Konfirmasi Wadan (terpisah, muncul jika belum dikonfirmasi)
-    var canKonfirmasiWadan = button.dataset.canKonfirmasiWadan === '1';
-    var sudahDikonfirmasiWadan = button.dataset.sudahDikonfirmasiWadan === '1';
-    if (btnKonfirmasiWadan) {
-      if (canKonfirmasiWadan) {
-        btnKonfirmasiWadan.hidden = false;
-        btnKonfirmasiWadan.onclick = function() {
-          var csrf = button.dataset.csrf || '';
-          var action = button.dataset.konfirmasiWadanAction || '';
-          if (!action) return;
-          if (!confirm('Konfirmasi surat ini sebagai diterima oleh Wadan?\nSurat akan tetap di Surat Masuk sampai Anda meneruskannya.')) return;
-          var f = document.createElement('form');
-          f.method = 'POST'; f.action = action;
-          f.innerHTML = '<input name="_token" value="' + escHtml(csrf) + '"><input name="_method" value="PATCH">';
-          document.body.appendChild(f); f.submit();
-        };
-      } else if (sudahDikonfirmasiWadan) {
-        // Sudah dikonfirmasi: tampilkan badge status saja (disabled)
-        btnKonfirmasiWadan.hidden = false;
-        btnKonfirmasiWadan.disabled = true;
-        btnKonfirmasiWadan.style.opacity = '0.55';
-        btnKonfirmasiWadan.style.cursor = 'default';
-        btnKonfirmasiWadan.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><path d="M5 13l4 4L19 7"/></svg>Terkonfirmasi';
-      }
-    }
-
-    if (btnTeruskanSimpel) {
-      btnTeruskanSimpel.hidden = false;
-      btnTeruskanSimpel.onclick = function(){
-        var tujuanId = wadanDisposisiSel ? wadanDisposisiSel.value : '';
-        var tindakanChecked = wadanTindakanGrid
-          ? Array.prototype.map.call(wadanTindakanGrid.querySelectorAll('.surat-detail-wadan-tindakan-check:checked'), function(c){ return c.value; })
-          : [];
-        var valid = true;
-
-        if (!tujuanId) {
-          if (wadanDisposisiSel) { wadanDisposisiSel.style.borderColor = 'var(--red)'; }
-          valid = false;
-        } else if (wadanDisposisiSel) {
-          wadanDisposisiSel.style.borderColor = '';
+    var canTeruskanWadan = button.dataset.canTeruskan === '1';
+    if (btnKonfirmasiWadan && canTeruskanWadan) {
+      btnKonfirmasiWadan.hidden = false;
+      btnKonfirmasiWadan.onclick = function(){
+        if (typeof window.bukaWadanDisposisiModal === 'function') {
+          window.bukaWadanDisposisiModal({
+            action : button.dataset.teruskanAction,
+            csrf   : button.dataset.csrf || ''
+          });
         }
-
-        if (tindakanChecked.length === 0) {
-          if (wadanTindakanGrid) {
-            wadanTindakanGrid.style.borderColor = 'var(--red)';
-            wadanTindakanGrid.style.boxShadow = '0 0 0 3px color-mix(in srgb,var(--red) 15%,transparent)';
-          }
-          if (wadanTindakanError) wadanTindakanError.style.display = 'flex';
-          valid = false;
-        }
-
-        if (!valid) return;
-
-        var selectedOpt = wadanDisposisiSel.options[wadanDisposisiSel.selectedIndex];
-        var disposisiLabel = selectedOpt ? (selectedOpt.dataset.label || selectedOpt.textContent) : '';
-
-        var f = document.createElement('form');
-        f.method = 'POST'; f.action = button.dataset.teruskanAction;
-        var html = '<input name="_token" value="' + escHtml(button.dataset.csrf || '') + '">';
-        html += '<input name="tujuan_satuan_id" value="' + escHtml(tujuanId) + '">';
-        html += '<input name="disposisi" value="' + escHtml(disposisiLabel) + '">';
-        tindakanChecked.forEach(function(t){
-          html += '<input name="tindakan[]" value="' + escHtml(t) + '">';
-        });
-        f.innerHTML = html;
-        document.body.appendChild(f); f.submit();
       };
     }
   } else if (context === 'masuk') {
