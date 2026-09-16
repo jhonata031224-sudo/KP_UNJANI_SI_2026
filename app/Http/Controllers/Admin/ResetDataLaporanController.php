@@ -7,6 +7,7 @@ use App\Models\ActivityLog;
 use App\Models\Laporan;
 use App\Models\LaporanKendala;
 use App\Models\LaporanMonitoring;
+use App\Models\LaporanSurat;
 use App\Models\PermintaanLaporan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -56,6 +57,16 @@ class ResetDataLaporanController extends Controller
                 ['table' => 'permintaan_laporans', 'file_column' => null],
             ],
         ],
+        'surat' => [
+            'label' => 'Surat & Disposisi',
+            'desc' => 'Surat masuk/keluar antar satuan, riwayat alur disposisi, tembusan, dan berkas lampirannya di semua pengguna terkait.',
+            'icon' => 'mail',
+            'tables' => [
+                ['table' => 'laporan_surat_tembusans', 'file_column' => null],
+                ['table' => 'laporan_surat_riwayats', 'file_column' => 'lampiran_path'],
+                ['table' => 'laporan_surats', 'file_column' => 'lampiran_path'],
+            ],
+        ],
     ];
 
     /**
@@ -95,6 +106,7 @@ class ResetDataLaporanController extends Controller
             'laporan' => [],
             'monitoring' => [],
             'permintaan' => [],
+            'surat' => [],
         ];
 
         try {
@@ -170,6 +182,25 @@ class ResetDataLaporanController extends Controller
                     'tanggal' => $row->created_at ? $row->created_at->translatedFormat('d M Y H:i') : '-',
                     'status' => $row->status ?: 'Aktif',
                     'lampiran' => false,
+                    'ts' => $row->created_at ? $row->created_at->timestamp : 0,
+                ];
+            }
+
+            // 4. Kategori: Surat & Disposisi (surat antar satuan/pengguna, semua pihak terkait)
+            $surats = LaporanSurat::with(['satuan', 'tujuanSatuan', 'user'])->latest('id')->limit(150)->get();
+            foreach ($surats as $row) {
+                $detail['surat'][] = [
+                    'key' => 'surat:'.$row->id,
+                    'id' => $row->id,
+                    'tipe' => 'surat',
+                    'subtipe' => 'Surat & Disposisi',
+                    'subtipe_badge' => 'purple',
+                    'judul' => $row->perihal ?: 'Surat #'.$row->id,
+                    'satuan' => ($row->satuan->nama ?? ($row->satuan->kode ?? '-')).' → '.($row->tujuanSatuan->nama ?? ($row->tujuanSatuan->kode ?? '-')),
+                    'user' => $row->user->name ?? '-',
+                    'tanggal' => $row->created_at ? $row->created_at->translatedFormat('d M Y H:i') : '-',
+                    'status' => $row->labelStatus(),
+                    'lampiran' => !empty($row->lampiran_path),
                     'ts' => $row->created_at ? $row->created_at->timestamp : 0,
                 ];
             }
@@ -255,6 +286,31 @@ class ResetDataLaporanController extends Controller
                             $row = PermintaanLaporan::find($id);
                             if ($row) {
                                 DB::table('permintaan_laporan_tasks')->where('permintaan_laporan_id', $id)->delete();
+                                $row->delete();
+                                $totalTerhapus++;
+                            }
+                            break;
+
+                        case 'surat':
+                            $row = LaporanSurat::find($id);
+                            if ($row) {
+                                // Hapus berkas lampiran surat utama
+                                if (!empty($row->lampiran_path)) {
+                                    Storage::disk('public')->delete($row->lampiran_path);
+                                }
+
+                                // Hapus berkas lampiran di setiap riwayat alur (disposisi/teruskan/balasan)
+                                DB::table('laporan_surat_riwayats')
+                                    ->where('laporan_surat_id', $id)
+                                    ->whereNotNull('lampiran_path')
+                                    ->pluck('lampiran_path')
+                                    ->filter()
+                                    ->each(fn ($p) => Storage::disk('public')->delete($p));
+
+                                // Bersihkan tembusan/view-only & riwayat alur di semua satuan/pengguna terkait
+                                DB::table('laporan_surat_tembusans')->where('laporan_surat_id', $id)->delete();
+                                DB::table('laporan_surat_riwayats')->where('laporan_surat_id', $id)->delete();
+
                                 $row->delete();
                                 $totalTerhapus++;
                             }
