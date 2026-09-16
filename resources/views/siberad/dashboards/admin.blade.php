@@ -79,23 +79,6 @@
   .radar-legend-value{flex:0 0 auto;font-family:var(--mono);font-size:15px;font-weight:800;color:var(--text);}
   @media(max-width:980px){.chart-box-grid{grid-template-columns:1fr;}.chart-mini .chart-wrap{height:198px;}}
 
-  /* ===== toggle "Lihat Detail per Satuan" di header chart Total Pelaporan
-     per Satuan -- tabel Detail per Satuan disembunyikan default supaya
-     chart-nya sendiri punya ruang lebih leluasa, baru muncul (dengan
-     scrollbar sendiri di dalam) begitu tombol ini diklik ===== */
-  .chart-mini-head-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
-  .chart-mini-head-row h4{margin:0;}
-  /* Panel "Total Pelaporan per Satuan" (Ringkasan Data) butuh header block biasa
-     (judul di kiri, tombol "Lihat Detail per Satuan" di kanan lewat
-     .chart-mini-head-row di atas), bukan flex-row ikon+teks seperti 3 kartu
-     ringkasan lain yang memakai .chart-mini-head -- makanya di-scope lewat
-     class tambahan ini supaya nggak ikut kena aturan .chart-mini-head{display:flex}
-     di bawah dan tombolnya nggak lagi turun ke bawah judul. */
-  .chart-mini-head.chart-mini-head-rekap{display:block;}
-  .btn-toggle-detail{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;border:1px solid var(--border-soft);background:var(--panel);font-family:inherit;font-size:11px;font-weight:700;color:var(--text-muted);cursor:pointer;white-space:nowrap;transition:border-color .15s ease,color .15s ease;}
-  .btn-toggle-detail:hover{border-color:var(--gold-bright);color:var(--text);}
-  .btn-toggle-detail .chevron{transition:transform .2s ease;flex:0 0 auto;}
-  .btn-toggle-detail[aria-expanded="true"] .chevron{transform:rotate(180deg);}
 
   /* ===== toolbar cari & filter tabel =====
      Disamakan gayanya dengan .rpt-filter-bar/.danpus-log-search (Pimpinan):
@@ -371,7 +354,7 @@
           </div>
           <div class="help-topic-body">
             <div class="help-topic-title">Monitoring</div>
-            <div class="help-topic-desc">Ringkasan Data (rekap &amp; grafik seluruh satuan), Arsip Data (daftar lengkap + ekspor), dan Pengguna Aktif (daftar yang sedang login).</div>
+            <div class="help-topic-desc">Arsip Data (daftar lengkap + ekspor) dan Pengguna Aktif (daftar yang sedang login). Ringkasan grafik per satuan bisa dibuka lewat kartu "Distribusi Status Laporan" di Dashboard.</div>
           </div>
         </div>
         <div class="help-topic">
@@ -1094,7 +1077,6 @@
         </button>
         <div class="side-subnav"><div>
           <span class="side-subnav-label">Monitoring</span>
-          <a href="#" class="side-sub-link" data-tab-link="rekap-laporan" title="Ringkasan Data"><span class="sub-dot"></span>Ringkasan Data</a>
           <a href="#" class="side-sub-link" data-tab-link="laporan-admin" title="Arsip Data"><span class="sub-dot"></span>Arsip Data</a>
           <a href="#" class="side-sub-link" data-tab-link="sesi-aktif" title="Pengguna Aktif"><span class="sub-dot"></span>Pengguna Aktif</a>
         </div></div>
@@ -1467,7 +1449,7 @@
                (markup-nya generik, sudah dipakai lintas partial lain juga --
                cuma butuh variabel $pimpStatusDist, diisi $adminStatusDist
                punya Admin). --}}
-          <div class="chart-card compact chart-mini-link status-dist-card" data-tab-link="rekap-laporan" role="button" tabindex="0" title="Lihat Ringkasan Data">
+          <div class="chart-card compact status-dist-card">
             <div class="pimp-card-head">
               <div class="pimp-card-head-main">
                 <span class="pimp-card-ico" style="background:color-mix(in srgb,#22c55e 15%,transparent);color:#22c55e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"></path></svg></span>
@@ -6962,79 +6944,6 @@
         </div>
       </section>
 
-      {{-- ===== REKAP LAPORAN LINTAS SATLAK ===== --}}
-      <section class="tab-panel" data-tab-panel="rekap-laporan">
-        <div class="section-head panel">
-          <h2>Ringkasan Data</h2>
-          <p>Ringkasan jumlah &amp; status laporan tiap satuan dalam satu tampilan.</p>
-        </div>
-
-        <div class="chart-box">
-          <div class="chart-mini">
-            <div class="chart-mini-head chart-mini-head-rekap">
-              <div class="chart-mini-head-row">
-                <h4>Total Pelaporan per Satuan</h4>
-                <button type="button" class="btn-toggle-detail" id="btnToggleDetailSatuan" aria-expanded="false" aria-controls="panelDetailPerSatuan">
-                  <span id="btnToggleDetailSatuanLabel">Lihat Detail per Satuan</span>
-                  <svg class="chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                </button>
-              </div>
-              <p>Semua satuan pengirim laporan (Unsur Pelayanan, Unsur Pembantu Pimpinan, Direktorat, Satlak, dan 21 satuan Kasansi) tersusun dari atas ke bawah per kategori -- warna batang menunjukkan kategorinya. Makin panjang batang, makin banyak laporan yang sudah dikirim satuan itu. Scroll ke bawah untuk lihat semua satuan.</p>
-            </div>
-            <div class="chart-wrap" style="overflow-y:auto;overflow-x:auto;max-height:640px;">
-              <div id="chartRekapLaporanWrap" style="position:relative;width:100%;">
-                <canvas id="chartRekapLaporan"></canvas>
-              </div>
-            </div>
-            <div class="chart-legend" id="chartRekapLaporanLegend"></div>
-          </div>
-        </div>
-
-        <div class="panel" id="panelDetailPerSatuan" hidden>
-          <div class="panel-head">
-            <div><h3>Detail per Satuan</h3></div>
-            <button type="button" class="btn-toggle-detail" id="btnCloseDetailSatuan" aria-expanded="true" aria-controls="panelDetailPerSatuan" title="Tutup detail dan kembali ke grafik">
-              <span>Tutup Detail</span>
-              <svg class="chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
-          </div>
-          <div class="table-toolbar">
-            <div class="table-search-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
-              <input type="text" class="table-search" data-table-search="tblRekapSatuan" placeholder="Cari nama satuan...">
-            </div>
-            <select class="table-filter" data-table-filter="tblRekapSatuan">
-              <option value="">Semua Kategori</option>
-              <option value="{{ \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN }}">Unsur Pelayanan</option>
-              <option value="{{ \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN }}">Unsur Pembantu Pimpinan</option>
-              <option value="{{ \App\Models\Satuan::KATEGORI_DIREKTORAT }}">Direktorat</option>
-              <option value="{{ \App\Models\Satuan::KATEGORI_SATLAK }}">Satlak</option>
-              <option value="{{ \App\Models\Satuan::KATEGORI_KOTAMA }}">Kasansi</option>
-            </select>
-            <span class="table-filter-count" data-table-count="tblRekapSatuan"></span>
-          </div>
-          <div class="tbl-wrap tbl-scroll" style="max-height:420px;">
-            <table class="dtbl" id="tblRekapSatuan">
-              <colgroup><col style="width:30%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"></colgroup>
-              <thead><tr><th>Satuan</th><th style="text-align:center;">Total Pelaporan</th><th style="text-align:center;">Disetujui</th><th style="text-align:center;">Koreksi</th><th style="text-align:center;">Terlambat</th><th style="text-align:center;">Dibatalkan</th></tr></thead>
-              <tbody>
-                @forelse($rekapLaporanSatuan as $s)
-                <tr data-filter-value="{{ $s->kategori }}" data-search-value="{{ strtolower($s->nama.' '.$s->kode) }}">
-                  <td>{{ $s->nama }}</td>
-                  <td style="text-align:center;">{{ $s->total_laporan }}</td>
-                  <td style="text-align:center;"><span class="badge-status ok">{{ $s->laporan_disetujui }}</span></td>
-                  <td style="text-align:center;"><span class="badge-status bad">{{ $s->laporan_ditolak }}</span></td>
-                  <td style="text-align:center;"><span class="badge-status late">{{ $s->laporan_terlambat }}</span></td>
-                  <td style="text-align:center;"><span class="badge-status cancelled">{{ $s->laporan_dibatalkan }}</span></td>
-                </tr>
-                @empty
-                <tr class="table-empty-row"><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg><div class="empty-state-title">Belum ada data satuan</div></div></td></tr>
-                @endforelse
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
 
       {{-- ===== SESI LOGIN AKTIF ===== --}}
       <section class="tab-panel" data-tab-panel="sesi-aktif">
@@ -7935,178 +7844,6 @@
       applyTrenAktivitasRange(trenAktivitasActiveRange);
     };
 
-    // ===== Grafik 4: Rekap Total Pelaporan per Satuan (termasuk 21 Kotama) =====
-    // Horizontal bar (bukan vertikal) supaya dengan 35+ satuan, nama satuan
-    // tetap kebaca utuh tanpa dirotasi/dipotong -- yang discroll cukup
-    // sumbu vertikal (lebih wajar buat orang baru dibanding scroll ke
-    // samping). Tiap batang diwarnai sesuai kategori satuannya (Unsur
-    // Pelayanan / Unsur Pembantu Pimpinan / Direktorat / Satlak / Kotama)
-    // pakai palet yang sama dengan doughnut "Pengguna per Kategori Satuan"
-    // di atas, supaya konsisten dan orang baru langsung bisa menghubungkan
-    // warna dengan kategori.
-    var rekapSatuan = @json($rekapLaporanSatuan);
-    var kategoriWarna = {
-      unsur_pelayanan: '#0ea5e9',
-      unsur_pembantu_pimpinan: '#a855f7',
-      direktorat: '#22c55e',
-      satlak: '#f59e0b',
-      kotama: '#ec4899'
-    };
-    var kategoriLabel = {
-      unsur_pelayanan: 'Unsur Pelayanan',
-      unsur_pembantu_pimpinan: 'Unsur Pembantu Pimpinan',
-      direktorat: 'Direktorat',
-      satlak: 'Satlak',
-      kotama: 'Kasansi'
-    };
-    var elRekap = document.getElementById('chartRekapLaporan');
-    if (elRekap) {
-      var innerEl = document.getElementById('chartRekapLaporanWrap');
-      // Tinggi awal sekadar placeholder sebelum sesuaikanTinggiChartRekap()
-      // (di bawah, setelah chart dibuat) menghitung ukuran final berdasarkan
-      // sisa ruang viewport -- dibuat cukup besar biar Chart.js nggak
-      // sempat kepepet render di 0px lalu "loncat" pas resize pertama.
-      if (innerEl) innerEl.style.height = Math.max(rekapSatuan.length * 22, 320) + 'px';
-
-      var warnaBar = rekapSatuan.map(function (s) { return kategoriWarna[s.kategori] || '#94a3b8'; });
-
-      // Kalibrasi sumbu X: 1 laporan = 3mm panjang batang, tidak dibatasi
-      // lebar layar. Batas atas sumbu X (xMaxTarget) dihitung dari total
-      // laporan terbesar (dibulatkan ke atas kelipatan 10 + sedikit ruang
-      // napas). Lebar kanvas aktual (innerEl) baru dihitung & dilebarkan
-      // di sesuaikanLebarChartRekap() di bawah -- SENGAJA tidak dihitung
-      // di sini, karena panel ini ada di dalam tab yang default
-      // display:none ("rekap-laporan"), jadi lebar container = 0 selama
-      // tab belum aktif. Kalau dihitung di sini, lebar kanvas bisa kekunci
-      // ke angka kecil yang salah sebelum tab pernah dibuka.
-      var MM_PER_LAPORAN = 3;
-      var PX_PER_MM = 96 / 25.4;
-      var pxPerLaporan = MM_PER_LAPORAN * PX_PER_MM;
-      var maxTotalLaporan = rekapSatuan.reduce(function (m, s) { return Math.max(m, s.total_laporan || 0); }, 0);
-      var xMaxTarget = Math.max(100, Math.ceil((maxTotalLaporan + 1) / 10) * 10);
-
-      var chartRekapInstance = new Chart(elRekap, {
-        type: 'bar',
-        data: {
-          labels: rekapSatuan.map(function (s) {
-            // Horizontal punya lebih banyak ruang dari vertikal, tapi nama
-            // yang sangat panjang tetap dipotong dikit biar margin kiri
-            // nggak kebesaran -- nama lengkap tetap muncul di tooltip.
-            var nama = (s.nama || s.kode).split('(')[0].trim();
-            return nama.length > 30 ? nama.slice(0, 28) + '…' : nama;
-          }),
-          datasets: [{
-            label: 'Total Pelaporan',
-            data: rekapSatuan.map(function (s) { return s.total_laporan; }),
-            backgroundColor: warnaBar,
-            borderRadius: 4,
-            maxBarThickness: 16
-          }]
-        },
-        options: {
-          indexAxis: 'y',
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                // Tampilkan nama lengkap + kategori satuan di tooltip meski label dipotong.
-                title: function (items) {
-                  var idx = items[0] && items[0].dataIndex;
-                  var s = rekapSatuan[idx];
-                  return s ? (s.nama || s.kode) : '';
-                },
-                afterTitle: function (items) {
-                  var idx = items[0] && items[0].dataIndex;
-                  var s = rekapSatuan[idx];
-                  return s ? 'Kategori: ' + (kategoriLabel[s.kategori] || s.kategori) : '';
-                },
-                label: function (item) { return 'Total Pelaporan: ' + item.raw; }
-              }
-            }
-          },
-          scales: {
-            x: { beginAtZero: true, max: xMaxTarget, ticks: { precision: 0 }, grid: { color: cGrid } },
-            y: { grid: { display: false }, ticks: { font: { size: 10 } } }
-          }
-        }
-      });
-
-      // Legend statis warna kategori (bukan toggle seperti doughnut, karena
-      // satu batang cuma punya 1 kategori -- klik legend nggak relevan di sini).
-      var legendBox = document.getElementById('chartRekapLaporanLegend');
-      if (legendBox) {
-        legendBox.innerHTML = '';
-        Object.keys(kategoriLabel).forEach(function (kunci) {
-          if (!rekapSatuan.some(function (s) { return s.kategori === kunci; })) return;
-          var item = document.createElement('span');
-          item.className = 'chart-legend-item';
-          item.innerHTML = '<span class="chart-legend-dot" style="background:' + kategoriWarna[kunci] + '"></span>' + kategoriLabel[kunci];
-          legendBox.appendChild(item);
-        });
-      }
-
-      // ===== Sizing dinamis: isi penuh sisa tinggi viewport, tanpa celah
-      // kosong yang canggung di bawah halaman =====
-      // Elemen ".chart-wrap" ini juga kena aturan CSS ".chart-mini .chart-wrap"
-      // (dipakai chart mini lain di dashboard) yang mematok height:178px --
-      // makanya "height" di sini WAJIB di-set langsung lewat inline style
-      // (bukan cuma max-height), karena inline style pasti menang atas
-      // aturan class manapun. Kalau ruang tersedia cukup buat semua satuan,
-      // baris dibuat lega mengisi penuh sisa layar (tanpa scroll, tanpa
-      // celah kosong di bawah). Kalau tidak cukup, tinggi baris dijaga di
-      // batas minimum biar batang tidak gepeng -- sisanya baru discroll,
-      // dan area scroll itu sendiri tetap mengisi penuh sisa layar (jadi
-      // scrollbar-nya juga sampai ke bawah, bukan berhenti di tengah).
-      var chartWrapRekap = elRekap.closest('.chart-wrap');
-      var tabPanelRekap = document.querySelector('[data-tab-panel="rekap-laporan"]');
-      var MIN_ROW_HEIGHT_PX = 20;
-      var MIN_WRAP_HEIGHT_PX = 320;
-      var BOTTOM_BREATHING_ROOM_PX = 32;
-
-      function sesuaikanTinggiChartRekap() {
-        if (!chartWrapRekap || !innerEl || !tabPanelRekap || !tabPanelRekap.classList.contains('active')) return;
-        var rectAtas = chartWrapRekap.getBoundingClientRect().top;
-        var legendH = legendBox ? legendBox.offsetHeight : 0;
-        var sisa = window.innerHeight - rectAtas - legendH - BOTTOM_BREATHING_ROOM_PX;
-        var tersedia = Math.max(sisa, MIN_WRAP_HEIGHT_PX);
-        var tinggiMinimalSemuaBaris = rekapSatuan.length * MIN_ROW_HEIGHT_PX;
-
-        chartWrapRekap.style.height = tersedia + 'px';
-        chartWrapRekap.style.maxHeight = tersedia + 'px';
-        innerEl.style.height = Math.max(tinggiMinimalSemuaBaris, tersedia) + 'px';
-
-        sesuaikanLebarChartRekap();
-      }
-
-      // Lebar kanvas (bukan tinggi): dipanggil dari sesuaikanTinggiChartRekap()
-      // di atas supaya ikut kena semua pemicu yang sama (tab "Rekap Laporan"
-      // baru dibuka, window di-resize, halaman baru dimuat) -- termasuk saat
-      // tab ini pertama kali diaktifkan, yang penting karena sebelum itu
-      // panel masih display:none sehingga lebar tidak bisa diukur dengan benar.
-      // Direset ke 100% dulu tiap kali supaya pengukuran "overhead" (ruang
-      // yang dipakai label sumbu Y) selalu berdasarkan lebar panel yang
-      // sebenarnya saat ini, baru dilebarkan kalau ternyata kurang untuk
-      // menjaga rasio 3mm per laporan -- sisanya discroll lewat chart-wrap.
-      function sesuaikanLebarChartRekap() {
-        if (!chartRekapInstance) return;
-        innerEl.style.width = '100%';
-        chartRekapInstance.resize();
-        var overhead = chartRekapInstance.width - (chartRekapInstance.chartArea ? chartRekapInstance.chartArea.width : chartRekapInstance.width);
-        var lebarDibutuhkan = Math.ceil(xMaxTarget * pxPerLaporan + overhead);
-        var lebarPanelSaatIni = innerEl.getBoundingClientRect().width;
-        if (lebarDibutuhkan > lebarPanelSaatIni + 1) {
-          innerEl.style.width = lebarDibutuhkan + 'px';
-          chartRekapInstance.resize();
-        }
-      }
-
-      new MutationObserver(sesuaikanTinggiChartRekap).observe(tabPanelRekap || document.body, { attributes: true, attributeFilter: ['class'] });
-      window.addEventListener('resize', sesuaikanTinggiChartRekap);
-      window.addEventListener('load', sesuaikanTinggiChartRekap);
-      sesuaikanTinggiChartRekap();
-    }
   })();
   </script>
 
@@ -8310,39 +8047,6 @@
     syncAdminKpis();
     window.setInterval(syncAdminKpis,2000);
     document.addEventListener('visibilitychange',function(){if(!document.hidden){syncAdminKpis();tickRelativeTimes();}});
-  })();
-  </script>
-
-  <script>
-  (function () {
-    // Toggle tabel "Detail per Satuan" -- disembunyikan default supaya
-    // chart "Total Pelaporan per Satuan" di atasnya punya ruang lebih lega,
-    // baru muncul (dengan scrollbar sendiri) begitu tombol ini diklik.
-    var btn = document.getElementById('btnToggleDetailSatuan');
-    var panel = document.getElementById('panelDetailPerSatuan');
-    var label = document.getElementById('btnToggleDetailSatuanLabel');
-    var btnClose = document.getElementById('btnCloseDetailSatuan');
-    if (!btn || !panel) return;
-    btn.addEventListener('click', function () {
-      var terbuka = panel.hidden;
-      panel.hidden = !terbuka;
-      btn.setAttribute('aria-expanded', terbuka ? 'true' : 'false');
-      if (label) label.textContent = terbuka ? 'Sembunyikan Detail per Satuan' : 'Lihat Detail per Satuan';
-      if (terbuka) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
-
-    // Tombol "Tutup Detail" (dropup) di dalam panel Detail per Satuan --
-    // kebalikan dari tombol "Lihat Detail per Satuan" di atas: nutup lagi
-    // panel ini dan scroll baliknya ke tombol toggle di atas biar user
-    // ga nyasar keliatan halaman kosong abis tabelnya ilang.
-    if (btnClose) {
-      btnClose.addEventListener('click', function () {
-        panel.hidden = true;
-        btn.setAttribute('aria-expanded', 'false');
-        if (label) label.textContent = 'Lihat Detail per Satuan';
-        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      });
-    }
   })();
   </script>
 

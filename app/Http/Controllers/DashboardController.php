@@ -128,8 +128,8 @@ class DashboardController
         // (Admin cuma pengelola sistem, Pimpinan/Danpus-Wadan cuma
         // menerima & meninjau, bukan pengirim). Dihitung otomatis dari
         // kategori, bukan daftar kode manual, supaya kategori satuan baru
-        // (mis. Kotama) otomatis ikut ke "Ringkasan Data"/"Detail per
-        // Satuan" tanpa perlu diedit lagi di sini tiap kali ada satuan baru.
+        // (mis. Kotama) otomatis ikut kehitung tanpa perlu diedit lagi di
+        // sini tiap kali ada satuan baru.
         $kodeSatuanPengirim = Satuan::whereNotIn('kategori', [Satuan::KATEGORI_ADMIN, Satuan::KATEGORI_PIMPINAN])
             ->pluck('kode')
             ->all();
@@ -143,31 +143,12 @@ class DashboardController
         $laporanRekapMentah = Laporan::whereIn('satuan_id', Satuan::whereIn('kode', $kodeSatuanPengirim)->pluck('id'))
             ->with('lampirans')
             ->get();
-        $rekapLaporanSatuan = Satuan::whereIn('kode', $kodeSatuanPengirim)->withCount([
-            // whereIn (bukan cuma varian DANPUS) -- sama alasannya kayak
-            // $statusLaporanSistem di atas, laporan yang diputuskan lewat
-            // jalur Wadan jangan sampai gak kehitung di sini.
-            'laporanTerkirim as laporan_disetujui' => fn ($q) => $q->whereIn('status', ['Disetujui DANPUS', 'Disetujui WADAN']),
-            'laporanTerkirim as laporan_ditolak' => fn ($q) => $q->whereIn('status', ['Ditolak DANPUS', 'Ditolak WADAN']),
-            // Samain persis sama kondisi PermintaanLaporan::isTerlambat().
-            'permintaanLaporanMasuk as laporan_terlambat' => fn ($q) => $q->whereNull('laporan_id')
-                ->whereNotIn('status', [PermintaanLaporan::STATUS_SELESAI, PermintaanLaporan::STATUS_PEMERIKSAAN, PermintaanLaporan::STATUS_DIBATALKAN])
-                ->where('deadline_at', '<', now()),
-            'permintaanLaporanMasuk as laporan_dibatalkan' => fn ($q) => $q->where('status', PermintaanLaporan::STATUS_DIBATALKAN),
-        ])->get()
-            ->sortBy(fn ($s) => Satuan::kunciUrutSatuan($s->kategori, $s->kode))
-            ->values()
-            ->map(function ($s) use ($laporanRekapMentah) {
-                $s->total_laporan = $this->hitungLaporanPerPerihal($laporanRekapMentah->where('satuan_id', $s->id));
-
-                return $s;
-            });
         // Dipakai partial admin-kpi-cards.blade.php buat hitung sparkline 7
         // hari terakhir kartu KPI "Total Surat" (jumlah keseluruhan sistem,
         // sama seperti $stats['total_surat'] di bawah).
         $suratSemuaAdmin = LaporanSurat::get();
 
-        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','trenAktivitas','logAktivitas','semuaPelaporan','daftarBackup','sesiAktif','rekapLaporanSatuan','logDari','logSampai','laporanRekapMentah','suratSemuaAdmin') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'resetDataDetails' => ResetDataLaporanController::ambilDetailPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah), 'total_surat' => LaporanSurat::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
+        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','trenAktivitas','logAktivitas','semuaPelaporan','daftarBackup','sesiAktif','logDari','logSampai','laporanRekapMentah','suratSemuaAdmin') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'resetDataDetails' => ResetDataLaporanController::ambilDetailPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah), 'total_surat' => LaporanSurat::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
     }
 
     public function adminKpiRealtime(Request $request): \Illuminate\Http\JsonResponse
@@ -284,9 +265,9 @@ class DashboardController
         // Binmat) -> 4 Satlak (Kal, Dak, Siber Sos, Dukteksi) -> 21 Kotama
         // (21 Sansidam aktif), sesuai urutan organisasi -- samain sama
         // Satuan::kunciUrutSatuan(). 21 Kotama ditambahkan di akhir supaya
-        // monitoring Pimpinan dan rekap laporan ikut menampilkan data mereka,
-        // konsisten dengan $rekapLaporanSatuan yang sudah include Kotama
-        // lewat whereNotIn(['admin','pimpinan']) di bagian atas.
+        // monitoring Pimpinan ikut menampilkan data mereka, konsisten dengan
+        // $kodeSatuanPengirim yang sudah include Kotama lewat
+        // whereNotIn(['admin','pimpinan']) di bagian atas.
         $kodeKotama = Satuan::KODE_KOTAMA;
         $kodeSatuanPelaksanaUrut = array_merge([
             'URDAL', 'POKANALIS',
