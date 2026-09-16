@@ -101,6 +101,10 @@ class LaporanSuratController extends Controller
         //    a. Surat yang sudah selesai (is_selesai = true) bagi yang terlibat (pembuat, penerima, tembusan, atau RC Urdal).
         //    b. Surat yang sudah dikonfirmasi (STATUS_DIKONFIRMASI).
         //    c. Tembusan yang sudah dikonfirmasi oleh satuan ini.
+        //    d. Surat yang PERNAH ditangani/diteruskan oleh satuan ini (tercatat sebagai
+        //       pengirim atau penerima di riwayat alur), tapi sekarang tanggung jawabnya
+        //       sudah pindah ke satuan lain -- tetap tercatat sebagai riwayat historis di
+        //       Arsip, supaya tidak "hilang" begitu saja setelah diteruskan lebih lanjut.
         $arsip = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
             ->where(function ($q) use ($satuan) {
                 $q->where(function ($sub) use ($satuan) {
@@ -125,6 +129,17 @@ class LaporanSuratController extends Controller
                   ->whereHas('tembusans', function ($tq) use ($satuan) {
                       $tq->where('satuan_id', $satuan->id)
                          ->where('jenis', LaporanSuratTembusan::JENIS_HASIL_RC);
+                  });
+            })
+            ->orWhere(function ($q) use ($satuan) {
+                // Pernah menangani (via riwayat), tapi bukan lagi pembuat asli
+                // maupun pemegang aktif saat ini -- surat sudah lanjut ke
+                // satuan berikutnya, jadi tampil sebagai riwayat historis saja.
+                $q->where('satuan_id', '!=', $satuan->id)
+                  ->where('tujuan_satuan_id', '!=', $satuan->id)
+                  ->whereHas('riwayats', function ($rq) use ($satuan) {
+                      $rq->where('pengirim_satuan_id', $satuan->id)
+                         ->orWhere('penerima_satuan_id', $satuan->id);
                   });
             })
             ->latest()
