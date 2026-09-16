@@ -10,18 +10,35 @@
     $sembunyikanIsiRahasia = $s->isRahasia() && (int) ($satuan->id ?? $s->satuan_id) !== (int) $s->satuan_id;
     $aksiBerisiIsiSurat    = [\App\Models\LaporanSuratRiwayat::AKSI_BUAT_SURAT, \App\Models\LaporanSuratRiwayat::AKSI_SURAT_KELUAR];
     $riwayats    = $s->riwayats;
-    $riwayatJson = $riwayats->map(fn ($r) => [
-        'aksi'          => $r->labelAksi(),
-        'pengirim'      => $r->pengirimSatuan->nama ?? '-',
-        'penerima'      => $r->penerimaSatuan->nama ?? null,
-        'catatan'       => ($sembunyikanIsiRahasia && in_array($r->aksi, $aksiBerisiIsiSurat, true)) ? '' : $r->catatan,
-        'disposisi'     => $r->disposisi,
-        'tindakan'      => $r->tindakan,
-        'lampiran_url'  => $r->lampiran_path ? asset('storage/' . $r->lampiran_path) : null,
-        'lampiran_nama' => $r->lampiran_nama_asli,
-        'tanggal'       => $r->created_at->translatedFormat('d M Y H:i'),
-        'siklus'        => $r->siklus,
-    ])->toJson();
+
+    // Kelompokkan tembusan per riwayat_id agar cabang paralel (mis. Urdal
+    // View Only saat Wadan disposisi ke Satuan) ikut tampil di modal Surat
+    // Terkirim juga -- konsisten dengan Surat Masuk & Arsip.
+    $tembusanPerRiwayat = $s->tembusans->groupBy('laporan_surat_riwayat_id');
+
+    $riwayatJson = $riwayats->map(function ($r) use ($sembunyikanIsiRahasia, $aksiBerisiIsiSurat, $tembusanPerRiwayat) {
+        $tembusanStep = $tembusanPerRiwayat->get($r->id, collect());
+        $paralel = $tembusanStep->map(fn ($t) => [
+            'satuan'      => $t->satuan->nama ?? '-',
+            'satuan_kode' => $t->satuan->kode ?? '-',
+            'jenis'       => $t->jenis, // view_only | tembusan | hasil_rc
+            'label_jenis' => $t->labelJenis(),
+        ])->values()->toArray();
+
+        return [
+            'aksi'          => $r->labelAksi(),
+            'pengirim'      => $r->pengirimSatuan->nama ?? '-',
+            'penerima'      => $r->penerimaSatuan->nama ?? null,
+            'catatan'       => ($sembunyikanIsiRahasia && in_array($r->aksi, $aksiBerisiIsiSurat, true)) ? '' : $r->catatan,
+            'disposisi'     => $r->disposisi,
+            'tindakan'      => $r->tindakan,
+            'lampiran_url'  => $r->lampiran_path ? asset('storage/' . $r->lampiran_path) : null,
+            'lampiran_nama' => $r->lampiran_nama_asli,
+            'tanggal'       => $r->created_at->translatedFormat('d M Y H:i'),
+            'siklus'        => $r->siklus,
+            'paralel'       => $paralel, // penerima paralel/bersamaan (Urdal view-only, dst)
+        ];
+    })->toJson();
 @endphp
 <div class="surat-file-card" data-surat-id="{{ $s->id }}" data-created-at="{{ $s->created_at->timestamp }}" data-search="{{ strtolower($s->perihal.' '.($s->tujuanSatuan->nama ?? '').' '.($s->tujuanSatuan->kode ?? '')) }}" data-prioritas="{{ $s->prioritas }}">
     <div class="surat-file-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
