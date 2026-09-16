@@ -64,9 +64,13 @@
     <button type="button" class="btn btn-warning" id="suratDetailDisposisiUlang" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Tindakan / Disposisi Baru
     </button>
+    {{-- Konfirmasi Wadan: muncul saat surat belum dikonfirmasi, surat TETAP di Surat Masuk setelah klik --}}
+    <button type="button" class="btn btn-secondary" id="suratDetailKonfirmasiWadan" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><path d="M5 13l4 4L19 7"/></svg>Konfirmasi
+    </button>
     {{-- Teruskan Surat (Wadan - mode simpel: konfirmasi + disposisi + tindakan sekaligus) --}}
     <button type="button" class="btn btn-primary" id="suratDetailTeruskanSimpel" hidden>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Teruskan Surat
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Disposisi &amp; Teruskan
     </button>
 </div></div></div>
 
@@ -327,6 +331,7 @@ window.openSuratDetail = function(button){
   // ── Tombol Aksi Kontekstual ───────────────────────────────────────────────
   var btnKonfirmasi          = document.getElementById('suratDetailKonfirmasi');
   var btnKonfirmasiTembusan  = document.getElementById('suratDetailKonfirmasiTembusan');
+  var btnKonfirmasiWadan     = document.getElementById('suratDetailKonfirmasiWadan');
   var btnTeruskan            = document.getElementById('suratDetailTeruskan');
   var btnKeDanpus            = document.getElementById('suratDetailKeDanpus');
   var btnSelesai             = document.getElementById('suratDetailSelesai');
@@ -341,6 +346,7 @@ window.openSuratDetail = function(button){
   // Reset semua action buttons terlebih dahulu (default: tersembunyi)
   btnKonfirmasi.hidden = true; btnKonfirmasi.onclick = null;
   btnKonfirmasiTembusan.hidden = true; btnKonfirmasiTembusan.onclick = null;
+  if (btnKonfirmasiWadan) { btnKonfirmasiWadan.hidden = true; btnKonfirmasiWadan.onclick = null; }
   btnTeruskan.hidden = true; btnTeruskan.onclick = null;
   btnKeDanpus.hidden = true; btnKeDanpus.onclick = null;
   btnSelesai.hidden = true; btnSelesai.onclick = null;
@@ -359,11 +365,38 @@ window.openSuratDetail = function(button){
   // Tombol aksi HANYA muncul pada SURAT MASUK sesuai peran & kondisi surat.
   // Pada Surat Keluar dan Arsip, HANYA tombol "Tutup" (X) yang ditampilkan.
   if (context === 'masuk' && wadanSimple) {
-    // ── Mode simpel Wadan: satu tombol "Teruskan Surat" + form Disposisi
-    //    (dropdown satuan kecuali Danpus) & Tindakan (checkbox) inline.
+    // ── Mode simpel Wadan: form Disposisi & Tindakan selalu tampil.
+    //    Tombol "Konfirmasi" muncul jika surat belum dikonfirmasi Wadan.
+    //    Tombol "Disposisi & Teruskan" selalu muncul.
     //    Tombol Tutup lama disembunyikan, cukup pakai ikon X di header.
     if (btnTutup) btnTutup.hidden = true;
     if (wadanForm) wadanForm.style.display = '';
+
+    // Tombol Konfirmasi Wadan (terpisah, muncul jika belum dikonfirmasi)
+    var canKonfirmasiWadan = button.dataset.canKonfirmasiWadan === '1';
+    var sudahDikonfirmasiWadan = button.dataset.sudahDikonfirmasiWadan === '1';
+    if (btnKonfirmasiWadan) {
+      if (canKonfirmasiWadan) {
+        btnKonfirmasiWadan.hidden = false;
+        btnKonfirmasiWadan.onclick = function() {
+          var csrf = button.dataset.csrf || '';
+          var action = button.dataset.konfirmasiWadanAction || '';
+          if (!action) return;
+          if (!confirm('Konfirmasi surat ini sebagai diterima oleh Wadan?\nSurat akan tetap di Surat Masuk sampai Anda meneruskannya.')) return;
+          var f = document.createElement('form');
+          f.method = 'POST'; f.action = action;
+          f.innerHTML = '<input name="_token" value="' + escHtml(csrf) + '"><input name="_method" value="PATCH">';
+          document.body.appendChild(f); f.submit();
+        };
+      } else if (sudahDikonfirmasiWadan) {
+        // Sudah dikonfirmasi: tampilkan badge status saja (disabled)
+        btnKonfirmasiWadan.hidden = false;
+        btnKonfirmasiWadan.disabled = true;
+        btnKonfirmasiWadan.style.opacity = '0.55';
+        btnKonfirmasiWadan.style.cursor = 'default';
+        btnKonfirmasiWadan.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><path d="M5 13l4 4L19 7"/></svg>Terkonfirmasi';
+      }
+    }
 
     if (btnTeruskanSimpel) {
       btnTeruskanSimpel.hidden = false;

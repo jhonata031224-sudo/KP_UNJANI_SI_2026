@@ -514,6 +514,12 @@
   .btn:hover{border-color:var(--gold);color:var(--gold-bright);transform:translateY(-1px);}
   .btn-primary{background:linear-gradient(135deg,var(--gold-solid-bright),var(--gold-solid));color:var(--on-gold);border-color:transparent;box-shadow:0 8px 22px -8px rgba(217,146,11,.5);}
   .btn-primary:hover{color:var(--on-gold);box-shadow:0 10px 26px -6px rgba(217,146,11,.6);}
+  .btn-secondary{background:var(--panel);color:var(--text);border-color:var(--border);}
+  .btn-secondary:hover{border-color:var(--primary,#3b82f6);color:var(--primary,#3b82f6);transform:translateY(-1px);}
+  .btn-success{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border-color:transparent;box-shadow:0 8px 22px -8px rgba(22,163,74,.4);}
+  .btn-success:hover{color:#fff;box-shadow:0 10px 26px -6px rgba(22,163,74,.55);}
+  .btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border-color:transparent;box-shadow:0 8px 22px -8px rgba(217,119,6,.4);}
+  .btn-warning:hover{color:#fff;box-shadow:0 10px 26px -6px rgba(217,119,6,.55);}
   .btn-ghost-red{color:var(--red);border-color:rgba(198,40,40,.3);}
   .btn-ghost-red:hover{border-color:var(--red);color:var(--red);}
   /* Kembaran .btn-ghost-red tapi hijau -- dipakai tombol "Ya, Setujui" di

@@ -464,10 +464,22 @@ class DashboardController
             // di bawah (niru pola Surat Keluar: begitu dikonfirmasi, otomatis
             // pindah ke Arsip Surat, bukan nyangkut selamanya di Surat Masuk).
             $isDanpusKode = $kode === 'DANPUS';
+            // Wadan: surat masuk termasuk yang sudah dikonfirmasi TAPI belum
+            // diteruskan ke satuan -- surat baru pindah ke Arsip setelah
+            // Wadan klik "Teruskan Surat" (status berubah ke menunggu dengan
+            // tujuan_satuan_id baru / bukan Wadan lagi). Danpus tetap pakai
+            // filter STATUS_MENUNGGU saja (alur Danpus berbeda).
+            $isWadanKode = $kode === 'WADAN';
             $suratMasukUtama = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
                 ->where('tujuan_satuan_id', $satuan->id)
-                ->where('status', LaporanSurat::STATUS_MENUNGGU)
                 ->where('is_selesai', false)
+                ->when($isWadanKode, function ($q) {
+                    // Wadan: ambil menunggu ATAU sudah dikonfirmasi (belum diteruskan)
+                    $q->whereIn('status', [LaporanSurat::STATUS_MENUNGGU, LaporanSurat::STATUS_DIKONFIRMASI]);
+                }, function ($q) {
+                    // Danpus & lainnya: hanya menunggu
+                    $q->where('status', LaporanSurat::STATUS_MENUNGGU);
+                })
                 ->when($isDanpusKode, function ($q) use ($satuan) {
                     $q->whereHas('riwayats', function ($rq) use ($satuan) {
                         $rq->where('penerima_satuan_id', $satuan->id);

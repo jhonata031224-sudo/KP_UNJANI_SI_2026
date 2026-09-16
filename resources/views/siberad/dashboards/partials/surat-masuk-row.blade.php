@@ -41,19 +41,25 @@
     // Status sudah dikonfirmasi (penerima utama)
     $sudahDikonfirmasi = $isTujuanUtama && $s->isDikonfirmasi();
 
-    // Boleh konfirmasi utama?
-    $canConfirm = $isTujuanUtama && ! $sudahDikonfirmasi;
+    // Boleh konfirmasi utama? (non-Wadan: konfirmasi biasa, surat pindah ke arsip)
+    $canConfirm = $isTujuanUtama && ! $sudahDikonfirmasi && ! $isWadan;
+
+    // Wadan: tombol konfirmasi TERPISAH -- hanya muncul saat belum dikonfirmasi,
+    // tapi setelah konfirmasi surat TETAP di Surat Masuk (belum masuk arsip).
+    $canKonfirmasiWadan = $isWadan && $isTujuanUtama && ! $sudahDikonfirmasi && ! $s->isSelesai();
+
     // Boleh konfirmasi tembusan?
     $canConfirmTembusan = $isTembusan && ! $sudahKonfirmasiTembusan;
 
-    // Boleh teruskan? (Wadan sudah konfirmasi, surat berstatus dikonfirmasi, belum selesai)
+    // Boleh teruskan? Wadan bisa teruskan baik sebelum maupun setelah konfirmasi
+    // (jika belum konfirmasi, controller akan auto-konfirmasi dulu)
     $riwayatCount = $s->riwayats->count();
     $adaLaporanSatrap = $s->riwayats->contains(function ($r) use ($satuan) {
         return (int) $r->pengirim_satuan_id !== (int) $satuan->id && $r->aksi === \App\Models\LaporanSuratRiwayat::AKSI_SURAT_KELUAR;
     });
 
-    // Wadan meneruskan ke Satrap: jika surat baru dari Danpus atau belum ada laporan balik
-    $canTeruskan = $isWadan && $isTujuanUtama && $sudahDikonfirmasi && ! $s->isSelesai() && ! $adaLaporanSatrap;
+    // Wadan meneruskan ke Satrap: selama belum selesai dan belum ada laporan balik
+    $canTeruskan = $isWadan && $isTujuanUtama && ! $s->isSelesai() && ! $adaLaporanSatrap;
 
     // Wadan meneruskan ke Danpus: jika sudah ada laporan balik dari Satrap / alur sudah berjalan
     $canKeDanpus = $isWadan && $isTujuanUtama && $sudahDikonfirmasi && ! $s->isSelesai() && ($adaLaporanSatrap || $riwayatCount >= 2);
@@ -153,6 +159,8 @@
         data-jenis-tembusan="{{ e($jenisTembusan ?? '') }}"
         data-can-confirm="{{ $canConfirm ? '1' : '0' }}"
         data-can-confirm-tembusan="{{ $canConfirmTembusan ? '1' : '0' }}"
+        data-can-konfirmasi-wadan="{{ $canKonfirmasiWadan ? '1' : '0' }}"
+        data-sudah-dikonfirmasi-wadan="{{ ($isWadan && $sudahDikonfirmasi) ? '1' : '0' }}"
         data-can-teruskan="{{ $canTeruskan ? '1' : '0' }}"
         data-can-ke-danpus="{{ $canKeDanpus ? '1' : '0' }}"
         data-can-selesai="{{ $canSelesai ? '1' : '0' }}"
@@ -160,6 +168,9 @@
         @if($canConfirm)
         data-confirm-action="{{ route('laporan-surat.konfirmasi', $s) }}"
         data-confirm-token="{{ csrf_token() }}"
+        @endif
+        @if($canKonfirmasiWadan)
+        data-konfirmasi-wadan-action="{{ route('laporan-surat.konfirmasi', $s) }}"
         @endif
         @if($canConfirmTembusan)
         data-confirm-tembusan-action="{{ route('laporan-surat.konfirmasi-tembusan', $s) }}"
