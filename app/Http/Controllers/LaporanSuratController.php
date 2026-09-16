@@ -173,13 +173,19 @@ class LaporanSuratController extends Controller
         $tindakanRules = $isDanpus
             ? ['required', 'array', 'min:1']
             : ['nullable', 'array'];
+        // Rahasia (khusus Danpus): kolom "Isi Ringkasan Surat" disembunyikan
+        // & opsional di form -- isinya toh nggak pernah ditampilkan ke
+        // penerima (lihat LaporanSurat::ringkasanUntuk()).
+        $deskripsiRules = ($isDanpus && $request->input('prioritas') === LaporanSurat::PRIORITAS_DANPUS_RAHASIA)
+            ? ['nullable', 'string', 'max:10000']
+            : ['required', 'string', 'max:10000'];
 
         $validated = $request->validate([
             'induk_surat_id'   => ['nullable', 'integer', 'exists:laporan_surats,id'],
             'tujuan_satuan_id' => ['required', 'integer', 'exists:satuans,id'],
             'perihal'          => ['required', 'string', 'max:255'],
             'kategori'         => ['required', 'string', 'max:255'],
-            'deskripsi'        => ['required', 'string', 'max:10000'],
+            'deskripsi'        => $deskripsiRules,
             'prioritas'        => $prioritasRules,
             'disposisi'        => $disposisiRules,
             'tindakan'         => $tindakanRules,
@@ -211,6 +217,13 @@ class LaporanSuratController extends Controller
         if (! empty($validated['induk_surat_id'])) {
             $indukSurat = LaporanSurat::findOrFail($validated['induk_surat_id']);
 
+            abort_unless(
+                (int) $indukSurat->tujuan_satuan_id === (int) $satuanAsal->id,
+                403,
+                'Surat ini bukan sedang berada di satuan Anda, tidak bisa dibalas.'
+            );
+            abort_if($indukSurat->isSelesai(), 422, 'Surat ini sudah selesai dan tidak bisa dibalas lagi.');
+
             // Update surat induk agar mengalir kembali ke tujuan baru (Wadan)
             $indukSurat->update([
                 'tujuan_satuan_id'    => $tujuan->id,
@@ -229,7 +242,7 @@ class LaporanSuratController extends Controller
                 'pengirim_satuan_id' => $satuanAsal->id,
                 'penerima_satuan_id' => $tujuan->id,
                 'user_id'            => $user->id,
-                'catatan'            => $validated['deskripsi'],
+                'catatan'            => $validated['deskripsi'] ?? '',
                 'lampiran_path'      => $lampiranPath,
                 'lampiran_nama_asli' => $lampiranFile->getClientOriginalName(),
             ]);
@@ -271,7 +284,7 @@ class LaporanSuratController extends Controller
             'tujuan_satuan_id'    => $tujuan->id,
             'perihal'             => $validated['perihal'],
             'kategori'            => $validated['kategori'] ?? null,
-            'deskripsi'           => $validated['deskripsi'],
+            'deskripsi'           => $validated['deskripsi'] ?? '',
             'prioritas'           => $validated['prioritas'],
             'disposisi'           => $validated['disposisi'] ?? null,
             'tindakan'            => $validated['tindakan'] ?? null,
@@ -398,6 +411,14 @@ class LaporanSuratController extends Controller
         $user   = $request->user()->load('satuan');
         $satuan = $user->satuan;
         abort_unless($satuan, 403);
+        abort_unless(strtoupper((string) $satuan->kode) === 'WADAN', 403, 'Hanya Wadan yang dapat meneruskan surat ini.');
+        abort_unless(
+            (int) $laporanSurat->tujuan_satuan_id === (int) $satuan->id,
+            403,
+            'Surat ini bukan sedang berada di satuan Anda.'
+        );
+        abort_unless($laporanSurat->isDikonfirmasi(), 422, 'Konfirmasi surat terlebih dahulu sebelum meneruskannya.');
+        abort_if($laporanSurat->isSelesai(), 422, 'Surat ini sudah selesai.');
 
         $validated = $request->validate([
             'tujuan_satuan_id' => ['required', 'integer', 'exists:satuans,id'],
@@ -487,6 +508,14 @@ class LaporanSuratController extends Controller
         $user   = $request->user()->load('satuan');
         $satuan = $user->satuan;
         abort_unless($satuan, 403);
+        abort_unless(strtoupper((string) $satuan->kode) === 'WADAN', 403, 'Hanya Wadan yang dapat meneruskan surat ini ke Danpus.');
+        abort_unless(
+            (int) $laporanSurat->tujuan_satuan_id === (int) $satuan->id,
+            403,
+            'Surat ini bukan sedang berada di satuan Anda.'
+        );
+        abort_unless($laporanSurat->isDikonfirmasi(), 422, 'Konfirmasi surat terlebih dahulu sebelum meneruskannya ke Danpus.');
+        abort_if($laporanSurat->isSelesai(), 422, 'Surat ini sudah selesai.');
 
         $danpusSatuan = Satuan::where('kode', 'DANPUS')->firstOrFail();
 
@@ -527,6 +556,13 @@ class LaporanSuratController extends Controller
         $user   = $request->user()->load('satuan');
         $satuan = $user->satuan;
         abort_unless($satuan && strtoupper((string) $satuan->kode) === 'DANPUS', 403, 'Hanya Danpus yang dapat menyelesaikan surat ini.');
+        abort_unless(
+            (int) $laporanSurat->tujuan_satuan_id === (int) $satuan->id,
+            403,
+            'Surat ini bukan sedang berada di Danpus.'
+        );
+        abort_unless($laporanSurat->isDikonfirmasi(), 422, 'Konfirmasi surat terlebih dahulu sebelum menyelesaikannya.');
+        abort_if($laporanSurat->isSelesai(), 422, 'Surat ini sudah selesai.');
 
         $laporanSurat->update([
             'is_selesai'        => true,
@@ -578,6 +614,13 @@ class LaporanSuratController extends Controller
         $user   = $request->user()->load('satuan');
         $satuan = $user->satuan;
         abort_unless($satuan && strtoupper((string) $satuan->kode) === 'DANPUS', 403, 'Hanya Danpus yang dapat membuat disposisi ulang.');
+        abort_unless(
+            (int) $laporanSurat->tujuan_satuan_id === (int) $satuan->id,
+            403,
+            'Surat ini bukan sedang berada di Danpus.'
+        );
+        abort_unless($laporanSurat->isDikonfirmasi(), 422, 'Konfirmasi surat terlebih dahulu sebelum membuat disposisi ulang.');
+        abort_if($laporanSurat->isSelesai(), 422, 'Surat ini sudah selesai.');
 
         $validated = $request->validate([
             'tujuan_satuan_id' => ['required', 'integer', 'exists:satuans,id'],

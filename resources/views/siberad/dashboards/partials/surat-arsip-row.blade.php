@@ -8,12 +8,17 @@
     $lawan = $isSent ? $s->tujuanSatuan : $s->satuan;
 
     // Riwayat untuk timeline
+    // Sembunyikan isi surat (catatan langkah Buat Surat / Surat Keluar berisi
+    // deskripsi lengkap) dari satuan lain kalau prioritas Rahasia -- sama
+    // aturannya dengan LaporanSurat::ringkasanUntuk().
+    $sembunyikanIsiRahasia = $s->isRahasia() && (int) ($satuan->id ?? 0) !== (int) $s->satuan_id;
+    $aksiBerisiIsiSurat    = [\App\Models\LaporanSuratRiwayat::AKSI_BUAT_SURAT, \App\Models\LaporanSuratRiwayat::AKSI_SURAT_KELUAR];
     $riwayats    = $s->riwayats;
     $riwayatJson = $riwayats->map(fn ($r) => [
         'aksi'          => $r->labelAksi(),
         'pengirim'      => $r->pengirimSatuan->nama ?? '-',
         'penerima'      => $r->penerimaSatuan->nama ?? null,
-        'catatan'       => $r->catatan,
+        'catatan'       => ($sembunyikanIsiRahasia && in_array($r->aksi, $aksiBerisiIsiSurat, true)) ? '' : $r->catatan,
         'disposisi'     => $r->disposisi,
         'tindakan'      => $r->tindakan,
         'lampiran_url'  => $r->lampiran_path ? asset('storage/' . $r->lampiran_path) : null,

@@ -33,7 +33,7 @@
 
             {{-- Tujuan Satuan --}}
             <div class="form-group" id="suratTeruskanTujuanWrap">
-                <label class="form-label" for="suratTeruskanTujuan">Tujuan Penerusan <span style="color:var(--danger)">*</span></label>
+                <label class="form-label" for="suratTeruskanTujuan">Tujuan Penerusan <span style="color:var(--red)">*</span></label>
                 <select name="tujuan_satuan_id" id="suratTeruskanTujuan" class="form-select" required>
                     <option value="">— Pilih Satuan Tujuan —</option>
                     @foreach($semuaSatuan as $st)
@@ -44,7 +44,7 @@
 
             {{-- Disposisi --}}
             <div class="form-group">
-                <label class="form-label" for="suratTeruskanDisposisi">Disposisi <span style="color:var(--danger)">*</span></label>
+                <label class="form-label" for="suratTeruskanDisposisi">Disposisi <span style="color:var(--red)">*</span></label>
                 <select name="disposisi" id="suratTeruskanDisposisi" class="form-select" required>
                     <option value="">— Pilih Disposisi —</option>
                     @foreach($disposisiOptions as $opt)
@@ -55,8 +55,8 @@
 
             {{-- Tindakan (checkboxes) --}}
             <div class="form-group">
-                <label class="form-label">Tindakan <span style="color:var(--danger)">*</span> <span style="font-size:11px;color:var(--text-muted);font-weight:400">(Pilih minimal satu)</span></label>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-top:6px;max-height:220px;overflow-y:auto;padding:2px 0">
+                <label class="form-label">Tindakan <span style="color:var(--red)">*</span> <span style="font-size:11px;color:var(--text-muted);font-weight:400">(Pilih minimal satu)</span></label>
+                <div id="suratTeruskanTindakanGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-top:6px;max-height:220px;overflow-y:auto;padding:2px 0;border:1px solid transparent;border-radius:10px">
                     @foreach($tindakanOptions as $opt)
                         <label class="surat-tindakan-check-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:4px 6px;border-radius:6px;transition:background .15s">
                             <input type="checkbox" name="tindakan[]" value="{{ $opt }}"
@@ -66,7 +66,7 @@
                         </label>
                     @endforeach
                 </div>
-                <div id="suratTeruskanTindakanError" style="display:none;color:var(--danger);font-size:12px;margin-top:4px">Pilih minimal satu tindakan.</div>
+                <span id="suratTeruskanTindakanError" style="display:none;align-items:center;gap:6px;color:var(--red);font-size:10.5px;margin-top:4px">Tindakan wajib dipilih (minimal satu).</span>
             </div>
 
             {{-- Catatan Arahan (opsional) --}}
@@ -126,6 +126,8 @@
         // Reset form
         form.reset();
         document.getElementById('suratTeruskanTindakanError').style.display = 'none';
+        document.getElementById('suratTeruskanTindakanGrid').style.borderColor = 'transparent';
+        document.getElementById('suratTeruskanTindakanGrid').style.boxShadow = 'none';
 
         // Filter tujuan jika ada
         var tujuanSel = document.getElementById('suratTeruskanTujuan');
@@ -154,13 +156,32 @@
         modal.classList.add('open');
     };
 
-    document.getElementById('suratTeruskanSubmit').addEventListener('click', function(){
+    function tindakanValid(){
+        var grid = document.getElementById('suratTeruskanTindakanGrid');
+        var errEl = document.getElementById('suratTeruskanTindakanError');
         var checks = document.querySelectorAll('.surat-tindakan-check:checked');
         if (checks.length === 0) {
-            document.getElementById('suratTeruskanTindakanError').style.display = '';
-            return;
+            grid.style.borderColor = 'var(--red)';
+            grid.style.boxShadow = '0 0 0 3px color-mix(in srgb,var(--red) 15%,transparent)';
+            errEl.style.display = 'flex';
+            return false;
         }
-        document.getElementById('suratTeruskanTindakanError').style.display = 'none';
+        grid.style.borderColor = 'transparent';
+        grid.style.boxShadow = 'none';
+        errEl.style.display = 'none';
+        return true;
+    }
+
+    document.getElementById('suratTeruskanTindakanGrid').addEventListener('change', function(){
+        if (document.querySelectorAll('.surat-tindakan-check:checked').length > 0) tindakanValid();
+    });
+
+    document.getElementById('suratTeruskanForm').addEventListener('submit', function(e){
+        if (!tindakanValid()) e.preventDefault();
+    });
+
+    document.getElementById('suratTeruskanSubmit').addEventListener('click', function(){
+        if (!tindakanValid()) return;
         document.getElementById('suratTeruskanForm').submit();
     });
 })();
