@@ -3996,15 +3996,17 @@
            .deadline-sender-item) biar gak cuma mengandalkan beda warna latar
            yang tipis. --}}
       <style>
-      {{-- padding-top 60px (bukan cuma ~22px) -- .dcard-icon punya
-           margin-top:-42px (buat efek "ngambang" nongol di atas kartunya
-           sendiri, lihat permintaan-laporan-deadline-styles.blade.php).
+      {{-- padding-top 80px (sebelumnya 60px, awalnya 22px) -- .dcard-icon
+           punya margin-top:-42px (buat efek "ngambang" nongol di atas
+           kartunya sendiri, lihat permintaan-laporan-deadline-styles.blade.php).
            Padding tray yang lebih tipis dari 42px bikin ikon baris PERTAMA
            nongol MELEWATI tepi atas tray, nabrak ke rpt-filter-bar
            (search/filter) di atasnya -- kelihatan dempet/nyatu lagi walau
-           dari sisi lain (bukan ke panel, tapi ke search bar). 60px = 42px
-           (margin ikon) + ~18px jarak aman. --}}
-      #tblDlPelaporan{background:var(--bg);border:1px solid var(--border-soft);border-radius:14px;padding:60px 20px 8px;}
+           dari sisi lain (bukan ke panel, tapi ke search bar). 60px (42px
+           margin ikon + ~18px jarak aman) ternyata masih kelihatan mepet di
+           sebagian layar/skala font, jadi dilebarkan ke 80px (42px + ~38px
+           jarak aman) supaya jarak ke rpt-filter-bar lebih lega. --}}
+      #tblDlPelaporan{background:var(--bg);border:1px solid var(--border-soft);border-radius:14px;padding:80px 20px 8px;}
       #tblDlPelaporan .deadline-sender-item{border-color:var(--border-strong);}
       </style>
       <script>
