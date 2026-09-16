@@ -31,6 +31,7 @@
 
         return [
             'aksi'          => $r->labelAksi(),
+            'aksi_kode'     => $r->aksi,
             'pengirim'      => $r->pengirimSatuan->nama ?? '-',
             'penerima'      => $r->penerimaSatuan->nama ?? null,
             'catatan'       => ($sembunyikanIsiRahasia && in_array($r->aksi, $aksiBerisiIsiSurat, true)) ? '' : $r->catatan,

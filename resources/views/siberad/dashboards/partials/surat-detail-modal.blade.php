@@ -252,6 +252,25 @@ window.openSuratDetail = function(button){
   var timeline = document.getElementById('suratDetailTimeline');
   timeline.innerHTML = '';
 
+  // Badge status per-langkah (step) di timeline -- supaya tiap baris riwayat
+  // (Danpus buat surat, Wadan konfirmasi, Wadan teruskan ke Satuan, dst)
+  // kelihatan jelas status konfirmasinya SENDIRI-SENDIRI, bukan cuma judul
+  // aksi generik. Warna dibikin inline supaya nggak gantung ke class
+  // .status-sedang/.status-disetujui yang belum ada definisi CSS-nya.
+  function stepStatusPill(aksiKode){
+    var map = {
+      'BUAT_SURAT'  : { label: 'Terkirim',     bg: 'rgba(52,152,219,.12)', fg: '#2476ad', bd: 'rgba(52,152,219,.3)' },
+      'SURAT_KELUAR': { label: 'Terkirim',     bg: 'rgba(52,152,219,.12)', fg: '#2476ad', bd: 'rgba(52,152,219,.3)' },
+      'KONFIRMASI'  : { label: 'Dikonfirmasi', bg: 'rgba(61,186,126,.14)', fg: '#2e9e68', bd: 'rgba(61,186,126,.35)' },
+      'TERUSKAN'    : { label: 'Diteruskan',   bg: 'rgba(99,102,241,.13)', fg: '#6366f1', bd: 'rgba(99,102,241,.32)' },
+      'SELESAI'     : { label: 'Selesai (Final)', bg: 'rgba(61,186,126,.16)', fg: '#1f7a4f', bd: 'rgba(61,186,126,.4)' },
+    };
+    var s = map[aksiKode];
+    if (!s) return '';
+    return '<span style="display:inline-flex;align-items:center;margin-left:8px;padding:1px 8px;border-radius:999px;font-size:10px;font-weight:800;' +
+      'letter-spacing:.02em;white-space:nowrap;vertical-align:middle;background:' + s.bg + ';color:' + s.fg + ';border:1px solid ' + s.bd + '">' + s.label + '</span>';
+  }
+
   var riwayats = [];
   try { riwayats = JSON.parse(button.dataset.riwayat || '[]'); } catch(e){}
 
@@ -291,7 +310,7 @@ window.openSuratDetail = function(button){
         item.className = 'surat-detail-timeline-item surat-timeline-branch-root';
         item.innerHTML =
           '<span class="surat-detail-timeline-dot">' + checkSvg + '</span>' +
-          '<div class="surat-detail-timeline-title">' + escHtml(r.aksi) + '</div>' +
+          '<div class="surat-detail-timeline-title">' + escHtml(r.aksi) + stepStatusPill(r.aksi_kode) + '</div>' +
           '<div class="surat-detail-timeline-sub">' + escHtml(meta) + '</div>' +
           extraHtml +
           // Label "Dikirim bersamaan ke:"
@@ -350,7 +369,7 @@ window.openSuratDetail = function(button){
         var dotHtml = '<span class="surat-detail-timeline-dot">' + checkSvg + '</span>';
         var meta = r.pengirim + (r.penerima ? ' → ' + r.penerima : '') + ' • ' + r.tanggal;
         if (r.siklus > 1) meta += ' (Siklus ' + r.siklus + ')';
-        item.innerHTML = dotHtml + '<div class="surat-detail-timeline-title">' + escHtml(r.aksi) + '</div><div class="surat-detail-timeline-sub">' + escHtml(meta) + '</div>' + extraHtml;
+        item.innerHTML = dotHtml + '<div class="surat-detail-timeline-title">' + escHtml(r.aksi) + stepStatusPill(r.aksi_kode) + '</div><div class="surat-detail-timeline-sub">' + escHtml(meta) + '</div>' + extraHtml;
         timeline.appendChild(item);
 
         if (!isLast) {
@@ -359,6 +378,23 @@ window.openSuratDetail = function(button){
         }
       }
     });
+
+    // ── Step SAAT INI (pending) ──────────────────────────────────────────
+    // Baris terakhir riwayat cuma nyatet apa yang SUDAH terjadi. Supaya
+    // kelihatan jelas surat ini masih "nyangkut" di satuan mana & belum
+    // tuntas semua (bukan cuma alasan satu langkah tengah yang konfirmasi),
+    // tambahin satu baris pending di ujung timeline kalau belum is_selesai.
+    if (button.dataset.isSelesai !== '1') {
+      var tujuanSaatIni = button.dataset.tujuan || '-';
+      var statusSaatIni = button.dataset.status || 'Menunggu Konfirmasi';
+      var pending = document.createElement('div');
+      pending.className = 'surat-detail-timeline-item is-pending';
+      pending.innerHTML =
+        '<span class="surat-detail-timeline-dot"></span>' +
+        '<div class="surat-detail-timeline-title">Saat Ini: ' + escHtml(tujuanSaatIni) + stepStatusPill(statusSaatIni === 'Dikonfirmasi' ? 'KONFIRMASI' : null) + '</div>' +
+        '<div class="surat-detail-timeline-sub">' + escHtml(statusSaatIni) + ' — belum masuk Arsip sampai seluruh alur tuntas</div>';
+      timeline.appendChild(pending);
+    }
   } else {
     // Fallback: tampilkan timeline 2 langkah lama (Dibuat + Dikonfirmasi)
     var sudahKonfirmasi = !!button.dataset.dikonfirmasiTanggal;
