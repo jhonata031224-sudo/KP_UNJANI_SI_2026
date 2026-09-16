@@ -3687,7 +3687,7 @@
             </div>
             <div>
               <h2>Arsip Data</h2>
-              <p>Rekap data pengguna, aktivitas, dan pelaporan sistem, siap diekspor. Unduh dalam format CSV (bisa dibuka Excel) atau cetak sebagai PDF.</p>
+              <p>Rekap data pelaporan, pengguna, dan aktivitas sistem dalam satu tempat. Data Pengguna &amp; Data Aktivitas bisa diunduh sebagai CSV/Excel atau PDF.</p>
             </div>
           </div>
         </div>
