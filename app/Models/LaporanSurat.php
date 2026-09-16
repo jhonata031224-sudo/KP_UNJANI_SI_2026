@@ -106,6 +106,15 @@ class LaporanSurat extends Model
     const DISPOSISI_WADAN_OPTIONS = self::DISPOSISI_DANPUS_OPTIONS;
     const TINDAKAN_WADAN_OPTIONS   = self::TINDAKAN_DANPUS_OPTIONS;
 
+    /**
+     * Disposisi surat AWAL dari Danpus -- karena Tujuan surat Danpus sekarang
+     * dikunci ke Wadan (lihat modal Buat Surat Baru di laporan-danpus.blade.php),
+     * Disposisi awalnya pun otomatis SELALU "WADAN", nggak ada pilihan lain
+     * (beda dengan DISPOSISI_DANPUS_OPTIONS di atas yang dipakai Wadan buat
+     * meneruskan surat lebih lanjut ke jajarannya sendiri).
+     */
+    const DISPOSISI_AWAL_DANPUS = 'WADAN';
+
     protected $fillable = [
         'satuan_id',
         'user_id',
@@ -252,85 +261,5 @@ class LaporanSurat extends Model
         return $bytes < 1024 * 1024
             ? max(1, round($bytes / 1024)) . ' KB'
             : round($bytes / 1024 / 1024, 1) . ' MB';
-    }
-
-    /**
-     * Scope untuk Surat Masuk dari POV satuan tertentu:
-     * - Surat belum selesai (is_selesai == false)
-     * - Satuan ini adalah penerima utama aktif (tujuan_satuan_id == $satuan->id)
-     *   ATAU satuan ini adalah penerima tembusan yang belum dikonfirmasi.
-     */
-    public function scopeSuratMasukFor($query, Satuan $satuan)
-    {
-        $isDanpus = strtoupper((string) $satuan->kode) === 'DANPUS';
-
-        return $query->where('is_selesai', false)
-            ->where(function ($q) use ($satuan, $isDanpus) {
-                // Penerima utama aktif
-                $q->where(function ($sub) use ($satuan, $isDanpus) {
-                    $sub->where('tujuan_satuan_id', $satuan->id)
-                        ->when($isDanpus, function ($dq) use ($satuan) {
-                            $dq->whereHas('riwayats', function ($rq) use ($satuan) {
-                                $rq->where('penerima_satuan_id', $satuan->id);
-                            });
-                        });
-                })
-                // Atau sebagai tembusan yang belum dikonfirmasi
-                ->orWhere(function ($sub) use ($satuan) {
-                    $sub->where('tujuan_satuan_id', '!=', $satuan->id)
-                        ->whereHas('tembusans', function ($tq) use ($satuan) {
-                            $tq->where('satuan_id', $satuan->id)
-                               ->whereNull('dikonfirmasi_at');
-                        });
-                });
-            });
-    }
-
-    /**
-     * Scope untuk Surat Keluar dari POV satuan tertentu:
-     * - Surat belum selesai (is_selesai == false)
-     * - Satuan ini BUKAN penerima aktif saat ini (tujuan_satuan_id != $satuan->id)
-     * - Satuan ini adalah pembuat awal (satuan_id == $satuan->id)
-     *   ATAU pernah meneruskan / membalas (riwayats.pengirim_satuan_id == $satuan->id).
-     */
-    public function scopeSuratKeluarFor($query, Satuan $satuan)
-    {
-        return $query->where('is_selesai', false)
-            ->where('tujuan_satuan_id', '!=', $satuan->id)
-            ->where(function ($q) use ($satuan) {
-                $q->where('satuan_id', $satuan->id)
-                  ->orWhereHas('riwayats', function ($rq) use ($satuan) {
-                      $rq->where('pengirim_satuan_id', $satuan->id);
-                  });
-            });
-    }
-
-    /**
-     * Scope untuk Arsip Surat dari POV satuan tertentu:
-     * - Surat yang sudah selesai (is_selesai == true) di mana satuan ini terlibat.
-     * - Tembusan yang sudah dikonfirmasi oleh satuan ini.
-     */
-    public function scopeSuratArsipFor($query, Satuan $satuan)
-    {
-        return $query->where(function ($q) use ($satuan) {
-            $q->where('is_selesai', true)
-              ->where(function ($sub) use ($satuan) {
-                  $sub->where('satuan_id', $satuan->id)
-                      ->orWhere('tujuan_satuan_id', $satuan->id)
-                      ->orWhereHas('riwayats', function ($rq) use ($satuan) {
-                          $rq->where('pengirim_satuan_id', $satuan->id)
-                             ->orWhere('penerima_satuan_id', $satuan->id);
-                      })
-                      ->orWhereHas('tembusans', function ($tq) use ($satuan) {
-                          $tq->where('satuan_id', $satuan->id);
-                      });
-              });
-        })
-        ->orWhere(function ($q) use ($satuan) {
-            $q->whereHas('tembusans', function ($tq) use ($satuan) {
-                $tq->where('satuan_id', $satuan->id)
-                   ->whereNotNull('dikonfirmasi_at');
-            });
-        });
     }
 }
