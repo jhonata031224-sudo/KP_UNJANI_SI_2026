@@ -1,7 +1,11 @@
 @php
-    // Status surat keluar: Diteruskan, Menunggu Konfirmasi, dsb.
-    $badgeCls   = $s->badgeClass();
-    $badgeLabel = $s->labelStatus();
+    // Status surat keluar: Diteruskan, Menunggu Konfirmasi, dsb -- dilihat dari
+    // sudut pandang PENGIRIM ASLI ($satuan), supaya "Dikonfirmasi" tidak
+    // menyesatkan seolah suratnya sudah tuntas padahal cuma penerima
+    // berikutnya (mis. Wadan) yang baru konfirmasi terima satu langkah.
+    $viewerSatuanId = $satuan->id ?? $s->satuan_id;
+    $badgeCls   = $s->badgeClass($viewerSatuanId);
+    $badgeLabel = $s->labelStatus($viewerSatuanId);
 
     // Riwayat untuk timeline
     // Sembunyikan isi surat (catatan langkah Buat Surat / Surat Keluar berisi
@@ -55,7 +59,7 @@
         data-tujuan-kode="{{ e($s->tujuanSatuan->kode ?? '') }}"
         data-kategori="{{ e($s->kategori ?: 'Umum') }}"
         data-prioritas="{{ e($s->prioritas) }}"
-        data-status="{{ $s->labelStatus() }}"
+        data-status="{{ $badgeLabel }}"
         data-deskripsi="{{ e($s->ringkasanUntuk($satuan->id ?? $s->satuan_id)) }}"
         data-rahasia="{{ $s->isRahasia() ? '1' : '0' }}"
         data-dari="{{ e($satuan->nama ?? $s->satuan->nama ?? '-') }}"

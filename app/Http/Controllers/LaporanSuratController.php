@@ -98,8 +98,17 @@ class LaporanSuratController extends Controller
         }
 
         // 3. Arsip Surat:
-        //    a. Surat yang sudah selesai (is_selesai = true) bagi yang terlibat (pembuat, penerima, tembusan, atau RC Urdal).
-        //    b. Surat yang sudah dikonfirmasi (STATUS_DIKONFIRMASI).
+        //    a. PENGIRIM ASLI (pembuat surat, satuan_id): baru masuk Arsip kalau
+        //       SELURUH alur Danpus>Wadan>Satuan>Urdal sudah benar-benar tuntas
+        //       (is_selesai = true, lewat aksi "Selesai" oleh Danpus) -- BUKAN
+        //       cuma karena satu penerima di tengah alur (mis. Wadan) baru
+        //       konfirmasi terima. Selama belum is_selesai, surat tetap tampil
+        //       di Surat Keluar sisi pengirim (lihat query Surat Keluar di atas),
+        //       supaya tidak nyangkut/ganda tampil di dua tempat sekaligus.
+        //    b. PEMEGANG SAAT INI (tujuan_satuan_id): masuk Arsip kalau sudah
+        //       dia sendiri konfirmasi (STATUS_DIKONFIRMASI) atau surat sudah
+        //       is_selesai -- ini status konfirmasi langkahnya SENDIRI, terpisah
+        //       dari status pengirim asli di atas.
         //    c. Tembusan yang sudah dikonfirmasi oleh satuan ini.
         //    d. Surat yang PERNAH ditangani/diteruskan oleh satuan ini (tercatat sebagai
         //       pengirim atau penerima di riwayat alur), tapi sekarang tanggung jawabnya
@@ -107,14 +116,17 @@ class LaporanSuratController extends Controller
         //       Arsip, supaya tidak "hilang" begitu saja setelah diteruskan lebih lanjut.
         $arsip = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
             ->where(function ($q) use ($satuan) {
-                $q->where(function ($sub) use ($satuan) {
-                    $sub->where('satuan_id', $satuan->id)
-                        ->orWhere('tujuan_satuan_id', $satuan->id);
-                })
-                ->where(function ($st) {
-                    $st->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
-                       ->orWhere('is_selesai', true);
-                });
+                // (a) Pengirim asli -- nunggu is_selesai, bukan status per-langkah.
+                $q->where('satuan_id', $satuan->id)
+                  ->where('is_selesai', true);
+            })
+            ->orWhere(function ($q) use ($satuan) {
+                // (b) Pemegang saat ini -- status konfirmasi langkahnya sendiri.
+                $q->where('tujuan_satuan_id', $satuan->id)
+                  ->where(function ($st) {
+                      $st->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
+                         ->orWhere('is_selesai', true);
+                  });
             })
             ->orWhere(function ($q) use ($satuan) {
                 // Tembusan / RC yang sudah dikonfirmasi oleh satuan ini

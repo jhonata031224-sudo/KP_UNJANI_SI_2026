@@ -219,10 +219,37 @@ class LaporanSurat extends Model
         return (string) $this->deskripsi;
     }
 
-    public function labelStatus(): string
+    /**
+     * Status surat sudah "pindah tangan" (dikonfirmasi diterima oleh
+     * pemegang saat ini) TAPI dilihat dari sudut pandang $viewerSatuanId
+     * yang BUKAN pemegang saat ini -- artinya cuma satu langkah di alur
+     * yang kelar, bukan keseluruhan surat. Dipakai supaya badge status
+     * "Dikonfirmasi" nggak menyesatkan pengirim asli, seolah suratnya
+     * sudah tuntas cuma karena penerima berikutnya (mis. Wadan) baru
+     * konfirmasi terima -- padahal masih lanjut ke satuan lain / Urdal.
+     */
+    protected function isDikonfirmasiSepihakDariSudutPandang(?int $viewerSatuanId): bool
+    {
+        return $viewerSatuanId !== null
+            && (int) $viewerSatuanId === (int) $this->satuan_id
+            && (int) $this->tujuan_satuan_id !== (int) $viewerSatuanId
+            && $this->status === self::STATUS_DIKONFIRMASI;
+    }
+
+    /**
+     * @param  int|null  $viewerSatuanId  Satuan yang sedang melihat kartu ini
+     *                                    (mis. dari Surat Keluar sisi pengirim).
+     *                                    Opsional supaya pemanggilan lama tanpa
+     *                                    argumen tetap jalan seperti biasa.
+     */
+    public function labelStatus(?int $viewerSatuanId = null): string
     {
         if ($this->isSelesai()) {
             return 'Selesai';
+        }
+
+        if ($this->isDikonfirmasiSepihakDariSudutPandang($viewerSatuanId)) {
+            return 'Diteruskan';
         }
 
         return match ($this->status) {
@@ -232,10 +259,14 @@ class LaporanSurat extends Model
         };
     }
 
-    public function badgeClass(): string
+    public function badgeClass(?int $viewerSatuanId = null): string
     {
         if ($this->isSelesai()) {
             return 'status-disetujui';
+        }
+
+        if ($this->isDikonfirmasiSepihakDariSudutPandang($viewerSatuanId)) {
+            return 'status-sedang';
         }
 
         return match ($this->status) {
