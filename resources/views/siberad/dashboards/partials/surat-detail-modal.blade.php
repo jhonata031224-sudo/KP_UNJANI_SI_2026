@@ -156,11 +156,13 @@ window.openSuratDetail = function(button){
 
   if (riwayats.length > 0) {
     riwayats.forEach(function(r, idx){
-      var item = document.createElement('div');
-      item.className = 'surat-detail-timeline-item';
-      var dotHtml = '<span class="surat-detail-timeline-dot">' + checkSvg + '</span>';
-      var meta = r.pengirim + (r.penerima ? ' → ' + r.penerima : '') + ' • ' + r.tanggal;
-      if (r.siklus > 1) meta += ' (Siklus ' + r.siklus + ')';
+      var isLast = idx === riwayats.length - 1;
+
+      // ── Cek apakah step ini punya cabang paralel (kirim bersamaan ke 2+ pihak) ──
+      var paralel = (r.paralel && r.paralel.length > 0) ? r.paralel : [];
+      var hasParalel = paralel.length > 0;
+
+      // ── Bangun extra info (disposisi, tindakan, catatan, lampiran) ──
       var extraHtml = '';
       if (r.disposisi) extraHtml += '<div class="surat-detail-timeline-sub" style="margin-top:2px;color:var(--primary);font-weight:500">Disposisi: ' + escHtml(r.disposisi) + '</div>';
       if (r.tindakan && r.tindakan.length) {
@@ -174,15 +176,86 @@ window.openSuratDetail = function(button){
       if (r.lampiran_url) {
         extraHtml += '<div class="surat-detail-timeline-sub" style="margin-top:4px"><a href="' + r.lampiran_url + '" target="_blank" rel="noopener" style="color:var(--primary);font-size:12px;text-decoration:underline">📎 ' + escHtml(r.lampiran_nama || 'Lampiran') + '</a></div>';
       }
-      item.innerHTML = dotHtml + '<div class="surat-detail-timeline-title">' + escHtml(r.aksi) + '</div><div class="surat-detail-timeline-sub">' + escHtml(meta) + '</div>' + extraHtml;
-      timeline.appendChild(item);
 
-      // Line complete antara langkah (kecuali item terakhir)
-      if (idx < riwayats.length - 1) {
-        void item.offsetHeight;
-        requestAnimationFrame(function(){requestAnimationFrame(function(){
-          item.classList.add('line-complete');
-        });});
+      if (hasParalel) {
+        // ── MODE BRANCHING: step ini mengirim ke 2 arah bersamaan ──
+        // Tampilkan sebagai blok dengan cabang visual: penerima utama + penerima paralel
+        var checkSvgSmall = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px"><path d="M5 13l4 4L19 7"/></svg>';
+
+        var meta = r.pengirim + ' • ' + r.tanggal;
+        if (r.siklus > 1) meta += ' (Siklus ' + r.siklus + ')';
+
+        // Header step utama (pengirim & aksi)
+        var item = document.createElement('div');
+        item.className = 'surat-detail-timeline-item surat-timeline-branch-root';
+        item.innerHTML =
+          '<span class="surat-detail-timeline-dot">' + checkSvg + '</span>' +
+          '<div class="surat-detail-timeline-title">' + escHtml(r.aksi) + '</div>' +
+          '<div class="surat-detail-timeline-sub">' + escHtml(meta) + '</div>' +
+          extraHtml +
+          // Label "Dikirim bersamaan ke:"
+          '<div style="margin-top:10px;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">Dikirim bersamaan ke:</div>' +
+          // Blok cabang 2 arah
+          '<div class="surat-timeline-branch-wrap" style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">' +
+            // Cabang UTAMA (penerima_satuan)
+            (r.penerima ? (
+              '<div class="surat-timeline-branch-node surat-timeline-branch-utama" style="' +
+                'flex:1;min-width:120px;border:1.5px solid var(--primary);border-radius:8px;padding:7px 10px;' +
+                'background:var(--primary-subtle,rgba(59,130,246,.07));position:relative' +
+              '">' +
+                '<div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--primary);margin-bottom:2px">' +
+                  '<span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:var(--primary);border-radius:50%;color:#fff">' + checkSvgSmall + '</span>' +
+                  'Penerima Utama' +
+                '</div>' +
+                '<div style="font-size:12px;font-weight:600;color:var(--text)">' + escHtml(r.penerima) + '</div>' +
+                '<div style="font-size:10.5px;color:var(--text-muted);margin-top:1px">Perlu konfirmasi / ACC</div>' +
+              '</div>'
+            ) : '') +
+            // Cabang PARALEL (view_only / tembusan) — satu per entry
+            paralel.map(function(p){
+              var isViewOnly = p.jenis === 'view_only';
+              var isHasilRc  = p.jenis === 'hasil_rc';
+              var borderCol  = isViewOnly ? 'var(--border)' : (isHasilRc ? '#16a34a' : 'var(--warning,#f59e0b)');
+              var bgCol      = isViewOnly ? 'var(--surface)' : (isHasilRc ? 'rgba(22,163,74,.07)' : 'rgba(245,158,11,.07)');
+              var labelCol   = isViewOnly ? 'var(--text-muted)' : (isHasilRc ? '#16a34a' : 'var(--warning,#f59e0b)');
+              var badgeLabel = escHtml(p.label_jenis || p.jenis);
+              return (
+                '<div class="surat-timeline-branch-node" style="' +
+                  'flex:1;min-width:120px;border:1.5px solid ' + borderCol + ';border-radius:8px;padding:7px 10px;' +
+                  'background:' + bgCol + ';position:relative' +
+                '">' +
+                  '<div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:' + labelCol + ';margin-bottom:2px">' +
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+                    badgeLabel +
+                  '</div>' +
+                  '<div style="font-size:12px;font-weight:600;color:var(--text)">' + escHtml(p.satuan) + '</div>' +
+                  (p.satuan_kode ? '<div style="font-size:10px;color:var(--text-muted);margin-top:1px">' + escHtml(p.satuan_kode) + ' — Hanya lihat</div>' : '') +
+                '</div>'
+              );
+            }).join('') +
+          '</div>';
+
+        timeline.appendChild(item);
+
+        if (!isLast) {
+          void item.offsetHeight;
+          requestAnimationFrame(function(){requestAnimationFrame(function(){ item.classList.add('line-complete'); });});
+        }
+
+      } else {
+        // ── MODE NORMAL: step tunggal (tidak ada cabang paralel) ──
+        var item = document.createElement('div');
+        item.className = 'surat-detail-timeline-item';
+        var dotHtml = '<span class="surat-detail-timeline-dot">' + checkSvg + '</span>';
+        var meta = r.pengirim + (r.penerima ? ' → ' + r.penerima : '') + ' • ' + r.tanggal;
+        if (r.siklus > 1) meta += ' (Siklus ' + r.siklus + ')';
+        item.innerHTML = dotHtml + '<div class="surat-detail-timeline-title">' + escHtml(r.aksi) + '</div><div class="surat-detail-timeline-sub">' + escHtml(meta) + '</div>' + extraHtml;
+        timeline.appendChild(item);
+
+        if (!isLast) {
+          void item.offsetHeight;
+          requestAnimationFrame(function(){requestAnimationFrame(function(){ item.classList.add('line-complete'); });});
+        }
       }
     });
   } else {

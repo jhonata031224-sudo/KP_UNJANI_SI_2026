@@ -80,6 +80,12 @@
 .surat-detail-timeline-dot.just-confirmed{animation:suratTimelineDotPop .45s cubic-bezier(.34,1.56,.64,1)}
 .surat-detail-timeline-title{font-size:13px;font-weight:700;color:var(--text);line-height:18px}
 .surat-detail-timeline-sub{font-size:11.5px;color:var(--text-muted);margin-top:3px}
+/* ── Branch / Parallel Timeline ── */
+.surat-timeline-branch-root{padding-bottom:16px}
+.surat-timeline-branch-wrap{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.surat-timeline-branch-node{flex:1;min-width:110px;border-radius:8px;padding:8px 10px;transition:box-shadow .15s}
+.surat-timeline-branch-utama{border-color:var(--primary)!important;background:var(--primary-subtle,rgba(59,130,246,.07))!important}
+.surat-timeline-branch-node:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .surat-detail-dokumen-row{display:flex;align-items:center;gap:12px}
 .surat-detail-dokumen-icon{flex-shrink:0;width:38px;height:38px;border-radius:8px;background:#d64545;color:#fff;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;letter-spacing:.02em}
 .surat-detail-dokumen-info{flex:1;min-width:0}

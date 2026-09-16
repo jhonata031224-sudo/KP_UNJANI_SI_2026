@@ -464,7 +464,7 @@ class DashboardController
             // di bawah (niru pola Surat Keluar: begitu dikonfirmasi, otomatis
             // pindah ke Arsip Surat, bukan nyangkut selamanya di Surat Masuk).
             $isDanpusKode = $kode === 'DANPUS';
-            $suratMasukUtama = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
+            $suratMasukUtama = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
                 ->where('tujuan_satuan_id', $satuan->id)
                 ->where('status', LaporanSurat::STATUS_MENUNGGU)
                 ->where('is_selesai', false)
@@ -476,7 +476,7 @@ class DashboardController
                 ->latest()
                 ->get();
 
-            $suratTembusanMasuk = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
+            $suratTembusanMasuk = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
                 ->where('is_selesai', false)
                 ->whereHas('tembusans', function ($tq) use ($satuan) {
                     $tq->where('satuan_id', $satuan->id)
@@ -489,13 +489,13 @@ class DashboardController
             $suratMasuk = $suratMasukUtama->concat($suratTembusanMasuk)->unique('id')->values();
 
             // ===== Menu Surat Danpus/Wadan =====
-            $suratTerkirim = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
+            $suratTerkirim = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
                 ->where('satuan_id', $satuan->id)
                 ->where('is_selesai', false)
                 ->latest()
                 ->get();
 
-            $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
+            $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
                 ->where(function ($q) use ($satuan) {
                     $q->where(function ($sub) use ($satuan) {
                         $sub->where('satuan_id', $satuan->id)
@@ -595,14 +595,14 @@ class DashboardController
             || in_array($kode, Satuan::KODE_UNSUR_PELAYANAN, true)
             || in_array($kode, Satuan::KODE_UNSUR_PEMBANTU_PIMPINAN, true);
         $suratTerkirim = $bisaKirimSurat
-            ? LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
+            ? LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
                 ->where('satuan_id', $satuan->id)
                 ->where('is_selesai', false)
                 ->latest()
                 ->get()
             : collect();
 
-        $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
+        $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
             ->where(function ($q) use ($satuan) {
                 $q->where(function ($sub) use ($satuan) {
                     $sub->where('satuan_id', $satuan->id)
@@ -635,14 +635,14 @@ class DashboardController
             ? Satuan::where('id', '!=', $satuan->id)->where('kode', '!=', 'ADMIN')->get()->sortBy($urutkanSatuan)->values()
             : collect();
 
-        $suratMasukUtama = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
+        $suratMasukUtama = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
             ->where('tujuan_satuan_id', $satuan->id)
             ->where('status', \App\Models\LaporanSurat::STATUS_MENUNGGU)
             ->where('is_selesai', false)
             ->latest()
             ->get();
 
-        $suratTembusanMasuk = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
+        $suratTembusanMasuk = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
             ->where('is_selesai', false)
             ->whereHas('tembusans', function ($tq) use ($satuan) {
                 $tq->where('satuan_id', $satuan->id)

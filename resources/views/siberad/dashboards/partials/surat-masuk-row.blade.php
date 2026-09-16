@@ -78,18 +78,35 @@
     $sembunyikanIsiRahasia = $s->isRahasia() && (int) ($satuan->id ?? 0) !== (int) $s->satuan_id;
     $aksiBerisiIsiSurat    = [\App\Models\LaporanSuratRiwayat::AKSI_BUAT_SURAT, \App\Models\LaporanSuratRiwayat::AKSI_SURAT_KELUAR];
     $riwayats     = $s->riwayats;
-    $riwayatJson  = $riwayats->map(fn ($r) => [
-        'aksi'            => $r->labelAksi(),
-        'pengirim'        => $r->pengirimSatuan->nama ?? '-',
-        'penerima'        => $r->penerimaSatuan->nama ?? null,
-        'catatan'         => ($sembunyikanIsiRahasia && in_array($r->aksi, $aksiBerisiIsiSurat, true)) ? '' : $r->catatan,
-        'disposisi'       => $r->disposisi,
-        'tindakan'        => $r->tindakan,
-        'lampiran_url'    => $r->lampiran_path ? asset('storage/' . $r->lampiran_path) : null,
-        'lampiran_nama'   => $r->lampiran_nama_asli,
-        'tanggal'         => $r->created_at->translatedFormat('d M Y H:i'),
-        'siklus'          => $r->siklus,
-    ])->toJson();
+
+    // Kelompokkan tembusan per riwayat_id agar bisa ditempel ke step TERUSKAN
+    $tembusanPerRiwayat = $s->tembusans->groupBy('laporan_surat_riwayat_id');
+
+    $riwayatJson  = $riwayats->map(function ($r) use ($sembunyikanIsiRahasia, $aksiBerisiIsiSurat, $tembusanPerRiwayat) {
+        // Cabang paralel: satuan yang ikut menerima di waktu yang sama (view_only / tembusan)
+        // tapi bukan penerima utama -- ditampilkan sebagai "parallel" di timeline
+        $tembusanStep = $tembusanPerRiwayat->get($r->id, collect());
+        $paralel = $tembusanStep->map(fn ($t) => [
+            'satuan'      => $t->satuan->nama ?? '-',
+            'satuan_kode' => $t->satuan->kode ?? '-',
+            'jenis'       => $t->jenis, // view_only | tembusan | hasil_rc
+            'label_jenis' => $t->labelJenis(),
+        ])->values()->toArray();
+
+        return [
+            'aksi'            => $r->labelAksi(),
+            'pengirim'        => $r->pengirimSatuan->nama ?? '-',
+            'penerima'        => $r->penerimaSatuan->nama ?? null,
+            'catatan'         => ($sembunyikanIsiRahasia && in_array($r->aksi, $aksiBerisiIsiSurat, true)) ? '' : $r->catatan,
+            'disposisi'       => $r->disposisi,
+            'tindakan'        => $r->tindakan,
+            'lampiran_url'    => $r->lampiran_path ? asset('storage/' . $r->lampiran_path) : null,
+            'lampiran_nama'   => $r->lampiran_nama_asli,
+            'tanggal'         => $r->created_at->translatedFormat('d M Y H:i'),
+            'siklus'          => $r->siklus,
+            'paralel'         => $paralel, // penerima paralel/bersamaan (Urdal view-only, dst)
+        ];
+    })->toJson();
 
     // Disposisi & Tindakan dari surat (untuk tampil di detail)
     $disposisiAktif = $s->disposisi_terakhir ?? $s->disposisi;
