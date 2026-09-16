@@ -1,6 +1,46 @@
-<div class="report-modal" id="suratDetailModal"><div class="report-modal-card"><div class="report-modal-head"><div style="min-width:0"><h3 id="suratDetailJudul" style="margin:0 0 4px">Detail Surat</h3><p id="suratDetailDari" style="margin:0;font-size:12px;color:var(--text-muted)">-</p></div></div><div class="surat-detail-body"><div class="surat-detail-col surat-detail-col-left"><div class="surat-detail-item"><div><div class="surat-detail-item-label">Tujuan</div><div class="surat-detail-item-value" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span id="suratDetailTujuan">-</span><span class="satuan-pill" id="suratDetailTujuanKode" style="display:none"></span></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Perihal</div><div class="surat-detail-item-value" id="suratDetailPerihal">-</div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Kategori</div><div class="surat-detail-item-value" id="suratDetailKategori">-</div></div></div><div class="surat-detail-item-row"><div class="surat-detail-item"><div><div class="surat-detail-item-label">Prioritas</div><div class="surat-detail-item-value"><span class="priority-tag" id="suratDetailPrioritas">-</span></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Status</div><div class="surat-detail-item-value"><span class="status-badge" id="suratDetailStatusText">-</span></div></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Ringkasan</div><div class="surat-detail-item-value" id="suratDetailRingkasan">-</div></div></div>
-{{-- Panel Disposisi & Tindakan --}}
-<div class="surat-detail-item" id="suratDetailDisposisiPanel" style="display:none"><div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px"><div class="surat-detail-item-label">Disposisi</div><div class="surat-detail-item-value" id="suratDetailDisposisiVal" style="font-weight:600;color:var(--primary)">-</div><div class="surat-detail-item-label" style="margin-top:8px">Tindakan</div><div id="suratDetailTindakanWrap" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div></div></div>
+<div class="report-modal" id="suratDetailModal"><div class="report-modal-card"><div class="report-modal-head"><div style="min-width:0"><h3 id="suratDetailJudul" style="margin:0 0 4px">Detail Surat</h3><p id="suratDetailDari" style="margin:0;font-size:12px;color:var(--text-muted)">-</p></div><button type="button" class="btn-icon-close" id="suratDetailClose" aria-label="Tutup" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="surat-detail-body"><div class="surat-detail-col surat-detail-col-left"><div class="surat-detail-item" id="suratDetailTujuanItem"><div><div class="surat-detail-item-label">Tujuan</div><div class="surat-detail-item-value" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span id="suratDetailTujuan">-</span><span class="satuan-pill" id="suratDetailTujuanKode" style="display:none"></span></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Perihal</div><div class="surat-detail-item-value" id="suratDetailPerihal">-</div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Kategori</div><div class="surat-detail-item-value" id="suratDetailKategori">-</div></div></div><div class="surat-detail-item-row"><div class="surat-detail-item"><div><div class="surat-detail-item-label">Prioritas</div><div class="surat-detail-item-value"><span class="priority-tag" id="suratDetailPrioritas">-</span></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Status</div><div class="surat-detail-item-value"><span class="status-badge" id="suratDetailStatusText">-</span></div></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Ringkasan</div><div class="surat-detail-item-value" id="suratDetailRingkasan">-</div></div></div>
+{{-- Disposisi: kalimat siapa mendisposisi ke siapa --}}
+<div class="surat-detail-item" id="suratDetailDisposisiPanel" style="display:none"><div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px"><div class="surat-detail-item-label">Disposisi</div><div class="surat-detail-item-value" id="suratDetailDisposisiVal" style="font-weight:600;color:var(--primary)">-</div></div></div>
+{{-- Tindakan: kolom terpisah, instruksi konkret dari pemberi disposisi --}}
+<div class="surat-detail-item" id="suratDetailTindakanPanel" style="display:none"><div><div class="surat-detail-item-label">Tindakan</div><div id="suratDetailTindakanWrap" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div></div></div>
+@php
+    $isWadanDashboard = strtoupper($satuan->kode ?? '') === 'WADAN';
+@endphp
+@if($isWadanDashboard)
+    @php
+        // Disposisi versi Wadan langsung berupa daftar satuan (bukan daftar
+        // label jabatan) -- kecuali Danpus (tidak boleh didisposisi turun ke
+        // Danpus) dan Wadan sendiri.
+        $wadanDisposisiSatuan = \App\Models\Satuan::orderBy('nama')->get()->filter(function ($st) {
+            return ! in_array(strtoupper($st->kode), ['ADMIN', 'DANPUS', 'WADAN'], true);
+        });
+        $wadanTindakanOptions = \App\Models\LaporanSurat::TINDAKAN_WADAN_OPTIONS;
+    @endphp
+    {{-- Form inline Disposisi & Tindakan (mode simpel Wadan, langsung teruskan) --}}
+    <div class="surat-detail-item" id="suratDetailWadanForm" style="display:none"><div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+        <div class="form-group" style="margin-bottom:14px">
+            <label class="form-label" for="suratDetailWadanDisposisi">Disposisi <span style="color:var(--red)">*</span></label>
+            <select id="suratDetailWadanDisposisi" class="form-select">
+                <option value="">— Pilih Satuan Tujuan —</option>
+                @foreach($wadanDisposisiSatuan as $st)
+                    <option value="{{ $st->id }}" data-label="{{ e($st->nama) }}">{{ $st->nama }} ({{ $st->kode }})</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Tindakan <span style="color:var(--red)">*</span> <span style="font-size:11px;color:var(--text-muted);font-weight:400">(Pilih minimal satu)</span></label>
+            <div id="suratDetailWadanTindakanGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-top:6px;max-height:200px;overflow-y:auto;padding:2px 0;border:1px solid transparent;border-radius:10px">
+                @foreach($wadanTindakanOptions as $opt)
+                    <label class="surat-tindakan-check-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:4px 6px;border-radius:6px;transition:background .15s">
+                        <input type="checkbox" value="{{ $opt }}" class="surat-detail-wadan-tindakan-check" style="width:15px;height:15px;accent-color:var(--primary);cursor:pointer;flex-shrink:0">
+                        <span>{{ $opt }}</span>
+                    </label>
+                @endforeach
+            </div>
+            <span id="suratDetailWadanTindakanError" style="display:none;align-items:center;gap:6px;color:var(--red);font-size:10.5px;margin-top:4px">Tindakan wajib dipilih (minimal satu).</span>
+        </div>
+    </div></div>
+@endif
 </div><div class="surat-detail-col surat-detail-col-right"><div class="surat-detail-panel"><div class="surat-detail-panel-title">Riwayat Alur</div><div class="surat-detail-timeline" id="suratDetailTimeline"></div></div><div class="surat-detail-panel" id="suratDetailDokumenPanel" hidden><div class="surat-detail-panel-title">Dokumen</div><div id="suratDetailDokumenWrap"></div></div></div></div>
 <div class="modal-actions" id="suratDetailActions">
     <button type="button" class="btn" id="suratDetailTutup">Tutup</button>
@@ -23,6 +63,10 @@
     {{-- Disposisi Ulang (Danpus) --}}
     <button type="button" class="btn btn-warning" id="suratDetailDisposisiUlang" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Tindakan / Disposisi Baru
+    </button>
+    {{-- Teruskan Surat (Wadan - mode simpel: konfirmasi + disposisi + tindakan sekaligus) --}}
+    <button type="button" class="btn btn-primary" id="suratDetailTeruskanSimpel" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Teruskan Surat
     </button>
 </div></div></div>
 
@@ -53,6 +97,9 @@ window.openSuratDetail = function(button){
   var tujuanKode = document.getElementById('suratDetailTujuanKode');
   tujuanKode.textContent = button.dataset.tujuanKode || '';
   tujuanKode.style.display = button.dataset.tujuanKode ? '' : 'none';
+  var tujuanItem = document.getElementById('suratDetailTujuanItem');
+  if (tujuanItem) tujuanItem.style.display = (button.dataset.hideTujuan === '1') ? 'none' : '';
+  var wadanSimple = button.dataset.wadanSimple === '1';
   document.getElementById('suratDetailPerihal').textContent = button.dataset.perihal || '-';
   document.getElementById('suratDetailKategori').textContent = button.dataset.kategori || 'Umum';
   var prio = document.getElementById('suratDetailPrioritas');
@@ -67,16 +114,26 @@ window.openSuratDetail = function(button){
   ringkasanEl.textContent = isRingkasanRahasia ? 'Ringkasan bersifat rahasia dan tidak ditampilkan.' : (button.dataset.deskripsi || '-');
   ringkasanEl.classList.toggle('surat-ringkasan-rahasia', isRingkasanRahasia);
 
-  // Disposisi & Tindakan
+  // Disposisi (kalimat) & Tindakan (kolom terpisah)
   var disposisiPanel = document.getElementById('suratDetailDisposisiPanel');
   var disposisiVal   = document.getElementById('suratDetailDisposisiVal');
+  var tindakanPanel  = document.getElementById('suratDetailTindakanPanel');
   var tindakanWrap   = document.getElementById('suratDetailTindakanWrap');
   var disposisi = button.dataset.disposisi || '';
+  var dariKode  = button.dataset.dariKode || '';
   var tindakan  = [];
   try { tindakan = JSON.parse(button.dataset.tindakan || '[]'); } catch(e){}
-  if (disposisi || tindakan.length) {
+
+  if (disposisi) {
     disposisiPanel.style.display = '';
-    disposisiVal.textContent = disposisi || '-';
+    var namaPengirim = dariKode ? toTitleCase(dariKode) : 'Pengirim';
+    disposisiVal.textContent = namaPengirim + ' mendisposisi kepada ' + disposisi.toLowerCase();
+  } else {
+    disposisiPanel.style.display = 'none';
+  }
+
+  if (tindakan.length) {
+    tindakanPanel.style.display = '';
     tindakanWrap.innerHTML = '';
     tindakan.forEach(function(t){
       var tag = document.createElement('span');
@@ -86,7 +143,7 @@ window.openSuratDetail = function(button){
       tindakanWrap.appendChild(tag);
     });
   } else {
-    disposisiPanel.style.display = 'none';
+    tindakanPanel.style.display = 'none';
   }
 
   // ── Timeline Riwayat Dinamis ──────────────────────────────────────────────
@@ -201,6 +258,12 @@ window.openSuratDetail = function(button){
   var btnKeDanpus            = document.getElementById('suratDetailKeDanpus');
   var btnSelesai             = document.getElementById('suratDetailSelesai');
   var btnDisposisiUlang      = document.getElementById('suratDetailDisposisiUlang');
+  var btnTeruskanSimpel      = document.getElementById('suratDetailTeruskanSimpel');
+  var btnTutup               = document.getElementById('suratDetailTutup');
+  var wadanForm              = document.getElementById('suratDetailWadanForm');
+  var wadanDisposisiSel      = document.getElementById('suratDetailWadanDisposisi');
+  var wadanTindakanGrid      = document.getElementById('suratDetailWadanTindakanGrid');
+  var wadanTindakanError     = document.getElementById('suratDetailWadanTindakanError');
 
   // Reset semua action buttons terlebih dahulu (default: tersembunyi)
   btnKonfirmasi.hidden = true; btnKonfirmasi.onclick = null;
@@ -209,10 +272,69 @@ window.openSuratDetail = function(button){
   btnKeDanpus.hidden = true; btnKeDanpus.onclick = null;
   btnSelesai.hidden = true; btnSelesai.onclick = null;
   btnDisposisiUlang.hidden = true; btnDisposisiUlang.onclick = null;
+  if (btnTeruskanSimpel) { btnTeruskanSimpel.hidden = true; btnTeruskanSimpel.onclick = null; }
+  if (btnTutup) btnTutup.hidden = false;
+  if (wadanForm) wadanForm.style.display = 'none';
+  if (wadanDisposisiSel) wadanDisposisiSel.value = '';
+  if (wadanTindakanGrid) {
+    wadanTindakanGrid.querySelectorAll('.surat-detail-wadan-tindakan-check').forEach(function(c){ c.checked = false; });
+    wadanTindakanGrid.style.borderColor = 'transparent';
+    wadanTindakanGrid.style.boxShadow = 'none';
+  }
+  if (wadanTindakanError) wadanTindakanError.style.display = 'none';
 
   // Tombol aksi HANYA muncul pada SURAT MASUK sesuai peran & kondisi surat.
-  // Pada Surat Keluar dan Arsip, HANYA tombol "Tutup" yang ditampilkan.
-  if (context === 'masuk') {
+  // Pada Surat Keluar dan Arsip, HANYA tombol "Tutup" (X) yang ditampilkan.
+  if (context === 'masuk' && wadanSimple) {
+    // ── Mode simpel Wadan: satu tombol "Teruskan Surat" + form Disposisi
+    //    (dropdown satuan kecuali Danpus) & Tindakan (checkbox) inline.
+    //    Tombol Tutup lama disembunyikan, cukup pakai ikon X di header.
+    if (btnTutup) btnTutup.hidden = true;
+    if (wadanForm) wadanForm.style.display = '';
+
+    if (btnTeruskanSimpel) {
+      btnTeruskanSimpel.hidden = false;
+      btnTeruskanSimpel.onclick = function(){
+        var tujuanId = wadanDisposisiSel ? wadanDisposisiSel.value : '';
+        var tindakanChecked = wadanTindakanGrid
+          ? Array.prototype.map.call(wadanTindakanGrid.querySelectorAll('.surat-detail-wadan-tindakan-check:checked'), function(c){ return c.value; })
+          : [];
+        var valid = true;
+
+        if (!tujuanId) {
+          if (wadanDisposisiSel) { wadanDisposisiSel.style.borderColor = 'var(--red)'; }
+          valid = false;
+        } else if (wadanDisposisiSel) {
+          wadanDisposisiSel.style.borderColor = '';
+        }
+
+        if (tindakanChecked.length === 0) {
+          if (wadanTindakanGrid) {
+            wadanTindakanGrid.style.borderColor = 'var(--red)';
+            wadanTindakanGrid.style.boxShadow = '0 0 0 3px color-mix(in srgb,var(--red) 15%,transparent)';
+          }
+          if (wadanTindakanError) wadanTindakanError.style.display = 'flex';
+          valid = false;
+        }
+
+        if (!valid) return;
+
+        var selectedOpt = wadanDisposisiSel.options[wadanDisposisiSel.selectedIndex];
+        var disposisiLabel = selectedOpt ? (selectedOpt.dataset.label || selectedOpt.textContent) : '';
+
+        var f = document.createElement('form');
+        f.method = 'POST'; f.action = button.dataset.teruskanAction;
+        var html = '<input name="_token" value="' + escHtml(button.dataset.csrf || '') + '">';
+        html += '<input name="tujuan_satuan_id" value="' + escHtml(tujuanId) + '">';
+        html += '<input name="disposisi" value="' + escHtml(disposisiLabel) + '">';
+        tindakanChecked.forEach(function(t){
+          html += '<input name="tindakan[]" value="' + escHtml(t) + '">';
+        });
+        f.innerHTML = html;
+        document.body.appendChild(f); f.submit();
+      };
+    }
+  } else if (context === 'masuk') {
     var csrf = button.dataset.csrf || '';
 
     // 1. Konfirmasi penerima utama (Surat baru masuk, belum di-ACC)
@@ -309,6 +431,11 @@ window.openSuratDetail = function(button){
 function escHtml(str){
   if (!str) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Helper: "DANPUS" / "DANSATLAK KALSI" -> "Danpus" / "Dansatlak Kalsi"
+function toTitleCase(str){
+  return String(str).toLowerCase().replace(/(^|\s)\S/g, function(c){ return c.toUpperCase(); });
 }
 
 // Selagi modal Detail Surat lagi kebuka, poll realtime manggil ini tiap habis sync

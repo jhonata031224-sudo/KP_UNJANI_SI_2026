@@ -420,7 +420,11 @@ class LaporanSuratController extends Controller
             403,
             'Surat ini bukan sedang berada di satuan Anda.'
         );
-        abort_unless($laporanSurat->isDikonfirmasi(), 422, 'Konfirmasi surat terlebih dahulu sebelum meneruskannya.');
+        // Catatan: dulu wajib klik "Konfirmasi / ACC & Terima" dulu baru bisa
+        // meneruskan. Sekarang Wadan bisa langsung "Teruskan Surat" dari
+        // modal Surat Masuk tanpa langkah konfirmasi terpisah -- kalau surat
+        // belum dikonfirmasi, otomatis dikonfirmasi dulu (dicatat ke riwayat)
+        // sesaat sebelum diteruskan, supaya jejak riwayatnya tetap lengkap.
         abort_if($laporanSurat->isSelesai(), 422, 'Surat ini sudah selesai.');
 
         $validated = $request->validate([
@@ -438,6 +442,25 @@ class LaporanSuratController extends Controller
         ]);
 
         $tujuan = Satuan::findOrFail($validated['tujuan_satuan_id']);
+
+        // Auto-konfirmasi implisit kalau surat ini belum sempat dikonfirmasi
+        // manual (mis. Wadan langsung klik "Teruskan Surat" dari surat baru).
+        if (! $laporanSurat->isDikonfirmasi()) {
+            $laporanSurat->update([
+                'status'            => LaporanSurat::STATUS_DIKONFIRMASI,
+                'dikonfirmasi_at'   => now(),
+                'dikonfirmasi_oleh' => $user->id,
+            ]);
+
+            LaporanSuratRiwayat::create([
+                'laporan_surat_id'   => $laporanSurat->id,
+                'siklus'             => $laporanSurat->siklus,
+                'aksi'               => LaporanSuratRiwayat::AKSI_KONFIRMASI,
+                'pengirim_satuan_id' => $satuan->id,
+                'user_id'            => $user->id,
+                'catatan'            => "Surat dikonfirmasi / ACC & Diterima oleh {$satuan->nama}.",
+            ]);
+        }
 
         $lampiranPath     = $laporanSurat->lampiran_path;
         $lampiranNamaAsli = $laporanSurat->lampiran_nama_asli;

@@ -4,6 +4,15 @@
     $kodeSatuan    = strtoupper((string) $satuan->kode);
     $isWadan       = $kodeSatuan === 'WADAN';
     $isDanpus      = $kodeSatuan === 'DANPUS';
+    $kodePengirim  = strtoupper((string) ($s->satuan->kode ?? ''));
+
+    // Kolom "Tujuan" di modal detail cuma nampilin nama satuan sendiri
+    // (redundan), jadi khusus buat Wadan pas nerima surat dari Danpus,
+    // kolom itu disembunyikan aja. Skenario yang sama juga dipakai buat
+    // nyalain mode modal simpel (cuma tombol "Teruskan Surat" + form
+    // disposisi/tindakan inline, tanpa langkah konfirmasi terpisah).
+    $hideTujuan = $isWadan && $isTujuanUtama && $kodePengirim === 'DANPUS';
+    $wadanModeSimpel = $hideTujuan;
 
     // Tembusan row jika satuan ini bukan penerima utama
     $tembusanRow = null;
@@ -108,6 +117,9 @@
         data-deskripsi="{{ e($s->ringkasanUntuk($satuan->id ?? null)) }}"
         data-rahasia="{{ $s->isRahasia() ? '1' : '0' }}"
         data-dari="{{ e($s->satuan->nama ?? '-') }}"
+        data-dari-kode="{{ e($kodePengirim) }}"
+        data-hide-tujuan="{{ $hideTujuan ? '1' : '0' }}"
+        data-wadan-simple="{{ $wadanModeSimpel ? '1' : '0' }}"
         data-dibuat-oleh="{{ e($s->satuan->nama ?? '-') }}"
         data-dibuat-tanggal="{{ e($s->created_at->translatedFormat('d M Y H:i')) }}"
         data-dikonfirmasi-oleh="{{ e($s->dikonfirmasiOleh->name ?? '') }}"
@@ -135,7 +147,7 @@
         @if($canConfirmTembusan)
         data-confirm-tembusan-action="{{ route('laporan-surat.konfirmasi-tembusan', $s) }}"
         @endif
-        @if($canTeruskan || $canDisposisiUlang)
+        @if($canTeruskan || $canDisposisiUlang || $wadanModeSimpel)
         data-teruskan-action="{{ route('laporan-surat.teruskan', $s) }}"
         data-disposisi-ulang-action="{{ route('laporan-surat.disposisi-ulang', $s) }}"
         @endif
