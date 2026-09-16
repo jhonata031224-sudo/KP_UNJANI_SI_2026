@@ -1381,6 +1381,7 @@
             <h2>{{ $satuan->nama ?? $user->name }}</h2>
             <p>{{ now()->translatedFormat('l, d F Y') }}</p>
           </div>
+          @include('siberad.dashboards.partials.dash-hero-deco', ['icon' => 'gear'])
         </div>
 
         <div id="adminKpisWrap">@include('siberad.dashboards.partials.admin-kpi-cards', ['stats' => $stats, 'semuaPengguna' => $semuaPengguna, 'semuaSatuan' => $semuaSatuan, 'laporanRekapMentah' => $laporanRekapMentah, 'suratSemuaAdmin' => $suratSemuaAdmin, 'permintaanResetPassword' => $permintaanResetPassword])</div>
