@@ -225,7 +225,8 @@ window.openSuratDetail = function(button){
   var tindakan  = [];
   try { tindakan = JSON.parse(button.dataset.tindakan || '[]'); } catch(e){}
 
-  if (disposisi && !wadanSimple) {
+  var hideDisposisi = button.dataset.hideDisposisi === '1';
+  if (disposisi && !wadanSimple && !hideDisposisi) {
     disposisiPanel.style.display = '';
     var namaPengirim = dariKode ? toTitleCase(dariKode) : 'Pengirim';
     disposisiVal.textContent = namaPengirim + ' mendisposisi kepada ' + disposisi.toLowerCase();
