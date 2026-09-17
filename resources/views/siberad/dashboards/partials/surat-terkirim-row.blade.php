@@ -20,6 +20,28 @@
     // Terkirim juga -- konsisten dengan Surat Masuk & Arsip.
     $tembusanPerRiwayat = $s->tembusans->groupBy('laporan_surat_riwayat_id');
 
+    // Alur Tujuan: dari sudut pandang pengirim asli, "Tujuan" tidak boleh cuma
+    // satu satuan (tujuan_satuan_id sekarang, yang berpindah tiap diteruskan)
+    // -- itu bikin satuan perantara (mis. Wadan) seolah hilang begitu Wadan
+    // meneruskan ke satuan lain. Bangun rantai penerima berurutan dalam
+    // siklus berjalan (Buat/Surat Keluar -> Teruskan -> Teruskan -> ...)
+    // supaya modal menampilkan "Wadan › Satlak Dukteksi", bukan cuma
+    // "Satlak Dukteksi".
+    $aksiTujuanChain = [
+        \App\Models\LaporanSuratRiwayat::AKSI_BUAT_SURAT,
+        \App\Models\LaporanSuratRiwayat::AKSI_SURAT_KELUAR,
+        \App\Models\LaporanSuratRiwayat::AKSI_TERUSKAN,
+    ];
+    $tujuanChain = $riwayats
+        ->where('siklus', $s->siklus)
+        ->whereIn('aksi', $aksiTujuanChain)
+        ->sortBy('created_at')
+        ->pluck('penerimaSatuan.nama')
+        ->filter()
+        ->values();
+    $tujuanChainDisplay = $tujuanChain->isNotEmpty() ? $tujuanChain->implode(' › ') : ($s->tujuanSatuan->nama ?? '-');
+    $tujuanChainAkhirKode = $tujuanChain->count() > 1 ? null : ($s->tujuanSatuan->kode ?? '');
+
     $riwayatJson = $riwayats->map(function ($r) use ($sembunyikanIsiRahasia, $aksiBerisiIsiSurat, $tembusanPerRiwayat) {
         $tembusanStep = $tembusanPerRiwayat->get($r->id, collect());
         $paralel = $tembusanStep->map(fn ($t) => [
@@ -47,19 +69,19 @@
         ];
     })->toJson();
 @endphp
-<div class="surat-file-card" data-surat-id="{{ $s->id }}" data-created-at="{{ $s->created_at->timestamp }}" data-search="{{ strtolower($s->perihal.' '.($s->tujuanSatuan->nama ?? '').' '.($s->tujuanSatuan->kode ?? '')) }}" data-prioritas="{{ $s->prioritas }}">
+<div class="surat-file-card" data-surat-id="{{ $s->id }}" data-created-at="{{ $s->created_at->timestamp }}" data-search="{{ strtolower($s->perihal.' '.$tujuanChainDisplay.' '.($s->tujuanSatuan->kode ?? '')) }}" data-prioritas="{{ $s->prioritas }}">
     <div class="surat-file-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
     <span class="status-badge {{ $badgeCls }} surat-file-card-badge">{{ $badgeLabel }}</span>
     <div class="surat-file-card-title">{{ $s->perihal }}</div>
-    <div><div class="surat-file-card-dari-label">Kepada</div><div class="surat-file-card-dari-value"><span>{{ $s->tujuanSatuan->nama ?? '-' }}</span><span class="satuan-pill">{{ $s->tujuanSatuan->kode ?? $s->tujuanSatuan->nama ?? '-' }}</span></div></div>
+    <div><div class="surat-file-card-dari-label">Kepada</div><div class="surat-file-card-dari-value"><span>{{ $tujuanChainDisplay }}</span>@if($tujuanChainAkhirKode)<span class="satuan-pill">{{ $tujuanChainAkhirKode }}</span>@endif</div></div>
     <div class="surat-file-card-divider"></div>
     <div class="surat-file-card-meta"><span class="surat-file-card-meta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span><div><div class="surat-file-card-meta-label">Tanggal Dibuat</div><div class="surat-file-card-meta-value">{{ $s->created_at->translatedFormat('d M Y H:i') }}</div></div></div>
     <div class="surat-file-card-divider"></div>
     <button type="button" class="surat-file-card-btn" onclick="openSuratDetail(this)"
         data-context="keluar"
         data-perihal="{{ e($s->perihal) }}"
-        data-tujuan="{{ e($s->tujuanSatuan->nama ?? '-') }}"
-        data-tujuan-kode="{{ e($s->tujuanSatuan->kode ?? '') }}"
+        data-tujuan="{{ e($tujuanChainDisplay) }}"
+        data-tujuan-kode="{{ e($tujuanChainAkhirKode ?? '') }}"
         data-kategori="{{ e($s->kategori ?: 'Umum') }}"
         data-prioritas="{{ e($s->prioritas) }}"
         data-status="{{ $badgeLabel }}"
