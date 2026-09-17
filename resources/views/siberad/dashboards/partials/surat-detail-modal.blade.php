@@ -197,16 +197,18 @@ window.openSuratDetail = function(button){
   var tujuanValueWrap = document.getElementById('suratDetailTujuanValue');
   var tujuanHops = [];
   try { tujuanHops = JSON.parse(button.dataset.tujuanHops || '[]'); } catch(e){}
-  var arrowSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
 
   if (tujuanHops.length > 1) {
-    // Alur diteruskan lebih dari 1 langkah -- tampilkan sebagai chip alur
-    // workflow (mis. Wadan → Satlak Dukteksi) supaya satuan perantara
-    // tetap kelihatan jelas, bukan teks digabung jadi satu baris.
+    // Alur diteruskan lebih dari 1 langkah -- tampilkan sebagai mini-timeline
+    // (titik + garis penghubung, senada gaya "Riwayat Alur") supaya satuan
+    // perantara (mis. Wadan) tetap kelihatan jelas per baris, bukan teks
+    // digabung jadi satu paragraf yang nyatu.
     tujuanValueWrap.className = 'surat-detail-item-value surat-tujuan-flow';
+    tujuanValueWrap.style.cssText = '';
     tujuanValueWrap.innerHTML = tujuanHops.map(function(hop, idx){
-      var stepHtml = '<span class="surat-tujuan-flow-step' + (idx === tujuanHops.length - 1 ? ' is-final' : '') + '">' + escHtml(hop.nama || '-') + '</span>';
-      return (idx > 0 ? '<span class="surat-tujuan-flow-arrow" aria-hidden="true">' + arrowSvg + '</span>' : '') + stepHtml;
+      var isFinal = idx === tujuanHops.length - 1;
+      var row = '<div class="surat-tujuan-flow-row"><span class="surat-tujuan-flow-dot' + (isFinal ? ' is-final' : '') + '"></span><span class="surat-tujuan-flow-step' + (isFinal ? ' is-final' : '') + '">' + escHtml(hop.nama || '-') + '</span></div>';
+      return row + (!isFinal ? '<span class="surat-tujuan-flow-connector"></span>' : '');
     }).join('');
   } else {
     tujuanValueWrap.className = 'surat-detail-item-value';
