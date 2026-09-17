@@ -31,6 +31,18 @@
 .surat-file-card-title{font-family:var(--display);font-size:17px;font-weight:700;line-height:1.35;color:var(--text);margin:0 0 14px}
 .surat-file-card-dari-label{font-size:12px;color:var(--text-muted)}
 .surat-file-card-dari-value{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:13.5px;font-weight:700;color:var(--text);margin-top:5px}
+/* Alur Tujuan (workflow) -- dipakai saat surat sudah diteruskan berkali-kali
+   (mis. Danpus > Wadan > Satlak) supaya tiap hop tampil sebagai chip
+   terpisah dihubungkan panah, bukan teks nyambung jadi satu baris. Dipakai
+   baik di kartu grid (versi -sm, kompak) maupun di modal detail (versi
+   biasa, lebih lega). */
+.surat-tujuan-flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;row-gap:8px}
+.surat-tujuan-flow-step{display:inline-flex;align-items:center;padding:5px 11px;border-radius:999px;background:var(--panel-soft,rgba(255,255,255,.05));border:1px solid var(--border-soft);font-size:12.5px;font-weight:700;color:var(--text-muted);line-height:1.3}
+.surat-tujuan-flow-step.is-final{color:var(--gold-bright);background:var(--gold-dim);border-color:var(--gold-bright)}
+.surat-tujuan-flow-arrow{flex-shrink:0;display:inline-flex;align-items:center;color:var(--text-muted);opacity:.6}
+.surat-tujuan-flow-arrow svg{width:13px;height:13px}
+.surat-tujuan-flow-sm .surat-tujuan-flow-step{padding:3px 9px;font-size:12px}
+.surat-tujuan-flow-sm .surat-tujuan-flow-arrow svg{width:11px;height:11px}
 .surat-file-card-divider{border-top:1px solid var(--border-soft);margin:16px 0}
 .surat-file-card-meta{display:flex;align-items:center;gap:12px}
 .surat-file-card-meta-icon{flex-shrink:0;width:36px;height:36px;border-radius:10px;background:var(--gold-dim);color:var(--gold-bright);display:flex;align-items:center;justify-content:center}

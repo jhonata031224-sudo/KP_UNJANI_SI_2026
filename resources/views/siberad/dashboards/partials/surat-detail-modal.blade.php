@@ -1,4 +1,4 @@
-<div class="report-modal" id="suratDetailModal"><div class="report-modal-card"><div class="report-modal-head"><div style="min-width:0"><h3 id="suratDetailJudul" style="margin:0 0 4px">Detail Surat</h3><p id="suratDetailDari" style="margin:0;font-size:12px;color:var(--text-muted)">-</p></div><button type="button" class="btn-icon-close" id="suratDetailClose" aria-label="Tutup" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="surat-detail-body"><div class="surat-detail-col surat-detail-col-left"><div class="surat-detail-item" id="suratDetailTujuanItem"><div><div class="surat-detail-item-label">Tujuan</div><div class="surat-detail-item-value" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span id="suratDetailTujuan">-</span><span class="satuan-pill" id="suratDetailTujuanKode" style="display:none"></span></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Perihal</div><div class="surat-detail-item-value" id="suratDetailPerihal">-</div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Kategori</div><div class="surat-detail-item-value" id="suratDetailKategori">-</div></div></div><div class="surat-detail-item-row"><div class="surat-detail-item"><div><div class="surat-detail-item-label">Prioritas</div><div class="surat-detail-item-value"><span class="priority-tag" id="suratDetailPrioritas">-</span></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Status</div><div class="surat-detail-item-value"><span class="status-badge" id="suratDetailStatusText">-</span></div></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Ringkasan</div><div class="surat-detail-item-value" id="suratDetailRingkasan">-</div></div></div>
+<div class="report-modal" id="suratDetailModal"><div class="report-modal-card"><div class="report-modal-head"><div style="min-width:0"><h3 id="suratDetailJudul" style="margin:0 0 4px">Detail Surat</h3><p id="suratDetailDari" style="margin:0;font-size:12px;color:var(--text-muted)">-</p></div><button type="button" class="btn-icon-close" id="suratDetailClose" aria-label="Tutup" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="surat-detail-body"><div class="surat-detail-col surat-detail-col-left"><div class="surat-detail-item" id="suratDetailTujuanItem"><div><div class="surat-detail-item-label">Tujuan</div><div class="surat-detail-item-value" id="suratDetailTujuanValue" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span id="suratDetailTujuan">-</span><span class="satuan-pill" id="suratDetailTujuanKode" style="display:none"></span></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Perihal</div><div class="surat-detail-item-value" id="suratDetailPerihal">-</div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Kategori</div><div class="surat-detail-item-value" id="suratDetailKategori">-</div></div></div><div class="surat-detail-item-row"><div class="surat-detail-item"><div><div class="surat-detail-item-label">Prioritas</div><div class="surat-detail-item-value"><span class="priority-tag" id="suratDetailPrioritas">-</span></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Status</div><div class="surat-detail-item-value"><span class="status-badge" id="suratDetailStatusText">-</span></div></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Ringkasan</div><div class="surat-detail-item-value" id="suratDetailRingkasan">-</div></div></div>
 {{-- Disposisi: kalimat siapa mendisposisi ke siapa --}}
 <div class="surat-detail-item" id="suratDetailDisposisiPanel" style="display:none"><div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px"><div class="surat-detail-item-label">Disposisi</div><div class="surat-detail-item-value" id="suratDetailDisposisiVal" style="font-weight:600;color:var(--primary)">-</div></div></div>
 {{-- Tindakan: kolom terpisah, instruksi konkret dari pemberi disposisi --}}
@@ -194,10 +194,32 @@ window.openSuratDetail = function(button){
     if (subDariEl) subDariEl.textContent = 'Dari ' + (button.dataset.dari || '-');
   }
 
-  document.getElementById('suratDetailTujuan').textContent = button.dataset.tujuan || '-';
-  var tujuanKode = document.getElementById('suratDetailTujuanKode');
-  tujuanKode.textContent = button.dataset.tujuanKode || '';
-  tujuanKode.style.display = button.dataset.tujuanKode ? '' : 'none';
+  var tujuanValueWrap = document.getElementById('suratDetailTujuanValue');
+  var tujuanHops = [];
+  try { tujuanHops = JSON.parse(button.dataset.tujuanHops || '[]'); } catch(e){}
+  var arrowSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+
+  if (tujuanHops.length > 1) {
+    // Alur diteruskan lebih dari 1 langkah -- tampilkan sebagai chip alur
+    // workflow (mis. Wadan → Satlak Dukteksi) supaya satuan perantara
+    // tetap kelihatan jelas, bukan teks digabung jadi satu baris.
+    tujuanValueWrap.className = 'surat-detail-item-value surat-tujuan-flow';
+    tujuanValueWrap.innerHTML = tujuanHops.map(function(hop, idx){
+      var stepHtml = '<span class="surat-tujuan-flow-step' + (idx === tujuanHops.length - 1 ? ' is-final' : '') + '">' + escHtml(hop.nama || '-') + '</span>';
+      return (idx > 0 ? '<span class="surat-tujuan-flow-arrow" aria-hidden="true">' + arrowSvg + '</span>' : '') + stepHtml;
+    }).join('');
+  } else {
+    tujuanValueWrap.className = 'surat-detail-item-value';
+    tujuanValueWrap.innerHTML = '<span id="suratDetailTujuan">-</span><span class="satuan-pill" id="suratDetailTujuanKode" style="display:none"></span>';
+    tujuanValueWrap.style.display = 'flex';
+    tujuanValueWrap.style.alignItems = 'center';
+    tujuanValueWrap.style.gap = '8px';
+    tujuanValueWrap.style.flexWrap = 'wrap';
+    document.getElementById('suratDetailTujuan').textContent = button.dataset.tujuan || '-';
+    var tujuanKode = document.getElementById('suratDetailTujuanKode');
+    tujuanKode.textContent = button.dataset.tujuanKode || '';
+    tujuanKode.style.display = button.dataset.tujuanKode ? '' : 'none';
+  }
   var tujuanItem = document.getElementById('suratDetailTujuanItem');
   if (tujuanItem) tujuanItem.style.display = (button.dataset.hideTujuan === '1') ? 'none' : '';
   var wadanSimple = button.dataset.wadanSimple === '1';

@@ -25,22 +25,27 @@
     // -- itu bikin satuan perantara (mis. Wadan) seolah hilang begitu Wadan
     // meneruskan ke satuan lain. Bangun rantai penerima berurutan dalam
     // siklus berjalan (Buat/Surat Keluar -> Teruskan -> Teruskan -> ...)
-    // supaya modal menampilkan "Wadan › Satlak Dukteksi", bukan cuma
-    // "Satlak Dukteksi".
+    // supaya modal menampilkan alur "Wadan -> Satlak Dukteksi", bukan cuma
+    // "Satlak Dukteksi". Disimpan sebagai array hop (nama+kode) supaya bisa
+    // dirender sebagai chip alur workflow, bukan cuma teks digabung "›".
     $aksiTujuanChain = [
         \App\Models\LaporanSuratRiwayat::AKSI_BUAT_SURAT,
         \App\Models\LaporanSuratRiwayat::AKSI_SURAT_KELUAR,
         \App\Models\LaporanSuratRiwayat::AKSI_TERUSKAN,
     ];
-    $tujuanChain = $riwayats
+    $tujuanHops = $riwayats
         ->where('siklus', $s->siklus)
         ->whereIn('aksi', $aksiTujuanChain)
         ->sortBy('created_at')
-        ->pluck('penerimaSatuan.nama')
+        ->map(fn ($r) => $r->penerimaSatuan ? ['nama' => $r->penerimaSatuan->nama, 'kode' => $r->penerimaSatuan->kode] : null)
         ->filter()
         ->values();
-    $tujuanChainDisplay = $tujuanChain->isNotEmpty() ? $tujuanChain->implode(' › ') : ($s->tujuanSatuan->nama ?? '-');
-    $tujuanChainAkhirKode = $tujuanChain->count() > 1 ? null : ($s->tujuanSatuan->kode ?? '');
+    if ($tujuanHops->isEmpty() && ($s->tujuanSatuan ?? null)) {
+        $tujuanHops = collect([['nama' => $s->tujuanSatuan->nama, 'kode' => $s->tujuanSatuan->kode]]);
+    }
+    $tujuanChainDisplay  = $tujuanHops->isNotEmpty() ? $tujuanHops->pluck('nama')->implode(' › ') : '-';
+    $tujuanChainAkhirKode = $tujuanHops->count() > 1 ? null : ($tujuanHops->first()['kode'] ?? '');
+    $tujuanHopsJson = $tujuanHops->toJson();
 
     $riwayatJson = $riwayats->map(function ($r) use ($sembunyikanIsiRahasia, $aksiBerisiIsiSurat, $tembusanPerRiwayat) {
         $tembusanStep = $tembusanPerRiwayat->get($r->id, collect());
@@ -73,7 +78,7 @@
     <div class="surat-file-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
     <span class="status-badge {{ $badgeCls }} surat-file-card-badge">{{ $badgeLabel }}</span>
     <div class="surat-file-card-title">{{ $s->perihal }}</div>
-    <div><div class="surat-file-card-dari-label">Kepada</div><div class="surat-file-card-dari-value"><span>{{ $tujuanChainDisplay }}</span>@if($tujuanChainAkhirKode)<span class="satuan-pill">{{ $tujuanChainAkhirKode }}</span>@endif</div></div>
+    <div><div class="surat-file-card-dari-label">Kepada</div><div class="surat-file-card-dari-value surat-tujuan-flow surat-tujuan-flow-sm">@foreach($tujuanHops as $hop)@if(!$loop->first)<span class="surat-tujuan-flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>@endif<span class="surat-tujuan-flow-step{{ $loop->last ? ' is-final' : '' }}">{{ $hop['nama'] }}</span>@endforeach</div></div>
     <div class="surat-file-card-divider"></div>
     <div class="surat-file-card-meta"><span class="surat-file-card-meta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span><div><div class="surat-file-card-meta-label">Tanggal Dibuat</div><div class="surat-file-card-meta-value">{{ $s->created_at->translatedFormat('d M Y H:i') }}</div></div></div>
     <div class="surat-file-card-divider"></div>
@@ -82,6 +87,7 @@
         data-perihal="{{ e($s->perihal) }}"
         data-tujuan="{{ e($tujuanChainDisplay) }}"
         data-tujuan-kode="{{ e($tujuanChainAkhirKode ?? '') }}"
+        data-tujuan-hops="{{ e($tujuanHopsJson) }}"
         data-kategori="{{ e($s->kategori ?: 'Umum') }}"
         data-prioritas="{{ e($s->prioritas) }}"
         data-status="{{ $badgeLabel }}"
