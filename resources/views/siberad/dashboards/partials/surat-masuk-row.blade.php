@@ -4,6 +4,7 @@
     $kodeSatuan    = strtoupper((string) $satuan->kode);
     $isWadan       = $kodeSatuan === 'WADAN';
     $isDanpus      = $kodeSatuan === 'DANPUS';
+    $isUrdal       = $kodeSatuan === 'URDAL';
     $kodePengirim  = strtoupper((string) ($s->satuan->kode ?? ''));
 
     // Kolom "Tujuan" di modal detail cuma nampilin nama satuan sendiri
@@ -67,6 +68,11 @@
     // Danpus: hanya jika surat masuk kembali ke Danpus setelah alur berjalan (riwayat >= 2)
     $canSelesai        = $isDanpus && $isTujuanUtama && $sudahDikonfirmasi && ! $s->isSelesai() && $riwayatCount >= 2;
     $canDisposisiUlang = $canSelesai;
+
+    // Urdal meneruskan ke Wadan: sekali klik setelah Urdal konfirmasi Surat
+    // Keluar dari Satlak (mis. Duktek), sama pola simpelnya dengan Wadan
+    // meneruskan ke Danpus di atas.
+    $canKeWadan = $isUrdal && $isTujuanUtama && $sudahDikonfirmasi && ! $s->isSelesai();
 
     // Badge status kartu
     if ($isTembusan) {
@@ -166,6 +172,7 @@
         data-sudah-dikonfirmasi-wadan="{{ ($isWadan && $sudahDikonfirmasi) ? '1' : '0' }}"
         data-can-teruskan="{{ $canTeruskan ? '1' : '0' }}"
         data-can-ke-danpus="{{ $canKeDanpus ? '1' : '0' }}"
+        data-can-ke-wadan="{{ $canKeWadan ? '1' : '0' }}"
         data-can-selesai="{{ $canSelesai ? '1' : '0' }}"
         data-can-disposisi-ulang="{{ $canDisposisiUlang ? '1' : '0' }}"
         @if($canConfirm)
@@ -184,6 +191,9 @@
         @endif
         @if($canKeDanpus)
         data-ke-danpus-action="{{ route('laporan-surat.ke-danpus', $s) }}"
+        @endif
+        @if($canKeWadan)
+        data-ke-wadan-action="{{ route('laporan-surat.ke-wadan', $s) }}"
         @endif
         @if($canSelesai)
         data-selesai-action="{{ route('laporan-surat.selesai', $s) }}"

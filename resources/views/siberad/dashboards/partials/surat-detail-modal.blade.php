@@ -35,6 +35,10 @@
     <button type="button" class="btn btn-primary" id="suratDetailKeDanpus" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><polyline points="15 18 9 12 15 6"/></svg>Teruskan ke Danpus
     </button>
+    {{-- Teruskan ke Wadan (Urdal setelah cek & konfirmasi Surat Keluar Satlak) --}}
+    <button type="button" class="btn btn-primary" id="suratDetailKeWadan" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><polyline points="15 18 9 12 15 6"/></svg>Teruskan ke Wadan
+    </button>
     {{-- Selesai (Danpus) --}}
     <button type="button" class="btn btn-success" id="suratDetailSelesai" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><path d="M5 13l4 4L19 7"/></svg>Konfirmasi Selesai
@@ -496,6 +500,7 @@ window.openSuratDetail = function(button){
   var btnKonfirmasiWadan     = document.getElementById('suratDetailKonfirmasiWadan');
   var btnTeruskan            = document.getElementById('suratDetailTeruskan');
   var btnKeDanpus            = document.getElementById('suratDetailKeDanpus');
+  var btnKeWadan             = document.getElementById('suratDetailKeWadan');
   var btnSelesai             = document.getElementById('suratDetailSelesai');
   var btnDisposisiUlang      = document.getElementById('suratDetailDisposisiUlang');
   var btnTutup               = document.getElementById('suratDetailTutup');
@@ -510,6 +515,7 @@ window.openSuratDetail = function(button){
   }
   btnTeruskan.hidden = true; btnTeruskan.onclick = null;
   btnKeDanpus.hidden = true; btnKeDanpus.onclick = null;
+  if (btnKeWadan) { btnKeWadan.hidden = true; btnKeWadan.onclick = null; }
   btnSelesai.hidden = true; btnSelesai.onclick = null;
   btnDisposisiUlang.hidden = true; btnDisposisiUlang.onclick = null;
   if (btnTutup) btnTutup.hidden = false;
@@ -590,6 +596,19 @@ window.openSuratDetail = function(button){
         if (confirm('Teruskan surat ini kembali ke Danpus untuk keputusan akhir?')) {
           var f = document.createElement('form');
           f.method = 'POST'; f.action = button.dataset.keDanpusAction;
+          f.innerHTML = '<input name="_token" value="' + csrf + '">';
+          document.body.appendChild(f); f.submit();
+        }
+      };
+    }
+
+    // 4b. Teruskan ke Wadan (Urdal setelah cek & konfirmasi Surat Keluar Satlak)
+    if (btnKeWadan && button.dataset.canKeWadan === '1') {
+      btnKeWadan.hidden = false;
+      btnKeWadan.onclick = function(){
+        if (confirm('Teruskan surat ini ke Wadan?')) {
+          var f = document.createElement('form');
+          f.method = 'POST'; f.action = button.dataset.keWadanAction;
           f.innerHTML = '<input name="_token" value="' + csrf + '">';
           document.body.appendChild(f); f.submit();
         }

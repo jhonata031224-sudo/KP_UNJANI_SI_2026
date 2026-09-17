@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 /**
  * Alur Surat Masuk, Surat Keluar, Disposisi & Tindakan Berkelanjutan:
@@ -210,9 +211,30 @@ class LaporanSuratController extends Controller
             ? ['nullable', 'string', 'max:10000']
             : ['required', 'string', 'max:10000'];
 
+        // Fondasi alur "Surat dari Satlak ke Urdal": khusus 4 Satlak (Kal,
+        // Sisos, Dak, Duktek) tujuan utama Surat Keluar SELALU dikunci ke
+        // Urdal -- bukan pilihan bebas seperti satuan lain. Tembusan (CC)
+        // tetap boleh bebas pilih satuan lain, KECUALI Danpus & Wadan
+        // (keduanya cuma boleh menerima surat lewat alur disposisi resmi,
+        // bukan tembusan langsung dari Satlak). Lihat juga penguncian yang
+        // sama di sisi form -- resources/views/.../laporan-role.blade.php.
+        $isSatlak       = in_array($kodeAsal, Satuan::KODE_SATLAK, true);
+        $urdalSatuan    = $isSatlak ? Satuan::where('kode', 'URDAL')->first() : null;
+        abort_if($isSatlak && ! $urdalSatuan, 500, 'Satuan Urdal belum terdaftar di sistem.');
+
+        $tujuanRules = ($isSatlak && $urdalSatuan)
+            ? ['required', 'integer', Rule::in([$urdalSatuan->id])]
+            : ['required', 'integer', 'exists:satuans,id'];
+
+        $tembusanItemRules = ['integer', 'exists:satuans,id'];
+        if ($isSatlak) {
+            $idDanpusWadan = Satuan::whereIn('kode', ['DANPUS', 'WADAN'])->pluck('id')->all();
+            $tembusanItemRules[] = Rule::notIn($idDanpusWadan);
+        }
+
         $validated = $request->validate([
             'induk_surat_id'   => ['nullable', 'integer', 'exists:laporan_surats,id'],
-            'tujuan_satuan_id' => ['required', 'integer', 'exists:satuans,id'],
+            'tujuan_satuan_id' => $tujuanRules,
             'perihal'          => ['required', 'string', 'max:255'],
             'kategori'         => ['required', 'string', 'max:255'],
             'deskripsi'        => $deskripsiRules,
@@ -221,13 +243,15 @@ class LaporanSuratController extends Controller
             'tindakan'         => $tindakanRules,
             'tindakan.*'       => ['string'],
             'tembusan'         => ['nullable', 'array'],
-            'tembusan.*'       => ['integer', 'exists:satuans,id'],
+            'tembusan.*'       => $tembusanItemRules,
             'lampiran'         => ['required', 'file', 'max:10240'],
         ], [
             'tujuan_satuan_id.required' => 'Tujuan surat wajib dipilih.',
+            'tujuan_satuan_id.in'       => 'Tujuan surat dari Satlak wajib ke Urdal.',
             'disposisi.required'        => 'Disposisi wajib dipilih.',
             'tindakan.required'         => 'Tindakan wajib dipilih.',
             'tindakan.min'              => 'Pilih minimal satu tindakan.',
+            'tembusan.*.not_in'         => 'Tembusan tidak boleh ditujukan ke Danpus atau Wadan.',
             'lampiran.required'         => 'Lampiran wajib diisi untuk mengirim Surat.',
         ]);
 
@@ -598,6 +622,55 @@ class LaporanSuratController extends Controller
         ]);
 
         return back()->with('status', 'Surat berhasil diteruskan kembali ke Danpus untuk keputusan akhir.');
+    }
+
+    /**
+     * Urdal meneruskan surat ke Wadan (mis. setelah cek & konfirmasi Surat
+     * Keluar dari Satlak). Sekali klik, tanpa form disposisi/tindakan --
+     * sama polanya dengan kembalikanKeDanpus() di atas (Wadan -> Danpus).
+     */
+    public function teruskanKeWadan(Request $request, LaporanSurat $laporanSurat): RedirectResponse
+    {
+        $user   = $request->user()->load('satuan');
+        $satuan = $user->satuan;
+        abort_unless($satuan, 403);
+        abort_unless(strtoupper((string) $satuan->kode) === 'URDAL', 403, 'Hanya Urdal yang dapat meneruskan surat ini ke Wadan.');
+        abort_unless(
+            (int) $laporanSurat->tujuan_satuan_id === (int) $satuan->id,
+            403,
+            'Surat ini bukan sedang berada di satuan Anda.'
+        );
+        abort_unless($laporanSurat->isDikonfirmasi(), 422, 'Konfirmasi surat terlebih dahulu sebelum meneruskannya ke Wadan.');
+        abort_if($laporanSurat->isSelesai(), 422, 'Surat ini sudah selesai.');
+
+        $wadanSatuan = Satuan::where('kode', 'WADAN')->firstOrFail();
+
+        $laporanSurat->update([
+            'tujuan_satuan_id'  => $wadanSatuan->id,
+            'status'            => LaporanSurat::STATUS_MENUNGGU,
+            'dikonfirmasi_at'   => null,
+            'dikonfirmasi_oleh' => null,
+        ]);
+
+        LaporanSuratRiwayat::create([
+            'laporan_surat_id'   => $laporanSurat->id,
+            'siklus'             => $laporanSurat->siklus,
+            'aksi'               => LaporanSuratRiwayat::AKSI_TERUSKAN,
+            'pengirim_satuan_id' => $satuan->id,
+            'penerima_satuan_id' => $wadanSatuan->id,
+            'user_id'            => $user->id,
+            'catatan'            => $request->input('catatan', 'Diteruskan oleh Urdal ke Wadan.'),
+        ]);
+
+        foreach (User::where('satuan_id', $wadanSatuan->id)->get() as $p) {
+            $p->notify(new LaporanSuratBaruDiterima($laporanSurat));
+        }
+
+        ActivityLog::catat('laporan-surat.ke-wadan', "Meneruskan surat \"{$laporanSurat->perihal}\" ke Wadan.", $user, [
+            'laporan_surat_id' => $laporanSurat->id,
+        ]);
+
+        return back()->with('status', 'Surat berhasil diteruskan ke Wadan.');
     }
 
     /**

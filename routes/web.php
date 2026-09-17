@@ -164,6 +164,9 @@ Route::post('/laporan-surat/{laporanSurat}/teruskan', [LaporanSuratController::c
 Route::post('/laporan-surat/{laporanSurat}/ke-danpus', [LaporanSuratController::class, 'kembalikanKeDanpus'])
     ->middleware(['auth', 'modul:surat'])
     ->name('laporan-surat.ke-danpus');
+Route::post('/laporan-surat/{laporanSurat}/ke-wadan', [LaporanSuratController::class, 'teruskanKeWadan'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.ke-wadan');
 Route::post('/laporan-surat/{laporanSurat}/selesai', [LaporanSuratController::class, 'selesai'])
     ->middleware(['auth', 'modul:surat'])
     ->name('laporan-surat.selesai');
