@@ -92,6 +92,14 @@
 .surat-detail-timeline-dot.just-confirmed{animation:suratTimelineDotPop .45s cubic-bezier(.34,1.56,.64,1)}
 .surat-detail-timeline-title{font-size:13px;font-weight:700;color:var(--text);line-height:18px}
 .surat-detail-timeline-sub{font-size:11.5px;color:var(--text-muted);margin-top:3px}
+/* Riwayat Alur bisa berisi banyak step (Danpus > Wadan > Urdal > Satuan, dst),
+   jadi dibatasi tingginya & dikasih scrollbar sendiri supaya tidak memaksa
+   modal jadi sangat tinggi / step terpotong di layar kecil. */
+.surat-detail-timeline{max-height:300px;overflow-y:auto;padding-right:8px;margin-right:-8px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.surat-detail-timeline::-webkit-scrollbar{width:6px}
+.surat-detail-timeline::-webkit-scrollbar-track{background:transparent}
+.surat-detail-timeline::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px}
+.surat-detail-timeline::-webkit-scrollbar-thumb:hover{background:var(--gold-bright,var(--gold))}
 
 /* ── Step-by-step "kartu bernomor" (redesain alur riwayat) ──
    Tiap langkah alur (Dibuat -> Konfirmasi Wadan -> Diteruskan -> ...)
@@ -100,21 +108,23 @@
    jenis aksi, judul, "Oleh ..." dan jam/tanggal -- niru gaya referensi
    "RIWAYAT ALUR" (nomor besar terpisah dari kartu, bukan digabung jadi
    badge kecil di pojok ikon). */
-.surat-detail-timeline-item.timeline-card{display:flex;align-items:stretch;gap:14px;padding-left:0;padding-bottom:14px}
+.surat-detail-timeline-item.timeline-card{display:flex;align-items:stretch;gap:10px;padding-left:0;padding-bottom:10px}
 .surat-detail-timeline-item.timeline-card:not(:last-child){padding-bottom:0}
-.timeline-step-col{flex-shrink:0;width:38px;display:flex;flex-direction:column;align-items:center}
-.timeline-step-num{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--success-bright,#3dba7e);color:#fff;font-weight:800;font-size:15px;line-height:1;flex-shrink:0}
-.timeline-step-line{flex:1;width:2px;min-height:18px;background:var(--border-soft);margin:2px 0;transition:background .5s ease}
+.timeline-step-col{flex-shrink:0;width:30px;display:flex;flex-direction:column;align-items:center}
+.timeline-step-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--success-bright,#3dba7e);color:#fff;font-weight:800;font-size:13px;line-height:1;flex-shrink:0}
+.timeline-step-line{flex:1;width:2px;min-height:12px;background:var(--border-soft);margin:2px 0;transition:background .5s ease}
 .timeline-step-line.line-complete{background:var(--success-bright,#3dba7e)}
-.timeline-card-inner{flex:1;min-width:0;display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--border-soft);border-radius:12px;padding:12px 14px;background:var(--panel-alt);margin-bottom:14px}
-.timeline-card-badge{flex-shrink:0;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--success-bright,#3dba7e);color:#fff;font-weight:800;font-size:14px}
-.timeline-card-badge svg{width:16px;height:16px}
+.timeline-card-inner{flex:1;min-width:0;display:flex;gap:8px;align-items:flex-start;border:1.5px solid var(--border-soft);border-radius:10px;padding:8px 10px;background:var(--panel-alt);margin-bottom:10px}
+.timeline-card-badge{flex-shrink:0;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--success-bright,#3dba7e);color:#fff;font-weight:800;font-size:12px}
+.timeline-card-badge svg{width:13px;height:13px}
 .surat-detail-timeline-item.timeline-card.is-pending .timeline-step-num{background:var(--panel);border:2px solid var(--border);color:var(--text-muted)}
 .surat-detail-timeline-item.timeline-card.is-pending .timeline-card-badge{background:var(--panel);border:2px solid var(--border);color:var(--text-muted)}
 .surat-detail-timeline-item.timeline-card.is-pending .timeline-card-inner{border-style:dashed}
 .timeline-card-body{min-width:0;flex:1}
-.timeline-card-meta{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text-muted);margin-top:3px}
-.timeline-card-meta svg{width:11px;height:11px;flex-shrink:0}
+.timeline-card-body .surat-detail-timeline-title{font-size:12px;line-height:16px}
+.timeline-card-body .surat-detail-timeline-sub{font-size:10.5px;margin-top:2px}
+.timeline-card-meta{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--text-muted);margin-top:2px}
+.timeline-card-meta svg{width:10px;height:10px;flex-shrink:0}
 /* Tint kartu per jenis aksi -- konsisten sama warna pill status yang sudah ada,
    dipakai juga buat warna lingkaran nomor di kolom kiri */
 .timeline-card-inner.aksi-buat,.timeline-card-inner.aksi-keluar{background:rgba(52,152,219,.06);border-color:rgba(52,152,219,.25)}
