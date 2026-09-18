@@ -95,32 +95,42 @@
 
 /* ── Step-by-step "kartu bernomor" (redesain alur riwayat) ──
    Tiap langkah alur (Dibuat -> Konfirmasi Wadan -> Diteruskan -> ...)
-   ditampilkan sebagai kartu bulat-nomor + ikon jenis aksi, biar Danpus
-   bisa lihat step demi step ke mana surat/disposisi ini mengalir --
-   bukan cuma titik+garis polos. */
-.surat-detail-timeline-item.timeline-card{padding-left:0;padding-bottom:14px}
-.surat-detail-timeline-item.timeline-card:not(:last-child){padding-bottom:22px}
-.timeline-card-inner{display:flex;gap:12px;border:1.5px solid var(--border-soft);border-radius:12px;padding:12px 14px;background:var(--panel-alt)}
-.timeline-card-badge{flex-shrink:0;position:relative;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--success-bright,#3dba7e);color:#fff;font-weight:800;font-size:14px;z-index:1}
+   ditampilkan sebagai baris: lingkaran nomor besar di kolom kiri
+   (terhubung garis vertikal ke nomor berikutnya) + kartu berisi ikon
+   jenis aksi, judul, "Oleh ..." dan jam/tanggal -- niru gaya referensi
+   "RIWAYAT ALUR" (nomor besar terpisah dari kartu, bukan digabung jadi
+   badge kecil di pojok ikon). */
+.surat-detail-timeline-item.timeline-card{display:flex;align-items:stretch;gap:14px;padding-left:0;padding-bottom:14px}
+.surat-detail-timeline-item.timeline-card:not(:last-child){padding-bottom:0}
+.timeline-step-col{flex-shrink:0;width:38px;display:flex;flex-direction:column;align-items:center}
+.timeline-step-num{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--success-bright,#3dba7e);color:#fff;font-weight:800;font-size:15px;line-height:1;flex-shrink:0}
+.timeline-step-line{flex:1;width:2px;min-height:18px;background:var(--border-soft);margin:2px 0;transition:background .5s ease}
+.timeline-step-line.line-complete{background:var(--success-bright,#3dba7e)}
+.timeline-card-inner{flex:1;min-width:0;display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--border-soft);border-radius:12px;padding:12px 14px;background:var(--panel-alt);margin-bottom:14px}
+.timeline-card-badge{flex-shrink:0;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--success-bright,#3dba7e);color:#fff;font-weight:800;font-size:14px}
 .timeline-card-badge svg{width:16px;height:16px}
-.timeline-card-badge .timeline-card-step-num{position:absolute;top:-6px;left:-6px;width:17px;height:17px;border-radius:50%;background:var(--panel);border:1.5px solid var(--border-soft);color:var(--text);font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1}
+.surat-detail-timeline-item.timeline-card.is-pending .timeline-step-num{background:var(--panel);border:2px solid var(--border);color:var(--text-muted)}
 .surat-detail-timeline-item.timeline-card.is-pending .timeline-card-badge{background:var(--panel);border:2px solid var(--border);color:var(--text-muted)}
 .surat-detail-timeline-item.timeline-card.is-pending .timeline-card-inner{border-style:dashed}
 .timeline-card-body{min-width:0;flex:1}
-/* Tint kartu per jenis aksi -- konsisten sama warna pill status yang sudah ada */
+.timeline-card-meta{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text-muted);margin-top:3px}
+.timeline-card-meta svg{width:11px;height:11px;flex-shrink:0}
+/* Tint kartu per jenis aksi -- konsisten sama warna pill status yang sudah ada,
+   dipakai juga buat warna lingkaran nomor di kolom kiri */
 .timeline-card-inner.aksi-buat,.timeline-card-inner.aksi-keluar{background:rgba(52,152,219,.06);border-color:rgba(52,152,219,.25)}
 .timeline-card-inner.aksi-buat .timeline-card-badge,.timeline-card-inner.aksi-keluar .timeline-card-badge{background:#2476ad}
+.surat-detail-timeline-item.timeline-card:has(.timeline-card-inner.aksi-buat) .timeline-step-num,
+.surat-detail-timeline-item.timeline-card:has(.timeline-card-inner.aksi-keluar) .timeline-step-num{background:#2476ad}
 .timeline-card-inner.aksi-konfirmasi{background:rgba(61,186,126,.07);border-color:rgba(61,186,126,.28)}
 .timeline-card-inner.aksi-konfirmasi .timeline-card-badge{background:#2e9e68}
+.surat-detail-timeline-item.timeline-card:has(.timeline-card-inner.aksi-konfirmasi) .timeline-step-num{background:#2e9e68}
 .timeline-card-inner.aksi-teruskan{background:rgba(99,102,241,.06);border-color:rgba(99,102,241,.25)}
 .timeline-card-inner.aksi-teruskan .timeline-card-badge{background:#6366f1}
+.surat-detail-timeline-item.timeline-card:has(.timeline-card-inner.aksi-teruskan) .timeline-step-num{background:#6366f1}
 .timeline-card-inner.aksi-selesai{background:rgba(61,186,126,.1);border-color:rgba(61,186,126,.35)}
 .timeline-card-inner.aksi-selesai .timeline-card-badge{background:#1f7a4f}
-/* Panah penghubung vertikal antar kartu step (ganti garis polos) */
-.timeline-card-connector{display:flex;justify-content:center;align-items:center;height:20px;margin:-2px 0}
-.timeline-card-connector svg{width:14px;height:14px;color:var(--border);transition:color .4s ease}
-.timeline-card-connector.line-complete svg{color:var(--success-bright,#3dba7e)}
-.timeline-card-badge.just-confirmed{animation:suratTimelineDotPop .45s cubic-bezier(.34,1.56,.64,1)}
+.surat-detail-timeline-item.timeline-card:has(.timeline-card-inner.aksi-selesai) .timeline-step-num{background:#1f7a4f}
+.timeline-card-badge.just-confirmed,.timeline-step-num.just-confirmed{animation:suratTimelineDotPop .45s cubic-bezier(.34,1.56,.64,1)}
 
 /* ── Branch / Parallel Timeline ── */
 .surat-timeline-branch-root{padding-bottom:16px}
