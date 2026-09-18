@@ -1223,9 +1223,11 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 
   // Deadline (tanggal+jam) cuma relevan buat prioritas Kilat -- field-nya
   // disembunyikan buat Biasa/Rahasia. Proxy-nya (suratDeadlineDateProxy/
-  // suratDeadlineTimeProxy) tetap `required` di HTML, tapi browser otomatis
-  // skip validasi required buat elemen yang lagi display:none, jadi aman.
-  // Pilihan yang sudah kepilih ikut di-reset begitu prioritas dipindah
+  // suratDeadlineTimeProxy) `required`-nya di-toggle eksplisit lewat JS
+  // (bukan cuma diandalkan ke display:none container-nya) karena proxy-nya
+  // sendiri cuma opacity:0 (bukan display:none), jadi browser tetap
+  // menganggapnya required+kosong dan ngeblok submit kalau atributnya
+  // dibiarkan nempel. Pilihan yang sudah kepilih ikut di-reset begitu prioritas dipindah
   // menjauh dari Kilat, biar nggak nyangkut ngirim deadline lama buat surat
   // Biasa/Rahasia yang sebenarnya nggak butuh deadline.
   const deadlineField=document.getElementById('suratDeadlineField');
@@ -1233,9 +1235,17 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
     if(!deadlineField)return;
     const kilat=prioritasTerpilih==='Kilat';
     deadlineField.style.display=kilat?'':'none';
+    const dateProxy=document.getElementById('suratDeadlineDateProxy');
+    const timeProxy=document.getElementById('suratDeadlineTimeProxy');
+    // display:none di container ternyata TIDAK cukup buat bikin browser skip
+    // validasi required elemen di dalamnya (proxy-nya sendiri cuma opacity:0,
+    // bukan display:none), jadi required di-toggle eksplisit di sini biar
+    // form.checkValidity() gak nyangkut walau Deadline lagi disembunyikan.
+    if(dateProxy)dateProxy.required=kilat;
+    if(timeProxy)timeProxy.required=kilat;
     if(!kilat){
-      document.getElementById('suratDeadlineDateProxy')?.classList.remove('field-invalid');
-      document.getElementById('suratDeadlineTimeProxy')?.classList.remove('field-invalid');
+      dateProxy?.classList.remove('field-invalid');
+      timeProxy?.classList.remove('field-invalid');
       window.suratDeadlineDatePicker?.setPicked(null);
       window.suratDeadlineTimePicker?.setPicked(null);
       const hidden=document.getElementById('suratDeadlineHidden');
