@@ -47,10 +47,17 @@
     <button type="button" class="btn btn-warning" id="suratDetailDisposisiUlang" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Tindakan / Disposisi Baru
     </button>
-    {{-- Konfirmasi Wadan (mode simpel): klik membuka sub-modal #wadanDisposisiModal
-         berisi form Disposisi & Tindakan + tombol "Disposisi & Teruskan". --}}
+    {{-- Konfirmasi Wadan (mode simpel): klik langsung mengirim konfirmasi via
+         AJAX (modal TIDAK tertutup) -- lalu tombol ini disable & tombol
+         "Teruskan Surat" di sebelahnya jadi aktif. --}}
     <button type="button" class="btn btn-secondary" id="suratDetailKonfirmasiWadan" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><path d="M5 13l4 4L19 7"/></svg>Konfirmasi
+    </button>
+    {{-- Teruskan Surat (mode simpel Wadan): hanya aktif setelah "Konfirmasi"
+         di atas diklik. Klik membuka sub-modal #wadanDisposisiModal berisi
+         form Disposisi & Tindakan + tombol "Disposisi & Teruskan". --}}
+    <button type="button" class="btn btn-primary" id="suratDetailTeruskanWadan" hidden disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><polyline points="9 18 15 12 9 6"/></svg>Teruskan Surat
     </button>
 </div></div></div>
 
@@ -498,6 +505,7 @@ window.openSuratDetail = function(button){
   var btnKonfirmasi          = document.getElementById('suratDetailKonfirmasi');
   var btnKonfirmasiTembusan  = document.getElementById('suratDetailKonfirmasiTembusan');
   var btnKonfirmasiWadan     = document.getElementById('suratDetailKonfirmasiWadan');
+  var btnTeruskanWadan       = document.getElementById('suratDetailTeruskanWadan');
   var btnTeruskan            = document.getElementById('suratDetailTeruskan');
   var btnKeDanpus            = document.getElementById('suratDetailKeDanpus');
   var btnKeWadan             = document.getElementById('suratDetailKeWadan');
@@ -513,6 +521,10 @@ window.openSuratDetail = function(button){
     btnKonfirmasiWadan.disabled = false; btnKonfirmasiWadan.style.opacity = ''; btnKonfirmasiWadan.style.cursor = '';
     btnKonfirmasiWadan.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><path d="M5 13l4 4L19 7"/></svg>Konfirmasi';
   }
+  if (btnTeruskanWadan) {
+    btnTeruskanWadan.hidden = true; btnTeruskanWadan.onclick = null;
+    btnTeruskanWadan.disabled = true; btnTeruskanWadan.style.opacity = ''; btnTeruskanWadan.style.cursor = '';
+  }
   btnTeruskan.hidden = true; btnTeruskan.onclick = null;
   btnKeDanpus.hidden = true; btnKeDanpus.onclick = null;
   if (btnKeWadan) { btnKeWadan.hidden = true; btnKeWadan.onclick = null; }
@@ -523,19 +535,84 @@ window.openSuratDetail = function(button){
   // Tombol aksi HANYA muncul pada SURAT MASUK sesuai peran & kondisi surat.
   // Pada Surat Keluar dan Arsip, HANYA tombol "Tutup" (X) yang ditampilkan.
   if (context === 'masuk' && wadanSimple) {
-    // ── Mode simpel Wadan: satu-satunya aksi di modal utama adalah tombol
-    //    "Konfirmasi". Klik tombol ini TIDAK langsung menyimpan apa pun --
-    //    ia cuma membuka sub-modal #wadanDisposisiModal berisi form
-    //    Disposisi & Tindakan. Konfirmasi + Teruskan baru benar-benar
-    //    tersimpan saat Wadan submit "Disposisi & Teruskan" di sub-modal
-    //    tsb (backend otomatis menandai surat terkonfirmasi lalu
-    //    meneruskannya sekaligus).
+    // ── Mode simpel Wadan: dua tombol berdampingan, "Konfirmasi" dan
+    //    "Teruskan Surat".
+    //    1) Klik "Konfirmasi" -> kirim AJAX (PATCH) ke endpoint konfirmasi.
+    //       Modal TIDAK tertutup. Setelah sukses, tombol "Konfirmasi"
+    //       jadi disable dan tombol "Teruskan Surat" jadi aktif.
+    //    2) Klik "Teruskan Surat" (baru bisa diklik setelah langkah 1) ->
+    //       membuka sub-modal #wadanDisposisiModal berisi form Disposisi
+    //       & Tindakan, lalu submit ke endpoint teruskan.
     if (btnTutup) btnTutup.hidden = true;
 
     var canTeruskanWadan = button.dataset.canTeruskan === '1';
-    if (btnKonfirmasiWadan && canTeruskanWadan) {
+    if (btnKonfirmasiWadan && btnTeruskanWadan && canTeruskanWadan) {
       btnKonfirmasiWadan.hidden = false;
+      btnTeruskanWadan.hidden = false;
+
+      // Helper: set tampilan tombol "Teruskan Surat" aktif / non-aktif.
+      function setTeruskanWadanEnabled(enabled){
+        btnTeruskanWadan.disabled = !enabled;
+        btnTeruskanWadan.style.opacity = enabled ? '' : '.5';
+        btnTeruskanWadan.style.cursor = enabled ? '' : 'not-allowed';
+      }
+
+      // Helper: set tampilan tombol "Konfirmasi" aktif / non-aktif (dipakai
+      // baik saat render awal maupun setelah sukses konfirmasi via AJAX).
+      function setKonfirmasiWadanEnabled(enabled){
+        btnKonfirmasiWadan.disabled = !enabled;
+        btnKonfirmasiWadan.style.opacity = enabled ? '' : '.5';
+        btnKonfirmasiWadan.style.cursor = enabled ? '' : 'not-allowed';
+      }
+
+      // Kondisi awal: kalau surat ini sebelumnya SUDAH dikonfirmasi (mis.
+      // modal dibuka ulang / refresh realtime), Konfirmasi langsung
+      // non-aktif dan Teruskan Surat langsung aktif. Kalau belum, sebaliknya.
+      var sudahKonfirmasiWadanAwal = button.dataset.sudahDikonfirmasiWadan === '1';
+      setKonfirmasiWadanEnabled(!sudahKonfirmasiWadanAwal);
+      setTeruskanWadanEnabled(sudahKonfirmasiWadanAwal);
+
       btnKonfirmasiWadan.onclick = function(){
+        if (btnKonfirmasiWadan.disabled) return;
+        var actionUrl = button.dataset.konfirmasiWadanAction || button.dataset.confirmAction;
+        if (!actionUrl) return;
+
+        setKonfirmasiWadanEnabled(false);
+        var originalHtml = btnKonfirmasiWadan.innerHTML;
+        btnKonfirmasiWadan.textContent = 'Memproses...';
+
+        fetch(actionUrl, {
+          method: 'PATCH',
+          credentials: 'same-origin',
+          headers: {
+            'X-CSRF-TOKEN': button.dataset.csrf || '',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+          }
+        }).then(function(res){
+          if (!res.ok) throw new Error('Gagal konfirmasi');
+          return res.json().catch(function(){ return {}; });
+        }).then(function(data){
+          // Sukses: tandai di dataset supaya render ulang modal (tanpa
+          // menutupnya) langsung menampilkan Konfirmasi non-aktif &
+          // Teruskan Surat aktif, plus timeline & badge status terbaru.
+          button.dataset.sudahDikonfirmasiWadan = '1';
+          button.dataset.status = 'Dikonfirmasi';
+          button.dataset.dikonfirmasiOleh = (data && data.dikonfirmasi_oleh) || button.dataset.tujuan || '-';
+          button.dataset.dikonfirmasiTanggal = (data && data.dikonfirmasi_tanggal) || '';
+
+          window.openSuratDetail(button);
+
+          if (window.siberadShowToast) window.siberadShowToast('success', 'Surat berhasil dikonfirmasi. Silakan lanjutkan dengan "Teruskan Surat".');
+        }).catch(function(){
+          btnKonfirmasiWadan.innerHTML = originalHtml;
+          setKonfirmasiWadanEnabled(true);
+          if (window.siberadShowToast) window.siberadShowToast('error', 'Gagal mengkonfirmasi surat. Coba lagi.');
+        });
+      };
+
+      btnTeruskanWadan.onclick = function(){
+        if (btnTeruskanWadan.disabled) return;
         if (typeof window.bukaWadanDisposisiModal === 'function') {
           window.bukaWadanDisposisiModal({
             action : button.dataset.teruskanAction,

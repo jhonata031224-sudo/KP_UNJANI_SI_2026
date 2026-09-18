@@ -400,11 +400,16 @@ class LaporanSuratController extends Controller
      * Konfirmasi / ACC & Terima surat oleh penerima utama,
      * ATAU Konfirmasi tanda mengetahui oleh pihak tembusan / view only.
      */
-    public function konfirmasi(Request $request, LaporanSurat $laporanSurat): RedirectResponse
+    public function konfirmasi(Request $request, LaporanSurat $laporanSurat): RedirectResponse|JsonResponse
     {
         $user   = $request->user()->load('satuan');
         $satuan = $user->satuan;
         abort_unless($satuan, 403);
+
+        // Dipakai oleh tombol "Konfirmasi" mode simpel Wadan (dipanggil via
+        // fetch/AJAX supaya modal Detail Surat TIDAK ikut ter-reload/tertutup
+        // seperti submit form biasa) -- lihat surat-detail-modal.blade.php.
+        $wantsJson = $request->wantsJson() || $request->ajax();
 
         $isTujuanUtama = (int) $laporanSurat->tujuan_satuan_id === (int) $satuan->id;
 
@@ -425,7 +430,13 @@ class LaporanSuratController extends Controller
                 'jenis_tembusan'   => $tembusanRow->jenis,
             ]);
 
-            return back()->with('status', 'Surat "'.$laporanSurat->perihal.'" berhasil dikonfirmasi (Mengetahui).');
+            $pesan = 'Surat "'.$laporanSurat->perihal.'" berhasil dikonfirmasi (Mengetahui).';
+
+            if ($wantsJson) {
+                return response()->json(['status' => 'ok', 'message' => $pesan]);
+            }
+
+            return back()->with('status', $pesan);
         }
 
         // Penerima Utama: Konfirmasi / ACC & Terima
@@ -452,7 +463,18 @@ class LaporanSuratController extends Controller
             'pengirim_satuan'  => $laporanSurat->satuan->nama,
         ]);
 
-        return back()->with('status', 'Surat "'.$laporanSurat->perihal.'" berhasil dikonfirmasi / ACC & Diterima.');
+        $pesan = 'Surat "'.$laporanSurat->perihal.'" berhasil dikonfirmasi / ACC & Diterima.';
+
+        if ($wantsJson) {
+            return response()->json([
+                'status'             => 'ok',
+                'message'            => $pesan,
+                'dikonfirmasi_oleh'  => $satuan->nama,
+                'dikonfirmasi_tanggal' => $laporanSurat->dikonfirmasi_at->translatedFormat('d M Y H:i'),
+            ]);
+        }
+
+        return back()->with('status', $pesan);
     }
 
     /**
