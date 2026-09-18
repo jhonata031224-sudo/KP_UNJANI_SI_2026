@@ -38,18 +38,31 @@ class LaporanSuratController extends Controller
 
         $kodeSatuan = strtoupper((string) $satuan->kode);
         $isDanpus   = $kodeSatuan === 'DANPUS';
+        // Wadan: surat masuk termasuk yang sudah dikonfirmasi TAPI belum
+        // diteruskan ke satuan lain -- surat baru pindah ke Arsip setelah
+        // Wadan klik "Teruskan Surat" (tujuan_satuan_id pindah dari Wadan)
+        // atau setelah is_selesai. Sama pola dengan DashboardController.
+        // Tanpa pengecualian ini, polling realtime akan "menghilangkan"
+        // tombol Teruskan Surat begitu Wadan klik Konfirmasi, karena surat
+        // langsung dianggap pindah ke Arsip padahal belum diteruskan.
+        $isWadan = $kodeSatuan === 'WADAN';
 
         // 1. Surat Masuk:
         //    a. Surat di mana satuan ini adalah tujuan utama (tujuan_satuan_id)
-        //       DAN berstatus MENUNGGU DAN belum selesai.
+        //       DAN berstatus MENUNGGU (atau, khusus Wadan, DIKONFIRMASI TAPI
+        //       belum diteruskan) DAN belum selesai.
         //       (Khusus Danpus: surat awal Danpus TIDAK tampil di Surat Masuk Danpus sendiri,
         //        tetapi tetap di Surat Keluar Danpus sampai selesai).
         //    b. Surat di mana satuan ini terdaftar sebagai View Only atau Tembusan
         //       yang BELUM dikonfirmasi oleh satuan ini, dan belum selesai.
         $suratMasukUtama = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
             ->where('tujuan_satuan_id', $satuan->id)
-            ->where('status', LaporanSurat::STATUS_MENUNGGU)
             ->where('is_selesai', false)
+            ->when($isWadan, function ($q) {
+                $q->whereIn('status', [LaporanSurat::STATUS_MENUNGGU, LaporanSurat::STATUS_DIKONFIRMASI]);
+            }, function ($q) {
+                $q->where('status', LaporanSurat::STATUS_MENUNGGU);
+            })
             ->when($isDanpus, function ($q) use ($satuan) {
                 // Danpus hanya melihat di surat masuk jika dikembalikan/diteruskan kepadanya oleh Wadan/satuan lain
                 $q->whereHas('riwayats', function ($rq) use ($satuan) {
@@ -121,12 +134,20 @@ class LaporanSuratController extends Controller
                 $q->where('satuan_id', $satuan->id)
                   ->where('is_selesai', true);
             })
-            ->orWhere(function ($q) use ($satuan) {
+            ->orWhere(function ($q) use ($satuan, $isWadan) {
                 // (b) Pemegang saat ini -- status konfirmasi langkahnya sendiri.
+                //     Khusus Wadan: SELAMA belum diteruskan (masih tujuan ke
+                //     Wadan) dan belum is_selesai, surat TIDAK dianggap masuk
+                //     Arsip walau statusnya sudah DIKONFIRMASI -- supaya
+                //     tombol Teruskan Surat di Surat Masuk tidak hilang.
                 $q->where('tujuan_satuan_id', $satuan->id)
-                  ->where(function ($st) {
-                      $st->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
-                         ->orWhere('is_selesai', true);
+                  ->where(function ($st) use ($isWadan) {
+                      if ($isWadan) {
+                          $st->where('is_selesai', true);
+                      } else {
+                          $st->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
+                             ->orWhere('is_selesai', true);
+                      }
                   });
             })
             ->orWhere(function ($q) use ($satuan) {

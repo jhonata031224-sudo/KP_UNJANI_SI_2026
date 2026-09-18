@@ -489,10 +489,26 @@ class DashboardController
                 ->get();
 
             $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
-                ->where(function ($q) use ($satuan) {
-                    $q->where(function ($sub) use ($satuan) {
+                ->where(function ($q) use ($satuan, $isWadanKode) {
+                    $q->where(function ($sub) use ($satuan, $isWadanKode) {
                         $sub->where('satuan_id', $satuan->id)
-                            ->orWhere('tujuan_satuan_id', $satuan->id);
+                            ->orWhere(function ($tj) use ($satuan, $isWadanKode) {
+                                $tj->where('tujuan_satuan_id', $satuan->id);
+                                // Wadan: surat masuk yang statusnya DIKONFIRMASI
+                                // TAPI masih di tangan Wadan (belum diteruskan,
+                                // is_selesai masih false) SENGAJA dikecualikan
+                                // dari Arsip -- supaya tetap nyangkut & tetap
+                                // actionable (tombol Teruskan Surat) di Surat
+                                // Masuk sampai Wadan benar-benar meneruskannya
+                                // (tujuan_satuan_id pindah dari Wadan) atau
+                                // sampai alurnya tuntas (is_selesai).
+                                if ($isWadanKode) {
+                                    $tj->where(function ($w) {
+                                        $w->where('is_selesai', true)
+                                          ->orWhere('status', '!=', LaporanSurat::STATUS_DIKONFIRMASI);
+                                    });
+                                }
+                            });
                     })
                     ->where(function ($st) {
                         $st->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
