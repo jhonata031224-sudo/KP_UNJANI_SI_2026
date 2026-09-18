@@ -7,6 +7,17 @@
     $isSent = (int) $s->satuan_id === (int) $satuan->id;
     $lawan = $isSent ? $s->tujuanSatuan : $s->satuan;
 
+    // Sama seperti di Surat Masuk: kolom "Tujuan" di modal detail cuma
+    // nampilin nama satuan sendiri (redundan) kalau yang buka adalah Wadan
+    // yang lagi liat arsip surat masuk dari Danpus -- jadi disembunyikan
+    // secara UI. Disposisi (mis. "Danpus mendisposisi kepada Satlak Duktek")
+    // ikut disembunyikan juga karena sama-sama nggak relevan dari sudut
+    // pandang Wadan sendiri (backend/riwayat tetap menyimpan datanya).
+    $isWadan     = strtoupper($satuan->kode ?? '') === 'WADAN';
+    $lawanKode   = strtoupper($lawan->kode ?? '');
+    $hideTujuan  = $isWadan && ! $isSent && $lawanKode === 'DANPUS';
+    $hideDisposisi = $hideTujuan;
+
     // Riwayat untuk timeline
     // Sembunyikan isi surat (catatan langkah Buat Surat / Surat Keluar berisi
     // deskripsi lengkap) dari satuan lain kalau prioritas Rahasia -- sama
@@ -65,6 +76,9 @@
         data-deskripsi="{{ e($s->ringkasanUntuk($satuan->id ?? null)) }}"
         data-rahasia="{{ $s->isRahasia() ? '1' : '0' }}"
         data-dari="{{ e($isSent ? ($satuan->nama ?? '-') : ($lawan->nama ?? '-')) }}"
+        data-dari-kode="{{ e($isSent ? ($satuan->kode ?? '') : $lawanKode) }}"
+        data-hide-tujuan="{{ $hideTujuan ? '1' : '0' }}"
+        data-hide-disposisi="{{ $hideDisposisi ? '1' : '0' }}"
         data-dibuat-oleh="{{ e($isSent ? ($satuan->nama ?? '-') : ($lawan->nama ?? '-')) }}"
         data-dibuat-tanggal="{{ e($s->created_at->translatedFormat('d M Y H:i')) }}"
         data-dikonfirmasi-oleh="{{ e($s->dikonfirmasiOleh->name ?? '') }}"
