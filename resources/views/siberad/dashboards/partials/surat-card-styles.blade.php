@@ -110,12 +110,20 @@
    badge kecil di pojok ikon). */
 .surat-detail-timeline-item.timeline-card{display:flex;align-items:stretch;gap:10px;padding-left:0;padding-bottom:10px}
 .surat-detail-timeline-item.timeline-card:not(:last-child){padding-bottom:0}
+/* Garis lama (dot-style ::before/::after di atas) dirancang buat dot 18px
+   (left:8px = pas tengah dot lama), jadi kalau dipakai bareng kartu step
+   bernomor 30px hasilnya offside/nyerong masuk ke lingkaran. Matikan
+   khusus untuk mode kartu step ini -- konektornya dipasang ulang di
+   .timeline-step-line yang otomatis presisi di tengah kolom (lihat bawah). */
+.surat-detail-timeline-item.timeline-card::before,
+.surat-detail-timeline-item.timeline-card::after{content:none}
 .timeline-step-col{flex-shrink:0;width:30px;display:flex;flex-direction:column;align-items:center}
-.timeline-step-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--success-bright,#3dba7e);color:#fff;font-weight:800;font-size:13px;line-height:1;flex-shrink:0}
-/* Garis penghubung vertikal antar nomor step di Riwayat Alur dihilangkan
-   (permintaan: tampilan step cukup lingkaran nomor tanpa garis penghubung). */
-.timeline-step-line{display:none}
-.timeline-step-line.line-complete{display:none}
+.timeline-step-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--success-bright,#3dba7e);color:#fff;font-weight:800;font-size:13px;line-height:1;flex-shrink:0;position:relative;z-index:1}
+/* Konektor step presisi: 2px, di tengah kolom 30px (align-items:center pada
+   .timeline-step-col otomatis menengahkannya persis di bawah lingkaran,
+   nempel rapat tanpa offset ke kiri/kanan). */
+.timeline-step-line{width:2px;flex:1;min-height:16px;background:var(--border-soft);margin:0;border-radius:1px;transition:background .5s ease}
+.timeline-step-line.line-complete{background:var(--success-bright,#3dba7e)}
 .timeline-card-inner{flex:1;min-width:0;display:flex;gap:8px;align-items:flex-start;border:1.5px solid var(--border-soft);border-radius:10px;padding:8px 10px;background:var(--panel-alt);margin-bottom:10px}
 .timeline-card-badge{flex-shrink:0;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--success-bright,#3dba7e);color:#fff;font-weight:800;font-size:12px}
 .timeline-card-badge svg{width:13px;height:13px}
