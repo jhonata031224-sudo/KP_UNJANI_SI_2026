@@ -305,6 +305,30 @@ window.openSuratDetail = function(button){
       'letter-spacing:.02em;white-space:nowrap;vertical-align:middle;background:' + s.bg + ';color:' + s.fg + ';border:1px solid ' + s.bd + '">' + s.label + '</span>';
   }
 
+  // Ikon per jenis aksi + kelas tint kartu -- supaya tiap step di alur
+  // (Dibuat/Konfirmasi/Diteruskan/Selesai) kelihatan beda jenisnya sekilas
+  // pandang, bukan cuma warna teks. Dipakai di kartu bernomor step-by-step.
+  function stepIconAndClass(aksiKode){
+    var iconDoc    = '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>';
+    var iconUser   = '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>';
+    var iconArrow  = '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>';
+    var iconFlag   = '<path d="M5 21V4a1 1 0 0 1 1-1c3 0 3 2 6 2s3-2 6-2a1 1 0 0 1 1 1v10c0 1-3-2-6-2s-3 2-6 2"/>';
+    var map = {
+      'BUAT_SURAT'  : { icon: iconDoc,   cls: 'aksi-buat' },
+      'SURAT_KELUAR': { icon: iconDoc,   cls: 'aksi-keluar' },
+      'KONFIRMASI'  : { icon: iconUser,  cls: 'aksi-konfirmasi' },
+      'TERUSKAN'    : { icon: iconArrow, cls: 'aksi-teruskan' },
+      'SELESAI'     : { icon: iconFlag,  cls: 'aksi-selesai' },
+    };
+    return map[aksiKode] || { icon: checkSvg.replace(/<svg[^>]*>|<\/svg>/g,''), cls: '' };
+  }
+
+  // Panah kecil "↓" antar kartu step -- ganti garis polos supaya kesan alur
+  // step-by-step (bukan cuma daftar riwayat) lebih kena.
+  var connectorArrowSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="4" x2="12" y2="17"/><polyline points="7 13 12 18 17 13"/></svg>';
+  // Panah cabang (1 masuk -> mekar ke 2+ arah) buat step yang punya paralel.
+  var forkArrowSvg = '<svg viewBox="0 0 60 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="30" y1="0" x2="30" y2="7"/><path d="M30 7 L12 7 L12 15"/><path d="M30 7 L48 7 L48 15"/><polyline points="8 12 12 16 16 12"/><polyline points="44 12 48 16 52 12"/></svg>';
+
   var riwayats = [];
   try { riwayats = JSON.parse(button.dataset.riwayat || '[]'); } catch(e){}
 
@@ -331,59 +355,70 @@ window.openSuratDetail = function(button){
         extraHtml += '<div class="surat-detail-timeline-sub" style="margin-top:4px"><a href="' + r.lampiran_url + '" target="_blank" rel="noopener" style="color:var(--primary);font-size:12px;text-decoration:underline">📎 ' + escHtml(r.lampiran_nama || 'Lampiran') + '</a></div>';
       }
 
+      var stepNum = idx + 1;
+      var iconInfo = stepIconAndClass(r.aksi_kode);
+
       if (hasParalel) {
         // ── MODE BRANCHING: step ini mengirim ke 2 arah bersamaan ──
-        // Tampilkan sebagai blok dengan cabang visual: penerima utama + penerima paralel
-        var checkSvgSmall = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px"><path d="M5 13l4 4L19 7"/></svg>';
-
-        var meta = r.pengirim + ' • ' + r.tanggal;
+        // Tampilkan sebagai kartu bernomor + cabang visual: penerima utama + penerima paralel
+        var meta = 'Oleh ' + r.pengirim + ' • ' + r.tanggal;
         if (r.siklus > 1) meta += ' (Siklus ' + r.siklus + ')';
 
-        // Header step utama (pengirim & aksi)
         var item = document.createElement('div');
-        item.className = 'surat-detail-timeline-item surat-timeline-branch-root';
+        item.className = 'surat-detail-timeline-item timeline-card surat-timeline-branch-root';
         item.innerHTML =
-          '<span class="surat-detail-timeline-dot">' + checkSvg + '</span>' +
-          '<div class="surat-detail-timeline-title">' + escHtml(r.aksi) + stepStatusPill(r.aksi_kode) + '</div>' +
-          '<div class="surat-detail-timeline-sub">' + escHtml(meta) + '</div>' +
-          extraHtml +
-          // Label "Dikirim bersamaan ke:"
-          '<div style="margin-top:10px;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">Dikirim bersamaan ke:</div>' +
+          '<div class="timeline-card-inner ' + iconInfo.cls + '">' +
+            '<span class="timeline-card-badge"><span class="timeline-card-step-num">' + stepNum + '</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' + iconInfo.icon + '</svg></span>' +
+            '<div class="timeline-card-body">' +
+              '<div class="surat-detail-timeline-title">' + escHtml(r.aksi) + stepStatusPill(r.aksi_kode) + '</div>' +
+              '<div class="surat-detail-timeline-sub">' + escHtml(meta) + '</div>' +
+              extraHtml +
+            '</div>' +
+          '</div>' +
+          // Panah cabang mekar ke 2+ arah
+          '<div class="timeline-branch-fork">' + forkArrowSvg + '</div>' +
           // Blok cabang 2 arah
-          '<div class="surat-timeline-branch-wrap" style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">' +
-            // Cabang UTAMA (penerima_satuan)
+          '<div class="surat-timeline-branch-wrap" style="display:flex;gap:8px;flex-wrap:wrap">' +
+            // Cabang UTAMA (penerima_satuan) -- ikon orang, samain sama "Konfirmasi Satuan"
             (r.penerima ? (
               '<div class="surat-timeline-branch-node surat-timeline-branch-utama" style="' +
                 'flex:1;min-width:120px;border:1.5px solid var(--primary);border-radius:8px;padding:7px 10px;' +
                 'background:var(--primary-subtle,rgba(59,130,246,.07));position:relative' +
               '">' +
                 '<div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--primary);margin-bottom:2px">' +
-                  '<span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:var(--primary);border-radius:50%;color:#fff">' + checkSvgSmall + '</span>' +
+                  '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:var(--primary);border-radius:50%;color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>' +
                   'Penerima Utama' +
                 '</div>' +
                 '<div style="font-size:12px;font-weight:600;color:var(--text)">' + escHtml(r.penerima) + '</div>' +
                 '<div style="font-size:10.5px;color:var(--text-muted);margin-top:1px">Perlu konfirmasi / ACC</div>' +
               '</div>'
             ) : '') +
-            // Cabang PARALEL (view_only / tembusan) — satu per entry
+            // Cabang PARALEL (view_only / tembusan) — satu per entry. Urdal
+            // dapet ikon gear khusus (beda dari "mata"/view-only biasa) biar
+            // langsung kebaca sebagai "Konfirmasi Urdal" di alur, niru style
+            // referensi step 3/4 mekar dua arah.
             paralel.map(function(p){
               var isViewOnly = p.jenis === 'view_only';
               var isHasilRc  = p.jenis === 'hasil_rc';
+              var isUrdal    = (p.satuan_kode || '').toUpperCase() === 'URDAL';
               var borderCol  = isViewOnly ? 'var(--border)' : (isHasilRc ? '#16a34a' : 'var(--warning,#f59e0b)');
               var bgCol      = isViewOnly ? 'var(--surface)' : (isHasilRc ? 'rgba(22,163,74,.07)' : 'rgba(245,158,11,.07)');
               var labelCol   = isViewOnly ? 'var(--text-muted)' : (isHasilRc ? '#16a34a' : 'var(--warning,#f59e0b)');
               var badgeLabel = escHtml(p.label_jenis || p.jenis);
+              var nodeIcon   = isUrdal
+                ? '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
+                : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
               return (
                 '<div class="surat-timeline-branch-node" style="' +
                   'flex:1;min-width:120px;border:1.5px solid ' + borderCol + ';border-radius:8px;padding:7px 10px;' +
                   'background:' + bgCol + ';position:relative' +
                 '">' +
                   '<div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:' + labelCol + ';margin-bottom:2px">' +
-                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
-                    badgeLabel +
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px">' + nodeIcon + '</svg>' +
+                    (isUrdal ? 'Urdal' : badgeLabel) +
                   '</div>' +
                   '<div style="font-size:12px;font-weight:600;color:var(--text)">' + escHtml(p.satuan) + '</div>' +
-                  (p.satuan_kode ? '<div style="font-size:10px;color:var(--text-muted);margin-top:1px">' + escHtml(p.satuan_kode) + ' — Hanya lihat</div>' : '') +
+                  (p.satuan_kode ? '<div style="font-size:10px;color:var(--text-muted);margin-top:1px">' + escHtml(p.satuan_kode) + (isUrdal ? ' — Administrasi' : ' — Hanya lihat') + '</div>' : '') +
                   // Status konfirmasi tembusan/view-only INI SENDIRI (mis. Urdal
                   // sudah klik "Konfirmasi Mengetahui" atau belum) -- terpisah
                   // dari status konfirmasi penerima utama di sebelahnya.
@@ -398,23 +433,35 @@ window.openSuratDetail = function(button){
         timeline.appendChild(item);
 
         if (!isLast) {
+          var forkEl = item.querySelector('.timeline-branch-fork');
           void item.offsetHeight;
-          requestAnimationFrame(function(){requestAnimationFrame(function(){ item.classList.add('line-complete'); });});
+          requestAnimationFrame(function(){requestAnimationFrame(function(){ if (forkEl) forkEl.classList.add('line-complete'); });});
         }
 
       } else {
-        // ── MODE NORMAL: step tunggal (tidak ada cabang paralel) ──
+        // ── MODE NORMAL: step tunggal bernomor (tidak ada cabang paralel) ──
         var item = document.createElement('div');
-        item.className = 'surat-detail-timeline-item';
-        var dotHtml = '<span class="surat-detail-timeline-dot">' + checkSvg + '</span>';
-        var meta = r.pengirim + (r.penerima ? ' → ' + r.penerima : '') + ' • ' + r.tanggal;
+        item.className = 'surat-detail-timeline-item timeline-card';
+        var meta = 'Oleh ' + r.pengirim + (r.penerima ? ' → ' + r.penerima : '') + ' • ' + r.tanggal;
         if (r.siklus > 1) meta += ' (Siklus ' + r.siklus + ')';
-        item.innerHTML = dotHtml + '<div class="surat-detail-timeline-title">' + escHtml(r.aksi) + stepStatusPill(r.aksi_kode) + '</div><div class="surat-detail-timeline-sub">' + escHtml(meta) + '</div>' + extraHtml;
+        item.innerHTML =
+          '<div class="timeline-card-inner ' + iconInfo.cls + '">' +
+            '<span class="timeline-card-badge"><span class="timeline-card-step-num">' + stepNum + '</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' + iconInfo.icon + '</svg></span>' +
+            '<div class="timeline-card-body">' +
+              '<div class="surat-detail-timeline-title">' + escHtml(r.aksi) + stepStatusPill(r.aksi_kode) + '</div>' +
+              '<div class="surat-detail-timeline-sub">' + escHtml(meta) + '</div>' +
+              extraHtml +
+            '</div>' +
+          '</div>';
         timeline.appendChild(item);
 
         if (!isLast) {
-          void item.offsetHeight;
-          requestAnimationFrame(function(){requestAnimationFrame(function(){ item.classList.add('line-complete'); });});
+          var connector = document.createElement('div');
+          connector.className = 'timeline-card-connector';
+          connector.innerHTML = connectorArrowSvg;
+          timeline.appendChild(connector);
+          void connector.offsetHeight;
+          requestAnimationFrame(function(){requestAnimationFrame(function(){ connector.classList.add('line-complete'); });});
         }
       }
     });
@@ -427,42 +474,68 @@ window.openSuratDetail = function(button){
     if (button.dataset.isSelesai !== '1') {
       var tujuanSaatIni = button.dataset.tujuan || '-';
       var statusSaatIni = button.dataset.status || 'Menunggu Konfirmasi';
+      var pendingConnector = document.createElement('div');
+      pendingConnector.className = 'timeline-card-connector';
+      pendingConnector.innerHTML = connectorArrowSvg;
+      timeline.appendChild(pendingConnector);
+
       var pending = document.createElement('div');
-      pending.className = 'surat-detail-timeline-item is-pending';
+      pending.className = 'surat-detail-timeline-item timeline-card is-pending';
       pending.innerHTML =
-        '<span class="surat-detail-timeline-dot"></span>' +
-        '<div class="surat-detail-timeline-title">Saat Ini: ' + escHtml(tujuanSaatIni) + stepStatusPill(statusSaatIni === 'Dikonfirmasi' ? 'KONFIRMASI' : null) + '</div>' +
-        '<div class="surat-detail-timeline-sub">' + escHtml(statusSaatIni) + ' — belum masuk Arsip sampai seluruh alur tuntas</div>';
+        '<div class="timeline-card-inner">' +
+          '<span class="timeline-card-badge"><span class="timeline-card-step-num">' + (riwayats.length + 1) + '</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>' +
+          '<div class="timeline-card-body">' +
+            '<div class="surat-detail-timeline-title">Saat Ini: ' + escHtml(tujuanSaatIni) + stepStatusPill(statusSaatIni === 'Dikonfirmasi' ? 'KONFIRMASI' : null) + '</div>' +
+            '<div class="surat-detail-timeline-sub">' + escHtml(statusSaatIni) + ' — belum masuk Arsip sampai seluruh alur tuntas</div>' +
+          '</div>' +
+        '</div>';
       timeline.appendChild(pending);
     }
   } else {
-    // Fallback: tampilkan timeline 2 langkah lama (Dibuat + Dikonfirmasi)
+    // Fallback (riwayat kosong -- mis. data lama sebelum pencatatan riwayat
+    // lengkap): tetap tampilkan sebagai kartu bernomor 2 langkah
+    // (Dibuat + Dikonfirmasi) biar konsisten sama gaya step-by-step di atas.
     var sudahKonfirmasi = !!button.dataset.dikonfirmasiTanggal;
     var justConfirmed   = wasOpen && prevStatusClass.indexOf('status-dikonfirmasi') === -1 && sudahKonfirmasi;
+    var iconDibuat = stepIconAndClass('BUAT_SURAT');
+    var iconKonf   = stepIconAndClass('KONFIRMASI');
 
     var dibuat = document.createElement('div');
-    dibuat.className = 'surat-detail-timeline-item';
-    dibuat.innerHTML = '<span class="surat-detail-timeline-dot">' + checkSvg + '</span><div class="surat-detail-timeline-title">Dibuat</div><div class="surat-detail-timeline-sub"></div>';
+    dibuat.className = 'surat-detail-timeline-item timeline-card';
+    dibuat.innerHTML =
+      '<div class="timeline-card-inner ' + iconDibuat.cls + '">' +
+        '<span class="timeline-card-badge"><span class="timeline-card-step-num">1</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' + iconDibuat.icon + '</svg></span>' +
+        '<div class="timeline-card-body"><div class="surat-detail-timeline-title">Dibuat</div><div class="surat-detail-timeline-sub"></div></div>' +
+      '</div>';
     dibuat.querySelector('.surat-detail-timeline-sub').textContent = 'Oleh ' + (button.dataset.dibuatOleh || '-') + ' • ' + (button.dataset.dibuatTanggal || '-');
     timeline.appendChild(dibuat);
 
+    var connector = document.createElement('div');
+    connector.className = 'timeline-card-connector';
+    connector.innerHTML = connectorArrowSvg;
+    timeline.appendChild(connector);
+
     var konfirmasi = document.createElement('div');
-    konfirmasi.className = 'surat-detail-timeline-item' + (sudahKonfirmasi ? '' : ' is-pending');
-    konfirmasi.innerHTML = '<span class="surat-detail-timeline-dot">' + (sudahKonfirmasi ? checkSvg : '') + '</span><div class="surat-detail-timeline-title">Dikonfirmasi</div><div class="surat-detail-timeline-sub"></div>';
+    konfirmasi.className = 'surat-detail-timeline-item timeline-card' + (sudahKonfirmasi ? '' : ' is-pending');
+    konfirmasi.innerHTML =
+      '<div class="timeline-card-inner' + (sudahKonfirmasi ? ' ' + iconKonf.cls : '') + '">' +
+        '<span class="timeline-card-badge"><span class="timeline-card-step-num">2</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' + iconKonf.icon + '</svg></span>' +
+        '<div class="timeline-card-body"><div class="surat-detail-timeline-title">Dikonfirmasi</div><div class="surat-detail-timeline-sub"></div></div>' +
+      '</div>';
     konfirmasi.querySelector('.surat-detail-timeline-sub').textContent = sudahKonfirmasi
       ? ('Oleh ' + (button.dataset.dikonfirmasiOleh || '-') + ' • ' + button.dataset.dikonfirmasiTanggal)
       : 'Menunggu konfirmasi penerima';
     timeline.appendChild(konfirmasi);
 
     if (sudahKonfirmasi) {
-      void dibuat.offsetHeight;
-      requestAnimationFrame(function(){requestAnimationFrame(function(){ dibuat.classList.add('line-complete'); });});
+      void connector.offsetHeight;
+      requestAnimationFrame(function(){requestAnimationFrame(function(){ connector.classList.add('line-complete'); });});
     }
     if (justConfirmed) {
       statusEl.classList.add('siberad-row-updated');
       konfirmasi.classList.add('siberad-row-updated');
-      var justDot = konfirmasi.querySelector('.surat-detail-timeline-dot');
-      if (justDot) justDot.classList.add('just-confirmed');
+      var justBadge = konfirmasi.querySelector('.timeline-card-badge');
+      if (justBadge) justBadge.classList.add('just-confirmed');
       if (window.siberadShowToast) window.siberadShowToast('success', 'Surat sudah dikonfirmasi.');
     }
   }

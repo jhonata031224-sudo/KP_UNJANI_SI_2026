@@ -92,12 +92,46 @@
 .surat-detail-timeline-dot.just-confirmed{animation:suratTimelineDotPop .45s cubic-bezier(.34,1.56,.64,1)}
 .surat-detail-timeline-title{font-size:13px;font-weight:700;color:var(--text);line-height:18px}
 .surat-detail-timeline-sub{font-size:11.5px;color:var(--text-muted);margin-top:3px}
+
+/* ── Step-by-step "kartu bernomor" (redesain alur riwayat) ──
+   Tiap langkah alur (Dibuat -> Konfirmasi Wadan -> Diteruskan -> ...)
+   ditampilkan sebagai kartu bulat-nomor + ikon jenis aksi, biar Danpus
+   bisa lihat step demi step ke mana surat/disposisi ini mengalir --
+   bukan cuma titik+garis polos. */
+.surat-detail-timeline-item.timeline-card{padding-left:0;padding-bottom:14px}
+.surat-detail-timeline-item.timeline-card:not(:last-child){padding-bottom:22px}
+.timeline-card-inner{display:flex;gap:12px;border:1.5px solid var(--border-soft);border-radius:12px;padding:12px 14px;background:var(--panel-alt)}
+.timeline-card-badge{flex-shrink:0;position:relative;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--success-bright,#3dba7e);color:#fff;font-weight:800;font-size:14px;z-index:1}
+.timeline-card-badge svg{width:16px;height:16px}
+.timeline-card-badge .timeline-card-step-num{position:absolute;top:-6px;left:-6px;width:17px;height:17px;border-radius:50%;background:var(--panel);border:1.5px solid var(--border-soft);color:var(--text);font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1}
+.surat-detail-timeline-item.timeline-card.is-pending .timeline-card-badge{background:var(--panel);border:2px solid var(--border);color:var(--text-muted)}
+.surat-detail-timeline-item.timeline-card.is-pending .timeline-card-inner{border-style:dashed}
+.timeline-card-body{min-width:0;flex:1}
+/* Tint kartu per jenis aksi -- konsisten sama warna pill status yang sudah ada */
+.timeline-card-inner.aksi-buat,.timeline-card-inner.aksi-keluar{background:rgba(52,152,219,.06);border-color:rgba(52,152,219,.25)}
+.timeline-card-inner.aksi-buat .timeline-card-badge,.timeline-card-inner.aksi-keluar .timeline-card-badge{background:#2476ad}
+.timeline-card-inner.aksi-konfirmasi{background:rgba(61,186,126,.07);border-color:rgba(61,186,126,.28)}
+.timeline-card-inner.aksi-konfirmasi .timeline-card-badge{background:#2e9e68}
+.timeline-card-inner.aksi-teruskan{background:rgba(99,102,241,.06);border-color:rgba(99,102,241,.25)}
+.timeline-card-inner.aksi-teruskan .timeline-card-badge{background:#6366f1}
+.timeline-card-inner.aksi-selesai{background:rgba(61,186,126,.1);border-color:rgba(61,186,126,.35)}
+.timeline-card-inner.aksi-selesai .timeline-card-badge{background:#1f7a4f}
+/* Panah penghubung vertikal antar kartu step (ganti garis polos) */
+.timeline-card-connector{display:flex;justify-content:center;align-items:center;height:20px;margin:-2px 0}
+.timeline-card-connector svg{width:14px;height:14px;color:var(--border);transition:color .4s ease}
+.timeline-card-connector.line-complete svg{color:var(--success-bright,#3dba7e)}
+.timeline-card-badge.just-confirmed{animation:suratTimelineDotPop .45s cubic-bezier(.34,1.56,.64,1)}
+
 /* ── Branch / Parallel Timeline ── */
 .surat-timeline-branch-root{padding-bottom:16px}
 .surat-timeline-branch-wrap{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 .surat-timeline-branch-node{flex:1;min-width:110px;border-radius:8px;padding:8px 10px;transition:box-shadow .15s}
 .surat-timeline-branch-utama{border-color:var(--primary)!important;background:var(--primary-subtle,rgba(59,130,246,.07))!important}
 .surat-timeline-branch-node:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
+/* Panah cabang (satu masuk, mekar ke 2+ arah) buat kartu bernomor */
+.timeline-branch-fork{display:flex;flex-direction:column;align-items:center;margin:2px 0 8px}
+.timeline-branch-fork svg{width:60px;height:20px;color:var(--border)}
+.timeline-branch-fork.line-complete svg{color:var(--success-bright,#3dba7e)}
 .surat-detail-dokumen-row{display:flex;align-items:center;gap:12px}
 .surat-detail-dokumen-icon{flex-shrink:0;width:38px;height:38px;border-radius:8px;background:#d64545;color:#fff;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;letter-spacing:.02em}
 .surat-detail-dokumen-info{flex:1;min-width:0}
