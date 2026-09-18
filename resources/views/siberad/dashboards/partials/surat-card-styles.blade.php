@@ -112,8 +112,10 @@
 .surat-detail-timeline-item.timeline-card:not(:last-child){padding-bottom:0}
 .timeline-step-col{flex-shrink:0;width:30px;display:flex;flex-direction:column;align-items:center}
 .timeline-step-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--success-bright,#3dba7e);color:#fff;font-weight:800;font-size:13px;line-height:1;flex-shrink:0}
-.timeline-step-line{flex:1;width:2px;min-height:12px;background:var(--border-soft);margin:2px 0;transition:background .5s ease}
-.timeline-step-line.line-complete{background:var(--success-bright,#3dba7e)}
+/* Garis penghubung vertikal antar nomor step di Riwayat Alur dihilangkan
+   (permintaan: tampilan step cukup lingkaran nomor tanpa garis penghubung). */
+.timeline-step-line{display:none}
+.timeline-step-line.line-complete{display:none}
 .timeline-card-inner{flex:1;min-width:0;display:flex;gap:8px;align-items:flex-start;border:1.5px solid var(--border-soft);border-radius:10px;padding:8px 10px;background:var(--panel-alt);margin-bottom:10px}
 .timeline-card-badge{flex-shrink:0;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--success-bright,#3dba7e);color:#fff;font-weight:800;font-size:12px}
 .timeline-card-badge svg{width:13px;height:13px}

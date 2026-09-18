@@ -565,6 +565,30 @@ window.openSuratDetail = function(button){
       if (justNum) justNum.classList.add('just-confirmed');
       if (window.siberadShowToast) window.siberadShowToast('success', 'Surat sudah dikonfirmasi.');
     }
+
+    // ── Step 3: Saat Ini (pending) ──────────────────────────────────────
+    // Mode fallback ini dulu cuma nampilin 2 langkah tetap (Dibuat +
+    // Dikonfirmasi) tanpa kotak lanjutan, padahal selama surat belum
+    // "selesai" (mis. Wadan masih harus meneruskan ke Satuan & Urdal),
+    // seharusnya ada kotak step berikutnya yang menandakan alur masih
+    // berjalan -- samain sama kotak "Saat Ini" di mode riwayat normal.
+    if (button.dataset.isSelesai !== '1') {
+      var tujuanSaatIni = button.dataset.tujuan || '-';
+      var statusSaatIni = button.dataset.status || 'Menunggu Konfirmasi';
+
+      var pendingFallback = document.createElement('div');
+      pendingFallback.className = 'surat-detail-timeline-item timeline-card is-pending';
+      pendingFallback.innerHTML =
+        timelineStepColHtml(3, true) +
+        '<div class="timeline-card-inner">' +
+          '<span class="timeline-card-badge">' + clockSvg + '</span>' +
+          '<div class="timeline-card-body">' +
+            '<div class="surat-detail-timeline-title">Saat Ini: ' + escHtml(tujuanSaatIni) + stepStatusPill(statusSaatIni === 'Dikonfirmasi' ? 'KONFIRMASI' : null) + '</div>' +
+            '<div class="surat-detail-timeline-sub">' + escHtml(statusSaatIni) + ' — belum masuk Arsip sampai seluruh alur tuntas</div>' +
+          '</div>' +
+        '</div>';
+      timeline.appendChild(pendingFallback);
+    }
   }
 
   // ── Dokumen Lampiran ──────────────────────────────────────────────────────
