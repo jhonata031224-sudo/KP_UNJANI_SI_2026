@@ -253,6 +253,15 @@ class LaporanSuratController extends Controller
             $tembusanItemRules[] = Rule::notIn($idDanpusWadan);
         }
 
+        // Deadline surat SAAT INI cuma dipakai Danpus dengan prioritas
+        // Kilat (lihat field Deadline yang muncul di modal Buat Surat Baru,
+        // laporan-danpus.blade.php, begitu opsi Kilat dipilih) -- wajib
+        // diisi & harus di masa depan waktu itu, tapi tetap nullable buat
+        // prioritas lain / satuan pengirim lain yang tidak punya field ini.
+        $deadlineRules = $isDanpus
+            ? ['nullable', 'date', 'required_if:prioritas,Kilat', 'after:now']
+            : ['nullable', 'date'];
+
         $validated = $request->validate([
             'induk_surat_id'   => ['nullable', 'integer', 'exists:laporan_surats,id'],
             'tujuan_satuan_id' => $tujuanRules,
@@ -260,6 +269,7 @@ class LaporanSuratController extends Controller
             'kategori'         => ['required', 'string', 'max:255'],
             'deskripsi'        => $deskripsiRules,
             'prioritas'        => $prioritasRules,
+            'deadline_at'      => $deadlineRules,
             'disposisi'        => $disposisiRules,
             'tindakan'         => $tindakanRules,
             'tindakan.*'       => ['string'],
@@ -274,6 +284,8 @@ class LaporanSuratController extends Controller
             'tindakan.min'              => 'Pilih minimal satu tindakan.',
             'tembusan.*.not_in'         => 'Tembusan tidak boleh ditujukan ke Danpus atau Wadan.',
             'lampiran.required'         => 'Lampiran wajib diisi untuk mengirim Surat.',
+            'deadline_at.required_if'   => 'Deadline wajib diisi untuk prioritas Kilat.',
+            'deadline_at.after'         => 'Deadline harus lebih besar dari waktu sekarang.',
         ]);
 
         abort_if(
@@ -361,6 +373,7 @@ class LaporanSuratController extends Controller
             'kategori'            => $validated['kategori'] ?? null,
             'deskripsi'           => $validated['deskripsi'] ?? '',
             'prioritas'           => $validated['prioritas'],
+            'deadline_at'         => $validated['deadline_at'] ?? null,
             'disposisi'           => $validated['disposisi'] ?? null,
             'tindakan'            => $validated['tindakan'] ?? null,
             'disposisi_terakhir'  => $validated['disposisi'] ?? null,

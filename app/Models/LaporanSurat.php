@@ -123,6 +123,7 @@ class LaporanSurat extends Model
         'kategori',
         'deskripsi',
         'prioritas',
+        'deadline_at',
         'disposisi',
         'tindakan',
         'siklus',
@@ -139,6 +140,7 @@ class LaporanSurat extends Model
     ];
 
     protected $casts = [
+        'deadline_at'       => 'datetime',
         'dikonfirmasi_at'   => 'datetime',
         'selesai_at'        => 'datetime',
         'is_selesai'        => 'boolean',
