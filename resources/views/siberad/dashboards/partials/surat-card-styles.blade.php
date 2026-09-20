@@ -135,6 +135,18 @@
 .timeline-card-body .surat-detail-timeline-sub{font-size:10.5px;margin-top:2px}
 .timeline-card-meta{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--text-muted);margin-top:2px}
 .timeline-card-meta svg{width:10px;height:10px;flex-shrink:0}
+/* Step Wadan (step 2): blok "Diteruskan ke / Disposisi" yang rapi + catatan View Only Urdal */
+.timeline-forward-block{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(61,186,126,.35);display:flex;flex-direction:column;gap:4px}
+.timeline-forward-row{display:flex;align-items:baseline;gap:8px;min-width:0}
+.timeline-forward-label{flex:0 0 96px;white-space:nowrap;font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted)}
+.timeline-forward-value{flex:1;min-width:0;font-size:11.5px;font-weight:700;line-height:15px;color:var(--text);overflow-wrap:anywhere}
+.timeline-viewonly-note{display:flex;align-items:flex-start;gap:8px;margin-top:8px;padding:7px 9px;border-radius:8px;border:1px dashed rgba(99,102,241,.4);background:rgba(99,102,241,.07)}
+.timeline-viewonly-icon{flex-shrink:0;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(99,102,241,.16);color:#6366f1}
+.timeline-viewonly-icon svg{width:12px;height:12px}
+.timeline-viewonly-text{min-width:0;flex:1}
+.timeline-viewonly-title{font-size:11px;font-weight:700;line-height:15px;color:var(--text)}
+.timeline-viewonly-tag{display:inline-flex;align-items:center;margin-left:4px;padding:0 7px;border-radius:999px;font-size:9.5px;font-weight:800;letter-spacing:.02em;vertical-align:middle;background:rgba(99,102,241,.14);color:#6366f1;border:1px solid rgba(99,102,241,.32)}
+.timeline-viewonly-desc{margin-top:2px;font-size:10.5px;line-height:14px;color:var(--text-muted)}
 /* Tint kartu per jenis aksi -- konsisten sama warna pill status yang sudah ada,
    dipakai juga buat warna lingkaran nomor di kolom kiri */
 .timeline-card-inner.aksi-buat,.timeline-card-inner.aksi-keluar{background:rgba(52,152,219,.06);border-color:rgba(52,152,219,.25)}

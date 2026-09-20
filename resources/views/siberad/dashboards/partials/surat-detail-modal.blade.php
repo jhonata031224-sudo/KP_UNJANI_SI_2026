@@ -396,15 +396,12 @@ window.openSuratDetail = function(button){
       return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
     }
 
-    // Disposisi / tindakan / catatan / lampiran milik satu riwayat.
-    function extraRiwayatHtml(r, sembunyikanCatatanOtomatis, tanpaLampiran){
+    // Disposisi / catatan / lampiran milik satu riwayat. Keterangan Tindakan
+    // (chip SESUAI JUK KOMANDAN, dst) sengaja TIDAK ditampilkan di Riwayat Alur
+    // karena sudah ada di panel "Tindakan" terpisah.
+    function extraRiwayatHtml(r, sembunyikanCatatanOtomatis, tanpaLampiran, tanpaDisposisi){
       var html = '';
-      if (r.disposisi) html += '<div class="surat-detail-timeline-sub" style="margin-top:2px;color:var(--primary);font-weight:500">Disposisi: ' + escHtml(r.disposisi) + '</div>';
-      if (r.tindakan && r.tindakan.length) {
-        html += '<div class="surat-detail-timeline-sub" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">';
-        r.tindakan.forEach(function(t){ html += '<span style="background:var(--primary-subtle,rgba(59,130,246,.1));color:var(--primary);border-radius:4px;padding:1px 7px;font-size:11px">' + escHtml(t) + '</span>'; });
-        html += '</div>';
-      }
+      if (r.disposisi && !tanpaDisposisi) html += '<div class="surat-detail-timeline-sub" style="margin-top:2px;color:var(--primary);font-weight:500">Disposisi: ' + escHtml(r.disposisi) + '</div>';
       var catatanOtomatis = sembunyikanCatatanOtomatis && /^Diteruskan ke .+ oleh /.test(r.catatan || '');
       if (r.catatan && r.aksi !== 'Surat Dibuat' && !catatanOtomatis) {
         html += '<div class="surat-detail-timeline-sub" style="margin-top:3px;font-style:italic;color:var(--text-muted)">' + escHtml(r.catatan) + '</div>';
@@ -425,6 +422,22 @@ window.openSuratDetail = function(button){
             (sudah ? 'rgba(61,186,126,.35)' : 'var(--border)') + ';background:' + (sudah ? 'rgba(61,186,126,.12)' : 'var(--panel)') + ';color:' +
             (sudah ? '#2e9e68' : 'var(--text-muted)') + '">' + escHtml(p.label_jenis || p.jenis) + ': ' + escHtml(p.satuan) + (sudah ? ' ✓' : '') + '</span>';
         }).join('') + '</div>';
+    }
+
+    // Catatan penjelas di step Wadan: saat Wadan meneruskan surat ke satuan,
+    // salinannya OTOMATIS ikut terkirim ke Urdal sebagai View Only.
+    var eyeSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+    function viewOnlyNoteHtml(list){
+      if (!list || !list.length) return '';
+      var nama  = list.map(function(p){ return p.satuan; }).join(', ');
+      var semuaSudah = list.every(function(p){ return !!p.sudah_konfirmasi; });
+      return '<div class="timeline-viewonly-note">' +
+        '<span class="timeline-viewonly-icon">' + eyeSvg + '</span>' +
+        '<div class="timeline-viewonly-text">' +
+          '<div class="timeline-viewonly-title">Otomatis terkirim juga ke ' + escHtml(nama) + ' <span class="timeline-viewonly-tag">View Only</span></div>' +
+          '<div class="timeline-viewonly-desc">Saat Wadan meneruskan surat ke satuan, salinannya ikut dikirim ke Urdal hanya untuk dilihat (tanpa tindak lanjut).' +
+            (semuaSudah ? ' Sudah dikonfirmasi.' : '') + '</div>' +
+        '</div></div>';
     }
 
     function metaHtml(tanggal){
@@ -475,9 +488,18 @@ window.openSuratDetail = function(button){
           (done ? metaHtml(tglDone) : '');
         if (l.diteruskan) {
           var f = l.diteruskan;
-          body += '<div class="surat-detail-timeline-sub" style="margin-top:6px;font-weight:600;color:var(--primary)">' +
-            (f.aksi_kode === 'SURAT_KELUAR' ? 'Dibalas ke ' : 'Diteruskan ke ') + escHtml(f.penerima || '-') + '</div>' +
-            extraRiwayatHtml(f, true, !f.lampiran_url || f.lampiran_url === lampiranAwalUrl) + paralelChipsHtml(f.paralel);
+          var paralelAll   = f.paralel || [];
+          var viewOnlyList = paralelAll.filter(function(p){ return p.jenis === 'view_only'; });
+          var paralelLain  = paralelAll.filter(function(p){ return p.jenis !== 'view_only'; });
+          body += '<div class="timeline-forward-block">' +
+            '<div class="timeline-forward-row"><span class="timeline-forward-label">' +
+              (f.aksi_kode === 'SURAT_KELUAR' ? 'Dibalas ke' : 'Diteruskan ke') + '</span>' +
+              '<span class="timeline-forward-value">' + escHtml(f.penerima || '-') + '</span></div>' +
+            (f.disposisi ? '<div class="timeline-forward-row"><span class="timeline-forward-label">Disposisi</span>' +
+              '<span class="timeline-forward-value">' + escHtml(f.disposisi) + '</span></div>' : '') +
+            '</div>' +
+            extraRiwayatHtml(f, true, !f.lampiran_url || f.lampiran_url === lampiranAwalUrl, true) +
+            viewOnlyNoteHtml(viewOnlyList) + paralelChipsHtml(paralelLain);
         }
         el = bangunItem(nomor, isLast, done, infoKonf.cls, done ? svgWrap(infoKonf.icon) : clockSvg, body);
 
