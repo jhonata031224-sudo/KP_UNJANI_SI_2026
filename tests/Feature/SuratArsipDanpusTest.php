@@ -150,6 +150,40 @@ class SuratArsipDanpusTest extends TestCase
         $this->assertStringContainsString('TEST', $bagian($res->getContent(), 'suratArsipGrid'));
     }
 
+    /** Label ("Ke"/"Dari") + kode satuan pada kartu Arsip milik satuan $kode, plus Tujuan di modal. */
+    private function kartuArsip(string $kode): array
+    {
+        $html = $this->actingAs($this->u[$kode])->getJson('/laporan-surat/realtime')->json('arsip_items_html');
+        preg_match('/surat-file-card-dari-label">([^<]*)<.*?satuan-pill">([^<]*)</s', $html, $m);
+        preg_match('/data-tujuan-kode="([^"]*)"/', $html, $t);
+        preg_match('/data-dari-kode="([^"]*)"/', $html, $d);
+
+        return ['label' => $m[1] ?? null, 'satuan' => $m[2] ?? null, 'tujuan_modal' => $t[1] ?? null, 'dari_modal' => $d[1] ?? null];
+    }
+
+    public function test_arsip_menampilkan_tujuan_yang_dipilih_masing_masing_sisi(): void
+    {
+        $surat = $this->buatSurat();
+        $this->actingAs($this->u['WADAN'])->patchJson("/laporan-surat/{$surat->id}/konfirmasi")->assertOk();
+        $this->actingAs($this->u['WADAN'])->post("/laporan-surat/{$surat->id}/teruskan", [
+            'tujuan_satuan_id' => $this->s['SATLAK_X']->id, 'disposisi' => 'Satlak Dukteksi', 'tindakan' => ['CATAT'],
+        ]);
+        $this->actingAs($this->u['SATLAK_X'])->patchJson("/laporan-surat/{$surat->id}/konfirmasi")->assertOk();
+
+        // Danpus: tujuan yang ia pilih saat membuat surat = Wadan (BUKAN satuan pilihan Wadan)
+        $k = $this->kartuArsip('DANPUS');
+        $this->assertSame(['Ke', 'WADAN', 'WADAN'], [$k['label'], $k['satuan'], $k['tujuan_modal']]);
+
+        // Wadan: satuan yang ia pilih saat disposisi
+        $k = $this->kartuArsip('WADAN');
+        $this->assertSame(['Ke', 'SATLAK_X', 'SATLAK_X'], [$k['label'], $k['satuan'], $k['tujuan_modal']]);
+        $this->assertSame('DANPUS', $k['dari_modal']); // pengirim asli tetap Danpus
+
+        // Satuan tujuan akhir: tidak meneruskan lagi -> tetap "Dari Danpus"
+        $k = $this->kartuArsip('SATLAK_X');
+        $this->assertSame(['Dari', 'DANPUS'], [$k['label'], $k['satuan']]);
+    }
+
     public function test_surat_menunggu_konfirmasi_tetap_punya_badge(): void
     {
         $this->buatSurat();
