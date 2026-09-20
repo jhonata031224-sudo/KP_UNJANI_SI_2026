@@ -6,6 +6,9 @@
     $viewerSatuanId = $satuan->id ?? $s->satuan_id;
     $badgeCls   = $s->badgeClass($viewerSatuanId);
     $badgeLabel = $s->labelStatus($viewerSatuanId);
+    // Kartu Surat Keluar Danpus: keterangan "Diteruskan" tidak ditampilkan
+    // (alurnya tetap berjalan; status tetap dikirim ke modal via data-status).
+    $sembunyikanBadge = strtoupper($satuan->kode ?? '') === 'DANPUS' && $badgeLabel === 'Diteruskan';
 
     // Riwayat untuk timeline
     // Sembunyikan isi surat (catatan langkah Buat Surat / Surat Keluar berisi
@@ -76,7 +79,7 @@
 @endphp
 <div class="surat-file-card" data-surat-id="{{ $s->id }}" data-created-at="{{ $s->created_at->timestamp }}" data-search="{{ strtolower($s->perihal.' '.$tujuanChainDisplay.' '.($s->tujuanSatuan->kode ?? '')) }}" data-prioritas="{{ $s->prioritas }}">
     <div class="surat-file-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
-    <span class="status-badge {{ $badgeCls }} surat-file-card-badge">{{ $badgeLabel }}</span>
+    @unless($sembunyikanBadge)<span class="status-badge {{ $badgeCls }} surat-file-card-badge">{{ $badgeLabel }}</span>@endunless
     <div class="surat-file-card-title">{{ $s->perihal }}</div>
     {{-- Cover kartu Danpus: keterangan "Kepada" disembunyikan (tujuan tetap tampil di dalam modal Detail). --}}
     @if(strtoupper($satuan->kode ?? '') !== 'DANPUS')

@@ -103,6 +103,9 @@ class LaporanSuratController extends Controller
             $terkirim = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
                 ->where('satuan_id', $satuan->id)
                 ->where('is_selesai', false)
+                // Danpus: surat yang alur 3 step-nya sudah terpenuhi otomatis
+                // keluar dari sini & pindah ke Arsip (lihat query Arsip (a)).
+                ->when($isDanpus, fn ($q) => $q->alurBelumTuntasSisiPengirim())
                 ->latest()
                 ->get();
 
@@ -129,10 +132,17 @@ class LaporanSuratController extends Controller
         //       sudah pindah ke satuan lain -- tetap tercatat sebagai riwayat historis di
         //       Arsip, supaya tidak "hilang" begitu saja setelah diteruskan lebih lanjut.
         $arsip = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
-            ->where(function ($q) use ($satuan) {
+            ->where(function ($q) use ($satuan, $isDanpus) {
                 // (a) Pengirim asli -- nunggu is_selesai, bukan status per-langkah.
+                //     Khusus Danpus: is_selesai ATAU alur 3 step sudah terpenuhi
+                //     (Wadan sudah meneruskan & satuan tujuan akhir sudah konfirmasi).
                 $q->where('satuan_id', $satuan->id)
-                  ->where('is_selesai', true);
+                  ->where(function ($fin) use ($isDanpus) {
+                      $fin->where('is_selesai', true);
+                      if ($isDanpus) {
+                          $fin->orWhere(fn ($t) => $t->alurTuntasSisiPengirim());
+                      }
+                  });
             })
             ->orWhere(function ($q) use ($satuan, $isWadan) {
                 // (b) Pemegang saat ini -- status konfirmasi langkahnya sendiri.

@@ -485,13 +485,28 @@ class DashboardController
             $suratTerkirim = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
                 ->where('satuan_id', $satuan->id)
                 ->where('is_selesai', false)
+                // Danpus: alur 3 step terpenuhi -> otomatis pindah ke Arsip.
+                ->when($isDanpusKode, fn ($q) => $q->alurBelumTuntasSisiPengirim())
                 ->latest()
                 ->get();
 
             $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
-                ->where(function ($q) use ($satuan, $isWadanKode) {
-                    $q->where(function ($sub) use ($satuan, $isWadanKode) {
-                        $sub->where('satuan_id', $satuan->id)
+                ->where(function ($q) use ($satuan, $isWadanKode, $isDanpusKode) {
+                    $q->where(function ($sub) use ($satuan, $isWadanKode, $isDanpusKode) {
+                        $sub->where(function ($own) use ($satuan, $isDanpusKode) {
+                                // Pengirim asli. Khusus Danpus: baru masuk Arsip kalau
+                                // is_selesai ATAU alur 3 step terpenuhi (Wadan sudah
+                                // meneruskan & satuan tujuan akhir sudah konfirmasi) --
+                                // BUKAN cuma karena Wadan baru konfirmasi terima, biar
+                                // tidak tampil ganda di Surat Keluar & Arsip.
+                                $own->where('satuan_id', $satuan->id);
+                                if ($isDanpusKode) {
+                                    $own->where(function ($fin) {
+                                        $fin->where('is_selesai', true)
+                                            ->orWhere(fn ($t) => $t->alurTuntasSisiPengirim());
+                                    });
+                                }
+                            })
                             ->orWhere(function ($tj) use ($satuan, $isWadanKode) {
                                 $tj->where('tujuan_satuan_id', $satuan->id);
                                 // Wadan: surat masuk yang statusnya DIKONFIRMASI

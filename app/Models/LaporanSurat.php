@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -182,6 +183,41 @@ class LaporanSurat extends Model
     public function tembusans(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(LaporanSuratTembusan::class, 'laporan_surat_id');
+    }
+
+    /**
+     * Satuan PERANTARA di alur surat Danpus (Danpus -> Wadan -> Satuan).
+     * Satuan tujuan akhir yang dipilih Wadan adalah satuan SELAIN keduanya.
+     */
+    const KODE_PERANTARA_ALUR_DANPUS = ['DANPUS', 'WADAN'];
+
+    /**
+     * Alur 3 step sudah terpenuhi dari sudut pandang PENGIRIM ASLI (Danpus):
+     *   1) Danpus membuat surat,
+     *   2) Wadan konfirmasi & meneruskan,
+     *   3) satuan tujuan akhir pilihan Wadan sudah konfirmasi.
+     * Artinya pemegang surat saat ini bukan lagi Danpus/Wadan DAN sudah
+     * berstatus dikonfirmasi. Surat seperti ini otomatis pindah dari Surat
+     * Keluar ke Arsip Surat Danpus (tanpa menunggu aksi "Selesai" manual).
+     */
+    public function scopeAlurTuntasSisiPengirim(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_DIKONFIRMASI)
+            ->whereHas('tujuanSatuan', function ($t) {
+                $t->whereNotIn('kode', self::KODE_PERANTARA_ALUR_DANPUS);
+            });
+    }
+
+    /** Kebalikan persis scopeAlurTuntasSisiPengirim() -- dipakai query Surat Keluar. */
+    public function scopeAlurBelumTuntasSisiPengirim(Builder $query): Builder
+    {
+        return $query->where(function ($q) {
+            $q->where('status', '!=', self::STATUS_DIKONFIRMASI)
+              ->orWhereNull('status')
+              ->orWhereDoesntHave('tujuanSatuan', function ($t) {
+                  $t->whereNotIn('kode', self::KODE_PERANTARA_ALUR_DANPUS);
+              });
+        });
     }
 
     public function isDikonfirmasi(): bool
