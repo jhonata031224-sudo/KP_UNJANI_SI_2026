@@ -76,8 +76,8 @@
 
     // Badge status kartu
     if ($isTembusan) {
-        $badgeLabel = $sudahKonfirmasiTembusan ? 'Dikonfirmasi' : ($tipeLabel ?? 'Tembusan');
-        $badgeCls   = $sudahKonfirmasiTembusan ? 'status-dikonfirmasi' : $tipeCls;
+        $badgeLabel = $sudahKonfirmasiTembusan ? 'Dikonfirmasi' : 'Menunggu';
+        $badgeCls   = $sudahKonfirmasiTembusan ? 'status-dikonfirmasi' : 'status-menunggu';
     } else {
         $badgeLabel = $s->isDikonfirmasi() ? 'Dikonfirmasi' : 'Menunggu';
         $badgeCls   = $s->badgeClass();
