@@ -534,17 +534,28 @@ window.openSuratDetail = function(button){
 
     var connector = dibuat.querySelector('.timeline-step-line');
 
+    // Penerima pertama surat (mis. Wadan). Kalau penerima itu Wadan, alur nyata
+    // sistemnya: Wadan konfirmasi dulu -> Wadan memilih satuan tujuan ->
+    // satuan tsb konfirmasi. Step 2 & 3 mengikuti kondisi itu.
+    var hopPertama = (tujuanHops && tujuanHops.length) ? tujuanHops[0] : null;
+    var namaPenerima = (hopPertama && hopPertama.nama) || button.dataset.tujuan || '-';
+    var penerimaIsWadan = !!hopPertama && /wadan/i.test((hopPertama.kode || '') + ' ' + (hopPertama.nama || ''));
+    var judulStep2 = penerimaIsWadan
+      ? (sudahKonfirmasi ? 'Dikonfirmasi ' : 'Menunggu Konfirmasi ') + namaPenerima
+      : 'Dikonfirmasi';
+
     var konfirmasi = document.createElement('div');
     konfirmasi.className = 'surat-detail-timeline-item timeline-card' + (sudahKonfirmasi ? '' : ' is-pending');
     konfirmasi.innerHTML =
       timelineStepColHtml(2, button.dataset.isSelesai === '1') +
       '<div class="timeline-card-inner' + (sudahKonfirmasi ? ' ' + iconKonf.cls : '') + '">' +
         '<span class="timeline-card-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' + iconKonf.icon + '</svg></span>' +
-        '<div class="timeline-card-body"><div class="surat-detail-timeline-title">Dikonfirmasi</div><div class="surat-detail-timeline-sub"></div><div class="timeline-card-meta"></div></div>' +
+        '<div class="timeline-card-body"><div class="surat-detail-timeline-title"></div><div class="surat-detail-timeline-sub"></div><div class="timeline-card-meta"></div></div>' +
       '</div>';
+    konfirmasi.querySelector('.surat-detail-timeline-title').textContent = judulStep2;
     konfirmasi.querySelector('.surat-detail-timeline-sub').textContent = sudahKonfirmasi
       ? ('Oleh ' + (button.dataset.dikonfirmasiOleh || '-'))
-      : 'Menunggu konfirmasi penerima';
+      : (penerimaIsWadan ? 'Surat belum dikonfirmasi oleh Wadan' : 'Menunggu konfirmasi penerima');
     if (sudahKonfirmasi) {
       var konfMeta = konfirmasi.querySelector('.timeline-card-meta');
       konfMeta.innerHTML = clockSvg;
@@ -578,14 +589,16 @@ window.openSuratDetail = function(button){
 
       var pendingFallback = document.createElement('div');
       pendingFallback.className = 'surat-detail-timeline-item timeline-card is-pending';
+      var step3Html = penerimaIsWadan
+        ? '<div class="surat-detail-timeline-title">Menunggu Konfirmasi Satuan</div>' +
+          '<div class="surat-detail-timeline-sub">Satuan tujuan akan dipilih oleh Wadan saat meneruskan surat</div>'
+        : '<div class="surat-detail-timeline-title">Saat Ini: ' + escHtml(tujuanSaatIni) + stepStatusPill(statusSaatIni === 'Dikonfirmasi' ? 'KONFIRMASI' : null) + '</div>' +
+          '<div class="surat-detail-timeline-sub">' + escHtml(statusSaatIni) + '<br>belum masuk Arsip sampai seluruh alur tuntas</div>';
       pendingFallback.innerHTML =
         timelineStepColHtml(3, true) +
         '<div class="timeline-card-inner">' +
           '<span class="timeline-card-badge">' + clockSvg + '</span>' +
-          '<div class="timeline-card-body">' +
-            '<div class="surat-detail-timeline-title">Saat Ini: ' + escHtml(tujuanSaatIni) + stepStatusPill(statusSaatIni === 'Dikonfirmasi' ? 'KONFIRMASI' : null) + '</div>' +
-            '<div class="surat-detail-timeline-sub">' + escHtml(statusSaatIni) + '<br>belum masuk Arsip sampai seluruh alur tuntas</div>' +
-          '</div>' +
+          '<div class="timeline-card-body">' + step3Html + '</div>' +
         '</div>';
       timeline.appendChild(pendingFallback);
 
