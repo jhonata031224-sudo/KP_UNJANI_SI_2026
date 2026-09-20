@@ -208,6 +208,8 @@ window.openSuratDetail = function(button){
   var tujuanValueWrap = document.getElementById('suratDetailTujuanValue');
   var tujuanHops = [];
   try { tujuanHops = JSON.parse(button.dataset.tujuanHops || '[]'); } catch(e){}
+  var alurHops = tujuanHops;
+  if (!alurHops.length) { try { alurHops = JSON.parse(button.dataset.alurHops || '[]'); } catch(e){ alurHops = []; } }
   var arrowSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
 
   if (tujuanHops.length > 1) {
@@ -493,7 +495,7 @@ window.openSuratDetail = function(button){
         lastLineEl.appendChild(extraLine);
       }
 
-      var tujuanSaatIni = button.dataset.tujuan || '-';
+      var tujuanSaatIni = button.dataset.saatIni || button.dataset.tujuan || '-';
       var statusSaatIni = button.dataset.status || 'Menunggu Konfirmasi';
 
       var pending = document.createElement('div');
@@ -537,7 +539,7 @@ window.openSuratDetail = function(button){
     // Penerima pertama surat (mis. Wadan). Kalau penerima itu Wadan, alur nyata
     // sistemnya: Wadan konfirmasi dulu -> Wadan memilih satuan tujuan ->
     // satuan tsb konfirmasi. Step 2 & 3 mengikuti kondisi itu.
-    var hopPertama = (tujuanHops && tujuanHops.length) ? tujuanHops[0] : null;
+    var hopPertama = (alurHops && alurHops.length) ? alurHops[0] : null;
     var namaPenerima = (hopPertama && hopPertama.nama) || button.dataset.tujuan || '-';
     var penerimaIsWadan = !!hopPertama && /wadan/i.test((hopPertama.kode || '') + ' ' + (hopPertama.nama || ''));
     var judulStep2 = penerimaIsWadan
@@ -584,7 +586,7 @@ window.openSuratDetail = function(button){
     // seharusnya ada kotak step berikutnya yang menandakan alur masih
     // berjalan -- samain sama kotak "Saat Ini" di mode riwayat normal.
     if (button.dataset.isSelesai !== '1') {
-      var tujuanSaatIni = button.dataset.tujuan || '-';
+      var tujuanSaatIni = button.dataset.saatIni || button.dataset.tujuan || '-';
       var statusSaatIni = button.dataset.status || 'Menunggu Konfirmasi';
 
       var pendingFallback = document.createElement('div');

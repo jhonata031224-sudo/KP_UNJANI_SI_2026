@@ -123,6 +123,28 @@
         ];
     })->toJson();
 
+    // Alur penerima (dari sudut pandang surat, bukan dari sudut pandang viewer):
+    // supaya Riwayat Alur di sisi penerima/tembusan (mis. Urdal View Only) sama
+    // persis dengan yang dilihat pengirim (Danpus): Dibuat -> Wadan -> satuan
+    // pilihan Wadan. Sebelumnya cuma kenal satuan viewer sendiri, jadi timeline
+    // selalu tampak "nyangkut" di step 1 dengan status "Saat Ini: <viewer>".
+    $alurHopsAksi = [
+        \App\Models\LaporanSuratRiwayat::AKSI_BUAT_SURAT,
+        \App\Models\LaporanSuratRiwayat::AKSI_SURAT_KELUAR,
+        \App\Models\LaporanSuratRiwayat::AKSI_TERUSKAN,
+    ];
+    $alurHops = $riwayats
+        ->where('siklus', $s->siklus)
+        ->whereIn('aksi', $alurHopsAksi)
+        ->sortBy('created_at')
+        ->map(fn ($r) => $r->penerimaSatuan ? ['nama' => $r->penerimaSatuan->nama, 'kode' => $r->penerimaSatuan->kode] : null)
+        ->filter()
+        ->values();
+    if ($alurHops->isEmpty() && ($s->tujuanSatuan ?? null)) {
+        $alurHops = collect([['nama' => $s->tujuanSatuan->nama, 'kode' => $s->tujuanSatuan->kode]]);
+    }
+    $posisiSaatIni = $s->tujuanSatuan->nama ?? ($satuan->nama ?? '-');
+
     // Disposisi & Tindakan dari surat (untuk tampil di detail)
     $disposisiAktif = $s->disposisi_terakhir ?? $s->disposisi;
     $tindakanAktif  = $s->tindakan_terakhir ?? $s->tindakan;
@@ -130,9 +152,6 @@
 <div class="surat-file-card" data-surat-id="{{ $s->id }}" data-created-at="{{ $s->created_at->timestamp }}" data-search="{{ strtolower($s->perihal.' '.($s->satuan->nama ?? '').' '.($s->satuan->kode ?? '')) }}" data-prioritas="{{ $s->prioritas }}">
     <div class="surat-file-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
     <span class="status-badge {{ $badgeCls }} surat-file-card-badge">{{ $badgeLabel }}</span>
-    @if($tipeLabel && ! $sudahKonfirmasiTembusan)
-        <span class="status-badge {{ $tipeCls }}" style="font-size:10px;padding:2px 8px;margin-left:4px;">{{ $tipeLabel }}</span>
-    @endif
     <div class="surat-file-card-title">{{ $s->perihal }}</div>
     <div><div class="surat-file-card-dari-label">Dari</div><div class="surat-file-card-dari-value"><span>{{ $s->satuan->nama ?? '-' }}</span><span class="satuan-pill">{{ $s->satuan->kode ?? $s->satuan->nama ?? '-' }}</span></div></div>
     <div class="surat-file-card-divider"></div>
@@ -143,6 +162,8 @@
         data-perihal="{{ e($s->perihal) }}"
         data-tujuan="{{ e($satuan->nama ?? '-') }}"
         data-tujuan-kode="{{ e($satuan->kode ?? '') }}"
+        data-alur-hops="{{ e($alurHops->toJson()) }}"
+        data-saat-ini="{{ e($posisiSaatIni) }}"
         data-kategori="{{ e($s->kategori ?: 'Umum') }}"
         data-prioritas="{{ e($s->prioritas) }}"
         data-status="{{ $s->labelStatus() }}"
