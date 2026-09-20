@@ -501,7 +501,7 @@ window.openSuratDetail = function(button){
               '<span class="timeline-forward-value">' + escHtml(f.disposisi) + '</span></div>' : '') +
             '</div>' +
             extraRiwayatHtml(f, true, !f.lampiran_url || f.lampiran_url === lampiranAwalUrl, true) +
-            viewOnlyNoteHtml(viewOnlyList) + paralelChipsHtml(paralelLain);
+            paralelChipsHtml(paralelLain);
         }
         el = bangunItem(nomor, isLast, done, infoKonf.cls, done ? svgWrap(infoKonf.icon) : clockSvg, body);
 
