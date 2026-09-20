@@ -504,7 +504,7 @@ window.openSuratDetail = function(button){
           '<span class="timeline-card-badge">' + clockSvg + '</span>' +
           '<div class="timeline-card-body">' +
             '<div class="surat-detail-timeline-title">Saat Ini: ' + escHtml(tujuanSaatIni) + stepStatusPill(statusSaatIni === 'Dikonfirmasi' ? 'KONFIRMASI' : null) + '</div>' +
-            '<div class="surat-detail-timeline-sub">' + escHtml(statusSaatIni) + ' — belum masuk Arsip sampai seluruh alur tuntas</div>' +
+            '<div class="surat-detail-timeline-sub">' + escHtml(statusSaatIni) + '<br>belum masuk Arsip sampai seluruh alur tuntas</div>' +
           '</div>' +
         '</div>';
       timeline.appendChild(pending);
@@ -537,7 +537,7 @@ window.openSuratDetail = function(button){
     var konfirmasi = document.createElement('div');
     konfirmasi.className = 'surat-detail-timeline-item timeline-card' + (sudahKonfirmasi ? '' : ' is-pending');
     konfirmasi.innerHTML =
-      timelineStepColHtml(2, true) +
+      timelineStepColHtml(2, button.dataset.isSelesai === '1') +
       '<div class="timeline-card-inner' + (sudahKonfirmasi ? ' ' + iconKonf.cls : '') + '">' +
         '<span class="timeline-card-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' + iconKonf.icon + '</svg></span>' +
         '<div class="timeline-card-body"><div class="surat-detail-timeline-title">Dikonfirmasi</div><div class="surat-detail-timeline-sub"></div><div class="timeline-card-meta"></div></div>' +
@@ -584,10 +584,17 @@ window.openSuratDetail = function(button){
           '<span class="timeline-card-badge">' + clockSvg + '</span>' +
           '<div class="timeline-card-body">' +
             '<div class="surat-detail-timeline-title">Saat Ini: ' + escHtml(tujuanSaatIni) + stepStatusPill(statusSaatIni === 'Dikonfirmasi' ? 'KONFIRMASI' : null) + '</div>' +
-            '<div class="surat-detail-timeline-sub">' + escHtml(statusSaatIni) + ' — belum masuk Arsip sampai seluruh alur tuntas</div>' +
+            '<div class="surat-detail-timeline-sub">' + escHtml(statusSaatIni) + '<br>belum masuk Arsip sampai seluruh alur tuntas</div>' +
           '</div>' +
         '</div>';
       timeline.appendChild(pendingFallback);
+
+      // Garis penghubung step 2 -> step 3 (hijau kalau step 2 sudah dikonfirmasi)
+      var line23 = konfirmasi.querySelector('.timeline-step-line');
+      if (line23 && sudahKonfirmasi) {
+        void line23.offsetHeight;
+        requestAnimationFrame(function(){requestAnimationFrame(function(){ line23.classList.add('line-complete'); });});
+      }
     }
   }
 
