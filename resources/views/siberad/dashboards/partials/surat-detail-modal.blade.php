@@ -397,7 +397,7 @@ window.openSuratDetail = function(button){
     }
 
     // Disposisi / tindakan / catatan / lampiran milik satu riwayat.
-    function extraRiwayatHtml(r, sembunyikanCatatanOtomatis){
+    function extraRiwayatHtml(r, sembunyikanCatatanOtomatis, tanpaLampiran){
       var html = '';
       if (r.disposisi) html += '<div class="surat-detail-timeline-sub" style="margin-top:2px;color:var(--primary);font-weight:500">Disposisi: ' + escHtml(r.disposisi) + '</div>';
       if (r.tindakan && r.tindakan.length) {
@@ -409,7 +409,7 @@ window.openSuratDetail = function(button){
       if (r.catatan && r.aksi !== 'Surat Dibuat' && !catatanOtomatis) {
         html += '<div class="surat-detail-timeline-sub" style="margin-top:3px;font-style:italic;color:var(--text-muted)">' + escHtml(r.catatan) + '</div>';
       }
-      if (r.lampiran_url) {
+      if (r.lampiran_url && !tanpaLampiran) {
         html += '<div class="surat-detail-timeline-sub" style="margin-top:4px"><a href="' + r.lampiran_url + '" target="_blank" rel="noopener" style="color:var(--primary);font-size:12px;text-decoration:underline">📎 ' + escHtml(r.lampiran_nama || 'Lampiran') + '</a></div>';
       }
       return html;
@@ -443,6 +443,12 @@ window.openSuratDetail = function(button){
       return el;
     }
 
+    // Lampiran surat awal sudah tersedia di panel "Dokumen" (tombol Unduh), jadi
+    // tidak diulang di step "Dibuat" maupun di step "Diteruskan" kalau file-nya
+    // masih sama. Tautan hanya muncul di step yang membawa file BARU.
+    var lampiranAwalUrl = '';
+    riwayats.forEach(function(r){ if (!lampiranAwalUrl && r.aksi_kode === 'BUAT_SURAT' && r.lampiran_url) lampiranAwalUrl = r.lampiran_url; });
+
     var itemsRendered = [];
     langkah.forEach(function(l, idx){
       var nomor  = idx + 1;
@@ -456,7 +462,7 @@ window.openSuratDetail = function(button){
         el = bangunItem(nomor, isLast, true, infoBuat.cls, svgWrap(infoBuat.icon),
           '<div class="surat-detail-timeline-title">Dibuat</div>' +
           '<div class="surat-detail-timeline-sub">' + escHtml(olehBuat) + '</div>' +
-          metaHtml(r.tanggal) + extraRiwayatHtml(r, false) + paralelChipsHtml(r.paralel));
+          metaHtml(r.tanggal) + extraRiwayatHtml(r, false, true) + paralelChipsHtml(r.paralel));
 
       } else if (l.tipe === 'pemegang') {
         done = !!(l.konfirmasi || l.diteruskan || l.selesai);
@@ -471,7 +477,7 @@ window.openSuratDetail = function(button){
           var f = l.diteruskan;
           body += '<div class="surat-detail-timeline-sub" style="margin-top:6px;font-weight:600;color:var(--primary)">' +
             (f.aksi_kode === 'SURAT_KELUAR' ? 'Dibalas ke ' : 'Diteruskan ke ') + escHtml(f.penerima || '-') + '</div>' +
-            extraRiwayatHtml(f, true) + paralelChipsHtml(f.paralel);
+            extraRiwayatHtml(f, true, !f.lampiran_url || f.lampiran_url === lampiranAwalUrl) + paralelChipsHtml(f.paralel);
         }
         el = bangunItem(nomor, isLast, done, infoKonf.cls, done ? svgWrap(infoKonf.icon) : clockSvg, body);
 
