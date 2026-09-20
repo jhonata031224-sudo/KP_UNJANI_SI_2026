@@ -287,33 +287,30 @@
     bar.className='rpt-filter-bar';
     var extraHtml='';
     if(extraFilters){
-      // Jenis Surat & Satuan: opsinya dibangun dari nilai yang BENERAN ada
-      // di kartu yang ke-render (data-jenis-filter / data-satuan-kode),
-      // bukan hardcode -- jadi otomatis nyesuain kalau suatu satuan ternyata
-      // gak punya semua kombinasi jenis/lawan di arsipnya. "Rahasia" TETAP
-      // muncul sebagai opsi biasa di sini (surat rahasia tetap kelihatan &
-      // bisa difilter) -- yang dikunci cuma ISI & tombol buka kartunya
-      // (lihat .surat-file-card-locked di surat-arsip-row.blade.php),
-      // bukan keberadaannya di daftar/filter.
-      var jenisSet={},satuanMap={};
+      // Jenis Surat: opsinya dibangun dari nilai yang BENERAN ada di kartu
+      // yang ke-render (data-jenis-filter), bukan hardcode -- jadi otomatis
+      // nyesuain kalau suatu satuan ternyata gak punya semua kombinasi
+      // jenis/lawan di arsipnya. "Rahasia" TETAP muncul sebagai opsi biasa
+      // di sini (surat rahasia tetap kelihatan & bisa difilter) -- yang
+      // dikunci cuma ISI & tombol buka kartunya (lihat
+      // .surat-file-card-locked di surat-arsip-row.blade.php), bukan
+      // keberadaannya di daftar/filter.
+      // Filter Satuan sengaja DIHAPUS dari sini (permintaan: hapus filter
+      // satuan di Arsip Surat) -- select Urutkan (Terbaru/Terlama) tetap
+      // ditaruh di luar extraHtml (lihat bar.innerHTML di bawah) jadi
+      // otomatis nempel tepat di sebelah kanan filter Jenis Surat begitu
+      // satuan gak ada lagi.
+      var jenisSet={};
       initialCards.forEach(function(c){
         var p=c.dataset.jenisFilter;
         if(p)jenisSet[p]=true;
-        var sk=c.dataset.satuanKode,sn=c.dataset.satuanNama;
-        if(sk)satuanMap[sk]=sn||sk;
       });
       var jenisOpts=Object.keys(jenisSet).sort().map(function(p){
         return '<option value="'+p+'">'+p+'</option>';
       }).join('');
-      var satuanKeys=Object.keys(satuanMap);
-      var satuanOpts=satuanKeys.sort().map(function(sk){
-        return '<option value="'+sk+'">'+satuanMap[sk]+'</option>';
-      }).join('');
-      var satuanSelectHtml=satuanKeys.length?('<select class="rpt-filter-select" aria-label="Filter satuan">'+(satuanKeys.length>1?'<option value="all">Semua Satuan</option>':'')+satuanOpts+'</select>'):'';
       extraHtml='<div class="rpt-filter-date-wrap"><label for="'+gridId+'DariDate">Dari</label><input type="date" id="'+gridId+'DariDate" aria-label="Tanggal dari"></div>'+
         '<div class="rpt-filter-date-wrap"><label for="'+gridId+'SampaiDate">Sampai</label><input type="date" id="'+gridId+'SampaiDate" aria-label="Tanggal sampai"></div>'+
-        '<select class="rpt-filter-select" aria-label="Filter jenis surat"><option value="all">Semua Jenis Surat</option>'+jenisOpts+'</select>'+
-        satuanSelectHtml;
+        '<select class="rpt-filter-select" aria-label="Filter jenis surat"><option value="all">Semua Jenis Surat</option>'+jenisOpts+'</select>';
     }
     bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="'+searchPlaceholder+'" aria-label="'+searchPlaceholder+'"></div>'+extraHtml+'<select class="rpt-filter-select" aria-label="Urutkan"><option value="newest">Terbaru</option><option value="oldest">Terlama</option></select><span class="rpt-filter-count"></span>';
     // .panel di grid Surat cuma bungkus panel-head (judul+deskripsi+tombol)
@@ -335,7 +332,6 @@
     var selects=bar.querySelectorAll('select');
     var sortSelect=selects[selects.length-1];
     var jenisSelect=extraFilters?bar.querySelector('select[aria-label="Filter jenis surat"]'):null;
-    var satuanSelect=extraFilters?bar.querySelector('select[aria-label="Filter satuan"]'):null;
     var dariInput=extraFilters?bar.querySelector('input[aria-label="Tanggal dari"]'):null;
     var sampaiInput=extraFilters?bar.querySelector('input[aria-label="Tanggal sampai"]'):null;
     var count=bar.querySelector('.rpt-filter-count');
@@ -383,14 +379,12 @@
 
       var q=(input.value||'').trim().toLowerCase();
       var jenisVal=jenisSelect?jenisSelect.value:'all';
-      var satuanVal=satuanSelect?satuanSelect.value:'all';
       var dariSec=(dariInput&&dariInput.value)?startOfDaySeconds(dariInput.value):null;
       var sampaiSec=(sampaiInput&&sampaiInput.value)?endOfDaySeconds(sampaiInput.value):null;
       var visible=0;
       items.forEach(function(item){
         var match=!q||(item.dataset.search||'').indexOf(q)!==-1;
         if(match&&jenisVal!=='all')match=item.dataset.jenisFilter===jenisVal;
-        if(match&&satuanVal&&satuanVal!=='all')match=item.dataset.satuanKode===satuanVal;
         if(match&&(dariSec!==null||sampaiSec!==null)){
           var createdAt=Number(item.dataset.createdAt);
           if(dariSec!==null&&createdAt<dariSec)match=false;
@@ -412,7 +406,6 @@
     input.addEventListener('input',apply);
     sortSelect.addEventListener('change',apply);
     if(jenisSelect)jenisSelect.addEventListener('change',apply);
-    if(satuanSelect)satuanSelect.addEventListener('change',apply);
     if(dariInput)dariInput.addEventListener('change',apply);
     if(sampaiInput)sampaiInput.addEventListener('change',apply);
 
