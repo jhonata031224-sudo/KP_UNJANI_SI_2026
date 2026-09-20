@@ -95,11 +95,33 @@
 /* Riwayat Alur bisa berisi banyak step (Danpus > Wadan > Urdal > Satuan, dst),
    jadi dibatasi tingginya & dikasih scrollbar sendiri supaya tidak memaksa
    modal jadi sangat tinggi / step terpotong di layar kecil. */
-.surat-detail-timeline{max-height:300px;overflow-y:auto;padding-right:8px;margin-right:-8px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
-.surat-detail-timeline::-webkit-scrollbar{width:6px}
-.surat-detail-timeline::-webkit-scrollbar-track{background:transparent}
-.surat-detail-timeline::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px}
-.surat-detail-timeline::-webkit-scrollbar-thumb:hover{background:var(--gold-bright,var(--gold))}
+.surat-detail-timeline{max-height:300px;overflow-y:auto;padding-right:8px;margin-right:-8px}
+
+/* ===== Semua modal surat (Detail, Buat Surat, Disposisi Wadan, Teruskan) =====
+   1) Sudut kartu modal tumpul semua.
+   2) Scrollbar SERAGAM di kartu modal & area scroll di dalamnya (timeline, grid tindakan):
+      tipis 6px, thumb bulat, tanpa tombol panah (panah bawaan browser bikin sudut
+      kanan-atas/bawah modal terlihat tajam). Firefox: gaya "thin" standar. */
+:is(#suratDetailModal,#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card{border-radius:22px}
+:is(#suratDetailModal,#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card,
+.surat-detail-timeline,#wadanDisposisiTindakanGrid,#suratTeruskanTindakanGrid{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+@supports selector(::-webkit-scrollbar){
+  /* Chrome/Edge/Safari baru: pakai pseudo-element webkit (standar scrollbar-* akan menampilkan panah) */
+  :is(#suratDetailModal,#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card,
+  .surat-detail-timeline,#wadanDisposisiTindakanGrid,#suratTeruskanTindakanGrid{scrollbar-width:auto;scrollbar-color:auto}
+  :is(#suratDetailModal,#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card::-webkit-scrollbar,
+  .surat-detail-timeline::-webkit-scrollbar,#wadanDisposisiTindakanGrid::-webkit-scrollbar,#suratTeruskanTindakanGrid::-webkit-scrollbar{width:6px;height:6px}
+  :is(#suratDetailModal,#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card::-webkit-scrollbar-track,
+  .surat-detail-timeline::-webkit-scrollbar-track,#wadanDisposisiTindakanGrid::-webkit-scrollbar-track,#suratTeruskanTindakanGrid::-webkit-scrollbar-track{background:transparent}
+  :is(#suratDetailModal,#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card::-webkit-scrollbar-thumb,
+  .surat-detail-timeline::-webkit-scrollbar-thumb,#wadanDisposisiTindakanGrid::-webkit-scrollbar-thumb,#suratTeruskanTindakanGrid::-webkit-scrollbar-thumb{background:var(--border);border-radius:999px}
+  :is(#suratDetailModal,#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card::-webkit-scrollbar-thumb:hover,
+  .surat-detail-timeline::-webkit-scrollbar-thumb:hover,#wadanDisposisiTindakanGrid::-webkit-scrollbar-thumb:hover,#suratTeruskanTindakanGrid::-webkit-scrollbar-thumb:hover{background:var(--gold-bright,var(--gold))}
+  :is(#suratDetailModal,#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card::-webkit-scrollbar-button,
+  .surat-detail-timeline::-webkit-scrollbar-button,#wadanDisposisiTindakanGrid::-webkit-scrollbar-button,#suratTeruskanTindakanGrid::-webkit-scrollbar-button{display:none;width:0;height:0}
+  /* Jarak ujung track dari sudut bulat kartu modal supaya thumb tidak menabrak lengkungan */
+  :is(#suratDetailModal,#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card::-webkit-scrollbar-track{margin:22px 0}
+}
 
 /* ── Step-by-step "kartu bernomor" (redesain alur riwayat) ──
    Tiap langkah alur (Dibuat -> Konfirmasi Wadan -> Diteruskan -> ...)
