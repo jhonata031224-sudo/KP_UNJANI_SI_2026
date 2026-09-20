@@ -244,6 +244,16 @@
    id-nya di selector bawah ini. */
 #suratDetailModal .modal-actions .btn[hidden]{display:none!important}
 @media(max-width:700px){.surat-detail-body{grid-template-columns:1fr}.surat-detail-col-left{border-right:none;padding-right:0;padding-bottom:20px;border-bottom:1px solid var(--border-soft);margin-bottom:20px}}
+/* Filter tambahan (Tanggal dari/sampai, Prioritas, Satuan) khusus grid
+   Arsip Surat -- numpang gaya input .rpt-filter-search input yang sama
+   biar nyatu sama search+sort bar yang udah ada (lihat initSuratCardSearch
+   di bawah), TAPI cuma dipasang di panggilan 'arsip-surat', bukan di
+   Surat Keluar/Surat Masuk (dua grid itu tetap search+sort polos). */
+.rpt-filter-date-wrap{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.rpt-filter-date-wrap label{font-size:11px;color:var(--text-muted);white-space:nowrap}
+.rpt-filter-date-wrap input[type="date"]{box-sizing:border-box;height:38px;border:1px solid var(--border-soft);border-radius:9px;background:var(--panel-alt);color:var(--text);font:inherit;font-size:12px;padding:8px 10px;color-scheme:light dark}
+.rpt-filter-date-wrap input[type="date"]:focus{outline:0;border-color:var(--gold-bright);box-shadow:0 0 0 3px rgba(201,122,0,.10)}
+@media(max-width:700px){.rpt-filter-date-wrap{width:100%}.rpt-filter-date-wrap input[type="date"]{flex:1;min-width:0}}
 </style>
 <script>
 (function(){
@@ -254,7 +264,7 @@
   // tiap grid cuma butuh cari + Terbaru/Terlama, gak butuh dropdown filter
   // status. Dipanggil sekali per grid (Surat Keluar & Surat Masuk) lewat
   // initAllSuratCardSearch() di bawah -- parametrized biar gak dobel-tulis.
-  function initSuratCardSearch(sectionId,gridId,searchPlaceholder){
+  function initSuratCardSearch(sectionId,gridId,searchPlaceholder,extraFilters){
     var section=document.getElementById(sectionId);
     if(!section||section.dataset.searchReady==='1')return;
     var grid=document.getElementById(gridId);
@@ -266,7 +276,33 @@
 
     var bar=document.createElement('div');
     bar.className='rpt-filter-bar';
-    bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="'+searchPlaceholder+'" aria-label="'+searchPlaceholder+'"></div><select aria-label="Urutkan"><option value="newest">Terbaru</option><option value="oldest">Terlama</option></select><span class="rpt-filter-count"></span>';
+    var extraHtml='';
+    if(extraFilters){
+      // Prioritas & Satuan: opsinya dibangun dari nilai yang BENERAN ada di
+      // kartu yang ke-render (data-prioritas / data-satuan-kode), bukan
+      // hardcode -- jadi otomatis nyesuain kalau suatu satuan ternyata gak
+      // punya semua kombinasi prioritas/lawan di arsipnya.
+      var prioritasSet={},satuanMap={};
+      initialCards.forEach(function(c){
+        var p=c.dataset.prioritas;
+        if(p)prioritasSet[p]=true;
+        var sk=c.dataset.satuanKode,sn=c.dataset.satuanNama;
+        if(sk)satuanMap[sk]=sn||sk;
+      });
+      var prioritasOpts=Object.keys(prioritasSet).sort().map(function(p){
+        return '<option value="'+p+'">'+p+'</option>';
+      }).join('');
+      var satuanKeys=Object.keys(satuanMap);
+      var satuanOpts=satuanKeys.sort().map(function(sk){
+        return '<option value="'+sk+'">'+satuanMap[sk]+'</option>';
+      }).join('');
+      var satuanSelectHtml=satuanKeys.length?('<select class="rpt-filter-select" aria-label="Filter satuan">'+(satuanKeys.length>1?'<option value="all">Semua Satuan</option>':'')+satuanOpts+'</select>'):'';
+      extraHtml='<div class="rpt-filter-date-wrap"><label for="'+gridId+'DariDate">Dari</label><input type="date" id="'+gridId+'DariDate" aria-label="Tanggal dari"></div>'+
+        '<div class="rpt-filter-date-wrap"><label for="'+gridId+'SampaiDate">Sampai</label><input type="date" id="'+gridId+'SampaiDate" aria-label="Tanggal sampai"></div>'+
+        '<select class="rpt-filter-select" aria-label="Filter prioritas"><option value="all">Semua Prioritas</option>'+prioritasOpts+'</select>'+
+        satuanSelectHtml;
+    }
+    bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="'+searchPlaceholder+'" aria-label="'+searchPlaceholder+'"></div>'+extraHtml+'<select class="rpt-filter-select" aria-label="Urutkan"><option value="newest">Terbaru</option><option value="oldest">Terlama</option></select><span class="rpt-filter-count"></span>';
     // .panel di grid Surat cuma bungkus panel-head (judul+deskripsi+tombol)
     // -- grid kartunya sendiri SENGAJA di luar .panel (lihat markup
     // #kirim-surat/#surat-masuk). Bar cari+urut ikut di DALAM .panel
@@ -282,11 +318,28 @@
     searchEmpty.innerHTML='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><div class="empty-state-title">Tidak ada surat yang sesuai dengan pencarian.</div>';
     grid.parentNode.insertBefore(searchEmpty,grid.nextSibling);
 
-    var input=bar.querySelector('input');
-    var sortSelect=bar.querySelector('select');
+    var input=bar.querySelector('input[type="search"]');
+    var selects=bar.querySelectorAll('select');
+    var sortSelect=selects[selects.length-1];
+    var prioritasSelect=extraFilters?bar.querySelector('select[aria-label="Filter prioritas"]'):null;
+    var satuanSelect=extraFilters?bar.querySelector('select[aria-label="Filter satuan"]'):null;
+    var dariInput=extraFilters?bar.querySelector('input[aria-label="Tanggal dari"]'):null;
+    var sampaiInput=extraFilters?bar.querySelector('input[aria-label="Tanggal sampai"]'):null;
     var count=bar.querySelector('.rpt-filter-count');
     var applying=false;
     var raf=0;
+
+    // Tanggal "sampai" diinterpretasikan SAMPAI AKHIR hari itu (23:59:59),
+    // biar surat yang dibuat siang/sore di tanggal yang dipilih tetap ikut
+    // kehitung -- bukan cuma tepat jam 00:00.
+    function endOfDaySeconds(dateStr){
+      var d=new Date(dateStr+'T23:59:59');
+      return Math.floor(d.getTime()/1000);
+    }
+    function startOfDaySeconds(dateStr){
+      var d=new Date(dateStr+'T00:00:00');
+      return Math.floor(d.getTime()/1000);
+    }
 
     function apply(){
       applying=true;
@@ -316,9 +369,20 @@
       }
 
       var q=(input.value||'').trim().toLowerCase();
+      var prioritasVal=prioritasSelect?prioritasSelect.value:'all';
+      var satuanVal=satuanSelect?satuanSelect.value:'all';
+      var dariSec=(dariInput&&dariInput.value)?startOfDaySeconds(dariInput.value):null;
+      var sampaiSec=(sampaiInput&&sampaiInput.value)?endOfDaySeconds(sampaiInput.value):null;
       var visible=0;
       items.forEach(function(item){
         var match=!q||(item.dataset.search||'').indexOf(q)!==-1;
+        if(match&&prioritasVal!=='all')match=item.dataset.prioritas===prioritasVal;
+        if(match&&satuanVal&&satuanVal!=='all')match=item.dataset.satuanKode===satuanVal;
+        if(match&&(dariSec!==null||sampaiSec!==null)){
+          var createdAt=Number(item.dataset.createdAt);
+          if(dariSec!==null&&createdAt<dariSec)match=false;
+          if(match&&sampaiSec!==null&&createdAt>sampaiSec)match=false;
+        }
         item.style.display=match?'':'none';
         if(match)visible++;
       });
@@ -334,6 +398,10 @@
 
     input.addEventListener('input',apply);
     sortSelect.addEventListener('change',apply);
+    if(prioritasSelect)prioritasSelect.addEventListener('change',apply);
+    if(satuanSelect)satuanSelect.addEventListener('change',apply);
+    if(dariInput)dariInput.addEventListener('change',apply);
+    if(sampaiInput)sampaiInput.addEventListener('change',apply);
 
     var observer=new MutationObserver(function(){ if(!applying) scheduleApply(); });
     observer.observe(grid,{childList:true});
@@ -343,7 +411,10 @@
   function initAllSuratCardSearch(){
     initSuratCardSearch('kirim-surat','suratTerkirimGrid','Cari perihal atau tujuan...');
     initSuratCardSearch('surat-masuk','suratMasukGrid','Cari perihal atau pengirim...');
-    initSuratCardSearch('arsip-surat','suratArsipGrid','Cari perihal atau dari/tujuan...');
+    // Cuma Arsip Surat yang dapet filter tambahan (Tanggal dari/sampai,
+    // Prioritas, Satuan) -- Surat Keluar & Surat Masuk tetap search+sort
+    // polos seperti semula.
+    initSuratCardSearch('arsip-surat','suratArsipGrid','Cari perihal atau dari/tujuan...',true);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initAllSuratCardSearch);else initAllSuratCardSearch();
 })();
