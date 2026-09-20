@@ -51,6 +51,15 @@
 .surat-file-card-meta-value{font-size:13.5px;font-weight:700;color:var(--text);margin-top:5px}
 .surat-file-card-btn{width:100%;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--gold-dim);color:var(--gold-bright);font-family:var(--body);font-weight:700;font-size:13.5px;cursor:pointer;transition:background-color .15s ease,transform .15s ease}
 .surat-file-card-btn:hover{background:color-mix(in srgb,var(--gold-bright) 22%,var(--gold-dim));transform:translateY(-1px)}
+/* Kartu surat Rahasia yang bukan punya satuan ini (lihat $rahasiaTerkunci
+   di surat-arsip-row.blade.php) -- tetap kelihatan & bisa difilter di
+   Arsip, TAPI isinya dikunci: ikon ganti gembok, kartu diredupkan dikit,
+   tombol dinonaktifkan (gak ada onclick/data isi surat sama sekali di
+   DOM, lihat blade-nya). */
+.surat-file-card-locked{opacity:.72}
+.surat-file-card-icon-locked{background:color-mix(in srgb,#dc2626 14%,var(--panel));color:#dc2626}
+.surat-file-card-btn-locked{background:var(--panel-alt);color:var(--text-muted);cursor:not-allowed;opacity:.85}
+.surat-file-card-btn-locked:hover{background:var(--panel-alt);transform:none}
 .surat-file-grid .empty-state{grid-column:1/-1}
 
 /* Modal Detail Surat (niru referensi modaldetailsurat1.png) */
@@ -281,12 +290,11 @@
       // Jenis Surat & Satuan: opsinya dibangun dari nilai yang BENERAN ada
       // di kartu yang ke-render (data-jenis-filter / data-satuan-kode),
       // bukan hardcode -- jadi otomatis nyesuain kalau suatu satuan ternyata
-      // gak punya semua kombinasi jenis/lawan di arsipnya. data-jenis-filter
-      // SENGAJA beda dari data-prioritas (yang masih dipakai buat warna
-      // ikon kartu) -- utk surat Rahasia yang isinya disembunyikan dari
-      // satuan ini (lihat $sembunyikanIsiRahasia di surat-arsip-row.blade.php),
-      // data-jenis-filter dikosongin biar "Rahasia" gak nongol/bisa
-      // difilter sama sekali dari sisi satuan yang emang gak berhak tahu.
+      // gak punya semua kombinasi jenis/lawan di arsipnya. "Rahasia" TETAP
+      // muncul sebagai opsi biasa di sini (surat rahasia tetap kelihatan &
+      // bisa difilter) -- yang dikunci cuma ISI & tombol buka kartunya
+      // (lihat .surat-file-card-locked di surat-arsip-row.blade.php),
+      // bukan keberadaannya di daftar/filter.
       var jenisSet={},satuanMap={};
       initialCards.forEach(function(c){
         var p=c.dataset.jenisFilter;
