@@ -33,16 +33,17 @@
     // Pengirim ASLI surat (tetap sama untuk semua sisi) -- dipakai untuk data "Dari" di modal.
     $dariSatuan = $s->satuan;
 
-    // Sama seperti di Surat Masuk: kolom "Tujuan" di modal detail cuma
-    // nampilin nama satuan sendiri (redundan) kalau yang buka adalah Wadan
-    // yang lagi liat arsip surat masuk dari Danpus -- jadi disembunyikan
-    // secara UI. Disposisi (mis. "Danpus mendisposisi kepada Satlak Duktek")
-    // ikut disembunyikan juga karena sama-sama nggak relevan dari sudut
-    // pandang Wadan sendiri (backend/riwayat tetap menyimpan datanya).
+    // Kolom "Tujuan" di modal detail cuma nampilin nama satuan SENDIRI
+    // (redundan) tiap kali yang buka adalah penerima akhir surat ini --
+    // bukan pengirim ($isSent) dan bukan yang meneruskan lagi ($tampilKe) --
+    // lihat data-tujuan di bawah: ($tampilKe || $isSent) ? nama lawan : nama
+    // sendiri. Berlaku untuk semua satuan (Wadan, Satlak, dst), bukan cuma
+    // Wadan-dari-Danpus seperti sebelumnya, karena kasusnya sama persis:
+    // satuan itu sendiri sudah tahu suratnya ditujukan ke dia.
     $isWadan     = strtoupper($satuan->kode ?? '') === 'WADAN';
     $lawanKode   = strtoupper($lawan->kode ?? '');
-    $hideTujuan  = $isWadan && ! $isSent && $lawanKode === 'DANPUS';
-    $hideDisposisi = $hideTujuan;
+    $hideTujuan  = ! $isSent && ! $tampilKe;
+    $hideDisposisi = $isWadan && ! $isSent && $lawanKode === 'DANPUS';
 
     // Riwayat untuk timeline
     // Sembunyikan isi surat (catatan langkah Buat Surat / Surat Keluar berisi
