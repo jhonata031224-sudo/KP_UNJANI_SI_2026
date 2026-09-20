@@ -244,7 +244,7 @@
    id-nya di selector bawah ini. */
 #suratDetailModal .modal-actions .btn[hidden]{display:none!important}
 @media(max-width:700px){.surat-detail-body{grid-template-columns:1fr}.surat-detail-col-left{border-right:none;padding-right:0;padding-bottom:20px;border-bottom:1px solid var(--border-soft);margin-bottom:20px}}
-/* Filter tambahan (Tanggal dari/sampai, Prioritas, Satuan) khusus grid
+/* Filter tambahan (Tanggal dari/sampai, Jenis Surat, Satuan) khusus grid
    Arsip Surat -- numpang gaya input .rpt-filter-search input yang sama
    biar nyatu sama search+sort bar yang udah ada (lihat initSuratCardSearch
    di bawah), TAPI cuma dipasang di panggilan 'arsip-surat', bukan di
@@ -278,18 +278,23 @@
     bar.className='rpt-filter-bar';
     var extraHtml='';
     if(extraFilters){
-      // Prioritas & Satuan: opsinya dibangun dari nilai yang BENERAN ada di
-      // kartu yang ke-render (data-prioritas / data-satuan-kode), bukan
-      // hardcode -- jadi otomatis nyesuain kalau suatu satuan ternyata gak
-      // punya semua kombinasi prioritas/lawan di arsipnya.
-      var prioritasSet={},satuanMap={};
+      // Jenis Surat & Satuan: opsinya dibangun dari nilai yang BENERAN ada
+      // di kartu yang ke-render (data-jenis-filter / data-satuan-kode),
+      // bukan hardcode -- jadi otomatis nyesuain kalau suatu satuan ternyata
+      // gak punya semua kombinasi jenis/lawan di arsipnya. data-jenis-filter
+      // SENGAJA beda dari data-prioritas (yang masih dipakai buat warna
+      // ikon kartu) -- utk surat Rahasia yang isinya disembunyikan dari
+      // satuan ini (lihat $sembunyikanIsiRahasia di surat-arsip-row.blade.php),
+      // data-jenis-filter dikosongin biar "Rahasia" gak nongol/bisa
+      // difilter sama sekali dari sisi satuan yang emang gak berhak tahu.
+      var jenisSet={},satuanMap={};
       initialCards.forEach(function(c){
-        var p=c.dataset.prioritas;
-        if(p)prioritasSet[p]=true;
+        var p=c.dataset.jenisFilter;
+        if(p)jenisSet[p]=true;
         var sk=c.dataset.satuanKode,sn=c.dataset.satuanNama;
         if(sk)satuanMap[sk]=sn||sk;
       });
-      var prioritasOpts=Object.keys(prioritasSet).sort().map(function(p){
+      var jenisOpts=Object.keys(jenisSet).sort().map(function(p){
         return '<option value="'+p+'">'+p+'</option>';
       }).join('');
       var satuanKeys=Object.keys(satuanMap);
@@ -299,7 +304,7 @@
       var satuanSelectHtml=satuanKeys.length?('<select class="rpt-filter-select" aria-label="Filter satuan">'+(satuanKeys.length>1?'<option value="all">Semua Satuan</option>':'')+satuanOpts+'</select>'):'';
       extraHtml='<div class="rpt-filter-date-wrap"><label for="'+gridId+'DariDate">Dari</label><input type="date" id="'+gridId+'DariDate" aria-label="Tanggal dari"></div>'+
         '<div class="rpt-filter-date-wrap"><label for="'+gridId+'SampaiDate">Sampai</label><input type="date" id="'+gridId+'SampaiDate" aria-label="Tanggal sampai"></div>'+
-        '<select class="rpt-filter-select" aria-label="Filter prioritas"><option value="all">Semua Prioritas</option>'+prioritasOpts+'</select>'+
+        '<select class="rpt-filter-select" aria-label="Filter jenis surat"><option value="all">Semua Jenis Surat</option>'+jenisOpts+'</select>'+
         satuanSelectHtml;
     }
     bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="'+searchPlaceholder+'" aria-label="'+searchPlaceholder+'"></div>'+extraHtml+'<select class="rpt-filter-select" aria-label="Urutkan"><option value="newest">Terbaru</option><option value="oldest">Terlama</option></select><span class="rpt-filter-count"></span>';
@@ -321,7 +326,7 @@
     var input=bar.querySelector('input[type="search"]');
     var selects=bar.querySelectorAll('select');
     var sortSelect=selects[selects.length-1];
-    var prioritasSelect=extraFilters?bar.querySelector('select[aria-label="Filter prioritas"]'):null;
+    var jenisSelect=extraFilters?bar.querySelector('select[aria-label="Filter jenis surat"]'):null;
     var satuanSelect=extraFilters?bar.querySelector('select[aria-label="Filter satuan"]'):null;
     var dariInput=extraFilters?bar.querySelector('input[aria-label="Tanggal dari"]'):null;
     var sampaiInput=extraFilters?bar.querySelector('input[aria-label="Tanggal sampai"]'):null;
@@ -369,14 +374,14 @@
       }
 
       var q=(input.value||'').trim().toLowerCase();
-      var prioritasVal=prioritasSelect?prioritasSelect.value:'all';
+      var jenisVal=jenisSelect?jenisSelect.value:'all';
       var satuanVal=satuanSelect?satuanSelect.value:'all';
       var dariSec=(dariInput&&dariInput.value)?startOfDaySeconds(dariInput.value):null;
       var sampaiSec=(sampaiInput&&sampaiInput.value)?endOfDaySeconds(sampaiInput.value):null;
       var visible=0;
       items.forEach(function(item){
         var match=!q||(item.dataset.search||'').indexOf(q)!==-1;
-        if(match&&prioritasVal!=='all')match=item.dataset.prioritas===prioritasVal;
+        if(match&&jenisVal!=='all')match=item.dataset.jenisFilter===jenisVal;
         if(match&&satuanVal&&satuanVal!=='all')match=item.dataset.satuanKode===satuanVal;
         if(match&&(dariSec!==null||sampaiSec!==null)){
           var createdAt=Number(item.dataset.createdAt);
@@ -398,7 +403,7 @@
 
     input.addEventListener('input',apply);
     sortSelect.addEventListener('change',apply);
-    if(prioritasSelect)prioritasSelect.addEventListener('change',apply);
+    if(jenisSelect)jenisSelect.addEventListener('change',apply);
     if(satuanSelect)satuanSelect.addEventListener('change',apply);
     if(dariInput)dariInput.addEventListener('change',apply);
     if(sampaiInput)sampaiInput.addEventListener('change',apply);
@@ -412,7 +417,7 @@
     initSuratCardSearch('kirim-surat','suratTerkirimGrid','Cari perihal atau tujuan...');
     initSuratCardSearch('surat-masuk','suratMasukGrid','Cari perihal atau pengirim...');
     // Cuma Arsip Surat yang dapet filter tambahan (Tanggal dari/sampai,
-    // Prioritas, Satuan) -- Surat Keluar & Surat Masuk tetap search+sort
+    // Jenis Surat, Satuan) -- Surat Keluar & Surat Masuk tetap search+sort
     // polos seperti semula.
     initSuratCardSearch('arsip-surat','suratArsipGrid','Cari perihal atau dari/tujuan...',true);
   }
