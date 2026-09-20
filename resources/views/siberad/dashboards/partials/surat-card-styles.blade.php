@@ -132,14 +132,25 @@
   #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-thumb:hover,
   .surat-detail-timeline::-webkit-scrollbar-thumb:hover,#wadanDisposisiTindakanGrid::-webkit-scrollbar-thumb:hover,#suratTeruskanTindakanGrid::-webkit-scrollbar-thumb:hover{background:var(--gold-bright,var(--gold))}
   :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card::-webkit-scrollbar-button,
-  #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-button,
   .surat-detail-timeline::-webkit-scrollbar-button,#wadanDisposisiTindakanGrid::-webkit-scrollbar-button,#suratTeruskanTindakanGrid::-webkit-scrollbar-button{display:none;width:0;height:0}
+  /* Scrollbar UTAMA modal Detail/Arsip Surat (.surat-detail-scroll) BEDA dari
+     yang lain di atas: dikasih tanda panah atas/bawah niru gaya scrollbar
+     sidebar (lihat .side-subnav>div::-webkit-scrollbar-button di
+     laporan-danpus.blade.php / laporan-wadan.blade.php) -- BUKAN
+     .surat-detail-timeline (Riwayat Alur) yang tetap tanpa panah seperti semula. */
+  #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-button{display:block;width:6px;height:14px;background-color:transparent;background-repeat:no-repeat;background-position:center;background-size:8px 8px;transition:background-color .15s ease}
+  #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-button:vertical:start:increment,
+  #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-button:vertical:end:decrement{display:none}
+  #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-button:vertical:start:decrement{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 15 12 9 18 15'/%3E%3C/svg%3E")}
+  #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-button:vertical:end:increment{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")}
+  #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-button:vertical:start:decrement:hover{background-color:var(--hover-tint);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FF9800' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 15 12 9 18 15'/%3E%3C/svg%3E")}
+  #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-button:vertical:end:increment:hover{background-color:var(--hover-tint);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FF9800' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")}
   /* Jarak ujung track dari sudut bulat kartu modal supaya thumb tidak menabrak lengkungan.
      #suratDetailModal beda: scroll-nya di wrapper .surat-detail-scroll (bukan .report-modal-card
-     langsung) yang sudut-sudutnya sendiri memang kotak -- margin di sini dibiarkan simetris
-     dengan padding wrapper (22px) supaya thumb tidak nempel mentok ke pinggir. */
+     langsung) yang sudut-sudutnya sendiri memang kotak -- tombol panah di atas sudah otomatis
+     menyisakan jarak 14px, jadi track-nya sendiri tidak perlu margin tambahan lagi. */
   :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card::-webkit-scrollbar-track{margin:22px 0}
-  #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-track{margin:4px 0}
+  #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-track{margin:0}
 }
 
 /* ── Step-by-step "kartu bernomor" (redesain alur riwayat) ──
