@@ -219,6 +219,7 @@
         @if($canSelesai)
         data-selesai-action="{{ route('laporan-surat.selesai', $s) }}"
         @endif
+        data-deadline="{{ $s->deadline_at ? $s->deadline_at->translatedFormat('d M Y H:i') : '' }}"
         data-csrf="{{ csrf_token() }}"
     >Lihat Detail</button>
 </div>

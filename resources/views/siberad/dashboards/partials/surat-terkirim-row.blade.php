@@ -120,5 +120,6 @@
         data-can-ke-danpus="0"
         data-can-selesai="0"
         data-can-disposisi-ulang="0"
+        data-deadline="{{ $s->deadline_at ? $s->deadline_at->translatedFormat('d M Y H:i') : '' }}"
     >Lihat Detail</button>
 </div>
