@@ -2,7 +2,7 @@
 {{-- Disposisi: kalimat siapa mendisposisi ke siapa --}}
 <div class="surat-detail-item" id="suratDetailDisposisiPanel" style="display:none"><div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px"><div class="surat-detail-item-label">Disposisi</div><div class="surat-detail-item-value" id="suratDetailDisposisiVal" style="font-weight:600;color:var(--primary)">-</div></div></div>
 {{-- Tindakan: kolom terpisah, instruksi konkret dari pemberi disposisi --}}
-<div class="surat-detail-item" id="suratDetailTindakanPanel" style="display:none"><div><div class="surat-detail-item-label">Tindakan</div><div id="suratDetailTindakanWrap" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div></div></div>
+<div class="surat-detail-item" id="suratDetailTindakanPanel" style="display:none"><div><div class="surat-detail-item-label">Tindakan</div><div id="suratDetailTindakanWrap" style="display:flex;flex-wrap:wrap;gap:2px 16px;margin-top:0"></div></div></div>
 @php
     $isWadanDashboard = strtoupper($satuan->kode ?? '') === 'WADAN';
 @endphp
@@ -275,7 +275,7 @@ window.openSuratDetail = function(button){
     tindakan.forEach(function(t){
       var tag = document.createElement('span');
       tag.className = 'status-badge status-sedang';
-      tag.style.cssText = 'font-size:11px;padding:3px 10px;font-weight:500';
+      tag.style.cssText = 'font-size:11px;padding:2px 0;font-weight:500';
       tag.textContent = t;
       tindakanWrap.appendChild(tag);
     });
