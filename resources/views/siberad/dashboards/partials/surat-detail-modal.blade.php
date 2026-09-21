@@ -478,19 +478,18 @@ window.openSuratDetail = function(button){
         }).join('') + '</div>';
     }
 
-    // Catatan penjelas di step Wadan: saat Wadan meneruskan surat ke satuan,
-    // salinannya OTOMATIS ikut terkirim ke Urdal sebagai View Only.
+    // Keterangan di Riwayat Alur: Urdal ikut menerima salinan surat, tapi
+    // HANYA untuk dilihat (View Only) -- tanpa konfirmasi/tindak lanjut.
+    // Ditempel di step yang meneruskan surat (data dari riwayat.paralel).
     var eyeSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
     function viewOnlyNoteHtml(list){
       if (!list || !list.length) return '';
       var nama  = list.map(function(p){ return p.satuan; }).join(', ');
-      var semuaSudah = list.every(function(p){ return !!p.sudah_konfirmasi; });
       return '<div class="timeline-viewonly-note">' +
         '<span class="timeline-viewonly-icon">' + eyeSvg + '</span>' +
         '<div class="timeline-viewonly-text">' +
-          '<div class="timeline-viewonly-title">Otomatis terkirim juga ke ' + escHtml(nama) + ' <span class="timeline-viewonly-tag">View Only</span></div>' +
-          '<div class="timeline-viewonly-desc">Saat Wadan meneruskan surat ke satuan, salinannya ikut dikirim ke Urdal hanya untuk dilihat (tanpa tindak lanjut).' +
-            (semuaSudah ? ' Sudah dikonfirmasi.' : '') + '</div>' +
+          '<div class="timeline-viewonly-title">' + escHtml(nama) + ' juga menerima surat ini <span class="timeline-viewonly-tag">View Only</span></div>' +
+          '<div class="timeline-viewonly-desc">Salinan surat diterima ' + escHtml(nama) + ' hanya untuk dilihat, tanpa konfirmasi atau tindak lanjut.</div>' +
         '</div></div>';
     }
 
@@ -570,7 +569,7 @@ window.openSuratDetail = function(button){
               '<span class="timeline-forward-value">' + escHtml(f.disposisi) + '</span></div>' : '') +
             '</div>' +
             extraRiwayatHtml(f, true, !f.lampiran_url || f.lampiran_url === lampiranAwalUrl, true) +
-            paralelChipsHtml(paralelLain);
+            viewOnlyNoteHtml(viewOnlyList) + paralelChipsHtml(paralelLain);
         }
         el = bangunItem(nomor, isLast, done, infoKonf.cls, done ? svgWrap(infoKonf.icon) : clockSvg, body);
 
