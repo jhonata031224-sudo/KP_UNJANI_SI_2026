@@ -181,7 +181,91 @@
     });
 })();
 </script>
+
+{{-- ═══════════════════════════════════════════════════
+     POPUP KONFIRMASI: Teruskan surat (alur naik) ke Danpus.
+     Pengganti confirm() bawaan browser. Gaya .confirm-overlay/.confirm-box
+     sudah global (dash-styles), z-index-nya di atas #suratDetailModal.
+     ═══════════════════════════════════════════════════ --}}
+<div class="confirm-overlay" id="keDanpusConfirmOverlay">
+    <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="keDanpusConfirmTitle" aria-describedby="keDanpusConfirmBody">
+        <div class="confirm-icon" style="background:rgba(245,158,11,.14);color:#d98a0b">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <h3 id="keDanpusConfirmTitle">Teruskan ke Danpus?</h3>
+        <p id="keDanpusConfirmBody">Surat <strong id="keDanpusConfirmPerihal">ini</strong> akan diteruskan kembali ke Danpus untuk keputusan akhir.</p>
+        <div class="confirm-actions">
+            <button type="button" class="btn" id="keDanpusConfirmBatal">Batal</button>
+            <button type="button" class="btn btn-primary" id="keDanpusConfirmYa">Ya, Teruskan</button>
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+    var overlay = document.getElementById('keDanpusConfirmOverlay');
+    if (!overlay) return;
+    var btnYa    = document.getElementById('keDanpusConfirmYa');
+    var btnBatal = document.getElementById('keDanpusConfirmBatal');
+    var perihalEl = document.getElementById('keDanpusConfirmPerihal');
+    var ya = 'Ya, Teruskan';
+    var pending = null;
+
+    function tutup(){ overlay.classList.remove('open'); pending = null; }
+
+    // Dipanggil dari surat-detail-modal (tombol "Teruskan ke Danpus", Wadan).
+    window.bukaKonfirmasiKeDanpus = function(opts){
+        if (!opts || !opts.action) return;
+        pending = { action: opts.action, csrf: opts.csrf || '' };
+        perihalEl.textContent = opts.perihal ? '\u201C' + opts.perihal + '\u201D' : 'ini';
+        btnYa.disabled = false; btnBatal.disabled = false; btnYa.textContent = ya;
+        overlay.classList.add('open');
+        setTimeout(function(){ btnYa.focus(); }, 30);
+    };
+
+    btnBatal.addEventListener('click', tutup);
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) tutup(); });
+
+    // Esc cukup menutup popup ini -- jangan ikut menutup modal Detail Surat di
+    // belakangnya (listener Esc modal itu ada di fase bubble; ini fase capture).
+    document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape' && overlay.classList.contains('open')) {
+            e.stopImmediatePropagation();
+            tutup();
+        }
+    }, true);
+
+    btnYa.addEventListener('click', function(){
+        if (!pending || btnYa.disabled) return;
+        // Cegah klik ganda selagi form dikirim.
+        btnYa.disabled = true; btnBatal.disabled = true; btnYa.textContent = 'Meneruskan\u2026';
+        var f = document.createElement('form');
+        f.method = 'POST'; f.action = pending.action;
+        var t = document.createElement('input');
+        t.type = 'hidden'; t.name = '_token'; t.value = pending.csrf;
+        f.appendChild(t);
+        document.body.appendChild(f); f.submit();
+    });
+})();
+</script>
 @endif
+
+<script>
+// Teruskan surat (alur naik) ke Danpus: pakai popup konfirmasi custom; kalau
+// popup tidak ada di halaman (mis. dashboard non-Wadan) jatuh ke confirm() bawaan.
+window.suratKonfirmasiKeDanpus = function(action, csrf, perihal){
+  if (!action) return;
+  if (typeof window.bukaKonfirmasiKeDanpus === 'function') {
+    window.bukaKonfirmasiKeDanpus({ action: action, csrf: csrf, perihal: perihal });
+    return;
+  }
+  if (confirm('Teruskan surat ini kembali ke Danpus untuk keputusan akhir?')) {
+    var f = document.createElement('form');
+    f.method = 'POST'; f.action = action;
+    var t = document.createElement('input'); t.type = 'hidden'; t.name = '_token'; t.value = csrf || '';
+    f.appendChild(t); document.body.appendChild(f); f.submit();
+  }
+};
+</script>
 
 <script>
 window.openSuratDetail = function(button){
@@ -875,12 +959,7 @@ window.openSuratDetail = function(button){
       btnTeruskanWadan.onclick = function(){
         if (btnTeruskanWadan.disabled) return;
         if (wadanNaik) {
-          if (confirm('Teruskan surat ini kembali ke Danpus untuk keputusan akhir?')) {
-            var fNaik = document.createElement('form');
-            fNaik.method = 'POST'; fNaik.action = button.dataset.keDanpusAction;
-            fNaik.innerHTML = '<input name="_token" value="' + (button.dataset.csrf || '') + '">';
-            document.body.appendChild(fNaik); fNaik.submit();
-          }
+          window.suratKonfirmasiKeDanpus(button.dataset.keDanpusAction, button.dataset.csrf || '', button.dataset.perihal || '');
           return;
         }
         if (typeof window.bukaWadanDisposisiModal === 'function') {
@@ -940,12 +1019,7 @@ window.openSuratDetail = function(button){
     if (button.dataset.canKeDanpus === '1') {
       btnKeDanpus.hidden = false;
       btnKeDanpus.onclick = function(){
-        if (confirm('Teruskan surat ini kembali ke Danpus untuk keputusan akhir?')) {
-          var f = document.createElement('form');
-          f.method = 'POST'; f.action = button.dataset.keDanpusAction;
-          f.innerHTML = '<input name="_token" value="' + csrf + '">';
-          document.body.appendChild(f); f.submit();
-        }
+        window.suratKonfirmasiKeDanpus(button.dataset.keDanpusAction, csrf, button.dataset.perihal || '');
       };
     }
 
