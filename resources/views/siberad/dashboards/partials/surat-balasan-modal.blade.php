@@ -26,8 +26,13 @@
 @endphp
 @if($bolehBalasNaik)
 <div class="report-modal" id="suratBalasanModal">
+    {{-- .report-modal-card jadi non-scroll (overflow:hidden, lihat surat-card-styles.blade.php)
+         supaya sudut kanan-atas/bawah tidak kepotong scrollbar bawaan browser -- scroll asli
+         dipindah ke .surat-balasan-scroll di dalamnya (pola sama seperti #suratDetailModal,
+         lihat surat-detail-modal.blade.php). --}}
     <div class="report-modal-card" style="max-width:560px">
-        <div class="report-modal-head">
+    <div class="surat-balasan-scroll">
+        <div class="report-modal-head" style="padding:20px 24px 0">
             <div style="min-width:0">
                 <h3 style="margin:0 0 4px">Kirim Surat</h3>
                 <p id="suratBalasanSub" style="margin:0;font-size:12px;color:var(--text-muted);word-break:break-word">Kirim hasil pelaksanaan kembali ke Wadan.</p>
@@ -37,7 +42,7 @@
             </button>
         </div>
 
-        <form id="suratBalasanForm" method="POST" action="{{ route('laporan-surat.store') }}" enctype="multipart/form-data" style="padding:20px 24px 0">
+        <form id="suratBalasanForm" method="POST" action="{{ route('laporan-surat.store') }}" enctype="multipart/form-data" style="padding:16px 24px 0">
             @csrf
             <input type="hidden" name="induk_surat_id" id="suratBalasanIndukId" value="">
 
@@ -78,6 +83,7 @@
             </div>
             @endif
         </form>
+    </div>
 
         <div class="modal-actions" style="padding:16px 24px 20px;gap:10px">
             <button type="button" class="btn" id="suratBalasanBatal">Batal</button>

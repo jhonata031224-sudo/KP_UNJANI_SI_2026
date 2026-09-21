@@ -121,36 +121,56 @@
    modal jadi sangat tinggi / step terpotong di layar kecil. */
 .surat-detail-timeline{max-height:300px;overflow-y:auto;padding-right:8px;margin-right:-8px}
 
+/* Modal Kirim Surat balasan naik (satuan pelaksana -> Wadan), lihat
+   surat-balasan-modal.blade.php. Border-radius:22px di aturan gabungan
+   di bawah sempat TIDAK cukup sendirian: scrollbar native masih tampil
+   lurus penuh dari atas ke bawah kartu dan memotong sudut kanan-atas/bawah
+   (mask-image trick di .report-modal-card dasar ternyata tidak konsisten
+   meng-clip scrollbar bawaan browser). Makanya sekarang dipakai pola sama
+   persis dengan #suratDetailModal: overflow-y:auto dipindah ke wrapper
+   .surat-balasan-scroll DI DALAM .report-modal-card, kartunya sendiri jadi
+   overflow:hidden supaya scrollbar ikut ke-clip mengikuti border-radius
+   kartu (nested overflow clip, bukan cuma andalkan mask-image). */
+#suratBalasanModal .report-modal-card{overflow:hidden;padding:0;display:flex;flex-direction:column}
+#suratBalasanModal .report-modal-card>.surat-balasan-scroll{overflow-y:auto;overflow-x:hidden;flex:1;min-height:0}
+
 /* ===== Semua modal surat (Detail, Buat Surat, Disposisi Wadan, Teruskan, Balasan) =====
    1) Sudut kartu modal tumpul semua.
    2) Scrollbar SERAGAM di kartu modal & area scroll di dalamnya (timeline, grid tindakan):
       tipis 6px, thumb bulat, tanpa tombol panah (panah bawaan browser bikin sudut
       kanan-atas/bawah modal terlihat tajam). Firefox: gaya "thin" standar.
-   #suratBalasanModal (modal "Kirim Surat" balasan naik dari satuan pelaksana ke
-   Wadan, lihat surat-balasan-modal.blade.php) ikut disamakan dengan
-   #kirimSuratModal/#wadanDisposisiModal/#suratTeruskanModal di bawah. */
+   #suratBalasanModal ikut kelompok "tanpa panah" ini, TAPI selector-nya
+   menunjuk ke .surat-balasan-scroll (wrapper di dalam kartu), bukan
+   .report-modal-card langsung -- lihat blok nested-overflow-clip di atas. */
 :is(#suratDetailModal,#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal,#suratBalasanModal) .report-modal-card{border-radius:22px}
-:is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal,#suratBalasanModal) .report-modal-card,
+:is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card,
 #suratDetailModal .surat-detail-scroll,
+#suratBalasanModal .surat-balasan-scroll,
 .surat-detail-timeline,#wadanDisposisiTindakanGrid,#suratTeruskanTindakanGrid{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 @supports selector(::-webkit-scrollbar){
   /* Chrome/Edge/Safari baru: pakai pseudo-element webkit (standar scrollbar-* akan menampilkan panah) */
-  :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal,#suratBalasanModal) .report-modal-card,
+  :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card,
   #suratDetailModal .surat-detail-scroll,
+  #suratBalasanModal .surat-balasan-scroll,
   .surat-detail-timeline,#wadanDisposisiTindakanGrid,#suratTeruskanTindakanGrid{scrollbar-width:auto;scrollbar-color:auto}
-  :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal,#suratBalasanModal) .report-modal-card::-webkit-scrollbar,
+  :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card::-webkit-scrollbar,
   #suratDetailModal .surat-detail-scroll::-webkit-scrollbar,
+  #suratBalasanModal .surat-balasan-scroll::-webkit-scrollbar,
   .surat-detail-timeline::-webkit-scrollbar,#wadanDisposisiTindakanGrid::-webkit-scrollbar,#suratTeruskanTindakanGrid::-webkit-scrollbar{width:6px;height:6px}
-  :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal,#suratBalasanModal) .report-modal-card::-webkit-scrollbar-track,
+  :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card::-webkit-scrollbar-track,
   #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-track,
+  #suratBalasanModal .surat-balasan-scroll::-webkit-scrollbar-track,
   .surat-detail-timeline::-webkit-scrollbar-track,#wadanDisposisiTindakanGrid::-webkit-scrollbar-track,#suratTeruskanTindakanGrid::-webkit-scrollbar-track{background:transparent}
-  :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal,#suratBalasanModal) .report-modal-card::-webkit-scrollbar-thumb,
+  :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card::-webkit-scrollbar-thumb,
   #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-thumb,
+  #suratBalasanModal .surat-balasan-scroll::-webkit-scrollbar-thumb,
   .surat-detail-timeline::-webkit-scrollbar-thumb,#wadanDisposisiTindakanGrid::-webkit-scrollbar-thumb,#suratTeruskanTindakanGrid::-webkit-scrollbar-thumb{background:var(--border);border-radius:999px}
-  :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal,#suratBalasanModal) .report-modal-card::-webkit-scrollbar-thumb:hover,
+  :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card::-webkit-scrollbar-thumb:hover,
   #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-thumb:hover,
+  #suratBalasanModal .surat-balasan-scroll::-webkit-scrollbar-thumb:hover,
   .surat-detail-timeline::-webkit-scrollbar-thumb:hover,#wadanDisposisiTindakanGrid::-webkit-scrollbar-thumb:hover,#suratTeruskanTindakanGrid::-webkit-scrollbar-thumb:hover{background:var(--gold-bright,var(--gold))}
-  :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal,#suratBalasanModal) .report-modal-card::-webkit-scrollbar-button,
+  :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card::-webkit-scrollbar-button,
+  #suratBalasanModal .surat-balasan-scroll::-webkit-scrollbar-button,
   .surat-detail-timeline::-webkit-scrollbar-button,#wadanDisposisiTindakanGrid::-webkit-scrollbar-button,#suratTeruskanTindakanGrid::-webkit-scrollbar-button{display:none;width:0;height:0}
   /* Scrollbar UTAMA modal Detail/Arsip Surat (.surat-detail-scroll) BEDA dari
      yang lain di atas: dikasih tanda panah atas/bawah niru gaya scrollbar
@@ -165,11 +185,14 @@
   #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-button:vertical:start:decrement:hover{background-color:var(--hover-tint);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FF9800' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 15 12 9 18 15'/%3E%3C/svg%3E")}
   #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-button:vertical:end:increment:hover{background-color:var(--hover-tint);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FF9800' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")}
   /* Jarak ujung track dari sudut bulat kartu modal supaya thumb tidak menabrak lengkungan.
-     #suratDetailModal beda: scroll-nya di wrapper .surat-detail-scroll (bukan .report-modal-card
-     langsung) yang sudut-sudutnya sendiri memang kotak -- tombol panah di atas sudah otomatis
-     menyisakan jarak 14px, jadi track-nya sendiri tidak perlu margin tambahan lagi. */
-  :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal,#suratBalasanModal) .report-modal-card::-webkit-scrollbar-track{margin:22px 0}
-  #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-track{margin:0}
+     #suratDetailModal & #suratBalasanModal beda: scroll-nya di wrapper
+     (.surat-detail-scroll / .surat-balasan-scroll), bukan .report-modal-card
+     langsung -- wrapper-nya sendiri sudutnya memang kotak (karena berada DI
+     DALAM kartu yang sudah dibulatkan lewat overflow:hidden), jadi track-nya
+     tidak perlu margin tambahan untuk menghindari lengkungan. */
+  :is(#kirimSuratModal,#wadanDisposisiModal,#suratTeruskanModal) .report-modal-card::-webkit-scrollbar-track{margin:22px 0}
+  #suratDetailModal .surat-detail-scroll::-webkit-scrollbar-track,
+  #suratBalasanModal .surat-balasan-scroll::-webkit-scrollbar-track{margin:0}
 }
 
 /* ── Step-by-step "kartu bernomor" (redesain alur riwayat) ──
