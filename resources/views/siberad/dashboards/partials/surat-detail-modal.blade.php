@@ -191,6 +191,13 @@ window.openSuratDetail = function(button){
   var prevStatusClass = document.getElementById('suratDetailStatusText').className;
   var card = button.closest('.surat-file-card');
   modal.dataset.openSuratId = card ? (card.dataset.suratId || '') : '';
+  // Surat yang SAMA bisa muncul di dua grid sekaligus (mis. Danpus: di
+  // "Surat Keluar" sebagai pengirim awal DAN di "Surat Masuk" sebagai
+  // balasan naik dari satuan). Simpan grid asal kartu yang diklik supaya
+  // refresh realtime tidak salah ambil kartu di grid lain (yang bikin modal
+  // "Surat Masuk" berubah sendiri jadi "Surat Keluar").
+  var asalGrid = card ? card.closest('[id$="Grid"]') : null;
+  modal.dataset.openSuratGrid = asalGrid ? asalGrid.id : '';
 
   var context = button.dataset.context || 'masuk';
   var judulEl = document.getElementById('suratDetailJudul');
@@ -356,42 +363,87 @@ window.openSuratDetail = function(button){
     //   2. Konfirmasi Wadan (+ info diteruskan ke satuan pilihan Wadan)
     //   3. Konfirmasi Satuan (mis. Satlak Dukteksi) ... dst kalau alur lanjut.
     var isSelesaiSurat = button.dataset.isSelesai === '1';
-    var langkah = [];
+
+    // Riwayat dipecah jadi FASE terpisah supaya alur turun & naik tidak
+    // menumpuk jadi satu timeline panjang (>3 step):
+    //   - TURUN : Dibuat (Danpus) -> Konfirmasi Wadan -> Konfirmasi Satuan
+    //   - NAIK  : Balasan dikirim Satuan -> Konfirmasi Wadan -> Konfirmasi Danpus
+    // Fase NAIK selalu diawali riwayat SURAT_KELUAR (balasan satuan). Disposisi
+    // ulang Danpus (siklus baru) memulai fase TURUN baru. Tiap fase punya
+    // penomoran step sendiri mulai dari 1.
+    var groups = [];
+    var grupAktif = null;
     var pemegangAktif = null;
+    var siklusTerakhir = null;
+
+    function mulaiGrup(fase){
+      pemegangAktif = null;
+      // Grup yang masih kosong dipakai ulang (jangan sampai ada fase kosong).
+      if (grupAktif && grupAktif.langkah.length === 0) { grupAktif.fase = fase; return; }
+      grupAktif = { fase: fase, langkah: [] };
+      groups.push(grupAktif);
+    }
+    function tambahPemegang(r){
+      pemegangAktif = { tipe: 'pemegang', nama: r.penerima, masuk: r, konfirmasi: null, diteruskan: null, dibalas: false, selesai: false };
+      grupAktif.langkah.push(pemegangAktif);
+    }
 
     riwayats.forEach(function(r){
       var kode = r.aksi_kode;
+      var siklusR = r.siklus || 1;
+      if (!grupAktif) mulaiGrup('turun');
+
       if (kode === 'BUAT_SURAT') {
-        langkah.push({ tipe: 'buat', r: r });
-        pemegangAktif = null;
-        if (r.penerima) {
-          pemegangAktif = { tipe: 'pemegang', nama: r.penerima, masuk: r, konfirmasi: null, diteruskan: null, selesai: false };
-          langkah.push(pemegangAktif);
-        }
+        mulaiGrup('turun');
+        grupAktif.langkah.push({ tipe: 'buat', r: r });
+        if (r.penerima) tambahPemegang(r);
+      } else if (kode === 'SURAT_KELUAR') {
+        // Satuan membalas: step satuan di fase turun cukup berhenti di
+        // "Dikonfirmasi"; pengiriman balasannya jadi step 1 fase NAIK.
+        if (pemegangAktif && !pemegangAktif.diteruskan) pemegangAktif.dibalas = true;
+        mulaiGrup('naik');
+        grupAktif.langkah.push({ tipe: 'balasan', r: r });
+        if (r.penerima) tambahPemegang(r);
       } else if (kode === 'KONFIRMASI') {
         if (pemegangAktif && !pemegangAktif.konfirmasi) pemegangAktif.konfirmasi = r;
-      } else if (kode === 'TERUSKAN' || kode === 'SURAT_KELUAR') {
+      } else if (kode === 'TERUSKAN') {
         // Pemegang sebelumnya menyerahkan surat -> otomatis dianggap sudah menerima.
         if (pemegangAktif && !pemegangAktif.diteruskan) pemegangAktif.diteruskan = r;
+        var disposisiUlang = grupAktif.fase === 'naik' && siklusTerakhir !== null && siklusR > siklusTerakhir;
+        if (disposisiUlang) mulaiGrup('turun'); // Danpus mendisposisi ulang -> fase turun baru
         pemegangAktif = null;
-        if (r.penerima) {
-          pemegangAktif = { tipe: 'pemegang', nama: r.penerima, masuk: r, konfirmasi: null, diteruskan: null, selesai: false };
-          langkah.push(pemegangAktif);
-        }
+        if (r.penerima) tambahPemegang(r);
       } else if (kode === 'SELESAI') {
         if (pemegangAktif) pemegangAktif.selesai = true;
-        langkah.push({ tipe: 'selesai', r: r });
+        grupAktif.langkah.push({ tipe: 'selesai', r: r });
         pemegangAktif = null;
       }
+      siklusTerakhir = siklusR;
     });
 
     // Surat baru dari pengirim awal ke Wadan: satuan tujuan akhir BELUM
     // ditentukan (Wadan yang memilih saat meneruskan) -> tampilkan sebagai
     // step berikutnya yang menunggu, supaya alurnya kelihatan utuh sejak awal.
-    if (!isSelesaiSurat && pemegangAktif && !pemegangAktif.diteruskan
+    if (!isSelesaiSurat && grupAktif && grupAktif.fase === 'turun' && pemegangAktif && !pemegangAktif.diteruskan
         && pemegangAktif.masuk && pemegangAktif.masuk.aksi_kode === 'BUAT_SURAT'
         && /wadan/i.test(pemegangAktif.nama || '')) {
-      langkah.push({ tipe: 'placeholder' });
+      grupAktif.langkah.push({ tipe: 'placeholder' });
+    }
+
+    // Judul fase -- hanya dirender kalau surat punya lebih dari 1 fase.
+    var arrowDownSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>';
+    var arrowUpSvg   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
+    function faseHeaderEl(fase, nomorFase){
+      var naik = fase === 'naik';
+      var h = document.createElement('div');
+      h.className = 'timeline-phase-head ' + (naik ? 'is-naik' : 'is-turun');
+      h.innerHTML =
+        '<span class="timeline-phase-icon">' + (naik ? arrowUpSvg : arrowDownSvg) + '</span>' +
+        '<div class="timeline-phase-text">' +
+          '<div class="timeline-phase-title">' + (naik ? 'Alur Naik' : 'Alur Turun') + (nomorFase > 1 ? ' ' + nomorFase : '') + '</div>' +
+          '<div class="timeline-phase-sub">' + (naik ? 'Balasan dari satuan kembali ke atas' : 'Surat diteruskan dari atas ke satuan') + '</div>' +
+        '</div>';
+      return h;
     }
 
     function svgWrap(inner){
@@ -464,6 +516,11 @@ window.openSuratDetail = function(button){
     var lampiranAwalUrl = '';
     riwayats.forEach(function(r){ if (!lampiranAwalUrl && r.aksi_kode === 'BUAT_SURAT' && r.lampiran_url) lampiranAwalUrl = r.lampiran_url; });
 
+    var jumlahFaseSama = { turun: 0, naik: 0 };
+    groups.forEach(function(g){
+    var langkah = g.langkah;
+    jumlahFaseSama[g.fase]++;
+    if (groups.length > 1) timeline.appendChild(faseHeaderEl(g.fase, jumlahFaseSama[g.fase]));
     var itemsRendered = [];
     langkah.forEach(function(l, idx){
       var nomor  = idx + 1;
@@ -479,8 +536,20 @@ window.openSuratDetail = function(button){
           '<div class="surat-detail-timeline-sub">' + escHtml(olehBuat) + '</div>' +
           metaHtml(r.tanggal) + extraRiwayatHtml(r, false, true) + paralelChipsHtml(r.paralel));
 
+      } else if (l.tipe === 'balasan') {
+        // Step 1 fase NAIK: satuan mengirim balasan (padanan "Dibuat" di fase turun).
+        var rb = l.r;
+        var infoBalas = stepIconAndClass('SURAT_KELUAR');
+        var olehBalas = 'Oleh ' + rb.pengirim + (rb.penerima ? ' → ' + rb.penerima : '') + (rb.siklus > 1 ? ' (Siklus ' + rb.siklus + ')' : '');
+        el = bangunItem(nomor, isLast, true, infoBalas.cls, svgWrap(infoBalas.icon),
+          '<div class="surat-detail-timeline-title">Balasan Dikirim</div>' +
+          '<div class="surat-detail-timeline-sub">' + escHtml(olehBalas) + '</div>' +
+          metaHtml(rb.tanggal) +
+          extraRiwayatHtml(rb, false, !rb.lampiran_url || rb.lampiran_url === lampiranAwalUrl, true) +
+          paralelChipsHtml(rb.paralel));
+
       } else if (l.tipe === 'pemegang') {
-        done = !!(l.konfirmasi || l.diteruskan || l.selesai);
+        done = !!(l.konfirmasi || l.diteruskan || l.dibalas || l.selesai);
         var infoKonf = stepIconAndClass('KONFIRMASI');
         var dari = l.masuk ? l.masuk.pengirim : '-';
         var tglDone = l.konfirmasi ? l.konfirmasi.tanggal : (l.diteruskan ? l.diteruskan.tanggal : '');
@@ -533,6 +602,7 @@ window.openSuratDetail = function(button){
         requestAnimationFrame(function(){ requestAnimationFrame(function(){ ln.classList.add('line-complete'); }); });
       }
     });
+    }); // akhir groups.forEach
   } else {
     // Fallback (riwayat kosong -- mis. data lama sebelum pencatatan riwayat
     // lengkap): tetap tampilkan sebagai kartu bernomor 2 langkah
@@ -930,7 +1000,10 @@ window.siberadRefreshSuratDetailIfOpen = function(){
   if (!modal || !modal.classList.contains('open')) return;
   var id = modal.dataset.openSuratId;
   if (!id) return;
-  var card = document.querySelector('.surat-file-card[data-surat-id="' + id + '"]:not(.siberad-card-leaving)');
+  var gridId = modal.dataset.openSuratGrid || '';
+  var scope  = gridId ? document.getElementById(gridId) : document;
+  if (!scope) return;
+  var card = scope.querySelector('.surat-file-card[data-surat-id="' + id + '"]:not(.siberad-card-leaving)');
   var btn  = card ? card.querySelector('.surat-file-card-btn') : null;
   if (!btn) return;
   var sig = btn.outerHTML.replace(/>\s+</g,'><').trim();
@@ -941,7 +1014,7 @@ window.siberadRefreshSuratDetailIfOpen = function(){
 (function(){
   var modal = document.getElementById('suratDetailModal');
   if (!modal) return;
-  function close(){ modal.classList.remove('open'); modal.dataset.openSuratId = ''; modal.dataset.openSuratSig = ''; }
+  function close(){ modal.classList.remove('open'); modal.dataset.openSuratId = ''; modal.dataset.openSuratGrid = ''; modal.dataset.openSuratSig = ''; }
   document.getElementById('suratDetailClose')?.addEventListener('click', close);
   document.getElementById('suratDetailTutup')?.addEventListener('click', close);
   document.addEventListener('keydown', function(e){

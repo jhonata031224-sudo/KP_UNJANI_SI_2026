@@ -231,6 +231,18 @@
 .timeline-card-inner.aksi-selesai .timeline-card-badge{background:#1f7a4f}
 .surat-detail-timeline-item.timeline-card:has(.timeline-card-inner.aksi-selesai) .timeline-step-num{background:#1f7a4f}
 .timeline-card-badge.just-confirmed,.timeline-step-num.just-confirmed{animation:suratTimelineDotPop .45s cubic-bezier(.34,1.56,.64,1)}
+/* Judul fase Riwayat Alur -- memisahkan Alur Turun (Danpus -> satuan) dari
+   Alur Naik (balasan satuan -> Danpus) supaya tiap fase maksimal ~3 step. */
+.timeline-phase-head{display:flex;align-items:center;gap:10px;margin:2px 0 12px;padding:8px 10px;border-radius:10px;border:1px solid var(--border-soft);background:var(--panel)}
+.timeline-phase-head:not(:first-child){margin-top:18px}
+.timeline-phase-icon{flex-shrink:0;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff}
+.timeline-phase-icon svg{width:14px;height:14px}
+.timeline-phase-title{font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;line-height:15px;color:var(--text)}
+.timeline-phase-sub{font-size:10.5px;line-height:14px;color:var(--text-muted)}
+.timeline-phase-head.is-turun{background:rgba(52,152,219,.07);border-color:rgba(52,152,219,.28)}
+.timeline-phase-head.is-turun .timeline-phase-icon{background:#2476ad}
+.timeline-phase-head.is-naik{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.32)}
+.timeline-phase-head.is-naik .timeline-phase-icon{background:#d98a0b}
 
 /* ── Branch / Parallel Timeline ── */
 .surat-timeline-branch-root{padding-bottom:16px}
