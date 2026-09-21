@@ -351,6 +351,9 @@ window.openSuratDetail = function(button){
 
   var riwayats = [];
   try { riwayats = JSON.parse(button.dataset.riwayat || '[]'); } catch(e){}
+  // URL lampiran balasan yang sudah tampil di Riwayat Alur (fase naik) --
+  // dipakai untuk menyembunyikan panel "Dokumen" supaya tidak dobel.
+  var lampiranDiRiwayat = [];
 
   if (riwayats.length > 0) {
     // ══ ALUR BERBASIS "PEMEGANG SURAT" ═══════════════════════════════════
@@ -453,15 +456,18 @@ window.openSuratDetail = function(button){
     // Disposisi / catatan / lampiran milik satu riwayat. Keterangan Tindakan
     // (chip SESUAI JUK KOMANDAN, dst) sengaja TIDAK ditampilkan di Riwayat Alur
     // karena sudah ada di panel "Tindakan" terpisah.
-    function extraRiwayatHtml(r, sembunyikanCatatanOtomatis, tanpaLampiran, tanpaDisposisi){
+    // Ikon tautan (rantai) untuk link lampiran di Riwayat Alur -- SVG, bukan emoji,
+    // supaya tampil konsisten di semua perangkat.
+    var linkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+    function extraRiwayatHtml(r, sembunyikanCatatanOtomatis, tanpaLampiran, tanpaDisposisi, tanpaCatatan){
       var html = '';
       if (r.disposisi && !tanpaDisposisi) html += '<div class="surat-detail-timeline-sub" style="margin-top:2px;color:var(--primary);font-weight:500">Disposisi: ' + escHtml(r.disposisi) + '</div>';
       var catatanOtomatis = sembunyikanCatatanOtomatis && /^Diteruskan ke .+ oleh /.test(r.catatan || '');
-      if (r.catatan && r.aksi !== 'Surat Dibuat' && !catatanOtomatis) {
+      if (r.catatan && r.aksi !== 'Surat Dibuat' && !catatanOtomatis && !tanpaCatatan) {
         html += '<div class="surat-detail-timeline-sub" style="margin-top:3px;font-style:italic;color:var(--text-muted)">' + escHtml(r.catatan) + '</div>';
       }
       if (r.lampiran_url && !tanpaLampiran) {
-        html += '<div class="surat-detail-timeline-sub" style="margin-top:4px"><a href="' + r.lampiran_url + '" target="_blank" rel="noopener" style="color:var(--primary);font-size:12px;text-decoration:underline">📎 ' + escHtml(r.lampiran_nama || 'Lampiran') + '</a></div>';
+        html += '<div class="surat-detail-timeline-sub" style="margin-top:4px"><a class="timeline-lampiran-link" href="' + escHtml(r.lampiran_url) + '" target="_blank" rel="noopener">' + linkSvg + '<span>' + escHtml(r.lampiran_nama || 'Lampiran') + '</span></a></div>';
       }
       return html;
     }
@@ -540,11 +546,15 @@ window.openSuratDetail = function(button){
         var rb = l.r;
         var infoBalas = stepIconAndClass('SURAT_KELUAR');
         var olehBalas = 'Oleh ' + rb.pengirim + (rb.penerima ? ' → ' + rb.penerima : '') + (rb.siklus > 1 ? ' (Siklus ' + rb.siklus + ')' : '');
+        var balasLampiranTampil = !!rb.lampiran_url && rb.lampiran_url !== lampiranAwalUrl;
+        if (balasLampiranTampil) lampiranDiRiwayat.push(rb.lampiran_url);
+        // Ringkasan/catatan balasan sengaja TIDAK ditampilkan di Riwayat Alur
+        // (tanpaCatatan = true); lampiran balasan cukup tampil di sini.
         el = bangunItem(nomor, isLast, true, infoBalas.cls, svgWrap(infoBalas.icon),
           '<div class="surat-detail-timeline-title">Balasan Dikirim</div>' +
           '<div class="surat-detail-timeline-sub">' + escHtml(olehBalas) + '</div>' +
           metaHtml(rb.tanggal) +
-          extraRiwayatHtml(rb, false, !rb.lampiran_url || rb.lampiran_url === lampiranAwalUrl, true) +
+          extraRiwayatHtml(rb, false, !balasLampiranTampil, true, true) +
           paralelChipsHtml(rb.paralel));
 
       } else if (l.tipe === 'pemegang') {
@@ -708,7 +718,7 @@ window.openSuratDetail = function(button){
   var dokWrap  = document.getElementById('suratDetailDokumenWrap');
   var dokPanel = document.getElementById('suratDetailDokumenPanel');
   dokWrap.innerHTML = '';
-  if (button.dataset.lampiranUrl) {
+  if (button.dataset.lampiranUrl && lampiranDiRiwayat.indexOf(button.dataset.lampiranUrl) === -1) {
     dokPanel.hidden = false;
     var badge = (window.siberadLampiranBadge && window.siberadLampiranBadge(button.dataset.lampiranNama)) || { text: 'FILE', cls: 'lfx-other' };
     var row = document.createElement('div');

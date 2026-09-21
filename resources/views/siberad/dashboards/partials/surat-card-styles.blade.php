@@ -233,6 +233,10 @@
 .timeline-card-badge.just-confirmed,.timeline-step-num.just-confirmed{animation:suratTimelineDotPop .45s cubic-bezier(.34,1.56,.64,1)}
 /* Judul fase Riwayat Alur -- memisahkan Alur Turun (Danpus -> satuan) dari
    Alur Naik (balasan satuan -> Danpus) supaya tiap fase maksimal ~3 step. */
+.timeline-lampiran-link{display:inline-flex;align-items:flex-start;gap:6px;max-width:100%;color:var(--primary);font-size:12px;line-height:16px;text-decoration:none;overflow-wrap:anywhere}
+.timeline-lampiran-link svg{flex-shrink:0;width:13px;height:13px;margin-top:2px}
+.timeline-lampiran-link span{min-width:0;text-decoration:underline;text-underline-offset:2px}
+.timeline-lampiran-link:hover span{text-decoration-thickness:2px}
 .timeline-phase-head{display:flex;align-items:center;gap:10px;margin:2px 0 12px;padding:8px 10px;border-radius:10px;border:1px solid var(--border-soft);background:var(--panel)}
 .timeline-phase-head:not(:first-child){margin-top:18px}
 .timeline-phase-icon{flex-shrink:0;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff}
