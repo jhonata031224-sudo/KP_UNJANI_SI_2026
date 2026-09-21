@@ -60,7 +60,7 @@
             <div class="form-group">
                 <label class="form-label" for="suratBalasanCatatan">Catatan <span style="font-size:11px;color:var(--text-muted);font-weight:400">(opsional)</span></label>
                 <textarea name="deskripsi" id="suratBalasanCatatan" class="form-textarea" rows="3" maxlength="10000"
-                    placeholder="Tambahkan catatan singkat hasil pelaksanaan..." style="resize:vertical"></textarea>
+                    placeholder="Tambahkan catatan singkat hasil pelaksanaan..." style="resize:none"></textarea>
             </div>
 
             {{-- Tembusan (opsional) --}}
