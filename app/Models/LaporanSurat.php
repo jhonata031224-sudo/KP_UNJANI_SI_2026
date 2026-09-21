@@ -220,6 +220,79 @@ class LaporanSurat extends Model
         });
     }
 
+    /**
+     * ALUR NAIK (balasan): surat turun dari Danpus -> Wadan -> satuan
+     * penerima (mis. Duktek). Setelah satuan itu konfirmasi & mengerjakan,
+     * dia mengirim hasilnya balik LANGSUNG ke Wadan lewat tombol "Kirim
+     * Surat" di kartu Surat Masuk (Urdal tidak jadi gerbang), lalu Wadan
+     * meneruskan ke Danpus (LaporanSuratController::kembalikanKeDanpus()).
+     *
+     * Kode satuan yang TIDAK memakai tombol "Kirim Surat" itu:
+     *   - DANPUS / WADAN : pelaku alur (pengirim & perantara), bukan pelaksana.
+     *   - URDAL          : sudah punya jalur sendiri (teruskanKeWadan()).
+     */
+    const KODE_TANPA_BALASAN_NAIK = ['DANPUS', 'WADAN', 'URDAL'];
+
+    public static function satuanBolehKirimBalasanNaik(?string $kodeSatuan): bool
+    {
+        $kode = strtoupper((string) $kodeSatuan);
+
+        return $kode !== '' && ! in_array($kode, self::KODE_TANPA_BALASAN_NAIK, true);
+    }
+
+    /**
+     * Surat turun dari Danpus yang SUDAH di-ACC satuan pemegangnya
+     * ($satuanId) tapi belum dikirim balik. Selama begini, kartunya tetap di
+     * Surat Masuk (dengan tombol "Kirim Surat"), BUKAN di Arsip Surat.
+     * Begitu dikirim balik, tujuan_satuan_id pindah ke Wadan dan surat
+     * otomatis keluar dari scope ini (lalu masuk Arsip lewat riwayat).
+     */
+    public function scopeMenungguBalasanSatuan(Builder $query, int $satuanId): Builder
+    {
+        return $query->where('tujuan_satuan_id', $satuanId)
+            ->where('status', self::STATUS_DIKONFIRMASI)
+            ->where('is_selesai', false)
+            ->whereHas('satuan', fn ($s) => $s->where('kode', 'DANPUS'))
+            ->whereHas('tujuanSatuan', fn ($t) => $t->whereNotIn('kode', self::KODE_TANPA_BALASAN_NAIK));
+    }
+
+    /**
+     * Versi in-memory scopeMenungguBalasanSatuan() buat view (relasi satuan &
+     * tujuanSatuan sudah di-eager-load) -- dipakai menentukan tombol
+     * "Kirim Surat" di kartu Surat Masuk.
+     */
+    public function isMenungguBalasanSatuan(?int $satuanId): bool
+    {
+        if (! $satuanId || (int) $this->tujuan_satuan_id !== (int) $satuanId) {
+            return false;
+        }
+
+        if ($this->status !== self::STATUS_DIKONFIRMASI || $this->isSelesai()) {
+            return false;
+        }
+
+        return strtoupper((string) ($this->satuan->kode ?? '')) === 'DANPUS'
+            && self::satuanBolehKirimBalasanNaik($this->tujuanSatuan->kode ?? null);
+    }
+
+    /**
+     * Riwayat balasan naik pada SIKLUS SAAT INI (aksi SURAT_KELUAR). Dibatasi
+     * per siklus supaya balasan dari siklus lama tidak "menempel" setelah
+     * Danpus membuat disposisi ulang (siklus baru).
+     */
+    public function balasanNaikSiklusIni(): \Illuminate\Support\Collection
+    {
+        return $this->riwayats
+            ->where('aksi', LaporanSuratRiwayat::AKSI_SURAT_KELUAR)
+            ->where('siklus', (int) $this->siklus)
+            ->values();
+    }
+
+    public function adaBalasanNaikSiklusIni(): bool
+    {
+        return $this->balasanNaikSiklusIni()->isNotEmpty();
+    }
+
     public function isDikonfirmasi(): bool
     {
         return $this->status === self::STATUS_DIKONFIRMASI || $this->isSelesai();

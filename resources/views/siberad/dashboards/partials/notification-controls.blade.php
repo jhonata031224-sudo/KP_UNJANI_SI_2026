@@ -569,7 +569,11 @@
           //   belum-dibaca (tidak ada titik oranye) & TIDAK bisa diklik
           //   sama sekali, cuma tampil sebagai teks biasa.
           var isPengumuman = notification.tipe === 'pengumuman_admin';
-          var isKeteranganSaja = isPengumuman && notification.kategori === 'keterangan';
+          // Notifikasi 'surat_info' (mis. balasan surat sudah di-ACC Danpus,
+          // lihat LaporanSuratBalasanDikonfirmasi) diperlakukan sama seperti
+          // 'keterangan': sekadar info, tanpa titik belum-dibaca & tidak bisa
+          // diklik (memang tidak punya 'url' tujuan).
+          var isKeteranganSaja = (isPengumuman && notification.kategori === 'keterangan') || notification.tipe === 'surat_info';
           if (isKeteranganSaja) {
             item.classList.add('is-read');
           } else if (!notification.read) {

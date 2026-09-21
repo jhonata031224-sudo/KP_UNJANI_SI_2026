@@ -179,9 +179,12 @@ class SuratArsipDanpusTest extends TestCase
         $this->assertSame(['Ke', 'SATLAK_X', 'SATLAK_X'], [$k['label'], $k['satuan'], $k['tujuan_modal']]);
         $this->assertSame('DANPUS', $k['dari_modal']); // pengirim asli tetap Danpus
 
-        // Satuan tujuan akhir: tidak meneruskan lagi -> tetap "Dari Danpus"
-        $k = $this->kartuArsip('SATLAK_X');
-        $this->assertSame(['Dari', 'DANPUS'], [$k['label'], $k['satuan']]);
+        // Satuan tujuan akhir: sudah ACC tapi belum kirim balasan (alur naik,
+        // lihat SuratBalasanNaikTest) -> surat TETAP di Surat Masuk, BELUM di
+        // Arsip. Sebelumnya surat langsung masuk Arsip begitu di-ACC.
+        $json = $this->actingAs($this->u['SATLAK_X'])->getJson('/laporan-surat/realtime')->assertOk()->json();
+        $this->assertStringContainsString('TEST', $json['masuk_items_html']);
+        $this->assertStringNotContainsString('TEST', $json['arsip_items_html']);
     }
 
     public function test_surat_menunggu_konfirmasi_tetap_punya_badge(): void

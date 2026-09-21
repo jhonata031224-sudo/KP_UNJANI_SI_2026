@@ -8,10 +8,12 @@ use App\Models\LaporanSuratRiwayat;
 use App\Models\LaporanSuratTembusan;
 use App\Models\Satuan;
 use App\Models\User;
+use App\Notifications\LaporanSuratBalasanDikonfirmasi;
 use App\Notifications\LaporanSuratBaruDiterima;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -46,6 +48,7 @@ class LaporanSuratController extends Controller
         // tombol Teruskan Surat begitu Wadan klik Konfirmasi, karena surat
         // langsung dianggap pindah ke Arsip padahal belum diteruskan.
         $isWadan = $kodeSatuan === 'WADAN';
+        $bolehKirimBalasan = LaporanSurat::satuanBolehKirimBalasanNaik($kodeSatuan);
 
         // 1. Surat Masuk:
         //    a. Surat di mana satuan ini adalah tujuan utama (tujuan_satuan_id)
@@ -60,8 +63,16 @@ class LaporanSuratController extends Controller
             ->where('is_selesai', false)
             ->when($isWadan, function ($q) {
                 $q->whereIn('status', [LaporanSurat::STATUS_MENUNGGU, LaporanSurat::STATUS_DIKONFIRMASI]);
-            }, function ($q) {
-                $q->where('status', LaporanSurat::STATUS_MENUNGGU);
+            }, function ($q) use ($satuan, $bolehKirimBalasan) {
+                $q->where(function ($x) use ($satuan, $bolehKirimBalasan) {
+                    $x->where('status', LaporanSurat::STATUS_MENUNGGU);
+                    // Alur naik: surat turun dari Danpus yang sudah di-ACC satuan
+                    // ini TETAP di Surat Masuk (tombol "Kirim Surat") sampai
+                    // satuan ini mengirim balasannya -- bukan pindah ke Arsip.
+                    if ($bolehKirimBalasan) {
+                        $x->orWhere(fn ($m) => $m->menungguBalasanSatuan($satuan->id));
+                    }
+                });
             })
             ->when($isDanpus, function ($q) use ($satuan) {
                 // Danpus hanya melihat di surat masuk jika dikembalikan/diteruskan kepadanya oleh Wadan/satuan lain
@@ -144,19 +155,26 @@ class LaporanSuratController extends Controller
                       }
                   });
             })
-            ->orWhere(function ($q) use ($satuan, $isWadan) {
+            ->orWhere(function ($q) use ($satuan, $isWadan, $bolehKirimBalasan) {
                 // (b) Pemegang saat ini -- status konfirmasi langkahnya sendiri.
                 //     Khusus Wadan: SELAMA belum diteruskan (masih tujuan ke
                 //     Wadan) dan belum is_selesai, surat TIDAK dianggap masuk
                 //     Arsip walau statusnya sudah DIKONFIRMASI -- supaya
                 //     tombol Teruskan Surat di Surat Masuk tidak hilang.
                 $q->where('tujuan_satuan_id', $satuan->id)
-                  ->where(function ($st) use ($isWadan) {
+                  ->where(function ($st) use ($isWadan, $bolehKirimBalasan) {
                       if ($isWadan) {
                           $st->where('is_selesai', true);
                       } else {
-                          $st->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
-                             ->orWhere('is_selesai', true);
+                          $st->where(function ($d) use ($bolehKirimBalasan) {
+                              $d->where('status', LaporanSurat::STATUS_DIKONFIRMASI);
+                              // Surat turun dari Danpus yang sudah di-ACC tapi belum
+                              // dibalas (alur naik) BELUM boleh masuk Arsip -- masih
+                              // di Surat Masuk dengan tombol "Kirim Surat".
+                              if ($bolehKirimBalasan) {
+                                  $d->whereDoesntHave('satuan', fn ($a) => $a->where('kode', 'DANPUS'));
+                              }
+                          })->orWhere('is_selesai', true);
                       }
                   });
             })
@@ -221,6 +239,14 @@ class LaporanSuratController extends Controller
             'Hanya Kasansi, Satlak, Sdir, Urdal, Pok Analis, atau Danpus/Wadan yang dapat mengirim Surat.'
         );
 
+        // ALUR NAIK (balasan dari satuan penerima ke Wadan): request yang bawa
+        // induk_surat_id dilempar ke method terpisah & langsung return, SEBELUM
+        // validasi/logika Buat Surat Baru di bawah dijalankan. Jadi surat baru
+        // (tanpa induk_surat_id) 100% lewat jalur lama yang tidak berubah.
+        if ($request->filled('induk_surat_id')) {
+            return $this->kirimBalasanNaik($request);
+        }
+
         $isDanpus       = $kodeAsal === 'DANPUS';
         $prioritasRules = $isDanpus
             ? ['required', 'in:'.implode(',', LaporanSurat::PRIORITAS_DANPUS)]
@@ -273,7 +299,6 @@ class LaporanSuratController extends Controller
             : ['nullable', 'date'];
 
         $validated = $request->validate([
-            'induk_surat_id'   => ['nullable', 'integer', 'exists:laporan_surats,id'],
             'tujuan_satuan_id' => $tujuanRules,
             'perihal'          => ['required', 'string', 'max:255'],
             'kategori'         => ['required', 'string', 'max:255'],
@@ -309,70 +334,6 @@ class LaporanSuratController extends Controller
         $lampiranFile = $request->file('lampiran');
         $lampiranPath = $lampiranFile->store('lampiran-surat', 'public');
         abort_if(! $lampiranPath, 500, 'Gagal menyimpan file lampiran ke server.');
-
-        // Jika merupakan balasan/laporan lanjutan dari surat induk (mis. Satrap Penindakan -> Wadan)
-        if (! empty($validated['induk_surat_id'])) {
-            $indukSurat = LaporanSurat::findOrFail($validated['induk_surat_id']);
-
-            abort_unless(
-                (int) $indukSurat->tujuan_satuan_id === (int) $satuanAsal->id,
-                403,
-                'Surat ini bukan sedang berada di satuan Anda, tidak bisa dibalas.'
-            );
-            abort_if($indukSurat->isSelesai(), 422, 'Surat ini sudah selesai dan tidak bisa dibalas lagi.');
-
-            // Update surat induk agar mengalir kembali ke tujuan baru (Wadan)
-            $indukSurat->update([
-                'tujuan_satuan_id'    => $tujuan->id,
-                'status'              => LaporanSurat::STATUS_MENUNGGU,
-                'lampiran_path'       => $lampiranPath,
-                'lampiran_nama_asli'  => $lampiranFile->getClientOriginalName(),
-                'dikonfirmasi_at'     => null,
-                'dikonfirmasi_oleh'   => null,
-            ]);
-
-            // Catat Riwayat Pengiriman Surat Keluar / Balasan
-            $riwayat = LaporanSuratRiwayat::create([
-                'laporan_surat_id'   => $indukSurat->id,
-                'siklus'             => $indukSurat->siklus,
-                'aksi'               => LaporanSuratRiwayat::AKSI_SURAT_KELUAR,
-                'pengirim_satuan_id' => $satuanAsal->id,
-                'penerima_satuan_id' => $tujuan->id,
-                'user_id'            => $user->id,
-                'catatan'            => $validated['deskripsi'] ?? '',
-                'lampiran_path'      => $lampiranPath,
-                'lampiran_nama_asli' => $lampiranFile->getClientOriginalName(),
-            ]);
-
-            // Tambahkan Tembusan jika ada
-            if (! empty($validated['tembusan'])) {
-                foreach ($validated['tembusan'] as $tembusanSatuanId) {
-                    if ((int) $tembusanSatuanId !== (int) $satuanAsal->id && (int) $tembusanSatuanId !== (int) $tujuan->id) {
-                        LaporanSuratTembusan::create([
-                            'laporan_surat_id'         => $indukSurat->id,
-                            'laporan_surat_riwayat_id' => $riwayat->id,
-                            'satuan_id'                => $tembusanSatuanId,
-                            'jenis'                    => LaporanSuratTembusan::JENIS_TEMBUSAN,
-                        ]);
-
-                        foreach (User::where('satuan_id', $tembusanSatuanId)->get() as $penerimaTembusan) {
-                            $penerimaTembusan->notify(new LaporanSuratBaruDiterima($indukSurat));
-                        }
-                    }
-                }
-            }
-
-            foreach (User::where('satuan_id', $tujuan->id)->get() as $penerima) {
-                $penerima->notify(new LaporanSuratBaruDiterima($indukSurat));
-            }
-
-            ActivityLog::catat('laporan-surat.balasan', "Mengirim balasan surat \"{$indukSurat->perihal}\" ke {$tujuan->nama}.", $user, [
-                'laporan_surat_id' => $indukSurat->id,
-                'tujuan_satuan'    => $tujuan->nama,
-            ]);
-
-            return back()->with('status', 'Surat balasan berhasil dikirim ke '.$tujuan->nama.'.');
-        }
 
         // Pembuatan Surat Baru Standar
         $surat = LaporanSurat::create([
@@ -441,6 +402,136 @@ class LaporanSuratController extends Controller
     }
 
     /**
+     * ALUR NAIK -- satuan penerima (mis. Duktek) mengirim hasil pelaksanaan
+     * surat turun dari Danpus KEMBALI ke Wadan lewat tombol "Kirim Surat" di
+     * kartu Surat Masuk (dipanggil dari store() begitu ada induk_surat_id).
+     *
+     * Ini update baris surat yang SAMA (bukan baris baru): perihal, kategori,
+     * prioritas, disposisi, dan tindakan otomatis terbawa, jadi request cuma
+     * butuh lampiran + catatan opsional + tembusan opsional. Tujuan SELALU
+     * Wadan (Urdal tidak jadi gerbang -- cuma numpang lihat lewat riwayat).
+     * Setelah ini Wadan konfirmasi & meneruskan lewat kembalikanKeDanpus()
+     * yang sudah ada, lalu Danpus tinggal selesai()/disposisiUlang().
+     */
+    private function kirimBalasanNaik(Request $request): RedirectResponse
+    {
+        $user   = $request->user()->load('satuan');
+        $satuan = $user->satuan;
+        abort_unless($satuan, 403, 'Akun ini belum terhubung ke satuan manapun.');
+
+        $wadan = Satuan::where('kode', 'WADAN')->first();
+        abort_unless($wadan, 500, 'Satuan Wadan belum terdaftar di sistem.');
+
+        // Tembusan opsional (mis. Satlak/Sdir/Kasansi/Pok Analis) -- TIDAK boleh
+        // ke Wadan/Danpus/Urdal (sudah otomatis/terikat struktural) maupun ke
+        // satuan pengirim sendiri.
+        $idDilarang = Satuan::whereIn('kode', LaporanSurat::KODE_TANPA_BALASAN_NAIK)->pluck('id')
+            ->push($satuan->id)
+            ->all();
+
+        $validated = $request->validate([
+            'induk_surat_id' => ['required', 'integer', 'exists:laporan_surats,id'],
+            'deskripsi'      => ['nullable', 'string', 'max:10000'],
+            'tembusan'       => ['nullable', 'array'],
+            'tembusan.*'     => ['integer', 'exists:satuans,id', Rule::notIn($idDilarang)],
+            'lampiran'       => ['required', 'file', 'max:10240'],
+        ], [
+            'lampiran.required'   => 'Lampiran wajib diisi untuk mengirim Surat.',
+            'tembusan.*.not_in'   => 'Tembusan tidak boleh ditujukan ke Danpus, Wadan, Urdal, atau satuan Anda sendiri.',
+        ]);
+
+        $induk = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats'])->findOrFail($validated['induk_surat_id']);
+
+        abort_unless(
+            (int) $induk->tujuan_satuan_id === (int) $satuan->id,
+            403,
+            'Surat ini bukan sedang berada di satuan Anda, tidak bisa dibalas.'
+        );
+        abort_if($induk->isSelesai(), 422, 'Surat ini sudah selesai dan tidak bisa dibalas lagi.');
+        abort_unless(
+            LaporanSurat::satuanBolehKirimBalasanNaik($satuan->kode),
+            403,
+            'Satuan Anda tidak menggunakan jalur Kirim Surat untuk membalas surat ini.'
+        );
+        abort_unless(
+            strtoupper((string) ($induk->satuan->kode ?? '')) === 'DANPUS',
+            422,
+            'Kirim Surat hanya untuk membalas surat yang turun dari Danpus.'
+        );
+        abort_unless(
+            $induk->status === LaporanSurat::STATUS_DIKONFIRMASI,
+            422,
+            'Konfirmasi surat terlebih dahulu sebelum mengirim balasannya.'
+        );
+
+        $lampiranFile = $request->file('lampiran');
+        $lampiranPath = $lampiranFile->store('lampiran-surat', 'public');
+        abort_if(! $lampiranPath, 500, 'Gagal menyimpan file lampiran ke server.');
+        $lampiranNama = $lampiranFile->getClientOriginalName();
+
+        $tembusanIds = collect($validated['tembusan'] ?? [])
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        DB::transaction(function () use ($induk, $satuan, $wadan, $user, $validated, $lampiranPath, $lampiranNama, $tembusanIds) {
+            // Surat mengalir balik ke Wadan, menunggu konfirmasi Wadan.
+            $induk->update([
+                'tujuan_satuan_id'   => $wadan->id,
+                'status'             => LaporanSurat::STATUS_MENUNGGU,
+                'lampiran_path'      => $lampiranPath,
+                'lampiran_nama_asli' => $lampiranNama,
+                'dikonfirmasi_at'    => null,
+                'dikonfirmasi_oleh'  => null,
+            ]);
+
+            $riwayat = LaporanSuratRiwayat::create([
+                'laporan_surat_id'   => $induk->id,
+                'siklus'             => $induk->siklus,
+                'aksi'               => LaporanSuratRiwayat::AKSI_SURAT_KELUAR,
+                'pengirim_satuan_id' => $satuan->id,
+                'penerima_satuan_id' => $wadan->id,
+                'user_id'            => $user->id,
+                'catatan'            => $validated['deskripsi'] ?? "Hasil pelaksanaan dikirim oleh {$satuan->nama}.",
+                'lampiran_path'      => $lampiranPath,
+                'lampiran_nama_asli' => $lampiranNama,
+            ]);
+
+            foreach ($tembusanIds as $tembusanSatuanId) {
+                LaporanSuratTembusan::create([
+                    'laporan_surat_id'         => $induk->id,
+                    'laporan_surat_riwayat_id' => $riwayat->id,
+                    'satuan_id'                => $tembusanSatuanId,
+                    'jenis'                    => LaporanSuratTembusan::JENIS_TEMBUSAN,
+                ]);
+            }
+        });
+
+        foreach ($tembusanIds as $tembusanSatuanId) {
+            foreach (User::where('satuan_id', $tembusanSatuanId)->get() as $penerimaTembusan) {
+                $penerimaTembusan->notify(new LaporanSuratBaruDiterima(
+                    $induk,
+                    "Tembusan balasan surat dari {$satuan->nama}: {$induk->perihal}"
+                ));
+            }
+        }
+
+        foreach (User::where('satuan_id', $wadan->id)->get() as $penerima) {
+            $penerima->notify(new LaporanSuratBaruDiterima(
+                $induk,
+                "Balasan surat dari {$satuan->nama}: {$induk->perihal}"
+            ));
+        }
+
+        ActivityLog::catat('laporan-surat.balasan', "Mengirim balasan surat \"{$induk->perihal}\" ke {$wadan->nama}.", $user, [
+            'laporan_surat_id' => $induk->id,
+            'tujuan_satuan'    => $wadan->nama,
+        ]);
+
+        return back()->with('status', 'Surat berhasil dikirim ke '.$wadan->nama.'.');
+    }
+
+    /**
      * Konfirmasi / ACC & Terima surat oleh penerima utama,
      * ATAU Konfirmasi tanda mengetahui oleh pihak tembusan / view only.
      */
@@ -486,6 +577,10 @@ class LaporanSuratController extends Controller
         // Penerima Utama: Konfirmasi / ACC & Terima
         abort_unless($isTujuanUtama, 403, 'Hanya penerima yang dapat mengkonfirmasi surat ini.');
 
+        // Buat notifikasi info alur naik di bawah: cuma kirim sekali, saat
+        // surat benar-benar berpindah dari belum-ACC ke ACC (bukan klik ulang).
+        $barusanDikonfirmasi = ! $laporanSurat->isDikonfirmasi();
+
         $laporanSurat->update([
             'status'            => LaporanSurat::STATUS_DIKONFIRMASI,
             'dikonfirmasi_at'   => now(),
@@ -501,6 +596,24 @@ class LaporanSuratController extends Controller
             'user_id'            => $user->id,
             'catatan'            => "Surat dikonfirmasi / ACC & Diterima oleh {$satuan->nama}.",
         ]);
+
+        // ALUR NAIK: Danpus (ujung alur) konfirmasi / ACC surat balasan -> satuan
+        // yang tadi mengirim balasan (mis. Duktek) dapat notifikasi INFORMASI
+        // saja (tidak bisa diklik, lihat LaporanSuratBalasanDikonfirmasi).
+        if (
+            $barusanDikonfirmasi
+            && strtoupper((string) $satuan->kode) === 'DANPUS'
+            && $laporanSurat->adaBalasanNaikSiklusIni()
+        ) {
+            $satuanPembalasIds = $laporanSurat->balasanNaikSiklusIni()
+                ->pluck('pengirim_satuan_id')
+                ->unique()
+                ->values();
+
+            foreach (User::whereIn('satuan_id', $satuanPembalasIds)->get() as $penerimaInfo) {
+                $penerimaInfo->notify(new LaporanSuratBalasanDikonfirmasi($laporanSurat));
+            }
+        }
 
         ActivityLog::catat('laporan-surat.konfirmasi', "Mengkonfirmasi surat \"{$laporanSurat->perihal}\" dari {$laporanSurat->satuan->nama}.", $user, [
             'laporan_surat_id' => $laporanSurat->id,

@@ -626,15 +626,24 @@ class DashboardController
                 ->get()
             : collect();
 
+        // Alur naik (balasan): surat turun dari Danpus yang sudah di-ACC satuan ini
+        // TAPI belum dibalas TETAP di Surat Masuk (tombol "Kirim Surat"), belum
+        // masuk Arsip. Satuan bawaan alur (Danpus/Wadan/Urdal) tidak terkena.
+        $bolehKirimBalasan = LaporanSurat::satuanBolehKirimBalasanNaik($kode);
+
         $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
-            ->where(function ($q) use ($satuan) {
+            ->where(function ($q) use ($satuan, $bolehKirimBalasan) {
                 $q->where(function ($sub) use ($satuan) {
                     $sub->where('satuan_id', $satuan->id)
                         ->orWhere('tujuan_satuan_id', $satuan->id);
                 })
-                ->where(function ($st) {
-                    $st->where('status', \App\Models\LaporanSurat::STATUS_DIKONFIRMASI)
-                       ->orWhere('is_selesai', true);
+                ->where(function ($st) use ($bolehKirimBalasan) {
+                    $st->where(function ($d) use ($bolehKirimBalasan) {
+                        $d->where('status', \App\Models\LaporanSurat::STATUS_DIKONFIRMASI);
+                        if ($bolehKirimBalasan) {
+                            $d->whereDoesntHave('satuan', fn ($a) => $a->where('kode', 'DANPUS'));
+                        }
+                    })->orWhere('is_selesai', true);
                 });
             })
             ->orWhere(function ($q) use ($satuan) {
@@ -650,6 +659,19 @@ class DashboardController
                          ->where('jenis', LaporanSuratTembusan::JENIS_HASIL_RC);
                   });
             })
+            ->orWhere(function ($q) use ($satuan) {
+                // Pernah menangani (tercatat di riwayat alur) tapi surat sekarang
+                // sudah di satuan lain -- mis. balasan yang sudah dikirim satuan
+                // ini ke Wadan. Sama dengan bagian (d) Arsip di
+                // LaporanSuratController::realtime(), supaya render awal tidak
+                // beda dengan hasil polling.
+                $q->where('satuan_id', '!=', $satuan->id)
+                  ->where('tujuan_satuan_id', '!=', $satuan->id)
+                  ->whereHas('riwayats', function ($rq) use ($satuan) {
+                      $rq->where('pengirim_satuan_id', $satuan->id)
+                         ->orWhere('penerima_satuan_id', $satuan->id);
+                  });
+            })
             ->latest()
             ->get()
             ->unique('id')
@@ -661,7 +683,12 @@ class DashboardController
 
         $suratMasukUtama = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
             ->where('tujuan_satuan_id', $satuan->id)
-            ->where('status', \App\Models\LaporanSurat::STATUS_MENUNGGU)
+            ->where(function ($x) use ($satuan, $bolehKirimBalasan) {
+                $x->where('status', \App\Models\LaporanSurat::STATUS_MENUNGGU);
+                if ($bolehKirimBalasan) {
+                    $x->orWhere(fn ($m) => $m->menungguBalasanSatuan($satuan->id));
+                }
+            })
             ->where('is_selesai', false)
             ->latest()
             ->get();
@@ -899,11 +926,22 @@ class DashboardController
         $laporanTerkirim = Laporan::with('lampirans')->where('satuan_id', $satuan->id)->get();
         $satuanTotalPelaporan = $this->hitungLaporanPerPerihal($laporanTerkirim);
 
-        $suratMasuk = LaporanSurat::where('tujuan_satuan_id', $satuan->id)->where('status', LaporanSurat::STATUS_MENUNGGU)->get();
+        // Alur naik (balasan): surat Danpus yang sudah di-ACC tapi belum dibalas
+        // dihitung Surat Masuk (bukan Arsip) -- sama dengan pelaporan() di atas.
+        $bolehKirimBalasan = LaporanSurat::satuanBolehKirimBalasanNaik($kode);
+        $suratMasuk = LaporanSurat::where('tujuan_satuan_id', $satuan->id)
+            ->where(function ($x) use ($satuan, $bolehKirimBalasan) {
+                $x->where('status', LaporanSurat::STATUS_MENUNGGU);
+                if ($bolehKirimBalasan) {
+                    $x->orWhere(fn ($m) => $m->menungguBalasanSatuan($satuan->id));
+                }
+            })->get();
         $suratTerkirim = LaporanSurat::where('satuan_id', $satuan->id)->where('status', LaporanSurat::STATUS_MENUNGGU)->get();
         $suratArsip = LaporanSurat::where(function ($q) use ($satuan) {
                 $q->where('satuan_id', $satuan->id)->orWhere('tujuan_satuan_id', $satuan->id);
-            })->where('status', LaporanSurat::STATUS_DIKONFIRMASI)->get();
+            })->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
+            ->when($bolehKirimBalasan, fn ($q) => $q->whereDoesntHave('satuan', fn ($a) => $a->where('kode', 'DANPUS')))
+            ->get();
 
         // "Total Kendala Kasansi" -- lihat komentar lengkap soal dua sumber
         // saling eksklusif ini di pelaporan() (KPI render awal) di atas.

@@ -51,6 +51,13 @@
 .surat-file-card-meta-value{font-size:13.5px;font-weight:700;color:var(--text);margin-top:5px}
 .surat-file-card-btn{width:100%;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--gold-dim);color:var(--gold-bright);font-family:var(--body);font-weight:700;font-size:13.5px;cursor:pointer;transition:background-color .15s ease,transform .15s ease}
 .surat-file-card-btn:hover{background:color-mix(in srgb,var(--gold-bright) 22%,var(--gold-dim));transform:translateY(-1px)}
+/* Tombol "Kirim Surat" (alur naik -- balasan satuan pelaksana ke Wadan) di
+   bawah "Lihat Detail" pada kartu Surat Masuk, lihat surat-masuk-row.blade.php.
+   Sengaja BUKAN kelas .surat-file-card-btn: JS refresh modal detail memakai
+   querySelector('.surat-file-card-btn') dan harus tetap ketemu "Lihat Detail". */
+.surat-file-card-kirim{width:100%;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;padding:12px;border-radius:10px;border:1px solid transparent;background:linear-gradient(135deg,var(--gold-solid-bright),var(--gold-solid));color:var(--on-gold);font-family:var(--body);font-weight:700;font-size:13.5px;cursor:pointer;box-shadow:0 8px 22px -10px rgba(217,146,11,.5);transition:transform .15s ease,box-shadow .15s ease}
+.surat-file-card-kirim:hover{transform:translateY(-1px);box-shadow:0 10px 26px -8px rgba(217,146,11,.6)}
+.surat-file-card-kirim svg{width:15px;height:15px;flex-shrink:0}
 /* Kartu surat Rahasia yang bukan punya satuan ini (lihat $rahasiaTerkunci
    di surat-arsip-row.blade.php) -- tetap kelihatan & bisa difilter di
    Arsip, TAPI isinya dikunci: ikon ganti gembok, kartu diredupkan dikit,

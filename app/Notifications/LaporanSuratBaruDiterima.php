@@ -12,7 +12,12 @@ use Illuminate\Notifications\Notification;
  */
 class LaporanSuratBaruDiterima extends Notification
 {
-    public function __construct(public LaporanSurat $surat)
+    /**
+     * @param  string|null  $pesan  Override teks notifikasi (mis. untuk balasan
+     *                              naik dari satuan). Null = teks default
+     *                              "Surat baru dari ..." seperti biasa.
+     */
+    public function __construct(public LaporanSurat $surat, public ?string $pesan = null)
     {
     }
 
@@ -28,7 +33,7 @@ class LaporanSuratBaruDiterima extends Notification
             'satuan_asal' => $this->surat->satuan->nama,
             'perihal' => $this->surat->perihal,
             'prioritas' => $this->surat->prioritas,
-            'pesan' => "Surat baru dari {$this->surat->satuan->nama}: {$this->surat->perihal}",
+            'pesan' => $this->pesan ?? "Surat baru dari {$this->surat->satuan->nama}: {$this->surat->perihal}",
             // Section #surat-masuk ada persis sama di dashboard Satuan
             // maupun Pimpinan, jadi aman dipakai apa adanya utk siapapun
             // penerimanya.

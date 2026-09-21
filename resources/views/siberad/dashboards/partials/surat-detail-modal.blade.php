@@ -689,9 +689,16 @@ window.openSuratDetail = function(button){
     btnKonfirmasiWadan.disabled = false; btnKonfirmasiWadan.style.opacity = ''; btnKonfirmasiWadan.style.cursor = '';
     btnKonfirmasiWadan.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><path d="M5 13l4 4L19 7"/></svg>Konfirmasi';
   }
+  // Label tombol Teruskan Wadan: default "Teruskan Surat"; berubah jadi
+  // "Teruskan ke Danpus" khusus surat BALASAN dari satuan (alur naik).
+  function setLabelTeruskanWadan(teks){
+    var n = btnTeruskanWadan ? btnTeruskanWadan.lastChild : null;
+    if (n && n.nodeType === 3) n.nodeValue = teks;
+  }
   if (btnTeruskanWadan) {
     btnTeruskanWadan.hidden = true; btnTeruskanWadan.onclick = null;
     btnTeruskanWadan.disabled = true; btnTeruskanWadan.style.opacity = ''; btnTeruskanWadan.style.cursor = '';
+    setLabelTeruskanWadan('Teruskan Surat');
   }
   btnTeruskan.hidden = true; btnTeruskan.onclick = null;
   btnKeDanpus.hidden = true; btnKeDanpus.onclick = null;
@@ -713,8 +720,13 @@ window.openSuratDetail = function(button){
     //       & Tindakan, lalu submit ke endpoint teruskan.
     if (btnTutup) btnTutup.hidden = true;
 
-    var canTeruskanWadan = button.dataset.canTeruskan === '1';
+    // Alur naik: surat BALASAN dari satuan pelaksana. Wadan tetap
+    // Konfirmasi dulu, lalu "Teruskan ke Danpus" (tanpa form disposisi &
+    // tindakan -- field surat tidak diinput ulang).
+    var wadanNaik = button.dataset.wadanNaik === '1';
+    var canTeruskanWadan = button.dataset.canTeruskan === '1' || wadanNaik;
     if (btnKonfirmasiWadan && btnTeruskanWadan && canTeruskanWadan) {
+      if (wadanNaik) setLabelTeruskanWadan('Teruskan ke Danpus');
       btnKonfirmasiWadan.hidden = false;
       btnTeruskanWadan.hidden = false;
 
@@ -771,7 +783,9 @@ window.openSuratDetail = function(button){
 
           window.openSuratDetail(button);
 
-          if (window.siberadShowToast) window.siberadShowToast('success', 'Surat berhasil dikonfirmasi. Silakan lanjutkan dengan "Teruskan Surat".');
+          if (window.siberadShowToast) window.siberadShowToast('success', wadanNaik
+            ? 'Surat berhasil dikonfirmasi. Silakan lanjutkan dengan "Teruskan ke Danpus".'
+            : 'Surat berhasil dikonfirmasi. Silakan lanjutkan dengan "Teruskan Surat".');
         }).catch(function(){
           btnKonfirmasiWadan.innerHTML = originalHtml;
           setKonfirmasiWadanEnabled(true);
@@ -781,6 +795,15 @@ window.openSuratDetail = function(button){
 
       btnTeruskanWadan.onclick = function(){
         if (btnTeruskanWadan.disabled) return;
+        if (wadanNaik) {
+          if (confirm('Teruskan surat ini kembali ke Danpus untuk keputusan akhir?')) {
+            var fNaik = document.createElement('form');
+            fNaik.method = 'POST'; fNaik.action = button.dataset.keDanpusAction;
+            fNaik.innerHTML = '<input name="_token" value="' + (button.dataset.csrf || '') + '">';
+            document.body.appendChild(fNaik); fNaik.submit();
+          }
+          return;
+        }
         if (typeof window.bukaWadanDisposisiModal === 'function') {
           window.bukaWadanDisposisiModal({
             action : button.dataset.teruskanAction,

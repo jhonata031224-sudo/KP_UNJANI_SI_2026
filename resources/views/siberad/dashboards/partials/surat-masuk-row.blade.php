@@ -55,9 +55,10 @@
     // Boleh teruskan? Wadan bisa teruskan baik sebelum maupun setelah konfirmasi
     // (jika belum konfirmasi, controller akan auto-konfirmasi dulu)
     $riwayatCount = $s->riwayats->count();
-    $adaLaporanSatrap = $s->riwayats->contains(function ($r) use ($satuan) {
-        return (int) $r->pengirim_satuan_id !== (int) $satuan->id && $r->aksi === \App\Models\LaporanSuratRiwayat::AKSI_SURAT_KELUAR;
-    });
+    // Ada balasan naik (Kirim Surat dari satuan pelaksana) di SIKLUS INI --
+    // dibatasi per siklus supaya balasan siklus lama tidak menyangkut setelah
+    // Danpus membuat disposisi ulang (lihat LaporanSurat::balasanNaikSiklusIni()).
+    $adaLaporanSatrap = $s->adaBalasanNaikSiklusIni();
 
     // Wadan meneruskan ke Satrap: selama belum selesai dan belum ada laporan balik
     $canTeruskan = $isWadan && $isTujuanUtama && ! $s->isSelesai() && ! $adaLaporanSatrap;
@@ -68,6 +69,15 @@
     // Danpus: hanya jika surat masuk kembali ke Danpus setelah alur berjalan (riwayat >= 2)
     $canSelesai        = $isDanpus && $isTujuanUtama && $sudahDikonfirmasi && ! $s->isSelesai() && $riwayatCount >= 2;
     $canDisposisiUlang = $canSelesai;
+
+    // ALUR NAIK -- Wadan menerima BALASAN dari satuan pelaksana: cukup
+    // Konfirmasi lalu Teruskan ke Danpus (tanpa form disposisi/tindakan lagi,
+    // karena field surat tidak diinput ulang).
+    $wadanNaik = $isWadan && $isTujuanUtama && $adaLaporanSatrap && ! $s->isSelesai();
+
+    // ALUR NAIK -- satuan pelaksana (mis. Duktek) yang sudah ACC surat turun
+    // dari Danpus: kartu TETAP di Surat Masuk & muncul tombol "Kirim Surat".
+    $canKirimBalasan = $s->isMenungguBalasanSatuan($satuan->id ?? null);
 
     // Urdal meneruskan ke Wadan: sekali klik setelah Urdal konfirmasi Surat
     // Keluar dari Satlak (mis. Duktek), sama pola simpelnya dengan Wadan
@@ -193,6 +203,7 @@
         data-sudah-dikonfirmasi-wadan="{{ ($isWadan && $sudahDikonfirmasi) ? '1' : '0' }}"
         data-can-teruskan="{{ $canTeruskan ? '1' : '0' }}"
         data-can-ke-danpus="{{ $canKeDanpus ? '1' : '0' }}"
+        data-wadan-naik="{{ $wadanNaik ? '1' : '0' }}"
         data-can-ke-wadan="{{ $canKeWadan ? '1' : '0' }}"
         data-can-selesai="{{ $canSelesai ? '1' : '0' }}"
         data-can-disposisi-ulang="{{ $canDisposisiUlang ? '1' : '0' }}"
@@ -210,7 +221,7 @@
         data-teruskan-action="{{ route('laporan-surat.teruskan', $s) }}"
         data-disposisi-ulang-action="{{ route('laporan-surat.disposisi-ulang', $s) }}"
         @endif
-        @if($canKeDanpus)
+        @if($canKeDanpus || $wadanNaik)
         data-ke-danpus-action="{{ route('laporan-surat.ke-danpus', $s) }}"
         @endif
         @if($canKeWadan)
@@ -222,4 +233,11 @@
         data-deadline="{{ $s->deadline_at ? $s->deadline_at->translatedFormat('d M Y H:i') : '' }}"
         data-csrf="{{ csrf_token() }}"
     >Lihat Detail</button>
+    @if($canKirimBalasan)
+    <button type="button" class="surat-file-card-kirim" onclick="bukaKirimBalasanSurat(this)"
+        data-induk-id="{{ $s->id }}"
+        data-perihal="{{ e($s->perihal) }}"
+        data-action="{{ route('laporan-surat.store') }}"
+    ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>Kirim Surat</button>
+    @endif
 </div>
