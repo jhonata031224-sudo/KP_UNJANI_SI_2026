@@ -60,7 +60,7 @@
             <div class="form-group">
                 <label class="form-label" for="suratBalasanLampiran">Lampiran <span style="color:var(--red)">*</span> <span style="font-size:11px;color:var(--text-muted);font-weight:400">(maks. 10MB)</span></label>
                 <div class="surat-lampiran-zone" id="suratBalasanLampiranZone">
-                    <input type="file" name="lampiran" id="suratBalasanLampiran" class="surat-lampiran-zone-input" required>
+                    <input type="file" name="lampiran" id="suratBalasanLampiran" class="surat-lampiran-zone-input" data-file-picker-ready="1" required>
                     <div class="surat-lampiran-zone-prompt">
                         <span class="surat-lampiran-zone-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17l4-4 4 4"></path><path d="M12 13v9"></path><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg>
@@ -71,7 +71,9 @@
                         </span>
                     </div>
                 </div>
-                <div class="lampiran-file-list" id="suratBalasanLampiranFileList"></div>
+                <div class="lampiran-file-list" id="suratBalasanLampiranFileList">
+                    <div class="lampiran-file-list-empty" id="suratBalasanLampiranEmpty">Belum ada file dipilih</div>
+                </div>
                 <span id="suratBalasanLampiranError" style="display:none;color:var(--red);font-size:10.5px;margin-top:4px"></span>
             </div>
 
@@ -118,6 +120,7 @@
     var zone      = document.getElementById('suratBalasanLampiranZone');
     var fileInput = document.getElementById('suratBalasanLampiran');
     var fileList  = document.getElementById('suratBalasanLampiranFileList');
+    var fileEmpty = document.getElementById('suratBalasanLampiranEmpty');
     var fileError = document.getElementById('suratBalasanLampiranError');
     var submitBtn = document.getElementById('suratBalasanSubmit');
     var btnLabel  = document.getElementById('suratBalasanBtnLabel');
@@ -142,8 +145,12 @@
     // Kirim Laporan/Kirim Kendala, lihat CSS-nya di
     // permintaan-laporan-deadline-styles.blade.php.
     function render(){
-        fileList.innerHTML = '';
+        // Hapus semua baris file tapi pertahankan div empty-state
+        Array.from(fileList.children).forEach(function(el){
+            if (!el.classList.contains('lampiran-file-list-empty')) el.remove();
+        });
         var file = fileInput.files && fileInput.files[0];
+        if (fileEmpty) fileEmpty.style.display = file ? 'none' : '';
         if (!file) return;
 
         var badge = (window.siberadLampiranBadge && window.siberadLampiranBadge(file.name)) || {text: 'FILE', cls: 'lfx-other'};
