@@ -422,10 +422,11 @@ class LaporanSuratController extends Controller
         $wadan = Satuan::where('kode', 'WADAN')->first();
         abort_unless($wadan, 500, 'Satuan Wadan belum terdaftar di sistem.');
 
-        // Tembusan opsional (mis. Satlak/Sdir/Kasansi/Pok Analis) -- TIDAK boleh
-        // ke Wadan/Danpus/Urdal (sudah otomatis/terikat struktural) maupun ke
-        // satuan pengirim sendiri.
-        $idDilarang = Satuan::whereIn('kode', LaporanSurat::KODE_TANPA_BALASAN_NAIK)->pluck('id')
+        // Tembusan opsional (Satlak/Sdir/Pok Analis) -- TIDAK boleh ke
+        // Wadan/Danpus/Urdal (otomatis/terikat struktural), 21 Kasansi (Kotama),
+        // maupun satuan pengirim sendiri.
+        $kodeDilarangTembusan = array_merge(LaporanSurat::KODE_TANPA_BALASAN_NAIK, Satuan::KODE_KOTAMA);
+        $idDilarang = Satuan::whereIn('kode', $kodeDilarangTembusan)->pluck('id')
             ->push($satuan->id)
             ->all();
 

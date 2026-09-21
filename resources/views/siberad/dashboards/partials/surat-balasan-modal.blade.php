@@ -11,15 +11,19 @@
 
     $tembusanBalasan = collect();
     if ($bolehBalasNaik) {
-        // Tembusan opsional: satuan lain (Satlak/Sdir/Kasansi/Pok Analis, dst),
-        // KECUALI Danpus/Wadan/Urdal (otomatis/terikat struktural) & satuan
-        // sendiri -- aturan yang sama divalidasi ulang di controller.
+        // Tembusan opsional: hanya Satlak, Sdir (pembinaan), & Pok Analis --
+        // TIDAK boleh ke Danpus/Wadan/Urdal (otomatis/terikat struktural),
+        // 21 Kasansi (Kotama), maupun satuan pengirim sendiri.
+        // Aturan yang sama divalidasi ulang di controller (kirimBalasanNaik).
+        $kodeKotama           = Satuan::KODE_KOTAMA;
+        $kodeDilarangTembusan = array_merge(LaporanSurat::KODE_TANPA_BALASAN_NAIK, $kodeKotama);
+
         $tembusanBalasan = collect($satuanSuratTujuanPilihan ?? []);
         if ($tembusanBalasan->isEmpty()) {
             $tembusanBalasan = Satuan::where('kode', '!=', 'ADMIN')->orderBy('nama')->get();
         }
         $tembusanBalasan = $tembusanBalasan
-            ->reject(fn ($st) => in_array(strtoupper((string) $st->kode), LaporanSurat::KODE_TANPA_BALASAN_NAIK, true)
+            ->reject(fn ($st) => in_array(strtoupper((string) $st->kode), $kodeDilarangTembusan, true)
                 || (int) $st->id === (int) ($satuan->id ?? 0))
             ->values();
     }
