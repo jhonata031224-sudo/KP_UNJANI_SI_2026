@@ -5039,33 +5039,12 @@
                   <span class="lp-browser-dot"></span><span class="lp-browser-dot"></span><span class="lp-browser-dot"></span>
                   <span class="lp-browser-url">siberad</span>
                 </div>
-                <div class="lp-preview" id="lpPreview">
-                  <div class="lp-hero {{ $pengaturanHeroBgType === 'video' ? 'lp-hero-bg-video' : '' }}" id="lpPreviewHero" data-lp-preview-section="beranda"
-                    style="--lp-hero-photo:@if($pengaturan->hero_image_path)url('{{ asset('storage/'.$pengaturan->hero_image_path) }}')@else none @endif;--lp-hero-blur:{{ old('hero_blur_level', $pengaturan->hero_blur_level ?? 0) }}px;--lp-hero-overlay:{{ (old('hero_overlay_intensity', $pengaturan->hero_overlay_intensity ?? 100)) / 100 }};"
-                  >
-                    <video id="lpPreviewHeroVideo" class="lp-hero-video-bg" muted loop autoplay playsinline
-                      @if($pengaturanHeroVideoExists) src="{{ asset('storage/'.$pengaturan->hero_video_path) }}" @endif
-                      style="{{ $pengaturanHeroBgType === 'video' && $pengaturanHeroVideoExists ? '' : 'display:none' }}"></video>
-                    <div class="lp-eyebrow" id="lpPvEyebrow"></div>
-                    <div class="lp-h1"><span id="lpPvJudulAwal"></span><em id="lpPvJudulAksen"></em></div>
-                    <div class="lp-h2" id="lpPvSubjudul"></div>
-                    <div class="lp-p" id="lpPvDeskripsi"></div>
-                  </div>
-                  <div class="lp-features" id="lpPvFitur" data-lp-preview-section="fitur"></div>
-                  <div class="lp-about" data-lp-preview-section="tentang">
-                    <div class="lp-section-title">Tentang</div>
-                    <div class="lp-p" id="lpPvTentang"></div>
-                    <div class="lp-moto-title" id="lpPvMotoJudul"></div>
-                    <div class="lp-p" id="lpPvMoto"></div>
-                  </div>
-                  <div class="lp-footer" data-lp-preview-section="kontak">
-                    <div class="lp-section-title">Kontak</div>
-                    <div class="lp-p" id="lpPvAlamat" data-lp-empty="Alamat belum diisi"></div>
-                    <div class="lp-p" id="lpPvTelepon" data-lp-empty="Telepon belum diisi"></div>
-                    <div class="lp-p" id="lpPvEmail" data-lp-empty="Email belum diisi"></div>
-                    <div class="lp-p" id="lpPvWebsite" data-lp-empty="Website belum diisi"></div>
-                    <div class="lp-sosial-list" id="lpPvSosial"></div>
-                  </div>
+                {{-- Landing page ASLI di dalam iframe (dimuat lazy saat tab dibuka, lihat
+                     public/js/admin-landing-live-preview.js). Diskalakan ke lebar kartu; isi
+                     form disuntikkan langsung ke DOM-nya sehingga tampilannya selalu sama
+                     dengan landing page yang sebenarnya. --}}
+                <div class="lp-live-viewport" id="lpLiveViewport">
+                  <iframe id="lpLiveLandingFrame" class="lp-live-frame" title="Pratinjau landing page SIBERAD" data-src="{{ url('/') }}?lp_preview=1" tabindex="-1"></iframe>
                 </div>
               </div>
             </div>
@@ -5846,55 +5825,22 @@
             .lp-form-actions-inner{padding:12px;}
           }
 
-          /* Pratinjau tetap di posisi normalnya (bawah editor, landscape) --
-             tidak sticky karena sudah 1 kolom, bukan sejajar ke samping. */
-          .lp-preview-panel{position:static;}
+          /* Pratinjau Langsung: landing page ASLI di dalam iframe yang diskalakan ke
+             lebar kartu (lihat public/js/admin-landing-live-preview.js). Posisi tetap di
+             bawah editor -- tidak sticky karena layout 1 kolom. */
+          .lp-panel{min-width:0;max-width:100%;box-sizing:border-box;}
+          .lp-preview-panel{position:static;min-width:0;max-width:100%;overflow:hidden;}
           .lp-preview-panel .panel-head h3{display:flex;align-items:center;gap:9px;}
           .lp-live-dot{width:7px;height:7px;border-radius:50%;background:var(--success-bright);box-shadow:0 0 0 3px var(--success-dim);animation:lpPulse 1.8s ease-in-out infinite;}
           @keyframes lpPulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
-          .lp-preview-body{padding:0 22px 22px;}
+          .lp-preview-body{padding:0 22px 22px;min-width:0;}
 
-          /* Preview dibuat seperti viewport desktop mini agar landing page utuh
-             terlihat di dalam kartu Admin tanpa memperbesar panel. */
           .lp-browser-frame{
+            width:100%;max-width:100%;box-sizing:border-box;
             border-radius:12px;overflow:hidden;border:1px solid var(--border-soft);
             box-shadow:0 14px 34px -14px rgba(0,0,0,.4);
             background:var(--bg);
           }
-          .lp-preview{
-            zoom:.72;
-            width:138.8889%;
-          }
-          @media (max-width:1280px){
-            .lp-preview{zoom:.64;width:156.25%;}
-          }
-          @media (max-width:1100px){
-            .lp-preview{zoom:.78;width:128.2051%;}
-          }
-
-          /* Mode rasio sempit (mobile/tablet kecil): kartu "Pratinjau Langsung"
-             tetap merender landing page pada lebar wajarnya (bukan dipaksa
-             mengecil sampai kepotong), lalu framenya dikasih scroll horizontal
-             supaya Admin bisa geser scrollbar untuk melihat sisi yang tidak
-             muat -- BUKAN diubah jadi ikut menyempit/terpotong seperti sebelumnya.
-             Sengaja dibatasi @media ini saja, jadi tampilan desktop (>900px)
-             di atas tetap persis seperti semula, tidak ikut berubah. */
-          @media (max-width:900px){
-            .lp-browser-frame{
-              overflow-x:auto;
-              overflow-y:hidden;
-              -webkit-overflow-scrolling:touch;
-              scrollbar-width:thin;
-              scrollbar-color:var(--border-strong) transparent;
-            }
-            .lp-browser-frame::-webkit-scrollbar{height:9px;}
-            .lp-browser-frame::-webkit-scrollbar-track{background:transparent;}
-            .lp-browser-frame::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:999px;}
-            .lp-browser-frame::-webkit-scrollbar-thumb:hover{background:var(--gold);}
-            .lp-browser-bar{min-width:640px;}
-            .lp-preview{zoom:1;width:640px;min-width:640px;}
-          }
-
           .lp-browser-bar{display:flex;align-items:center;gap:6px;padding:10px 12px;background:var(--panel-alt);border-bottom:1px solid var(--border-soft);}
           .lp-browser-dot{width:8px;height:8px;border-radius:50%;background:var(--border-strong);}
           .lp-browser-url{
@@ -5902,58 +5848,10 @@
             background:var(--panel);border:1px solid var(--border-soft);border-radius:6px;padding:3px 10px;
           }
 
-          .lp-preview{background:var(--bg);color:var(--text);font-family:var(--body);}
-          .lp-preview [data-lp-preview-section]{position:relative;outline:2px solid transparent;outline-offset:-2px;transition:outline-color .2s ease;}
-          .lp-preview [data-lp-preview-section].is-focus{outline-color:var(--gold);}
-
-          .lp-hero{padding:26px 22px 22px;position:relative;overflow:hidden;background:linear-gradient(160deg,var(--panel-2),var(--bg-deep));}
-          /* Foto (::before) & overlay gradient (::after) dipisah supaya slider
-             "Blur Foto Latar" cuma mem-blur foto-nya, tidak ikut mem-blur teks
-             judul/deskripsi pratinjau -- lihat --lp-hero-photo/-blur/-overlay
-             yang di-set inline & disinkronkan lewat JS pas slider digeser. */
-          .lp-hero::before{
-            content:"";position:absolute;inset:-14px;z-index:0;
-            background-image:var(--lp-hero-photo, none);
-            background-size:cover;background-position:center;
-            filter:blur(var(--lp-hero-blur, 0px));
-          }
-          /* Mode latar VIDEO: sembunyikan layer foto (::before) & tampilkan
-             <video> sungguhan sebagai gantinya, blur/overlay tetap sinkron
-             lewat variabel CSS yang sama dengan mode gambar. */
-          .lp-hero.lp-hero-bg-video::before{display:none;}
-          .lp-hero-video-bg{
-            position:absolute;inset:-14px;z-index:0;width:calc(100% + 28px);height:calc(100% + 28px);
-            object-fit:cover;filter:blur(var(--lp-hero-blur, 0px));
-          }
-          .lp-hero::after{
-            content:"";position:absolute;inset:0;z-index:1;
-            opacity:var(--lp-hero-overlay, 1);
-            background-image:linear-gradient(160deg, color-mix(in srgb, var(--panel-2) 85%, transparent), color-mix(in srgb, var(--bg-deep) 75%, transparent));
-          }
-          .lp-hero > *{position:relative;z-index:2;}
-          .lp-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
-          .lp-h1{font-family:var(--display);font-size:27px;font-weight:700;line-height:1;text-transform:uppercase;margin-bottom:9px;color:var(--text);}
-          .lp-h1 em{color:var(--gold-bright);font-style:normal;}
-          .lp-h2{font-size:13px;font-weight:600;margin-bottom:9px;color:var(--text);}
-          .lp-p{font-size:11.5px;line-height:1.65;color:var(--text-muted);white-space:pre-line;}
-
-          .lp-features{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-soft);}
-          .lp-features .lp-feature-card{background:var(--panel);padding:15px;}
-          .lp-features .lp-feature-card b{display:block;font-family:var(--display);font-size:12.5px;margin-bottom:5px;color:var(--text);}
-          .lp-features .lp-feature-card span{font-size:10.5px;color:var(--text-muted);line-height:1.55;}
-
-          .lp-about,.lp-footer{padding:20px 22px;border-top:1px solid var(--border-soft);}
-          .lp-section-title{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:9px;}
-          .lp-moto-title{font-family:var(--display);font-size:14px;font-weight:700;text-transform:uppercase;margin:12px 0 7px;color:var(--text);}
-
-          .lp-sosial-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;}
-          .lp-sosial-chip{
-            display:inline-flex;align-items:center;gap:5px;
-            font-size:10.5px;color:var(--text-muted);
-            border:1px solid var(--border-soft);border-radius:999px;padding:5px 10px;
-            background:var(--panel-alt);
-          }
-          .lp-sosial-chip svg{width:12px;height:12px;color:var(--gold-bright);flex-shrink:0;}
+          /* Tinggi viewport & skala iframe dihitung JS (fit()); nilai di bawah cuma
+             cadangan sebelum JS jalan. Iframe dirender selebar 1440px lalu di-scale. */
+          .lp-live-viewport{position:relative;width:100%;height:560px;overflow:hidden;background:#0d120f;}
+          .lp-live-frame{position:absolute;top:0;left:0;display:block;width:1440px;max-width:none;border:0;transform-origin:0 0;background:#151e19;}
 
         </style>
 
@@ -6135,7 +6033,6 @@
 
             // ---------- MODAL CARD PANEL EDITOR: KLIK KARTU RINGKASAN -> BUKA MODAL POP-UP ----------
             var overviewCards = form.querySelectorAll('[data-lp-tab]');
-            var previewSections = document.querySelectorAll('[data-lp-preview-section]');
             var modalBackdrop = document.getElementById('lpLandingModalBackdrop');
             if (modalBackdrop && modalBackdrop.parentElement !== document.body) {
               document.body.appendChild(modalBackdrop);
@@ -6213,7 +6110,6 @@
                 lpOpenCard.classList.remove('lp-ov-open');
                 lpOpenCard = null;
               }
-              previewSections.forEach(function(s){ s.classList.remove('is-focus'); });
             }
 
             function lpOpenModal(card){
@@ -6251,9 +6147,6 @@
               card.classList.add('lp-ov-open');
               lpOpenCard = card;
               if (modalBody) modalBody.scrollTop = 0;
-
-              var focusName = moved[0].dataset.lpTabPanel;
-              previewSections.forEach(function(s){ s.classList.toggle('is-focus', s.dataset.lpPreviewSection === focusName); });
             }
 
             overviewCards.forEach(function(card){
@@ -6287,122 +6180,6 @@
               if (e.key === 'Escape') lpCloseModal();
             });
 
-            // ---------- live preview ----------
-            var sosialIcons = {
-              instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1"/></svg>',
-              tiktok: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 3h-3.1v12.4a2.7 2.7 0 1 1-1.9-2.6V9.6a5.8 5.8 0 1 0 5 5.7V9.4a7.9 7.9 0 0 0 4.4 1.3V7.6c-2.2-.2-4-1.9-4.4-4.1z"/></svg>',
-              youtube: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.5 7.2c-.3-1.1-1.1-1.9-2.1-2.2C18.6 4.5 12 4.5 12 4.5s-6.6 0-8.4.5c-1 .3-1.8 1.1-2.1 2.2C1 9 1 12 1 12s0 3 .5 4.8c.3 1.1 1.1 1.9 2.1 2.2 1.8.5 8.4.5 8.4.5s6.6 0 8.4-.5c1-.3 1.8-1.1 2.1-2.2.5-1.8.5-4.8.5-4.8s0-3-.5-4.8zM9.8 15.3V8.7l6 3.3-6 3.3z"/></svg>',
-              x: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 3H22l-7.5 8.6L23 21h-6.6l-5.2-6.6L5.2 21H2l8.1-9.3L2 3h6.7l4.7 6 5.5-6z"/></svg>',
-              facebook: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-8h2.7l.4-3.1h-3.1V8c0-.9.3-1.5 1.6-1.5h1.7V3.7C16.5 3.6 15.6 3.5 14.6 3.5c-2.4 0-4 1.5-4 4.1v2.3H7.9V13h2.7v8h2.9z"/></svg>',
-              wikipedia: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9s1.3-6.5 3.8-9z"/></svg>'
-            };
-
-            function setText(id, val, emptyLabel){
-              var el = document.getElementById(id);
-              if(!el) return;
-              var hasVal = val && val.trim() !== '';
-              el.textContent = hasVal ? val : (emptyLabel || el.dataset.lpEmpty || '');
-              el.style.opacity = hasVal ? '1' : '.45';
-              el.style.fontStyle = hasVal ? 'normal' : 'italic';
-            }
-
-            function renderFitur(){
-              var wrap = document.getElementById('lpPvFitur');
-              wrap.innerHTML = '';
-              for(var i=0;i<4;i++){
-                // document, bukan form -- lihat catatan di applyBgType() di
-                // bawah: elemen ini bisa sedang dipindah ke dalam modal.
-                var judul = document.querySelector('[data-lp="fitur_judul_'+i+'"]');
-                var desk = document.querySelector('[data-lp="fitur_deskripsi_'+i+'"]');
-                if(!judul) continue;
-                var card = document.createElement('div');
-                card.className = 'lp-feature-card';
-                card.innerHTML = '<b></b><span></span>';
-                card.querySelector('b').textContent = judul.value || 'Judul fitur ' + (i + 1);
-                card.querySelector('span').textContent = desk ? desk.value : '';
-                wrap.appendChild(card);
-              }
-            }
-
-            function renderSosial(){
-              var wrap = document.getElementById('lpPvSosial');
-              wrap.innerHTML = '';
-              var i = 0;
-              while (true) {
-                var platformEl = document.querySelector('[data-lp="sosial_platform_'+i+'"]');
-                if(!platformEl) break;
-                var labelEl = document.querySelector('[data-lp="sosial_label_'+i+'"]');
-                var urlEl = document.querySelector('[data-lp="sosial_url_'+i+'"]');
-                var url = urlEl ? urlEl.value.trim() : '';
-                if(url){
-                  var chip = document.createElement('span');
-                  chip.className = 'lp-sosial-chip';
-                  chip.innerHTML = (sosialIcons[platformEl.value] || '') + '<span></span>';
-                  chip.querySelector('span').textContent = (labelEl && labelEl.value) || platformEl.value;
-                  wrap.appendChild(chip);
-                }
-                i++;
-              }
-            }
-
-            function updatePreview(){
-              // document, bukan form -- panel section yang sedang dibuka di
-              // modal (lihat catatan di applyBgType() di bawah) sudah
-              // dipindah keluar dari <form>, jadi query lewat `form` bisa
-              // balik null utk field yang sedang diedit & bikin baris
-              // `.value` di bawah lempar TypeError (mematikan sisa
-              // pratinjau, padahal modal menjanjikan "otomatis
-              // tersinkronisasi ke Pratinjau Langsung").
-              var heroBlurEl = document.querySelector('[data-lp="hero_blur_level"]');
-              var heroOverlayEl = document.querySelector('[data-lp="hero_overlay_intensity"]');
-              var lpPreviewHero = document.getElementById('lpPreviewHero');
-              if(lpPreviewHero && heroBlurEl){ lpPreviewHero.style.setProperty('--lp-hero-blur', heroBlurEl.value + 'px'); }
-              if(lpPreviewHero && heroOverlayEl){ lpPreviewHero.style.setProperty('--lp-hero-overlay', (heroOverlayEl.value / 100)); }
-              // Sinkron juga ke pratinjau gambar/video BESAR di dalam modal
-              // "Latar Belakang Beranda" sendiri (bukan cuma di panel
-              // Pratinjau Langsung yang letaknya terpisah) -- supaya efek
-              // blur & overlay-nya langsung kelihatan begitu slider digeser,
-              // tanpa perlu simpan dulu.
-              if(heroBlurEl){
-                var blurCss = 'blur(' + heroBlurEl.value + 'px)';
-                var imgEl = document.getElementById('lpHeroImagePreviewImg');
-                var vidEl = document.getElementById('lpHeroVideoPreviewVideo');
-                if(imgEl){ imgEl.style.filter = blurCss; }
-                if(vidEl){ vidEl.style.filter = blurCss; }
-              }
-              if(heroOverlayEl){
-                var overlayOpacity = heroOverlayEl.value / 100;
-                var imgOverlayEl = document.getElementById('lpHeroImagePreviewOverlay');
-                var vidOverlayEl = document.getElementById('lpHeroVideoPreviewOverlay');
-                if(imgOverlayEl){ imgOverlayEl.style.opacity = overlayOpacity; }
-                if(vidOverlayEl){ vidOverlayEl.style.opacity = overlayOpacity; }
-              }
-              setText('lpPvEyebrow', document.querySelector('[data-lp="hero_eyebrow"]').value, 'PUSSIBERAD SISTEM PENDUKUNG OPERASIONAL');
-              setText('lpPvJudulAwal', document.querySelector('[data-lp="hero_judul_awal"]').value, 'SIBER');
-              setText('lpPvJudulAksen', document.querySelector('[data-lp="hero_judul_aksen"]').value, 'AD');
-              setText('lpPvSubjudul', document.querySelector('[data-lp="hero_subjudul"]').value);
-              setText('lpPvDeskripsi', document.querySelector('[data-lp="hero_deskripsi"]').value);
-              setText('lpPvTentang', document.querySelector('[data-lp="tentang_deskripsi"]').value);
-              setText('lpPvMotoJudul', document.querySelector('[data-lp="tentang_moto_judul"]').value);
-              setText('lpPvMoto', document.querySelector('[data-lp="tentang_moto_deskripsi"]').value);
-              setText('lpPvAlamat', document.querySelector('[data-lp="alamat"]').value);
-              setText('lpPvTelepon', document.querySelector('[data-lp="telepon_kontak"]').value);
-              setText('lpPvEmail', document.querySelector('[data-lp="email_kontak"]').value);
-              setText('lpPvWebsite', document.querySelector('[data-lp="website"]').value);
-              renderFitur();
-              renderSosial();
-            }
-
-            form.querySelectorAll('[data-lp]').forEach(function(el){
-              el.addEventListener('input', updatePreview);
-              el.addEventListener('focus', function(){
-                var tabPanel = el.closest('[data-lp-tab-panel]');
-                if(tabPanel){
-                  previewSections.forEach(function(s){ s.classList.toggle('is-focus', s.dataset.lpPreviewSection === tabPanel.dataset.lpTabPanel); });
-                }
-              });
-            });
-
             // Batas ukuran gambar (BG beranda & logo) -- HARUS sama persis
             // dengan validasi server ('max:5120' KB di SettingController)
             // supaya Admin ditolak SAAT MEMILIH FILE (instan, tanpa perlu
@@ -6423,14 +6200,12 @@
               heroImageInput.addEventListener('change', function(){
                 if(lpTolakJikaTerlaluBesar(this, 'Gambar latar beranda')) return;
                 var file = this.files && this.files[0];
-                var heroEl = document.getElementById('lpPreviewHero');
                 var previewImg = document.getElementById('lpHeroImagePreviewImg');
                 var previewFrame = document.getElementById('lpHeroImagePreviewFrame');
                 var placeholder = document.getElementById('lpHeroImagePreviewPlaceholder');
-                if(!file){ heroEl.style.setProperty('--lp-hero-photo', 'none'); return; }
+                if(!file) return;
                 var reader = new FileReader();
                 reader.onload = function(e){
-                  heroEl.style.setProperty('--lp-hero-photo', 'url(' + e.target.result + ')');
                   // Tampilkan pratinjau BG realtime di sebelah tombol pilih file,
                   // gantikan kotak "belum ada gambar" begitu file dipilih.
                   if(previewImg){ previewImg.src = e.target.result; }
@@ -6451,11 +6226,7 @@
               heroVideoInput.addEventListener('change', function(){
                 var input = this;
                 var file = input.files && input.files[0];
-                if(!file){
-                  var lpPreviewVideoKosong = document.getElementById('lpPreviewHeroVideo');
-                  if(lpPreviewVideoKosong){ lpPreviewVideoKosong.removeAttribute('src'); lpPreviewVideoKosong.style.display = 'none'; }
-                  return;
-                }
+                if(!file) return;
                 if(file.size > LP_MAX_VIDEO_BYTES){
                   var ukuranMb = (file.size / (1024 * 1024)).toFixed(1);
                   window.siberadShowToast && window.siberadShowToast('error',
@@ -6500,13 +6271,9 @@
               var previewVideo = document.getElementById('lpHeroVideoPreviewVideo');
               var previewFrame = document.getElementById('lpHeroVideoPreviewFrame');
               var placeholder = document.getElementById('lpHeroVideoPreviewPlaceholder');
-              var lpPreviewVideo = document.getElementById('lpPreviewHeroVideo');
               if(previewVideo){ previewVideo.src = url; }
               if(previewFrame){ previewFrame.style.display = ''; }
               if(placeholder){ placeholder.style.display = 'none'; }
-              // Ikut tampilkan di panel Pratinjau Langsung kalau tipe latar
-              // yang sedang aktif memang video.
-              if(lpPreviewVideo){ lpPreviewVideo.src = url; }
             }
 
             // Toggle panel Gambar <-> Video sesuai radio "hero_bg_type" yang
@@ -6523,8 +6290,6 @@
             // nya tidak lagi terpicu. Diganti jadi event delegation di
             // `document` (elemen yang TIDAK PERNAH ikut berpindah), supaya
             // toggle panel tetap jalan berapa kali pun modalnya dibuka-tutup.
-            var lpPreviewHeroEl = document.getElementById('lpPreviewHero');
-            var lpPreviewVideoEl = document.getElementById('lpPreviewHeroVideo');
             function applyBgType(type){
               // PENTING: query dari document, BUKAN dari `form`. Panel ini
               // (beserta sub-panel Gambar/Video di dalamnya) dipindahkan
@@ -6544,8 +6309,6 @@
                 var opt = radio.closest('.lp-bg-type-option');
                 if(opt) opt.classList.toggle('is-active', radio.checked);
               });
-              if(lpPreviewHeroEl) lpPreviewHeroEl.classList.toggle('lp-hero-bg-video', type === 'video');
-              if(lpPreviewVideoEl) lpPreviewVideoEl.style.display = (type === 'video' && lpPreviewVideoEl.getAttribute('src')) ? 'block' : 'none';
             }
             document.addEventListener('change', function(e){
               // CATATAN PERBAIKAN BUG: guard "form.contains(radio)" di bawah
@@ -6577,8 +6340,6 @@
             });
             var initialBgTypeRadio = form.querySelector('[data-lp-bg-type-radio]:checked');
             applyBgType(initialBgTypeRadio ? initialBgTypeRadio.value : 'gambar');
-
-            updatePreview();
           })();
         </script>
       </section>

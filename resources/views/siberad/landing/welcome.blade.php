@@ -2,6 +2,13 @@
 {{-- Halaman landing SIBERAD — Sistem Informasi Berbasis Elektronik Angkatan Darat (PUSSIBERAD) --}}
 @php
   $lp = $pengaturan->landingConfig();
+  // Mode pratinjau: halaman ini dimuat di dalam iframe "Pratinjau Langsung"
+  // (Admin > Pengaturan Umum) lewat ?lp_preview=1. Tampilannya SAMA PERSIS
+  // dengan landing asli, cuma tanpa splash loader, modal login, dan bundle
+  // app.js (Echo/Pusher) yang tidak berguna di dalam pratinjau. Data draf
+  // dari form admin disuntikkan ke DOM iframe oleh
+  // public/js/admin-landing-live-preview.js.
+  $lpPreview = request()->boolean('lp_preview');
   // Sengaja TIDAK fallback ke logo/gambar bawaan (images/logo-pussiberad.jpg,
   // images/hero-lapangan-mabesad.jpg) lagi -- kalau Admin menghapus logo/
   // gambar latar beranda di Pengaturan Umum, landing page ini HARUS ikut
@@ -1191,9 +1198,18 @@
   })();
 </script>
 
+@if ($lpPreview)
+<style id="lp-preview-mode">
+  #loader,#loginOverlay{display:none !important;}
+  body.is-loading{overflow:auto !important;height:auto !important;}
+  [data-reveal]{opacity:1 !important;transform:none !important;transition:none !important;}
+  #themeToggle{pointer-events:none !important;}
+</style>
+@else
 @vite(['resources/js/app.js'])
+@endif
 </head>
-<body class="is-loading">
+<body class="{{ $lpPreview ? '' : 'is-loading' }}">
 
   <!-- ================= LOADER ================= -->
   <div id="loader">
@@ -1482,7 +1498,7 @@
         @endphp
         <div>
           <div class="footer-col-title">{{ $lp['footer']['social_title'] }}</div>
-          <ul class="footer-links">
+          <ul class="footer-links" id="footerSosialList">
             @foreach (($pengaturan->sosial_media ?? []) as $sosial)
               @if (!empty($sosial['url']))
                 <li><a href="{{ $sosial['url'] }}" target="_blank" rel="noopener noreferrer">{!! $sosialIcons[$sosial['platform']] ?? '' !!}{{ $sosial['label'] }}</a></li>
@@ -1493,7 +1509,7 @@
         <div>
           <div class="footer-col-title">{{ $lp['footer']['mabesad_title'] }}</div>
           <p class="footer-desc" style="margin-bottom:14px;">{{ $lp['footer']['mabesad_description'] }}</p>
-          <ul class="footer-links">
+          <ul class="footer-links" id="footerKontakList">
             @if ($pengaturan->alamat)<li>{{ $pengaturan->alamat }}</li>@endif
             @if ($pengaturan->telepon_kontak)<li>{{ $pengaturan->telepon_kontak }}</li>@endif
             @if ($pengaturan->website)<li><a href="{{ $pengaturan->website }}" target="_blank" rel="noopener noreferrer">{{ preg_replace('#^https?://#', '', rtrim($pengaturan->website, '/')) }}</a></li>@endif

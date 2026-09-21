@@ -265,10 +265,13 @@
     if (el) el.textContent = value ?? '';
   }
 
-  // Live preview di sini menyasar iframe #lpLiveLandingFrame. Iframe itu
-  // TIDAK ada di admin.blade.php saat ini, jadi fungsi ini otomatis
-  // no-op (langsung return karena iframe null) tanpa bikin error --
-  // aman dibiarkan menyala untuk saat iframe pratinjau itu ditambahkan lagi.
+  // Live preview di sini menyasar iframe #lpLiveLandingFrame (landing page
+  // ASLI, dimuat & diskalakan oleh admin-landing-live-preview.js). File itu
+  // menyinkronkan field kolom DB (hero, fitur, tentang, kontak, sosial media,
+  // makna logo, latar hero); fungsi di bawah ini menyinkronkan field config
+  // landing_content (brand, nav, statistik, judul section, login, footer).
+  // Jangan menyinkronkan field yang sama di dua tempat. Kalau iframe belum
+  // dimuat (tab belum dibuka), fungsi ini no-op.
   function preview() {
     const iframe = document.getElementById('lpLiveLandingFrame');
     if (!iframe || !iframe.contentDocument) return;
