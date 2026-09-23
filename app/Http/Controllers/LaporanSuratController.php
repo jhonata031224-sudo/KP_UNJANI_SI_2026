@@ -658,8 +658,18 @@ class LaporanSuratController extends Controller
         // sesaat sebelum diteruskan, supaya jejak riwayatnya tetap lengkap.
         abort_if($laporanSurat->isSelesai(), 422, 'Surat ini sudah selesai.');
 
+        // Wadan hanya boleh meneruskan surat ke Pok Analis, 4 Satlak, dan
+        // 4 Sdir/Pembinaan -- Sansidam/Kotama TIDAK boleh jadi tujuan di sini,
+        // walau di-request langsung (bukan lewat dropdown UI).
+        $kodeWadanTujuan = array_merge(
+            Satuan::KODE_UNSUR_PEMBANTU_PIMPINAN,
+            Satuan::KODE_SATLAK,
+            Satuan::KODE_PEMBINAAN,
+        );
+        $idTujuanDiizinkan = Satuan::whereIn('kode', $kodeWadanTujuan)->pluck('id')->all();
+
         $validated = $request->validate([
-            'tujuan_satuan_id' => ['required', 'integer', 'exists:satuans,id'],
+            'tujuan_satuan_id' => ['required', 'integer', 'exists:satuans,id', Rule::in($idTujuanDiizinkan)],
             'disposisi'        => ['required', 'string'],
             'tindakan'         => ['required', 'array', 'min:1'],
             'tindakan.*'       => ['string'],
@@ -667,6 +677,7 @@ class LaporanSuratController extends Controller
             'lampiran'         => ['nullable', 'file', 'max:10240'],
         ], [
             'tujuan_satuan_id.required' => 'Satuan tujuan penerusan wajib dipilih.',
+            'tujuan_satuan_id.in'       => 'Satuan tujuan tidak valid untuk disposisi Wadan.',
             'disposisi.required'        => 'Disposisi wajib dipilih.',
             'tindakan.required'         => 'Tindakan wajib dipilih minimal satu.',
             'tindakan.min'              => 'Pilih minimal satu tindakan.',

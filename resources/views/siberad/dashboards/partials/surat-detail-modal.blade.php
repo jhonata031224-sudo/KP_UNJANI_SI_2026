@@ -10,10 +10,16 @@
 @if($isWadanDashboard)
     @php
         // Disposisi versi Wadan langsung berupa daftar satuan (bukan daftar
-        // label jabatan) -- kecuali Danpus (tidak boleh didisposisi turun ke
-        // Danpus) dan Wadan sendiri.
-        $wadanDisposisiSatuan = \App\Models\Satuan::orderBy('nama')->get()->filter(function ($st) {
-            return ! in_array(strtoupper($st->kode), ['ADMIN', 'DANPUS', 'WADAN'], true);
+        // label jabatan). Tujuan dibatasi hanya ke Pok Analis, 4 Satlak, dan
+        // 4 Sdir/Pembinaan -- Sansidam/Kotama, Danpus, Wadan, dan Admin
+        // TIDAK boleh muncul di sini.
+        $kodeWadanDisposisiSimpel = array_merge(
+            \App\Models\Satuan::KODE_UNSUR_PEMBANTU_PIMPINAN, // POKANALIS
+            \App\Models\Satuan::KODE_SATLAK,                   // SATLAKKAL, SATLAKSISOS, SATLAKDAK, SATLAKDUKTEK
+            \App\Models\Satuan::KODE_PEMBINAAN,                // BINFUNG, BINUM, DIKLAT, BINMAT
+        );
+        $wadanDisposisiSatuan = \App\Models\Satuan::orderBy('nama')->get()->filter(function ($st) use ($kodeWadanDisposisiSimpel) {
+            return in_array(strtoupper($st->kode), $kodeWadanDisposisiSimpel, true);
         });
         $wadanTindakanOptions = \App\Models\LaporanSurat::TINDAKAN_WADAN_OPTIONS;
     @endphp
