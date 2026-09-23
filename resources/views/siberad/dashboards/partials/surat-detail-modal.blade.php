@@ -1004,17 +1004,13 @@ window.openSuratDetail = function(button){
       btnTeruskan.hidden = false;
       btnTeruskan.onclick = function(){
         if (typeof window.bukaSuratTeruskanModal === 'function') {
-          var modalEl = document.getElementById('suratTeruskanModal');
-          var wadanIds = modalEl && modalEl.dataset.wadanTujuanIds
-            ? JSON.parse(modalEl.dataset.wadanTujuanIds)
-            : [];
           window.bukaSuratTeruskanModal({
-            action     : button.dataset.teruskanAction,
-            method     : 'POST',
-            title      : 'Disposisi & Teruskan Surat',
-            sub        : 'Pilih satuan tujuan dan tindakan yang harus dilaksanakan sebelum meneruskan.',
-            btnLabel   : 'Disposisi & Teruskan',
-            tujuanIds  : wadanIds,
+            action   : button.dataset.teruskanAction,
+            method   : 'POST',
+            title    : 'Disposisi & Teruskan Surat',
+            sub      : 'Pilih satuan tujuan dan tindakan yang harus dilaksanakan sebelum meneruskan.',
+            btnLabel : 'Disposisi & Teruskan',
+            isWadan  : true,
           });
         }
       };
@@ -1065,6 +1061,7 @@ window.openSuratDetail = function(button){
             title    : 'Tindakan / Disposisi Baru',
             sub      : 'Buat siklus disposisi baru. Riwayat siklus sebelumnya tetap tersimpan.',
             btnLabel : 'Kirim Disposisi Baru',
+            isWadan  : false,
           });
         }
       };

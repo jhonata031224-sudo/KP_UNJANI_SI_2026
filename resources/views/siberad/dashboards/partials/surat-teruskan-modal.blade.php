@@ -45,9 +45,24 @@
             <input type="hidden" name="_method" id="suratTeruskanMethod" value="POST">
 
             {{-- Tujuan Satuan --}}
+            {{-- Dua select: #suratTeruskanTujuanWadan hanya untuk Wadan (Pok Analis + Satlak + Sdir), --}}
+            {{-- #suratTeruskanTujuanDanpus untuk Danpus (semua). JS swap aktif/non-aktif saat buka. --}}
             <div class="form-group" id="suratTeruskanTujuanWrap">
-                <label class="form-label" for="suratTeruskanTujuan">Tujuan Penerusan <span style="color:var(--red)">*</span></label>
-                <select name="tujuan_satuan_id" id="suratTeruskanTujuan" class="form-select" required>
+                <label class="form-label" for="suratTeruskanTujuanWadan">Tujuan Penerusan <span style="color:var(--red)">*</span></label>
+
+                {{-- SELECT WADAN: hanya Pok Analis, 4 Satlak, 4 Sdir --}}
+                @php
+                    $satuanWadan = $semuaSatuan->filter(fn ($st) => in_array(strtoupper($st->kode), $kodeWadanTujuan, true));
+                @endphp
+                <select name="tujuan_satuan_id" id="suratTeruskanTujuanWadan" class="form-select" required>
+                    <option value="">— Pilih Satuan Tujuan —</option>
+                    @foreach($satuanWadan as $st)
+                        <option value="{{ $st->id }}">{{ $st->nama }} ({{ $st->kode }})</option>
+                    @endforeach
+                </select>
+
+                {{-- SELECT DANPUS: semua satuan (termasuk Sansidam) --}}
+                <select name="tujuan_satuan_id" id="suratTeruskanTujuanDanpus" class="form-select" required style="display:none">
                     <option value="">— Pilih Satuan Tujuan —</option>
                     @foreach($semuaSatuan as $st)
                         <option value="{{ $st->id }}">{{ $st->nama }} ({{ $st->kode }})</option>
@@ -127,8 +142,9 @@
     });
 
     // Buka modal Teruskan dari luar (dipanggil oleh surat-detail-modal)
+    // opts.isWadan = true  → pakai select Wadan (Pok Analis + Satlak + Sdir saja)
+    // opts.isWadan = false → pakai select Danpus (semua satuan)
     window.bukaSuratTeruskanModal = function(opts){
-        // opts: { action, method, title, sub, btnLabel, tujuanWajib, tujuanFilter }
         var form = document.getElementById('suratTeruskanForm');
         form.action = opts.action;
         document.getElementById('suratTeruskanMethod').value = opts.method || 'POST';
@@ -142,27 +158,33 @@
         document.getElementById('suratTeruskanTindakanGrid').style.borderColor = 'transparent';
         document.getElementById('suratTeruskanTindakanGrid').style.boxShadow = 'none';
 
-        // Filter tujuan jika ada
-        var tujuanSel = document.getElementById('suratTeruskanTujuan');
-        var tujuanWrap = document.getElementById('suratTeruskanTujuanWrap');
-
-        Array.prototype.forEach.call(tujuanSel.options, function(opt){
-            opt.style.display = '';
-            opt.disabled = false;
-        });
+        var tujuanWrap   = document.getElementById('suratTeruskanTujuanWrap');
+        var selWadan     = document.getElementById('suratTeruskanTujuanWadan');
+        var selDanpus    = document.getElementById('suratTeruskanTujuanDanpus');
 
         if (opts.hideTujuan) {
+            // Sembunyikan seluruh field tujuan (mis. kembalikan ke Danpus)
             tujuanWrap.style.display = 'none';
-            tujuanSel.removeAttribute('required');
+            selWadan.disabled  = true;
+            selDanpus.disabled = true;
         } else {
             tujuanWrap.style.display = '';
-            tujuanSel.setAttribute('required', 'required');
-            if (opts.tujuanIds && opts.tujuanIds.length) {
-                Array.prototype.forEach.call(tujuanSel.options, function(opt){
-                    if (opt.value && opts.tujuanIds.indexOf(parseInt(opt.value)) === -1) {
-                        opt.style.display = 'none';
-                    }
-                });
+            if (opts.isWadan) {
+                // Tampilkan select Wadan (terbatas), sembunyikan select Danpus
+                selWadan.style.display  = '';
+                selWadan.disabled       = false;
+                selWadan.name           = 'tujuan_satuan_id';
+                selDanpus.style.display = 'none';
+                selDanpus.disabled      = true;
+                selDanpus.name          = '';
+            } else {
+                // Tampilkan select Danpus (semua), sembunyikan select Wadan
+                selDanpus.style.display = '';
+                selDanpus.disabled      = false;
+                selDanpus.name          = 'tujuan_satuan_id';
+                selWadan.style.display  = 'none';
+                selWadan.disabled       = true;
+                selWadan.name           = '';
             }
         }
 
