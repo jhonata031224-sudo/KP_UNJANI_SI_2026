@@ -7,6 +7,19 @@
         return ! in_array(strtoupper($st->kode), ['ADMIN'], true);
     });
 
+    // Kode satuan yang boleh jadi tujuan penerusan Wadan:
+    // hanya Pok Analis, 4 Satlak, dan 4 Sdir (bukan Sansidam/Kotama).
+    $kodeWadanTujuan = array_merge(
+        Satuan::KODE_UNSUR_PEMBANTU_PIMPINAN, // POKANALIS
+        Satuan::KODE_SATLAK,                   // SATLAKKAL, SATLAKSISOS, SATLAKDAK, SATLAKDUKTEK
+        Satuan::KODE_PEMBINAAN,                // BINFUNG, BINUM, DIKLAT, BINMAT
+    );
+    $wadanTujuanIds = $semuaSatuan
+        ->filter(fn ($st) => in_array(strtoupper($st->kode), $kodeWadanTujuan, true))
+        ->pluck('id')
+        ->values()
+        ->all();
+
     $disposisiOptions = LaporanSurat::DISPOSISI_WADAN_OPTIONS;
     $tindakanOptions  = LaporanSurat::TINDAKAN_WADAN_OPTIONS;
 @endphp
@@ -15,7 +28,7 @@
      MODAL: DISPOSISI & TERUSKAN SURAT
      Dipakai oleh: Wadan (teruskan ke Satrap), Danpus (disposisi ulang)
      ═══════════════════════════════════════════════════ --}}
-<div class="report-modal" id="suratTeruskanModal">
+<div class="report-modal" id="suratTeruskanModal" data-wadan-tujuan-ids="{{ json_encode($wadanTujuanIds) }}">
     <div class="report-modal-card" style="max-width:600px">
         <div class="report-modal-head">
             <div style="min-width:0">

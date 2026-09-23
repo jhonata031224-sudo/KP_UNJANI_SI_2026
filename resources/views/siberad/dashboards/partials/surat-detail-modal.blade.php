@@ -1004,12 +1004,17 @@ window.openSuratDetail = function(button){
       btnTeruskan.hidden = false;
       btnTeruskan.onclick = function(){
         if (typeof window.bukaSuratTeruskanModal === 'function') {
+          var modalEl = document.getElementById('suratTeruskanModal');
+          var wadanIds = modalEl && modalEl.dataset.wadanTujuanIds
+            ? JSON.parse(modalEl.dataset.wadanTujuanIds)
+            : [];
           window.bukaSuratTeruskanModal({
-            action   : button.dataset.teruskanAction,
-            method   : 'POST',
-            title    : 'Disposisi & Teruskan Surat',
-            sub      : 'Pilih satuan tujuan, disposisi, dan tindakan yang harus dilaksanakan.',
-            btnLabel : 'Teruskan Surat',
+            action     : button.dataset.teruskanAction,
+            method     : 'POST',
+            title      : 'Disposisi & Teruskan Surat',
+            sub        : 'Pilih satuan tujuan dan tindakan yang harus dilaksanakan sebelum meneruskan.',
+            btnLabel   : 'Disposisi & Teruskan',
+            tujuanIds  : wadanIds,
           });
         }
       };
