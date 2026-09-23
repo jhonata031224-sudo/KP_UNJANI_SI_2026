@@ -20,6 +20,12 @@ use Illuminate\Validation\Rule;
 /**
  * Alur Surat Masuk, Surat Keluar, Disposisi & Tindakan Berkelanjutan:
  *   - Danpus -> Wadan -> Satrap Penindakan -> Wadan -> Danpus (Selesai / Siklus Baru)
+ *   - Surat Keluar MURNI (bukan balasan) dari satuan manapun SELAIN Danpus
+ *     & Wadan: Satuan -> Danpus (cek & konfirmasi via konfirmasi()) ->
+ *     disposisi ke Wadan (disposisiUlang()) -> Wadan disposisi ke satuan
+ *     tujuan akhir SELAIN satuan pembuat surat (teruskan(), yang otomatis
+ *     mengirim ke DUA pihak sekaligus: satuan tujuan akhir DAN Urdal
+ *     sebagai tembusan View Only untuk cek & konfirmasi mengetahui).
  *   - Disposisi = penerima utama yang harus menangani surat.
  *   - Tindakan = instruksi yang harus dilakukan penerima.
  *   - Tembusan = pihak yang hanya mengetahui/menerima informasi.
@@ -268,23 +274,29 @@ class LaporanSuratController extends Controller
             ? ['nullable', 'string', 'max:10000']
             : ['required', 'string', 'max:10000'];
 
-        // Fondasi alur "Surat dari Satlak ke Urdal": khusus 4 Satlak (Kal,
-        // Sisos, Dak, Duktek) tujuan utama Surat Keluar SELALU dikunci ke
-        // Urdal -- bukan pilihan bebas seperti satuan lain. Tembusan (CC)
-        // tetap boleh bebas pilih satuan lain, KECUALI Danpus & Wadan
-        // (keduanya cuma boleh menerima surat lewat alur disposisi resmi,
-        // bukan tembusan langsung dari Satlak). Lihat juga penguncian yang
-        // sama di sisi form -- resources/views/.../laporan-role.blade.php.
-        $isSatlak       = in_array($kodeAsal, Satuan::KODE_SATLAK, true);
-        $urdalSatuan    = $isSatlak ? Satuan::where('kode', 'URDAL')->first() : null;
-        abort_if($isSatlak && ! $urdalSatuan, 500, 'Satuan Urdal belum terdaftar di sistem.');
+        // Fondasi alur "Surat Keluar Murni" (bukan balasan): SEMUA satuan
+        // SELAIN Danpus & Wadan wajib mengirim surat keluarnya ke DANPUS
+        // dulu -- bukan pilihan bebas seperti sebelumnya (dulu cuma Satlak
+        // yang dikunci ke Urdal, sekarang seragam ke Danpus buat SEMUA
+        // satuan lain, termasuk Satlak). Alur lanjutannya:
+        //   Satuan -> Danpus (cek & konfirmasi) -> disposisi ke Wadan
+        //   (LaporanSuratController::disposisiUlang()) -> Wadan disposisi
+        //   ke satuan tujuan akhir (LaporanSuratController::teruskan(),
+        //   yang otomatis meng-cc Urdal sebagai View Only).
+        // Tembusan (CC) tetap boleh bebas pilih satuan lain, KECUALI Danpus
+        // & Wadan (keduanya cuma boleh menerima surat lewat alur disposisi
+        // resmi di atas, bukan tembusan langsung). Lihat juga penguncian
+        // yang sama di sisi form -- resources/views/.../laporan-role.blade.php.
+        $isDanpusAtauWadan = in_array($kodeAsal, ['DANPUS', 'WADAN'], true);
+        $danpusSatuan      = $isDanpusAtauWadan ? null : Satuan::where('kode', 'DANPUS')->first();
+        abort_if(! $isDanpusAtauWadan && ! $danpusSatuan, 500, 'Satuan Danpus belum terdaftar di sistem.');
 
-        $tujuanRules = ($isSatlak && $urdalSatuan)
-            ? ['required', 'integer', Rule::in([$urdalSatuan->id])]
+        $tujuanRules = $danpusSatuan
+            ? ['required', 'integer', Rule::in([$danpusSatuan->id])]
             : ['required', 'integer', 'exists:satuans,id'];
 
         $tembusanItemRules = ['integer', 'exists:satuans,id'];
-        if ($isSatlak) {
+        if (! $isDanpusAtauWadan) {
             $idDanpusWadan = Satuan::whereIn('kode', ['DANPUS', 'WADAN'])->pluck('id')->all();
             $tembusanItemRules[] = Rule::notIn($idDanpusWadan);
         }
@@ -313,7 +325,7 @@ class LaporanSuratController extends Controller
             'lampiran'         => ['required', 'file', 'max:10240'],
         ], [
             'tujuan_satuan_id.required' => 'Tujuan surat wajib dipilih.',
-            'tujuan_satuan_id.in'       => 'Tujuan surat dari Satlak wajib ke Urdal.',
+            'tujuan_satuan_id.in'       => 'Surat Keluar wajib ditujukan ke Danpus terlebih dahulu.',
             'disposisi.required'        => 'Disposisi wajib dipilih.',
             'tindakan.required'         => 'Tindakan wajib dipilih.',
             'tindakan.min'              => 'Pilih minimal satu tindakan.',
@@ -684,6 +696,16 @@ class LaporanSuratController extends Controller
         ]);
 
         $tujuan = Satuan::findOrFail($validated['tujuan_satuan_id']);
+
+        // Khusus alur Surat Keluar Murni (satuan -> Danpus -> Wadan): Wadan
+        // WAJIB mendisposisikan ke satuan SELAIN satuan yang membuat surat
+        // ini di awal (satuan_id) -- tidak masuk akal mengembalikan surat
+        // ke satuan yang sama persis sebagai "disposisi baru".
+        abort_if(
+            (int) $tujuan->id === (int) $laporanSurat->satuan_id,
+            422,
+            'Satuan tujuan disposisi tidak boleh sama dengan satuan pembuat surat ini.'
+        );
 
         // Auto-konfirmasi implisit kalau surat ini belum sempat dikonfirmasi
         // manual (mis. Wadan langsung klik "Teruskan Surat" dari surat baru).
