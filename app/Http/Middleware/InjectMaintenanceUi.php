@@ -56,17 +56,22 @@ class InjectMaintenanceUi
             'pesanMaintenance' => $pengaturan->pesanMaintenance(),
         ])->render();
 
-        // Disisipkan sebagai anak PERTAMA <body> (bukan fixed/overlay) supaya
-        // banner mendorong konten di bawahnya secara alami tanpa perlu hitung
-        // offset/menimpa topbar yang sudah ada di tiap dashboard.
-        $bodyOpenPos = stripos($html, '<body');
-        if ($bodyOpenPos !== false) {
-            $bodyTagEnd = strpos($html, '>', $bodyOpenPos);
-            if ($bodyTagEnd !== false) {
-                $insertAt = $bodyTagEnd + 1;
-                $html = substr($html, 0, $insertAt).$banner.substr($html, $insertAt);
-                $response->setContent($html);
-            }
+        // PENTING: cari `</body>` dari BELAKANG (strripos), BUKAN `<body` dari
+        // depan (stripos) -- pola ini SENGAJA disamakan dengan InjectWebPushUi.
+        // `<body` dari depan pernah salah tangkap komentar JS di <head> (mis.
+        // "// <body>/sidebar sempat di-parse..." di dash-styles.blade.php) yang
+        // kebetulan mengandung teks "<body>", lalu menyisipkan banner di
+        // TENGAH-TENGAH sebuah <script> -- merusak seluruh parsing script
+        // setelahnya (kelihatan sebagai kode JS mentah tampil sebagai teks di
+        // halaman). `</body>` jauh lebih jarang muncul di luar tag penutup
+        // asli, dan diambil dari kemunculan TERAKHIR supaya makin aman.
+        // Posisi visual "banner di paling atas" tetap dicapai lewat script di
+        // partial banner yang memindahkan elemennya jadi anak pertama <body>
+        // begitu DOM siap -- bukan lewat manipulasi string di titik ini.
+        $bodyClosePos = strripos($html, '</body>');
+        if ($bodyClosePos !== false) {
+            $html = substr($html, 0, $bodyClosePos).$banner.substr($html, $bodyClosePos);
+            $response->setContent($html);
         }
 
         return $response;

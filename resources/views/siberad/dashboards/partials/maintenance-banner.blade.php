@@ -33,6 +33,18 @@
 </div>
 <script>
 (function(){
+  // Banner ini disisipkan tepat sebelum penutup body (titik sisip yang aman
+  // -- lihat catatan di InjectMaintenanceUi.php), bukan di awal body, supaya
+  // tidak pernah salah menabrak komentar/string di bagian head yang
+  // kebetulan menyebut kata "body". Supaya tetap TAMPIL PALING ATAS
+  // (persisten, bukan nempel di bawah konten), elemennya dipindah jadi anak
+  // PERTAMA body di sini, secepatnya begitu script ini jalan (masih dalam
+  // parsing dokumen yang sama, jadi tidak sempat kelihatan "loncat").
+  var bannerEl = document.currentScript && document.currentScript.previousElementSibling;
+  if (bannerEl && bannerEl.hasAttribute && bannerEl.hasAttribute('data-siberad-maintenance-banner') && document.body.firstChild !== bannerEl) {
+    document.body.insertBefore(bannerEl, document.body.firstChild);
+  }
+
   var PESAN_MAINTENANCE = {!! json_encode($pesanMaintenance) !!};
   var MUTATING = ['POST','PUT','PATCH','DELETE'];
 
