@@ -28,6 +28,14 @@
 .surat-file-card-badge{align-self:flex-start;margin-bottom:14px}
 .status-badge.status-menunggu.surat-file-card-badge,
 #suratDetailModal .status-badge.status-menunggu{color:#2476ad;background:rgba(52,152,219,.1);border-color:rgba(52,152,219,.25)}
+/* Status "Selesai" (LaporanSurat::badgeClass() -> status-disetujui) belum
+   pernah punya definisi warna di manapun (base .status-badge di 3 file
+   dashboard cuma isi status-menunggu/status-dikonfirmasi/status-ditolak/
+   status-progres) -- makanya badge "Selesai" di kartu Surat Keluar tampil
+   polos tanpa pill/background. Samakan hijaunya dengan pill "Selesai
+   (Final)" yang sudah dipakai di timeline Riwayat Alur (surat-detail-modal). */
+.status-badge.status-disetujui.surat-file-card-badge,
+#suratDetailModal .status-badge.status-disetujui{color:#1f7a4f;background:rgba(61,186,126,.16);border-color:rgba(61,186,126,.4)}
 .surat-file-card-title{font-family:var(--display);font-size:17px;font-weight:700;line-height:1.35;color:var(--text);margin:0 0 14px}
 .surat-file-card-dari-label{font-size:12px;color:var(--text-muted)}
 .surat-file-card-dari-value{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:13.5px;font-weight:700;color:var(--text);margin-top:5px}
