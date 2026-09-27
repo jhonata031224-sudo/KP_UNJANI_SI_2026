@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ $jenis === 'pengguna' ? 'Cetak Laporan Pengguna' : 'Cetak Riwayat Aktivitas' }} — {{ $pengaturan?->namaSistem() ?? 'SIBERAD' }}</title>
+<title>{{ match($jenis) { 'pengguna' => 'Cetak Laporan Pengguna', 'surat' => 'Cetak Data Surat', default => 'Cetak Riwayat Aktivitas' } }} — {{ $pengaturan?->namaSistem() ?? 'SIBERAD' }}</title>
 <style>
   body{font-family:Georgia,'Times New Roman',serif;color:#111;margin:36px;}
   header{display:flex;align-items:center;gap:14px;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:18px;}
@@ -28,7 +28,11 @@
     @endif
     <div>
       <h1>{{ $pengaturan->nama_instansi }}</h1>
-      <p>{{ $jenis === 'pengguna' ? 'Laporan Daftar Pengguna Sistem '.($pengaturan?->namaSistem() ?? 'SIBERAD') : 'Laporan Riwayat Aktivitas Sistem '.($pengaturan?->namaSistem() ?? 'SIBERAD') }}</p>
+      <p>{{ match($jenis) {
+        'pengguna' => 'Laporan Daftar Pengguna Sistem '.($pengaturan?->namaSistem() ?? 'SIBERAD'),
+        'surat' => 'Laporan Data Surat Sistem '.($pengaturan?->namaSistem() ?? 'SIBERAD'),
+        default => 'Laporan Riwayat Aktivitas Sistem '.($pengaturan?->namaSistem() ?? 'SIBERAD'),
+      } }}</p>
     </div>
   </header>
 
@@ -40,6 +44,18 @@
     <tbody>
       @foreach($semuaPengguna as $i => $u)
       <tr><td>{{ $i + 1 }}</td><td>{{ $u->name }}</td><td>{{ $u->username }}</td><td>{{ $u->satuan->nama ?? '-' }}</td></tr>
+      @endforeach
+    </tbody>
+  </table>
+  </div>
+  @elseif($jenis === 'surat')
+  <h2>Data Surat ({{ $semuaSurat->count() }})</h2>
+  <div class="tbl-scroll-wrap">
+  <table>
+    <thead><tr><th>#</th><th>Perihal</th><th>Satuan Pengirim</th><th>Satuan Tujuan</th><th>Prioritas</th><th>Status</th><th>Dibuat</th></tr></thead>
+    <tbody>
+      @foreach($semuaSurat as $i => $s)
+      <tr><td>{{ $i + 1 }}</td><td>{{ $s->perihal ?: '-' }}</td><td>{{ $s->satuan?->nama ?? '-' }}</td><td>{{ $s->tujuanSatuan?->nama ?? '-' }}</td><td>{{ $s->prioritas ?: '-' }}</td><td>{{ $s->labelStatus() }}</td><td>{{ $s->created_at?->format('d/m/Y H:i') }}</td></tr>
       @endforeach
     </tbody>
   </table>

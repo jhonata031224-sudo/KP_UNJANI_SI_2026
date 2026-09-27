@@ -145,8 +145,10 @@ class DashboardController
             ->get();
         // Dipakai partial admin-kpi-cards.blade.php buat hitung sparkline 7
         // hari terakhir kartu KPI "Total Surat" (jumlah keseluruhan sistem,
-        // sama seperti $stats['total_surat'] di bawah).
-        $suratSemuaAdmin = LaporanSurat::get();
+        // sama seperti $stats['total_surat'] di bawah). Eager-load satuan
+        // pengirim & tujuan supaya tabel "Data Surat" di Arsip Data (admin.
+        // blade.php) tidak N+1 query pas nampilin nama satuan tiap baris.
+        $suratSemuaAdmin = LaporanSurat::with(['satuan', 'tujuanSatuan'])->get();
 
         return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','trenAktivitas','logAktivitas','semuaPelaporan','daftarBackup','sesiAktif','logDari','logSampai','laporanRekapMentah','suratSemuaAdmin') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'resetDataDetails' => ResetDataLaporanController::ambilDetailPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah), 'total_surat' => LaporanSurat::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
     }

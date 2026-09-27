@@ -3674,7 +3674,7 @@
             </div>
             <div>
               <h2>Arsip Data</h2>
-              <p>Rekap data pelaporan, pengguna, dan aktivitas sistem dalam satu tempat. Data Pengguna &amp; Data Aktivitas bisa diunduh sebagai CSV/Excel atau PDF.</p>
+              <p>Rekap data pelaporan, surat, pengguna, dan aktivitas sistem dalam satu tempat. Data Surat, Data Pengguna &amp; Data Aktivitas bisa diunduh sebagai CSV/Excel atau PDF.</p>
             </div>
           </div>
         </div>
@@ -3692,6 +3692,10 @@
             <button type="button" class="dl-tab" data-dl-tab="dl-aktivitas">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
               Data Aktivitas
+            </button>
+            <button type="button" class="dl-tab" data-dl-tab="dl-surat">
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="m4 6 8 7 8-7"/></svg>
+              Data Surat
             </button>
           </div>
 
@@ -3921,12 +3925,83 @@
               <p>Data ditampilkan langsung dari database sistem.</p>
             </div>
           </div>
+
+          {{-- ----- Sub-tab: Data Surat ----- --}}
+          <div class="dl-section" data-dl-section="dl-surat">
+            <div class="dl-section-head">
+              <div>
+                <h3>Data Surat</h3>
+                <p>Surat yang dikirim antar satuan (termasuk alur Danpus-Wadan) yang dapat dilihat dan diunduh.</p>
+              </div>
+              <div class="dl-download" data-dropdown>
+                <button type="button" class="btn btn-primary btn-sm dl-download-btn" data-dropdown-toggle>
+                  Unduh
+                  <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="dl-download-menu">
+                  <a href="{{ route('admin.laporan.export-surat') }}" data-dl-base-href="{{ route('admin.laporan.export-surat') }}"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Unduh CSV / Excel</a>
+                  <a href="{{ route('admin.laporan.cetak', 'surat') }}" data-dl-base-href="{{ route('admin.laporan.cetak', 'surat') }}" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>Unduh PDF</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="dl-search-row">
+              <div class="table-search-wrap" style="max-width:280px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+                <input type="text" class="table-search" data-dl-search="tblDlSurat" placeholder="Cari perihal, satuan, atau disposisi...">
+              </div>
+              <div class="dl-date-filter">
+                <label for="dlSuratDari">Dari</label>
+                <input type="date" id="dlSuratDari" class="table-filter" max="{{ now()->format('Y-m-d') }}">
+              </div>
+              <div class="dl-date-filter">
+                <label for="dlSuratSampai">Sampai</label>
+                <input type="date" id="dlSuratSampai" class="table-filter" max="{{ now()->format('Y-m-d') }}" value="{{ now()->format('Y-m-d') }}">
+              </div>
+              <select class="table-filter dl-kategori-filter" data-dl-filter="tblDlSurat">
+                <option value="">Semua Status</option>
+                <option value="Menunggu Konfirmasi">Menunggu Konfirmasi</option>
+                <option value="Dikonfirmasi">Dikonfirmasi</option>
+                <option value="Diteruskan">Diteruskan</option>
+                <option value="Selesai">Selesai</option>
+              </select>
+              <button type="button" class="dl-filter-reset" id="dlSuratReset" title="Reset filter tanggal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+              </button>
+              <span class="dl-search-count" data-dl-count="tblDlSurat"></span>
+            </div>
+
+            <div class="tbl-wrap tbl-scroll" style="max-height:420px;">
+              <table class="dtbl" id="tblDlSurat">
+                <thead><tr><th>No</th><th>Perihal</th><th>Satuan Pengirim</th><th>Satuan Tujuan</th><th>Prioritas</th><th>Status</th><th>Dibuat</th></tr></thead>
+                <tbody>
+                  @forelse($suratSemuaAdmin->sortByDesc('created_at')->values() as $i => $s)
+                  <tr data-filter-value="{{ $s->labelStatus() }}" data-search-value="{{ strtolower(($s->perihal ?? '').' '.($s->satuan?->nama ?? '').' '.($s->tujuanSatuan?->nama ?? '').' '.($s->disposisi_terakhir ?? $s->disposisi ?? '')) }}">
+                    <td>{{ $i + 1 }}</td>
+                    <td><strong>{{ $s->perihal ?: '-' }}</strong></td>
+                    <td>{{ $s->satuan?->nama_keterangan ?? $s->satuan?->nama ?? '-' }}</td>
+                    <td>{{ $s->tujuanSatuan?->nama_keterangan ?? $s->tujuanSatuan?->nama ?? '-' }}</td>
+                    <td>{{ $s->prioritas ?: '-' }}</td>
+                    <td><span class="badge">{{ $s->labelStatus() }}</span></td>
+                    <td style="white-space:nowrap;" data-tanggal="{{ $s->created_at?->format('Y-m-d') }}">{{ $s->created_at?->format('d/m/Y H:i') }}</td>
+                  </tr>
+                  @empty
+                  <tr><td colspan="7"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"></path><path d="m4 6 8 7 8-7"></path></svg><div class="empty-state-title">Belum ada surat</div></div></td></tr>
+                  @endforelse
+                </tbody>
+              </table>
+            </div>
+
+            <div class="dl-foot">
+              <p>Data ditampilkan langsung dari database sistem.</p>
+            </div>
+          </div>
         </div>
       </section>
 
       <script>
       (function () {
-        // Toggle sub-tab Data Pengguna / Data Aktivitas / Data Pelaporan di dalam panel Arsip Data.
+        // Toggle sub-tab Data Pengguna / Data Aktivitas / Data Pelaporan / Data Surat di dalam panel Arsip Data.
         var tabs = document.querySelectorAll('.dl-tab');
         tabs.forEach(function (tab) {
           tab.addEventListener('click', function () {
@@ -3997,7 +4072,7 @@
           dlHitungTampil(tableId);
         }
 
-        // Konfigurasi tabel Arsip Data (Data Pengguna/Data Aktivitas) dalam
+        // Konfigurasi tabel Arsip Data (Data Pengguna/Data Aktivitas/Data Surat) dalam
         // SATU array supaya nambah tabel baru ke depannya cukup nambah 1
         // entri di sini, gak perlu ubah tiap fungsi di bawah satu-satu
         // (dulu di-hardcode lewat ternary). "Data Pelaporan" TIDAK make
@@ -4007,6 +4082,7 @@
         var dlTables = [
           { id: 'tblDlPengguna',  section: 'dl-pengguna',  dari: 'dlPenggunaDari',  sampai: 'dlPenggunaSampai',  reset: 'dlPenggunaReset' },
           { id: 'tblDlAktivitas', section: 'dl-aktivitas', dari: 'dlAktivitasDari', sampai: 'dlAktivitasSampai', reset: 'dlAktivitasReset' },
+          { id: 'tblDlSurat',     section: 'dl-surat',     dari: 'dlSuratDari',     sampai: 'dlSuratSampai',     reset: 'dlSuratReset' },
         ];
         function dlCfg(tableId) {
           for (var i = 0; i < dlTables.length; i++) { if (dlTables[i].id === tableId) return dlTables[i]; }
@@ -4125,7 +4201,7 @@
         }
         dlTables.forEach(function (t) { buatResetHandler(t.dari, t.sampai, t.id); });
 
-        // Dropdown filter kategori Arsip Data (Data Pengguna / Data Aktivitas / Data Pelaporan)
+        // Dropdown filter kategori/status Arsip Data (Data Pengguna / Data Aktivitas / Data Pelaporan / Data Surat)
         dlTables.forEach(function (t) {
           var filterEl = document.querySelector('[data-dl-filter="' + t.id + '"]');
           if (filterEl) filterEl.addEventListener('change', function () { dlSaringTanggal(t.id, t.dari, t.sampai); });

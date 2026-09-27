@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\LaporanSurat;
 use App\Models\Pengaturan;
 use App\Models\Satuan;
 use App\Models\User;
@@ -98,6 +99,35 @@ class ReportController extends Controller
             ['Waktu', 'Pengguna', 'Satuan', 'Aksi', 'Deskripsi', 'Detail', 'IP Address'],
             $rows,
             [23, 32, 26, 30, 70, 46, 22],
+        );
+    }
+
+    /**
+     * Export data surat sebagai XLSX yang sudah diformat untuk Excel, sama
+     * seperti exportUsersExcel()/exportActivityExcel() di atas.
+     *
+     * Menerima query 'q', 'kategori' (di sini berisi label status, mis.
+     * "Selesai"), 'dari', 'sampai' -- sama persis dengan filter yang tampil
+     * di tabel "Data Surat" pada tab Arsip Data.
+     */
+    public function exportSuratExcel(Request $request)
+    {
+        $surat = $this->filteredSurat($request);
+        $rows = $surat->map(fn ($s) => [
+            $s->perihal ?: '-',
+            $s->satuan?->nama ?: '-',
+            $s->tujuanSatuan?->nama ?: '-',
+            $s->prioritas ?: '-',
+            $s->labelStatus(),
+            $s->created_at?->format('d/m/Y H:i') ?: '-',
+        ])->all();
+
+        return SimpleXlsx::download(
+            'data-surat-'.now()->format('Ymd_His').'.xlsx',
+            'Data Surat',
+            ['Perihal', 'Satuan Pengirim', 'Satuan Tujuan', 'Prioritas', 'Status', 'Dibuat'],
+            $rows,
+            [40, 30, 30, 16, 20, 22],
         );
     }
 
@@ -213,6 +243,9 @@ class ReportController extends Controller
             'log' => $jenis === 'aktivitas'
                 ? $this->filteredActivityLog($request)
                 : collect(),
+            'semuaSurat' => $jenis === 'surat'
+                ? $this->filteredSurat($request)
+                : collect(),
             'dicetakOleh' => $request->user(),
             'dicetakPada' => now(),
         ]);
@@ -298,6 +331,45 @@ class ReportController extends Controller
         }
 
         return $log->values();
+    }
+
+    /**
+     * Surat (LaporanSurat), disaring dengan query 'q' (perihal/satuan
+     * pengirim/satuan tujuan/disposisi), 'kategori' (di sini berisi label
+     * status hasil labelStatus(), mis. "Selesai"/"Dikonfirmasi"), serta
+     * rentang tanggal dibuat 'dari'/'sampai'. Dipakai bersama oleh export
+     * Excel & cetak PDF supaya keduanya konsisten dengan filter yang aktif
+     * di tabel "Data Surat" pada tab Arsip Data.
+     */
+    private function filteredSurat(Request $request)
+    {
+        $dari = $request->filled('dari') ? Carbon::parse($request->query('dari'))->startOfDay() : null;
+        $sampai = $request->filled('sampai') ? Carbon::parse($request->query('sampai'))->endOfDay() : null;
+        $q = mb_strtolower(trim((string) $request->query('q', '')));
+        $status = trim((string) $request->query('kategori', ''));
+
+        $surat = LaporanSurat::with(['satuan', 'tujuanSatuan'])
+            ->when($dari, fn ($qq) => $qq->where('created_at', '>=', $dari))
+            ->when($sampai, fn ($qq) => $qq->where('created_at', '<=', $sampai))
+            ->latest('created_at')
+            ->get();
+
+        if ($q !== '') {
+            $surat = $surat->filter(function ($s) use ($q) {
+                $haystack = mb_strtolower(trim(implode(' ', [
+                    $s->perihal, $s->satuan?->nama ?? '', $s->tujuanSatuan?->nama ?? '',
+                    $s->disposisi_terakhir ?? $s->disposisi ?? '',
+                ])));
+
+                return str_contains($haystack, $q);
+            });
+        }
+
+        if ($status !== '') {
+            $surat = $surat->filter(fn ($s) => $s->labelStatus() === $status);
+        }
+
+        return $surat->values();
     }
 
     /**
