@@ -76,12 +76,18 @@ return Application::configure(basePath: dirname(__DIR__))
         // di bawah ini) -- lihat komentar di NormalizeClientIpFromEdge.
         $middleware->prepend(NormalizeClientIpFromEdge::class);
         $middleware->trustProxies(at: '*');
+        // Gerbang keamanan Mode Maintenance -- HARUS jalan sebelum middleware
+        // lain yang menyuntik/mengubah body response (Inject*Ui dsb), supaya
+        // request yang ditolak langsung dapat respons final tanpa diproses
+        // lebih jauh oleh middleware yang tidak relevan untuk request ditolak.
+        $middleware->append(\App\Http\Middleware\EnforceMaintenanceMode::class);
         $middleware->append(PreventHtmlPageCaching::class);
         $middleware->append(RemoveDecorativeSeparators::class);
         $middleware->append(InjectDashboardUi::class);
         $middleware->append(InjectPengaturanAccessUi::class);
         $middleware->append(InjectAdminReportCenter::class);
         $middleware->append(InjectWebPushUi::class);
+        $middleware->append(\App\Http\Middleware\InjectMaintenanceUi::class);
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,

@@ -14,12 +14,28 @@ class Pengaturan extends Model
         'fitur','tentang_deskripsi','tentang_nama_resmi','tentang_nama_lama','tentang_fungsi_utama',
         'tentang_moto_judul','tentang_moto_deskripsi','website','sosial_media','landing_content',
         'notifikasi_push_aktif','struktur_organisasi_path','makna_logo','notifikasi_sound_path',
+        'mode_maintenance_aktif','mode_maintenance_pesan',
     ];
 
     protected $casts = [
         'fitur' => 'array','sosial_media' => 'array','landing_content' => 'array','notifikasi_push_aktif' => 'boolean',
         'hero_blur_level' => 'integer','hero_overlay_intensity' => 'integer','makna_logo' => 'array',
+        'mode_maintenance_aktif' => 'boolean',
     ];
+
+    /**
+     * Pesan yang ditampilkan ke pengguna non-Admin (banner + respons
+     * server saat aksi ditolak) selagi Mode Maintenance aktif. Admin bisa
+     * mengisi pesan kustom lewat Kelola Sistem -> Mode Maintenance; kalau
+     * dikosongkan, dipakai pesan default ini supaya banner/blokir tetap
+     * punya keterangan yang jelas.
+     */
+    public function pesanMaintenance(): string
+    {
+        $pesan = trim((string) $this->mode_maintenance_pesan);
+
+        return $pesan !== '' ? $pesan : 'Sistem sedang dalam pemeliharaan. Aktivitas pengiriman dan perubahan data sementara dinonaktifkan hingga pemeliharaan selesai.';
+    }
 
     /**
      * Nama sistem yang tampil ke pengguna (mis. eyebrow dashboard, judul

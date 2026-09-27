@@ -1106,6 +1106,7 @@
           <a href="#" class="side-sub-link" data-tab-link="role-akses" title="Hak Akses Pengguna"><span class="sub-dot"></span>Hak Akses Pengguna</a>
           <a href="#" class="side-sub-link" data-tab-link="backup" title="Cadangan Data"><span class="sub-dot"></span>Cadangan Data</a>
           <a href="#" class="side-sub-link" data-tab-link="reset-data-laporan" title="Reset Data Laporan"><span class="sub-dot"></span>Reset Data Laporan</a>
+          <a href="#" class="side-sub-link" data-tab-link="mode-maintenance" title="Mode Maintenance"><span class="sub-dot"></span>Mode Maintenance</a>
           <a href="#" class="side-sub-link" data-tab-link="pengaturan-umum" title="Pengaturan Umum"><span class="sub-dot"></span>Pengaturan Umum</a>
         </div></div>
       </div>
@@ -3663,6 +3664,77 @@
           };
         })();
         </script>
+      </section>
+
+      {{-- ===== MODE MAINTENANCE ===== --}}
+      <section class="tab-panel" data-tab-panel="mode-maintenance">
+        <div class="section-head panel rdl-head-panel">
+          <div class="rdl-head-content">
+            <div class="rdl-head-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            </div>
+            <div>
+              <h2>Mode Maintenance</h2>
+              <p>Saat aktif, pengguna non-Admin tetap bisa login dan membaca/melihat data, tapi TIDAK bisa melakukan aksi yang mengubah data (buat, edit, hapus, kirim, submit, konfirmasi/ACC, disposisi, upload, dsb). Admin selalu tetap bisa bekerja normal.</p>
+            </div>
+          </div>
+        </div>
+
+        <style>
+          .mm-panel-body{padding:20px 22px;display:flex;flex-direction:column;gap:18px;}
+          .mm-switch-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border:1px solid var(--border-soft);border-radius:12px;background:var(--panel-alt);}
+          .mm-switch-row-label{font-size:13px;font-weight:700;color:var(--text);}
+          .mm-switch-row-sub{font-size:11.5px;color:var(--text-muted);margin-top:3px;}
+          .mm-switch{position:relative;display:inline-block;width:44px;height:24px;flex:0 0 auto;}
+          .mm-switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;}
+          .mm-switch-track{position:absolute;inset:0;border-radius:999px;background:var(--border-soft);transition:background .15s ease;}
+          .mm-switch-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s ease;}
+          .mm-switch input:checked ~ .mm-switch-track{background:var(--amber,#a4700a);}
+          .mm-switch input:checked ~ .mm-switch-thumb{transform:translateX(20px);}
+          .mm-status-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;}
+          .mm-status-badge.on{background:var(--amber-dim,rgba(224,168,58,.15));color:var(--amber,#a4700a);}
+          .mm-status-badge.off{background:rgba(34,197,94,.12);color:#22c55e;}
+          .mm-field label{display:block;font-size:11.5px;font-weight:700;color:var(--text-muted);margin-bottom:5px;}
+          .mm-field textarea{width:100%;box-sizing:border-box;border:1px solid var(--border-soft);border-radius:9px;padding:9px 12px;font-family:var(--body);font-size:12.5px;background:var(--panel-alt);color:var(--text);resize:vertical;min-height:80px;}
+          .mm-field-hint{font-size:11px;color:var(--text-dim,var(--text-muted));margin-top:5px;}
+        </style>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel-head">
+            <div>
+              <h3>Saklar Mode Maintenance</h3>
+              <p>Perubahan berlaku LANGSUNG ke seluruh sistem begitu disimpan.</p>
+            </div>
+            <span class="mm-status-badge {{ $pengaturan->mode_maintenance_aktif ? 'on' : 'off' }}" id="mmStatusBadge">
+              {{ $pengaturan->mode_maintenance_aktif ? 'AKTIF' : 'NONAKTIF' }}
+            </span>
+          </div>
+          <form method="POST" action="{{ route('admin.setelan.maintenance.toggle') }}" class="mm-panel-body" id="mmForm">
+            @csrf
+            @method('PATCH')
+            <div class="mm-switch-row">
+              <div>
+                <div class="mm-switch-row-label">Aktifkan Mode Maintenance</div>
+                <div class="mm-switch-row-sub">Pengguna non-Admin tidak bisa buat/edit/hapus/kirim/konfirmasi/disposisi data selama mode ini aktif.</div>
+              </div>
+              <label class="mm-switch">
+                <input type="checkbox" name="aktif" value="1" id="mmAktifInput" @checked($pengaturan->mode_maintenance_aktif)>
+                <span class="mm-switch-track"></span>
+                <span class="mm-switch-thumb"></span>
+              </label>
+            </div>
+
+            <div class="mm-field">
+              <label>Pesan Maintenance (opsional)</label>
+              <textarea name="pesan" maxlength="500" placeholder="Sistem sedang dalam pemeliharaan. Aktivitas pengiriman dan perubahan data sementara dinonaktifkan hingga pemeliharaan selesai.">{{ old('pesan', $pengaturan->mode_maintenance_pesan) }}</textarea>
+              <div class="mm-field-hint">Ditampilkan di banner pengguna non-Admin. Kosongkan untuk memakai pesan default.</div>
+            </div>
+
+            <div>
+              <button type="submit" class="btn btn-primary">Simpan Pengaturan</button>
+            </div>
+          </form>
+        </div>
       </section>
 
       {{-- ===== ARSIP DATA (dulu "Data Laporan") ===== --}}

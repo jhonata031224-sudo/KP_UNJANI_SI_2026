@@ -351,6 +351,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/permintaan-reset-password/riwayat', [AdminPermintaanResetPasswordController::class, 'hapusRiwayat'])->name('permintaan-reset-password.hapus-riwayat');
     Route::delete('/reset-data-laporan', [ResetDataLaporanController::class, 'destroy'])->name('reset-data-laporan.destroy');
     Route::patch('/setelan/notifikasi/toggle', [NotifikasiSettingController::class, 'updateToggle'])->name('setelan.notifikasi.toggle');
+    Route::patch('/setelan/maintenance/toggle', [\App\Http\Controllers\Admin\MaintenanceSettingController::class, 'update'])->name('setelan.maintenance.toggle');
     Route::post('/setelan/notifikasi/broadcast', [NotifikasiSettingController::class, 'broadcast'])->name('setelan.notifikasi.broadcast');
     Route::post('/setelan/notifikasi/suara', [NotifikasiSettingController::class, 'updateSuara'])->name('setelan.notifikasi.suara.update');
     Route::delete('/setelan/notifikasi/suara', [NotifikasiSettingController::class, 'destroySuara'])->name('setelan.notifikasi.suara.destroy');
