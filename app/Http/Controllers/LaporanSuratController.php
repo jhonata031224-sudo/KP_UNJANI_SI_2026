@@ -21,11 +21,13 @@ use Illuminate\Validation\Rule;
  * Alur Surat Masuk, Surat Keluar, Disposisi & Tindakan Berkelanjutan:
  *   - Danpus -> Wadan -> Satrap Penindakan -> Wadan -> Danpus (Selesai / Siklus Baru)
  *   - Surat Keluar MURNI (bukan balasan) dari satuan manapun SELAIN Danpus
- *     & Wadan: Satuan -> Danpus (cek & konfirmasi via konfirmasi()) ->
- *     disposisi ke Wadan (disposisiUlang()) -> Wadan disposisi ke satuan
- *     tujuan akhir SELAIN satuan pembuat surat (teruskan(), yang otomatis
- *     mengirim ke DUA pihak sekaligus: satuan tujuan akhir DAN Urdal
- *     sebagai tembusan View Only untuk cek & konfirmasi mengetahui).
+ *     & Wadan: Satuan -> Danpus (cek & konfirmasi via konfirmasi()) -> SELESAI.
+ *     Begitu Danpus konfirmasi, surat otomatis is_selesai=true dan pindah ke
+ *     Arsip Surat untuk KEDUA sisi (pengirim asli & Danpus) sekaligus --
+ *     Danpus TIDAK mendisposisi ulang record yang sama ke Wadan. Kalau surat
+ *     ini perlu ditindaklanjuti, Danpus membuat Surat Keluar BARU dari sisi
+ *     dia sendiri (record baru, alur Danpus -> Wadan -> tujuan seperti biasa),
+ *     bukan meneruskan surat murni yang sudah tuntas ini.
  *   - Disposisi = penerima utama yang harus menangani surat.
  *   - Tindakan = instruksi yang harus dilakukan penerima.
  *   - Tembusan = pihak yang hanya mengetahui/menerima informasi.
@@ -594,11 +596,23 @@ class LaporanSuratController extends Controller
         // surat benar-benar berpindah dari belum-ACC ke ACC (bukan klik ulang).
         $barusanDikonfirmasi = ! $laporanSurat->isDikonfirmasi();
 
-        $laporanSurat->update([
+        // Surat Keluar MURNI (dibuat oleh satuan manapun SELAIN Danpus &
+        // Wadan) yang dikonfirmasi LANGSUNG oleh Danpus: alurnya TUNTAS di
+        // sini saja -- baik dari sisi pengirim asli maupun sisi Danpus,
+        // dua-duanya langsung pindah ke Arsip Surat. Danpus TIDAK lagi
+        // mendisposisi ulang record yang sama ke Wadan (disposisiUlang());
+        // kalau surat ini perlu ditindaklanjuti, Danpus membuat Surat Keluar
+        // baru dari sisi dia sendiri (alur Danpus -> Wadan -> tujuan seperti
+        // biasa), bukan meneruskan record surat murni ini.
+        $kodePengirimAsli     = strtoupper((string) ($laporanSurat->satuan->kode ?? ''));
+        $isSuratMurniKeDanpus = strtoupper((string) $satuan->kode) === 'DANPUS'
+            && ! in_array($kodePengirimAsli, ['DANPUS', 'WADAN'], true);
+
+        $laporanSurat->update(array_merge([
             'status'            => LaporanSurat::STATUS_DIKONFIRMASI,
             'dikonfirmasi_at'   => now(),
             'dikonfirmasi_oleh' => $user->id,
-        ]);
+        ], $isSuratMurniKeDanpus ? ['is_selesai' => true] : []));
 
         // Catat riwayat konfirmasi penerima
         LaporanSuratRiwayat::create([
@@ -607,7 +621,9 @@ class LaporanSuratController extends Controller
             'aksi'               => LaporanSuratRiwayat::AKSI_KONFIRMASI,
             'pengirim_satuan_id' => $satuan->id,
             'user_id'            => $user->id,
-            'catatan'            => "Surat dikonfirmasi / ACC & Diterima oleh {$satuan->nama}.",
+            'catatan'            => $isSuratMurniKeDanpus
+                ? "Surat dikonfirmasi / ACC & Diterima oleh {$satuan->nama}. Surat dianggap tuntas -- tindak lanjut (jika ada) dibuat sebagai Surat Keluar baru oleh Danpus."
+                : "Surat dikonfirmasi / ACC & Diterima oleh {$satuan->nama}.",
         ]);
 
         // ALUR NAIK: Danpus (ujung alur) konfirmasi / ACC surat balasan -> satuan
