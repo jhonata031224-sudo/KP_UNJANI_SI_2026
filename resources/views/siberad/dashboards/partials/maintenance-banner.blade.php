@@ -35,12 +35,19 @@
   /* .shell didorong turun sebesar tinggi banner (variabel --mm-banner-h,
      diisi script di bawah), dan .sidebar (sticky/fixed di top:0) digeser
      sama besar supaya logo-nya tidak nyelip di bawah banner saat di-scroll.
-     .topbar SENGAJA TIDAK disentuh: partials/notification-controls memaksanya
-     position:relative (bukan sticky), jadi cukup ikut terdorong oleh .shell;
-     menambah 'top' di sini justru menggeser posisinya & bikin ikon tema/
-     lonceng/avatar tertimpa banner. Nilai default 0px = tidak mengubah
-     apa pun kalau script belum jalan. */
+
+     .topbar: aslinya position:sticky (dash-styles.blade.php) -- kondisi ini
+     yang posisinya BENAR di bawah banner. ~1 detik setelah load, script
+     lonceng (notification-controls.blade.php, initNotificationControls)
+     menyuntik '.topbar{position:relative!important}' sehingga topbar
+     bergeser naik & tertimpa banner. Karena aturan itu !important dan
+     disuntik belakangan, di sini topbar DIKUNCI tetap sticky memakai
+     selector yang lebih spesifik (html body .shell .topbar). z-index
+     lonceng tetap berlaku (sticky juga mendukung z-index) jadi dropdown
+     notifikasi tidak terganggu. Nilai default 0px = tidak mengubah apa
+     pun kalau script belum jalan. */
   .shell{padding-top:var(--mm-banner-h,0px)!important;}
+  html body .shell .topbar{position:sticky!important;top:var(--mm-banner-h,0px)!important;}
   .sidebar{top:var(--mm-banner-h,0px)!important;height:calc(100vh - var(--mm-banner-h,0px))!important;}
   .siberad-maintenance-disabled{opacity:.5!important;cursor:not-allowed!important;filter:grayscale(.15);}
   @media(max-width:640px){.siberad-maintenance-banner{padding:9px 14px;font-size:11.5px;}.siberad-maintenance-banner .mm-detail span{display:none;}}
