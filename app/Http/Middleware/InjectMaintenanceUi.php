@@ -3,7 +3,10 @@
 namespace App\Http\Middleware;
 
 use App\Models\Pengaturan;
+use App\Models\User;
+use App\Notifications\PengumumanBroadcastAdmin;
 use Closure;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -54,6 +57,7 @@ class InjectMaintenanceUi
 
         $banner = view('siberad.dashboards.partials.maintenance-banner', [
             'pesanMaintenance' => $pengaturan->pesanMaintenance(),
+            'waktuMaintenance' => $this->waktuPengumumanMaintenance($user),
         ])->render();
 
         // PENTING: cari `</body>` dari BELAKANG (strripos), BUKAN `<body` dari
@@ -75,5 +79,29 @@ class InjectMaintenanceUi
         }
 
         return $response;
+    }
+
+    /**
+     * Teks waktu "Dikirim" untuk modal pemeliharaan yang dibuka dari banner
+     * -- SAMA persis dengan yang ditampilkan lonceng notifikasi
+     * (NotifikasiController::realtime -> created_at->diffForHumans()),
+     * diambil dari notifikasi pengumuman 'maintenance' yang dikirim
+     * MaintenanceSettingController saat mode diaktifkan. Prioritas:
+     * notifikasi milik pengguna ini (identik dengan yang dilihatnya di
+     * lonceng); kalau sudah dihapus dari lonceng, pakai notifikasi
+     * pemeliharaan terbaru milik pengguna mana pun (dikirim serentak ke
+     * semua non-Admin, jadi waktunya sama). NULL kalau memang tidak ada.
+     */
+    private function waktuPengumumanMaintenance(User $user): ?string
+    {
+        $filter = fn ($q) => $q
+            ->where('type', PengumumanBroadcastAdmin::class)
+            ->where('data', 'like', '%"kategori":"maintenance"%')
+            ->where('data', 'like', '%"judul":"Sistem Dalam Pemeliharaan"%');
+
+        $notif = $filter($user->notifications()->getQuery())->latest('created_at')->first()
+            ?? $filter(DatabaseNotification::query())->latest('created_at')->first();
+
+        return $notif?->created_at?->diffForHumans();
     }
 }

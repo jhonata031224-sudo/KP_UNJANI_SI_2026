@@ -25,11 +25,10 @@
   <div class="section-head panel">
     <h2>{{ $judul }}</h2>
     <p>{{ $deskripsi }}</p>
-  </div>
-
-  <div class="monitor-view-toggle" role="tablist" aria-label="Pilih tampilan {{ $judul }}">
-    <button type="button" class="monitor-view-toggle-btn is-active" id="monitorToggleLaporan-{{ $prefix }}" role="tab" aria-selected="true">Laporan</button>
-    <button type="button" class="monitor-view-toggle-btn" id="monitorToggleSurat-{{ $prefix }}" role="tab" aria-selected="false">Surat</button>
+    <div class="monitor-view-toggle" role="tablist" aria-label="Pilih tampilan {{ $judul }}">
+      <button type="button" class="monitor-view-toggle-btn is-active" id="monitorToggleLaporan-{{ $prefix }}" role="tab" aria-selected="true">Laporan</button>
+      <button type="button" class="monitor-view-toggle-btn" id="monitorToggleSurat-{{ $prefix }}" role="tab" aria-selected="false">Surat</button>
+    </div>
   </div>
 
   <div class="monitor-view-panel" id="monitorLaporanView-{{ $prefix }}">
