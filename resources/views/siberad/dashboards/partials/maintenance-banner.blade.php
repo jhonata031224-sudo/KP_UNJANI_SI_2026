@@ -17,7 +17,10 @@
     position:fixed;top:0;left:0;right:0;z-index:100050;
     display:flex;align-items:center;gap:10px;
     padding:11px 20px;
-    background:var(--amber-dim,rgba(224,168,58,.15));
+    /* SOLID: amber tipis di atas warna dasar halaman. Sebelumnya cuma
+       var(--amber-dim) yang transparan (~14%) sehingga topbar di belakang
+       banner tembus & kelihatan menumpuk. */
+    background:linear-gradient(var(--amber-dim,rgba(224,168,58,.15)),var(--amber-dim,rgba(224,168,58,.15))),var(--bg,#f5f2e7);
     color:var(--amber,#a4700a);
     border-bottom:1px solid rgba(164,112,10,.3);
     font-family:var(--body);font-size:12.5px;font-weight:600;
@@ -26,7 +29,7 @@
   }
   .siberad-maintenance-banner:hover,.siberad-maintenance-banner:focus-visible{background:rgba(164,112,10,.22);outline:none;}
   .siberad-maintenance-banner .mm-icon{flex:0 0 auto;width:19px;height:19px;}
-  .siberad-maintenance-banner .mm-text{flex:1 1 auto;}
+  .siberad-maintenance-banner .mm-text{flex:1 1 auto;min-width:0;overflow-wrap:anywhere;}
   .siberad-maintenance-banner .mm-detail{flex:0 0 auto;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;opacity:.85;white-space:nowrap;}
   .siberad-maintenance-banner .mm-detail svg{width:14px;height:14px;}
   /* Elemen existing yang menempel di top:0 (sidebar sticky/fixed & topbar
@@ -34,6 +37,7 @@
      lewat variabel --mm-banner-h (diisi script di bawah), supaya logo sidebar
      dan lonceng/avatar di topbar tidak nyelip di bawah banner saat di-scroll.
      Nilai default 0px = tidak mengubah apa pun kalau script belum jalan. */
+  .shell{padding-top:var(--mm-banner-h,0px)!important;}
   .sidebar{top:var(--mm-banner-h,0px)!important;height:calc(100vh - var(--mm-banner-h,0px))!important;}
   .topbar{top:var(--mm-banner-h,0px)!important;}
   .siberad-maintenance-disabled{opacity:.5!important;cursor:not-allowed!important;filter:grayscale(.15);}
@@ -59,9 +63,10 @@
   function sesuaikanOffsetKonten(){
     if (!bannerEl) return;
     var tinggi = bannerEl.offsetHeight;
-    var shell = document.querySelector('.shell');
-    (shell || document.body).style.paddingTop = tinggi + 'px';
     document.documentElement.style.setProperty('--mm-banner-h', tinggi + 'px');
+    // .shell sudah didorong lewat aturan CSS (var --mm-banner-h). Halaman
+    // tanpa .shell (layout lain) pakai padding body sebagai cadangan.
+    if (!document.querySelector('.shell')) document.body.style.paddingTop = tinggi + 'px';
   }
   sesuaikanOffsetKonten();
   window.addEventListener('resize', sesuaikanOffsetKonten);
