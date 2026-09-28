@@ -547,6 +547,12 @@
       overlay.offsetHeight; // force reflow biar animasi open konsisten (lihat pola sesiBerakhirOverlay)
       overlay.classList.add('open');
     }
+    // Diekspos ke window (pola sama seperti window.siberadTampilkanSesiBerakhir
+    // di atas) supaya banner Mode Maintenance (lihat partials/
+    // maintenance-banner.blade.php) bisa buka modal "Pengumuman" yang SAMA
+    // PERSIS ini saat diklik -- satu tampilan konsisten, bukan modal ke-2
+    // yang beda gaya.
+    window.siberadTampilkanPengumuman = tampilkanPengumuman;
 
     function render() {
       list.innerHTML = '';

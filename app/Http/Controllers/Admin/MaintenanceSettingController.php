@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Pengaturan;
+use App\Models\User;
+use App\Notifications\PengumumanBroadcastAdmin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
 
 class MaintenanceSettingController extends Controller
 {
@@ -29,12 +32,36 @@ class MaintenanceSettingController extends Controller
         ]);
 
         $pengaturan = Pengaturan::current();
+        $aktifSebelumnya = (bool) $pengaturan->mode_maintenance_aktif;
         $aktifBaru = $request->boolean('aktif');
 
         $pengaturan->update([
             'mode_maintenance_aktif' => $aktifBaru,
             'mode_maintenance_pesan' => $validated['pesan'] ?? null,
         ]);
+
+        // Sambungkan ke sistem notifikasi pengumuman yang sudah ada
+        // (lonceng in-app + push + modal "Pemeliharaan Sistem", lihat
+        // NotifikasiSettingController::broadcast & partials/
+        // notification-controls.blade.php). HANYA dikirim saat status
+        // BERUBAH (mati->hidup atau hidup->mati), bukan tiap form disimpan,
+        // supaya Admin yang cuma mengedit teks pesan tidak membanjiri
+        // lonceng pengguna. Penerima: semua pengguna NON-Admin (Admin
+        // tidak terdampak maintenance jadi tidak perlu diberi tahu).
+        if ($aktifBaru !== $aktifSebelumnya) {
+            $penerima = User::whereHas('satuan', fn ($q) => $q->whereRaw('UPPER(TRIM(kode)) != ?', ['ADMIN']))->get();
+
+            if ($penerima->isNotEmpty()) {
+                NotificationFacade::send(
+                    $penerima,
+                    $aktifBaru
+                        // 'maintenance' -> ditandai belum dibaca & bisa diklik buka modal.
+                        ? new PengumumanBroadcastAdmin('Sistem Dalam Pemeliharaan', $pengaturan->fresh()->pesanMaintenance(), 'maintenance')
+                        // 'keterangan' -> info biasa, tanpa titik belum-dibaca & tidak clickable.
+                        : new PengumumanBroadcastAdmin('Pemeliharaan Sistem Selesai', 'Pemeliharaan telah selesai. Sistem kembali normal dan semua fitur dapat digunakan seperti biasa.', 'keterangan')
+                );
+            }
+        }
 
         ActivityLog::catat(
             'setelan.maintenance.toggle',
