@@ -119,6 +119,13 @@
 .surat-arah{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;white-space:nowrap}
 .surat-arah-masuk{color:var(--green)}
 .surat-arah-keluar{color:#3b82f6}
+/* Baris tag kartu surat monitoring: status + arah, dua pil setinggi sama, rata kiri persis dgn judul perihal */
+.surat-card-tags{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.surat-card-tags .status-badge,.surat-card-tags .surat-arah{box-sizing:border-box;height:24px;padding:0 11px;border-radius:999px;border:1px solid transparent;font-size:10.5px;font-weight:800;line-height:1;letter-spacing:.02em;gap:4px}
+.surat-card-tags .status-badge.status-disetujui{color:var(--success-bright,#2e9e68);background:rgba(61,186,126,.14);border-color:rgba(61,186,126,.38)}
+.surat-card-tags .status-badge.status-sedang{color:var(--amber);background:rgba(224,168,58,.13);border-color:rgba(224,168,58,.35)}
+.surat-card-tags .surat-arah-masuk{color:var(--green,#2e9e68);background:rgba(61,186,126,.10);border-color:rgba(61,186,126,.30)}
+.surat-card-tags .surat-arah-keluar{color:#3b82f6;background:rgba(59,130,246,.10);border-color:rgba(59,130,246,.30)}
 .pimp-activity-list{display:flex;flex-direction:column}
 .pimp-activity-item{display:flex;align-items:center;gap:12px;padding:13px 0}
 .pimp-activity-item:first-child{padding-top:0}
