@@ -502,9 +502,6 @@
     // Jenis Surat, Satuan) -- Surat Keluar & Surat Masuk tetap search+sort
     // polos seperti semula.
     initSuratCardSearch('arsip-surat','suratArsipGrid','Cari perihal atau dari/tujuan...',true);
-    initSuratCardSearch('monitorSuratView-kal','monitorSuratGrid-kal','Cari perihal atau satuan...',true);
-    initSuratCardSearch('monitorSuratView-dak','monitorSuratGrid-dak','Cari perihal atau satuan...',true);
-    initSuratCardSearch('monitorSuratView-sisos','monitorSuratGrid-sisos','Cari perihal atau satuan...',true);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initAllSuratCardSearch);else initAllSuratCardSearch();
 })();

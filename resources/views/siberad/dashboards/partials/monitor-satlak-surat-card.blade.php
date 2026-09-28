@@ -72,6 +72,7 @@
      data-created-at="{{ $s->created_at->timestamp }}"
      data-search="{{ strtolower($nomorSurat.' '.$s->perihal.' '.($s->satuan->nama ?? '').' '.($s->tujuanSatuan->nama ?? '')) }}"
      data-prioritas="{{ $s->prioritas }}"
+     data-arah="{{ $arah }}"
      data-jenis-filter="{{ $s->prioritas }}"
      data-satuan-kode="{{ $lawan->kode ?? '' }}"
      data-satuan-nama="{{ $lawan->nama ?? ($lawan->kode ?? '-') }}"
