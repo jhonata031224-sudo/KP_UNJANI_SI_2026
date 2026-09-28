@@ -336,10 +336,65 @@ class DashboardController
             : collect();
 
         $monitoringSatlak = collect(); $laporanSatlak = collect();
+        $suratKal = collect(); $suratDak = collect(); $suratSisos = collect();
         if ($mode === 'duktek') {
             $satlakIds = Satuan::whereIn('kode', ['SATLAKKAL','SATLAKSISOS','SATLAKDAK'])->pluck('id');
             $laporanSatlak = Laporan::with(['satuan','tujuanSatuan'])->whereIn('satuan_id', $satlakIds)->latest()->get();
             $monitoringSatlak = Satuan::whereIn('kode', ['SATLAKKAL','SATLAKSISOS','SATLAKDAK'])->get()->sortBy($urutkanSatuan)->values()->map(fn ($satlak) => ['nama' => $satlak->nama, 'total' => $laporanSatlak->where('satuan_id',$satlak->id)->count()]);
+
+            // ===== Monitoring Surat 3 Satlak (Duktek, view-only) =====
+            // Tambahan terpisah dari $laporanSatlak di atas -- TIDAK
+            // mengubah/menyentuh logic Laporan yang sudah ada. Satu query
+            // gabungan dulu (semua surat yang menyinggung salah satu dari
+            // 3 Satlak, lewat kolom asli/relasi yang SUDAH ADA di
+            // LaporanSurat: satuan_id, tujuan_satuan_id, riwayats,
+            // tembusans), baru dikelompokkan per-Satlak di bawah supaya
+            // query DB cuma jalan sekali.
+            $satlakIdList = $satlakIds->values();
+            $suratSatlakSemua = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
+                ->where(function ($q) use ($satlakIdList) {
+                    $q->whereIn('satuan_id', $satlakIdList)
+                      ->orWhereIn('tujuan_satuan_id', $satlakIdList)
+                      ->orWhereHas('riwayats', function ($rq) use ($satlakIdList) {
+                          $rq->whereIn('penerima_satuan_id', $satlakIdList)
+                             ->orWhereIn('pengirim_satuan_id', $satlakIdList);
+                      })
+                      ->orWhereHas('tembusans', function ($tq) use ($satlakIdList) {
+                          $tq->whereIn('satuan_id', $satlakIdList);
+                      });
+                })
+                ->latest()
+                ->get();
+
+            // Per-Satlak: "Keluar" kalau Satlak itu pengirim ASLI surat
+            // (satuan_id) -- sisanya ("diterima/ditujukan ke/sedang
+            // ditangani", termasuk tembusan) dianggap "Masuk", sesuai
+            // definisi yang diminta. arahUntukSatlak ditempel per baris
+            // supaya kartu tahu badge apa yang harus ditampilkan tanpa
+            // menghitung ulang.
+            $suratUntukSatlak = function (?int $satlakId) use ($suratSatlakSemua) {
+                if (! $satlakId) {
+                    return collect();
+                }
+
+                return $suratSatlakSemua->filter(function ($s) use ($satlakId) {
+                    return (int) $s->satuan_id === $satlakId
+                        || (int) $s->tujuan_satuan_id === $satlakId
+                        || $s->riwayats->contains(fn ($r) => (int) $r->penerima_satuan_id === $satlakId || (int) $r->pengirim_satuan_id === $satlakId)
+                        || $s->tembusans->contains(fn ($t) => (int) $t->satuan_id === $satlakId);
+                })->map(function ($s) use ($satlakId) {
+                    $s->arahUntukSatlak = ((int) $s->satuan_id === $satlakId) ? 'keluar' : 'masuk';
+
+                    return $s;
+                })->sortByDesc('created_at')->values();
+            };
+
+            $satlakKalId = Satuan::where('kode', 'SATLAKKAL')->value('id');
+            $satlakDakId = Satuan::where('kode', 'SATLAKDAK')->value('id');
+            $satlakSisosId = Satuan::where('kode', 'SATLAKSISOS')->value('id');
+            $suratKal = $suratUntukSatlak($satlakKalId);
+            $suratDak = $suratUntukSatlak($satlakDakId);
+            $suratSisos = $suratUntukSatlak($satlakSisosId);
         }
         $monitoringPimpinanSatlak = collect();
         $laporanPimpinanSatlak = collect();
@@ -767,7 +822,7 @@ class DashboardController
             : $tembusanMasukSemua->pluck('laporanKendala')->filter()->values();
         $satuanKendalaTerbaru = $satuanKendalaTerbaruSumber->sortByDesc('created_at')->take(5)->values();
 
-        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk','tembusanArsip','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'satuanTotalPelaporan' => $satuanTotalPelaporan, 'kendalaKasansiKpiAktif' => $kendalaKasansiKpiAktif, 'kendalaKasansiKpiArsip' => $kendalaKasansiKpiArsip, 'satuanStatusDist' => $satuanStatusDist, 'satuanTotalStatus' => $satuanTotalStatus, 'satuanSuratTerbaru' => $satuanSuratTerbaru, 'satuanKendalaTerbaru' => $satuanKendalaTerbaru, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $satuanDisetujui, 'ditolak' => $satuanDitolak, 'terlambat' => $satuanTerlambat, 'dibatalkan' => $satuanDibatalkan]]);
+        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','satuanTembusanPilihan','isPenerimaTembusan','tembusanMasuk','tembusanArsip','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk','suratKal','suratDak','suratSisos') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'satuanTotalPelaporan' => $satuanTotalPelaporan, 'kendalaKasansiKpiAktif' => $kendalaKasansiKpiAktif, 'kendalaKasansiKpiArsip' => $kendalaKasansiKpiArsip, 'satuanStatusDist' => $satuanStatusDist, 'satuanTotalStatus' => $satuanTotalStatus, 'satuanSuratTerbaru' => $satuanSuratTerbaru, 'satuanKendalaTerbaru' => $satuanKendalaTerbaru, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $satuanDisetujui, 'ditolak' => $satuanDitolak, 'terlambat' => $satuanTerlambat, 'dibatalkan' => $satuanDibatalkan]]);
     }
 
     /**
