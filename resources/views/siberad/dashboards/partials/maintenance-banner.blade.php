@@ -32,14 +32,16 @@
   .siberad-maintenance-banner .mm-text{flex:1 1 auto;min-width:0;overflow-wrap:anywhere;}
   .siberad-maintenance-banner .mm-detail{flex:0 0 auto;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;opacity:.85;white-space:nowrap;}
   .siberad-maintenance-banner .mm-detail svg{width:14px;height:14px;}
-  /* Elemen existing yang menempel di top:0 (sidebar sticky/fixed & topbar
-     sticky, lihat dash-styles.blade.php) digeser turun sebesar tinggi banner
-     lewat variabel --mm-banner-h (diisi script di bawah), supaya logo sidebar
-     dan lonceng/avatar di topbar tidak nyelip di bawah banner saat di-scroll.
-     Nilai default 0px = tidak mengubah apa pun kalau script belum jalan. */
+  /* .shell didorong turun sebesar tinggi banner (variabel --mm-banner-h,
+     diisi script di bawah), dan .sidebar (sticky/fixed di top:0) digeser
+     sama besar supaya logo-nya tidak nyelip di bawah banner saat di-scroll.
+     .topbar SENGAJA TIDAK disentuh: partials/notification-controls memaksanya
+     position:relative (bukan sticky), jadi cukup ikut terdorong oleh .shell;
+     menambah 'top' di sini justru menggeser posisinya & bikin ikon tema/
+     lonceng/avatar tertimpa banner. Nilai default 0px = tidak mengubah
+     apa pun kalau script belum jalan. */
   .shell{padding-top:var(--mm-banner-h,0px)!important;}
   .sidebar{top:var(--mm-banner-h,0px)!important;height:calc(100vh - var(--mm-banner-h,0px))!important;}
-  .topbar{top:var(--mm-banner-h,0px)!important;}
   .siberad-maintenance-disabled{opacity:.5!important;cursor:not-allowed!important;filter:grayscale(.15);}
   @media(max-width:640px){.siberad-maintenance-banner{padding:9px 14px;font-size:11.5px;}.siberad-maintenance-banner .mm-detail span{display:none;}}
 </style>
