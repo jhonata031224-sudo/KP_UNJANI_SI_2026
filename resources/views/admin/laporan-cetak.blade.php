@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ match($jenis) { 'pengguna' => 'Cetak Laporan Pengguna', 'surat' => 'Cetak Data Surat', default => 'Cetak Riwayat Aktivitas' } }} — {{ $pengaturan?->namaSistem() ?? 'SIBERAD' }}</title>
+<title>{{ match($jenis) { 'pengguna' => 'Cetak Laporan Pengguna', 'surat' => 'Cetak Data Surat', default => 'Cetak Riwayat Aktivitas' } }} — {{ $pengaturan?->namaSistem() ?? 'Cyclone' }}</title>
 <style>
   body{font-family:Georgia,'Times New Roman',serif;color:#111;margin:36px;}
   header{display:flex;align-items:center;gap:14px;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:18px;}
@@ -29,9 +29,9 @@
     <div>
       <h1>{{ $pengaturan->nama_instansi }}</h1>
       <p>{{ match($jenis) {
-        'pengguna' => 'Laporan Daftar Pengguna Sistem '.($pengaturan?->namaSistem() ?? 'SIBERAD'),
-        'surat' => 'Laporan Data Surat Sistem '.($pengaturan?->namaSistem() ?? 'SIBERAD'),
-        default => 'Laporan Riwayat Aktivitas Sistem '.($pengaturan?->namaSistem() ?? 'SIBERAD'),
+        'pengguna' => 'Laporan Daftar Pengguna Sistem '.($pengaturan?->namaSistem() ?? 'Cyclone'),
+        'surat' => 'Laporan Data Surat Sistem '.($pengaturan?->namaSistem() ?? 'Cyclone'),
+        default => 'Laporan Riwayat Aktivitas Sistem '.($pengaturan?->namaSistem() ?? 'Cyclone'),
       } }}</p>
     </div>
   </header>

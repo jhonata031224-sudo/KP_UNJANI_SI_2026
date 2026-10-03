@@ -31,7 +31,7 @@ class InjectPengaturanAccessUi
             return $response;
         }
 
-        $modal = view('siberad.dashboards.partials.admin-pengaturan-access')->render();
+        $modal = view('cyclone.dashboards.partials.admin-pengaturan-access')->render();
         $pos = strripos($html, '</body>');
         if ($pos !== false) {
             $html = substr($html, 0, $pos).$modal.substr($html, $pos);

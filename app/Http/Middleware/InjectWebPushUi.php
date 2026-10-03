@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
  * subscribe terpanggil di halaman manapun yang pertama kali dibuka user
  * setelah login, tidak harus /dashboard dulu.
  *
- * Lihat resources/views/siberad/dashboards/partials/push-notification-controls.blade.php
+ * Lihat resources/views/cyclone/dashboards/partials/push-notification-controls.blade.php
  * untuk logika izin & subscribe-nya.
  */
 class InjectWebPushUi
@@ -45,7 +45,7 @@ class InjectWebPushUi
         }
 
         $html = $response->getContent();
-        if (! is_string($html) || $html === '' || str_contains($html, 'id="pushEnableBtn"') || str_contains($html, 'siberad-push-style')) {
+        if (! is_string($html) || $html === '' || str_contains($html, 'id="pushEnableBtn"') || str_contains($html, 'cyclone-push-style')) {
             return $response;
         }
 
@@ -55,7 +55,7 @@ class InjectWebPushUi
             $html = substr($html, 0, $headPos).$manifestTag.substr($html, $headPos);
         }
 
-        $pushUi = view('siberad.dashboards.partials.push-notification-controls')->render();
+        $pushUi = view('cyclone.dashboards.partials.push-notification-controls')->render();
         $bodyPos = strripos($html, '</body>');
         if ($bodyPos !== false) {
             $html = substr($html, 0, $bodyPos).$pushUi.substr($html, $bodyPos);

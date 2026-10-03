@@ -1,0 +1,100 @@
+<script>
+(function () {
+  var tbody = document.getElementById('tblLogAktivitas')?.querySelector('tbody');
+  if (!tbody) return;
+  var url = @json(route('admin.laporan.aktivitas-terbaru'));
+
+  var ids = Array.prototype.map.call(tbody.querySelectorAll('tr[data-log-id]'), function (tr) {
+    return parseInt(tr.getAttribute('data-log-id'), 10);
+  });
+  var lastId = ids.length ? Math.max.apply(null, ids) : 0;
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str ?? '-';
+    return div.innerHTML;
+  }
+
+  // Tab ini defaultnya nampilin rentang "kemarin-hari ini", tapi admin bisa
+  // ganti ke rentang tanggal LAMPAU buat nelusuri histori -- kalau lagi
+  // begitu, jangan sisipin aktivitas yang baru saja terjadi (itu di LUAR
+  // rentang yang lagi dia lihat, malah bikin bingung).
+  function tanggalLokalHariIni() {
+    // toISOString() pakai UTC -- di WIB (UTC+7) tengah malam s/d jam 7 pagi,
+    // itu masih nunjuk tanggal KEMARIN secara UTC walau sudah tanggal baru
+    // secara lokal. Geser dulu pakai offset timezone browser biar tanggal
+    // yang diambil beneran tanggal lokal, bukan UTC.
+    var d = new Date();
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  }
+
+  function sedangLihatHariIni() {
+    var sampai = document.getElementById('logSampaiInput');
+    if (!sampai || !sampai.value) return true;
+    return sampai.value >= tanggalLokalHariIni();
+  }
+
+  // DULU ada gate tabIniAktif() (poll cuma jalan kalau tab "Riwayat
+  // Aktivitas" lagi aktif) -- niatnya hemat resource, tapi efeknya toast
+  // "Ada X aktivitas baru tercatat." SAMA SEKALI gak muncul selama admin
+  // buka tab LAIN (mis. Dashboard), sama persis kayak bug yang dilaporkan
+  // user di admin-permintaan-reset-password-realtime.blade.php. Dihapus
+  // total -- poller ini sekarang jalan terus di background apapun tab yang
+  // aktif (audit polling menyeluruh, dilaporkan user 2026-09-14).
+  function ambilAktivitasBaru() {
+    if (!sedangLihatHariIni()) return;
+    fetch(url + '?after_id=' + lastId, { headers: { Accept: 'application/json' } })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (data) {
+        if (!data || !data.log || !data.log.length) return;
+
+        Array.prototype.slice.call(tbody.querySelectorAll('tr')).forEach(function (r) {
+          if (r.querySelector('.empty-state')) r.remove();
+        });
+
+        // API balikin urutan terbaru dulu; balik supaya yang paling baru
+        // tetap tampil paling atas tabel secara kronologis.
+        var jumlahBaru = 0;
+        data.log.slice().reverse().forEach(function (l) {
+          if (tbody.querySelector('[data-log-id="' + l.id + '"]')) return;
+          var tr = document.createElement('tr');
+          tr.setAttribute('data-log-id', l.id);
+          tr.setAttribute('data-filter-value', l.kategori || '');
+          tr.classList.add('cyclone-row-in');
+          tr.innerHTML =
+            '<td style="white-space:nowrap;">' + escapeHtml(l.waktu) + '</td>' +
+            '<td>' + escapeHtml(l.pengguna) + '</td>' +
+            '<td><span class="badge">' + escapeHtml(l.aksi) + '</span></td>' +
+            '<td style="color:var(--text-muted);">' + escapeHtml(l.deskripsi) + '</td>' +
+            '<td style="color:var(--text-dim);">' + escapeHtml(l.ip) + '</td>';
+          tbody.insertBefore(tr, tbody.firstChild);
+          jumlahBaru++;
+        });
+
+        // Tanpa ini, baris baru tetap kelihatan walau lagi ada kata kunci
+        // pencarian/filter kategori aktif yang seharusnya menyembunyikannya.
+        if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblLogAktivitas');
+
+        // Admin dulu SATU-SATUNYA role yang gak dapat toast pop-up buat
+        // aktivitas/laporan baru masuk (Pimpinan sudah punya lewat
+        // log-aktivitas-realtime.blade.php, "Ada X laporan baru masuk.") --
+        // gak butuh guard "poll pertama" kayak punya Pimpinan karena lastId
+        // di sini SELALU diturunkan dari baris yang SUDAH kerender
+        // server-side (bukan fetch ulang "semua sejak 0"), jadi baris yang
+        // nyisip lewat sini pasti beneran baru (audit polling 2026-09-14).
+        if (jumlahBaru > 0 && window.cycloneShowToast) {
+          window.cycloneShowToast('success', jumlahBaru === 1 ? 'Ada 1 aktivitas baru tercatat.' : 'Ada ' + jumlahBaru + ' aktivitas baru tercatat.');
+        }
+
+        lastId = data.max_id;
+      })
+      .catch(function () {});
+  }
+
+  // Poll pertama LANGSUNG jalan (dulu murni nunggu interval pertama) --
+  // begitu tab Riwayat Aktivitas dibuka, tabel langsung disegarkan tanpa
+  // nunggu sampai 5 detik (audit polling 2026-09-14).
+  ambilAktivitasBaru();
+  setInterval(ambilAktivitasBaru, 5000);
+})();
+</script>

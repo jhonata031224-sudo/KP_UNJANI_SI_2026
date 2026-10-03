@@ -208,7 +208,7 @@ class AuthenticatedSessionController extends Controller
 
         try {
             $resp = Http::timeout(4)
-                ->withHeaders(['User-Agent' => 'SIBERAD-Pussiberad/1.0 (reverse-geocode login)'])
+                ->withHeaders(['User-Agent' => 'Cyclone-Pussiberad/1.0 (reverse-geocode login)'])
                 ->get('https://nominatim.openstreetmap.org/reverse', [
                     'format'          => 'jsonv2',
                     'lat'             => $lat,

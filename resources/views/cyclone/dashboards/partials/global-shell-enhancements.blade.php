@@ -1,0 +1,314 @@
+<script>
+(function () {
+  // =========================================================
+  // GLOBAL TOPBAR: KONFIRMASI KELUAR
+  // (Lonceng notifikasi sekarang SATU implementasi tunggal di
+  // partials/notification-controls.blade.php -- realtime, badge angka,
+  // dan hapus per-notifikasi. Jangan bikin dropdown notifikasi lagi di
+  // sini, dua implementasi yang sama-sama pegang #notifDropdown bakal
+  // saling tumpang tindih.)
+  // =========================================================
+  function initLogoutConfirm() {
+    var forms = document.querySelectorAll('.logout-form');
+    if (!forms.length) return;
+
+    var overlay = document.getElementById('logoutConfirmOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'confirm-overlay';
+      overlay.id = 'logoutConfirmOverlay';
+      overlay.innerHTML = '<div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="globalLogoutConfirmTitle">' +
+        '<div class="confirm-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></svg></div>' +
+        '<h3 id="globalLogoutConfirmTitle">Keluar dari akun?</h3>' +
+        '<p>Sesi kamu akan diakhiri dan kamu perlu login kembali untuk mengakses {{ $pengaturan?->namaSistem() ?? "Cyclone" }}.</p>' +
+        '<div class="confirm-actions"><button type="button" class="btn" id="globalLogoutCancel">Batal</button><button type="button" class="btn btn-ghost-red" id="globalLogoutConfirm">Ya, Keluar</button></div>' +
+        '</div>';
+      document.body.appendChild(overlay);
+    }
+
+    var cancel = document.getElementById('globalLogoutCancel');
+    var confirmBtn = document.getElementById('globalLogoutConfirm');
+    var pendingForm = null;
+
+    function closeConfirm() {
+      overlay.classList.remove('open');
+      pendingForm = null;
+    }
+    function openConfirm(form) {
+      pendingForm = form;
+      overlay.classList.add('open');
+    }
+
+    forms.forEach(function (form) {
+      if (form.dataset.globalLogoutBound === '1') return;
+      form.dataset.globalLogoutBound = '1';
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        openConfirm(form);
+      });
+    });
+
+    cancel?.addEventListener('click', closeConfirm);
+    confirmBtn?.addEventListener('click', function () {
+      if (!pendingForm) return;
+      // Tandai "user memang sengaja logout". Selama transisi logout (nunggu
+      // lepas-langganan push + POST /logout + redirect + load landing), poller
+      // realtime yang masih jalan bisa kena 401 -- itu WAJAR, bukan sesi
+      // kadaluarsa. Flag ini dibaca tampilkanSesiBerakhir() supaya modal
+      // "Sesi Anda Berakhir" tidak berkedip sekejap saat logout normal.
+      window.__cycloneLoggingOut = true;
+      // Reset HANYA tab menu terakhir supaya login berikutnya selalu mulai
+      // dari Dashboard. Jangan hapus SEMUA key "cyclone-*" -- itu juga
+      // menyimpan status buka/tutup tiap dropdown menu, tema, dan status
+      // ciutkan sidebar, yang harus tetap seperti preferensi terakhir user,
+      // bukan ikut ke-reset tiap logout.
+      try {
+        ['cyclone-admin-active-tab', 'cyclone-pimpinan-active-tab', 'cyclone-role-active-tab'].forEach(function (k) {
+          sessionStorage.removeItem(k);
+        });
+      } catch (e) {}
+
+      var formToSubmit = pendingForm;
+      confirmBtn.disabled = true;
+
+      // Lepas subscription push notifikasi milik user ini dari server SEBELUM
+      // sesi diakhiri -- endpoint-nya butuh auth, jadi wajib dipanggil di sini,
+      // bukan setelah logout. Kalau tidak, notifikasi user ini akan terus
+      // nyasar ke device/browser ini walau user lain yang login berikutnya.
+      var unsubscribe = window.cycloneUnsubscribePush
+        ? window.cycloneUnsubscribePush()
+        : Promise.resolve();
+
+      // .catch(...) supaya logout tetap jalan walau lepas-langganan push gagal
+      // -- jangan sampai gantung (apalagi flag __cycloneLoggingOut sudah ke-set).
+      unsubscribe.catch(function () {}).then(function () {
+        formToSubmit.submit();
+      });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('open')) closeConfirm();
+    });
+  }
+
+  var originalConfirm = window.confirm;
+  window.confirm = function (message) {
+    if (typeof message === 'string' && message.indexOf('Keluar dari akun') === 0) return true;
+    return originalConfirm.call(window, message);
+  };
+
+  initLogoutConfirm();
+
+  // =========================================================
+  // GLOBAL LAPORAN: aksi hanya dari detail + form catatan penolakan
+  // =========================================================
+  (function initReportActions() {
+    var isDanpus = !!document.querySelector('.pimp-hero h1') &&
+      /Komandan Pusat/i.test(document.querySelector('.pimp-hero h1').textContent || '');
+
+    // Base/warna tombol #detailActions & #reportDetailModal .modal-actions sudah
+    // didefinisikan sekali di partials/profile-enhancements.blade.php (selalu ikut
+    // ter-include lewat pengumuman-banner di setiap view yang memuat file ini).
+    // Jangan duplikasi rule itu di sini lagi.
+    function injectStyles() {
+      if (document.getElementById('globalReportActionStyles')) return;
+      var style = document.createElement('style');
+      style.id = 'globalReportActionStyles';
+      style.textContent = `
+        .report-reject-overlay { position:fixed; inset:0; z-index:100200; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(0,0,0,.55); }
+        .report-reject-overlay.open { display:flex; }
+        .report-reject-card { width:min(560px,100%); background:var(--panel,#fff); color:var(--text,#17212b); border:1px solid var(--border-soft,#ddd); border-radius:14px; padding:22px; box-shadow:0 25px 70px rgba(0,0,0,.25); }
+        .report-reject-card h3 { margin:0 0 6px; font-family:var(--display); font-size:19px; }
+        .report-reject-card p { margin:0 0 16px; font-size:12px; color:var(--text-muted); line-height:1.6; }
+        .report-reject-card label { display:block; font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:7px; }
+        .report-reject-card textarea { width:100%; min-height:130px; box-sizing:border-box; resize:none; padding:10px 11px; border:1px solid var(--border); border-radius:8px; background:var(--panel-alt); color:var(--text); font:inherit; font-size:13px; }
+        .report-reject-card .reject-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+        .report-reject-card .reject-actions button { border:1px solid var(--border); border-radius:8px; padding:8px 13px; background:var(--panel-alt); color:var(--text); cursor:pointer; }
+        .report-reject-card .reject-actions .confirm-reject { border-color:var(--red); color:var(--red); }
+        .report-detail-note { margin-right:auto; font-size:11px; color:var(--text-muted); }
+        .report-rejection-note { border-color:rgba(198,40,40,.3)!important; background:rgba(181,52,47,.08)!important; }
+      `;
+      document.head.appendChild(style);
+    }
+
+    function ensureRejectModal() {
+      var existing = document.getElementById('reportRejectOverlay');
+      if (existing) return existing;
+      var overlay = document.createElement('div');
+      overlay.className = 'report-reject-overlay';
+      overlay.id = 'reportRejectOverlay';
+      overlay.innerHTML = '<div class="report-reject-card" role="dialog" aria-modal="true" aria-labelledby="reportRejectTitle">' +
+        '<h3 id="reportRejectTitle">Catatan Penolakan</h3>' +
+        '<p>Berikan catatan atau keterangan alasan laporan ditolak. Catatan ini wajib diisi dan akan tersimpan bersama status laporan.</p>' +
+        '<form id="reportRejectForm" method="POST">' +
+        '<input type="hidden" name="_token" value="{{ csrf_token() }}">' +
+        '<input type="hidden" name="_method" value="PATCH">' +
+        '<input type="hidden" name="status" value="Ditolak">' +
+        '<label for="reportRejectNote">Catatan / Keterangan <span style="color:var(--red)">*</span></label>' +
+        '<textarea id="reportRejectNote" name="catatan" required maxlength="5000" placeholder="Tuliskan alasan atau keterangan penolakan..."></textarea>' +
+        '<div class="reject-actions"><button type="button" id="cancelReportReject">Batal</button><button type="submit" class="confirm-reject">Tolak Laporan</button></div>' +
+        '</form></div>';
+      document.body.appendChild(overlay);
+      document.getElementById('cancelReportReject')?.addEventListener('click', closeRejectModal);
+      document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.classList.contains('open')) closeRejectModal(); });
+      return overlay;
+    }
+
+    function closeRejectModal() {
+      var overlay = document.getElementById('reportRejectOverlay');
+      if (!overlay) return;
+      overlay.classList.remove('open');
+      var form = document.getElementById('reportRejectForm');
+      if (form) form.reset();
+    }
+
+    function openRejectModal(sourceForm) {
+      var overlay = ensureRejectModal();
+      var form = document.getElementById('reportRejectForm');
+      if (!form) return;
+      form.action = sourceForm.getAttribute('action') || '';
+      var tokenInput = form.querySelector('input[name="_token"]');
+      var freshMeta = document.querySelector('meta[name="csrf-token"]');
+      if (tokenInput && freshMeta) tokenInput.value = freshMeta.content;
+      var sourceStatus = sourceForm.querySelector('input[name="status"]');
+      var targetStatus = form.querySelector('input[name="status"]');
+      if (targetStatus) targetStatus.value = sourceStatus?.value || 'Ditolak';
+      var note = document.getElementById('reportRejectNote');
+      if (note) note.value = '';
+      overlay.classList.add('open');
+      setTimeout(function(){ note?.focus(); }, 50);
+    }
+
+    function getActionsContainer() {
+      var actions = document.getElementById('detailActions');
+      if (actions) return actions;
+      var modal = document.getElementById('reportDetailModal');
+      if (!modal) return null;
+      actions = modal.querySelector('.modal-actions');
+      if (!actions) {
+        actions = document.createElement('div');
+        actions.className = 'modal-actions';
+        modal.querySelector('.report-modal-card')?.appendChild(actions);
+      }
+      return actions;
+    }
+
+    function populateDetailActions(detailButton) {
+      var actions = getActionsContainer();
+      if (!actions) return;
+      var container = detailButton.closest('.review-actions, .action-row');
+      var forms = container ? Array.prototype.slice.call(container.querySelectorAll('form')) : [];
+      actions.innerHTML = '';
+
+      if (!forms.length || detailButton.dataset.readonly === '1') {
+        // Modal Detail Laporan Kendala (Kasansi/Danpus/Tembusan) sengaja tidak
+        // pakai catatan "Mode pemantauan..." di bagian bawah -- lihat
+        // data-kendala-report pada partial kendala-*.
+        if (detailButton.dataset.kendalaReport === '1') return;
+        var readonly = document.createElement('span');
+        readonly.className = 'report-detail-note';
+        readonly.textContent = detailButton.dataset.readonly === '1'
+          ? 'Mode pemantauan — detail ini hanya untuk melihat aktivitas laporan.'
+          : 'Tidak ada tindakan yang tersedia untuk laporan ini.';
+        actions.appendChild(readonly);
+        return;
+      }
+
+      var note = document.createElement('span');
+      note.className = 'report-detail-note';
+      note.textContent = 'Tindak lanjuti laporan dari detail ini.';
+      actions.appendChild(note);
+
+      forms.forEach(function(originalForm){
+        var statusInput = originalForm.querySelector('input[name="status"]');
+        var status = statusInput ? String(statusInput.value || '').toLowerCase() : '';
+        var isReject = status.indexOf('tolak') !== -1;
+        var isRevise = status.indexOf('revisi') !== -1;
+        var isConfirmArchive = status.indexOf('dikonfirmasi') !== -1;
+        if (isDanpus && isRevise) return;
+
+        if (isReject) {
+          var rejectButton = document.createElement('button');
+          rejectButton.type = 'button';
+          rejectButton.className = 'reject';
+          rejectButton.textContent = 'Tolak';
+          rejectButton.addEventListener('click', function(){ openRejectModal(originalForm); });
+          actions.appendChild(rejectButton);
+          return;
+        }
+
+        if (isConfirmArchive) {
+          var archiveButton = document.createElement('button');
+          archiveButton.type = 'button';
+          archiveButton.className = 'approve';
+          var archiveLabel = originalForm.querySelector('button[type="submit"]');
+          archiveButton.textContent = archiveLabel ? archiveLabel.textContent.trim() : 'Konfirmasi & Arsipkan';
+          archiveButton.addEventListener('click', function(){
+            if (typeof window.bukaKonfirmasiArsipkanKendala === 'function') {
+              window.bukaKonfirmasiArsipkanKendala({ dataset: { action: originalForm.getAttribute('action') || '', perihal: originalForm.dataset.perihal || '' } });
+            } else {
+              originalForm.submit();
+            }
+          });
+          actions.appendChild(archiveButton);
+          return;
+        }
+
+        var clone = originalForm.cloneNode(true);
+        clone.style.display = 'inline-flex';
+        var button = clone.querySelector('button[type="submit"]');
+        if (button) {
+          button.classList.remove('approve','revise','reject');
+          if (status.indexOf('diterima') !== -1 || status.indexOf('setujui') !== -1 || status.indexOf('setuj') !== -1) button.classList.add('approve');
+          else if (isRevise) button.classList.add('revise');
+        }
+        actions.appendChild(clone);
+      });
+    }
+
+    function renameStatusMenu() {
+      document.querySelectorAll('.side-sub-link').forEach(function(link){
+        if (link.textContent.trim() !== 'Status Laporan') return;
+        var textNode = Array.prototype.slice.call(link.childNodes).find(function(node){
+          return node.nodeType === Node.TEXT_NODE && node.nodeValue.trim();
+        });
+        if (textNode) textNode.nodeValue = 'Riwayat Laporan';
+        else link.textContent = 'Riwayat Laporan';
+      });
+      document.querySelectorAll('h2').forEach(function(h){
+        if (h.textContent.trim() === 'Status Laporan') h.textContent = 'Riwayat Laporan';
+      });
+    }
+
+    injectStyles();
+    renameStatusMenu();
+
+    document.querySelectorAll('.review-actions form, .action-row form').forEach(function(form){
+      form.style.display = 'none';
+    });
+
+    document.addEventListener('click', function(e){
+      var detailButton = e.target.closest('.review-actions .detail-btn, .action-row .detail-btn');
+      if (!detailButton) return;
+      // Tombol Detail laporan tembusan punya form feedback-nya sendiri yang
+      // dirakit langsung di dalam window.openReportDetail (lihat data-tembusan-feedback
+      // di laporan-kendala-tembusan-row.blade.php). Delegation generik di bawah ini
+      // cuma ngerti pola form approve/reject/revisi biasa, jadi kalau dibiarkan jalan
+      // dia bakal nimpa ulang detailActions dan bikin form feedback ilang. Skip di sini.
+      if (detailButton.dataset.tembusanFeedback === '1') return;
+      // .action-row juga dipakai buat tombol lain yang gak ada hubungannya
+      // (mis. tombol "Batal" permintaan) -- itu bukan tombol Detail beneran,
+      // cuma kebetulan sama-sama pakai class .detail-btn di dalam wrapper
+      // .action-row. Delegation ini cuma valid buat kartu review yang beneran
+      // punya form approve/reject tersembunyi di containernya; kalau gak ada
+      // form sama sekali, jangan buka/replace modal Detail dengan data kosong.
+      var container = detailButton.closest('.review-actions, .action-row');
+      if (!container || !container.querySelector('form')) return;
+      if (typeof window.openReportDetail === 'function') {
+        window.openReportDetail(detailButton);
+      }
+      setTimeout(function(){ populateDetailActions(detailButton); }, 0);
+    });
+  })();
+})();
+</script>

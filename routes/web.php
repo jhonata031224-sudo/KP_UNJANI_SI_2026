@@ -40,7 +40,7 @@ use App\Models\Pengaturan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('siberad.landing.welcome', [
+    return view('cyclone.landing.welcome', [
         'pengaturan' => Pengaturan::current(),
     ]);
 });

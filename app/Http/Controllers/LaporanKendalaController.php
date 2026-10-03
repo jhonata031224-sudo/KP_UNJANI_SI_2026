@@ -83,7 +83,7 @@ class LaporanKendalaController extends Controller
             // DecorativeSeparatorCleaner utk detail lengkapnya.
             return response()->json([
                 'latest_id' => $latestId,
-                'items_html' => DecorativeSeparatorCleaner::clean($items->map(fn (LaporanKendala $k) => view('siberad.dashboards.partials.kendala-kasansi-row', ['k' => $k, 'satuan' => $satuan])->render())->implode('')),
+                'items_html' => DecorativeSeparatorCleaner::clean($items->map(fn (LaporanKendala $k) => view('cyclone.dashboards.partials.kendala-kasansi-row', ['k' => $k, 'satuan' => $satuan])->render())->implode('')),
             ], 200, [
                 'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             ]);
@@ -111,8 +111,8 @@ class LaporanKendalaController extends Controller
         // tiap 3 detik walau tidak ada perubahan data sama sekali -- lihat
         // DecorativeSeparatorCleaner.
         return response()->json([
-            'terkirim_items_html' => DecorativeSeparatorCleaner::clean($terkirim->map(fn (LaporanKendala $k) => view('siberad.dashboards.partials.kendala-terkirim-row', ['k' => $k, 'satuan' => $satuan])->render())->implode('')),
-            'arsip_items_html' => DecorativeSeparatorCleaner::clean($arsip->map(fn (LaporanKendala $k) => view('siberad.dashboards.partials.kendala-terkirim-row', ['k' => $k, 'satuan' => $satuan])->render())->implode('')),
+            'terkirim_items_html' => DecorativeSeparatorCleaner::clean($terkirim->map(fn (LaporanKendala $k) => view('cyclone.dashboards.partials.kendala-terkirim-row', ['k' => $k, 'satuan' => $satuan])->render())->implode('')),
+            'arsip_items_html' => DecorativeSeparatorCleaner::clean($arsip->map(fn (LaporanKendala $k) => view('cyclone.dashboards.partials.kendala-terkirim-row', ['k' => $k, 'satuan' => $satuan])->render())->implode('')),
         ], 200, [
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
         ]);

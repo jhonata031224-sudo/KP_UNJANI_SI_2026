@@ -75,7 +75,7 @@
       link.setAttribute('title','Data Laporan');
     });
 
-    var center=document.getElementById('siberadAdminReportCenter');
+    var center=document.getElementById('cycloneAdminReportCenter');
     if(!center)return;
 
     var headings=center.querySelectorAll('h1,h2,h3,h4,h5,h6,p');
@@ -88,14 +88,14 @@
   }
 
   function applyReportFix(){
-    var center=document.getElementById('siberadAdminReportCenter');
+    var center=document.getElementById('cycloneAdminReportCenter');
     if(!center){
       applyAdminUserListOrder();
       normalizeReportLabels();
       return false;
     }
 
-    var wrap=center.querySelector('.siberad-report-table-wrap');
+    var wrap=center.querySelector('.cyclone-report-table-wrap');
     var table=wrap&&wrap.querySelector('table');
     if(wrap&&table){
       wrap.classList.add('tbl-wrap','tbl-scroll');
@@ -119,7 +119,7 @@
       }
     }
 
-    var search=document.getElementById('siberadReportSearch');
+    var search=document.getElementById('cycloneReportSearch');
     if(search&&!search.dataset.reportFixBound){
       search.dataset.reportFixBound='1';
       search.setAttribute('autocomplete','new-password');
@@ -143,7 +143,7 @@
   }
 
   function clearReportSearch(){
-    var search=document.getElementById('siberadReportSearch');
+    var search=document.getElementById('cycloneReportSearch');
     if(!search||search.matches(':focus'))return;
     search.value='';
     search.defaultValue='';

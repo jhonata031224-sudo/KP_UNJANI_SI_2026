@@ -158,7 +158,7 @@ class ReportController extends Controller
                 // Dipakai tab "Log Aktivitas" dashboard admin (bukan
                 // halaman terpisah ini) buat filter kategori satuan --
                 // mapping-nya SAMA persis dengan yang di
-                // siberad.dashboards.admin (data-filter-value tiap baris).
+                // cyclone.dashboards.admin (data-filter-value tiap baris).
                 'kategori' => $l->user && $l->user->satuan ? match ($l->user->satuan->kategori) {
                     \App\Models\Satuan::KATEGORI_ADMIN => 'Admin',
                     \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
@@ -175,7 +175,7 @@ class ReportController extends Controller
 
     /**
      * Endpoint JSON untuk filter tanggal di tab "Log Aktivitas" dashboard
-     * admin (lihat siberad.dashboards.admin). Dipanggil lewat fetch() setiap
+     * admin (lihat cyclone.dashboards.admin). Dipanggil lewat fetch() setiap
      * input tanggal "Dari"/"Sampai" berubah, supaya tabelnya kefilter tanpa
      * reload halaman.
      */
@@ -375,7 +375,7 @@ class ReportController extends Controller
     /**
      * Label kategori satuan untuk ditampilkan/difilter, disamakan persis
      * dengan mapping yang dipakai tabel "Arsip Data" di
-     * siberad.dashboards.admin (dropdown "Semua Kategori" & atribut
+     * cyclone.dashboards.admin (dropdown "Semua Kategori" & atribut
      * data-filter-value tiap baris), supaya nilai yang dikirim dari filter
      * di halaman itu cocok dengan yang dihitung di sini.
      */

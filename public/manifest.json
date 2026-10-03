@@ -1,6 +1,6 @@
 {
-  "name": "SIBERAD - Sistem Pendukung Operasional",
-  "short_name": "SIBERAD",
+  "name": "Cyclone - Sistem Pendukung Operasional",
+  "short_name": "Cyclone",
   "description": "Sistem Informasi dan Basis Data Elektronik Radar Analisis Data PUSSIBERAD",
   "start_url": "/dashboard",
   "scope": "/",

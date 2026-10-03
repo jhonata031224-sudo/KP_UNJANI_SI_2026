@@ -57,7 +57,7 @@ function rapikanLoginLightTheme() {
 
 function terapkanTemaLandingPadaDashboard() {
   if (!document.querySelector('.shell')) return;
-  const id = 'siberad-landing-theme-dashboard';
+  const id = 'cyclone-landing-theme-dashboard';
   if (document.getElementById(id)) return;
 
   const style = document.createElement('style');

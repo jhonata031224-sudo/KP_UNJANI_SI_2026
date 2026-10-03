@@ -35,7 +35,7 @@ class InjectAdminReportPreview
         $downloadUser = route('admin.laporan.export-pengguna');
         $downloadActivity = route('admin.laporan.export-aktivitas');
 
-        $injection = '<style id="siberad-admin-report-preview-style">
+        $injection = '<style id="cyclone-admin-report-preview-style">
 .admin-report-preview{display:none;margin-top:18px;border:1px solid var(--border-soft);border-radius:14px;background:var(--panel);box-shadow:0 10px 28px rgba(15,23,42,.08);overflow:hidden;}
 .admin-report-preview.is-open{display:block;}
 .admin-report-preview-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 18px;border-bottom:1px solid var(--border-soft);background:var(--panel-alt);}
@@ -55,10 +55,10 @@ class InjectAdminReportPreview
 .admin-report-preview.loading .admin-report-preview-frame{display:none;}
 @media(max-width:760px){.admin-report-preview-head{align-items:flex-start;flex-direction:column;}.admin-report-preview-actions{width:100%;flex-wrap:wrap;}.admin-report-preview-btn{flex:1 1 auto;}.admin-report-preview-frame{height:560px;}}
 </style>
-<script id="siberad-admin-report-preview-script">
+<script id="cyclone-admin-report-preview-script">
 (function(){
-  if(window.__SIBERAD_ADMIN_REPORT_PREVIEW__) return;
-  window.__SIBERAD_ADMIN_REPORT_PREVIEW__=true;
+  if(window.__CYCLONE_ADMIN_REPORT_PREVIEW__) return;
+  window.__CYCLONE_ADMIN_REPORT_PREVIEW__=true;
 
   var URLS={
     userPreview:'.json_encode($previewUser, JSON_UNESCAPED_SLASHES).',

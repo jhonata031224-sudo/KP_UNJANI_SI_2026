@@ -44,7 +44,7 @@ class SessionController extends Controller
         $sesiAktif = \App\Helpers\SesiAnomaliDetector::tandai($sesiAktif);
 
         return response()->json([
-            'items_html' => $sesiAktif->map(fn ($s) => view('siberad.dashboards.partials.sesi-aktif-row', ['s' => $s, 'sesiSayaId' => $request->session()->getId()])->render())->implode(''),
+            'items_html' => $sesiAktif->map(fn ($s) => view('cyclone.dashboards.partials.sesi-aktif-row', ['s' => $s, 'sesiSayaId' => $request->session()->getId()])->render())->implode(''),
         ], 200, [
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
         ]);

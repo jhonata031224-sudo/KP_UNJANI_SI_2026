@@ -103,7 +103,7 @@ class UserController extends Controller
                 'id' => $id,
                 'message' => $pesan,
                 'satuan_rows_html' => Satuan::terurut()
-                    ->map(fn (Satuan $s) => view('siberad.dashboards.partials.satuan-row', ['s' => $s])->render())
+                    ->map(fn (Satuan $s) => view('cyclone.dashboards.partials.satuan-row', ['s' => $s])->render())
                     ->implode(''),
             ])
             : back()->with('status', $pesan);
@@ -123,7 +123,7 @@ class UserController extends Controller
      * tambah/ubah (termasuk pindah satuan)/hapus Pengguna bikin angkanya
      * basi di tab Data Satuan kalau cuma tbody Pengguna sendiri yang
      * ditimpa -- padahal keduanya satu halaman yang sama (beda tab, bukan
-     * reload). Klien (siberadSubmitPenggunaAjax() & handler hapus Pengguna
+     * reload). Klien (cycloneSubmitPenggunaAjax() & handler hapus Pengguna
      * di admin.blade.php) menimpa #tblSatuan kalau field ini ada di respons.
      */
     private function tableJson(Request $request, User $subject, string $pesan): JsonResponse
@@ -131,14 +131,14 @@ class UserController extends Controller
         $authUserId = $request->user()->id;
 
         $rowsHtml = User::terurutOrganisasi()
-            ->map(fn (User $p) => view('siberad.dashboards.partials.pengguna-row', [
+            ->map(fn (User $p) => view('cyclone.dashboards.partials.pengguna-row', [
                 'p' => $p,
                 'authUserId' => $authUserId,
             ])->render())
             ->implode('');
 
         $satuanRowsHtml = Satuan::terurut()
-            ->map(fn (Satuan $s) => view('siberad.dashboards.partials.satuan-row', ['s' => $s])->render())
+            ->map(fn (Satuan $s) => view('cyclone.dashboards.partials.satuan-row', ['s' => $s])->render())
             ->implode('');
 
         return response()->json([

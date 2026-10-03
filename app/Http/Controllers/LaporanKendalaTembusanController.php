@@ -56,8 +56,8 @@ class LaporanKendalaTembusanController extends Controller
         // RemoveDecorativeSeparators), biar tidak kedip terus tanpa
         // perubahan data beneran -- lihat DecorativeSeparatorCleaner.
         return response()->json([
-            'masuk_items_html' => DecorativeSeparatorCleaner::clean($masuk->map(fn (LaporanKendalaTembusan $t) => view('siberad.dashboards.partials.laporan-kendala-tembusan-card', ['t' => $t, 'satuan' => $satuan])->render())->implode('')),
-            'arsip_items_html' => DecorativeSeparatorCleaner::clean($arsip->map(fn (LaporanKendalaTembusan $t) => view('siberad.dashboards.partials.laporan-kendala-tembusan-card', ['t' => $t, 'satuan' => $satuan])->render())->implode('')),
+            'masuk_items_html' => DecorativeSeparatorCleaner::clean($masuk->map(fn (LaporanKendalaTembusan $t) => view('cyclone.dashboards.partials.laporan-kendala-tembusan-card', ['t' => $t, 'satuan' => $satuan])->render())->implode('')),
+            'arsip_items_html' => DecorativeSeparatorCleaner::clean($arsip->map(fn (LaporanKendalaTembusan $t) => view('cyclone.dashboards.partials.laporan-kendala-tembusan-card', ['t' => $t, 'satuan' => $satuan])->render())->implode('')),
         ], 200, [
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
         ]);

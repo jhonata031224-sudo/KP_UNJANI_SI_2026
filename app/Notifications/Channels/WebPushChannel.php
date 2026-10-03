@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Channel notifikasi custom: mengirim push notification browser (muncul
- * di notification tray OS walau tab/browser SIBERAD sedang tertutup) buat
+ * di notification tray OS walau tab/browser Cyclone sedang tertutup) buat
  * SEMUA notifikasi yang sudah ada di sistem, tanpa perlu nulis ulang
  * pesannya masing-masing.
  *

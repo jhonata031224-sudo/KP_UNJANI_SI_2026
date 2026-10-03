@@ -33,7 +33,7 @@ class PermintaanResetPasswordController extends Controller
 
         return response()->json([
             'latest_id' => $latestId,
-            'items_html' => $items->map(fn (PermintaanResetPassword $r) => view('siberad.dashboards.partials.permintaan-reset-password-row', ['r' => $r])->render())->implode(''),
+            'items_html' => $items->map(fn (PermintaanResetPassword $r) => view('cyclone.dashboards.partials.permintaan-reset-password-row', ['r' => $r])->render())->implode(''),
         ], 200, [
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
         ]);
@@ -108,7 +108,7 @@ class PermintaanResetPasswordController extends Controller
             'ok' => true,
             'id' => $permintaanResetPassword->id,
             'message' => $pesan,
-            'row_html' => view('siberad.dashboards.partials.permintaan-reset-password-row', [
+            'row_html' => view('cyclone.dashboards.partials.permintaan-reset-password-row', [
                 'r' => $permintaanResetPassword,
             ])->render(),
         ]);

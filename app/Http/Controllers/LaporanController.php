@@ -112,7 +112,7 @@ class LaporanController extends Controller
                     ->get();
                 $monitoringHtml = $laporanSatlak->isEmpty()
                     ? $this->emptyStateRow('Belum ada laporan dari 3 Satlak', 'Aktivitas Penangkalan, Siber Sosial, dan Penindakan akan muncul di sini.')
-                    : $laporanSatlak->map(fn ($l) => view('siberad.dashboards.partials.monitor-satlak-row', ['l' => $l])->render())->implode('');
+                    : $laporanSatlak->map(fn ($l) => view('cyclone.dashboards.partials.monitor-satlak-row', ['l' => $l])->render())->implode('');
             }
 
             return response()->json([
@@ -120,12 +120,12 @@ class LaporanController extends Controller
                 'sent_html' => $includeReports
                     ? ($sent->isEmpty()
                         ? $this->emptyStateRow('Belum ada laporan', 'Riwayat laporan yang kamu kirim akan muncul di sini.')
-                        : $sent->map(fn ($l) => view('siberad.dashboards.partials.laporan-role-realtime-sent-row', ['l' => $l])->render())->implode(''))
+                        : $sent->map(fn ($l) => view('cyclone.dashboards.partials.laporan-role-realtime-sent-row', ['l' => $l])->render())->implode(''))
                     : '',
                 'incoming_html' => $includeReports
                     ? ($incoming->isEmpty()
                         ? $this->emptyStateRow('Belum ada laporan masuk', 'Laporan dari satuan lain akan muncul di sini.')
-                        : $incoming->map(fn ($l) => view('siberad.dashboards.partials.laporan-role-realtime-incoming-row', ['l' => $l, 'canReview' => true, 'satuan' => $user->satuan])->render())->implode(''))
+                        : $incoming->map(fn ($l) => view('cyclone.dashboards.partials.laporan-role-realtime-incoming-row', ['l' => $l, 'canReview' => true, 'satuan' => $user->satuan])->render())->implode(''))
                     : '',
                 'role_stats' => $roleStats,
                 'monitoring_html' => $monitoringHtml,
@@ -147,7 +147,7 @@ class LaporanController extends Controller
 
         $rowsBySatuan = $items->groupBy('satuan_id')->map(
             fn ($group) => $group
-                ->map(fn ($l) => view('siberad.dashboards.partials.laporan-pimpinan-row', ['l' => $l])->render())
+                ->map(fn ($l) => view('cyclone.dashboards.partials.laporan-pimpinan-row', ['l' => $l])->render())
                 ->implode('')
         );
 
@@ -234,7 +234,7 @@ class LaporanController extends Controller
                 // (efeknya: data kelihatan nongol lalu tiba-tiba hilang sendiri).
                 $newRequests = $requests->where('id', '>', $requestsSince)->whereNull('archived_at');
                 $requestsNewHtml = $newRequests->map(
-                    fn (PermintaanLaporan $item) => view('siberad.dashboards.partials.permintaan-laporan-pimpinan-row', ['item' => $item, 'satuan' => $user->satuan])->render()
+                    fn (PermintaanLaporan $item) => view('cyclone.dashboards.partials.permintaan-laporan-pimpinan-row', ['item' => $item, 'satuan' => $user->satuan])->render()
                 )->implode('');
             }
 
@@ -246,7 +246,7 @@ class LaporanController extends Controller
                 // (lihat log-aktivitas-realtime.blade.php) karena nge-render
                 // partial buat SEMUA item tiap kali, bukan cuma yang baru.
                 $requestsFullHtml = $requests->whereNull('archived_at')->map(
-                    fn (PermintaanLaporan $item) => view('siberad.dashboards.partials.permintaan-laporan-pimpinan-row', ['item' => $item, 'satuan' => $user->satuan])->render()
+                    fn (PermintaanLaporan $item) => view('cyclone.dashboards.partials.permintaan-laporan-pimpinan-row', ['item' => $item, 'satuan' => $user->satuan])->render()
                 )->implode('');
             }
         }
@@ -449,7 +449,7 @@ class LaporanController extends Controller
         // Wizard-topbar (#kirimLaporanModal) minta submit lewat AJAX supaya
         // modal-nya TETAP TERBUKA (bukan full-page reload yang otomatis
         // "nutup" modal) dan bisa langsung lanjut ke step task berikutnya --
-        // lihat window.siberadSubmitKirimLaporanForm di
+        // lihat window.cycloneSubmitKirimLaporanForm di
         // permintaan-laporan-deadline.blade.php. Fallback ke redirect biasa
         // kalau request-nya BUKAN AJAX (mis. JS gagal load).
         if ($request->expectsJson()) {
@@ -738,7 +738,7 @@ class LaporanController extends Controller
 
     /**
      * Render ulang 1 kartu <article> permintaan-laporan-item.blade.php buat
-     * dikirim balik ke JS (window.siberadSubmitKirimLaporanForm di
+     * dikirim balik ke JS (window.cycloneSubmitKirimLaporanForm di
      * permintaan-laporan-deadline.blade.php), yang bakal nge-replace kartu
      * lama di DOM dengan versi fresh ini -- checklist task, progres, dan
      * tombol Edit/Update Progres semuanya kebawa sinkron TANPA reload
@@ -757,7 +757,7 @@ class LaporanController extends Controller
             return null;
         }
 
-        return view('siberad.dashboards.partials.permintaan-laporan-item', ['permintaan' => $permintaan])->render();
+        return view('cyclone.dashboards.partials.permintaan-laporan-item', ['permintaan' => $permintaan])->render();
     }
 
     private function simpanLampiranBaru(Request $request, Laporan $laporan): void
