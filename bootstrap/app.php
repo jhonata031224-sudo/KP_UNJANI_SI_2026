@@ -52,10 +52,6 @@ return Application::configure(basePath: dirname(__DIR__))
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
         then: function (): void {
-            Route::patch('/laporan/{laporan}/status', [\App\Http\Controllers\LaporanController::class, 'updateStatus'])
-                ->middleware(['web', 'auth', \App\Http\Middleware\EnsureModulAktif::class.':laporan'])
-                ->name('laporan.status');
-
             Route::middleware(['web', 'auth', \App\Http\Middleware\EnsureUserIsAdmin::class])
                 ->prefix('admin')
                 ->name('admin.')
@@ -92,6 +88,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'modul' => \App\Http\Middleware\EnsureModulAktif::class,
+            'satuan' => \App\Http\Middleware\EnsureSatuanKode::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

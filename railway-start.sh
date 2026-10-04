@@ -41,6 +41,11 @@ timeout 60 php artisan migrate --force -v
 MIGRATE_EXIT=$?
 set -e
 echo "==> [3/5] exit code: $MIGRATE_EXIT"
+if [ "$MIGRATE_EXIT" -ne 0 ] && [ "${ALLOW_MIGRATE_FAIL:-0}" != "1" ]; then
+  echo "==> [3/5] GAGAL: migrasi tidak berhasil, aplikasi tidak dinyalakan."
+  echo "==> Perbaiki masalahnya, atau set ALLOW_MIGRATE_FAIL=1 untuk tetap menyala."
+  exit 1
+fi
 
 echo "==> [4/5] storage:link"
 php artisan storage:link || true
