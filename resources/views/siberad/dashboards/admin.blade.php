@@ -228,6 +228,8 @@
   .dl-tab svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
   .dl-tab.active{background:linear-gradient(135deg,var(--gold-solid-bright),var(--gold-solid));color:var(--on-gold);box-shadow:0 8px 20px -8px rgba(217,146,11,.55);}
   .dl-tab:not(.active):hover{background:var(--hover-tint);color:var(--text);}
+  /* Mobile: 4 tombol Arsip Data jadi grid 2x2 (2 kiri, 2 kanan), rata & sama lebar */
+  @media(max-width:640px){.dl-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}.dl-tab{width:100%;justify-content:center;padding:10px 8px;font-size:13px;white-space:nowrap;}}
 
   .dl-section{display:none;}
   .dl-section.active{display:block;animation:fadeIn .2s ease;}
