@@ -45,6 +45,26 @@
 .admin-access-btn.submit svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:620px){.admin-access-card{width:400px;max-width:calc(100vw - 24px);padding:22px 20px 20px}.admin-access-title{font-size:21px}.admin-access-desc{font-size:13px;margin-right:0}.admin-access-captcha-row{grid-template-columns:minmax(0,1fr) 50px minmax(0,1.1fr);gap:8px}.admin-access-refresh{width:50px;height:54px}.admin-access-actions{justify-content:stretch}.admin-access-btn{flex:1}.admin-access-btn.submit{min-width:0}}
 @media(max-width:500px){.admin-access-captcha-row{grid-template-columns:minmax(0,1fr) 50px}.admin-access-captcha-input{grid-column:1/-1}.admin-access-actions{flex-direction:column-reverse}.admin-access-btn{width:100%}}
+/* ===== Tema gelap (default; tema terang = [data-theme="light"]) ===== */
+:root:not([data-theme="light"]) .admin-access-overlay{background:rgba(2,6,10,.72)}
+:root:not([data-theme="light"]) .admin-access-card{background:var(--panel,#11181F);color:var(--text,#F5F1E8);border-color:var(--border,rgba(217,146,11,.22));box-shadow:0 28px 72px rgba(0,0,0,.6)}
+:root:not([data-theme="light"]) .admin-access-close{background:var(--panel-alt,#0D141A);border-color:var(--border-soft,rgba(217,146,11,.13));color:var(--text-muted,#A9A39A)}
+:root:not([data-theme="light"]) .admin-access-close:hover{border-color:var(--border-strong,rgba(217,146,11,.42));color:var(--text,#F5F1E8)}
+:root:not([data-theme="light"]) .admin-access-icon{background:rgba(255,152,0,.14)}
+:root:not([data-theme="light"]) .admin-access-title,:root:not([data-theme="light"]) .admin-access-label{color:var(--text,#F5F1E8)}
+:root:not([data-theme="light"]) .admin-access-desc{color:var(--text-muted,#A9A39A)}
+:root:not([data-theme="light"]) .admin-access-input{background:var(--panel-alt,#0D141A);border-color:var(--border-soft,rgba(217,146,11,.13));color:var(--text,#F5F1E8)}
+:root:not([data-theme="light"]) .admin-access-input:focus{border-color:#FF9800;background:var(--panel-alt,#0D141A);box-shadow:0 0 0 3px rgba(255,152,0,.18)}
+:root:not([data-theme="light"]) .admin-access-input::placeholder{color:var(--text-dim,#77736C)}
+:root:not([data-theme="light"]) .admin-access-input:-webkit-autofill,:root:not([data-theme="light"]) .admin-access-input:-webkit-autofill:hover,:root:not([data-theme="light"]) .admin-access-input:-webkit-autofill:focus{-webkit-text-fill-color:var(--text,#F5F1E8);-webkit-box-shadow:0 0 0 1000px #0D141A inset}
+:root:not([data-theme="light"]) .admin-access-password-toggle{color:var(--text-muted,#A9A39A)}
+:root:not([data-theme="light"]) .admin-access-password-toggle:hover{background:rgba(255,152,0,.12);color:var(--text,#F5F1E8)}
+:root:not([data-theme="light"]) .admin-access-captcha-image{border-color:var(--border-soft,rgba(217,146,11,.13))}
+:root:not([data-theme="light"]) .admin-access-refresh{background:var(--panel-alt,#0D141A);border-color:var(--border-soft,rgba(217,146,11,.13));color:var(--text-muted,#A9A39A)}
+:root:not([data-theme="light"]) .admin-access-refresh:hover{border-color:#FF9800;color:#FF9800;background:rgba(255,152,0,.1)}
+:root:not([data-theme="light"]) .admin-access-btn.cancel{background:var(--panel-alt,#0D141A);border-color:var(--border-soft,rgba(217,146,11,.13));color:var(--text-muted,#A9A39A)}
+:root:not([data-theme="light"]) .admin-access-btn.cancel:hover{border-color:var(--border-strong,rgba(217,146,11,.42));background:rgba(255,152,0,.08);color:var(--text,#F5F1E8)}
+:root:not([data-theme="light"]) .admin-access-error{background:rgba(192,86,79,.14);border-color:rgba(192,86,79,.4);color:#ef9a94}
 </style>
 <div class="admin-access-overlay" id="adminPengaturanAccessModal" aria-hidden="true">
 <div class="admin-access-card" role="dialog" aria-modal="true" aria-labelledby="adminAccessTitle">
