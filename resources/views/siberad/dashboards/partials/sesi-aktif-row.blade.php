@@ -33,6 +33,7 @@
 @endphp
 <tr data-session-id="{{ $s->id }}">
   <td>
+   <div class="sa-user">
     {{ $s->user_name ?? 'Tamu (belum login)' }}
     @if($s->id === $sesiSayaId)
       <span class="badge">Sesi Anda</span>
@@ -43,6 +44,7 @@
         🚨 2 Lokasi Sekaligus
       </span>
     @endif
+   </div>
   </td>
   <td>{{ $s->ip_address ?? '-' }}</td>
   <td style="max-width:300px;">

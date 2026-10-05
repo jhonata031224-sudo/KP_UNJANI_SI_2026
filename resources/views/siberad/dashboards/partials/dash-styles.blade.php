@@ -857,6 +857,28 @@
     #tblSesiAktif td:nth-child(4)::before{content:"Titik Lokasi";}
     #tblSesiAktif td:nth-child(5)::before{content:"Terakhir Aktif";}
     #tblSesiAktif td:nth-child(6)::before{content:"Aksi";}
+
+    /* ===== Pengguna Aktif (mobile): tiap kartu dirapikan ===== */
+    /* kartu: bingkai jelas, isi tidak mepet */
+    #tblSesiAktif tr{padding:0 16px;border:1px solid var(--border-strong,var(--border));overflow:hidden;}
+    /* tiap field = 1 blok: label kecil di atas, isi di bawah rata kiri, dipisah garis tegas */
+    #tblSesiAktif td{flex-direction:column;align-items:flex-start;justify-content:flex-start;text-align:left;gap:6px;padding:14px 0;border-bottom:1px solid var(--border-strong,var(--border));}
+    #tblSesiAktif td:last-child{border-bottom:none;padding-bottom:16px;}
+    #tblSesiAktif td::before{margin:0;padding:0;line-height:1.2;}
+    #tblSesiAktif td:nth-child(3)::before{content:"Perangkat / Browser";}
+    #tblSesiAktif td:nth-child(3){max-width:none!important;}
+    /* nama + badge "Sesi Anda" satu baris, badge tidak patah jadi 2 baris */
+    #tblSesiAktif .sa-user{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-weight:600;font-size:14px;color:var(--text);}
+    #tblSesiAktif .sa-user .badge{white-space:nowrap;padding:4px 10px;}
+    /* teks isi: ukuran & jarak baris seragam */
+    #tblSesiAktif td{font-size:14px;line-height:1.4;}
+    #tblSesiAktif td > span{line-height:1.4;}
+    /* hint hover "Lihat di Google Maps" tidak relevan di layar sentuh & bikin celah kosong */
+    #tblSesiAktif .geo-maps-hint{display:none!important;}
+    #tblSesiAktif a.geo-maps-link{margin:0;padding:0;}
+    /* tombol aksi selebar kartu */
+    #tblSesiAktif td:nth-child(6) form{display:block!important;width:100%;}
+    #tblSesiAktif td:nth-child(6) .btn{width:100%;justify-content:center;text-align:center;padding:11px 14px;}
   }
 </style>
 <script>
