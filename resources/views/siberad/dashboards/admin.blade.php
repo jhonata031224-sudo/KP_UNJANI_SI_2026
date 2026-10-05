@@ -3717,7 +3717,7 @@
             <div class="mm-switch-row">
               <div>
                 <div class="mm-switch-row-label">Aktifkan Mode Maintenance</div>
-                <div class="mm-switch-row-sub">Pengguna non-Admin tidak bisa buat/edit/hapus/kirim/konfirmasi/disposisi data selama mode ini aktif.</div>
+                <div class="mm-switch-row-sub">Pengguna non-Admin tidak bisa buat/<wbr>edit/<wbr>hapus/<wbr>kirim/<wbr>konfirmasi/<wbr>disposisi data selama mode ini aktif.</div>
               </div>
               <label class="mm-switch">
                 <input type="checkbox" name="aktif" value="1" id="mmAktifInput" @checked($pengaturan->mode_maintenance_aktif)>

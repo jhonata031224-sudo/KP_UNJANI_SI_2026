@@ -918,7 +918,10 @@
     .main .content [data-tab-panel="mode-maintenance"] .mm-switch-row{padding:14px;gap:14px;align-items:center;}
     .main .content [data-tab-panel="mode-maintenance"] .mm-switch-row > div:first-child{flex:1 1 auto;min-width:0;}
     .main .content [data-tab-panel="mode-maintenance"] .mm-switch-row-label{font-size:14px;}
-    .main .content [data-tab-panel="mode-maintenance"] .mm-switch-row-sub{font-size:12px;line-height:1.5;}
+    .main .content [data-tab-panel="mode-maintenance"] .mm-switch-row-sub{font-size:12px;line-height:1.5;overflow-wrap:break-word;word-break:normal;}
+    .main .content [data-tab-panel="mode-maintenance"] .mm-switch-row-label{overflow-wrap:break-word;line-height:1.3;}
+    .main .content [data-tab-panel="mode-maintenance"] .mm-switch-row > div:first-child{overflow:hidden;padding-right:4px;}
+    .main .content [data-tab-panel="mode-maintenance"] .mm-switch{align-self:center;margin-left:auto;}
     .main .content [data-tab-panel="mode-maintenance"] .mm-switch{flex:0 0 44px;}
     .main .content [data-tab-panel="mode-maintenance"] .mm-field label{font-size:12px;margin-bottom:6px;}
     .main .content [data-tab-panel="mode-maintenance"] .mm-field textarea{font-size:14px;min-height:110px;padding:10px 12px;}
