@@ -903,6 +903,27 @@
     .main .content [data-tab-panel="backup"] #tblRiwayatBackup td[colspan]::before{content:none!important;display:none!important;}
     .main .content [data-tab-panel="backup"] #tblRiwayatBackup td[colspan] .empty-state{display:block;width:100%;box-sizing:border-box;margin:0;padding:24px 14px;}
     .main .content [data-tab-panel="backup"] #tblRiwayatBackup td[colspan] .empty-state-title{white-space:normal;word-break:normal;}
+
+    /* ===== Mode Maintenance (mobile) ===== */
+    /* header: ikon & teks sejajar rapi, padding pas */
+    .main .content [data-tab-panel="mode-maintenance"] .rdl-head-panel{padding:18px 16px;}
+    .main .content [data-tab-panel="mode-maintenance"] .rdl-head-content{align-items:flex-start;gap:14px;}
+    .main .content [data-tab-panel="mode-maintenance"] .rdl-head-icon{width:44px;height:44px;}
+    .main .content [data-tab-panel="mode-maintenance"] .rdl-head-content h2{font-size:20px;line-height:1.25;margin:0 0 6px;}
+    .main .content [data-tab-panel="mode-maintenance"] .rdl-head-content p{font-size:13px;line-height:1.55;margin:0;}
+    /* judul panel + badge status: ditumpuk rata kiri */
+    .main .content [data-tab-panel="mode-maintenance"] .panel-head{flex-direction:column;align-items:flex-start;gap:10px;}
+    /* form sebelumnya dobel padding (panel + form) sehingga baris saklar bergeser & meluber -> padding form dinolkan */
+    .main .content [data-tab-panel="mode-maintenance"] .mm-panel-body{padding:0!important;gap:16px;}
+    .main .content [data-tab-panel="mode-maintenance"] .mm-switch-row{padding:14px;gap:14px;align-items:center;}
+    .main .content [data-tab-panel="mode-maintenance"] .mm-switch-row > div:first-child{flex:1 1 auto;min-width:0;}
+    .main .content [data-tab-panel="mode-maintenance"] .mm-switch-row-label{font-size:14px;}
+    .main .content [data-tab-panel="mode-maintenance"] .mm-switch-row-sub{font-size:12px;line-height:1.5;}
+    .main .content [data-tab-panel="mode-maintenance"] .mm-switch{flex:0 0 44px;}
+    .main .content [data-tab-panel="mode-maintenance"] .mm-field label{font-size:12px;margin-bottom:6px;}
+    .main .content [data-tab-panel="mode-maintenance"] .mm-field textarea{font-size:14px;min-height:110px;padding:10px 12px;}
+    .main .content [data-tab-panel="mode-maintenance"] .mm-field-hint{font-size:11.5px;line-height:1.5;}
+    .main .content [data-tab-panel="mode-maintenance"] .mm-panel-body > div:last-child .btn{width:100%;height:44px;display:inline-flex;align-items:center;justify-content:center;}
   }
 </style>
 <script>
