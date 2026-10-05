@@ -887,19 +887,22 @@
     .main .content section[data-tab-panel="backup"] .backup-action-row .backup-create-form .backup-create-actions{width:100%!important;}
     .main .content section[data-tab-panel="backup"] .backup-action-row .backup-create-form .backup-create-actions{flex-direction:column!important;align-items:stretch!important;gap:10px!important;}
     .main .content section[data-tab-panel="backup"] .backup-action-row .backup-create-actions>.btn{flex:none!important;width:100%!important;height:44px!important;min-height:44px!important;justify-content:center!important;text-align:center!important;white-space:nowrap!important;padding:0 14px!important;font-size:12.5px!important;}
-    /* Riwayat Backup: kartu per file, label di atas & isi rata kiri, dipisah garis tegas */
-    #tblRiwayatBackup tr{padding:0 16px;border-color:var(--border-strong,var(--border));}
-    #tblRiwayatBackup td{flex-direction:column;align-items:flex-start;justify-content:flex-start;text-align:left;gap:6px;padding:14px 0;border-bottom:1px solid var(--border-strong,var(--border));}
-    #tblRiwayatBackup td:last-child{border-bottom:none;padding-bottom:16px;}
-    #tblRiwayatBackup td::before{margin:0;padding:0;line-height:1.2;}
-    #tblRiwayatBackup td:nth-child(1){word-break:break-all;font-weight:600;line-height:1.4;}
-    #tblRiwayatBackup td:nth-child(5) .btn-row{display:flex;width:100%;gap:10px;justify-content:stretch;}
-    #tblRiwayatBackup td:nth-child(5) .btn-row .btn,
-    #tblRiwayatBackup td:nth-child(5) .btn-row .table-action-btn{flex:1 1 0;height:42px;display:inline-flex;align-items:center;justify-content:center;text-align:center;}
-    /* keadaan kosong ("Belum ada backup"): tanpa label kolom, penuh & di tengah (sebelumnya tertimpa label "Nama File" dan menyempit) */
-    #tblRiwayatBackup td[colspan]{display:block!important;text-align:center;padding:20px 0;border-bottom:none;}
-    #tblRiwayatBackup td[colspan]::before{content:none!important;display:none!important;}
-    #tblRiwayatBackup td[colspan] .empty-state{width:100%;margin:0 auto;}
+    /* Riwayat Backup: kartu per file. Selector diperkuat (pakai id + !important) karena
+       admin-ui-consistency memaksa lebar kolom 20%, rata tengah, & table-layout:fixed untuk desktop. */
+    .main .content [data-tab-panel="backup"] #tblRiwayatBackup{width:100%!important;table-layout:auto!important;}
+    .main .content [data-tab-panel="backup"] #tblRiwayatBackup tr{padding:0 16px!important;border-color:var(--border-strong,var(--border))!important;}
+    .main .content [data-tab-panel="backup"] #tblRiwayatBackup td{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:flex-start!important;text-align:left!important;gap:6px;width:100%!important;max-width:none!important;box-sizing:border-box;padding:14px 0!important;border-bottom:1px solid var(--border-strong,var(--border))!important;}
+    .main .content [data-tab-panel="backup"] #tblRiwayatBackup td:last-child{border-bottom:none!important;padding-bottom:16px!important;}
+    .main .content [data-tab-panel="backup"] #tblRiwayatBackup td::before{margin:0;padding:0;line-height:1.2;}
+    .main .content [data-tab-panel="backup"] #tblRiwayatBackup td:nth-child(1){word-break:break-all;font-weight:600;line-height:1.4;}
+    .main .content [data-tab-panel="backup"] #tblRiwayatBackup td:nth-child(5) .btn-row{display:flex!important;width:100%;gap:10px;justify-content:stretch!important;}
+    .main .content [data-tab-panel="backup"] #tblRiwayatBackup td:nth-child(5) .btn-row .btn,
+    .main .content [data-tab-panel="backup"] #tblRiwayatBackup td:nth-child(5) .btn-row .table-action-btn{flex:1 1 0;height:42px;display:inline-flex;align-items:center;justify-content:center;text-align:center;}
+    /* keadaan kosong ("Belum ada backup dibuat"): penuh selebar kartu, di tengah, tanpa label kolom */
+    .main .content [data-tab-panel="backup"] #tblRiwayatBackup td[colspan]{display:block!important;text-align:center!important;padding:16px 0!important;border-bottom:none!important;}
+    .main .content [data-tab-panel="backup"] #tblRiwayatBackup td[colspan]::before{content:none!important;display:none!important;}
+    .main .content [data-tab-panel="backup"] #tblRiwayatBackup td[colspan] .empty-state{display:block;width:100%;box-sizing:border-box;margin:0;padding:24px 14px;}
+    .main .content [data-tab-panel="backup"] #tblRiwayatBackup td[colspan] .empty-state-title{white-space:normal;word-break:normal;}
   }
 </style>
 <script>
