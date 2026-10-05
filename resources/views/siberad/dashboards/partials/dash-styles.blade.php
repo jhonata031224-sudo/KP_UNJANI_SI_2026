@@ -879,6 +879,27 @@
     /* tombol aksi selebar kartu */
     #tblSesiAktif td:nth-child(6) form{display:block!important;width:100%;}
     #tblSesiAktif td:nth-child(6) .btn{width:100%;justify-content:center;text-align:center;padding:11px 14px;}
+
+    /* ===== Cadangan Data (mobile) ===== */
+    /* 2 tombol aksi (Buat Cadangan / Unggah File Cadangan): tumpuk, selebar kartu, tinggi & ukuran teks sama */
+    .main .content section[data-tab-panel="backup"] .backup-action-row{padding:16px!important;}
+    .main .content section[data-tab-panel="backup"] .backup-action-row .backup-create-form,
+    .main .content section[data-tab-panel="backup"] .backup-action-row .backup-create-form .backup-create-actions{width:100%!important;}
+    .main .content section[data-tab-panel="backup"] .backup-action-row .backup-create-form .backup-create-actions{flex-direction:column!important;align-items:stretch!important;gap:10px!important;}
+    .main .content section[data-tab-panel="backup"] .backup-action-row .backup-create-actions>.btn{flex:none!important;width:100%!important;height:44px!important;min-height:44px!important;justify-content:center!important;text-align:center!important;white-space:nowrap!important;padding:0 14px!important;font-size:12.5px!important;}
+    /* Riwayat Backup: kartu per file, label di atas & isi rata kiri, dipisah garis tegas */
+    #tblRiwayatBackup tr{padding:0 16px;border-color:var(--border-strong,var(--border));}
+    #tblRiwayatBackup td{flex-direction:column;align-items:flex-start;justify-content:flex-start;text-align:left;gap:6px;padding:14px 0;border-bottom:1px solid var(--border-strong,var(--border));}
+    #tblRiwayatBackup td:last-child{border-bottom:none;padding-bottom:16px;}
+    #tblRiwayatBackup td::before{margin:0;padding:0;line-height:1.2;}
+    #tblRiwayatBackup td:nth-child(1){word-break:break-all;font-weight:600;line-height:1.4;}
+    #tblRiwayatBackup td:nth-child(5) .btn-row{display:flex;width:100%;gap:10px;justify-content:stretch;}
+    #tblRiwayatBackup td:nth-child(5) .btn-row .btn,
+    #tblRiwayatBackup td:nth-child(5) .btn-row .table-action-btn{flex:1 1 0;height:42px;display:inline-flex;align-items:center;justify-content:center;text-align:center;}
+    /* keadaan kosong ("Belum ada backup"): tanpa label kolom, penuh & di tengah (sebelumnya tertimpa label "Nama File" dan menyempit) */
+    #tblRiwayatBackup td[colspan]{display:block!important;text-align:center;padding:20px 0;border-bottom:none;}
+    #tblRiwayatBackup td[colspan]::before{content:none!important;display:none!important;}
+    #tblRiwayatBackup td[colspan] .empty-state{width:100%;margin:0 auto;}
   }
 </style>
 <script>
