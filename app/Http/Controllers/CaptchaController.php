@@ -23,8 +23,17 @@ class CaptchaController extends Controller
      */
     public function image(): Response
     {
-        $width = 260;
+        // Mode compact (?c=1) dipakai di HP: kotak captcha di layar kecil sempit (~94x56px),
+        // jadi kanvas dibuat lebih "kotak" (150x90) dengan karakter lebih besar & rapat supaya
+        // kelima karakter tetap kelihatan penuh dan terbaca. Mode normal (desktop) tidak berubah.
+        $compact = request()->query('c') === '1';
+        $width = $compact ? 150 : 260;
         $height = 90;
+        $startX = $compact ? 5 : 18;
+        $stepMin = $compact ? 27 : 38;
+        $stepMax = $compact ? 29 : 46;
+        $noiseDots = $compact ? 150 : 260;
+        $noiseLines = $compact ? 6 : 9;
 
         // Karakter membingungkan (0/O, 1/l/I, V/v yang mirip U/u di font ini) dibuang supaya tetap terbaca.
         $karakter = 'ABCDEFGHJKLMNPQRSTWXYZabcdefghijkmnpqrstuwxyz23456789';
@@ -39,11 +48,11 @@ class CaptchaController extends Controller
         // bila GD memang tidak tersedia, sehingga hasil GD yang lama tetap
         // digunakan pada environment yang memilikinya.
         if (! function_exists('imagecreatetruecolor')) {
-            $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="260" height="90" viewBox="0 0 260 90">';
-            $svg .= '<rect width="260" height="90" rx="8" fill="#0a1a12"/>';
+            $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="'.$width.'" height="'.$height.'" viewBox="0 0 '.$width.' '.$height.'">';
+            $svg .= '<rect width="'.$width.'" height="'.$height.'" rx="8" fill="#0a1a12"/>';
 
             // Noise garis di belakang teks.
-            for ($i = 0; $i < 9; $i++) {
+            for ($i = 0; $i < $noiseLines; $i++) {
                 $x1 = random_int(0, $width);
                 $y1 = random_int(0, $height);
                 $x2 = random_int(0, $width);
@@ -57,24 +66,24 @@ class CaptchaController extends Controller
             // Kapital dibuat lebih besar dan tebal; lowercase sedikit lebih
             // kecil/ringan serta lebih rendah. Case tetap merupakan bagian dari
             // kode yang divalidasi server, hanya presentasinya yang diperjelas.
-            $x = 18;
+            $x = $startX;
             for ($i = 0; $i < strlen($kode); $i++) {
                 $char = $kode[$i];
                 $isUpper = ctype_upper($char);
-                $fontSize = $isUpper ? 38 : 31;
+                $fontSize = $compact ? ($isUpper ? 38 : 32) : ($isUpper ? 38 : 31);
                 $fontWeight = $isUpper ? 800 : 500;
-                $y = $isUpper ? 55 : 61;
+                $y = $compact ? ($isUpper ? 62 : 66) : ($isUpper ? 55 : 61);
                 $r = random_int(200, 255);
                 $g = random_int(190, 230);
                 $b = random_int(90, 140);
                 $rotate = random_int(-7, 7);
 
                 $svg .= '<text x="'.$x.'" y="'.$y.'" fill="rgb('.$r.','.$g.','.$b.')" font-family="DejaVu Sans, Arial, sans-serif" font-size="'.$fontSize.'" font-weight="'.$fontWeight.'" transform="rotate('.$rotate.' '.$x.' '.$y.')">'.$char.'</text>';
-                $x += random_int(38, 46);
+                $x += random_int($stepMin, $stepMax);
             }
 
             // Noise titik di depan teks.
-            for ($i = 0; $i < 260; $i++) {
+            for ($i = 0; $i < $noiseDots; $i++) {
                 $x = random_int(0, $width - 1);
                 $y = random_int(0, $height - 1);
                 $r = random_int(30, 200);
@@ -96,7 +105,7 @@ class CaptchaController extends Controller
         imagefill($image, 0, 0, $bg);
 
         // Garis noise di belakang teks.
-        for ($i = 0; $i < 9; $i++) {
+        for ($i = 0; $i < $noiseLines; $i++) {
             $warnaGaris = imagecolorallocate($image, random_int(40, 90), random_int(90, 140), random_int(60, 100));
             imageline($image, random_int(0, $width), random_int(0, $height), random_int(0, $width), random_int(0, $height), $warnaGaris);
         }
@@ -106,7 +115,7 @@ class CaptchaController extends Controller
         // perbedaan case terlihat jelas walaupun tanpa font TTF eksternal.
         $fontW = imagefontwidth(5);
         $fontH = imagefontheight(5);
-        $x = 18;
+        $x = $startX;
         for ($i = 0; $i < strlen($kode); $i++) {
             $char = $kode[$i];
             $isUpper = ctype_upper($char);
@@ -123,10 +132,12 @@ class CaptchaController extends Controller
                 imagestring($charCanvas, 5, 1, 0, $char, $warnaTeks);
             }
 
-            $scale = $isUpper ? 3.45 : 2.75;
+            $scale = $compact ? ($isUpper ? 2.7 : 2.2) : ($isUpper ? 3.45 : 2.75);
             $scaledW = (int) round($fontW * $scale);
             $scaledH = (int) round($fontH * $scale);
-            $y = $isUpper ? random_int(10, 16) : random_int(23, 30);
+            $y = $compact
+                ? ($isUpper ? random_int(16, 22) : random_int(30, 38))
+                : ($isUpper ? random_int(10, 16) : random_int(23, 30));
 
             imagecopyresampled(
                 $image, $charCanvas,
@@ -135,11 +146,11 @@ class CaptchaController extends Controller
             );
             imagedestroy($charCanvas);
 
-            $x += random_int(38, 46);
+            $x += random_int($stepMin, $stepMax);
         }
 
         // Titik noise di depan teks.
-        for ($i = 0; $i < 260; $i++) {
+        for ($i = 0; $i < $noiseDots; $i++) {
             $warnaTitik = imagecolorallocate($image, random_int(30, 200), random_int(30, 200), random_int(30, 200));
             imagesetpixel($image, random_int(0, $width - 1), random_int(0, $height - 1), $warnaTitik);
         }

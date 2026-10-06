@@ -498,14 +498,6 @@
     width:100%;height:56px;object-fit:contain;background:#0a1a12;
     border-radius:8px;border:1px solid var(--border);
   }
-  /* Mobile: huruf/angka captcha diperbesar TANPA mengubah ukuran kotak (tetap 56px).
-     Gambar asli 260x90 sebelumnya "contain" -> mengecil ke ~62% & ada ruang kosong di kiri-kanan.
-     Sekarang: cover (isi penuh kotak) + object-view-box memotong margin kosong di sekeliling teks
-     (teks ada di x~18-235, y~10-75) sehingga karakter tampil ~35-40% lebih besar.
-     Browser yang belum mendukung object-view-box tetap kebagian efek "cover". */
-  @media (max-width:560px){
-    .captcha-img{object-fit:cover;object-position:center;object-view-box:inset(8.9% 7.7% 15.6% 4.6%);}
-  }
   .captcha-row .captcha-input{
     box-sizing:border-box;height:56px;width:100%;margin-bottom:0;
     padding:0 14px;font-size:12px;
@@ -1308,7 +1300,11 @@
         </div>
         <label class="login-label" for="loginCaptcha">Captcha</label>
         <div class="captcha-row">
-          <img id="captchaImg" class="captcha-img" src="{{ route('captcha.image') }}?t={{ microtime(true) }}" alt="Kode captcha">
+          @php
+            // HP (UA mobile) -> gambar captcha mode compact (lihat CaptchaController); desktop tetap normal.
+            $captchaQs = preg_match('/Mobi|Android|iPhone|iPod/i', (string) request()->userAgent()) ? '&c=1' : '';
+          @endphp
+          <img id="captchaImg" class="captcha-img" src="{{ route('captcha.image') }}?t={{ microtime(true) }}{{ $captchaQs }}" alt="Kode captcha">
           <button class="captcha-refresh" type="button" id="captchaRefresh" aria-label="Muat ulang captcha">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>
           </button>
@@ -1934,7 +1930,7 @@
       const captchaField = document.getElementById('loginCaptcha');
       if(captchaField) captchaField.value = '';
       const captchaImgEl = document.getElementById('captchaImg');
-      if(captchaImgEl) captchaImgEl.src = '{{ route('captcha.image') }}?t=' + Date.now();
+      if(captchaImgEl) captchaImgEl.src = '{{ route('captcha.image') }}?t=' + Date.now() + '{!! $captchaQs ?? '' !!}';
     } catch(err){
       siberadShowToast('error', 'Gagal terhubung ke server. Periksa koneksi Anda.');
     } finally {
@@ -1985,7 +1981,7 @@
   const captchaRefresh = document.getElementById('captchaRefresh');
   if (captchaRefresh && captchaImg) {
     captchaRefresh.addEventListener('click', () => {
-      captchaImg.src = '{{ route('captcha.image') }}?t=' + Date.now();
+      captchaImg.src = '{{ route('captcha.image') }}?t=' + Date.now() + '{!! $captchaQs ?? '' !!}';
       captchaRefresh.classList.remove('spinning');
       void captchaRefresh.offsetWidth;
       captchaRefresh.classList.add('spinning');
