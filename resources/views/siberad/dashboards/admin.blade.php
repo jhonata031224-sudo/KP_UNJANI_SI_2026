@@ -157,6 +157,12 @@
   .user-modal-actions{grid-column:1/-1;display:flex;flex-direction:row;align-items:center;justify-content:flex-end;gap:10px;margin-top:4px;}
   @media(max-width:640px){.user-modal-actions{flex-direction:column-reverse;align-items:stretch;}}
   @media(max-width:640px){.user-modal-card{padding:20px;}}
+  /* Modal Satuan (Tambah & Ubah), mobile: tombol Simpan/Batal selebar teksnya & di tengah
+     (sebelumnya melebar penuh). Urutan tetap: Simpan di atas, Batal di bawah. */
+  @media(max-width:640px){
+    #tambahSatuanModal .user-modal-actions,#ubahSatuanModal .user-modal-actions{align-items:center;gap:10px;margin-top:8px;}
+    #tambahSatuanModal .user-modal-actions .btn,#ubahSatuanModal .user-modal-actions .btn{width:auto;flex:0 0 auto;align-self:center;height:44px;padding:0 28px;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;}
+  }
   /* Form di dalam modal dibuat 1 kolom terus (bukan ikut breakpoint global .form-grid),
      supaya opsi teks panjang di dropdown Satuan tidak memepetkan/merusak layout 2 kolom
      di lebar modal yang terbatas (560px). */
