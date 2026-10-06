@@ -2653,11 +2653,12 @@
           <p>Setiap satuan berperan sebagai role login. Atur modul apa saja yang boleh diakses tiap satuan.</p>
         </div>
 
-        <div class="notice">
-          <b>Cara pakai halaman ini:</b> tiap kotak di bawah ini adalah satu satuan/akun login. Modul yang <b>dicentang</b> akan muncul di menu dashboard mereka saat login — modul yang <b>tidak dicentang</b> akan disembunyikan dan tidak bisa diakses. Baca dulu keterangan di bawah nama tiap modul untuk tahu apa fungsinya, centang/hapus centang sesuai kebutuhan, lalu klik tombol <b>"Simpan Hak Akses"</b> di satuan yang diubah. Satuan hanya menampilkan modul yang memang relevan dengan tugasnya — kalau suatu modul tidak muncul di satuan tertentu, artinya modul itu memang tidak berlaku untuk satuan tersebut.
+        <div class="notice notice-perm">
+          <b>Cara pakai halaman ini:</b> tiap kotak di bawah adalah satu satuan/akun login. Modul yang <b>dicentang</b> muncul di menu dashboard satuan tersebut, sedangkan yang <b>tidak dicentang</b> disembunyikan dan tidak bisa diakses. Baca keterangan di bawah nama modul, atur centangnya, lalu klik <b>"Simpan Hak Akses"</b> pada satuan yang diubah. Jika sebuah modul tidak muncul di satuan tertentu, berarti modul itu memang tidak berlaku untuk satuan tersebut.
         </div>
 
         <style>
+          .notice-perm{text-align:justify;text-justify:inter-word;}
           .perm-global-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:12px 16px;margin-bottom:16px;border:1px solid var(--border);border-radius:10px;background:var(--panel-2);position:sticky;top:0;z-index:5;}
           .perm-filter-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
           .perm-filter-btn{display:inline-flex;align-items:center;height:30px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel-alt);color:var(--text-dim);font-size:11.5px;font-weight:700;cursor:pointer;transition:border-color .15s,background .15s,color .15s;}
