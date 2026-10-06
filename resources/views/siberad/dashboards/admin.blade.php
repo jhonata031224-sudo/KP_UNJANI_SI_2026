@@ -6704,16 +6704,32 @@
           $notifSoundExists = ($pengaturan->notifikasi_sound_path ?? null)
             && \Illuminate\Support\Facades\Storage::disk('public')->exists($pengaturan->notifikasi_sound_path);
         @endphp
+        <style>
+          .ns-status{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:11px;flex-wrap:wrap;}
+          .ns-status-text{font-size:12px;color:var(--text-muted);flex:1;min-width:120px;}
+          .ns-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+          /* Mobile: status ditumpuk & tombol aksi jadi grid rapi (2 kolom + Hapus selebar penuh) */
+          @media (max-width:640px){
+            .ns-status{flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:10px;}
+            .ns-status #notifSoundPlayBtn{width:100%;box-sizing:border-box;justify-content:center;min-height:38px;}
+            .ns-status-text{flex:none;min-width:0;text-align:center;}
+            .ns-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:stretch;}
+            .ns-actions .btn{box-sizing:border-box;width:100%;min-height:38px;display:inline-flex;align-items:center;justify-content:center;text-align:center;margin:0;}
+            .ns-actions #notifSoundDeleteBtn{grid-column:1 / -1;}
+            .ns-actions #notifSoundFileName{order:-1;grid-column:1 / -1;text-align:center;word-break:break-all;}
+            .ns-actions #notifSoundFileName:empty{display:none;}
+          }
+        </style>
         <div class="panel" style="margin-top:16px;">
           <div class="panel-head"><div><h3>Suara Notifikasi</h3><p>Pasang satu file suara yang akan otomatis berbunyi di navbar semua dashboard (Admin, Pimpinan, dan semua Satuan) setiap kali ada notifikasi baru masuk ke lonceng.</p></div></div>
           <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;">
             @if($notifSoundExists)
-              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:11px;flex-wrap:wrap;">
+              <div class="ns-status">
                 <button type="button" class="btn btn-ghost btn-sm" id="notifSoundPlayBtn" style="display:flex;align-items:center;gap:6px;">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                   Putar Contoh
                 </button>
-                <span style="font-size:12px;color:var(--text-muted);flex:1;min-width:120px;">Suara notifikasi sudah terpasang.</span>
+                <span class="ns-status-text">Suara notifikasi sudah terpasang.</span>
                 <audio id="notifSoundPreview" src="{{ asset('storage/'.$pengaturan->notifikasi_sound_path) }}" preload="none"></audio>
               </div>
             @else
@@ -6724,7 +6740,7 @@
               </div>
             @endif
 
-            <form method="POST" action="{{ route('admin.setelan.notifikasi.suara.update') }}" enctype="multipart/form-data" id="notifSoundForm" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <form method="POST" action="{{ route('admin.setelan.notifikasi.suara.update') }}" enctype="multipart/form-data" id="notifSoundForm" class="ns-actions">
               @csrf
               <label class="btn btn-ghost btn-sm" style="cursor:pointer" for="notifSoundInput">{{ $notifSoundExists ? 'Ganti Suara' : 'Pilih File Suara' }}</label>
               <input id="notifSoundInput" name="notifikasi_suara" type="file" accept="audio/mpeg,audio/wav,audio/ogg,.mp3,.wav,.ogg" hidden required>
