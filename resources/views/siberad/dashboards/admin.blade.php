@@ -2671,6 +2671,16 @@
           .perm-global-select-all span{font-size:11.5px;font-weight:700;color:var(--text);white-space:nowrap;}
           .perm-global-select-all.is-all-active{border-color:var(--gold-bright);background:var(--gold-dim);}
           .perm-global-select-all.is-all-active span{color:var(--gold-bright);}
+          /* Mobile: filter kategori jadi grid 2 kolom rata (tanpa celah kiri/kanan), tombol aksi selebar kotak */
+          @media (max-width:640px){
+            .perm-global-toolbar{flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:12px;padding:12px;box-sizing:border-box;max-width:100%;}
+            .perm-filter-group{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;}
+            .perm-filter-group .perm-filter-btn{box-sizing:border-box;width:100%;height:auto;min-height:36px;padding:6px 8px;justify-content:center;text-align:center;line-height:1.25;white-space:normal;}
+            .perm-filter-group .perm-filter-btn:first-child{grid-column:1 / -1;}
+            .perm-global-actions{flex-direction:column;align-items:stretch;gap:8px;width:100%;}
+            .perm-global-count{text-align:center;white-space:normal;}
+            .perm-global-select-all{box-sizing:border-box;width:100%;justify-content:center;}
+          }
           .perm-batch-fab{position:fixed;bottom:28px;right:32px;z-index:900;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none;}
           .perm-batch-apply{display:none;align-items:center;gap:8px;padding:11px 20px;border:none;border-radius:12px;background:var(--gold-bright);color:#000;font-family:var(--mono);font-size:11.5px;font-weight:700;cursor:pointer;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.28);transition:opacity .2s,transform .2s,box-shadow .2s;pointer-events:auto;}
           .perm-batch-apply:hover{opacity:.88;box-shadow:0 6px 24px rgba(0,0,0,.36);transform:translateY(-1px);}
