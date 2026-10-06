@@ -2983,6 +2983,15 @@
 
       {{-- ===== LOG AKTIVITAS ===== --}}
       <section class="tab-panel" data-tab-panel="log-aktivitas">
+        <style>
+          /* Mobile: panel besar dilepas supaya judul, filter, dan tiap kartu aktivitas jadi panel terpisah */
+          @media (max-width:640px){
+            [data-tab-panel="log-aktivitas"] > .panel{background:none;border:0;box-shadow:none;padding:0;margin-bottom:0;}
+            [data-tab-panel="log-aktivitas"] > .panel::before{display:none;}
+            [data-tab-panel="log-aktivitas"] > .panel > .panel-head,
+            [data-tab-panel="log-aktivitas"] > .panel > .dl-search-row{background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;padding:16px;margin-bottom:12px;}
+          }
+        </style>
         <div class="panel">
           <div class="panel-head"><div><h2>Riwayat Aktivitas</h2><p>Rekam jejak login, logout, dan seluruh aksi kelola sistem oleh Admin.</p></div></div>
 
