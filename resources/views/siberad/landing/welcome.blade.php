@@ -498,6 +498,14 @@
     width:100%;height:56px;object-fit:contain;background:#0a1a12;
     border-radius:8px;border:1px solid var(--border);
   }
+  /* Mobile: huruf/angka captcha diperbesar TANPA mengubah ukuran kotak (tetap 56px).
+     Gambar asli 260x90 sebelumnya "contain" -> mengecil ke ~62% & ada ruang kosong di kiri-kanan.
+     Sekarang: cover (isi penuh kotak) + object-view-box memotong margin kosong di sekeliling teks
+     (teks ada di x~18-235, y~10-75) sehingga karakter tampil ~35-40% lebih besar.
+     Browser yang belum mendukung object-view-box tetap kebagian efek "cover". */
+  @media (max-width:560px){
+    .captcha-img{object-fit:cover;object-position:center;object-view-box:inset(8.9% 7.7% 15.6% 4.6%);}
+  }
   .captcha-row .captcha-input{
     box-sizing:border-box;height:56px;width:100%;margin-bottom:0;
     padding:0 14px;font-size:12px;
