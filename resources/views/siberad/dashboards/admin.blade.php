@@ -3153,6 +3153,15 @@
 
       {{-- ===== BACKUP DATABASE ===== --}}
       <section class="tab-panel" data-tab-panel="backup">
+        <style>
+          /* Mobile: panel besar Riwayat Backup dilepas supaya judul, filter, dan tiap kartu file jadi panel terpisah */
+          @media (max-width:640px){
+            [data-tab-panel="backup"] .backup-riwayat-panel{background:none;border:0;box-shadow:none;padding:0;margin-bottom:0;}
+            [data-tab-panel="backup"] .backup-riwayat-panel::before{display:none;}
+            [data-tab-panel="backup"] .backup-riwayat-panel > .panel-head,
+            [data-tab-panel="backup"] .backup-riwayat-panel > .log-filter-row{background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;padding:16px;margin:0 0 12px;}
+          }
+        </style>
         <div class="section-head panel">
           <h2>Cadangan Data</h2>
           <p>Buat salinan database sewaktu-waktu dan unduh untuk disimpan di luar server.</p>
@@ -3175,7 +3184,7 @@
           </form>
         </div>
 
-        <div class="panel">
+        <div class="panel backup-riwayat-panel">
           <div class="panel-head"><div><h3>Riwayat Backup</h3></div></div>
 
           <div class="log-filter-row" id="backupFilterRow">
