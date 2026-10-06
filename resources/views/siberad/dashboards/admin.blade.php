@@ -3160,6 +3160,11 @@
             [data-tab-panel="backup"] .backup-riwayat-panel::before{display:none;}
             [data-tab-panel="backup"] .backup-riwayat-panel > .panel-head,
             [data-tab-panel="backup"] .backup-riwayat-panel > .log-filter-row{background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;padding:16px;margin:0 0 12px;}
+            /* Mode terang: tiap panel/kartu diberi bayangan hitam blur seperti panel lain */
+            :root[data-theme="light"] [data-tab-panel="backup"] .backup-riwayat-panel > .panel-head,
+            :root[data-theme="light"] [data-tab-panel="backup"] .backup-riwayat-panel > .log-filter-row,
+            :root[data-theme="light"] [data-tab-panel="backup"] #tblRiwayatBackup tr{box-shadow:0 10px 30px rgba(0,0,0,.25);}
+            :root[data-theme="light"] [data-tab-panel="backup"] .backup-riwayat-panel .tbl-wrap{overflow:visible !important;}
           }
         </style>
         <div class="section-head panel">
