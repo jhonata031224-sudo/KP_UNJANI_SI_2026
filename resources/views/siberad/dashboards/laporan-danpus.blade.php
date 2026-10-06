@@ -718,7 +718,7 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
   window.addEventListener('resize',()=>window.siberadRepositionSubnavFlyouts());
 
   function restorePimpinanGroupState(){
-    ['monitorGroup','reportGroup','kendalaKasansiGroup','suratGroup'].forEach(id=>{
+    ['monitorGroup','reportGroup','kendalaKasansiGroup','suratGroup','lainnyaGroup'].forEach(id=>{
       const g=document.getElementById(id);
       if(!g)return;
       let saved=null;try{saved=sessionStorage.getItem(GROUP_STATE_KEY+id)}catch(e){}
@@ -738,7 +738,7 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
   window.siberadRestoreGroupState=restorePimpinanGroupState;
   restorePimpinanGroupState();
 
-  ['monitorGroup','reportGroup','kendalaKasansiGroup','suratGroup'].forEach(id=>{
+  ['monitorGroup','reportGroup','kendalaKasansiGroup','suratGroup','lainnyaGroup'].forEach(id=>{
     const g=document.getElementById(id),b=g?.querySelector('.side-nav-group-title');
     if(!g)return;
     b?.addEventListener('click',e=>{
