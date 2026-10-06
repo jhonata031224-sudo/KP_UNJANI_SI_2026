@@ -393,6 +393,25 @@
 
   @media (max-width:560px){ .btn-restricted{display:none;} }
 
+  /* ===== Header landing (mobile): lebih lega, tidak mepet ===== */
+  @media (max-width:560px){
+    header .wrap{padding:0 16px;}
+    nav{padding:12px 0;gap:14px;}
+    .logo{flex:1 1 auto;min-width:0;gap:10px;}
+    .logo-badge{width:38px;height:38px;}
+    .logo-text{min-width:0;gap:3px;}
+    .logo-text b{font-size:17px;line-height:1.1;}
+    .logo-text small{font-size:8.5px;letter-spacing:.08em;line-height:1.35;}
+    .nav-cta{flex:0 0 auto;gap:8px;}
+    .nav-menu-btn,.btn-theme{width:38px;height:38px;}
+    .btn-nav{height:38px;padding:0 14px;font-size:11.5px;}
+    .nav-links a{padding:13px 16px;}
+  }
+  @media (max-width:360px){
+    .logo-text small{display:none;}
+    .btn-nav{padding:0 11px;}
+  }
+
   /* ================= LOGIN MODAL ================= */
   .login-overlay{
     position:fixed;inset:0;z-index:60;
