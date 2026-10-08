@@ -1095,6 +1095,17 @@ window.siberadRefreshSuratDetailIfOpen = function(){
   var scope  = gridId ? document.getElementById(gridId) : document;
   if (!scope) return;
   var card = scope.querySelector('.surat-file-card[data-surat-id="' + id + '"]:not(.siberad-card-leaving)');
+  // Fallback: begitu penerima (mis. Danpus) konfirmasi, kartu surat PINDAH dari
+  // grid asal (Surat Keluar/Surat Masuk) ke Arsip Surat -- kartu di grid asal
+  // hilang/leaving sehingga modal yang lagi terbuka dulu tertahan di status
+  // lama (\"Menunggu Konfirmasi\") sampai halaman di-refresh. Kalau kartunya
+  // sudah tidak ada di grid asal, ikuti ke grid Arsip Surat (hanya kalau
+  // memang sudah ada di sana, supaya surat yang sama di dua grid tidak
+  // tertukar -- lihat catatan asalGrid di openSuratDetail).
+  if (!card && gridId !== 'suratArsipGrid') {
+    var arsip = document.getElementById('suratArsipGrid');
+    if (arsip) card = arsip.querySelector('.surat-file-card[data-surat-id="' + id + '"]:not(.siberad-card-leaving)');
+  }
   var btn  = card ? card.querySelector('.surat-file-card-btn') : null;
   if (!btn) return;
   var sig = btn.outerHTML.replace(/>\s+</g,'><').trim();
