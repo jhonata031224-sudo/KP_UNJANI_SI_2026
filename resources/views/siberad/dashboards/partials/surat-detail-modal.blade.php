@@ -314,7 +314,7 @@ window.openSuratDetail = function(button){
     // Alur diteruskan lebih dari 1 langkah -- tampilkan sebagai chip alur
     // workflow (mis. Wadan → Satlak Dukteksi) supaya satuan perantara
     // tetap kelihatan jelas, bukan teks digabung jadi satu baris.
-    tujuanValueWrap.className = 'surat-detail-item-value surat-tujuan-flow';
+    tujuanValueWrap.className = 'surat-detail-item-value surat-tujuan-fases';
     // Arah tiap langkah (warna sama dgn Riwayat Alur): Turun = biru, Naik = amber.
     // Ditentukan dari tingkat jabatan: Danpus(3) > Wadan(2) > satlak/pok analis(1).
     function rankSatuan(nm){
@@ -335,21 +335,40 @@ window.openSuratDetail = function(button){
     });
     var iconTurun = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>';
     var iconNaik  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
-    tujuanValueWrap.innerHTML = tujuanHops.map(function(hop, idx){
-      var last = idx === tujuanHops.length - 1;
-      var arah = arahHops[idx];
-      // Label peran tiap langkah (dipakai di tampilan HP supaya orang awam paham urutannya)
-      var kembali = last && idx > 0 && (hop.nama || '') === (tujuanHops[0].nama || '');
-      var peran = idx === 0 ? 'Dikirim ke' : (kembali ? 'Kembali ke' : (last ? 'Tujuan akhir' : 'Diteruskan ke'));
-      var stepHtml = '<span class="surat-tujuan-flow-step is-' + arah + (last ? ' is-final' : '') + '">' +
-        '<span class="surat-tujuan-flow-no" aria-hidden="true">' + (idx + 1) + '</span>' +
-        '<span class="surat-tujuan-flow-txt"><small class="surat-tujuan-flow-peran">' + peran +
-        '<span class="surat-tujuan-flow-arah">' + (arah === 'naik' ? iconNaik + 'Naik' : iconTurun + 'Turun') + '</span></small>' +
-        '<span class="surat-tujuan-flow-nama">' + escHtml(hop.nama || '-') + '</span></span></span>';
-      return (idx > 0 ? '<span class="surat-tujuan-flow-arrow" aria-hidden="true">' + arrowSvg + '</span>' : '') + stepHtml;
-    }).join('') + ((adaTurun && adaNaik)
-      ? '<span class="surat-tujuan-flow-legend"><span class="lg-turun">' + iconTurun + 'Turun: surat diteruskan ke bawah</span><span class="lg-naik">' + iconNaik + 'Naik: balasan kembali ke atas</span></span>'
-      : '');
+    // Pecah langkah jadi blok FASE terpisah (Alur Turun / Alur Naik) -- sama dgn
+    // pemisahan di Riwayat Alur -- masing-masing diberi penjelasan aksi singkat.
+    var AKSI_FASE = {
+      turun: ['Dikirim', 'Dikonfirmasi penerima', 'Disposisi & diteruskan', 'Dikonfirmasi satuan'],
+      naik : ['Dibalas satuan', 'Dikonfirmasi Wadan', 'Diteruskan ke Danpus', 'Selesai (Danpus)']
+    };
+    var fases = [];
+    tujuanHops.forEach(function(hop, idx){
+      var f = fases[fases.length - 1];
+      if (!f || f.arah !== arahHops[idx]) { f = { arah: arahHops[idx], langkah: [] }; fases.push(f); }
+      f.langkah.push({ hop: hop, no: idx + 1, last: idx === tujuanHops.length - 1 });
+    });
+    var nomorTurun = 0, nomorNaik = 0;
+    tujuanValueWrap.innerHTML = fases.map(function(f){
+      var naik = f.arah === 'naik';
+      var nomorFase = naik ? ++nomorNaik : ++nomorTurun;
+      var stepsHtml = f.langkah.map(function(l, i){
+        var peran;
+        if (naik) peran = l.last ? 'Tujuan akhir' : (i === 0 ? 'Balasan ke' : 'Diteruskan ke');
+        else peran = l.no === 1 ? 'Dikirim ke' : 'Diteruskan ke';
+        return '<span class="tujuan-fase-step">' +
+          '<span class="tujuan-fase-no" aria-hidden="true">' + l.no + '</span>' +
+          '<span class="tujuan-fase-txt"><small class="tujuan-fase-peran">' + peran + '</small>' +
+          '<span class="tujuan-fase-nama">' + escHtml(l.hop.nama || '-') + '</span></span></span>';
+      }).join('');
+      var aksiHtml = AKSI_FASE[f.arah].map(function(a){ return '<span class="tujuan-fase-aksi-item">' + a + '</span>'; })
+        .join('<span class="tujuan-fase-aksi-sep" aria-hidden="true">\u203a</span>');
+      return '<span class="tujuan-fase is-' + f.arah + '">' +
+        '<span class="tujuan-fase-head"><span class="timeline-phase-icon">' + (naik ? iconNaik : iconTurun) + '</span>' +
+        '<span class="tujuan-fase-headtxt"><span class="timeline-phase-title">' + (naik ? 'Alur Naik' : 'Alur Turun') + (nomorFase > 1 ? ' ' + nomorFase : '') + '</span>' +
+        '<span class="timeline-phase-sub">' + (naik ? 'Balasan dari satuan kembali ke atas' : 'Surat diteruskan dari atas ke satuan') + '</span></span></span>' +
+        '<span class="tujuan-fase-aksi"><small>Aksi</small>' + aksiHtml + '</span>' +
+        '<span class="tujuan-fase-steps">' + stepsHtml + '</span></span>';
+    }).join('');
   } else {
     tujuanValueWrap.className = 'surat-detail-item-value';
     tujuanValueWrap.innerHTML = '<span id="suratDetailTujuan">-</span><span class="satuan-pill" id="suratDetailTujuanKode" style="display:none"></span>';

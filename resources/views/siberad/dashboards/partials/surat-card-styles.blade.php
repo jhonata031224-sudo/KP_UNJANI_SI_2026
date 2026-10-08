@@ -51,45 +51,26 @@
 .surat-tujuan-flow-arrow svg{width:13px;height:13px}
 .surat-tujuan-flow-sm .surat-tujuan-flow-step{padding:3px 9px;font-size:12px}
 .surat-tujuan-flow-sm .surat-tujuan-flow-arrow svg{width:11px;height:11px}
-/* Nomor + label peran + warna arah (sama dgn Riwayat Alur: Turun biru, Naik amber) */
-.surat-tujuan-flow{--flow-turun:#2476ad;--flow-naik:#d98a0b}
-.surat-tujuan-flow-step{gap:7px}
-.surat-tujuan-flow-no{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font-size:11px;font-weight:800;line-height:1}
-.surat-tujuan-flow-step.is-turun .surat-tujuan-flow-no{background:var(--flow-turun)}
-.surat-tujuan-flow-step.is-naik .surat-tujuan-flow-no{background:var(--flow-naik)}
-.surat-tujuan-flow-step.is-turun{border-color:rgba(52,152,219,.4);background:rgba(52,152,219,.08)}
-.surat-tujuan-flow-step.is-naik{border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.1)}
-.surat-tujuan-flow-step.is-turun.is-final{color:#5aa9dc}
-.surat-tujuan-flow-step.is-naik.is-final{color:var(--gold-bright)}
-.surat-tujuan-flow-txt{display:inline-flex;flex-direction:column;min-width:0}
-.surat-tujuan-flow-peran{display:none}
-.surat-tujuan-flow-arah svg{width:11px;height:11px;flex-shrink:0}
-.surat-tujuan-flow-legend{display:none}
-/* HP: daftar vertikal bernomor dengan garis penghubung berwarna, mudah dibaca urutannya */
-@media (max-width:640px){
-  .surat-detail-item-value.surat-tujuan-flow{white-space:normal;display:flex;flex-direction:column;align-items:stretch;gap:0;row-gap:0;position:relative}
-  .surat-tujuan-flow-arrow{display:none!important}
-  .surat-tujuan-flow-step,.surat-tujuan-flow-step.is-turun,.surat-tujuan-flow-step.is-naik,.surat-tujuan-flow-step.is-final{position:relative;display:flex;align-items:flex-start;gap:12px;width:100%;box-sizing:border-box;margin:0;padding:0 0 16px;border:0;border-radius:0;background:none;white-space:normal;font-size:14px;transform:none}
-  .surat-tujuan-flow-step.is-final{padding-bottom:0}
-  /* garis penghubung ke langkah berikutnya: warna ikut arah langkah berikutnya */
-  .surat-tujuan-flow-step:not(:last-child)::before{content:"";position:absolute;left:12px;top:28px;bottom:2px;width:3px;border-radius:2px;background:var(--border-soft,rgba(255,255,255,.15))}
-  .surat-tujuan-flow-step:has(+ .surat-tujuan-flow-arrow + .is-turun)::before{background:var(--flow-turun)}
-  .surat-tujuan-flow-step:has(+ .surat-tujuan-flow-arrow + .is-naik)::before{background:var(--flow-naik)}
-  .surat-tujuan-flow-no{width:26px;height:26px;font-size:13px;box-shadow:0 0 0 3px var(--panel,#0f1720)}
-  .surat-tujuan-flow-txt{padding-top:1px;gap:2px}
-  .surat-tujuan-flow-peran{display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted)}
-  .surat-tujuan-flow-arah{display:inline-flex;align-items:center;gap:3px;padding:1px 7px 1px 5px;border-radius:999px;font-size:9.5px;letter-spacing:.04em}
-  .surat-tujuan-flow-step.is-turun .surat-tujuan-flow-arah{color:#5aa9dc;background:rgba(52,152,219,.14);border:1px solid rgba(52,152,219,.32)}
-  .surat-tujuan-flow-step.is-naik .surat-tujuan-flow-arah{color:#f0a52b;background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.35)}
-  .surat-tujuan-flow-nama{font-size:14px;font-weight:700;color:var(--text,#fff);line-height:1.35}
-  .surat-tujuan-flow-step.is-turun.is-final .surat-tujuan-flow-nama{color:#5aa9dc}
-  .surat-tujuan-flow-step.is-naik.is-final .surat-tujuan-flow-nama{color:#f0a52b}
-  .surat-tujuan-flow-legend{display:flex;flex-direction:column;gap:4px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--border-soft,rgba(255,255,255,.15));font-size:11px;font-weight:600;color:var(--text-muted)}
-  .surat-tujuan-flow-legend span{display:inline-flex;align-items:center;gap:6px}
-  .surat-tujuan-flow-legend svg{width:12px;height:12px}
-  .surat-tujuan-flow-legend .lg-turun svg{color:#5aa9dc}
-  .surat-tujuan-flow-legend .lg-naik svg{color:#f0a52b}
-}
+/* ── Tujuan di modal detail: blok terpisah Alur Turun (biru) & Alur Naik (amber) ── */
+.surat-detail-item-value.surat-tujuan-fases{display:flex;flex-direction:column;gap:12px;white-space:normal}
+.tujuan-fase{display:block;border-radius:12px;border:1px solid;padding:10px 12px 12px}
+.tujuan-fase.is-turun{background:rgba(52,152,219,.07);border-color:rgba(52,152,219,.28);--fase:#2476ad;--fase-txt:#5aa9dc}
+.tujuan-fase.is-naik{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.32);--fase:#d98a0b;--fase-txt:#f0a52b}
+.tujuan-fase-head{display:flex;align-items:center;gap:10px}
+.tujuan-fase .timeline-phase-icon{background:var(--fase)}
+.tujuan-fase-headtxt{display:flex;flex-direction:column;min-width:0}
+.tujuan-fase-aksi{display:flex;flex-wrap:wrap;align-items:center;gap:4px 5px;margin:9px 0 12px;padding:7px 9px;border-radius:9px;background:rgba(0,0,0,.18)}
+.tujuan-fase-aksi small{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-right:3px}
+.tujuan-fase-aksi-item{font-size:11px;font-weight:700;line-height:1.3;color:var(--fase-txt)}
+.tujuan-fase-aksi-sep{font-size:12px;font-weight:700;color:var(--text-muted);opacity:.7}
+.tujuan-fase-steps{display:flex;flex-direction:column}
+.tujuan-fase-step{position:relative;display:flex;align-items:flex-start;gap:12px;padding-bottom:14px}
+.tujuan-fase-step:last-child{padding-bottom:0}
+.tujuan-fase-step:not(:last-child)::before{content:"";position:absolute;left:12px;top:28px;bottom:2px;width:3px;border-radius:2px;background:var(--fase)}
+.tujuan-fase-no{flex-shrink:0;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--fase);color:#fff;font-size:13px;font-weight:800;line-height:1}
+.tujuan-fase-txt{display:flex;flex-direction:column;gap:2px;min-width:0;padding-top:1px}
+.tujuan-fase-peran{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted)}
+.tujuan-fase-nama{font-size:14px;font-weight:700;line-height:1.35;color:var(--text,#fff)}
 .surat-file-card-divider{border-top:1px solid var(--border-soft);margin:16px 0}
 .surat-file-card-meta{display:flex;align-items:center;gap:12px}
 .surat-file-card-meta-icon{flex-shrink:0;width:36px;height:36px;border-radius:10px;background:var(--gold-dim);color:var(--gold-bright);display:flex;align-items:center;justify-content:center}
