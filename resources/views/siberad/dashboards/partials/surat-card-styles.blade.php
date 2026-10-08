@@ -51,24 +51,44 @@
 .surat-tujuan-flow-arrow svg{width:13px;height:13px}
 .surat-tujuan-flow-sm .surat-tujuan-flow-step{padding:3px 9px;font-size:12px}
 .surat-tujuan-flow-sm .surat-tujuan-flow-arrow svg{width:11px;height:11px}
-/* Nomor + label peran: di desktop cukup nomor kecil, label disembunyikan */
+/* Nomor + label peran + warna arah (sama dgn Riwayat Alur: Turun biru, Naik amber) */
+.surat-tujuan-flow{--flow-turun:#2476ad;--flow-naik:#d98a0b}
 .surat-tujuan-flow-step{gap:7px}
-.surat-tujuan-flow-no{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.1);font-size:11px;font-weight:800;line-height:1}
-.surat-tujuan-flow-step.is-final .surat-tujuan-flow-no{background:var(--gold-bright);color:#1a1405}
+.surat-tujuan-flow-no{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font-size:11px;font-weight:800;line-height:1}
+.surat-tujuan-flow-step.is-turun .surat-tujuan-flow-no{background:var(--flow-turun)}
+.surat-tujuan-flow-step.is-naik .surat-tujuan-flow-no{background:var(--flow-naik)}
+.surat-tujuan-flow-step.is-turun{border-color:rgba(52,152,219,.4);background:rgba(52,152,219,.08)}
+.surat-tujuan-flow-step.is-naik{border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.1)}
+.surat-tujuan-flow-step.is-turun.is-final{color:#5aa9dc}
+.surat-tujuan-flow-step.is-naik.is-final{color:var(--gold-bright)}
 .surat-tujuan-flow-txt{display:inline-flex;flex-direction:column;min-width:0}
 .surat-tujuan-flow-peran{display:none}
-/* HP: daftar vertikal bernomor dengan garis penghubung, mudah dibaca urutannya */
+.surat-tujuan-flow-arah svg{width:11px;height:11px;flex-shrink:0}
+.surat-tujuan-flow-legend{display:none}
+/* HP: daftar vertikal bernomor dengan garis penghubung berwarna, mudah dibaca urutannya */
 @media (max-width:640px){
-  .surat-tujuan-flow{flex-direction:column;align-items:stretch;gap:0;row-gap:0;position:relative}
-  .surat-tujuan-flow-arrow{display:none}
-  .surat-tujuan-flow-step{position:relative;display:flex;align-items:flex-start;gap:12px;padding:0 0 16px;border:0;border-radius:0;background:none;white-space:normal;font-size:14px}
-  .surat-tujuan-flow-step.is-final{background:none;border:0;padding-bottom:0}
-  .surat-tujuan-flow-step:not(:last-child)::before{content:"";position:absolute;left:12px;top:26px;bottom:2px;width:2px;background:var(--border-soft,rgba(255,255,255,.15))}
-  .surat-tujuan-flow-no{width:26px;height:26px;font-size:13px}
+  .surat-detail-item-value.surat-tujuan-flow{white-space:normal;display:flex;flex-direction:column;align-items:stretch;gap:0;row-gap:0;position:relative}
+  .surat-tujuan-flow-arrow{display:none!important}
+  .surat-tujuan-flow-step,.surat-tujuan-flow-step.is-turun,.surat-tujuan-flow-step.is-naik,.surat-tujuan-flow-step.is-final{position:relative;display:flex;align-items:flex-start;gap:12px;width:100%;box-sizing:border-box;margin:0;padding:0 0 16px;border:0;border-radius:0;background:none;white-space:normal;font-size:14px;transform:none}
+  .surat-tujuan-flow-step.is-final{padding-bottom:0}
+  /* garis penghubung ke langkah berikutnya: warna ikut arah langkah berikutnya */
+  .surat-tujuan-flow-step:not(:last-child)::before{content:"";position:absolute;left:12px;top:28px;bottom:2px;width:3px;border-radius:2px;background:var(--border-soft,rgba(255,255,255,.15))}
+  .surat-tujuan-flow-step:has(+ .surat-tujuan-flow-arrow + .is-turun)::before{background:var(--flow-turun)}
+  .surat-tujuan-flow-step:has(+ .surat-tujuan-flow-arrow + .is-naik)::before{background:var(--flow-naik)}
+  .surat-tujuan-flow-no{width:26px;height:26px;font-size:13px;box-shadow:0 0 0 3px var(--panel,#0f1720)}
   .surat-tujuan-flow-txt{padding-top:1px;gap:2px}
-  .surat-tujuan-flow-peran{display:block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);opacity:.8}
-  .surat-tujuan-flow-nama{font-size:14px;font-weight:700;color:var(--text-main,#fff);line-height:1.35}
-  .surat-tujuan-flow-step.is-final .surat-tujuan-flow-nama{color:var(--gold-bright)}
+  .surat-tujuan-flow-peran{display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted)}
+  .surat-tujuan-flow-arah{display:inline-flex;align-items:center;gap:3px;padding:1px 7px 1px 5px;border-radius:999px;font-size:9.5px;letter-spacing:.04em}
+  .surat-tujuan-flow-step.is-turun .surat-tujuan-flow-arah{color:#5aa9dc;background:rgba(52,152,219,.14);border:1px solid rgba(52,152,219,.32)}
+  .surat-tujuan-flow-step.is-naik .surat-tujuan-flow-arah{color:#f0a52b;background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.35)}
+  .surat-tujuan-flow-nama{font-size:14px;font-weight:700;color:var(--text,#fff);line-height:1.35}
+  .surat-tujuan-flow-step.is-turun.is-final .surat-tujuan-flow-nama{color:#5aa9dc}
+  .surat-tujuan-flow-step.is-naik.is-final .surat-tujuan-flow-nama{color:#f0a52b}
+  .surat-tujuan-flow-legend{display:flex;flex-direction:column;gap:4px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--border-soft,rgba(255,255,255,.15));font-size:11px;font-weight:600;color:var(--text-muted)}
+  .surat-tujuan-flow-legend span{display:inline-flex;align-items:center;gap:6px}
+  .surat-tujuan-flow-legend svg{width:12px;height:12px}
+  .surat-tujuan-flow-legend .lg-turun svg{color:#5aa9dc}
+  .surat-tujuan-flow-legend .lg-naik svg{color:#f0a52b}
 }
 .surat-file-card-divider{border-top:1px solid var(--border-soft);margin:16px 0}
 .surat-file-card-meta{display:flex;align-items:center;gap:12px}

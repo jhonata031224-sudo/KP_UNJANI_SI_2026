@@ -315,17 +315,41 @@ window.openSuratDetail = function(button){
     // workflow (mis. Wadan → Satlak Dukteksi) supaya satuan perantara
     // tetap kelihatan jelas, bukan teks digabung jadi satu baris.
     tujuanValueWrap.className = 'surat-detail-item-value surat-tujuan-flow';
+    // Arah tiap langkah (warna sama dgn Riwayat Alur): Turun = biru, Naik = amber.
+    // Ditentukan dari tingkat jabatan: Danpus(3) > Wadan(2) > satlak/pok analis(1).
+    function rankSatuan(nm){
+      nm = String(nm || '').toLowerCase();
+      if (/danpus|komandan pusat/.test(nm)) return 3;
+      if (/wadan|wakil komandan/.test(nm)) return 2;
+      return 1;
+    }
+    var arahHops = [], adaTurun = false, adaNaik = false;
+    tujuanHops.forEach(function(hop, idx){
+      var arah = 'turun';
+      if (idx > 0) {
+        var rNow = rankSatuan(hop.nama), rPrev = rankSatuan(tujuanHops[idx - 1].nama);
+        arah = rNow > rPrev ? 'naik' : (rNow < rPrev ? 'turun' : arahHops[idx - 1]);
+      }
+      arahHops.push(arah);
+      if (arah === 'naik') adaNaik = true; else adaTurun = true;
+    });
+    var iconTurun = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>';
+    var iconNaik  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
     tujuanValueWrap.innerHTML = tujuanHops.map(function(hop, idx){
       var last = idx === tujuanHops.length - 1;
+      var arah = arahHops[idx];
       // Label peran tiap langkah (dipakai di tampilan HP supaya orang awam paham urutannya)
       var kembali = last && idx > 0 && (hop.nama || '') === (tujuanHops[0].nama || '');
       var peran = idx === 0 ? 'Dikirim ke' : (kembali ? 'Kembali ke' : (last ? 'Tujuan akhir' : 'Diteruskan ke'));
-      var stepHtml = '<span class="surat-tujuan-flow-step' + (last ? ' is-final' : '') + '">' +
+      var stepHtml = '<span class="surat-tujuan-flow-step is-' + arah + (last ? ' is-final' : '') + '">' +
         '<span class="surat-tujuan-flow-no" aria-hidden="true">' + (idx + 1) + '</span>' +
-        '<span class="surat-tujuan-flow-txt"><small class="surat-tujuan-flow-peran">' + peran + '</small>' +
+        '<span class="surat-tujuan-flow-txt"><small class="surat-tujuan-flow-peran">' + peran +
+        '<span class="surat-tujuan-flow-arah">' + (arah === 'naik' ? iconNaik + 'Naik' : iconTurun + 'Turun') + '</span></small>' +
         '<span class="surat-tujuan-flow-nama">' + escHtml(hop.nama || '-') + '</span></span></span>';
       return (idx > 0 ? '<span class="surat-tujuan-flow-arrow" aria-hidden="true">' + arrowSvg + '</span>' : '') + stepHtml;
-    }).join('');
+    }).join('') + ((adaTurun && adaNaik)
+      ? '<span class="surat-tujuan-flow-legend"><span class="lg-turun">' + iconTurun + 'Turun: surat diteruskan ke bawah</span><span class="lg-naik">' + iconNaik + 'Naik: balasan kembali ke atas</span></span>'
+      : '');
   } else {
     tujuanValueWrap.className = 'surat-detail-item-value';
     tujuanValueWrap.innerHTML = '<span id="suratDetailTujuan">-</span><span class="satuan-pill" id="suratDetailTujuanKode" style="display:none"></span>';
