@@ -327,6 +327,17 @@
 .rpt-filter-date-wrap input[type="date"]{box-sizing:border-box;height:38px;border:1px solid var(--border-soft);border-radius:9px;background:var(--panel-alt);color:var(--text);font:inherit;font-size:12px;padding:8px 10px;color-scheme:light dark}
 .rpt-filter-date-wrap input[type="date"]:focus{outline:0;border-color:var(--gold-bright);box-shadow:0 0 0 3px rgba(201,122,0,.10)}
 @media(max-width:700px){.rpt-filter-date-wrap{width:100%}.rpt-filter-date-wrap input[type="date"]{flex:1;min-width:0}}
+/* Mobile: filter Arsip Surat jadi grid 2 kolom (search tetap 1 baris penuh).
+   Urutan: Satuan|Status, Dari|Sampai, Jenis Surat|Urutan, lalu counter. */
+@media(max-width:700px){
+  #arsip-surat .rpt-filter-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:end}
+  #arsip-surat .rpt-filter-bar>*{min-width:0}
+  #arsip-surat .rpt-filter-search{grid-column:1/-1;width:100%}
+  #arsip-surat .rpt-filter-bar .styled-select-wrap,#arsip-surat .rpt-filter-bar>select{width:100%;min-width:0;max-width:100%}
+  #arsip-surat .rpt-filter-date-wrap{flex-direction:column;align-items:stretch;gap:4px;width:100%;min-width:0}
+  #arsip-surat .rpt-filter-date-wrap input[type="date"]{width:100%;min-width:0;flex:none}
+  #arsip-surat .rpt-filter-count{grid-column:1/-1;width:auto;margin-left:0}
+}
 </style>
 <script>
 (function(){
