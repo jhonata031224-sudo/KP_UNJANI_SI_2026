@@ -272,6 +272,13 @@ Route::get('/permintaan-reset-password/status', [PermintaanResetPasswordControll
     ->middleware('auth')
     ->name('permintaan-reset-password.status');
 
+// Status Mode Maintenance (polling realtime banner + kunci tombol di klien,
+// lihat partials/maintenance-banner.blade.php). Sengaja TANPA middleware
+// modul: berlaku untuk semua pengguna login & method GET selalu lolos
+// EnforceMaintenanceMode.
+Route::get('/maintenance/status', [\App\Http\Controllers\MaintenanceStatusController::class, 'show'])
+    ->middleware('auth')
+    ->name('maintenance.status');
 Route::get('/notifikasi/realtime', [NotifikasiController::class, 'realtime'])
     ->middleware(['auth', 'modul:notifikasi'])
     ->name('notifikasi.realtime');

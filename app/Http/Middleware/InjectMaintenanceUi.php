@@ -13,7 +13,8 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Menyuntik banner PERSISTEN Mode Maintenance (+ script proteksi tombol
  * di sisi klien) ke SEMUA halaman HTML pengguna non-Admin yang sedang
- * login, selagi Pengaturan::current()->mode_maintenance_aktif TRUE --
+ * login (banner tampil hanya selagi mode_maintenance_aktif TRUE, dan
+ * disinkronkan realtime lewat polling /maintenance/status) --
  * mengikuti pola persis InjectWebPushUi/InjectPengaturanAccessUi (append
  * global di bootstrap/app.php, cek Content-Type text/html, sisipkan
  * sebelum </body>).
@@ -40,10 +41,13 @@ class InjectMaintenanceUi
             return $response;
         }
 
+        // Skrip maintenance DISUNTIK SELALU ke halaman non-Admin (bukan cuma saat
+        // maintenance aktif) supaya perubahan status oleh Admin langsung
+        // tampil di halaman yang sudah terbuka tanpa refresh -- banner
+        // disembunyikan (hidden) selagi maintenance mati, dan skrip polling
+        // /maintenance/status yang menyalakan/mematikannya.
         $pengaturan = Pengaturan::current();
-        if (! $pengaturan->mode_maintenance_aktif) {
-            return $response;
-        }
+        $aktif      = (bool) $pengaturan->mode_maintenance_aktif;
 
         $contentType = (string) $response->headers->get('Content-Type');
         if ($contentType !== '' && ! str_contains($contentType, 'text/html')) {
@@ -56,8 +60,9 @@ class InjectMaintenanceUi
         }
 
         $banner = view('siberad.dashboards.partials.maintenance-banner', [
+            'aktifMaintenance' => $aktif,
             'pesanMaintenance' => $pengaturan->pesanMaintenance(),
-            'waktuMaintenance' => $this->waktuPengumumanMaintenance($user),
+            'waktuMaintenance' => $aktif ? $this->waktuPengumumanMaintenance($user) : null,
         ])->render();
 
         // PENTING: cari `</body>` dari BELAKANG (strripos), BUKAN `<body` dari
@@ -92,7 +97,7 @@ class InjectMaintenanceUi
      * pemeliharaan terbaru milik pengguna mana pun (dikirim serentak ke
      * semua non-Admin, jadi waktunya sama). NULL kalau memang tidak ada.
      */
-    private function waktuPengumumanMaintenance(User $user): ?string
+    public function waktuPengumumanMaintenance(User $user): ?string
     {
         $filter = fn ($q) => $q
             ->where('type', PengumumanBroadcastAdmin::class)
