@@ -3391,6 +3391,74 @@
 
           .btn-danger-soft{background:rgba(229,72,77,.12);color:#e5484d;border:1px solid rgba(229,72,77,.28);font-weight:700;}
           .btn-danger-soft:hover{background:#e5484d;color:#fff;border-color:#e5484d;}
+        
+          /* ===== MOBILE (<=760px): rapikan header, kartu kategori, aksi & tabel ===== */
+          @media (max-width:760px){
+            .rdl-head-panel{padding:16px;}
+            .rdl-head-content{flex-direction:column;align-items:flex-start;gap:12px;}
+            .rdl-head-icon{width:40px;height:40px;border-radius:10px;}
+            .rdl-head-icon svg{width:21px;height:21px;}
+            .rdl-head-panel h2{font-size:19px;line-height:1.25;margin:0 0 6px;}
+            .rdl-head-panel p{font-size:12.5px;line-height:1.55;margin:0;}
+
+            /* Kategori: 2 kolom ringkas, judul boleh 2 baris, kartu terakhir ganjil melebar */
+            .rdl-category-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px;}
+            .rdl-category-grid .rdl-cat-card:last-child:nth-child(odd){grid-column:1 / -1;}
+            .rdl-cat-card{flex-direction:column;align-items:flex-start;gap:9px;padding:12px;border-radius:12px;}
+            .rdl-cat-card:hover{transform:none;box-shadow:none;}
+            .rdl-cat-icon{width:34px;height:34px;border-radius:9px;}
+            .rdl-cat-body{width:100%;}
+            .rdl-cat-title{white-space:normal;overflow:visible;text-overflow:clip;font-size:12.5px;line-height:1.3;margin-bottom:6px;}
+            .rdl-cat-badge{font-size:10.5px;padding:2px 7px;}
+
+            /* Panel detail */
+            .rdl-detail-panel{padding:14px;}
+            .rdl-panel-head{flex-direction:column;align-items:stretch;gap:12px;margin-bottom:14px;}
+            .rdl-panel-title-area{align-items:flex-start;}
+            .rdl-panel-head h3{font-size:15px;line-height:1.3;}
+            .rdl-panel-head p{font-size:12px;line-height:1.5;}
+            .rdl-panel-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;}
+            .rdl-search-wrap{grid-column:1 / -1;width:100%;}
+            .rdl-search-input{width:100%;box-sizing:border-box;min-height:42px;font-size:14px;}
+            .rdl-panel-actions .btn{width:100%;min-height:42px;justify-content:center;text-align:center;white-space:normal;line-height:1.25;padding:8px 10px;margin:0;}
+
+            /* Tabel -> daftar kartu (tanpa scroll samping) */
+            .rdl-table-wrap{overflow:visible;max-height:none;border:0;border-radius:0;background:transparent;}
+            table.rdl-table,table.rdl-table tbody{display:block;width:100%;}
+            table.rdl-table thead{display:block;margin-bottom:10px;}
+            table.rdl-table thead tr{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border-soft);border-radius:12px;background:var(--panel-alt, var(--panel));}
+            table.rdl-table thead th{display:none;padding:0;border:0;}
+            table.rdl-table thead th.rdl-check-cell{display:flex;width:auto;align-items:center;gap:10px;}
+            table.rdl-table thead th.rdl-check-cell::after{content:"Pilih semua";font-size:12px;font-weight:600;color:var(--text-muted);}
+            table.rdl-table tbody tr{display:grid;grid-template-columns:28px minmax(0,1fr) 40px;column-gap:10px;row-gap:8px;align-items:start;padding:12px;margin-bottom:10px;border:1px solid var(--border-soft);border-radius:12px;background:var(--panel);}
+            table.rdl-table tbody tr:hover td{background:transparent;}
+            table.rdl-table tbody tr.is-selected{border-color:rgba(229,72,77,.5);background:rgba(229,72,77,.06);}
+            table.rdl-table td{display:block;padding:0;border:0;min-width:0;}
+            table.rdl-table td.rdl-check-cell{grid-column:1;grid-row:1;width:auto;text-align:left;padding-top:2px;}
+            table.rdl-table td.rdl-check-cell input[type="checkbox"]{width:20px;height:20px;}
+            table.rdl-table td.rdl-no-cell{display:none;}
+            table.rdl-table td.rdl-title-td{grid-column:2;grid-row:1;}
+            table.rdl-table td.rdl-aksi-td{grid-column:3;grid-row:1;text-align:right !important;}
+            .rdl-item-title{font-size:14px;word-break:break-word;}
+            .rdl-action-del-btn{width:36px;height:36px;}
+
+            /* Baris info: label di kiri, nilai di kanan */
+            table.rdl-table td[data-label="Satuan & Pengaju"],
+            table.rdl-table td.rdl-date,
+            table.rdl-table td[data-label="Status"],
+            table.rdl-table td.rdl-lampiran-td{
+              grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:12px;
+              padding-top:8px;border-top:1px dashed var(--border-soft);text-align:right !important;
+            }
+            table.rdl-table td[data-label="Satuan & Pengaju"]::before,
+            table.rdl-table td.rdl-date::before,
+            table.rdl-table td[data-label="Status"]::before,
+            table.rdl-table td.rdl-lampiran-td::before{
+              content:attr(data-label);flex:0 0 auto;font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--text-dim);text-align:left;
+            }
+            table.rdl-table td[data-label="Satuan & Pengaju"] > *{text-align:right;}
+            .rdl-date{white-space:normal;}
+          }
         </style>
 
         {{-- Grid Kartu Kategori --}}
@@ -3492,22 +3560,22 @@
                         <td class="rdl-check-cell">
                           <input type="checkbox" class="rdl-row-cb" value="{{ $item['key'] }}" data-title="{{ e($item['judul']) }}" onchange="syncRdlSelection('{{ $key }}')">
                         </td>
-                        <td style="font-family:var(--mono);color:var(--text-dim);">{{ $i + 1 }}</td>
-                        <td>
+                        <td class="rdl-no-cell" data-label="No" style="font-family:var(--mono);color:var(--text-dim);">{{ $i + 1 }}</td>
+                        <td class="rdl-title-td" data-label="Perihal">
                           <div class="rdl-title-cell">
                             <span class="rdl-item-title">{{ $item['judul'] }}</span>
                             <span class="rdl-item-subtype rdl-subtype-{{ $item['subtipe_badge'] ?? 'gold' }}">{{ $item['subtipe'] }}</span>
                           </div>
                         </td>
-                        <td>
+                        <td data-label="Satuan &amp; Pengaju">
                           <span class="rdl-satuan-badge">{{ $item['satuan'] }}</span>
                           <div class="rdl-user-name">{{ $item['user'] }}</div>
                         </td>
-                        <td class="rdl-date">{{ $item['tanggal'] }}</td>
-                        <td>
+                        <td class="rdl-date" data-label="Tanggal">{{ $item['tanggal'] }}</td>
+                        <td data-label="Status">
                           <span class="rdl-status-pill">{{ $item['status'] }}</span>
                         </td>
-                        <td style="text-align:center;">
+                        <td class="rdl-lampiran-td" data-label="Lampiran" style="text-align:center;">
                           @if(!empty($item['lampiran']))
                             <span title="Ada lampiran berkas" style="color:var(--success);font-weight:700;display:inline-flex;align-items:center;gap:3px;font-size:11px;">
                               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
@@ -3517,7 +3585,7 @@
                             <span style="color:var(--text-dim);font-size:12px;">-</span>
                           @endif
                         </td>
-                        <td style="text-align:center;">
+                        <td class="rdl-aksi-td" data-label="Aksi" style="text-align:center;">
                           <button type="button" class="rdl-action-del-btn" title="Hapus baris ini" onclick="bukaKonfirmasiHapusSatu('{{ $item['key'] }}', '{{ addslashes($item['judul']) }}')">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                           </button>
