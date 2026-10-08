@@ -472,7 +472,9 @@
       try {
         var target = new URL(url, window.location.origin);
         hashId = target.hash ? target.hash.slice(1) : '';
-        if (target.pathname !== window.location.pathname) { window.location.href = url; return; }
+        var samaHalaman = target.pathname === window.location.pathname
+          || (window.__siberadUrlMasked && target.pathname === '/dashboard');
+        if (!samaHalaman) { window.location.href = url; return; }
       } catch (e) { window.location.href = url; return; }
       if (!hashId) return;
       // Bukan section tab biasa -- buka modal "Pengaturan Akun" > tab

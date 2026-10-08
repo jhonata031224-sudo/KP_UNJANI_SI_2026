@@ -85,6 +85,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(RemoveDecorativeSeparators::class);
         $middleware->append(InjectDashboardUi::class);
         $middleware->append(InjectPengaturanAccessUi::class);
+        $middleware->append(\App\Http\Middleware\InjectUrlMask::class);
         $middleware->append(InjectAdminReportCenter::class);
         $middleware->append(InjectWebPushUi::class);
         $middleware->append(\App\Http\Middleware\InjectMobilePerf::class);

@@ -38,7 +38,18 @@ use App\Http\Controllers\ProyekRisetController;
 use App\Models\Pengaturan;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
+Route::get('/', function (\Illuminate\Http\Request $request) {
+    // Alamat dashboard disamarkan jadi "/" di address bar (lihat
+    // public/js/siberad-url-mask.js). Maka bagi pengguna yang sudah login,
+    // "/" -- dari refresh, atau redirect back() setelah submit form -- harus
+    // kembali ke dashboard. reflash() menjaga pesan sukses/gagal (flash
+    // session) agar tidak hilang di lompatan perantara ini.
+    if ($request->user()) {
+        $request->session()->reflash();
+
+        return redirect()->route('dashboard', $request->query());
+    }
+
     return view('siberad.landing.welcome', [
         'pengaturan' => Pengaturan::current(),
     ]);
