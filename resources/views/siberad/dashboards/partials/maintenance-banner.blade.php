@@ -148,8 +148,47 @@
     if (hidden && hidden.value) return hidden.value.toUpperCase();
     return (form.getAttribute('method') || 'GET').toUpperCase();
   }
+  // ---- Anti-banjir toast ----
+  // Saat maintenance, satu klik pada aksi yang diblok dulu memunculkan DUA
+  // toast: toast maintenance dari sini + toast error bawaan fitur itu sendiri
+  // (mis. "Gagal mengkonfirmasi surat. Coba lagi." di .catch masing-masing
+  // fitur, karena respons 423 dianggap gagal). Klik berulang membuat toast
+  // menumpuk beruntun. Solusinya dipusatkan di sini (berlaku ke SEMUA fitur
+  // & semua pengguna non-Admin, tanpa menyentuh tiap file fitur):
+  //   1) toast maintenance di-throttle: maksimal 1 per TOAST_JEDA_MS;
+  //   2) selama jendela "baru saja diblok" (blokirSampai), toast ERROR lain
+  //      yang bukan pesan maintenance ditahan -- itu hanya efek samping
+  //      dari aksi yang memang sengaja kita blok, bukan error sungguhan.
+  var TOAST_JEDA_MS   = 3200;  // sedikit > umur toast (3 dtk) di dash-styles
+  var BLOKIR_JENDELA  = 1500;  // jendela penahan toast error bawaan fitur
+  var toastAsliFn     = null;  // siberadShowToast asli (sebelum dibungkus)
+  var terakhirNotify  = 0;
+  var blokirSampai    = 0;
+
+  // Bungkus window.siberadShowToast sekali saja. Dipanggil lazy karena
+  // fungsi aslinya bisa saja baru terdefinisi setelah skrip ini jalan.
+  function pasangFilterToast(){
+    var fn = window.siberadShowToast;
+    if (typeof fn !== 'function' || fn.__mmFilter) return;
+    toastAsliFn = fn;
+    var pembungkus = function(type, message){
+      if (type === 'error' && Date.now() < blokirSampai && message !== PESAN_MAINTENANCE) {
+        return; // efek samping aksi yang diblok maintenance -- tahan
+      }
+      return fn.apply(this, arguments);
+    };
+    pembungkus.__mmFilter = true;
+    window.siberadShowToast = pembungkus;
+  }
+
   function notify(){
-    window.siberadShowToast && window.siberadShowToast('error', PESAN_MAINTENANCE);
+    var sekarang = Date.now();
+    blokirSampai = sekarang + BLOKIR_JENDELA;   // selalu tahan toast error fitur
+    pasangFilterToast();
+    if (sekarang - terakhirNotify < TOAST_JEDA_MS) return; // sudah tampil, jangan numpuk
+    terakhirNotify = sekarang;
+    var tampil = toastAsliFn || window.siberadShowToast;
+    if (tampil) tampil('error', PESAN_MAINTENANCE);
   }
 
   // ---- 1) Tandai & disable tombol submit pada form yang mengubah data ----
@@ -248,7 +287,29 @@
           }
         }
       } catch (err) { /* kalau deteksi gagal, biarkan lolos -- server tetap menolak */ }
-      return originalFetch.apply(this, arguments);
+
+      // Celah: Admin BARU SAJA menyalakan maintenance dan polling belum sempat
+      // memutakhirkan `aktif`, jadi request lolos ke server dan dijawab 423.
+      // Tanpa ini, fitur memunculkan toast error-nya sendiri + (setelah polling)
+      // toast maintenance -> dobel. Di sini 423 diperlakukan sama dengan blokir
+      // sisi klien: satu toast maintenance, toast error fitur ditahan, dan
+      // status langsung disinkronkan (banner + kunci tombol) tanpa nunggu 4 dtk.
+      var argumen = arguments;
+      var metodeReq = 'GET', urlReq = '';
+      try {
+        urlReq = (typeof input === 'string') ? input : (input && input.url) || '';
+        metodeReq = ((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+      } catch (err) {}
+      return originalFetch.apply(this, argumen).then(function(res){
+        try {
+          if (res && res.status === 423 && MUTATING.indexOf(metodeReq) !== -1
+              && isSameOrigin(urlReq) && !isExcluded(urlReq)) {
+            notify();                // 1 toast + tahan toast error fitur
+            poll();                  // sinkron status: nyalakan banner + kunci tombol
+          }
+        } catch (err) { /* abaikan -- jangan ganggu alur fetch fitur */ }
+        return res;
+      });
     };
   }
 
@@ -282,8 +343,8 @@
     }
 
     if (tampilkanToast && berubahAktif && window.siberadShowToast) {
-      window.siberadShowToast(aktif ? 'error' : 'success',
-        aktif ? PESAN_MAINTENANCE : 'Pemeliharaan selesai. Sistem kembali normal.');
+      if (aktif) notify();   // throttle: tidak dobel dengan toast dari aksi yang baru diblok
+      else window.siberadShowToast('success', 'Pemeliharaan selesai. Sistem kembali normal.');
     }
   }
 
@@ -306,6 +367,7 @@
   }
 
   // Status awal dari server.
+  pasangFilterToast();
   root.classList.toggle('siberad-mm-on', aktif);
   sesuaikanOffsetKonten();
   if (aktif) { scan(document); mulaiObserver(); }
