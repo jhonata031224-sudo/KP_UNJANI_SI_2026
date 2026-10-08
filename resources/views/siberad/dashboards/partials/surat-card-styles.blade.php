@@ -98,6 +98,13 @@
 .surat-detail-item-value{font-size:13.5px;font-weight:600;color:var(--text);line-height:1.55;white-space:pre-wrap}
 .surat-detail-item-row{display:flex;gap:10px;margin-bottom:10px}
 .surat-detail-item-row .surat-detail-item{flex:1;min-width:0;margin-bottom:0}
+/* Fix mobile: baris Jenis Surat + Status tidak offside; badge panjang tidak keluar kotak */
+.surat-detail-item-value .status-badge,.surat-detail-item-value .priority-tag{max-width:100%;box-sizing:border-box}
+@media(max-width:560px){
+  .surat-detail-item-row{flex-direction:column;gap:10px}
+  .surat-detail-item-row .surat-detail-item{flex:none;width:100%}
+  .surat-detail-item-value .status-badge{white-space:normal;line-height:1.35}
+}
 .surat-detail-item-value .priority-tag.prio-rendah{color:#8b5cf6;background:color-mix(in srgb,#8b5cf6 12%,transparent);border-color:color-mix(in srgb,#8b5cf6 35%,transparent)}
 .surat-detail-item-value .priority-tag.prio-sedang{color:#a855f7;background:color-mix(in srgb,#a855f7 12%,transparent);border-color:color-mix(in srgb,#a855f7 35%,transparent)}
 .surat-detail-item-value .priority-tag.prio-tinggi{color:#6d28d9;background:color-mix(in srgb,#6d28d9 12%,transparent);border-color:color-mix(in srgb,#6d28d9 35%,transparent)}
