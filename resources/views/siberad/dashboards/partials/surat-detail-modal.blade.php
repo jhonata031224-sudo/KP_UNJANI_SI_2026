@@ -316,7 +316,14 @@ window.openSuratDetail = function(button){
     // tetap kelihatan jelas, bukan teks digabung jadi satu baris.
     tujuanValueWrap.className = 'surat-detail-item-value surat-tujuan-flow';
     tujuanValueWrap.innerHTML = tujuanHops.map(function(hop, idx){
-      var stepHtml = '<span class="surat-tujuan-flow-step' + (idx === tujuanHops.length - 1 ? ' is-final' : '') + '">' + escHtml(hop.nama || '-') + '</span>';
+      var last = idx === tujuanHops.length - 1;
+      // Label peran tiap langkah (dipakai di tampilan HP supaya orang awam paham urutannya)
+      var kembali = last && idx > 0 && (hop.nama || '') === (tujuanHops[0].nama || '');
+      var peran = idx === 0 ? 'Dikirim ke' : (kembali ? 'Kembali ke' : (last ? 'Tujuan akhir' : 'Diteruskan ke'));
+      var stepHtml = '<span class="surat-tujuan-flow-step' + (last ? ' is-final' : '') + '">' +
+        '<span class="surat-tujuan-flow-no" aria-hidden="true">' + (idx + 1) + '</span>' +
+        '<span class="surat-tujuan-flow-txt"><small class="surat-tujuan-flow-peran">' + peran + '</small>' +
+        '<span class="surat-tujuan-flow-nama">' + escHtml(hop.nama || '-') + '</span></span></span>';
       return (idx > 0 ? '<span class="surat-tujuan-flow-arrow" aria-hidden="true">' + arrowSvg + '</span>' : '') + stepHtml;
     }).join('');
   } else {
@@ -330,6 +337,9 @@ window.openSuratDetail = function(button){
     var tujuanKode = document.getElementById('suratDetailTujuanKode');
     tujuanKode.textContent = button.dataset.tujuanKode || '';
     tujuanKode.style.display = button.dataset.tujuanKode ? '' : 'none';
+  }
+  if (context === 'keluar' && tujuanHops.length > 1 && subDariEl) {
+    subDariEl.textContent = 'Kepada ' + (tujuanHops[0].nama || '-') + ' \u00b7 diteruskan lewat ' + tujuanHops.length + ' langkah';
   }
   var tujuanItem = document.getElementById('suratDetailTujuanItem');
   if (tujuanItem) tujuanItem.style.display = (button.dataset.hideTujuan === '1') ? 'none' : '';

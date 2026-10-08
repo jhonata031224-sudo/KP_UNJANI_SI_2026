@@ -51,6 +51,25 @@
 .surat-tujuan-flow-arrow svg{width:13px;height:13px}
 .surat-tujuan-flow-sm .surat-tujuan-flow-step{padding:3px 9px;font-size:12px}
 .surat-tujuan-flow-sm .surat-tujuan-flow-arrow svg{width:11px;height:11px}
+/* Nomor + label peran: di desktop cukup nomor kecil, label disembunyikan */
+.surat-tujuan-flow-step{gap:7px}
+.surat-tujuan-flow-no{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.1);font-size:11px;font-weight:800;line-height:1}
+.surat-tujuan-flow-step.is-final .surat-tujuan-flow-no{background:var(--gold-bright);color:#1a1405}
+.surat-tujuan-flow-txt{display:inline-flex;flex-direction:column;min-width:0}
+.surat-tujuan-flow-peran{display:none}
+/* HP: daftar vertikal bernomor dengan garis penghubung, mudah dibaca urutannya */
+@media (max-width:640px){
+  .surat-tujuan-flow{flex-direction:column;align-items:stretch;gap:0;row-gap:0;position:relative}
+  .surat-tujuan-flow-arrow{display:none}
+  .surat-tujuan-flow-step{position:relative;display:flex;align-items:flex-start;gap:12px;padding:0 0 16px;border:0;border-radius:0;background:none;white-space:normal;font-size:14px}
+  .surat-tujuan-flow-step.is-final{background:none;border:0;padding-bottom:0}
+  .surat-tujuan-flow-step:not(:last-child)::before{content:"";position:absolute;left:12px;top:26px;bottom:2px;width:2px;background:var(--border-soft,rgba(255,255,255,.15))}
+  .surat-tujuan-flow-no{width:26px;height:26px;font-size:13px}
+  .surat-tujuan-flow-txt{padding-top:1px;gap:2px}
+  .surat-tujuan-flow-peran{display:block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);opacity:.8}
+  .surat-tujuan-flow-nama{font-size:14px;font-weight:700;color:var(--text-main,#fff);line-height:1.35}
+  .surat-tujuan-flow-step.is-final .surat-tujuan-flow-nama{color:var(--gold-bright)}
+}
 .surat-file-card-divider{border-top:1px solid var(--border-soft);margin:16px 0}
 .surat-file-card-meta{display:flex;align-items:center;gap:12px}
 .surat-file-card-meta-icon{flex-shrink:0;width:36px;height:36px;border-radius:10px;background:var(--gold-dim);color:var(--gold-bright);display:flex;align-items:center;justify-content:center}
