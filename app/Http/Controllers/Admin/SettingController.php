@@ -50,15 +50,10 @@ class SettingController extends Controller
         $captchaExpected = (string) $request->session()->pull('captcha_code', '');
         $captchaGiven = (string) $validated['captcha'];
 
-        // Password akses Pengaturan Umum dapat dibuat terpisah dari password login Admin.
-        // Jika belum dikonfigurasi, fallback ke password Admin menjaga instalasi lama tetap berfungsi.
-        // trim() di sini mengantisipasi spasi/baris baru tak sengaja ikut
-        // tersimpan saat isi value environment variable lewat panel hosting.
-        $accessPassword = trim((string) env('PENGATURAN_UMUM_ACCESS_PASSWORD', ''));
+        // Password akses Pengaturan Umum = password login Admin yang sedang aktif
+        // (tidak ada password terpisah / override lewat environment variable).
         $passwordGiven = trim((string) $validated['password']);
-        $passwordValid = $accessPassword !== ''
-            ? hash_equals($accessPassword, $passwordGiven)
-            : Hash::check($passwordGiven, (string) $request->user()->password);
+        $passwordValid = Hash::check($passwordGiven, (string) $request->user()->password);
         $captchaValid = $captchaExpected !== '' && hash_equals($captchaExpected, $captchaGiven);
 
         if (! $passwordValid || ! $captchaValid) {
@@ -69,9 +64,7 @@ class SettingController extends Controller
             if (! $passwordValid && ! $captchaValid) {
                 $pesan = 'Password dan captcha salah. Periksa ulang keduanya.';
             } elseif (! $passwordValid) {
-                $pesan = $accessPassword !== ''
-                    ? 'Password salah. Periksa lagi nilai PENGATURAN_UMUM_ACCESS_PASSWORD di environment variable server.'
-                    : 'Password salah. Karena PENGATURAN_UMUM_ACCESS_PASSWORD belum diisi, sistem memakai password login Admin yang sedang aktif.';
+                $pesan = 'Password salah. Gunakan password login Admin Anda.';
             } else {
                 $pesan = 'Kode captcha salah atau sudah kedaluwarsa. Captcha baru sudah dimuat ulang, coba masukkan lagi.';
             }

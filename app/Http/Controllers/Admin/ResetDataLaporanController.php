@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -217,8 +218,7 @@ class ResetDataLaporanController extends Controller
      * Gerbang akses menu Reset Data Laporan (password + captcha), pola sama
      * dengan Pengaturan Umum (SettingController::verifyLandingAccess).
      * Status terverifikasi disimpan di sesi dan dicabut (action=revoke) begitu
-     * Admin pindah ke menu lain. Password diambil dari env
-     * RESET_DATA_ACCESS_PASSWORD (bawaan: 123).
+     * Admin pindah ke menu lain. Password = password login Admin yang aktif.
      */
     public function verifyAccess(Request $request): JsonResponse
     {
@@ -248,12 +248,8 @@ class ResetDataLaporanController extends Controller
         ]);
 
         $captchaExpected = (string) $request->session()->pull('captcha_code', '');
-        $accessPassword  = trim((string) env('RESET_DATA_ACCESS_PASSWORD', '123'));
-        if ($accessPassword === '') {
-            $accessPassword = '123';
-        }
-
-        $passwordValid = hash_equals($accessPassword, trim((string) $validated['password']));
+        // Password akses = password login Admin yang sedang aktif.
+        $passwordValid   = Hash::check(trim((string) $validated['password']), (string) $request->user()->password);
         $captchaValid  = $captchaExpected !== '' && hash_equals($captchaExpected, (string) $validated['captcha']);
 
         if (! $passwordValid || ! $captchaValid) {
@@ -262,7 +258,7 @@ class ResetDataLaporanController extends Controller
             if (! $passwordValid && ! $captchaValid) {
                 $pesan = 'Password dan captcha salah. Periksa ulang keduanya.';
             } elseif (! $passwordValid) {
-                $pesan = 'Password salah. Periksa ulang password akses Reset Data Laporan.';
+                $pesan = 'Password salah. Gunakan password login Admin Anda.';
             } else {
                 $pesan = 'Kode captcha salah atau sudah kedaluwarsa. Captcha baru sudah dimuat ulang, coba masukkan lagi.';
             }
