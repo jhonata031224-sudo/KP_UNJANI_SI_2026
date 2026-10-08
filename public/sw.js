@@ -46,7 +46,17 @@ self.addEventListener('push', function (event) {
     timestamp: Date.now(),
   };
 
-  event.waitUntil(self.registration.showNotification(payload.title, options));
+  // Angka badge di ikon app (Badging API) -- didukung PWA terpasang di
+  // Android/Chrome/Edge & iOS 16.4+. Kalau tidak didukung, diabaikan.
+  var badgeTask = Promise.resolve();
+  if (self.navigator && typeof self.navigator.setAppBadge === 'function') {
+    badgeTask = self.navigator.setAppBadge(payload.badge_count || 1).catch(function () {});
+  }
+
+  event.waitUntil(Promise.all([
+    self.registration.showNotification(payload.title, options),
+    badgeTask,
+  ]));
 });
 
 // Diklik dari notification tray OS -> fokuskan tab SIBERAD yang sudah

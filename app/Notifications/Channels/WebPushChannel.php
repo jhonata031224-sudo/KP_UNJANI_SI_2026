@@ -147,6 +147,10 @@ class WebPushChannel
             'title' => $data['judul'] ?? $namaSistem,
             'body' => $data['pesan'] ?? "Ada pembaruan baru di {$namaSistem}.",
             'notification_id' => $notification->id,
+            // Jumlah notif belum dibaca -> angka badge di ikon app (seperti WA).
+            'badge_count' => method_exists($notifiable, 'unreadNotifications')
+                ? max(1, (int) $notifiable->unreadNotifications()->count())
+                : 1,
             // Deep link ke halaman/tab yang relevan (mis. tab reset-password
             // untuk Admin). Fallback ke dashboard kalau notifikasi tidak
             // menyertakan 'url'.

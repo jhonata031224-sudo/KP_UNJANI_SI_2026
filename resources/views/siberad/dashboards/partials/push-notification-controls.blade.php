@@ -164,6 +164,15 @@
     });
   };
 
+  // Badge di ikon app dibersihkan begitu app dibuka/dilihat user.
+  function clearBadge() {
+    try { if (navigator.clearAppBadge) navigator.clearAppBadge().catch(function () {}); } catch (e) {}
+  }
+  clearBadge();
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') clearBadge();
+  });
+
   function init() {
     if (Notification.permission === 'denied') return; // browser sendiri yang blokir prompt ulang, jangan paksa
 

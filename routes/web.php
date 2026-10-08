@@ -301,6 +301,9 @@ Route::post('/push/subscribe', [\App\Http\Controllers\PushSubscriptionController
 Route::post('/push/unsubscribe', [\App\Http\Controllers\PushSubscriptionController::class, 'destroy'])
     ->middleware('auth')
     ->name('push.unsubscribe');
+Route::get('/push/diagnosa', [\App\Http\Controllers\PushSubscriptionController::class, 'diagnosa'])
+    ->middleware('auth')
+    ->name('push.diagnosa');
 
 // Toggle preferensi push notification per-user (on/off dari panel Notifikasi Kasansi)
 Route::post('/notifikasi/toggle-user', [\App\Http\Controllers\UserNotifikasiController::class, 'toggle'])

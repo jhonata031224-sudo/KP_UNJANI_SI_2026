@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pengaturan;
 use App\Models\PushSubscription;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -65,5 +66,78 @@ class PushSubscriptionController extends Controller
             ->delete();
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Halaman diagnosa push untuk user yang sedang login. Buka
+     * /push/diagnosa di HP yang bermasalah: hasilnya JSON berisi status tiap
+     * syarat push (VAPID, saklar, jumlah device terdaftar). Tambahkan
+     * ?kirim=1 untuk mengirim notif tes langsung ke device user ini dan
+     * melihat balasan asli dari push service (FCM/Mozilla/Apple).
+     * Tidak membocorkan kunci apapun -- hanya true/false dan potongan host.
+     */
+    public function diagnosa(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $vapid = config('webpush.vapid');
+        $subs = $user->pushSubscriptions()->get();
+
+        $hasil = [
+            'library_webpush_terpasang' => class_exists(\Minishlink\WebPush\WebPush::class),
+            'ext_bcmath' => extension_loaded('bcmath'),
+            'ext_gmp' => extension_loaded('gmp'),
+            'vapid_public_terisi' => filled($vapid['publicKey'] ?? null),
+            'vapid_private_terisi' => filled($vapid['privateKey'] ?? null),
+            'saklar_global_push_aktif' => (bool) Pengaturan::current()->notifikasi_push_aktif,
+            'saklar_user_push_aktif' => (bool) $user->notif_push_enabled,
+            'jumlah_device_terdaftar' => $subs->count(),
+            'device' => $subs->map(fn ($s) => [
+                'push_service' => parse_url($s->endpoint, PHP_URL_HOST),
+                'encoding' => $s->content_encoding,
+                'terdaftar' => optional($s->updated_at)->toDateTimeString(),
+                'user_agent' => substr((string) $s->user_agent, 0, 80),
+            ])->values(),
+        ];
+
+        if ($request->boolean('kirim')) {
+            $hasil['tes_kirim'] = [];
+            try {
+                if (blank($vapid['publicKey'] ?? null) || blank($vapid['privateKey'] ?? null)) {
+                    throw new \RuntimeException('VAPID key belum diisi di environment server.');
+                }
+                if ($subs->isEmpty()) {
+                    throw new \RuntimeException('Belum ada device terdaftar. Buka app di HP, izinkan notifikasi, lalu coba lagi.');
+                }
+
+                $webPush = new \Minishlink\WebPush\WebPush(['VAPID' => $vapid], ['TTL' => 600, 'urgency' => 'high']);
+                $payload = json_encode([
+                    'title' => 'Tes Notifikasi',
+                    'body' => 'Kalau ini muncul di HP (termasuk saat terkunci), push berjalan normal.',
+                    'notification_id' => 'tes-'.now()->timestamp,
+                    'badge_count' => 1,
+                    'url' => url('/dashboard'),
+                ]);
+                foreach ($subs as $s) {
+                    $webPush->queueNotification(\Minishlink\WebPush\Subscription::create([
+                        'endpoint' => $s->endpoint,
+                        'publicKey' => $s->public_key,
+                        'authToken' => $s->auth_token,
+                        'contentEncoding' => $s->content_encoding ?: 'aes128gcm',
+                    ]), $payload);
+                }
+                foreach ($webPush->flush() as $report) {
+                    $hasil['tes_kirim'][] = [
+                        'push_service' => parse_url($report->getEndpoint(), PHP_URL_HOST),
+                        'berhasil' => $report->isSuccess(),
+                        'status_http' => $report->getResponse()?->getStatusCode(),
+                        'alasan' => $report->isSuccess() ? null : $report->getReason(),
+                    ];
+                }
+            } catch (\Throwable $e) {
+                $hasil['tes_kirim'][] = ['berhasil' => false, 'error' => $e->getMessage()];
+            }
+        }
+
+        return response()->json($hasil, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 }
