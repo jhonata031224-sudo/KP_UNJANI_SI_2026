@@ -59,7 +59,14 @@ class WebPushChannel
         // menggagalkan request utama (mis. kirim kendala) atau channel lain
         // (database/lonceng in-app) yang sudah lebih dulu berhasil dikirim.
         try {
-            $webPush = new \Minishlink\WebPush\WebPush(['VAPID' => $vapid]);
+            // urgency "high" supaya push service (FCM dll.) langsung
+            // membangunkan HP walau layar terkunci/mode hemat daya (Doze),
+            // bukan menunda sampai HP aktif lagi. TTL 24 jam: kalau HP
+            // mati/offline, notif tetap dikirim begitu online dalam sehari.
+            $webPush = new \Minishlink\WebPush\WebPush(
+                ['VAPID' => $vapid],
+                ['TTL' => 86400, 'urgency' => 'high']
+            );
 
             foreach ($subscriptions as $subscription) {
                 $webPush->queueNotification(
@@ -140,7 +147,10 @@ class WebPushChannel
             'title' => $data['judul'] ?? $namaSistem,
             'body' => $data['pesan'] ?? "Ada pembaruan baru di {$namaSistem}.",
             'notification_id' => $notification->id,
-            'url' => url('/dashboard'),
+            // Deep link ke halaman/tab yang relevan (mis. tab reset-password
+            // untuk Admin). Fallback ke dashboard kalau notifikasi tidak
+            // menyertakan 'url'.
+            'url' => ! empty($data['url']) ? url($data['url']) : url('/dashboard'),
         ];
     }
 }

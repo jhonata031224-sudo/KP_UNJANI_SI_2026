@@ -35,6 +35,15 @@ self.addEventListener('push', function (event) {
     badge: '/images/logo-pussiberad.png',
     data: { url: payload.url || '/dashboard' },
     tag: payload.notification_id || undefined,
+    // Bunyi & getar mengikuti pengaturan suara notifikasi HP (silent:false
+    // = jangan dibisukan). renotify supaya notif dengan tag sama tetap
+    // berbunyi. requireInteraction menjaga notif tetap tampil di lock
+    // screen/tray sampai disentuh, tidak hilang sendiri.
+    silent: false,
+    vibrate: [250, 120, 250, 120, 400],
+    renotify: !!payload.notification_id,
+    requireInteraction: true,
+    timestamp: Date.now(),
   };
 
   event.waitUntil(self.registration.showNotification(payload.title, options));
