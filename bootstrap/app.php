@@ -87,6 +87,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(InjectPengaturanAccessUi::class);
         $middleware->append(InjectAdminReportCenter::class);
         $middleware->append(InjectWebPushUi::class);
+        $middleware->append(\App\Http\Middleware\InjectMobilePerf::class);
         $middleware->append(\App\Http\Middleware\InjectMaintenanceUi::class);
 
         $middleware->alias([
