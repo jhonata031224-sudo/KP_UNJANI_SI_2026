@@ -324,7 +324,7 @@
    Surat Keluar/Surat Masuk (dua grid itu tetap search+sort polos). */
 .rpt-filter-date-wrap{display:flex;align-items:center;gap:6px;flex:0 0 auto}
 .rpt-filter-date-wrap label{font-size:11px;color:var(--text-muted);white-space:nowrap}
-.rpt-filter-date-wrap input[type="date"]{box-sizing:border-box;height:38px;border:1px solid var(--border-soft);border-radius:9px;background:var(--panel-alt);color:var(--text);font:inherit;font-size:12px;padding:8px 10px;color-scheme:light dark}
+.rpt-filter-date-wrap input[type="date"]{box-sizing:border-box;height:38px;border:1px solid var(--border-soft);border-radius:9px;background:var(--panel-alt);color:var(--text);font:inherit;font-size:12px;padding:8px 10px;color-scheme:inherit}
 .rpt-filter-date-wrap input[type="date"]:focus{outline:0;border-color:var(--gold-bright);box-shadow:0 0 0 3px rgba(201,122,0,.10)}
 @media(max-width:700px){.rpt-filter-date-wrap{width:100%}.rpt-filter-date-wrap input[type="date"]{flex:1;min-width:0}}
 /* Mobile: filter Arsip Surat jadi grid 2 kolom (search tetap 1 baris penuh).
