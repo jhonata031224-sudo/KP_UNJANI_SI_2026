@@ -202,7 +202,7 @@
     var action = form.getAttribute('action') || window.location.href;
     if (isExcluded(action)) return;
     form.dataset.maintenanceLocked = '1';
-    form.querySelectorAll('button[type="submit"], input[type="submit"], button:not([type])').forEach(function(btn){
+    form.querySelectorAll('button[type="submit"], input[type="submit"], button:not([type]), button[data-mm-aksi]').forEach(function(btn){
       if (btn.disabled) return;
       btn.dataset.mmLocked = '1';
       btn.dataset.mmTitle = btn.getAttribute('title') || '';
@@ -238,6 +238,14 @@
     observer = new MutationObserver(function(mutations){
       if (!aktif) return;
       mutations.forEach(function(m){
+        // Kode fitur kerap memanggil `tombol.disabled = false` (mis. saat modal
+        // dibuka ulang). Selagi maintenance, kembalikan kuncinya seketika --
+        // hanya untuk tombol yang memang kita kunci (data-mm-locked).
+        if (m.type === 'attributes') {
+          var t = m.target;
+          if (t && t.dataset && t.dataset.mmLocked === '1' && !t.disabled) t.disabled = true;
+          return;
+        }
         (m.addedNodes || []).forEach(function(node){
           if (node.nodeType !== 1) return;
           if (node.tagName === 'FORM') markForm(node);
@@ -245,7 +253,7 @@
         });
       });
     });
-    observer.observe(document.documentElement, {childList:true, subtree:true});
+    observer.observe(document.documentElement, {childList:true, subtree:true, attributes:true, attributeFilter:['disabled']});
   }
   function hentikanObserver(){
     if (observer) { observer.disconnect(); observer = null; }
@@ -265,6 +273,21 @@
     e.stopImmediatePropagation();
     notify();
   }, true);
+
+  // ---- 2b) `form.submit()` dari JavaScript TIDAK memicu event 'submit', jadi
+  //          lolos dari jaring pengaman di atas (dipakai ±30 tempat: Kirim
+  //          Balasan, Teruskan, dst). Bungkus di level prototype supaya SEMUA
+  //          pemanggil terlindungi tanpa mengubah file fiturnya satu per satu. ----
+  var submitAsli = HTMLFormElement.prototype.submit;
+  HTMLFormElement.prototype.submit = function(){
+    try {
+      if (aktif && MUTATING.indexOf(effectiveFormMethod(this)) !== -1) {
+        var act = this.getAttribute('action') || window.location.href;
+        if (!isExcluded(act)) { notify(); return; }
+      }
+    } catch (err) { /* kalau deteksi gagal, biarkan lolos -- server tetap menolak */ }
+    return submitAsli.apply(this, arguments);
+  };
 
   // ---- 3) Banyak aksi (Kirim/Konfirmasi/Disposisi/dsb) di sistem ini
   //         TIDAK lewat native form submit, tapi fetch() langsung dari
