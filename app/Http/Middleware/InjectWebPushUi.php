@@ -49,7 +49,7 @@ class InjectWebPushUi
             return $response;
         }
 
-        $manifestTag = '<link rel="manifest" href="'.e(asset('manifest.json')).'">';
+        $manifestTag = '<link rel="manifest" href="'.e(route('manifest', [], false)).'">';
         $headPos = stripos($html, '</head>');
         if ($headPos !== false) {
             $html = substr($html, 0, $headPos).$manifestTag.substr($html, $headPos);

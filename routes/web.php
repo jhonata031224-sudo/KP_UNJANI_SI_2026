@@ -45,6 +45,32 @@ Route::get('/', function () {
     ]);
 });
 
+// Manifest PWA dinamis: nama app (pop-up "Instal" & nama setelah terinstal)
+// mengikuti nama sistem di Pengaturan admin, bukan hardcode.
+Route::get('/manifest.webmanifest', function () {
+    $nama = Pengaturan::current()->namaSistem();
+
+    return response()->json([
+        'name' => $nama.' - Sistem Pendukung Operasional',
+        'short_name' => $nama,
+        'description' => 'Sistem Pendukung Operasional '.$nama,
+        'id' => '/dashboard',
+        'start_url' => '/dashboard',
+        'scope' => '/',
+        'display' => 'standalone',
+        'background_color' => '#06090c',
+        'theme_color' => '#06090c',
+        'orientation' => 'any',
+        'icons' => [
+            ['src' => '/images/logo-pussiberad.png', 'sizes' => '192x192', 'type' => 'image/png'],
+            ['src' => '/images/logo-pussiberad.png', 'sizes' => '512x512', 'type' => 'image/png'],
+        ],
+    ], 200, [
+        'Content-Type' => 'application/manifest+json',
+        'Cache-Control' => 'no-cache',
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+})->name('manifest');
+
 Route::get('/landing-config', function () {
     $p = Pengaturan::current();
     $config = $p->landingConfig();

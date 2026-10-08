@@ -20,7 +20,7 @@ self.addEventListener('activate', function (event) {
 // service/dst) mengirim data dari server SIBERAD -- termasuk saat tab
 // SIBERAD sedang tertutup sepenuhnya.
 self.addEventListener('push', function (event) {
-  var payload = { title: 'SIBERAD', body: 'Ada pembaruan baru.', url: '/dashboard' };
+  var payload = { title: 'Notifikasi', body: 'Ada pembaruan baru.', url: '/dashboard' };
   if (event.data) {
     try {
       payload = Object.assign(payload, event.data.json());
