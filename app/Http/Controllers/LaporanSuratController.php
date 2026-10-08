@@ -659,6 +659,20 @@ class LaporanSuratController extends Controller
             }
         }
 
+        // Danpus adalah PENGIRIM ASLI (mis. Surat Keluar Danpus -> Wadan) dan
+        // penerimanya (Wadan/satuan lain) yang konfirmasi / ACC -> kabari
+        // Danpus lewat notifikasi (lonceng + suara + push popup), supaya tahu
+        // suratnya sudah diterima. Hanya sekali, saat surat benar-benar
+        // berpindah dari belum-ACC ke ACC (bukan klik ulang). Konfirmasi oleh
+        // Danpus sendiri sudah ditangani blok di atas.
+        if ($barusanDikonfirmasi
+            && strtoupper((string) $satuan->kode) !== 'DANPUS'
+            && $kodePengirimAsli === 'DANPUS') {
+            foreach (User::where('satuan_id', (int) $laporanSurat->satuan_id)->get() as $penerimaInfo) {
+                $penerimaInfo->notify(new LaporanSuratBalasanDikonfirmasi($laporanSurat, true, (string) $satuan->nama));
+            }
+        }
+
         ActivityLog::catat('laporan-surat.konfirmasi', "Mengkonfirmasi surat \"{$laporanSurat->perihal}\" dari {$laporanSurat->satuan->nama}.", $user, [
             'laporan_surat_id' => $laporanSurat->id,
             'pengirim_satuan'  => $laporanSurat->satuan->nama,
