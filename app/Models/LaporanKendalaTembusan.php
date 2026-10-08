@@ -7,14 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Baris tembusan (CC) satu laporan kendala Kasansi ke satu satuan penerima
- * (Satlak/Sdir). Lihat komentar migration create_laporan_kendala_tembusans_table
- * untuk kenapa ini terpisah dari alur approval laporan_kendalas ke DANPUS.
+ * PENINGGALAN ALUR LAMA -- tidak dipakai lagi.
  *
- * feedback/feedback_at/feedback_oleh adalah catatan yang dikirim satuan
- * penerima ini BALIK ke Kasansi -- begitu terisi, Kasansi sudah boleh
- * meneruskan laporan induknya ke Danpus (lihat LaporanKendala::siapDiteruskan()
- * dan LaporanKendalaController::teruskan()).
+ * Dulu: baris tembusan (CC) satu laporan kendala Kasansi ke satu satuan
+ * penerima (Satlak/Sdir) yang harus membalas dulu sebelum Kasansi bisa
+ * meneruskan laporan ke Danpus. Alur kendala sekarang langsung
+ * Kasansi -> Danpus (Menunggu Konfirmasi -> Dikonfirmasi) tanpa tembusan,
+ * lihat LaporanKendalaController.
+ *
+ * Model & tabel laporan_kendala_tembusans SENGAJA dipertahankan supaya data
+ * lama (feedback & dokumen balasan) tidak hilang.
  */
 class LaporanKendalaTembusan extends Model
 {

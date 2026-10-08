@@ -200,6 +200,26 @@
       var forms = container ? Array.prototype.slice.call(container.querySelectorAll('form')) : [];
       actions.innerHTML = '';
 
+      // Laporan Kendala Kasansi (Danpus): satu-satunya aksi adalah Konfirmasi.
+      // Tombol ini cuma muncul kalau kartu menyediakan data-konfirmasi-kendala-action
+      // (hanya untuk Danpus & laporan yang belum dikonfirmasi) -- Wadan tidak.
+      if (detailButton.dataset.kendalaReport === '1' && detailButton.dataset.konfirmasiKendalaAction) {
+        var konfirmasiKendalaButton = document.createElement('button');
+        konfirmasiKendalaButton.type = 'button';
+        konfirmasiKendalaButton.className = 'approve';
+        konfirmasiKendalaButton.textContent = 'Konfirmasi';
+        konfirmasiKendalaButton.addEventListener('click', function(){
+          if (typeof window.bukaKonfirmasiArsipkanKendala === 'function') {
+            window.bukaKonfirmasiArsipkanKendala({ dataset: {
+              action: detailButton.dataset.konfirmasiKendalaAction,
+              perihal: detailButton.dataset.perihal || ''
+            } });
+          }
+        });
+        actions.appendChild(konfirmasiKendalaButton);
+        return;
+      }
+
       if (!forms.length || detailButton.dataset.readonly === '1') {
         // Modal Detail Laporan Kendala (Kasansi/Danpus/Tembusan) sengaja tidak
         // pakai catatan "Mode pemantauan..." di bagian bawah -- lihat

@@ -1,15 +1,20 @@
 {{-- CARD: Kendala Masuk (sisi penerima / Danpus & Wadan) --}}
 @php
-  $kendalaAdaAksi = in_array($k->status, ['Menunggu','Ditindaklanjuti'], true) || strtoupper($satuan->kode ?? '') === 'DANPUS';
-  $isDanpus = strtoupper($satuan->kode ?? '') === 'DANPUS';
-  $statusClass = in_array($k->status, ['Ditindaklanjuti','Selesai'], true) ? 'ok' : ($k->status === 'Ditolak' ? 'bad' : 'wait');
+  // Alur: Menunggu Konfirmasi -> Dikonfirmasi. SATU-SATUNYA aksi adalah
+  // Konfirmasi, dan hanya untuk Danpus. Wadan hanya melihat (tanpa aksi).
+  // Aturan ini ditegakkan lagi di backend (LaporanKendalaController::konfirmasi).
+  $isDanpus        = strtoupper($satuan->kode ?? '') === 'DANPUS';
+  $sudahKonfirmasi = $k->sudahDikonfirmasi();
+  $bisaKonfirmasi  = $isDanpus && ! $sudahKonfirmasi;
+  $labelStatus     = $sudahKonfirmasi ? \App\Models\LaporanKendala::STATUS_DIKONFIRMASI : $k->status;
+  $statusClass     = $sudahKonfirmasi ? 'ok' : 'wait';
 @endphp
 <div class="kcard" data-kendala-id="{{ $k->id }}" data-search="{{ strtolower(($k->satuan->nama ?? '').' '.$k->perihal) }}" data-prioritas="{{ $k->prioritas }}">
   <div class="kcard-header">
     <div class="kcard-meta">
       <span class="satuan-pill">{{ $k->satuan->kode ?? $k->satuan->nama ?? '-' }}</span>
     </div>
-    <span class="status-pill {{ $statusClass }}">{{ $k->status }}</span>
+    <span class="status-pill {{ $statusClass }}">{{ $labelStatus }}</span>
   </div>
 
   <div class="kcard-body">
@@ -34,48 +39,21 @@
         data-kendala="{{ e($k->catatan ?? '') }}"
         data-lampiran="{{ $k->semuaLampiran->map(fn($x) => ['url' => asset('storage/'.$x->path), 'nama' => $x->nama_asli])->values()->toJson() }}"
         data-kendala-report="1"
-        data-readonly="{{ $kendalaAdaAksi ? '0' : '1' }}"
-        @if(! $kendalaAdaAksi) data-readonly-text="Kendala ini sudah ditindaklanjuti — status: {{ $k->status }}." @endif>
+        data-readonly="{{ $bisaKonfirmasi ? '0' : '1' }}"
+        @if($bisaKonfirmasi) data-konfirmasi-kendala-action="{{ route('laporan-kendala.konfirmasi', $k) }}" @endif
+        @if(! $bisaKonfirmasi) data-readonly-text="Status: {{ $labelStatus }}." @endif>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         Lihat Detail
       </button>
 
-      @if($k->status === 'Menunggu' && ! $isDanpus)
-        <form method="POST" action="{{ route('laporan-kendala.status', $k) }}" style="display:inline-flex">
-          @csrf @method('PATCH')
-          <input type="hidden" name="status" value="Ditindaklanjuti">
-          <button class="kcard-btn kcard-btn-approve" type="submit">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            Tindak Lanjuti
-          </button>
-        </form>
-        <form method="POST" action="{{ route('laporan-kendala.status', $k) }}" style="display:inline-flex">
-          @csrf @method('PATCH')
-          <input type="hidden" name="status" value="Ditolak">
-          <button class="kcard-btn kcard-btn-reject" type="submit">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            Tolak
-          </button>
-        </form>
-      @elseif($k->status === 'Ditindaklanjuti')
-        <form method="POST" action="{{ route('laporan-kendala.status', $k) }}" style="display:inline-flex">
-          @csrf @method('PATCH')
-          <input type="hidden" name="status" value="Selesai">
-          <button class="kcard-btn kcard-btn-approve" type="submit">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            Tandai Selesai
-          </button>
-        </form>
-      @endif
-
-      @if($isDanpus)
+      @if($bisaKonfirmasi)
         <button type="button" class="kcard-btn kcard-btn-archive confirm-archive"
           onclick="bukaKonfirmasiArsipkanKendala(this)"
-          data-action="{{ route('laporan-kendala.status', $k) }}"
+          data-action="{{ route('laporan-kendala.konfirmasi', $k) }}"
           data-perihal="{{ e($k->perihal) }}"
-          title="Konfirmasi dan pindahkan ke Arsip Kendala Kasansi">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M23 3H1v5h22V3z"/><path d="M10 12h4"/></svg>
-          Konfirmasi & Arsipkan
+          title="Konfirmasi penerimaan laporan kendala ini">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Konfirmasi
         </button>
       @endif
     </div>

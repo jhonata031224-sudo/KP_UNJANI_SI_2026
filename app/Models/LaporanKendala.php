@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,13 +14,19 @@ use Illuminate\Support\Collection;
  * Lihat komentar migration create_laporan_kendalas_table untuk alasan kenapa
  * ini terpisah dari model Laporan.
  *
- * Tujuan resmi (tujuan_satuan_id) TETAP selalu DANPUS. Tapi kalau Kasansi
- * memilih tembusan saat mengirim, laporan tidak langsung sampai ke Danpus --
- * statusnya Menunggu Tembusan dulu sampai minimal satu satuan tembusan
- * memberi feedback, baru Kasansi bisa menekan "Kirim ke Danpus"
- * (LaporanKendalaController::teruskan()) yang mengubah status jadi Menunggu
- * seperti biasa dan BARU DI SITU Danpus diberi tahu. Laporan tanpa tembusan
- * tetap langsung Menunggu seperti alur lama.
+ * ALUR (disederhanakan):
+ *   Menunggu Konfirmasi  ->  Dikonfirmasi
+ *
+ * Kasansi mengirim laporan (lampiran opsional) dan laporan LANGSUNG masuk ke
+ * daftar Danpus dengan status "Menunggu Konfirmasi". Satu-satunya aksi Danpus
+ * adalah Konfirmasi (LaporanKendalaController::konfirmasi()) -- setelah itu
+ * status jadi "Dikonfirmasi", confirmed_at/confirmed_by terisi, dan proses
+ * SELESAI. Tidak ada tembusan, balasan, dokumen siap kirim, tindak lanjut,
+ * selesai, maupun penolakan.
+ *
+ * Kolom/tabel peninggalan alur lama (diteruskan_*, dokumen_kasansi_*, tabel
+ * laporan_kendala_tembusans) SENGAJA tidak dihapus supaya data lama utuh,
+ * tapi tidak lagi dipakai oleh alur baru.
  */
 class LaporanKendala extends Model
 {
@@ -52,12 +59,29 @@ class LaporanKendala extends Model
         'dokumen_kasansi_at' => 'datetime',
     ];
 
-    public const STATUS_MENUNGGU_TEMBUSAN = 'Menunggu Balasan';
-    public const STATUS_MENUNGGU = 'Menunggu';
-    public const STATUS_DITINDAKLANJUTI = 'Ditindaklanjuti';
-    public const STATUS_SELESAI = 'Selesai';
-    public const STATUS_DITOLAK = 'Ditolak';
+    public const STATUS_MENUNGGU_KONFIRMASI = 'Menunggu Konfirmasi';
     public const STATUS_DIKONFIRMASI = 'Dikonfirmasi';
+
+    /**
+     * Laporan yang masih menunggu aksi Danpus (belum dikonfirmasi). Dasarnya
+     * confirmed_at (bukan label status) supaya baris peninggalan alur lama --
+     * mis. berstatus Ditindaklanjuti/Selesai/Ditolak tapi belum pernah
+     * dikonfirmasi -- tetap muncul dan masih bisa dikonfirmasi Danpus.
+     */
+    public function scopeMenungguKonfirmasi(Builder $query): Builder
+    {
+        return $query->whereNull('confirmed_at');
+    }
+
+    public function scopeSudahDikonfirmasi(Builder $query): Builder
+    {
+        return $query->whereNotNull('confirmed_at');
+    }
+
+    public function sudahDikonfirmasi(): bool
+    {
+        return $this->confirmed_at !== null || $this->status === self::STATUS_DIKONFIRMASI;
+    }
 
     public function satuan(): BelongsTo
     {
@@ -85,13 +109,9 @@ class LaporanKendala extends Model
     }
 
     /**
-     * Tembusan (CC) laporan kendala ini ke satuan lain (4 Satlak/4 Sdir).
-     * Kalau ada, laporan ini mampir dulu ke sini (status Menunggu Tembusan)
-     * sebelum Kasansi meneruskannya ke DANPUS -- tapi tembusan sendiri
-     * TETAP TIDAK PERNAH mengubah status Menunggu/Ditindaklanjuti/Selesai/
-     * Ditolak/Dikonfirmasi di atas, itu murni wewenang DANPUS. Satu-satunya
-     * pengaruh tembusan adalah lewat feedback-nya yang membuka tombol
-     * "Kirim ke Danpus" milik Kasansi, lihat siapDiteruskan().
+     * Peninggalan alur lama (tembusan ke satuan lain). Tidak dipakai lagi oleh
+     * alur kendala yang baru; relasi dipertahankan hanya supaya data lama di
+     * tabel laporan_kendala_tembusans tetap bisa dibaca/dibersihkan.
      */
     public function tembusans(): HasMany
     {
@@ -129,27 +149,5 @@ class LaporanKendala extends Model
         }
 
         return collect();
-    }
-
-    /**
-     * True kalau laporan ini sedang mampir di tembusan (Menunggu Balasan)
-     * DAN minimal satu satuan tembusan sudah membalas (teks atau dokumen) --
-     * artinya Kasansi sudah bisa baca balasan dan upload dokumen.
-     */
-    public function siapUploadDokumen(): bool
-    {
-        return $this->status === self::STATUS_MENUNGGU_TEMBUSAN
-            && $this->tembusans->contains(fn (LaporanKendalaTembusan $t) => $t->sudahMembalas());
-    }
-
-    /**
-     * True kalau Kasansi sudah upload dokumen balasan -- artinya tombol
-     * "Kirim Dokumen ke Danpus" boleh ditampilkan.
-     */
-    public function siapDiteruskan(): bool
-    {
-        return $this->status === self::STATUS_MENUNGGU_TEMBUSAN
-            && $this->siapUploadDokumen()
-            && filled($this->dokumen_kasansi_path);
     }
 }

@@ -79,7 +79,7 @@
     // PENTING: harus dicari cuma di ANAK LANGSUNG container, bukan lewat
     // container.querySelector(':not([idAttr])') -- selector itu mencari ke
     // SEMUA turunan (bukan cuma anak langsung), dan karena isi tiap kartu
-    // (.kcard-header, .kcard-body, .kcard-tembusan, dst) juga sama-sama
+    // (.kcard-header, .kcard-body, .kcard-info, dst) juga sama-sama
     // tidak punya atribut data-kendala-id (cuma .kcard paling luar yang
     // punya), querySelector itu jatuhnya nemu elemen PALING ATAS di dalam
     // kartu PERTAMA, bukan placeholder-nya -- lalu elemen itu ikut

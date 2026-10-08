@@ -1,19 +1,20 @@
 {{-- CARD: Kendala Terkirim (sisi pengirim / Kasansi) --}}
 @php
-  $statusBadgeClass = in_array($k->status, ['Ditindaklanjuti','Selesai','Dikonfirmasi'], true)
-      ? 'status-dikonfirmasi'
-      : ($k->status === 'Ditolak' ? 'status-ditolak' : 'status-menunggu');
-  $menungguTembusan = $k->status === \App\Models\LaporanKendala::STATUS_MENUNGGU_TEMBUSAN;
-  $sudahAdaBalasan  = $menungguTembusan && $k->siapUploadDokumen();
-  $sudahAdaDokumen  = $menungguTembusan && filled($k->dokumen_kasansi_path);
-  $siapKirim        = $menungguTembusan && $k->siapDiteruskan();
+  // Alur: Menunggu Konfirmasi -> Dikonfirmasi (selesai). Kasansi hanya
+  // memantau status; tidak ada aksi lanjutan di sisi pengirim.
+  $sudahKonfirmasi  = $k->sudahDikonfirmasi();
+  $labelStatus      = $sudahKonfirmasi ? \App\Models\LaporanKendala::STATUS_DIKONFIRMASI : $k->status;
+  $statusBadgeClass = $sudahKonfirmasi ? 'status-dikonfirmasi' : 'status-menunggu';
+  $infoKonfirmasi   = $sudahKonfirmasi
+      ? 'Dikonfirmasi Danpus'.($k->confirmed_at ? ' · '.$k->confirmed_at->translatedFormat('d M Y H:i') : '')
+      : 'Terkirim ke Danpus · menunggu konfirmasi';
 @endphp
 <div class="kcard" data-kendala-id="{{ $k->id }}" data-search="{{ strtolower($k->perihal.' '.($k->tujuanSatuan->nama ?? '')) }}" data-prioritas="{{ $k->prioritas }}">
   <div class="kcard-header">
     <div class="kcard-meta">
       <span class="satuan-pill">{{ $k->tujuanSatuan->kode ?? $k->tujuanSatuan->nama ?? '-' }}</span>
     </div>
-    <span class="kcard-status status-badge {{ $statusBadgeClass }}">{{ $k->status }}</span>
+    <span class="kcard-status status-badge {{ $statusBadgeClass }}">{{ $labelStatus }}</span>
   </div>
 
   <div class="kcard-body">
@@ -25,35 +26,9 @@
     </div>
   </div>
 
-  {{-- Alur tembusan: tampilkan status tiap tahap --}}
-  <div class="kcard-tembusan">
-    <span class="kcard-tembusan-label">Alur Pengiriman</span>
-    @foreach($k->tembusans as $t)
-      <div class="kcard-tembusan-item" style="margin-bottom:4px">
-        <span class="satuan-pill" style="font-size:10px">{{ $t->satuan->kode ?? $t->satuan->nama ?? '-' }}</span>
-        @if($t->sudahMembalas())
-          <span class="kcard-tembusan-status replied">
-            Sudah membalas{{ $t->dokumen_balasan_path ? ' + kirim dok.' : '' }}
-          </span>
-        @else
-          <span class="kcard-tembusan-status waiting">Menunggu balasan…</span>
-        @endif
-      </div>
-    @endforeach
-
-    {{-- Tahap 2: Upload dokumen Kasansi (aktif setelah tembusan membalas) --}}
-    @if($menungguTembusan)
-      <div class="kcard-tembusan-item" style="margin-top:6px;border-top:1px solid var(--border-soft);padding-top:6px">
-        <span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em">Dok. Anda</span>
-        @if($sudahAdaDokumen)
-          <span class="kcard-tembusan-status replied">{{ $k->dokumen_kasansi_nama }}</span>
-        @elseif($sudahAdaBalasan)
-          <span class="kcard-tembusan-status waiting">Siapkan &amp; upload dokumen</span>
-        @else
-          <span class="kcard-tembusan-status waiting" style="color:var(--text-dim)">Menunggu balasan tembusan</span>
-        @endif
-      </div>
-    @endif
+  <div class="kcard-info">
+    <span class="kcard-info-label">Status Laporan</span>
+    <span class="kcard-info-status {{ $sudahKonfirmasi ? 'done' : 'waiting' }}">{{ $infoKonfirmasi }}</span>
   </div>
 
   <div class="kcard-footer">
@@ -69,38 +44,12 @@
         data-deskripsi-label="Isi Laporan"
         data-kendala="{{ e($k->catatan ?? '') }}"
         data-lampiran="{{ $k->semuaLampiran->map(fn($x) => ['url' => asset('storage/'.$x->path), 'nama' => $x->nama_asli])->values()->toJson() }}"
-        data-tembusan-balasan="{{ $k->tembusans->map(fn($t) => ['satuan' => $t->satuan->nama ?? $t->satuan->kode ?? '-', 'feedback' => $t->feedback, 'dokumen' => $t->dokumen_balasan_nama])->values()->toJson() }}"
-        data-dokumen-kasansi="{{ $k->dokumen_kasansi_nama ? json_encode(['url' => asset('storage/'.$k->dokumen_kasansi_path), 'nama' => $k->dokumen_kasansi_nama]) : '' }}"
         data-kendala-report="1"
         data-readonly="1"
-        data-readonly-text="Status saat ini: {{ $k->status }}.">
+        data-readonly-text="Status saat ini: {{ $labelStatus }}.">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         Lihat Detail
       </button>
-
-      {{-- Tahap 2: Upload dokumen (muncul setelah tembusan membalas, sebelum ada dokumen) --}}
-      @if($sudahAdaBalasan)
-        <form method="POST" action="{{ route('laporan-kendala.upload-dokumen', $k) }}"
-              enctype="multipart/form-data" style="display:inline-flex;align-items:center;gap:6px"
-              id="formUploadDok{{ $k->id }}">
-          @csrf
-          <label class="kcard-btn" style="cursor:pointer;background:var(--panel-alt);border:1px solid var(--border)" title="{{ $sudahAdaDokumen ? 'Ganti dokumen' : 'Upload dokumen' }}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            {{ $sudahAdaDokumen ? 'Ganti Dok.' : 'Upload Dok.' }}
-            <input type="file" name="dokumen_kasansi" style="display:none" max="10240"
-              onchange="this.closest('form').submit()">
-          </label>
-        </form>
-      @endif
-
-      {{-- Tahap 3: Kirim ke Danpus (hanya muncul setelah ada dokumen) --}}
-      @if($siapKirim)
-        <button type="button" class="kcard-btn kcard-btn-approve"
-          onclick="bukaKonfirmasiTeruskan('{{ route('laporan-kendala.teruskan', $k) }}','{{ csrf_token() }}','{{ e($k->perihal) }}')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2Z"/></svg>
-          Kirim ke Danpus
-        </button>
-      @endif
     </div>
   </div>
 </div>

@@ -706,13 +706,12 @@
   .kcard-perihal{font-size:15px;font-weight:800;color:var(--text);line-height:1.35;}
   .kcard-kategori{font-size:11px;color:var(--text-muted);font-style:italic;}
 
-  /* Tembusan */
-  .kcard-tembusan{background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:9px;padding:9px 11px;display:flex;flex-direction:column;gap:5px;}
-  .kcard-tembusan-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);margin-bottom:2px;}
-  .kcard-tembusan-item{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
-  .kcard-tembusan-status{font-size:10.5px;font-weight:700;}
-  .kcard-tembusan-status.replied{color:var(--success-bright);}
-  .kcard-tembusan-status.waiting{color:var(--text-dim);font-style:italic;}
+  /* Info status laporan kendala (sisi pengirim / Kasansi) */
+  .kcard-info{background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:9px;padding:9px 11px;display:flex;flex-direction:column;gap:5px;}
+  .kcard-info-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);margin-bottom:2px;}
+  .kcard-info-status{font-size:10.5px;font-weight:700;}
+  .kcard-info-status.done{color:var(--success-bright);}
+  .kcard-info-status.waiting{color:var(--text-dim);font-style:italic;}
 
   /* Confirm info (arsip pimpinan) */
   .kcard-confirm-info{display:flex;align-items:flex-start;gap:7px;font-size:11px;color:var(--text-muted);background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:9px;padding:8px 11px;line-height:1.4;}
