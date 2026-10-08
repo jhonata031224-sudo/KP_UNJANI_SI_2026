@@ -397,6 +397,8 @@ body{background:var(--p-bg)!important;color:var(--p-text)}.content{background:va
 #permintaanDetailModal .detail-item{padding:11px;border-radius:8px}
 #permintaanDetailModal .detail-label{font-size:10px;font-weight:700;letter-spacing:.05em}
 #permintaanDetailModal .detail-value{font-size:13px;line-height:1.6}
+/* Fix modal detail: teks panjang tanpa spasi tidak lagi melebarkan grid / terpotong */
+.detail-grid{min-width:0}.detail-grid>.detail-item{min-width:0;max-width:100%;box-sizing:border-box}.detail-label,.detail-value{min-width:0;max-width:100%;overflow-wrap:anywhere;word-break:break-word}
 #permintaanDetailModal .modal-actions{gap:8px;flex-wrap:wrap;margin-top:18px}
 #permintaanDetailModal .modal-actions .action-row{gap:8px;justify-content:flex-end}
 /* Tombol polos di footer (Tutup / Lihat Aktivitas): rule `.action-row button`

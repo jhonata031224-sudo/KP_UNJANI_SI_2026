@@ -156,6 +156,8 @@
 #kirimLaporanModal .task-detail-btn svg{width:14px;height:14px;flex-shrink:0}
 #kirimLaporanModal .task-detail-btn[hidden]{display:none}
 #taskDetailModal .report-modal-card{width:min(480px,100%)}
+/* Fix modal detail: teks panjang tanpa spasi tidak lagi melebarkan grid / terpotong */
+.detail-grid{min-width:0}.detail-grid>.detail-item{min-width:0;max-width:100%;box-sizing:border-box}.detail-label,.detail-value{min-width:0;max-width:100%;overflow-wrap:anywhere;word-break:break-word}
 #taskDetailModal .task-detail-modal-sub{margin:2px 0 12px;font-size:12px;color:var(--text-muted);line-height:1.55}
 #taskDetailModal .task-detail-modal-body{font-size:13px;line-height:1.7;white-space:pre-wrap;color:var(--text);border:1px solid var(--border-soft);border-radius:10px;background:var(--panel-alt);padding:13px 15px;max-height:56vh;overflow-y:auto}
 .lampiran-input-wrap{display:flex;align-items:center;gap:8px}
