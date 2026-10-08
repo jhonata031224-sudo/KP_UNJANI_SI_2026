@@ -202,18 +202,34 @@
     var action = form.getAttribute('action') || window.location.href;
     if (isExcluded(action)) return;
     form.dataset.maintenanceLocked = '1';
-    form.querySelectorAll('button[type="submit"], input[type="submit"], button:not([type]), button[data-mm-aksi]').forEach(function(btn){
-      if (btn.disabled) return;
-      btn.dataset.mmLocked = '1';
-      btn.dataset.mmTitle = btn.getAttribute('title') || '';
-      btn.disabled = true;
-      btn.setAttribute('title', JUDUL_TOMBOL);
-      btn.classList.add('siberad-maintenance-disabled');
-    });
+    form.querySelectorAll('button[type="submit"], input[type="submit"], button:not([type]), button[data-mm-aksi]').forEach(kunciTombol);
+    // Tombol aksi yang diletakkan DI LUAR tag <form> (mis. footer .modal-actions
+    // Kirim Balasan/Teruskan Surat) tapi merujuk form ini lewat atribut form=.
+    if (form.id) {
+      document.querySelectorAll('[data-mm-aksi][form="' + form.id + '"]').forEach(kunciTombol);
+    }
+  }
+  function kunciTombol(btn){
+    if (!btn || btn.disabled || btn.dataset.mmLocked === '1') return;
+    btn.dataset.mmLocked = '1';
+    btn.dataset.mmTitle = btn.getAttribute('title') || '';
+    btn.disabled = true;
+    btn.setAttribute('title', JUDUL_TOMBOL);
+    btn.classList.add('siberad-maintenance-disabled');
+  }
+  // Tombol bertanda data-mm-aksi adalah deklarasi eksplisit "tombol ini mengubah
+  // data". Dikunci DI MANA PUN posisinya -- tidak bergantung pada apakah ia
+  // berada di dalam tag <form> (banyak modal menaruh tombol aksi di footer
+  // di luar <form> lalu memanggil form.submit() lewat JS).
+  function scanAksi(root){
+    if (!root) return;
+    if (root.matches && root.matches('[data-mm-aksi]')) kunciTombol(root);
+    if (root.querySelectorAll) root.querySelectorAll('[data-mm-aksi]').forEach(kunciTombol);
   }
   function scan(root){
     if (!root || !root.querySelectorAll) return;
     root.querySelectorAll('form').forEach(markForm);
+    scanAksi(root);
   }
   // Buka kunci SEMUA tombol/form yang tadi dikunci skrip ini (maintenance mati).
   function unlockAll(){
@@ -249,7 +265,7 @@
         (m.addedNodes || []).forEach(function(node){
           if (node.nodeType !== 1) return;
           if (node.tagName === 'FORM') markForm(node);
-          scan(node);
+          scan(node);   // scan() sudah memanggil scanAksi(node) juga
         });
       });
     });
