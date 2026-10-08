@@ -10,7 +10,8 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Enforcement NYATA untuk Mode Maintenance (Admin -> Kelola Sistem -> Mode
  * Maintenance) -- BUKAN sekadar mendisable tombol di frontend. Dipasang
- * GLOBAL (lihat bootstrap/app.php, $middleware->append) supaya berlaku ke
+ * di grup 'web' (lihat bootstrap/app.php, appendToGroup -- BUKAN stack global,
+ * karena di sana user & route belum tersedia) supaya berlaku ke
  * SELURUH request perubahan data di sistem (laporan, surat, kendala,
  * personel, dst.) tanpa perlu menempel middleware ini satu-persatu ke
  * puluhan route yang ada.

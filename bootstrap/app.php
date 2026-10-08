@@ -76,11 +76,15 @@ return Application::configure(basePath: dirname(__DIR__))
         // di bawah ini) -- lihat komentar di NormalizeClientIpFromEdge.
         $middleware->prepend(NormalizeClientIpFromEdge::class);
         $middleware->trustProxies(at: '*');
-        // Gerbang keamanan Mode Maintenance -- HARUS jalan sebelum middleware
-        // lain yang menyuntik/mengubah body response (Inject*Ui dsb), supaya
-        // request yang ditolak langsung dapat respons final tanpa diproses
-        // lebih jauh oleh middleware yang tidak relevan untuk request ditolak.
-        $middleware->append(\App\Http\Middleware\EnforceMaintenanceMode::class);
+        // Gerbang keamanan Mode Maintenance. WAJIB di GRUP 'web' (diletakkan
+        // SETELAH StartSession/CSRF/SubstituteBindings), BUKAN di stack global
+        // via ->append(). Middleware global jalan SEBELUM session dimulai dan
+        // SEBELUM rute ditemukan, sehingga di sana $request->user() selalu
+        // null dan $request->route() selalu null -> middleware ini dulu
+        // meloloskan SEMUA request (maintenance tidak pernah benar-benar
+        // menolak apa pun di server). Di grup web, user & nama rute sudah
+        // tersedia, dan flash ->with('error') juga bisa tersimpan di session.
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnforceMaintenanceMode::class);
         $middleware->append(PreventHtmlPageCaching::class);
         $middleware->append(RemoveDecorativeSeparators::class);
         $middleware->append(InjectDashboardUi::class);
