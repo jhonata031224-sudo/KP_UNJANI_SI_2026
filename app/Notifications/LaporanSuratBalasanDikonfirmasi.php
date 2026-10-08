@@ -17,7 +17,12 @@ use Illuminate\Notifications\Notification;
  */
 class LaporanSuratBalasanDikonfirmasi extends Notification
 {
-    public function __construct(public LaporanSurat $surat)
+    /**
+     * @param bool $suratAsli true = penerima adalah PENGIRIM ASLI surat
+     *                        (teks: "Surat ... sudah dikonfirmasi"); false =
+     *                        penerima pengirim balasan naik (teks: "Balasan surat ...").
+     */
+    public function __construct(public LaporanSurat $surat, public bool $suratAsli = false)
     {
     }
 
@@ -31,7 +36,9 @@ class LaporanSuratBalasanDikonfirmasi extends Notification
         return [
             'laporan_surat_id' => $this->surat->id,
             'perihal'          => $this->surat->perihal,
-            'pesan'            => "Balasan surat \"{$this->surat->perihal}\" sudah dikonfirmasi (ACC) oleh Danpus.",
+            'pesan'            => $this->suratAsli
+                ? "Surat \"{$this->surat->perihal}\" sudah dikonfirmasi (ACC) oleh Danpus."
+                : "Balasan surat \"{$this->surat->perihal}\" sudah dikonfirmasi (ACC) oleh Danpus.",
             'tipe'             => 'surat_info',
         ];
     }

@@ -626,21 +626,36 @@ class LaporanSuratController extends Controller
                 : "Surat dikonfirmasi / ACC & Diterima oleh {$satuan->nama}.",
         ]);
 
-        // ALUR NAIK: Danpus (ujung alur) konfirmasi / ACC surat balasan -> satuan
-        // yang tadi mengirim balasan (mis. Duktek) dapat notifikasi INFORMASI
-        // saja (tidak bisa diklik, lihat LaporanSuratBalasanDikonfirmasi).
-        if (
-            $barusanDikonfirmasi
-            && strtoupper((string) $satuan->kode) === 'DANPUS'
-            && $laporanSurat->adaBalasanNaikSiklusIni()
-        ) {
+        // Danpus (ujung alur) konfirmasi / ACC surat -> kabari satuan terkait
+        // lewat notifikasi INFORMASI (lonceng + suara + push popup; tidak bisa
+        // diklik, lihat LaporanSuratBalasanDikonfirmasi):
+        //  1) PENGIRIM ASLI surat (mis. Kasansi) -- SELALU, termasuk surat
+        //     langsung ke Danpus tanpa balasan sama sekali. Dulu bagian ini
+        //     terlewat karena notifikasi hanya dikirim bila ada balasan naik.
+        //  2) Satuan yang mengirim BALASAN naik pada siklus ini (mis. Duktek),
+        //     kecuali yang sudah masuk di poin 1 supaya tidak dobel.
+        // Satuan Danpus sendiri tidak dinotifikasi. Hanya sekali, saat surat
+        // benar-benar berpindah dari belum-ACC ke ACC (bukan klik ulang).
+        if ($barusanDikonfirmasi && strtoupper((string) $satuan->kode) === 'DANPUS') {
+            $pengirimAsliId = (int) $laporanSurat->satuan_id;
+
             $satuanPembalasIds = $laporanSurat->balasanNaikSiklusIni()
                 ->pluck('pengirim_satuan_id')
+                ->map(fn ($id) => (int) $id)
                 ->unique()
+                ->reject(fn ($id) => $id === (int) $satuan->id || $id === $pengirimAsliId)
                 ->values();
 
-            foreach (User::whereIn('satuan_id', $satuanPembalasIds)->get() as $penerimaInfo) {
-                $penerimaInfo->notify(new LaporanSuratBalasanDikonfirmasi($laporanSurat));
+            if ($pengirimAsliId !== (int) $satuan->id) {
+                foreach (User::where('satuan_id', $pengirimAsliId)->get() as $penerimaInfo) {
+                    $penerimaInfo->notify(new LaporanSuratBalasanDikonfirmasi($laporanSurat, true));
+                }
+            }
+
+            if ($satuanPembalasIds->isNotEmpty()) {
+                foreach (User::whereIn('satuan_id', $satuanPembalasIds)->get() as $penerimaInfo) {
+                    $penerimaInfo->notify(new LaporanSuratBalasanDikonfirmasi($laporanSurat));
+                }
             }
         }
 
