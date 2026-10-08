@@ -31,7 +31,10 @@ class InjectPengaturanAccessUi
             return $response;
         }
 
-        $modal = view('siberad.dashboards.partials.admin-pengaturan-access')->render();
+        // Dua modal akses Admin disuntik bersamaan (CSS .admin-access-* dipakai
+        // bersama): Pengaturan Umum & Reset Data Laporan.
+        $modal = view('siberad.dashboards.partials.admin-pengaturan-access')->render()
+            .view('siberad.dashboards.partials.admin-reset-data-access')->render();
         $pos = strripos($html, '</body>');
         if ($pos !== false) {
             $html = substr($html, 0, $pos).$modal.substr($html, $pos);

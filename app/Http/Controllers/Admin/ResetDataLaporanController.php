@@ -9,9 +9,11 @@ use App\Models\LaporanKendala;
 use App\Models\LaporanMonitoring;
 use App\Models\LaporanSurat;
 use App\Models\PermintaanLaporan;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -212,10 +214,88 @@ class ResetDataLaporanController extends Controller
     }
 
     /**
+     * Gerbang akses menu Reset Data Laporan (password + captcha), pola sama
+     * dengan Pengaturan Umum (SettingController::verifyLandingAccess).
+     * Status terverifikasi disimpan di sesi dan dicabut (action=revoke) begitu
+     * Admin pindah ke menu lain. Password diambil dari env
+     * RESET_DATA_ACCESS_PASSWORD (bawaan: 123).
+     */
+    public function verifyAccess(Request $request): JsonResponse
+    {
+        if ($request->input('action') === 'revoke') {
+            $request->session()->forget(['reset_data_terverifikasi', 'reset_data_terverifikasi_at', 'captcha_code']);
+
+            return response()->json(['ok' => true, 'access' => false]);
+        }
+
+        $key = 'admin-reset-data-access:'.$request->user()->id.'|'.$request->ip();
+
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            return response()->json([
+                'message' => 'Terlalu banyak percobaan. Coba lagi dalam '.RateLimiter::availableIn($key).' detik.',
+            ], 429);
+        }
+
+        RateLimiter::increment($key, 60);
+
+        $validated = $request->validate([
+            'password' => ['required', 'string'],
+            'captcha'  => ['required', 'string', 'size:5'],
+        ], [
+            'password.required' => 'Password wajib diisi.',
+            'captcha.required'  => 'Captcha wajib diisi.',
+            'captcha.size'      => 'Captcha harus terdiri dari 5 karakter.',
+        ]);
+
+        $captchaExpected = (string) $request->session()->pull('captcha_code', '');
+        $accessPassword  = trim((string) env('RESET_DATA_ACCESS_PASSWORD', '123'));
+        if ($accessPassword === '') {
+            $accessPassword = '123';
+        }
+
+        $passwordValid = hash_equals($accessPassword, trim((string) $validated['password']));
+        $captchaValid  = $captchaExpected !== '' && hash_equals($captchaExpected, (string) $validated['captcha']);
+
+        if (! $passwordValid || ! $captchaValid) {
+            ActivityLog::catat('reset-data.access_denied', 'Percobaan membuka Reset Data Laporan ditolak karena password atau captcha tidak valid.');
+
+            if (! $passwordValid && ! $captchaValid) {
+                $pesan = 'Password dan captcha salah. Periksa ulang keduanya.';
+            } elseif (! $passwordValid) {
+                $pesan = 'Password salah. Periksa ulang password akses Reset Data Laporan.';
+            } else {
+                $pesan = 'Kode captcha salah atau sudah kedaluwarsa. Captcha baru sudah dimuat ulang, coba masukkan lagi.';
+            }
+
+            return response()->json(['message' => $pesan], 422);
+        }
+
+        RateLimiter::clear($key);
+        // Sama seperti Pengaturan Umum: sengaja TIDAK regenerate sesi supaya
+        // token CSRF form hapus yang sudah ter-render tidak basi (419).
+        $request->session()->put('reset_data_terverifikasi', true);
+        $request->session()->put('reset_data_terverifikasi_at', now()->timestamp);
+
+        ActivityLog::catat('reset-data.access_granted', 'Konfirmasi akses Reset Data Laporan berhasil.');
+
+        return response()->json([
+            'ok'         => true,
+            'access'     => true,
+            'csrf_token' => $request->session()->token(),
+        ]);
+    }
+
+    /**
      * Hapus data laporan baik per baris terpilih (selektif) ataupun per kategori utuh.
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // Penjagaan di SERVER (bukan cuma modal di tampilan): penghapusan
+        // permanen hanya boleh jika akses sudah diverifikasi password + captcha.
+        if (! $request->session()->get('reset_data_terverifikasi', false)) {
+            return back()->with('error', 'Akses Reset Data Laporan belum diverifikasi. Masukkan password dan captcha terlebih dahulu.');
+        }
+
         // -------------------------------------------------------------
         // MODE A: Hapus baris-baris spesifik yang dipilih (item_keys[])
         // -------------------------------------------------------------
