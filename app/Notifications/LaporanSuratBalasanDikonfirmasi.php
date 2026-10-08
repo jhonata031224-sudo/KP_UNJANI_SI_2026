@@ -24,11 +24,16 @@ class LaporanSuratBalasanDikonfirmasi extends Notification
      * @param string $oleh    Nama satuan yang mengonfirmasi (default "Danpus").
      *                        Diisi satuan lain (mis. Wadan) saat Danpus adalah
      *                        PENGIRIM ASLI surat dan penerimanya yang mengonfirmasi.
+     * @param ?string $tab    Hash tab tujuan klik ('#arsip-surat' / '#kirim-surat'); null = otomatis.
+     * @param bool $sampai    true = surat sudah SAMPAI ke satuan tujuan akhir (diteruskan Wadan)
+     *                        dan dikonfirmasi di sana -- teks notifikasi menyatakan itu.
      */
     public function __construct(
         public LaporanSurat $surat,
         public bool $suratAsli = false,
         public string $oleh = 'Danpus',
+        public ?string $tab = null,
+        public bool $sampai = false,
     ) {
     }
 
@@ -48,12 +53,16 @@ class LaporanSuratBalasanDikonfirmasi extends Notification
             // Konfirmasi oleh satuan lain (mis. Wadan menerima surat dari
             // Danpus) -> surat MASIH di Surat Keluar pengirim sampai selesai
             // (mis. diteruskan Wadan), jadi arahkan ke sana kecuali sudah selesai.
-            $tab = ($this->oleh === 'Danpus' || $this->surat->is_selesai) ? '#arsip-surat' : '#kirim-surat';
+            $tab = $this->tab
+                ?? (($this->oleh === 'Danpus' || $this->surat->is_selesai) ? '#arsip-surat' : '#kirim-surat');
+            $pesan = $this->sampai
+                ? "Surat \"{$this->surat->perihal}\" sudah sampai dan dikonfirmasi (ACC) oleh {$this->oleh}."
+                : "Surat \"{$this->surat->perihal}\" sudah dikonfirmasi (ACC) oleh {$this->oleh}.";
 
             return [
                 'laporan_surat_id' => $this->surat->id,
                 'perihal'          => $this->surat->perihal,
-                'pesan'            => "Surat \"{$this->surat->perihal}\" sudah dikonfirmasi (ACC) oleh {$this->oleh}.",
+                'pesan'            => $pesan,
                 'url'              => route('dashboard').$tab,
             ];
         }

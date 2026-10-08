@@ -659,17 +659,60 @@ class LaporanSuratController extends Controller
             }
         }
 
-        // Danpus adalah PENGIRIM ASLI (mis. Surat Keluar Danpus -> Wadan) dan
-        // penerimanya (Wadan/satuan lain) yang konfirmasi / ACC -> kabari
-        // Danpus lewat notifikasi (lonceng + suara + push popup), supaya tahu
-        // suratnya sudah diterima. Hanya sekali, saat surat benar-benar
-        // berpindah dari belum-ACC ke ACC (bukan klik ulang). Konfirmasi oleh
-        // Danpus sendiri sudah ditangani blok di atas.
-        if ($barusanDikonfirmasi
-            && strtoupper((string) $satuan->kode) !== 'DANPUS'
-            && $kodePengirimAsli === 'DANPUS') {
-            foreach (User::where('satuan_id', (int) $laporanSurat->satuan_id)->get() as $penerimaInfo) {
-                $penerimaInfo->notify(new LaporanSuratBalasanDikonfirmasi($laporanSurat, true, (string) $satuan->nama));
+        // Konfirmasi / ACC oleh satuan SELAIN Danpus (mis. Wadan menerima surat
+        // dari Danpus, atau satuan AKHIR menerima surat yang diteruskan Wadan)
+        // -> kabari pihak yang terlibat lewat notifikasi (lonceng + suara +
+        // push popup) supaya tahu suratnya sudah diterima/sampai. Hanya sekali,
+        // saat surat benar-benar berpindah dari belum-ACC ke ACC (bukan klik
+        // ulang). Yang mengonfirmasi sendiri tidak dinotifikasi, dan tiap satuan
+        // cuma dapat satu notifikasi. Konfirmasi oleh Danpus sudah ditangani
+        // blok di atas.
+        //  1) Danpus -- bila PENGIRIM ASLI surat, atau terlibat di riwayat alur.
+        //  2) Wadan (peneruskan) -- bila surat ini diteruskan Wadan ke satuan
+        //     yang mengonfirmasi (alur Danpus -> Wadan -> satuan akhir).
+        if ($barusanDikonfirmasi && strtoupper((string) $satuan->kode) !== 'DANPUS') {
+            $siklusIni = (int) $laporanSurat->siklus;
+
+            $riwayatTeruskan = $laporanSurat->riwayats()
+                ->where('aksi', LaporanSuratRiwayat::AKSI_TERUSKAN)
+                ->where('siklus', $siklusIni)
+                ->where('penerima_satuan_id', $satuan->id)
+                ->get();
+            $sampaiTujuan = $riwayatTeruskan->isNotEmpty();
+
+            $idDanpus = (int) Satuan::whereRaw('UPPER(kode) = ?', ['DANPUS'])->value('id');
+            $sudahDinotifikasi = [(int) $satuan->id];
+
+            $kabari = function (int $satuanId, ?string $tab) use ($laporanSurat, $satuan, $sampaiTujuan, &$sudahDinotifikasi): void {
+                if ($satuanId <= 0 || in_array($satuanId, $sudahDinotifikasi, true)) {
+                    return;
+                }
+                $sudahDinotifikasi[] = $satuanId;
+                foreach (User::where('satuan_id', $satuanId)->get() as $penerimaInfo) {
+                    $penerimaInfo->notify(new LaporanSuratBalasanDikonfirmasi(
+                        $laporanSurat, true, (string) $satuan->nama, $tab, $sampaiTujuan
+                    ));
+                }
+            };
+
+            // 1) Danpus sebagai pengirim asli.
+            if ($kodePengirimAsli === 'DANPUS') {
+                $kabari((int) $laporanSurat->satuan_id, null);
+            }
+
+            if ($sampaiTujuan) {
+                // 2) Wadan yang meneruskan -- suratnya sudah di Arsip Surat Wadan.
+                foreach ($riwayatTeruskan->pluck('pengirim_satuan_id')->map(fn ($id) => (int) $id)->unique() as $idPeneruskan) {
+                    $kabari($idPeneruskan, '#arsip-surat');
+                }
+
+                // 3) Danpus yang terlibat di alur (bukan pengirim asli), bila ada.
+                if ($idDanpus > 0 && $laporanSurat->riwayats()
+                        ->where('siklus', $siklusIni)
+                        ->where(fn ($q) => $q->where('pengirim_satuan_id', $idDanpus)->orWhere('penerima_satuan_id', $idDanpus))
+                        ->exists()) {
+                    $kabari($idDanpus, null);
+                }
             }
         }
 
