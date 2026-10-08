@@ -8,16 +8,27 @@ class LandingAccessCaptchaController
 {
     public function image(): Response
     {
-        // Mode compact (?c=1) dipakai di HP: kanvas 150x90 dengan karakter lebih besar & rapat
-        // (sama seperti captcha halaman login) supaya tetap terbaca di kotak kecil.
+        // Mode compact (?c=1) dipakai di HP. Kanvas dibuat mengikuti rasio kotak gambar
+        // di layar (?r=lebar/tinggi, dikirim JS) supaya kode captcha memenuhi kotak:
+        // tidak ada sisi kosong dan karakter tidak terpotong. Tanpa ?r= dipakai rasio bawaan.
         $compact = request()->query('c') === '1';
-        $width = $compact ? 150 : 260;
-        $height = 90;
-        $startX = $compact ? 5 : 18;
-        $stepMin = $compact ? 27 : 40;
-        $stepMax = $compact ? 29 : 47;
+        $height = $compact ? 72 : 90;
+        if ($compact) {
+            $ratio = (float) request()->query('r', 0);
+            if ($ratio < 1.4 || $ratio > 3.4) {
+                $ratio = 2.1;
+            }
+            $width = (int) round($height * $ratio);
+        } else {
+            $width = 260;
+        }
+        $margin = 8;
+        $advance = ($width - 2 * $margin) / 5;
+        $startX = 18;
+        $stepMin = 40;
+        $stepMax = 47;
         $noiseLines = $compact ? 6 : 12;
-        $noiseDots = $compact ? 150 : 260;
+        $noiseDots = $compact ? (int) round($width * $height / 90) : 260;
         $alphabet = 'ABCDEFGHJKLMNPQRSTWXYZabcdefghijkmnpqrstuwxyz23456789';
         $code = '';
 
@@ -41,12 +52,28 @@ class LandingAccessCaptchaController
         for ($i = 0; $i < strlen($code); $i++) {
             $char = $code[$i];
             $upper = ctype_upper($char);
-            $size = $compact ? ($upper ? 38 : 32) : ($upper ? 38 : 31);
+            if ($compact) {
+                // Tiap karakter dipusatkan di slotnya masing-masing (text-anchor middle),
+                // ukuran font mengikuti lebar slot supaya kelima karakter muat penuh.
+                $big = min(36, $advance * 1.1);
+                $size = $upper ? $big : $big * 0.86;
+                if (in_array($char, ['W', 'M', 'w', 'm'], true)) {
+                    $size *= 0.88; // huruf lebar dikecilkan sedikit supaya tidak menimpa tetangganya
+                }
+                $y = $upper ? 50 : 52;
+                $cx = $margin + ($i + 0.5) * $advance + random_int(-1, 1);
+                $anchor = ' text-anchor="middle"';
+                $posX = round($cx, 1);
+            } else {
+                $size = $upper ? 38 : 31;
+                $y = $upper ? 55 : 62;
+                $anchor = '';
+                $posX = $x;
+            }
             $weight = $upper ? 800 : 600;
-            $y = $compact ? ($upper ? 62 : 66) : ($upper ? 55 : 62);
             $r = random_int(205, 255); $g = random_int(190, 232); $b = random_int(90, 145);
             $rotate = random_int(-7, 7);
-            $svg .= '<text x="'.$x.'" y="'.$y.'" fill="rgb('.$r.','.$g.','.$b.')" font-family="Arial, sans-serif" font-size="'.$size.'" font-weight="'.$weight.'" transform="rotate('.$rotate.' '.$x.' '.$y.')">'.htmlspecialchars($char, ENT_QUOTES, 'UTF-8').'</text>';
+            $svg .= '<text x="'.$posX.'" y="'.$y.'"'.$anchor.' fill="rgb('.$r.','.$g.','.$b.')" font-family="Arial, sans-serif" font-size="'.round($size, 1).'" font-weight="'.$weight.'" transform="rotate('.$rotate.' '.$posX.' '.$y.')">'.htmlspecialchars($char, ENT_QUOTES, 'UTF-8').'</text>';
             $x += random_int($stepMin, $stepMax);
         }
 

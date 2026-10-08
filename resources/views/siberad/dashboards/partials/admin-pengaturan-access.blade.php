@@ -43,8 +43,9 @@
 .admin-access-btn.submit:hover{background:#cd8f1d;border-color:#cd8f1d}
 .admin-access-btn.submit[disabled]{opacity:.65;cursor:not-allowed}
 .admin-access-btn.submit svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-@media(max-width:620px){.admin-access-card{width:400px;max-width:calc(100vw - 24px);padding:22px 20px 20px}.admin-access-title{font-size:21px}.admin-access-desc{font-size:13px;margin-right:0}.admin-access-captcha-row{grid-template-columns:minmax(0,1fr) 54px minmax(0,1fr);gap:8px}.admin-access-refresh{width:54px;height:54px}.admin-access-actions{justify-content:stretch}.admin-access-btn{flex:1}.admin-access-btn.submit{min-width:0}}
-@media(max-width:500px){.admin-access-captcha-input{font-size:13px;padding-left:10px;padding-right:6px}.admin-access-actions{flex-direction:column-reverse}.admin-access-btn{width:100%}}
+@media(max-width:620px){.admin-access-card{width:400px;max-width:calc(100vw - 24px);padding:22px 20px 20px}.admin-access-title{font-size:21px}.admin-access-desc{font-size:13px;margin-right:0}.admin-access-captcha-row{grid-template-columns:minmax(0,.9fr) 54px minmax(0,1.1fr);gap:8px}.admin-access-refresh{width:54px;height:54px}.admin-access-actions{justify-content:stretch}.admin-access-btn{flex:1}.admin-access-btn.submit{min-width:0}}
+@media(max-width:360px){.admin-access-captcha-input::placeholder{font-size:11px}}
+@media(max-width:500px){.admin-access-captcha-input{font-size:14px;padding-left:10px;padding-right:6px}.admin-access-captcha-input::placeholder{font-size:12px;letter-spacing:0}.admin-access-actions{flex-direction:column-reverse}.admin-access-btn{width:100%}}
 /* ===== Tema gelap (default; tema terang = [data-theme="light"]) ===== */
 :root:not([data-theme="light"]) .admin-access-overlay{background:rgba(2,6,10,.72)}
 :root:not([data-theme="light"]) .admin-access-card{background:var(--panel,#11181F);color:var(--text,#F5F1E8);border-color:var(--border,rgba(217,146,11,.22));box-shadow:0 28px 72px rgba(0,0,0,.6)}
@@ -88,7 +89,7 @@ function syncCsrfToken(token){if(!token)return;csrfToken=token;if(csrfMeta)csrfM
 function setError(msg){error.textContent=msg||'';error.classList.toggle('show',!!msg)}
 function lockPanel(){if(lockStyle||granted)return;lockStyle=document.createElement('style');lockStyle.id='adminPengaturanAccessPanelLock';lockStyle.textContent='[data-tab-panel="pengaturan-umum"]{display:none!important;}';document.head.appendChild(lockStyle)}
 function unlockPanel(){if(lockStyle){lockStyle.remove();lockStyle=null}}
-function refreshCaptcha(){if(!img)return;refresh.classList.remove('spinning');void refresh.offsetWidth;refresh.classList.add('spinning');setError('');captcha.value='';img.src=captchaUrl+'?t='+Date.now()+(window.matchMedia&&window.matchMedia('(max-width:620px)').matches?'&c=1':'');captcha.focus()}
+function refreshCaptcha(){if(!img)return;refresh.classList.remove('spinning');void refresh.offsetWidth;refresh.classList.add('spinning');setError('');captcha.value='';img.src=captchaUrl+'?t='+Date.now()+(window.matchMedia&&window.matchMedia('(max-width:620px)').matches?'&c=1'+(img.clientWidth&&img.clientHeight?'&r='+(img.clientWidth/img.clientHeight).toFixed(2):''):'');captcha.focus()}
 function openModal(){pass.value='';captcha.value='';pass.type='password';modal.classList.add('open');modal.setAttribute('aria-hidden','false');setError('');refreshCaptcha();setTimeout(function(){pass.value='';pass.focus()},80)}
 function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');pass.value='';captcha.value='';pass.type='password';setError('')}
 function activateSettingTab(){unlockPanel();document.querySelectorAll('[data-tab-panel]').forEach(function(p){p.classList.remove('active')});document.querySelectorAll('[data-tab-link]').forEach(function(l){l.classList.remove('active')});document.querySelectorAll('[data-tab-panel="pengaturan-umum"]').forEach(function(p){p.classList.add('active')});document.querySelectorAll('[data-tab-link="pengaturan-umum"]').forEach(function(l){l.classList.add('active')})}

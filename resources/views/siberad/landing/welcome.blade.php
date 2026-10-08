@@ -509,6 +509,14 @@
     transition:background .15s ease,color .15s ease,border-color .15s ease;
   }
   .captcha-refresh svg{width:15px;height:15px;}
+  /* HP: kolom isian captcha diberi ruang lebih supaya placeholder "Masukan Captcha" terbaca penuh */
+  @media (max-width:560px){
+    .captcha-row{grid-template-columns:minmax(0,.9fr) 52px minmax(0,1.1fr);}
+    .captcha-refresh{width:52px;}
+    .captcha-row .captcha-input{padding:0 8px;}
+    .captcha-row .captcha-input::placeholder{font-size:11px;letter-spacing:0;}
+  }
+  @media (max-width:360px){ .captcha-row .captcha-input::placeholder{font-size:10px;} }
   .captcha-refresh:hover{background:var(--gold-dim);border-color:var(--gold);color:var(--gold-bright);}
   .captcha-refresh.spinning svg{animation:captchaRefreshSpin .5s ease;}
   @keyframes captchaRefreshSpin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
