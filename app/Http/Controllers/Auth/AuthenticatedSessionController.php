@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
@@ -39,6 +41,16 @@ class AuthenticatedSessionController extends Controller
             'gps_lon.numeric' => 'Data lokasi tidak valid. Coba muat ulang halaman dan izinkan akses lokasi.',
         ]);
 
+        // Batasi percobaan login (5x per menit per username+IP) supaya password
+        // tidak bisa ditebak berulang-ulang.
+        $throttleKey = Str::lower($credentials['username']).'|'.$request->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $detik = RateLimiter::availableIn($throttleKey);
+            throw ValidationException::withMessages([
+                'username' => "Terlalu banyak percobaan login. Coba lagi dalam {$detik} detik.",
+            ]);
+        }
+
         $captchaBenar = hash_equals(
             (string) $request->session()->get('captcha_code'),
             $credentials['captcha']
@@ -58,8 +70,11 @@ class AuthenticatedSessionController extends Controller
             $errors['captcha'] = 'Kode captcha salah.';
         }
         if ($errors) {
+            RateLimiter::hit($throttleKey, 60);
             throw ValidationException::withMessages($errors);
         }
+
+        RateLimiter::clear($throttleKey);
 
         $user = User::where('username', $credentials['username'])->first();
 
