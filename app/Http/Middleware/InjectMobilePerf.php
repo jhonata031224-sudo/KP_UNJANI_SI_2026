@@ -26,7 +26,7 @@ class InjectMobilePerf
         }
 
         $html = $response->getContent();
-        if (! is_string($html) || $html === '' || str_contains($html, 'id="siberad-mobile-perf"')) {
+        if (! is_string($html) || $html === '' || str_contains($html, 'id="cyclone-mobile-perf"')) {
             return $response;
         }
 
@@ -35,7 +35,7 @@ class InjectMobilePerf
         }
 
         $pos = $m[0][1] + strlen($m[0][0]);
-        $snippet = view('siberad.dashboards.partials.mobile-perf')->render();
+        $snippet = view('cyclone.dashboards.partials.mobile-perf')->render();
         $response->setContent(substr($html, 0, $pos).$snippet.substr($html, $pos));
 
         return $response;

@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 // SATU gambar bagan struktur organisasi (bukan dibangun manual pakai
 // HTML/CSS) yang lalu ditampilkan apa adanya di dashboard Kasansi,
 // menu Lainnya -> Struktur Organisasi (lihat partial
-// siberad.dashboards.partials.lainnya-kasansi).
+// cyclone.dashboards.partials.lainnya-kasansi).
 class StrukturOrganisasiController extends Controller
 {
     public function update(Request $request): RedirectResponse

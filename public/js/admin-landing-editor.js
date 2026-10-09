@@ -188,7 +188,7 @@
 
     form.querySelectorAll('input[type=file]').forEach(input => {
       if (input.dataset.filePickerReady === '1') return;
-      if (input.dataset.siberadEnhanced === '1' || input.closest('.siberad-file-wrap')) return;
+      if (input.dataset.cycloneEnhanced === '1' || input.closest('.cyclone-file-wrap')) return;
       input.dataset.filePickerReady = '1';
 
       const wrap = document.createElement('div');
@@ -391,7 +391,7 @@
         const LP_MAX_LOGO_BYTES = 5 * 1024 * 1024; // 5 MB
         if (f.size > LP_MAX_LOGO_BYTES) {
           const ukuranMb = (f.size / (1024 * 1024)).toFixed(1);
-          window.siberadShowToast && window.siberadShowToast('error',
+          window.cycloneShowToast && window.cycloneShowToast('error',
             'Logo berukuran ' + ukuranMb + ' MB, melebihi batas maksimal 5 MB. Silakan kompres atau pilih foto lain.');
           logo.value = ''; // batalkan pilihan supaya tidak ikut ke-submit
           return;

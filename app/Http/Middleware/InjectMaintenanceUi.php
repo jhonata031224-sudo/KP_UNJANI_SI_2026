@@ -55,11 +55,11 @@ class InjectMaintenanceUi
         }
 
         $html = $response->getContent();
-        if (! is_string($html) || $html === '' || str_contains($html, 'data-siberad-maintenance-banner')) {
+        if (! is_string($html) || $html === '' || str_contains($html, 'data-cyclone-maintenance-banner')) {
             return $response;
         }
 
-        $banner = view('siberad.dashboards.partials.maintenance-banner', [
+        $banner = view('cyclone.dashboards.partials.maintenance-banner', [
             'aktifMaintenance' => $aktif,
             'pesanMaintenance' => $pengaturan->pesanMaintenance(),
             'waktuMaintenance' => $aktif ? $this->waktuPengumumanMaintenance($user) : null,

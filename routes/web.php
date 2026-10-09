@@ -40,7 +40,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function (\Illuminate\Http\Request $request) {
     // Alamat dashboard disamarkan jadi "/" di address bar (lihat
-    // public/js/siberad-url-mask.js). Maka bagi pengguna yang sudah login,
+    // public/js/cyclone-url-mask.js). Maka bagi pengguna yang sudah login,
     // "/" -- dari refresh, atau redirect back() setelah submit form -- harus
     // kembali ke dashboard. reflash() menjaga pesan sukses/gagal (flash
     // session) agar tidak hilang di lompatan perantara ini.
@@ -50,7 +50,7 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
         return redirect()->route('dashboard', $request->query());
     }
 
-    return view('siberad.landing.welcome', [
+    return view('cyclone.landing.welcome', [
         'pengaturan' => Pengaturan::current(),
     ]);
 });

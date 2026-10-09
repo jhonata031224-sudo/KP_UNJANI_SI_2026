@@ -42,7 +42,7 @@ class Pengaturan extends Model
      * tab browser, notifikasi push, log aktivitas), diambil dari
      * hero_judul_awal + hero_judul_aksen yang diatur Admin di Pengaturan
      * Umum > Konten Landing. SATU sumber kebenaran tunggal -- kalau Admin
-     * ganti nama sistem (mis. dari "SIBERAD" ke "Dharma Tech"), semua
+     * ganti nama sistem (mis. dari "Cyclone" ke "Dharma Tech"), semua
      * tempat yang manggil method ini ikut berubah otomatis tanpa perlu
      * ubah kode satu-satu lagi.
      */
@@ -50,7 +50,7 @@ class Pengaturan extends Model
     {
         $nama = trim(($this->hero_judul_awal ?? '').($this->hero_judul_aksen ?? ''));
 
-        return $nama !== '' ? $nama : 'SIBERAD';
+        return $nama !== '' ? $nama : 'Cyclone';
     }
 
     public static function current(): self

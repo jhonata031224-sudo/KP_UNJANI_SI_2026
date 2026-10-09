@@ -1,0 +1,47 @@
+<style>
+/* Baris kendala baru yang disisipkan live -- fade+slide halus, senada sama
+   animasi .tab-panel.active (fadeIn .25s) yang sudah ada di dash-styles. */
+@keyframes cycloneKendalaRowIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.cyclone-row-in{animation:cycloneKendalaRowIn .35s ease}
+</style>
+<script>
+(function(){
+  var endpoint='{{ route('laporan-kendala.realtime') }}';
+  var lastSeen=0,polling=false,initial=true;
+  function poll(){
+    if(polling)return;polling=true;
+    fetch(endpoint+'?since='+(initial?0:lastSeen)+'&_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(data){
+        if(!data)return;
+        var tbody=document.getElementById('kcard-grid-masuk');
+        var inserted=0;
+        if(tbody&&typeof data.items_html==='string'&&data.items_html){
+          var temp=document.createElement('tbody');temp.innerHTML=data.items_html;
+          var rows=Array.prototype.slice.call(temp.children);
+          if(rows.length){
+            Array.prototype.slice.call(tbody.querySelectorAll('.kcard-empty,.empty-state')).forEach(function(r){r.remove();});
+            rows.reverse().forEach(function(row){
+              var id=row.getAttribute('data-kendala-id');
+              if(!id||tbody.querySelector('[data-kendala-id="'+id+'"]'))return;
+              row.classList.add('cyclone-row-in');
+              tbody.insertBefore(row,tbody.firstChild);
+              inserted++;
+            });
+          }
+        }
+        if(!initial&&inserted>0&&window.cycloneShowToast){
+          // Teks ini kendala LANGSUNG (bukan tembusan) -- lihat
+          // tembusan-kendala-realtime.blade.php (Satuan) buat toast serupa
+          // tapi datanya beda, teksnya sengaja dibedain biar gak keliatan
+          // kayak duplikat kalau 2 event ini kejadian berdekatan.
+          window.cycloneShowToast('success', inserted===1?'Ada 1 kendala baru masuk dari Kasansi.':'Ada '+inserted+' kendala baru masuk dari Kasansi.');
+        }
+        if(typeof data.latest_id==='number')lastSeen=Math.max(lastSeen,data.latest_id);
+        initial=false;
+      }).catch(function(){}).finally(function(){polling=false;});
+  }
+  function start(){ if(!document.getElementById('kcard-grid-masuk'))return; poll(); window.setInterval(poll,3000); }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>

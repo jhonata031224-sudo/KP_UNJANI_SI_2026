@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sesi Berakhir — {{ $pengaturan?->namaSistem() ?? 'SIBERAD' }}</title>
+<title>Sesi Berakhir — {{ $pengaturan?->namaSistem() ?? 'Cyclone' }}</title>
 <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-pussiberad.jpg') }}">
 <style>
   :root{

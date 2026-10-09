@@ -105,7 +105,7 @@ class LaporanSuratController extends Controller
 
         $payload = [
             'masuk_items_html' => $suratMasuk->map(
-                fn (LaporanSurat $s) => view('siberad.dashboards.partials.surat-masuk-row', ['s' => $s, 'satuan' => $satuan])->render()
+                fn (LaporanSurat $s) => view('cyclone.dashboards.partials.surat-masuk-row', ['s' => $s, 'satuan' => $satuan])->render()
             )->implode(''),
         ];
 
@@ -129,7 +129,7 @@ class LaporanSuratController extends Controller
                 ->get();
 
             $payload['terkirim_items_html'] = $terkirim->map(
-                fn (LaporanSurat $s) => view('siberad.dashboards.partials.surat-terkirim-row', ['s' => $s, 'satuan' => $satuan])->render()
+                fn (LaporanSurat $s) => view('cyclone.dashboards.partials.surat-terkirim-row', ['s' => $s, 'satuan' => $satuan])->render()
             )->implode('');
         }
 
@@ -218,7 +218,7 @@ class LaporanSuratController extends Controller
             ->values();
 
         $payload['arsip_items_html'] = $arsip->map(
-            fn (LaporanSurat $s) => view('siberad.dashboards.partials.surat-arsip-row', ['s' => $s, 'satuan' => $satuan])->render()
+            fn (LaporanSurat $s) => view('cyclone.dashboards.partials.surat-arsip-row', ['s' => $s, 'satuan' => $satuan])->render()
         )->implode('');
 
         return response()->json($payload, 200, [

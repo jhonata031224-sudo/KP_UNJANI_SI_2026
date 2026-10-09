@@ -149,7 +149,7 @@ class DashboardController
         // blade.php) tidak N+1 query pas nampilin nama satuan tiap baris.
         $suratSemuaAdmin = LaporanSurat::with(['satuan', 'tujuanSatuan'])->get();
 
-        return view('siberad.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','trenAktivitas','logAktivitas','semuaPelaporan','daftarBackup','sesiAktif','logDari','logSampai','laporanRekapMentah','suratSemuaAdmin') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'resetDataDetails' => ResetDataLaporanController::ambilDetailPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah), 'total_surat' => LaporanSurat::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
+        return view('cyclone.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','trenAktivitas','logAktivitas','semuaPelaporan','daftarBackup','sesiAktif','logDari','logSampai','laporanRekapMentah','suratSemuaAdmin') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'resetDataDetails' => ResetDataLaporanController::ambilDetailPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah), 'total_surat' => LaporanSurat::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
     }
 
     public function adminKpiRealtime(Request $request): \Illuminate\Http\JsonResponse
@@ -195,7 +195,7 @@ class DashboardController
         ];
 
         return response()->json([
-            'kpis_html' => view('siberad.dashboards.partials.admin-kpi-cards', [
+            'kpis_html' => view('cyclone.dashboards.partials.admin-kpi-cards', [
                 'stats' => $stats,
                 'semuaPengguna' => $semuaPengguna,
                 'semuaSatuan' => $semuaSatuan,
@@ -203,16 +203,16 @@ class DashboardController
                 'suratSemuaAdmin' => $suratSemuaAdmin,
                 'permintaanResetPassword' => $permintaanResetPassword,
             ])->render(),
-            'reset_password_terbaru_html' => view('siberad.dashboards.partials.admin-reset-password-terbaru-list', [
+            'reset_password_terbaru_html' => view('cyclone.dashboards.partials.admin-reset-password-terbaru-list', [
                 'permintaanResetPasswordTerbaru' => $permintaanResetPassword->take(5),
             ])->render(),
-            'aktivitas_terbaru_html' => view('siberad.dashboards.partials.admin-aktivitas-terbaru-list', [
+            'aktivitas_terbaru_html' => view('cyclone.dashboards.partials.admin-aktivitas-terbaru-list', [
                 'logAktivitasTerbaru' => $logAktivitasTerbaru,
             ])->render(),
             'radar_kategori' => $this->distribusiPenggunaKategoriRadar($semuaSatuan),
             'status_laporan' => $statusLaporanSistem,
             'status_donut_total' => array_sum($statusLaporanSistem),
-            'status_bd_html' => view('siberad.dashboards.partials.pimpinan-status-distribusi-list', [
+            'status_bd_html' => view('cyclone.dashboards.partials.pimpinan-status-distribusi-list', [
                 'pimpStatusDist' => $adminStatusDist,
             ])->render(),
             'tren_aktivitas' => $this->trenAktivitas(),
@@ -608,7 +608,7 @@ class DashboardController
             // Sekarang dipisah jadi file sendiri-sendiri (isi & wewenang
             // TETAP SAMA persis) supaya perombakan menu Surat ke depan bisa
             // digarap per satuan tanpa saling nyenggol.
-            $shellPimpinan = $kode === 'WADAN' ? 'siberad.dashboards.laporan-wadan-shell' : 'siberad.dashboards.laporan-danpus-shell';
+            $shellPimpinan = $kode === 'WADAN' ? 'cyclone.dashboards.laporan-wadan-shell' : 'cyclone.dashboards.laporan-danpus-shell';
 
             return view($shellPimpinan, compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporanPimpinan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk','kendalaArsip','suratMasuk','suratTerkirim','suratArsip','satuanSuratTujuanPilihan') + ['pengaturan' => Pengaturan::current()]);
         }
@@ -786,7 +786,7 @@ class DashboardController
             : collect();
         $satuanKendalaTerbaru = $satuanKendalaTerbaruSumber->sortByDesc('created_at')->take(5)->values();
 
-        return view('siberad.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk','suratKal','suratDak','suratSisos') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'satuanTotalPelaporan' => $satuanTotalPelaporan, 'kendalaKasansiKpiAktif' => $kendalaKasansiKpiAktif, 'kendalaKasansiKpiArsip' => $kendalaKasansiKpiArsip, 'satuanStatusDist' => $satuanStatusDist, 'satuanTotalStatus' => $satuanTotalStatus, 'satuanSuratTerbaru' => $satuanSuratTerbaru, 'satuanKendalaTerbaru' => $satuanKendalaTerbaru, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $satuanDisetujui, 'ditolak' => $satuanDitolak, 'terlambat' => $satuanTerlambat, 'dibatalkan' => $satuanDibatalkan]]);
+        return view('cyclone.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk','suratKal','suratDak','suratSisos') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'satuanTotalPelaporan' => $satuanTotalPelaporan, 'kendalaKasansiKpiAktif' => $kendalaKasansiKpiAktif, 'kendalaKasansiKpiArsip' => $kendalaKasansiKpiArsip, 'satuanStatusDist' => $satuanStatusDist, 'satuanTotalStatus' => $satuanTotalStatus, 'satuanSuratTerbaru' => $satuanSuratTerbaru, 'satuanKendalaTerbaru' => $satuanKendalaTerbaru, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $satuanDisetujui, 'ditolak' => $satuanDitolak, 'terlambat' => $satuanTerlambat, 'dibatalkan' => $satuanDibatalkan]]);
     }
 
     /**
@@ -897,7 +897,7 @@ class DashboardController
         $pimpKendalaTerbaru = $kendalaMasuk->concat($kendalaArsip)->sortByDesc('created_at')->take(5)->values();
 
         return response()->json([
-            'kpis_html' => view('siberad.dashboards.partials.pimpinan-kpi-cards', [
+            'kpis_html' => view('cyclone.dashboards.partials.pimpinan-kpi-cards', [
                 'pimpTotalPelaporan' => $pimpTotalPelaporan,
                 'laporanPimpinanSatlak' => $laporanPimpinanSatlak,
                 'suratMasuk' => $suratMasuk,
@@ -906,17 +906,17 @@ class DashboardController
                 'kendalaMasuk' => $kendalaMasuk,
                 'kendalaArsip' => $kendalaArsip,
             ])->render(),
-            'status_bd_html' => view('siberad.dashboards.partials.pimpinan-status-distribusi-list', [
+            'status_bd_html' => view('cyclone.dashboards.partials.pimpinan-status-distribusi-list', [
                 'pimpStatusDist' => $pimpStatusDist,
             ])->render(),
             'status_donut_total' => $pimpTotalStatus,
             'status_donut_counts' => [$pimpTotalDisetujui, $pimpTotalDitolak, $pimpTotalTerlambat, $pimpTotalDibatalkan],
             'tren_data' => $pimpTrenRentang,
-            'surat_terbaru_html' => view('siberad.dashboards.partials.pimpinan-surat-terbaru-rows', [
+            'surat_terbaru_html' => view('cyclone.dashboards.partials.pimpinan-surat-terbaru-rows', [
                 'pimpSuratTerbaru' => $pimpSuratTerbaru,
                 'satuan' => $satuan,
             ])->render(),
-            'kendala_terbaru_html' => view('siberad.dashboards.partials.pimpinan-kendala-terbaru-list', [
+            'kendala_terbaru_html' => view('cyclone.dashboards.partials.pimpinan-kendala-terbaru-list', [
                 'pimpKendalaTerbaru' => $pimpKendalaTerbaru,
             ])->render(),
             'server_time' => now()->toIso8601String(),
@@ -991,7 +991,7 @@ class DashboardController
         $satuanKendalaTerbaru = $satuanKendalaTerbaruSumber->sortByDesc('created_at')->take(5)->values();
 
         return response()->json([
-            'kpis_html' => view('siberad.dashboards.partials.pimpinan-kpi-cards', [
+            'kpis_html' => view('cyclone.dashboards.partials.pimpinan-kpi-cards', [
                 'pimpTotalPelaporan' => $satuanTotalPelaporan,
                 'laporanPimpinanSatlak' => $laporanTerkirim,
                 'suratMasuk' => $suratMasuk,
@@ -1000,7 +1000,7 @@ class DashboardController
                 'kendalaMasuk' => $kendalaTerkirim,
                 'kendalaArsip' => $kendalaArsip,
             ])->render(),
-            'status_bd_html' => view('siberad.dashboards.partials.pimpinan-status-distribusi-list', [
+            'status_bd_html' => view('cyclone.dashboards.partials.pimpinan-status-distribusi-list', [
                 'pimpStatusDist' => [
                     ['label' => 'Disetujui', 'color' => '#22c55e', 'labelColor' => '#22c55e', 'count' => $satuanDisetujui],
                     ['label' => 'Ditolak', 'color' => '#ef4444', 'labelColor' => '#ef4444', 'count' => $satuanDitolak],
@@ -1010,11 +1010,11 @@ class DashboardController
             ])->render(),
             'status_donut_total' => $satuanTotalStatus,
             'status_donut_counts' => [$satuanDisetujui, $satuanDitolak, $satuanTerlambat, $satuanDibatalkan],
-            'surat_terbaru_html' => view('siberad.dashboards.partials.pimpinan-surat-terbaru-rows', [
+            'surat_terbaru_html' => view('cyclone.dashboards.partials.pimpinan-surat-terbaru-rows', [
                 'pimpSuratTerbaru' => $satuanSuratTerbaru,
                 'satuan' => $satuan,
             ])->render(),
-            'kendala_terbaru_html' => view('siberad.dashboards.partials.pimpinan-kendala-terbaru-list', [
+            'kendala_terbaru_html' => view('cyclone.dashboards.partials.pimpinan-kendala-terbaru-list', [
                 'pimpKendalaTerbaru' => $satuanKendalaTerbaru,
             ])->render(),
             'server_time' => now()->toIso8601String(),

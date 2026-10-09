@@ -83,15 +83,15 @@ class BackupController extends Controller
     }
 
     /**
-     * Nama file backup memakai pola "siberad.ext", "siberad-1.ext",
-     * "siberad-2.ext", dst. -- tanpa tanggal di nama file karena tanggal
+     * Nama file backup memakai pola "cyclone.ext", "cyclone-1.ext",
+     * "cyclone-2.ext", dst. -- tanpa tanggal di nama file karena tanggal
      * sudah ditampilkan di kolom terpisah pada riwayat backup. Setiap
      * backup baru tetap dapat nama file unik supaya riwayat sebelumnya
      * tidak tertimpa.
      */
     private function nextBackupFilename(string $extension): string
     {
-        $pattern = '/^siberad(?:-(\d+))?\.'.preg_quote($extension, '/').'$/i';
+        $pattern = '/^cyclone(?:-(\d+))?\.'.preg_quote($extension, '/').'$/i';
 
         $maxSuffix = collect(Storage::disk(self::DISK)->files(self::FOLDER))
             ->map(fn ($f) => basename($f))
@@ -104,10 +104,10 @@ class BackupController extends Controller
             ->max();
 
         if ($maxSuffix === null) {
-            return "siberad.{$extension}";
+            return "cyclone.{$extension}";
         }
 
-        return 'siberad-'.($maxSuffix + 1).".{$extension}";
+        return 'cyclone-'.($maxSuffix + 1).".{$extension}";
     }
 
     /**
@@ -242,7 +242,7 @@ class BackupController extends Controller
         }
 
         try {
-            fwrite($handle, "-- SIBERAD MySQL backup\n");
+            fwrite($handle, "-- Cyclone MySQL backup\n");
             fwrite($handle, "-- Database: ".$database."\n");
             fwrite($handle, "-- Generated: ".now()->toDateTimeString()."\n\n");
             fwrite($handle, "SET NAMES utf8mb4;\nSET FOREIGN_KEY_CHECKS=0;\nSET SQL_MODE='NO_AUTO_VALUE_ON_ZERO';\n\n");
@@ -342,11 +342,14 @@ class BackupController extends Controller
             return;
         }
 
-        // Fallback native hanya untuk format backup SIBERAD yang kita hasilkan,
+        // Fallback native hanya untuk format backup Cyclone yang kita hasilkan,
         // sehingga dump eksternal yang memakai DELIMITER/routine kompleks tidak
         // dipaksa dieksekusi parser sederhana ini.
-        if (! str_starts_with(ltrim($sql), '-- SIBERAD MySQL backup')) {
-            throw new \RuntimeException('Server tidak memiliki mysql client. Restore fallback hanya mendukung backup SIBERAD.');
+        // Header lama ('-- SIBERAD MySQL backup') tetap diterima supaya file backup
+        // yang dibuat sebelum penggantian nama menjadi Cyclone masih bisa di-restore.
+        $header = ltrim($sql);
+        if (! str_starts_with($header, '-- Cyclone MySQL backup') && ! str_starts_with($header, '-- SIBERAD MySQL backup')) {
+            throw new \RuntimeException('Server tidak memiliki mysql client. Restore fallback hanya mendukung backup Cyclone.');
         }
 
         $pdo = DB::connection('mysql')->getPdo();

@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
  * "IP Address" tabel Pengguna Aktif (admin-sesi-aktif-realtime.blade.php):
  * nilainya beda tiap poll (4 detik) padahal sesi & jaringan penggunanya
  * sama, bikin baris dianggap "berubah" terus dan animasi kedip kuning
- * (siberad-row-updated) nyala tanpa henti.
+ * (cyclone-row-updated) nyala tanpa henti.
  *
  * Railway sendiri menyediakan header X-Real-IP yang isinya SATU nilai
  * (bukan rantai/chain) berisi IP klien asli, lepas dari jalur routing

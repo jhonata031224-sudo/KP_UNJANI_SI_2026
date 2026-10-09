@@ -77,7 +77,7 @@ class PermintaanLaporanController extends Controller
                 ->get();
 
             return response()->json([
-                'items_html' => view('siberad.dashboards.partials.permintaan-laporan-pimpinan-riwayat-items', [
+                'items_html' => view('cyclone.dashboards.partials.permintaan-laporan-pimpinan-riwayat-items', [
                     'permintaanLaporan' => $items,
                 ])->render(),
                 'archived_ids' => $items->pluck('id')->values(),
@@ -111,7 +111,7 @@ class PermintaanLaporanController extends Controller
                 ->get();
 
             return response()->json([
-                'items_html' => view('siberad.dashboards.partials.permintaan-laporan-pimpinan-realtime-items', [
+                'items_html' => view('cyclone.dashboards.partials.permintaan-laporan-pimpinan-realtime-items', [
                     'permintaanLaporan' => $items,
                     'satuan' => $request->user()->loadMissing('satuan')->satuan,
                 ])->render(),
@@ -131,7 +131,7 @@ class PermintaanLaporanController extends Controller
                 ->get();
 
             return response()->json([
-                'items_html' => view('siberad.dashboards.partials.admin-data-pelaporan-realtime-items', [
+                'items_html' => view('cyclone.dashboards.partials.admin-data-pelaporan-realtime-items', [
                     'semuaPelaporan' => $items,
                 ])->render(),
                 'server_time' => now()->toIso8601String(),
@@ -198,10 +198,10 @@ class PermintaanLaporanController extends Controller
 
         return response()->json([
             'latest_id' => $latestId,
-            'items_html' => view('siberad.dashboards.partials.permintaan-laporan-realtime-items', [
+            'items_html' => view('cyclone.dashboards.partials.permintaan-laporan-realtime-items', [
                 'permintaanLaporan' => $items,
             ])->render(),
-            'riwayat_items_html' => view('siberad.dashboards.partials.permintaan-laporan-realtime-items', [
+            'riwayat_items_html' => view('cyclone.dashboards.partials.permintaan-laporan-realtime-items', [
                 'permintaanLaporan' => $riwayatItems,
             ])->render(),
             'laporan_masuk_count' => $laporanMasukCount,

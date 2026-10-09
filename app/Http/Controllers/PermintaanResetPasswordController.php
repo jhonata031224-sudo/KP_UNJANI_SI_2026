@@ -52,7 +52,7 @@ class PermintaanResetPasswordController extends Controller
                 'ok' => true,
                 'id' => $permintaan->id,
                 'message' => 'Permintaan ganti password berhasil dikirim ke Admin.',
-                'pending_html' => view('siberad.dashboards.partials.profile-password-pending', [
+                'pending_html' => view('cyclone.dashboards.partials.profile-password-pending', [
                     'permintaan' => $permintaan,
                 ])->render(),
             ]);

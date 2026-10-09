@@ -67,21 +67,21 @@ class SatuanController extends Controller
      * lihat activateAdminTab() di dash-script.blade.php), jadi kalau nama/
      * kode satuan berubah, kolom "Satuan" di tabel Pengguna serta opsi
      * combobox Satuan di modal Tambah/Ubah Pengguna (window.
-     * __penggunaSatuanOptions / window.__siberadSatuanList) ikut basi kalau
+     * __penggunaSatuanOptions / window.__cycloneSatuanList) ikut basi kalau
      * cuma tbody Satuan-nya sendiri yang di-update. Klien (lihat
-     * siberadSubmitSatuanAjax() di admin.blade.php) menimpa keduanya kalau
+     * cycloneSubmitSatuanAjax() di admin.blade.php) menimpa keduanya kalau
      * field ini ada di respons, jadi tab Daftar Pengguna langsung akurat
      * begitu admin pindah tab -- tanpa refresh manual.
      */
     private function tableJson(Request $request, Satuan $satuan, string $pesan): JsonResponse
     {
         $rowsHtml = Satuan::terurut()
-            ->map(fn (Satuan $s) => view('siberad.dashboards.partials.satuan-row', ['s' => $s])->render())
+            ->map(fn (Satuan $s) => view('cyclone.dashboards.partials.satuan-row', ['s' => $s])->render())
             ->implode('');
 
         $authUserId = $request->user()->id;
         $penggunaRowsHtml = User::terurutOrganisasi()
-            ->map(fn (User $p) => view('siberad.dashboards.partials.pengguna-row', [
+            ->map(fn (User $p) => view('cyclone.dashboards.partials.pengguna-row', [
                 'p' => $p,
                 'authUserId' => $authUserId,
             ])->render())
@@ -115,7 +115,7 @@ class SatuanController extends Controller
 
     /**
      * Bentuk array-nya HARUS sama persis dengan $satuanListForDup di
-     * admin.blade.php (window.__siberadSatuanList, dipakai buat cek "Kode
+     * admin.blade.php (window.__cycloneSatuanList, dipakai buat cek "Kode
      * Satuan sudah dipakai" secara live di modal Tambah/Ubah Pengguna).
      */
     private function satuanListForDup(): \Illuminate\Support\Collection
@@ -153,7 +153,7 @@ class SatuanController extends Controller
         // Satuan yg masih punya pengguna gak bisa dihapus (guard di atas),
         // jadi gak ada baris tabel Pengguna yg jadi basi di sini -- tapi
         // opsi combobox Satuan di modal Tambah/Ubah Pengguna
-        // (window.__penggunaSatuanOptions/__siberadSatuanList) tetap perlu
+        // (window.__penggunaSatuanOptions/__cycloneSatuanList) tetap perlu
         // disegarkan, supaya satuan yg baru dihapus gak nyangkut sbg pilihan
         // yg bisa dipilih. Lihat komentar tableJson() soal kenapa ini perlu.
         return $request->wantsJson()
