@@ -46,6 +46,7 @@ class SuratMurniTuntasSaatKonfirmasiDanpusTest extends TestCase
             'kategori' => 'Umum', 'deskripsi' => 'isi', 'lampiran_path' => 'lampiran-surat/x.pdf',
             'lampiran_nama_asli' => 'x.pdf', 'prioritas' => 'Biasa', 'status' => LaporanSurat::STATUS_MENUNGGU,
         ]);
+        $surat->refresh();
         LaporanSuratRiwayat::create([
             'laporan_surat_id' => $surat->id, 'siklus' => $surat->siklus, 'aksi' => LaporanSuratRiwayat::AKSI_BUAT_SURAT,
             'pengirim_satuan_id' => $this->s['SATLAK_DUKTEK']->id, 'penerima_satuan_id' => $this->s['DANPUS']->id,
@@ -101,6 +102,7 @@ class SuratMurniTuntasSaatKonfirmasiDanpusTest extends TestCase
             'kategori' => 'Umum', 'deskripsi' => 'isi', 'lampiran_path' => 'lampiran-surat/x.pdf',
             'lampiran_nama_asli' => 'x.pdf', 'prioritas' => 'Biasa', 'status' => LaporanSurat::STATUS_MENUNGGU,
         ]);
+        $surat->refresh();
         LaporanSuratRiwayat::create([
             'laporan_surat_id' => $surat->id, 'siklus' => $surat->siklus, 'aksi' => LaporanSuratRiwayat::AKSI_BUAT_SURAT,
             'pengirim_satuan_id' => $this->s['DANPUS']->id, 'penerima_satuan_id' => $this->s['WADAN']->id,

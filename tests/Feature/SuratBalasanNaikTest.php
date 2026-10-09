@@ -196,9 +196,10 @@ class SuratBalasanNaikTest extends TestCase
 
     public function test_surat_baru_tanpa_induk_tetap_lewat_jalur_lama(): void
     {
-        // Satlak membuat surat baru ke Urdal (tanpa induk_surat_id) -> baris baru, bukan balasan.
+        // Satlak membuat surat baru (tanpa induk_surat_id) -> baris baru, bukan balasan.
+        // Aturan terbaru: Surat Keluar selalu ditujukan ke Danpus (Urdal otomatis view-only).
         $this->actingAs($this->u['SATLAKDUKTEK'])->post('/laporan-surat', [
-            'tujuan_satuan_id' => $this->s['URDAL']->id,
+            'tujuan_satuan_id' => $this->s['DANPUS']->id,
             'perihal'          => 'SURAT BARU',
             'kategori'         => 'Koordinasi',
             'prioritas'        => 'Rendah',

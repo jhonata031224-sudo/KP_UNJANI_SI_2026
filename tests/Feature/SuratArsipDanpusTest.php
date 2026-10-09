@@ -24,7 +24,7 @@ class SuratArsipDanpusTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        foreach (['DANPUS' => 'Danpus', 'WADAN' => 'Wadan', 'URDAL' => 'Urdal', 'SATLAK_X' => 'Satlak Dukteksi'] as $kode => $nama) {
+        foreach (['DANPUS' => 'Danpus', 'WADAN' => 'Wadan', 'URDAL' => 'Urdal', 'SATLAKDUKTEK' => 'Satlak Dukteksi'] as $kode => $nama) {
             $this->s[$kode] = Satuan::firstOrCreate(['kode' => $kode], ['nama' => $nama, 'kategori' => 'Test']);
             $this->u[$kode] = User::create([
                 'name' => $nama, 'username' => 'uji_'.strtolower($kode), 'password' => bcrypt('x'),
@@ -87,13 +87,13 @@ class SuratArsipDanpusTest extends TestCase
 
         // Step 2b: Wadan teruskan ke satuan (+ Urdal view only) -> TETAP Surat Keluar
         $this->actingAs($this->u['WADAN'])->post("/laporan-surat/{$surat->id}/teruskan", [
-            'tujuan_satuan_id' => $this->s['SATLAK_X']->id, 'disposisi' => 'Satlak Dukteksi', 'tindakan' => ['CATAT'],
+            'tujuan_satuan_id' => $this->s['SATLAKDUKTEK']->id, 'disposisi' => 'Satlak Dukteksi', 'tindakan' => ['CATAT'],
         ])->assertSessionHasNoErrors();
         $this->assertSame(['terkirim' => true, 'arsip' => false], $this->posisiDiDanpus());
         $this->assertSame(['terkirim' => true, 'arsip' => false], $this->posisiViaScope());
 
         // Step 3: satuan tujuan akhir konfirmasi -> PINDAH ke Arsip Danpus
-        $this->actingAs($this->u['SATLAK_X'])->patchJson("/laporan-surat/{$surat->id}/konfirmasi")->assertOk();
+        $this->actingAs($this->u['SATLAKDUKTEK'])->patchJson("/laporan-surat/{$surat->id}/konfirmasi")->assertOk();
         $this->assertSame(['terkirim' => false, 'arsip' => true], $this->posisiDiDanpus());
         $this->assertSame(['terkirim' => false, 'arsip' => true], $this->posisiViaScope());
     }
@@ -115,9 +115,9 @@ class SuratArsipDanpusTest extends TestCase
         $surat = $this->buatSurat();
         $this->actingAs($this->u['WADAN'])->patchJson("/laporan-surat/{$surat->id}/konfirmasi")->assertOk();
         $this->actingAs($this->u['WADAN'])->post("/laporan-surat/{$surat->id}/teruskan", [
-            'tujuan_satuan_id' => $this->s['SATLAK_X']->id, 'disposisi' => 'Satlak Dukteksi', 'tindakan' => ['CATAT'],
+            'tujuan_satuan_id' => $this->s['SATLAKDUKTEK']->id, 'disposisi' => 'Satlak Dukteksi', 'tindakan' => ['CATAT'],
         ]);
-        $this->actingAs($this->u['SATLAK_X'])->patchJson("/laporan-surat/{$surat->id}/konfirmasi")->assertOk();
+        $this->actingAs($this->u['SATLAKDUKTEK'])->patchJson("/laporan-surat/{$surat->id}/konfirmasi")->assertOk();
 
         $arsip = $this->actingAs($this->u['DANPUS'])->getJson('/laporan-surat/realtime')->json('arsip_items_html');
         $this->assertStringContainsString('TEST', $arsip);
@@ -129,7 +129,7 @@ class SuratArsipDanpusTest extends TestCase
         $surat = $this->buatSurat();
         $this->actingAs($this->u['WADAN'])->patchJson("/laporan-surat/{$surat->id}/konfirmasi")->assertOk();
         $this->actingAs($this->u['WADAN'])->post("/laporan-surat/{$surat->id}/teruskan", [
-            'tujuan_satuan_id' => $this->s['SATLAK_X']->id, 'disposisi' => 'Satlak Dukteksi', 'tindakan' => ['CATAT'],
+            'tujuan_satuan_id' => $this->s['SATLAKDUKTEK']->id, 'disposisi' => 'Satlak Dukteksi', 'tindakan' => ['CATAT'],
         ]);
 
         $bagian = function (string $html, string $id): string {
@@ -144,7 +144,7 @@ class SuratArsipDanpusTest extends TestCase
         $this->assertStringNotContainsString('TEST', $bagian($res->getContent(), 'suratArsipGrid'));
 
         // Step 3 selesai: pindah ke Arsip di load awal juga (tanpa menunggu polling)
-        $this->actingAs($this->u['SATLAK_X'])->patchJson("/laporan-surat/{$surat->id}/konfirmasi")->assertOk();
+        $this->actingAs($this->u['SATLAKDUKTEK'])->patchJson("/laporan-surat/{$surat->id}/konfirmasi")->assertOk();
         $res = $this->actingAs($this->u['DANPUS'])->get('/dashboard');
         $this->assertStringNotContainsString('TEST', $bagian($res->getContent(), 'suratTerkirimGrid'));
         $this->assertStringContainsString('TEST', $bagian($res->getContent(), 'suratArsipGrid'));
@@ -166,9 +166,9 @@ class SuratArsipDanpusTest extends TestCase
         $surat = $this->buatSurat();
         $this->actingAs($this->u['WADAN'])->patchJson("/laporan-surat/{$surat->id}/konfirmasi")->assertOk();
         $this->actingAs($this->u['WADAN'])->post("/laporan-surat/{$surat->id}/teruskan", [
-            'tujuan_satuan_id' => $this->s['SATLAK_X']->id, 'disposisi' => 'Satlak Dukteksi', 'tindakan' => ['CATAT'],
+            'tujuan_satuan_id' => $this->s['SATLAKDUKTEK']->id, 'disposisi' => 'Satlak Dukteksi', 'tindakan' => ['CATAT'],
         ]);
-        $this->actingAs($this->u['SATLAK_X'])->patchJson("/laporan-surat/{$surat->id}/konfirmasi")->assertOk();
+        $this->actingAs($this->u['SATLAKDUKTEK'])->patchJson("/laporan-surat/{$surat->id}/konfirmasi")->assertOk();
 
         // Danpus: tujuan yang ia pilih saat membuat surat = Wadan (BUKAN satuan pilihan Wadan)
         $k = $this->kartuArsip('DANPUS');
@@ -176,13 +176,13 @@ class SuratArsipDanpusTest extends TestCase
 
         // Wadan: satuan yang ia pilih saat disposisi
         $k = $this->kartuArsip('WADAN');
-        $this->assertSame(['Ke', 'SATLAK_X', 'SATLAK_X'], [$k['label'], $k['satuan'], $k['tujuan_modal']]);
+        $this->assertSame(['Ke', 'SATLAKDUKTEK', 'SATLAKDUKTEK'], [$k['label'], $k['satuan'], $k['tujuan_modal']]);
         $this->assertSame('DANPUS', $k['dari_modal']); // pengirim asli tetap Danpus
 
         // Satuan tujuan akhir: sudah ACC tapi belum kirim balasan (alur naik,
         // lihat SuratBalasanNaikTest) -> surat TETAP di Surat Masuk, BELUM di
         // Arsip. Sebelumnya surat langsung masuk Arsip begitu di-ACC.
-        $json = $this->actingAs($this->u['SATLAK_X'])->getJson('/laporan-surat/realtime')->assertOk()->json();
+        $json = $this->actingAs($this->u['SATLAKDUKTEK'])->getJson('/laporan-surat/realtime')->assertOk()->json();
         $this->assertStringContainsString('TEST', $json['masuk_items_html']);
         $this->assertStringNotContainsString('TEST', $json['arsip_items_html']);
     }
