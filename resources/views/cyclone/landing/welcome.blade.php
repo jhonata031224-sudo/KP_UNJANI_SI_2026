@@ -1270,6 +1270,34 @@
     100%{opacity:0;transform:translate(-50%,-30px) scale(.9);}
   }
   @keyframes toastBar{from{transform:scaleX(1);}to{transform:scaleX(0);}}
+
+  /* ================= PERFORMA MOBILE =================
+     Di HP, efek yang dihitung ulang GPU tiap frame bikin scroll patah-patah:
+     blur pada <video> yang sedang main, backdrop-filter di atas video,
+     dan background-attachment:fixed. Di layar <=900px semuanya diganti
+     versi murah yang tampilannya nyaris sama. Desktop TIDAK terpengaruh. */
+  @media (max-width:900px){
+    body{background-attachment:scroll;}
+    body::before{display:none;}
+
+    .hero-bg-video{filter:none;}
+    .hero-bg-video-stage{transform:translateZ(0);}
+
+    header{
+      -webkit-backdrop-filter:none;backdrop-filter:none;
+      background:rgba(13,18,15,.97);
+    }
+    html[data-theme="light"] header{background:rgba(255,253,247,.98);}
+    .nav-links{-webkit-backdrop-filter:none;backdrop-filter:none;}
+
+    .hero-stats-bg .eyebrow,
+    .hero-stats-bg .pill,
+    .hero-stats-bg .hero-crest-caption{-webkit-backdrop-filter:none;backdrop-filter:none;}
+    .login-overlay{-webkit-backdrop-filter:none;backdrop-filter:none;}
+
+    [data-reveal]{transition-duration:.45s;will-change:opacity,transform;}
+    [data-reveal].in{will-change:auto;}
+  }
 </style>
 <script>
   (function(){
@@ -2158,7 +2186,10 @@
     if (target) navSections.push({ link, target });
   });
 
+  let activeNavLinkCurrent = null;
   function setActiveNavLink(activeLink) {
+    if (activeLink === activeNavLinkCurrent) return; // tidak berubah -> hindari style recalc tiap frame scroll
+    activeNavLinkCurrent = activeLink;
     navLinks.forEach(a => a.classList.remove('active'));
     if (activeLink) activeLink.classList.add('active');
   }
@@ -2228,12 +2259,27 @@
     var src = stage.dataset.heroVideoSrc;
     if (!videoA || !videoB || !src) return;
 
+    // Hemat data: pengguna menyalakan Data Saver -> cukup tampilkan poster.
+    var koneksi = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (koneksi && koneksi.saveData) {
+      videoA.removeAttribute('autoplay');
+      videoA.preload = 'none';
+      try { videoA.pause(); } catch (err) {}
+      return;
+    }
+
     var heroReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (heroReduceMotion) {
       // Pengguna minta animasi diminimalkan -- pakai loop native biasa,
       // tanpa crossfade dua video (transition opacity juga sudah dimatikan
       // lewat @media (prefers-reduced-motion: reduce) di CSS di atas).
       videoA.loop = true;
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function(en){
+          if (en[0].isIntersecting) { var p = videoA.play(); if (p && p.catch) p.catch(function(){}); }
+          else videoA.pause();
+        }, {threshold:0}).observe(stage);
+      }
       return;
     }
 
@@ -2321,6 +2367,27 @@
         mulaiCrossfade();
       }
     }
+
+    // Hentikan decode video saat hero tidak terlihat (sudah di-scroll jauh)
+    // atau tab disembunyikan, lanjutkan lagi saat terlihat -> scroll lebih
+    // ringan & baterai HP lebih awet.
+    var heroTerlihat = true;
+    function sinkronkanPutarVideo(){
+      var harusMain = heroTerlihat && !document.hidden;
+      if (harusMain) {
+        var p = active.play();
+        if (p && typeof p.catch === 'function') p.catch(function(){});
+      } else {
+        videoA.pause(); videoB.pause();
+      }
+    }
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        heroTerlihat = entries[0].isIntersecting;
+        sinkronkanPutarVideo();
+      }, {threshold:0}).observe(stage);
+    }
+    document.addEventListener('visibilitychange', sinkronkanPutarVideo);
 
     videoA.addEventListener('timeupdate', onHeroVideoTimeUpdate);
     videoB.addEventListener('timeupdate', onHeroVideoTimeUpdate);
