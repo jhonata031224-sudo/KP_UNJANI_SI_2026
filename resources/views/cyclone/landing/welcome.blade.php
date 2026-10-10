@@ -74,6 +74,9 @@
 @if ($lpLogoUrl)
 <link rel="icon" type="image/jpeg" href="{{ $lpLogoUrl }}">
 <link rel="preload" as="image" href="{{ $lpLogoUrl }}" fetchpriority="high">
+@if ($lpHeroExists && !$lpHeroUseVideo)
+<link rel="preload" as="image" href="{{ asset('storage/'.$pengaturan->hero_image_path) }}" fetchpriority="high">
+@endif
 @endif
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1295,8 +1298,18 @@
     .hero-stats-bg .hero-crest-caption{-webkit-backdrop-filter:none;backdrop-filter:none;}
     .login-overlay{-webkit-backdrop-filter:none;backdrop-filter:none;}
 
-    [data-reveal]{transition-duration:.45s;will-change:opacity,transform;}
-    [data-reveal].in{will-change:auto;}
+    [data-reveal]{transition-duration:.45s;}
+
+    /* Foto hero: blur dibatasi 6px & layer di-cache GPU (tidak di-raster ulang saat scroll) */
+    .hero-stats-bg::before{
+      filter:blur(min({{ $lpHeroBlur }}px, 6px));
+      transform:translateZ(0);backface-visibility:hidden;
+    }
+    /* Efek yang menganimasikan filter/bayangan besar & animasi tanpa henti -> disederhanakan */
+    .mark.leaving{filter:none;}
+    .about-crest-hint{animation:none;opacity:1;box-shadow:none;}
+    .hero-crest .mark-plate{box-shadow:0 0 0 1px rgba(0,0,0,.35) inset, 0 8px 18px rgba(0,0,0,.4);}
+    .about-crest,.about-crest:hover{box-shadow:0 0 0 6px rgba(212,175,55,.06), 0 10px 22px rgba(0,0,0,.35);}
   }
 </style>
 <script>
@@ -1775,7 +1788,25 @@
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const duration = reduceMotion ? 150 : 1200;
 
-  setTimeout(()=>{
+  // Tunggu foto hero selesai diunduh & di-decode SEBELUM animasi pembuka jalan,
+  // supaya decode foto besar tidak bentrok dengan animasi (penyebab patah-patah
+  // di HP saat halaman baru terbuka). Dibatasi maks 3,5 dtk agar tidak menggantung.
+  const heroSiap = new Promise(function(resolve){
+    @if ($lpHeroExists && !$lpHeroUseVideo)
+    var url = {!! json_encode(asset('storage/'.$pengaturan->hero_image_path)) !!};
+    var batas = setTimeout(resolve, 3500);
+    var selesai = function(){ clearTimeout(batas); resolve(); };
+    var im = new Image();
+    im.decoding = 'async';
+    im.src = url;
+    if (im.decode) { im.decode().then(selesai, selesai); }
+    else { im.onload = selesai; im.onerror = selesai; }
+    @else
+    resolve();
+    @endif
+  });
+
+  Promise.all([new Promise(function(r){ setTimeout(r, duration); }), heroSiap]).then(()=>{
     mark.classList.add('leaving');
     setTimeout(()=>{
       loader.classList.add('scan');
@@ -1788,7 +1819,7 @@
         }, reduceMotion ? 0 : 900);
       }, reduceMotion ? 0 : 260);
     }, reduceMotion ? 0 : 260);
-  }, duration);
+  });
 
   // ---------- ganti tema (gelap/terang) ----------
   const themeToggle = document.getElementById('themeToggle');

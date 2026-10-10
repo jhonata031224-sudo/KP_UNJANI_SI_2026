@@ -246,7 +246,7 @@ class SettingController extends Controller
         $gagalSimpanGambar = [];
 
         if ($request->hasFile('hero_image')) {
-            $path = $this->storeVerifiedImage($request->file('hero_image'), 'pengaturan');
+            $path = $this->storeHeroImage($request->file('hero_image'), 'pengaturan');
             if ($path) {
                 if ($pengaturan->hero_image_path) Storage::disk('public')->delete($pengaturan->hero_image_path);
                 $validated['hero_image_path'] = $path;
@@ -323,6 +323,29 @@ class SettingController extends Controller
      * fisik di disk) -- dipakai juga untuk file video (hero_video, lihat
      * updateLanding()), bukan cuma gambar.
      */
+    /**
+     * Simpan gambar latar hero dalam versi yang sudah dikecilkan (maks 1920px,
+     * WebP/JPEG) supaya ringan dimuat di HP. Kalau pengecilan tidak bisa/perlu
+     * (GD tidak ada, sudah kecil, memori kurang), pakai file asli seperti biasa.
+     */
+    private function storeHeroImage($file, string $folder): ?string
+    {
+        try {
+            $opt = \App\Support\ImageOptimizer::optimize($file->getRealPath());
+            if ($opt) {
+                $path = $folder.'/'.\Illuminate\Support\Str::random(40).'.'.$opt['ext'];
+                if (Storage::disk('public')->put($path, $opt['data']) && Storage::disk('public')->size($path) > 0) {
+                    return $path;
+                }
+                Storage::disk('public')->delete($path);
+            }
+        } catch (\Throwable $e) {
+            // abaikan -> jatuh ke penyimpanan file asli di bawah
+        }
+
+        return $this->storeVerifiedImage($file, $folder);
+    }
+
     private function storeVerifiedImage($file, string $folder): ?string
     {
         $path = $file->store($folder, 'public');
