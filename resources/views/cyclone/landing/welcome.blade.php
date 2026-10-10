@@ -1240,39 +1240,37 @@
     *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
   }
 
-  /* ===== toast notifikasi ===== */
-  .toast-stack{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2000;width:min(400px,86vw);pointer-events:none;height:0;}
-  .toast{
-    position:absolute;top:0;left:50%;overflow:hidden;
-    pointer-events:auto;display:flex;align-items:center;gap:11px;padding:13px 18px 15px;border-radius:11px;
-    background:var(--panel);border:1px solid var(--border-soft);box-shadow:0 15px 40px rgba(0,0,0,.35);
-    font-family:var(--body);font-size:13px;color:var(--text);width:100%;box-sizing:border-box;
-    opacity:0;transform:translate(-50%,-26px) scale(.97);
-    transition:top .8s cubic-bezier(.34,1.2,.64,1);
-    animation:toastIn .35s cubic-bezier(.34,1.56,.64,1) forwards;
-  }
-  .toast.leaving{animation:toastOut .4s cubic-bezier(.4,0,.2,1) forwards;}
-  .toast.success{border-color:rgba(63,194,125,.4);}
-  .toast.success .toast-icon{background:var(--success-dim);color:var(--success-bright);}
-  .toast.success .toast-bar{background:var(--success-bright);}
-  .toast.error{border-color:rgba(198,40,40,.35);}
-  .toast.error .toast-icon{background:var(--red-dim);color:var(--red);}
-  .toast.error .toast-bar{background:var(--red);}
-  .toast-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .toast-icon svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.4;}
-  .toast-body{display:flex;flex-direction:column;gap:2px;min-width:0;}
-  .toast-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;}
-  .toast.success .toast-label{color:var(--success-bright);}
-  .toast.error .toast-label{color:var(--red);}
-  .toast-text{font-family:var(--body);font-size:13.5px;font-weight:600;line-height:1.4;color:var(--text);}
-  .toast-bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform-origin:left;animation:toastBar 3s linear forwards;}
-  @keyframes toastIn{to{opacity:1;transform:translate(-50%,0) scale(1);}}
-  @keyframes toastOut{
-    0%{opacity:1;transform:translate(-50%,0) scale(1);}
-    35%{opacity:1;transform:translate(-50%,-6px) scale(1.05);}
-    100%{opacity:0;transform:translate(-50%,-30px) scale(.9);}
-  }
-  @keyframes toastBar{from{transform:scaleX(1);}to{transform:scaleX(0);}}
+  /* ===== toast notifikasi (kartu seragam dgn dashboard) ===== */
+  /* Popup (toast) seragam bergaya kartu notifikasi -- dipakai SEMUA jenis
+     (sukses/gagal/info/peringatan/notifikasi baru). Tampilan sama, yang beda
+     cuma warna aksen + ikon + label per jenis (var --nt-c / --nt-bg). */
+  .cyclone-ntoast-stack{position:fixed;z-index:200001;top:calc(env(safe-area-inset-top,0px) + 20px);right:20px;width:min(380px,calc(100vw - 24px));display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+  @media (max-width:700px){.cyclone-ntoast-stack{left:12px;right:12px;width:auto;}}
+  .cyclone-ntoast{--nt-c:var(--gold-bright,#ff9800);--nt-bg:var(--gold-dim,rgba(255,152,0,.14));--nt-bd:var(--border-strong,rgba(212,175,55,.42));position:relative;overflow:hidden;pointer-events:auto;display:flex;align-items:flex-start;gap:12px;padding:13px 42px 17px 14px;box-sizing:border-box;border-radius:14px;background:var(--panel,#1b2721);border:1px solid var(--nt-bd);box-shadow:0 18px 44px rgba(0,0,0,.45);color:var(--text,#f4f1e6);font-family:var(--body,inherit);opacity:0;transform:translateY(-14px) scale(.97);animation:cycloneNToastIn .38s cubic-bezier(.2,.9,.25,1.15) forwards;-webkit-tap-highlight-color:transparent;}
+  .cyclone-ntoast.is-success{--nt-c:var(--success-bright,#3fc27d);--nt-bg:var(--success-dim,rgba(63,194,125,.14));--nt-bd:rgba(63,194,125,.42);}
+  .cyclone-ntoast.is-error{--nt-c:var(--red,#e5484d);--nt-bg:var(--red-dim,rgba(198,40,40,.16));--nt-bd:rgba(198,40,40,.42);}
+  .cyclone-ntoast.is-info{--nt-c:var(--amber,#d99a1e);--nt-bg:var(--amber-dim,rgba(183,121,0,.16));--nt-bd:rgba(183,121,0,.42);}
+  .cyclone-ntoast.is-warning{--nt-c:#f0b429;--nt-bg:rgba(240,180,41,.15);--nt-bd:rgba(240,180,41,.45);}
+  .cyclone-ntoast.is-clickable{cursor:pointer;}
+  .cyclone-ntoast.is-clickable:active{transform:scale(.985);}
+  .cyclone-ntoast.is-leaving{animation:cycloneNToastOut .28s ease forwards;}
+  .cyclone-ntoast-icon{flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:var(--nt-bg);color:var(--nt-c);display:flex;align-items:center;justify-content:center;}
+  .cyclone-ntoast-icon svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;}
+  .cyclone-ntoast-body{display:flex;flex-direction:column;gap:3px;min-width:0;}
+  .cyclone-ntoast-label{font-family:var(--mono,monospace);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--nt-c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cyclone-ntoast-text{font-size:13.5px;font-weight:600;line-height:1.4;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+  .cyclone-ntoast-time{font-size:11px;color:var(--text-muted,#9fb3a5);}
+  .cyclone-ntoast-close{position:absolute;top:8px;right:8px;width:28px;height:28px;border:0;border-radius:8px;background:transparent;color:var(--text-muted,#9fb3a5);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
+  .cyclone-ntoast-close:hover{background:var(--nt-bg);color:var(--nt-c);}
+  .cyclone-ntoast-close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;pointer-events:none;}
+  .cyclone-ntoast-bar{position:absolute;left:0;bottom:0;height:3px;width:100%;background:var(--nt-c);transform-origin:left;animation:cycloneNToastBar var(--nt-ms,3500ms) linear forwards;}
+  .cyclone-ntoast:hover .cyclone-ntoast-bar,.cyclone-ntoast:active .cyclone-ntoast-bar{animation-play-state:paused;}
+  html[data-theme="light"] .cyclone-ntoast.is-notif .cyclone-ntoast-label{color:#a85a00;}
+  html[data-theme="light"] .cyclone-ntoast{box-shadow:0 14px 34px rgba(60,40,0,.22);}
+  @keyframes cycloneNToastIn{to{opacity:1;transform:translateY(0) scale(1);}}
+  @keyframes cycloneNToastOut{from{opacity:1;transform:translateY(0) scale(1);}to{opacity:0;transform:translateY(-10px) scale(.96);}}
+  @keyframes cycloneNToastBar{from{transform:scaleX(1);}to{transform:scaleX(0);}}
+  @media (prefers-reduced-motion:reduce){.cyclone-ntoast,.cyclone-ntoast.is-leaving{animation-duration:.01s;}}
 
   /* ================= PERFORMA MOBILE =================
      Di HP, efek yang dihitung ulang GPU tiap frame bikin scroll patah-patah:
@@ -2109,60 +2107,62 @@
   }
 
   // ---------- toast notifikasi ----------
-  var cycloneToastQueue = [];
-  function cycloneShowToast(type, message){
-    var stack = document.getElementById('cycloneToastStack');
-    if(!stack){ stack=document.createElement('div'); stack.id='cycloneToastStack'; stack.className='toast-stack'; document.body.appendChild(stack); }
-    var toast=document.createElement('div');
-    toast.className='toast '+type;
-    var icon = type==='success'
-      ? '<path d="M20 6L9 17l-5-5"></path>'
-      : '<line x1="12" y1="8" x2="12" y2="13"></line><circle cx="12" cy="16.5" r=".6" fill="currentColor" stroke="none"></circle><circle cx="12" cy="12" r="9.3"></circle>';
-    var label = type==='success' ? 'Berhasil' : 'Gagal';
-    toast.innerHTML = '<span class="toast-icon"><svg viewBox="0 0 24 24">'+icon+'</svg></span><span class="toast-body"><span class="toast-label"></span><span class="toast-text"></span></span><span class="toast-bar"></span>';
-    toast.querySelector('.toast-label').textContent = label;
-    toast.querySelector('.toast-text').textContent = message;
-    toast.style.top = '0px';
-    stack.prepend(toast);
-    cycloneRelayoutToasts(stack);
+  var CYCLONE_TOAST_ICONS = {
+    success: '<path d="M20 6L9 17l-5-5"></path>',
+    error: '<circle cx="12" cy="12" r="9.3"></circle><path d="M15 9l-6 6M9 9l6 6"></path>',
+    info: '<circle cx="12" cy="12" r="9.3"></circle><line x1="12" y1="11" x2="12" y2="16.5"></line><circle cx="12" cy="7.8" r=".6" fill="currentColor" stroke="none"></circle>',
+    warning: '<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><circle cx="12" cy="16.8" r=".6" fill="currentColor" stroke="none"></circle>',
+    notif: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path>'
+  };
+  var CYCLONE_TOAST_LABELS = { success:'Berhasil', error:'Gagal', info:'Info', warning:'Perhatian', notif:'Notifikasi baru' };
+  var CYCLONE_TOAST_MAKS = 4;
 
-    // Antrean FIFO: toast yang muncul duluan HARUS mulai hilang duluan juga,
-    // jadi urutan animasi keluar tidak pernah kebalik walau timer selisih dikit.
-    var entry = { el: toast, leaving: false, readyAt: Date.now() + 3000 };
-    cycloneToastQueue.push(entry);
-
-    function tryLeave(){
-      if(entry.leaving) return;
-      if(Date.now() < entry.readyAt) return;
-      var idx = cycloneToastQueue.indexOf(entry);
-      if(idx > 0 && cycloneToastQueue.slice(0, idx).some(function(e){ return !e.leaving; })) return;
-      entry.leaving = true;
-      toast.classList.add('leaving');
-      setTimeout(function(){
-        toast.remove();
-        var i = cycloneToastQueue.indexOf(entry);
-        if(i > -1) cycloneToastQueue.splice(i, 1);
-        cycloneRelayoutToasts(stack);
-      }, 400);
+  function cycloneToastStack(){
+    var stack = document.getElementById('cycloneNToastStack');
+    if(!stack){
+      stack = document.createElement('div');
+      stack.id = 'cycloneNToastStack';
+      stack.className = 'cyclone-ntoast-stack';
+      stack.setAttribute('role','status');
+      stack.setAttribute('aria-live','polite');
+      document.body.appendChild(stack);
     }
+    return stack;
+  }
+  function cycloneCloseToast(el){
+    if(!el || el.dataset.leaving) return;
+    el.dataset.leaving = '1';
+    el.classList.add('is-leaving');
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 300);
+  }
+  // opts (opsional): {label, ms, onClick, time}
+  function cycloneShowToast(type, message, opts){
+    opts = opts || {};
+    if(type === 'danger') type = 'error';
+    if(!CYCLONE_TOAST_ICONS[type]) type = 'info';
+    var stack = cycloneToastStack();
+    var aktif = Array.prototype.slice.call(stack.querySelectorAll('.cyclone-ntoast:not([data-leaving])'));
+    while(aktif.length >= CYCLONE_TOAST_MAKS) cycloneCloseToast(aktif.pop());
 
-    setTimeout(function poll(){
-      tryLeave();
-      if(!entry.leaving) setTimeout(poll, 100);
-    }, 3000);
+    var el = document.createElement('div');
+    el.className = 'cyclone-ntoast is-' + type + (opts.onClick ? ' is-clickable' : '');
+    el.style.setProperty('--nt-ms', (opts.ms || 3500) + 'ms');
+    el.innerHTML =
+      '<span class="cyclone-ntoast-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + CYCLONE_TOAST_ICONS[type] + '</svg></span>' +
+      '<span class="cyclone-ntoast-body"><span class="cyclone-ntoast-label"></span><span class="cyclone-ntoast-text"></span>' + (opts.time ? '<span class="cyclone-ntoast-time"></span>' : '') + '</span>' +
+      '<button type="button" class="cyclone-ntoast-close" aria-label="Tutup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>' +
+      '<span class="cyclone-ntoast-bar"></span>';
+    el.querySelector('.cyclone-ntoast-label').textContent = opts.label || CYCLONE_TOAST_LABELS[type];
+    el.querySelector('.cyclone-ntoast-text').textContent = message;
+    if(opts.time) el.querySelector('.cyclone-ntoast-time').textContent = opts.time;
+    el.querySelector('.cyclone-ntoast-close').addEventListener('click', function(e){ e.stopPropagation(); cycloneCloseToast(el); });
+    if(opts.onClick) el.addEventListener('click', function(){ cycloneCloseToast(el); opts.onClick(); });
+    el.querySelector('.cyclone-ntoast-bar').addEventListener('animationend', function(){ cycloneCloseToast(el); });
+    stack.insertBefore(el, stack.firstChild); // terbaru di paling atas
+    return el;
   }
-  // Susun ulang posisi (top) tiap toast berdasarkan urutan & tinggi aktualnya
-  // — perubahan nilai top otomatis dianimasikan lewat transition CSS, jadi
-  // toast lama beneran "geser" turun, bukan loncat/ketimpa toast baru.
-  function cycloneRelayoutToasts(stack){
-    requestAnimationFrame(function(){
-      var y = 0, gap = 10;
-      Array.prototype.forEach.call(stack.children, function(el){
-        el.style.top = y + 'px';
-        y += el.offsetHeight + gap;
-      });
-    });
-  }
+  window.cycloneCloseToast = cycloneCloseToast;
+  window.cycloneToastStack = cycloneToastStack;
 
   @if ($errors->any())
     openLogin();
