@@ -11,6 +11,7 @@
   // EnsureModulAktif), ini cuma supaya UI-nya tidak nyoba minta hal yang
   // memang tidak diizinkan.
   var CYCLONE_NOTIFIKASI_AKTIF = @json($modulAktif['notifikasi'] ?? true);
+  window.CYCLONE_NOTIFIKASI_AKTIF = CYCLONE_NOTIFIKASI_AKTIF;
 
   function initNotificationControls() {
     if (!CYCLONE_NOTIFIKASI_AKTIF) return;

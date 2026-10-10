@@ -639,8 +639,8 @@
   /* Popup (toast) seragam bergaya kartu notifikasi -- dipakai SEMUA jenis
      (sukses/gagal/info/peringatan/notifikasi baru). Tampilan sama, yang beda
      cuma warna aksen + ikon + label per jenis (var --nt-c / --nt-bg). */
-  .cyclone-ntoast-stack{position:fixed;z-index:200001;top:calc(env(safe-area-inset-top,0px) + 92px);right:20px;width:min(380px,calc(100vw - 24px));display:flex;flex-direction:column;gap:10px;pointer-events:none;}
-  @media (max-width:700px){.cyclone-ntoast-stack{left:12px;right:12px;width:auto;}}
+  .cyclone-ntoast-stack{position:fixed;z-index:200001;top:calc(env(safe-area-inset-top,0px) + 20px);left:50%;transform:translateX(-50%);width:min(400px,calc(100vw - 24px));display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+  @media (max-width:700px){.cyclone-ntoast-stack{top:calc(env(safe-area-inset-top,0px) + 92px);}}
   .cyclone-ntoast{--nt-c:var(--gold-bright,#ff9800);--nt-bg:var(--gold-dim,rgba(255,152,0,.14));--nt-bd:var(--border-strong,rgba(212,175,55,.42));position:relative;overflow:hidden;pointer-events:auto;display:flex;align-items:flex-start;gap:12px;padding:13px 42px 17px 14px;box-sizing:border-box;border-radius:14px;background:var(--panel,#1b2721);border:1px solid var(--nt-bd);box-shadow:0 18px 44px rgba(0,0,0,.45);color:var(--text,#f4f1e6);font-family:var(--body,inherit);opacity:0;transform:translateY(-14px) scale(.97);animation:cycloneNToastIn .38s cubic-bezier(.2,.9,.25,1.15) forwards;-webkit-tap-highlight-color:transparent;}
   .cyclone-ntoast.is-success{--nt-c:var(--success-bright,#3fc27d);--nt-bg:var(--success-dim,rgba(63,194,125,.14));--nt-bd:rgba(63,194,125,.42);}
   .cyclone-ntoast.is-error{--nt-c:var(--red,#e5484d);--nt-bg:var(--red-dim,rgba(198,40,40,.16));--nt-bd:rgba(198,40,40,.42);}

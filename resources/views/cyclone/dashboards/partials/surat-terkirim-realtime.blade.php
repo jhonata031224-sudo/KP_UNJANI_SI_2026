@@ -199,7 +199,9 @@
         if(typeof data.arsip_items_html==='string') syncContainer(arsipEl,data.arsip_items_html,emptyArsip);
         var masukInserted=0;
         if(typeof data.masuk_items_html==='string') masukInserted=syncContainer(masukEl,data.masuk_items_html,emptyMasuk);
-        if(!initialPoll && masukInserted>0 && window.cycloneShowToast) window.cycloneShowToast('success','Surat baru masuk.');
+        // Dobel dengan popup "Notifikasi baru" (lonceng) untuk kejadian yang sama, jadi
+        // toast ini cuma jadi cadangan kalau modul notifikasi nonaktif untuk user ini.
+        if(!initialPoll && masukInserted>0 && window.CYCLONE_NOTIFIKASI_AKTIF===false && window.cycloneShowToast) window.cycloneShowToast('success','Surat baru masuk.');
         initialPoll=false;
         window.cycloneRefreshSuratDetailIfOpen&&window.cycloneRefreshSuratDetailIfOpen();
       }).catch(function(){}).finally(function(){busy=false;});
