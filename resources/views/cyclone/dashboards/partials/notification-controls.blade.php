@@ -671,6 +671,121 @@
       }, true);
     }
 
+    // ── Popup melayang (toast) untuk notifikasi BARU ─────────────────────
+    // Selain badge lonceng & suara, tiap notifikasi yang datang saat
+    // dashboard sedang dibuka juga muncul sebagai kartu melayang di pojok
+    // atas: bisa diklik (langsung ke surat/halaman terkait), ada tombol
+    // tutup, hilang sendiri ~6,5 dtk, dan berhenti menghitung mundur selama
+    // disentuh/di-hover. Komponen ini SENGAJA terpisah dari
+    // cycloneShowToast (toast sukses/gagal 3 dtk) agar tidak saling ganggu.
+    var NTOAST_MAKS = 3;
+    var NTOAST_MS = 6500;
+    var ntoastTertunda = [];
+
+    function ensureNToastStyle() {
+      if (document.getElementById('cyclone-notif-toast-style')) return;
+      var st = document.createElement('style');
+      st.id = 'cyclone-notif-toast-style';
+      st.textContent =
+        '.cyclone-ntoast-stack{position:fixed;z-index:200001;top:calc(env(safe-area-inset-top,0px) + 92px);right:20px;width:min(380px,calc(100vw - 24px));display:flex;flex-direction:column;gap:10px;pointer-events:none;}' +
+        '@media (max-width:700px){.cyclone-ntoast-stack{left:12px;right:12px;width:auto;top:calc(env(safe-area-inset-top,0px) + 92px);}}' +
+        '.cyclone-ntoast{position:relative;overflow:hidden;pointer-events:auto;display:flex;align-items:flex-start;gap:12px;padding:13px 42px 17px 14px;box-sizing:border-box;border-radius:14px;background:var(--panel,#1b2721);border:1px solid var(--border-strong,rgba(212,175,55,.42));box-shadow:0 18px 44px rgba(0,0,0,.45);color:var(--text,#f4f1e6);font-family:var(--body,inherit);opacity:0;transform:translateY(-14px) scale(.97);animation:cycloneNToastIn .38s cubic-bezier(.2,.9,.25,1.15) forwards;-webkit-tap-highlight-color:transparent;}' +
+        '.cyclone-ntoast.is-clickable{cursor:pointer;}' +
+        '.cyclone-ntoast.is-clickable:active{transform:scale(.985);}' +
+        '.cyclone-ntoast.is-leaving{animation:cycloneNToastOut .28s ease forwards;}' +
+        '.cyclone-ntoast-icon{flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:var(--gold-dim,rgba(255,152,0,.14));color:var(--gold-bright,#ff9800);display:flex;align-items:center;justify-content:center;}' +
+        '.cyclone-ntoast-icon svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;}' +
+        '.cyclone-ntoast-body{display:flex;flex-direction:column;gap:3px;min-width:0;}' +
+        '.cyclone-ntoast-label{font-family:var(--mono,monospace);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--gold-bright,#ff9800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+        '.cyclone-ntoast-text{font-size:13.5px;font-weight:600;line-height:1.4;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}' +
+        '.cyclone-ntoast-time{font-size:11px;color:var(--text-muted,#9fb3a5);}' +
+        '.cyclone-ntoast-close{position:absolute;top:8px;right:8px;width:28px;height:28px;border:0;border-radius:8px;background:transparent;color:var(--text-muted,#9fb3a5);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}' +
+        '.cyclone-ntoast-close:hover{background:var(--gold-dim,rgba(255,152,0,.14));color:var(--gold-bright,#ff9800);}' +
+        '.cyclone-ntoast-close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;pointer-events:none;}' +
+        '.cyclone-ntoast-bar{position:absolute;left:0;bottom:0;height:3px;width:100%;background:var(--gold-bright,#ff9800);transform-origin:left;animation:cycloneNToastBar ' + NTOAST_MS + 'ms linear forwards;}' +
+        '.cyclone-ntoast:hover .cyclone-ntoast-bar,.cyclone-ntoast:active .cyclone-ntoast-bar{animation-play-state:paused;}' +
+        'html[data-theme="light"] .cyclone-ntoast-label{color:#a85a00;}' +
+        'html[data-theme="light"] .cyclone-ntoast{box-shadow:0 14px 34px rgba(60,40,0,.22);}' +
+        '@keyframes cycloneNToastIn{to{opacity:1;transform:translateY(0) scale(1);}}' +
+        '@keyframes cycloneNToastOut{from{opacity:1;transform:translateY(0) scale(1);}to{opacity:0;transform:translateY(-10px) scale(.96);}}' +
+        '@keyframes cycloneNToastBar{from{transform:scaleX(1);}to{transform:scaleX(0);}}' +
+        '@media (prefers-reduced-motion:reduce){.cyclone-ntoast,.cyclone-ntoast.is-leaving{animation-duration:.01s;}}';
+      document.head.appendChild(st);
+    }
+
+    function tutupToastNotifikasi(el) {
+      if (!el || el.dataset.leaving) return;
+      el.dataset.leaving = '1';
+      el.classList.add('is-leaving');
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+    }
+
+    function tampilkanToastNotifikasi(n) {
+      ensureNToastStyle();
+      var stack = document.getElementById('cycloneNToastStack');
+      if (!stack) {
+        stack = document.createElement('div');
+        stack.id = 'cycloneNToastStack';
+        stack.className = 'cyclone-ntoast-stack';
+        stack.setAttribute('role', 'status');
+        stack.setAttribute('aria-live', 'polite');
+        document.body.appendChild(stack);
+      }
+      // Batasi tumpukan: yang paling lama disingkirkan dulu.
+      var aktif = Array.prototype.slice.call(stack.querySelectorAll('.cyclone-ntoast:not([data-leaving])'));
+      while (aktif.length >= NTOAST_MAKS) tutupToastNotifikasi(aktif.pop());
+
+      var isPengumuman = n.tipe === 'pengumuman_admin';
+      var isKeteranganSaja = (isPengumuman && n.kategori === 'keterangan') || n.tipe === 'surat_info';
+      var aksi = null;
+      if (isPengumuman && !isKeteranganSaja) {
+        aksi = function () { markNotificationRead(n.id, null); tampilkanPengumuman(n.title, n.message, n.kategori, n.time); };
+      } else if (!isPengumuman && n.url) {
+        aksi = function () { markNotificationRead(n.id, null); goToNotifikasi(n.url); };
+      }
+
+      var el = document.createElement('div');
+      el.className = 'cyclone-ntoast' + (aksi ? ' is-clickable' : '');
+      el.innerHTML =
+        '<span class="cyclone-ntoast-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span>' +
+        '<span class="cyclone-ntoast-body"><span class="cyclone-ntoast-label"></span><span class="cyclone-ntoast-text"></span><span class="cyclone-ntoast-time"></span></span>' +
+        '<button type="button" class="cyclone-ntoast-close" aria-label="Tutup notifikasi"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>' +
+        '<span class="cyclone-ntoast-bar"></span>';
+      el.querySelector('.cyclone-ntoast-label').textContent = n.title || 'Notifikasi baru';
+      el.querySelector('.cyclone-ntoast-text').textContent = n.message || 'Ada pembaruan baru.';
+      el.querySelector('.cyclone-ntoast-time').textContent = n.time || 'Baru saja';
+
+      el.querySelector('.cyclone-ntoast-close').addEventListener('click', function (e) {
+        e.stopPropagation();
+        tutupToastNotifikasi(el);
+      });
+      if (aksi) {
+        el.addEventListener('click', function () { tutupToastNotifikasi(el); aksi(); });
+      }
+      el.querySelector('.cyclone-ntoast-bar').addEventListener('animationend', function () { tutupToastNotifikasi(el); });
+
+      stack.insertBefore(el, stack.firstChild); // terbaru di paling atas
+    }
+
+    // Terima daftar notifikasi baru dari poll (urutan: terbaru dulu).
+    function antrikanToastNotifikasi(daftar) {
+      if (!daftar || !daftar.length) return;
+      // Dropdown lonceng sedang terbuka -> notifikasinya sudah kelihatan di sana.
+      if (dropdown.classList.contains('open')) return;
+      // Tab sedang di latar belakang: tahan, tampilkan saat pengguna kembali.
+      if (document.hidden) {
+        ntoastTertunda = daftar.concat(ntoastTertunda).slice(0, NTOAST_MAKS);
+        return;
+      }
+      daftar.slice(0, NTOAST_MAKS).reverse().forEach(tampilkanToastNotifikasi);
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden || !ntoastTertunda.length) return;
+      var tunda = ntoastTertunda; ntoastTertunda = [];
+      tunda.slice(0, NTOAST_MAKS).reverse().forEach(tampilkanToastNotifikasi);
+    });
+    window.cycloneTampilkanToastNotifikasi = tampilkanToastNotifikasi;
+
     render();
 
     // Realtime: poll berkala buat notifikasi baru & sinkron daftar/badge --
@@ -702,16 +817,22 @@
           // biar tidak numpuk bunyi berkali-kali kalau beberapa notif
           // masuk bersamaan dalam satu jeda poll 3 detik).
           var adaNotifikasiBaru = false;
+          var daftarBaru = [];
           data.notifications.forEach(function (n) {
             if (!notifKnownIds[String(n.id)]) {
               notifKnownIds[String(n.id)] = true;
               adaNotifikasiBaru = true;
+              daftarBaru.push(n);
             }
           });
           if (adaNotifikasiBaru) mainkanSuaraNotifikasi();
 
           notifications = data.notifications;
           render();
+
+          // Popup melayang (setelah render supaya klik di popup bisa
+          // menandai-dibaca notifikasi yang sudah ada di daftar).
+          if (adaNotifikasiBaru) antrikanToastNotifikasi(daftarBaru);
         }).catch(function () {}).finally(function () { polling = false; });
       }
       // Poll pertama LANGSUNG jalan (dulu murni nunggu interval pertama) --
