@@ -117,6 +117,13 @@
 .surat-detail-item-label{font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
 .surat-detail-item-value{font-size:13.5px;font-weight:600;color:var(--text);line-height:1.55;white-space:pre-wrap}
 .surat-detail-item-row{display:flex;gap:10px;margin-bottom:10px}
+/* Daftar Tindakan per-poin (disposisi bisa lebih dari satu) */
+.surat-tindakan-list{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+.surat-tindakan-item{display:flex;align-items:flex-start;gap:10px;padding:7px 10px;border:1px solid var(--border-soft);border-radius:9px;background:rgba(255,152,0,.05)}
+.surat-tindakan-check{flex:0 0 auto;width:18px;height:18px;margin-top:1px;border-radius:50%;background:var(--gold-dim);color:var(--gold-bright);display:inline-flex;align-items:center;justify-content:center}
+.surat-tindakan-check svg{width:11px;height:11px}
+.surat-tindakan-text{font-size:13px;font-weight:600;color:var(--text);line-height:1.45;min-width:0;overflow-wrap:anywhere}
+html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
 .surat-detail-item-row .surat-detail-item{flex:1;min-width:0;margin-bottom:0}
 /* Fix mobile: baris Jenis Surat + Status tidak offside; badge panjang tidak keluar kotak */
 .surat-detail-item-value .status-badge,.surat-detail-item-value .priority-tag{max-width:100%;box-sizing:border-box}

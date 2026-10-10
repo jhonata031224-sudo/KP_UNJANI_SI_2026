@@ -3,7 +3,7 @@
      bawaan browser -- scroll asli dipindah ke .surat-detail-scroll di dalamnya. --}}
 <div class="report-modal" id="suratDetailModal"><div class="report-modal-card"><div class="surat-detail-scroll"><div class="report-modal-head"><div style="min-width:0"><h3 id="suratDetailJudul" style="margin:0 0 4px">Detail Surat</h3><p id="suratDetailDari" style="margin:0;font-size:12px;color:var(--text-muted)">-</p></div><button type="button" class="btn-icon-close" id="suratDetailClose" aria-label="Tutup" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="surat-detail-body"><div class="surat-detail-col surat-detail-col-left"><div class="surat-detail-item" id="suratDetailTujuanItem"><div><div class="surat-detail-item-label">Tujuan</div><div class="surat-detail-item-value" id="suratDetailTujuanValue" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span id="suratDetailTujuan">-</span><span class="satuan-pill" id="suratDetailTujuanKode" style="display:none"></span></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Perihal</div><div class="surat-detail-item-value" id="suratDetailPerihal">-</div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Kategori</div><div class="surat-detail-item-value" id="suratDetailKategori">-</div></div></div><div class="surat-detail-item-row"><div class="surat-detail-item"><div><div class="surat-detail-item-label">Jenis Surat</div><div class="surat-detail-item-value"><span class="priority-tag" id="suratDetailPrioritas">-</span></div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Status</div><div class="surat-detail-item-value"><span class="status-badge" id="suratDetailStatusText">-</span></div></div></div></div><div class="surat-detail-item" id="suratDetailDeadlineItem" style="display:none"><div><div class="surat-detail-item-label" style="display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0;color:#f59e0b"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Tenggat Waktu (Kilat)</div><div class="surat-detail-item-value" id="suratDetailDeadlineValue" style="font-weight:700;color:#f59e0b">-</div></div></div><div class="surat-detail-item"><div><div class="surat-detail-item-label">Ringkasan</div><div class="surat-detail-item-value" id="suratDetailRingkasan">-</div></div></div>
 {{-- Tindakan: kolom terpisah, instruksi konkret dari pemberi disposisi --}}
-<div class="surat-detail-item" id="suratDetailTindakanPanel" style="display:none"><div><div class="surat-detail-item-label">Tindakan</div><div id="suratDetailTindakanWrap" style="display:flex;flex-wrap:wrap;gap:2px 16px;margin-top:0"></div></div></div>
+<div class="surat-detail-item" id="suratDetailTindakanPanel" style="display:none"><div><div class="surat-detail-item-label">Tindakan</div><div id="suratDetailTindakanWrap" class="surat-tindakan-list"></div></div></div>
 @php
     $isWadanDashboard = strtoupper($satuan->kode ?? '') === 'WADAN';
 @endphp
@@ -424,12 +424,21 @@ window.openSuratDetail = function(button){
   if (tindakan.length) {
     tindakanPanel.style.display = '';
     tindakanWrap.innerHTML = '';
+    // Tiap tindakan tampil per-poin (satu baris, penanda centang) supaya
+    // disposisi lebih dari satu mudah dibaca, bukan berjejer tanpa pemisah.
+    var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>';
     tindakan.forEach(function(t){
-      var tag = document.createElement('span');
-      tag.className = 'status-badge status-sedang';
-      tag.style.cssText = 'font-size:11px;padding:2px 0;font-weight:500';
-      tag.textContent = t;
-      tindakanWrap.appendChild(tag);
+      var row = document.createElement('div');
+      row.className = 'surat-tindakan-item';
+      var ico = document.createElement('span');
+      ico.className = 'surat-tindakan-check';
+      ico.innerHTML = checkIcon;
+      var txt = document.createElement('span');
+      txt.className = 'surat-tindakan-text';
+      txt.textContent = t;
+      row.appendChild(ico);
+      row.appendChild(txt);
+      tindakanWrap.appendChild(row);
     });
   } else {
     tindakanPanel.style.display = 'none';
