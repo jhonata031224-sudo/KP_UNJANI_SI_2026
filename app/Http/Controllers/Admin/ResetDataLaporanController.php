@@ -202,6 +202,7 @@ class ResetDataLaporanController extends Controller
                     'judul' => $row->perihal ?: 'Surat #'.$row->id,
                     'satuan' => self::jalurAlurSurat($row),
                     'alur_ket' => self::keteranganAlurSurat($row),
+                    'grup' => self::grupSurat($row),
                     'user' => $row->user->name ?? '-',
                     'tanggal' => $row->created_at ? $row->created_at->translatedFormat('d M Y H:i') : '-',
                     'status' => $row->labelStatus(),
@@ -276,6 +277,25 @@ class ResetDataLaporanController extends Controller
     private static function jalurAlurSurat(LaporanSurat $row): string
     {
         return implode(' → ', self::jalurSatuanSurat($row));
+    }
+
+    /**
+     * Kelompok surat untuk tab pemisah di menu Reset Data (hanya tampilan admin):
+     *  - 'danpus'  : surat turun yang dikeluarkan Danpus (belum ada balasan satuan)
+     *  - 'balasan' : surat turun Danpus yang sudah dibalas satuan (balasan naik ke Danpus)
+     *  - 'satuan'  : surat keluar murni yang berawal dari satuan (pengajuan satuan)
+     * Balasan satuan disimpan sebagai riwayat SURAT_KELUAR pada surat Danpus yang sama
+     * (bukan baris baru), jadi satu surat hanya masuk ke satu kelompok.
+     */
+    private static function grupSurat(LaporanSurat $row): string
+    {
+        if (strtoupper((string) ($row->satuan->kode ?? '')) !== 'DANPUS') {
+            return 'satuan';
+        }
+
+        return $row->riwayats->contains('aksi', LaporanSuratRiwayat::AKSI_SURAT_KELUAR)
+            ? 'balasan'
+            : 'danpus';
     }
 
     /**

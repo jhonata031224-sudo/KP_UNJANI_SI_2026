@@ -3360,6 +3360,21 @@
             table.rdl-table td.rdl-col-center{text-align:center;}
           }
 
+          /* Tab pemisah kelompok (khusus kategori Surat) */
+          .rdl-grup-bar{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px;}
+          .rdl-grup-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;border:1px solid var(--border-soft);background:var(--panel-alt);color:var(--text-muted);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s ease;}
+          .rdl-grup-btn:hover{border-color:rgba(255,152,0,.5);color:var(--text);}
+          .rdl-grup-btn.active{border-color:#ff9800;background:rgba(255,152,0,.12);color:var(--gold-bright, #ff9800);}
+          .rdl-grup-count{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--panel);border:1px solid var(--border-soft);color:var(--text-muted);}
+          .rdl-grup-btn.active .rdl-grup-count{color:inherit;border-color:rgba(255,152,0,.4);}
+          .rdl-grup-desc{margin:0 0 14px;font-size:12px;color:var(--text-dim);line-height:1.5;}
+          .rdl-grup-empty{padding:28px 16px;text-align:center;font-size:12.5px;color:var(--text-muted);border:1px dashed var(--border-soft);border-radius:12px;background:var(--panel-alt);}
+          .rdl-grup-empty[hidden]{display:none;}
+          @media (max-width:760px){
+            .rdl-grup-bar{flex-direction:column;}
+            .rdl-grup-btn{width:100%;justify-content:space-between;min-height:42px;}
+          }
+
           .rdl-check-cell{width:36px;text-align:center;}
           .rdl-check-cell input[type="checkbox"]{width:16px;height:16px;accent-color:#e5484d;cursor:pointer;margin:0;}
 
@@ -3523,7 +3538,7 @@
             $totalCount = count($items);
             $isActiveCat = $loop->first;
           @endphp
-          <div class="panel rdl-detail-panel {{ $isActiveCat ? 'active' : '' }}" id="rdlDetail_{{ $key }}">
+          <div class="panel rdl-detail-panel {{ $isActiveCat ? 'active' : '' }}" id="rdlDetail_{{ $key }}" @if($key === 'surat') data-grup-aktif="danpus" @endif>
             <div class="rdl-panel-head">
               <div class="rdl-panel-title-area">
                 <div class="rdl-panel-icon">
@@ -3554,6 +3569,26 @@
               </div>
             </div>
 
+
+            @if($key === 'surat' && $totalCount > 0)
+              @php
+                $suratGrup = [
+                  'danpus'  => ['label' => 'Surat dari Danpus',   'desc' => 'Surat turun yang dikeluarkan Danpus ke satuan, belum ada balasan dari satuan.'],
+                  'balasan' => ['label' => 'Balasan ke Danpus',   'desc' => 'Surat turun dari Danpus yang sudah dibalas satuan (balasan naik kembali ke Danpus).'],
+                  'satuan'  => ['label' => 'Surat Keluar Satuan', 'desc' => 'Surat keluar murni yang berawal dari satuan (pengajuan satuan), bukan dari Danpus.'],
+                ];
+                $suratGrupCount = collect($items)->countBy('grup');
+              @endphp
+              <div class="rdl-grup-bar" id="rdlGrupBar_{{ $key }}" role="tablist">
+                @foreach($suratGrup as $gKey => $gDef)
+                  <button type="button" role="tab" class="rdl-grup-btn {{ $loop->first ? 'active' : '' }}" data-grup="{{ $gKey }}" data-desc="{{ $gDef['desc'] }}" onclick="setRdlGrup('{{ $key }}', '{{ $gKey }}', this)">
+                    {{ $gDef['label'] }}
+                    <span class="rdl-grup-count" id="rdlGrupCount_{{ $gKey }}">{{ $suratGrupCount[$gKey] ?? 0 }}</span>
+                  </button>
+                @endforeach
+              </div>
+              <p class="rdl-grup-desc" id="rdlGrupDesc_{{ $key }}">{{ $suratGrup['danpus']['desc'] }}</p>
+            @endif
 
             @if($totalCount > 0)
               <div class="rdl-select-bar" id="rdlSelectBar_{{ $key }}" hidden>
@@ -3594,12 +3629,18 @@
                     </tr>
                   </thead>
                   <tbody>
+                    @php $noGrup = []; @endphp
                     @foreach($items as $i => $item)
-                      <tr data-rdl-row data-item-key="{{ $item['key'] }}" data-search-text="{{ strtolower($item['judul'].' '.$item['satuan'].' '.$item['user'].' '.$item['status'].' '.$item['subtipe']) }}">
+                      @php
+                        $g = $item['grup'] ?? '_';
+                        $noGrup[$g] = ($noGrup[$g] ?? 0) + 1;
+                        $sembunyiAwal = $key === 'surat' && $g !== 'danpus';
+                      @endphp
+                      <tr data-rdl-row data-grup="{{ $g }}" @if($sembunyiAwal) style="display: none;" @endif data-item-key="{{ $item['key'] }}" data-search-text="{{ strtolower($item['judul'].' '.$item['satuan'].' '.$item['user'].' '.$item['status'].' '.$item['subtipe']) }}">
                         <td class="rdl-check-cell">
                           <input type="checkbox" class="rdl-row-cb" value="{{ $item['key'] }}" data-title="{{ e($item['judul']) }}" onchange="syncRdlSelection('{{ $key }}')">
                         </td>
-                        <td class="rdl-no-cell" data-label="No" style="font-family:var(--mono);color:var(--text-dim);">{{ $i + 1 }}</td>
+                        <td class="rdl-no-cell" data-label="No" style="font-family:var(--mono);color:var(--text-dim);">{{ $noGrup[$g] }}</td>
                         <td class="rdl-title-td" data-label="Perihal">
                           <div class="rdl-title-cell">
                             <span class="rdl-item-title">{{ $item['judul'] }}</span>
@@ -3632,6 +3673,7 @@
                   </tbody>
                 </table>
               </div>
+              <div class="rdl-grup-empty" id="rdlGrupEmpty_{{ $key }}" hidden>Tidak ada data yang cocok pada tab ini.</div>
             @endif
           </div>
         @endforeach
@@ -3694,16 +3736,52 @@
           });
 
           // 2. Search Filter in Table
-          window.filterRdlTable = function(input, catKey) {
-            var val = (input.value || '').trim().toLowerCase();
+          // Filter gabungan: kata kunci pencarian + tab kelompok (kategori Surat)
+          window.applyRdlFilter = function(catKey) {
             var panel = document.getElementById('rdlDetail_' + catKey);
             if (!panel) return;
-            var rows = panel.querySelectorAll('tbody tr[data-rdl-row]');
-            rows.forEach(function(row){
+            var input = panel.querySelector('.rdl-search-input');
+            var val = ((input && input.value) || '').trim().toLowerCase();
+            var grup = panel.getAttribute('data-grup-aktif') || '';
+            var tampil = 0;
+            panel.querySelectorAll('tbody tr[data-rdl-row]').forEach(function(row){
               var searchTxt = row.getAttribute('data-search-text') || '';
-              row.style.display = searchTxt.indexOf(val) !== -1 ? '' : 'none';
+              var cocokGrup = !grup || row.getAttribute('data-grup') === grup;
+              var cocok = cocokGrup && searchTxt.indexOf(val) !== -1;
+              row.style.display = cocok ? '' : 'none';
+              if (cocok) {
+                tampil++;
+                var no = row.querySelector('.rdl-no-cell');
+                if (no) no.textContent = tampil;
+              }
             });
+            var kosong = document.getElementById('rdlGrupEmpty_' + catKey);
+            if (kosong) kosong.hidden = tampil > 0;
             syncRdlSelection(catKey);
+          };
+
+          // Ganti tab kelompok surat
+          window.setRdlGrup = function(catKey, grup, btn) {
+            var panel = document.getElementById('rdlDetail_' + catKey);
+            if (!panel) return;
+            panel.setAttribute('data-grup-aktif', grup);
+            panel.querySelectorAll('.rdl-grup-btn').forEach(function(b){
+              b.classList.toggle('active', b === btn);
+            });
+            var desc = document.getElementById('rdlGrupDesc_' + catKey);
+            if (desc && btn) desc.textContent = btn.getAttribute('data-desc') || '';
+            // Lepas centang baris dari tab lain supaya tidak ikut terhapus tanpa terlihat
+            panel.querySelectorAll('tbody tr[data-rdl-row]').forEach(function(row){
+              if (row.getAttribute('data-grup') !== grup) {
+                var cb = row.querySelector('.rdl-row-cb');
+                if (cb) cb.checked = false;
+              }
+            });
+            applyRdlFilter(catKey);
+          };
+
+          window.filterRdlTable = function(input, catKey) {
+            applyRdlFilter(catKey);
           };
 
           // 3. Toggle Check All
