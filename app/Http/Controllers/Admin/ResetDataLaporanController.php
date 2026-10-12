@@ -274,8 +274,88 @@ class ResetDataLaporanController extends Controller
         return $jalur;
     }
 
+    /**
+     * Rangkai daftar satuan dari sekumpulan langkah riwayat (pengirim -> penerima),
+     * tanpa satuan ganda berurutan. Hanya untuk tampilan admin.
+     *
+     * @return array<int, string>
+     */
+    private static function rangkaiJalur(iterable $langkah): array
+    {
+        $jalur = [];
+        $tambah = function ($satuan) use (&$jalur) {
+            $nama = self::namaSingkatSatuan($satuan);
+            if ($nama !== '-' && (empty($jalur) || end($jalur) !== $nama)) {
+                $jalur[] = $nama;
+            }
+        };
+
+        foreach ($langkah as $r) {
+            if (empty($jalur)) {
+                $tambah($r->pengirimSatuan);
+            }
+            $tambah($r->penerimaSatuan);
+        }
+
+        return $jalur;
+    }
+
+    /**
+     * Pecah riwayat surat Danpus jadi dua jalur (siklus berjalan; jika siklus itu
+     * belum punya balasan, pakai seluruh riwayat):
+     *  - 'turun'   : Danpus -> ... -> satuan penerima akhir (sebelum balasan pertama)
+     *  - 'balasan' : satuan penerima -> ... -> Danpus (mulai balasan pertama sampai ke Danpus)
+     * Hanya untuk tampilan admin; tidak mengubah data/alur surat.
+     *
+     * @return array{turun: array<int, string>, balasan: array<int, string>}
+     */
+    private static function jalurTurunDanBalasan(LaporanSurat $row): array
+    {
+        $semua = $row->riwayats->sortBy('id')->values();
+        $siklusIni = $semua->where('siklus', (int) ($row->siklus ?? 1))->values();
+        $riwayats = $siklusIni->contains('aksi', LaporanSuratRiwayat::AKSI_SURAT_KELUAR) ? $siklusIni : $semua;
+
+        $idxBalasan = $riwayats->search(fn ($r) => $r->aksi === LaporanSuratRiwayat::AKSI_SURAT_KELUAR);
+
+        $turunLangkah = $riwayats
+            ->filter(fn ($r, $i) => ($idxBalasan === false || $i < $idxBalasan)
+                && in_array($r->aksi, [LaporanSuratRiwayat::AKSI_BUAT_SURAT, LaporanSuratRiwayat::AKSI_TERUSKAN], true));
+
+        $balasanLangkah = $idxBalasan === false
+            ? collect()
+            : $riwayats->filter(fn ($r, $i) => $i >= $idxBalasan
+                && in_array($r->aksi, [LaporanSuratRiwayat::AKSI_SURAT_KELUAR, LaporanSuratRiwayat::AKSI_TERUSKAN], true));
+
+        $turun = self::rangkaiJalur($turunLangkah);
+        if (count($turun) < 2) {
+            // Data lama tanpa riwayat: pembuat -> pemegang saat ini.
+            $turun = array_values(array_filter([
+                self::namaSingkatSatuan($row->satuan),
+                self::namaSingkatSatuan($row->tujuanSatuan),
+            ], fn ($n) => $n !== '-'));
+        }
+
+        return ['turun' => $turun, 'balasan' => self::rangkaiJalur($balasanLangkah)];
+    }
+
     private static function jalurAlurSurat(LaporanSurat $row): string
     {
+        // Surat dari Danpus: tampilkan jalur turun saja (Danpus -> ... -> satuan penerima akhir).
+        // Balasan ke Danpus: tampilkan jalur balasan saja (satuan penerima -> ... -> Danpus).
+        // Surat Keluar Satuan: jalur lengkap seperti sebelumnya.
+        $grup = self::grupSurat($row);
+
+        if ($grup === 'danpus') {
+            return implode(' → ', self::jalurTurunDanBalasan($row)['turun']);
+        }
+
+        if ($grup === 'balasan') {
+            $balasan = self::jalurTurunDanBalasan($row)['balasan'];
+            if (count($balasan) >= 2) {
+                return implode(' → ', $balasan);
+            }
+        }
+
         return implode(' → ', self::jalurSatuanSurat($row));
     }
 
@@ -308,9 +388,12 @@ class ResetDataLaporanController extends Controller
         $adaBalasan = $row->riwayats->contains('aksi', LaporanSuratRiwayat::AKSI_SURAT_KELUAR);
 
         if (strtoupper((string) ($row->satuan->kode ?? '')) === 'DANPUS') {
-            $ket = $adaBalasan
-                ? 'Surat turun dari Danpus, satuan sudah mengirim balasan'
-                : 'Surat turun dari Danpus';
+            if ($adaBalasan) {
+                $turun = self::jalurTurunDanBalasan($row)['turun'];
+                $ket = 'Balasan naik ke Danpus · Surat turun: '.implode(' → ', $turun);
+            } else {
+                $ket = 'Surat turun dari Danpus';
+            }
         } else {
             $ket = 'Pengajuan surat dari '.$asal;
         }
