@@ -338,6 +338,34 @@ class ResetDataLaporanController extends Controller
         return ['turun' => $turun, 'balasan' => self::rangkaiJalur($balasanLangkah)];
     }
 
+    /**
+     * Satuan tujuan yang dipilih Wadan saat menekan "Teruskan Surat" pada surat
+     * turun Danpus (siklus berjalan, sebelum balasan pertama). Kosong = surat
+     * belum diteruskan Wadan. Hanya untuk tampilan admin.
+     *
+     * @return \Illuminate\Support\Collection<int, \App\Models\Satuan>
+     */
+    private static function tujuanTeruskanWadan(LaporanSurat $row): \Illuminate\Support\Collection
+    {
+        $semua = $row->riwayats->sortBy('id')->values();
+        $siklusIni = $semua->where('siklus', (int) ($row->siklus ?? 1))->values();
+        $riwayats = $siklusIni->contains('aksi', LaporanSuratRiwayat::AKSI_SURAT_KELUAR) ? $siklusIni : $semua;
+
+        $idxBalasan = $riwayats->search(fn ($r) => $r->aksi === LaporanSuratRiwayat::AKSI_SURAT_KELUAR);
+
+        return $riwayats
+            ->filter(function ($r, $i) use ($idxBalasan) {
+                return ($idxBalasan === false || $i < $idxBalasan)
+                    && $r->aksi === LaporanSuratRiwayat::AKSI_TERUSKAN
+                    && strtoupper((string) ($r->pengirimSatuan->kode ?? '')) === 'WADAN'
+                    && ! in_array(strtoupper((string) ($r->penerimaSatuan->kode ?? '')), ['', 'DANPUS', 'WADAN'], true);
+            })
+            ->map(fn ($r) => $r->penerimaSatuan)
+            ->filter()
+            ->unique('id')
+            ->values();
+    }
+
     private static function jalurAlurSurat(LaporanSurat $row): string
     {
         // Surat dari Danpus: tampilkan jalur turun saja (Danpus -> ... -> satuan penerima akhir).
@@ -346,7 +374,14 @@ class ResetDataLaporanController extends Controller
         $grup = self::grupSurat($row);
 
         if ($grup === 'danpus') {
-            return implode(' → ', self::jalurTurunDanBalasan($row)['turun']);
+            $jalur = implode(' → ', self::jalurTurunDanBalasan($row)['turun']);
+
+            // Belum diteruskan Wadan -> penerima akhir memang belum ditentukan.
+            if (self::tujuanTeruskanWadan($row)->isEmpty()) {
+                $jalur .= ' → (menunggu diteruskan Wadan)';
+            }
+
+            return $jalur;
         }
 
         if ($grup === 'balasan') {
@@ -388,11 +423,23 @@ class ResetDataLaporanController extends Controller
         $adaBalasan = $row->riwayats->contains('aksi', LaporanSuratRiwayat::AKSI_SURAT_KELUAR);
 
         if (strtoupper((string) ($row->satuan->kode ?? '')) === 'DANPUS') {
+            $diteruskan = self::tujuanTeruskanWadan($row)
+                ->map(fn ($sat) => $sat->nama ?: self::namaSingkatSatuan($sat))
+                ->implode(', ');
+
             if ($adaBalasan) {
                 $turun = self::jalurTurunDanBalasan($row)['turun'];
                 $ket = 'Balasan naik ke Danpus · Surat turun: '.implode(' → ', $turun);
+                if ($diteruskan !== '') {
+                    $ket .= ' · Wadan meneruskan ke '.$diteruskan;
+                }
+            } elseif ($diteruskan !== '') {
+                $ket = 'Surat turun dari Danpus · Wadan meneruskan ke '.$diteruskan
+                    .' · Saat ini di '.self::namaSingkatSatuan($row->tujuanSatuan)
+                    .' ('.$row->labelStatus().')';
             } else {
-                $ket = 'Surat turun dari Danpus';
+                $ket = 'Surat turun dari Danpus · Belum diteruskan Wadan, masih di '
+                    .self::namaSingkatSatuan($row->tujuanSatuan).' ('.$row->labelStatus().')';
             }
         } else {
             $ket = 'Pengajuan surat dari '.$asal;
