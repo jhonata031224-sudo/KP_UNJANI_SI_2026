@@ -200,8 +200,8 @@ class ResetDataLaporanController extends Controller
                     'subtipe' => 'Surat',
                     'subtipe_badge' => 'purple',
                     'judul' => $row->perihal ?: 'Surat #'.$row->id,
-                    'satuan' => $this->jalurAlurSurat($row),
-                    'alur_ket' => $this->keteranganAlurSurat($row),
+                    'satuan' => self::jalurAlurSurat($row),
+                    'alur_ket' => self::keteranganAlurSurat($row),
                     'user' => $row->user->name ?? '-',
                     'tanggal' => $row->created_at ? $row->created_at->translatedFormat('d M Y H:i') : '-',
                     'status' => $row->labelStatus(),
@@ -220,7 +220,7 @@ class ResetDataLaporanController extends Controller
      * Nama satuan versi singkat (mis. "Danpus" dari "Danpus (Komandan Pusat
      * Pussiberad)") supaya jalur alur surat muat dibaca di tabel admin.
      */
-    private function namaSingkatSatuan($satuan): string
+    private static function namaSingkatSatuan($satuan): string
     {
         if (! $satuan) {
             return '-';
@@ -237,11 +237,11 @@ class ResetDataLaporanController extends Controller
      *
      * @return array<int, string>
      */
-    private function jalurSatuanSurat(LaporanSurat $row): array
+    private static function jalurSatuanSurat(LaporanSurat $row): array
     {
         $jalur = [];
         $tambah = function ($satuan) use (&$jalur) {
-            $nama = $this->namaSingkatSatuan($satuan);
+            $nama = self::namaSingkatSatuan($satuan);
             if ($nama !== '-' && (empty($jalur) || end($jalur) !== $nama)) {
                 $jalur[] = $nama;
             }
@@ -273,18 +273,18 @@ class ResetDataLaporanController extends Controller
         return $jalur;
     }
 
-    private function jalurAlurSurat(LaporanSurat $row): string
+    private static function jalurAlurSurat(LaporanSurat $row): string
     {
-        return implode(' → ', $this->jalurSatuanSurat($row));
+        return implode(' → ', self::jalurSatuanSurat($row));
     }
 
     /**
      * Keterangan jenis alur: surat turun dari Danpus ke satuan (dan balasan
      * satuan naik lagi), atau pengajuan/surat keluar yang berawal dari satuan.
      */
-    private function keteranganAlurSurat(LaporanSurat $row): string
+    private static function keteranganAlurSurat(LaporanSurat $row): string
     {
-        $asal = $this->namaSingkatSatuan($row->satuan);
+        $asal = self::namaSingkatSatuan($row->satuan);
         $adaBalasan = $row->riwayats->contains('aksi', LaporanSuratRiwayat::AKSI_SURAT_KELUAR);
 
         if (strtoupper((string) ($row->satuan->kode ?? '')) === 'DANPUS') {
