@@ -3355,6 +3355,10 @@
           table.rdl-table td{padding:12px 14px;border-bottom:1px solid var(--border-soft);vertical-align:middle;color:var(--text);}
           table.rdl-table tr:hover td{background:rgba(255,152,0,.04);}
           table.rdl-table tr.is-selected td{background:rgba(229,72,77,.08);}
+          @media (min-width:761px){
+            table.rdl-table th.rdl-col-center,
+            table.rdl-table td.rdl-col-center{text-align:center;}
+          }
 
           .rdl-check-cell{width:36px;text-align:center;}
           .rdl-check-cell input[type="checkbox"]{width:16px;height:16px;accent-color:#e5484d;cursor:pointer;margin:0;}
@@ -3583,10 +3587,10 @@
                       <th class="rdl-check-cell"></th>
                       <th style="width:40px;">No</th>
                       <th>Perihal / Rincian Laporan</th>
-                      <th>Satuan &amp; Pengaju</th>
+                      <th class="rdl-col-center">Satuan &amp; Pengaju</th>
                       <th>Tanggal Dibuat</th>
-                      <th>Status</th>
-                      <th style="text-align:center;width:80px;">Lampiran</th>
+                      <th class="rdl-col-center">Status</th>
+                      <th class="rdl-col-center" style="width:80px;">Lampiran</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -3602,7 +3606,7 @@
                             <span class="rdl-item-subtype rdl-subtype-{{ $item['subtipe_badge'] ?? 'gold' }}">{{ $item['subtipe'] }}</span>
                           </div>
                         </td>
-                        <td data-label="Satuan &amp; Pengaju">
+                        <td class="rdl-col-center" data-label="Satuan &amp; Pengaju">
                           <span class="rdl-satuan-badge">{{ $item['satuan'] }}</span>
                           <div class="rdl-user-name">{{ $item['user'] }}</div>
                           @if(!empty($item['alur_ket']))
@@ -3610,10 +3614,10 @@
                           @endif
                         </td>
                         <td class="rdl-date" data-label="Tanggal">{{ $item['tanggal'] }}</td>
-                        <td data-label="Status">
+                        <td class="rdl-col-center" data-label="Status">
                           <span class="rdl-status-pill">{{ $item['status'] }}</span>
                         </td>
-                        <td class="rdl-lampiran-td" data-label="Lampiran" style="text-align:center;">
+                        <td class="rdl-lampiran-td rdl-col-center" data-label="Lampiran" style="text-align:center;">
                           @if(!empty($item['lampiran']))
                             <span title="Ada lampiran berkas" style="color:var(--success);font-weight:700;display:inline-flex;align-items:center;gap:3px;font-size:11px;">
                               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
