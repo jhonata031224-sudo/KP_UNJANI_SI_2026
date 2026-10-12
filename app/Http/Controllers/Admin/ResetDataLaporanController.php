@@ -61,7 +61,7 @@ class ResetDataLaporanController extends Controller
             ],
         ],
         'surat' => [
-            'label' => 'Surat & Disposisi',
+            'label' => 'Surat',
             'desc' => 'Surat masuk/keluar antar satuan, riwayat alur disposisi, tembusan, dan berkas lampirannya di semua pengguna terkait.',
             'icon' => 'mail',
             'tables' => [
@@ -189,14 +189,14 @@ class ResetDataLaporanController extends Controller
                 ];
             }
 
-            // 4. Kategori: Surat & Disposisi (surat antar satuan/pengguna, semua pihak terkait)
+            // 4. Kategori: Surat (surat antar satuan/pengguna, semua pihak terkait)
             $surats = LaporanSurat::with(['satuan', 'tujuanSatuan', 'user'])->latest('id')->limit(150)->get();
             foreach ($surats as $row) {
                 $detail['surat'][] = [
                     'key' => 'surat:'.$row->id,
                     'id' => $row->id,
                     'tipe' => 'surat',
-                    'subtipe' => 'Surat & Disposisi',
+                    'subtipe' => 'Surat',
                     'subtipe_badge' => 'purple',
                     'judul' => $row->perihal ?: 'Surat #'.$row->id,
                     'satuan' => ($row->satuan->nama ?? ($row->satuan->kode ?? '-')).' → '.($row->tujuanSatuan->nama ?? ($row->tujuanSatuan->kode ?? '-')),
