@@ -3370,6 +3370,7 @@
 
           .rdl-satuan-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--border-soft);color:var(--text);}
           .rdl-user-name{font-size:11px;color:var(--text-muted);margin-top:2px;}
+          .rdl-alur-ket{font-size:10.5px;color:var(--text-dim);margin-top:2px;}
 
           .rdl-date{font-family:var(--mono);font-size:11px;color:var(--text-muted);white-space:nowrap;}
           .rdl-status-pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:10.5px;font-weight:700;text-transform:uppercase;background:var(--panel);border:1px solid var(--border-soft);color:var(--text-muted);}
@@ -3604,6 +3605,9 @@
                         <td data-label="Satuan &amp; Pengaju">
                           <span class="rdl-satuan-badge">{{ $item['satuan'] }}</span>
                           <div class="rdl-user-name">{{ $item['user'] }}</div>
+                          @if(!empty($item['alur_ket']))
+                            <div class="rdl-alur-ket">{{ $item['alur_ket'] }}</div>
+                          @endif
                         </td>
                         <td class="rdl-date" data-label="Tanggal">{{ $item['tanggal'] }}</td>
                         <td data-label="Status">

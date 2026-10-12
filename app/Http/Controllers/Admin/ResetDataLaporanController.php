@@ -8,6 +8,7 @@ use App\Models\Laporan;
 use App\Models\LaporanKendala;
 use App\Models\LaporanMonitoring;
 use App\Models\LaporanSurat;
+use App\Models\LaporanSuratRiwayat;
 use App\Models\PermintaanLaporan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -190,7 +191,7 @@ class ResetDataLaporanController extends Controller
             }
 
             // 4. Kategori: Surat (surat antar satuan/pengguna, semua pihak terkait)
-            $surats = LaporanSurat::with(['satuan', 'tujuanSatuan', 'user'])->latest('id')->limit(150)->get();
+            $surats = LaporanSurat::with(['satuan', 'tujuanSatuan', 'user', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan'])->latest('id')->limit(150)->get();
             foreach ($surats as $row) {
                 $detail['surat'][] = [
                     'key' => 'surat:'.$row->id,
@@ -199,7 +200,8 @@ class ResetDataLaporanController extends Controller
                     'subtipe' => 'Surat',
                     'subtipe_badge' => 'purple',
                     'judul' => $row->perihal ?: 'Surat #'.$row->id,
-                    'satuan' => ($row->satuan->nama ?? ($row->satuan->kode ?? '-')).' → '.($row->tujuanSatuan->nama ?? ($row->tujuanSatuan->kode ?? '-')),
+                    'satuan' => $this->jalurAlurSurat($row),
+                    'alur_ket' => $this->keteranganAlurSurat($row),
                     'user' => $row->user->name ?? '-',
                     'tanggal' => $row->created_at ? $row->created_at->translatedFormat('d M Y H:i') : '-',
                     'status' => $row->labelStatus(),
@@ -212,6 +214,92 @@ class ResetDataLaporanController extends Controller
         }
 
         return $detail;
+    }
+
+    /**
+     * Nama satuan versi singkat (mis. "Danpus" dari "Danpus (Komandan Pusat
+     * Pussiberad)") supaya jalur alur surat muat dibaca di tabel admin.
+     */
+    private function namaSingkatSatuan($satuan): string
+    {
+        if (! $satuan) {
+            return '-';
+        }
+
+        return $satuan->nama_singkat ?: ($satuan->kode ?? '-');
+    }
+
+    /**
+     * Daftar satuan yang dilalui surat, urut sesuai riwayat sebenarnya
+     * (pembuat -> penerima tiap langkah: surat dibuat, diteruskan/disposisi,
+     * balasan/surat keluar). Konfirmasi & Selesai tidak menambah satuan baru.
+     * Hanya untuk tampilan admin; tidak mengubah data/alur surat.
+     *
+     * @return array<int, string>
+     */
+    private function jalurSatuanSurat(LaporanSurat $row): array
+    {
+        $jalur = [];
+        $tambah = function ($satuan) use (&$jalur) {
+            $nama = $this->namaSingkatSatuan($satuan);
+            if ($nama !== '-' && (empty($jalur) || end($jalur) !== $nama)) {
+                $jalur[] = $nama;
+            }
+        };
+
+        $langkahPindah = [
+            LaporanSuratRiwayat::AKSI_BUAT_SURAT,
+            LaporanSuratRiwayat::AKSI_TERUSKAN,
+            LaporanSuratRiwayat::AKSI_SURAT_KELUAR,
+        ];
+
+        foreach ($row->riwayats->sortBy('id') as $r) {
+            if (! in_array($r->aksi, $langkahPindah, true)) {
+                continue;
+            }
+            if (empty($jalur)) {
+                $tambah($r->pengirimSatuan);
+            }
+            $tambah($r->penerimaSatuan);
+        }
+
+        // Data lama tanpa riwayat: pakai pembuat -> pemegang saat ini.
+        if (count($jalur) < 2) {
+            $jalur = [];
+            $tambah($row->satuan);
+            $tambah($row->tujuanSatuan);
+        }
+
+        return $jalur;
+    }
+
+    private function jalurAlurSurat(LaporanSurat $row): string
+    {
+        return implode(' → ', $this->jalurSatuanSurat($row));
+    }
+
+    /**
+     * Keterangan jenis alur: surat turun dari Danpus ke satuan (dan balasan
+     * satuan naik lagi), atau pengajuan/surat keluar yang berawal dari satuan.
+     */
+    private function keteranganAlurSurat(LaporanSurat $row): string
+    {
+        $asal = $this->namaSingkatSatuan($row->satuan);
+        $adaBalasan = $row->riwayats->contains('aksi', LaporanSuratRiwayat::AKSI_SURAT_KELUAR);
+
+        if (strtoupper((string) ($row->satuan->kode ?? '')) === 'DANPUS') {
+            $ket = $adaBalasan
+                ? 'Surat turun dari Danpus, satuan sudah mengirim balasan'
+                : 'Surat turun dari Danpus';
+        } else {
+            $ket = 'Pengajuan surat dari '.$asal;
+        }
+
+        if ((int) ($row->siklus ?? 1) > 1) {
+            $ket .= ' · Siklus '.(int) $row->siklus;
+        }
+
+        return $ket;
     }
 
     /**
