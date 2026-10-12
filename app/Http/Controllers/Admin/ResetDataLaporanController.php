@@ -34,8 +34,8 @@ class ResetDataLaporanController extends Controller
      */
     public const KATEGORI = [
         'laporan' => [
-            'label' => 'Laporan & Laporan Kendala',
-            'desc' => 'Laporan berkala satuan, kendala operasional, serta dokumen lampirannya.',
+            'label' => 'Laporan & Kendala',
+            'desc' => 'Laporan berkala dan laporan kendala operasional yang dikirim satuan, beserta lampirannya.',
             'icon' => 'file-text',
             'tables' => [
                 ['table' => 'laporans', 'file_column' => 'lampiran_path'],
@@ -43,8 +43,8 @@ class ResetDataLaporanController extends Controller
             ],
         ],
         'monitoring' => [
-            'label' => 'Laporan Monitoring & Recovery',
-            'desc' => 'Rekap kegiatan monitoring sistem, recovery insiden, dan berkas pendukung.',
+            'label' => 'Monitoring & Recovery',
+            'desc' => 'Rekap kegiatan monitoring sistem dan recovery insiden yang dikirim satuan, beserta berkas pendukung.',
             'icon' => 'activity',
             'tables' => [
                 ['table' => 'laporan_monitoring_lampirans', 'file_column' => 'path'],
@@ -52,8 +52,8 @@ class ResetDataLaporanController extends Controller
             ],
         ],
         'permintaan' => [
-            'label' => 'Permintaan Laporan & Task',
-            'desc' => 'Daftar disposisi permintaan laporan dan tracking penugasan satuan.',
+            'label' => 'Permintaan Laporan',
+            'desc' => 'Permintaan laporan dari pimpinan ke satuan, beserta penugasan (task) untuk tiap satuan tujuan.',
             'icon' => 'clipboard-list',
             'tables' => [
                 ['table' => 'permintaan_laporan_tasks', 'file_column' => null],
@@ -170,7 +170,7 @@ class ResetDataLaporanController extends Controller
                 ];
             }
 
-            // 3. Kategori: Permintaan Laporan & Task
+            // 3. Kategori: Permintaan Laporan (beserta task penugasannya)
             $permintaans = PermintaanLaporan::with(['tujuanSatuan', 'pembuat'])->latest('id')->limit(150)->get();
             foreach ($permintaans as $row) {
                 $detail['permintaan'][] = [
