@@ -3459,6 +3459,29 @@
             table.rdl-table td[data-label="Satuan & Pengaju"] > *{text-align:right;}
             .rdl-date{white-space:normal;}
           }
+
+          /* ===== Mode pilih: 1 tombol "Hapus" -> checkbox muncul, hapus banyak sekaligus ===== */
+          .rdl-check-cell{display:none;}
+          .rdl-select-mode .rdl-check-cell{display:table-cell;}
+          .rdl-select-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 12px;margin-bottom:12px;border:1px solid rgba(229,72,77,.28);background:rgba(229,72,77,.06);border-radius:12px;}
+          .rdl-select-bar[hidden]{display:none;}
+          .rdl-select-all{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;margin-right:auto;}
+          .rdl-select-all input{width:18px;height:18px;accent-color:#e5484d;margin:0;cursor:pointer;}
+          .rdl-select-actions{display:flex;align-items:center;gap:8px;}
+          .rdl-select-mode tbody tr[data-rdl-row]{cursor:pointer;}
+          @media (max-width:760px){
+            .rdl-panel-actions .rdl-mode-btn{grid-column:1 / -1;}
+            .rdl-select-bar{flex-direction:column;align-items:stretch;gap:10px;}
+            .rdl-select-all{margin-right:0;}
+            .rdl-select-actions .btn{flex:1 1 0;}
+            table.rdl-table thead{display:none;}
+            table.rdl-table tbody tr{grid-template-columns:minmax(0,1fr);}
+            table.rdl-table td.rdl-check-cell{display:none;}
+            table.rdl-table td.rdl-title-td{grid-column:1;}
+            .rdl-select-mode table.rdl-table tbody tr{grid-template-columns:28px minmax(0,1fr);}
+            .rdl-select-mode table.rdl-table td.rdl-check-cell{display:block;}
+            .rdl-select-mode table.rdl-table td.rdl-title-td{grid-column:2;}
+          }
         </style>
 
         {{-- Grid Kartu Kategori --}}
@@ -3519,15 +3542,29 @@
                   <span class="rdl-search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
                   <input type="text" class="rdl-search-input" placeholder="Cari perihal, pengirim..." oninput="filterRdlTable(this, '{{ $key }}')">
                 </div>
-                <button type="button" class="btn btn-sm btn-ghost-red" id="btnDeleteSelected_{{ $key }}" disabled onclick="bukaKonfirmasiHapusTerpilih('{{ $key }}')">
+                <button type="button" class="btn btn-sm btn-ghost-red rdl-mode-btn" id="btnHapusMode_{{ $key }}" @if($totalCount === 0) disabled style="opacity:.5;cursor:not-allowed;" @endif onclick="toggleRdlSelectMode('{{ $key }}')">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                  Hapus Baris Terpilih (<span id="rdlSelectedNum_{{ $key }}">0</span>)
-                </button>
-                <button type="button" class="btn btn-sm btn-danger-soft" @if($totalCount === 0) disabled style="opacity:.5;cursor:not-allowed;" @endif onclick="bukaKonfirmasiHapusSemua('{{ $key }}', '{{ addslashes($def['label']) }}', {{ $totalCount }})">
-                  Hapus Semua ({{ $totalCount }})
+                  Hapus
                 </button>
               </div>
             </div>
+
+
+            @if($totalCount > 0)
+              <div class="rdl-select-bar" id="rdlSelectBar_{{ $key }}" hidden>
+                <label class="rdl-select-all">
+                  <input type="checkbox" id="rdlSelectAll_{{ $key }}" onchange="toggleRdlCheckAll(this, '{{ $key }}')">
+                  <span id="rdlSelectAllLabel_{{ $key }}">Pilih semua</span>
+                </label>
+                <div class="rdl-select-actions">
+                  <button type="button" class="btn btn-sm btn-ghost-red" id="btnDeleteSelected_{{ $key }}" disabled onclick="bukaKonfirmasiHapusTerpilih('{{ $key }}')">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    Hapus (<span id="rdlSelectedNum_{{ $key }}">0</span>)
+                  </button>
+                  <button type="button" class="btn btn-sm" onclick="toggleRdlSelectMode('{{ $key }}', false)">Batal</button>
+                </div>
+              </div>
+            @endif
 
             @if($totalCount === 0)
               <div class="rdl-empty-box">
@@ -3542,16 +3579,13 @@
                 <table class="rdl-table" id="rdlTable_{{ $key }}">
                   <thead>
                     <tr>
-                      <th class="rdl-check-cell">
-                        <input type="checkbox" title="Pilih semua baris" onchange="toggleRdlCheckAll(this, '{{ $key }}')">
-                      </th>
+                      <th class="rdl-check-cell"></th>
                       <th style="width:40px;">No</th>
                       <th>Perihal / Rincian Laporan</th>
                       <th>Satuan &amp; Pengaju</th>
                       <th>Tanggal Dibuat</th>
                       <th>Status</th>
                       <th style="text-align:center;width:80px;">Lampiran</th>
-                      <th style="text-align:center;width:60px;">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -3584,11 +3618,6 @@
                           @else
                             <span style="color:var(--text-dim);font-size:12px;">-</span>
                           @endif
-                        </td>
-                        <td class="rdl-aksi-td" data-label="Aksi" style="text-align:center;">
-                          <button type="button" class="rdl-action-del-btn" title="Hapus baris ini" onclick="bukaKonfirmasiHapusSatu('{{ $item['key'] }}', '{{ addslashes($item['judul']) }}')">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                          </button>
                         </td>
                       </tr>
                     @endforeach
@@ -3623,8 +3652,38 @@
             });
             document.querySelectorAll('.rdl-detail-panel').forEach(function(panel){
               panel.classList.toggle('active', panel.id === 'rdlDetail_' + catKey);
+              if (panel.id !== 'rdlDetail_' + catKey) {
+                window.toggleRdlSelectMode(panel.id.replace('rdlDetail_', ''), false);
+              }
             });
           };
+
+          // 1b. Masuk/keluar mode pilih (1 tombol Hapus -> checkbox + bar aksi)
+          window.toggleRdlSelectMode = function(catKey, force) {
+            var panel = document.getElementById('rdlDetail_' + catKey);
+            if (!panel) return;
+            var on = (typeof force === 'boolean') ? force : !panel.classList.contains('rdl-select-mode');
+            panel.classList.toggle('rdl-select-mode', on);
+            var bar = document.getElementById('rdlSelectBar_' + catKey);
+            var modeBtn = document.getElementById('btnHapusMode_' + catKey);
+            if (bar) bar.hidden = !on;
+            if (modeBtn) modeBtn.style.display = on ? 'none' : '';
+            if (!on) {
+              panel.querySelectorAll('tbody .rdl-row-cb').forEach(function(cb){ cb.checked = false; });
+            }
+            syncRdlSelection(catKey);
+          };
+
+          // Ketuk baris (khusus mode pilih) = centang/lepas centang
+          document.addEventListener('click', function(e){
+            var tr = e.target.closest ? e.target.closest('.rdl-select-mode tbody tr[data-rdl-row]') : null;
+            if (!tr || e.target.closest('input,button,a,label')) return;
+            var cb = tr.querySelector('.rdl-row-cb');
+            if (!cb) return;
+            cb.checked = !cb.checked;
+            var panel = tr.closest('.rdl-detail-panel');
+            if (panel) syncRdlSelection(panel.id.replace('rdlDetail_', ''));
+          });
 
           // 2. Search Filter in Table
           window.filterRdlTable = function(input, catKey) {
@@ -3662,6 +3721,14 @@
             var count = cbs.length;
             if (numEl) numEl.textContent = count;
             if (delBtn) delBtn.disabled = count === 0;
+
+            // Status checkbox "Pilih semua" = semua baris yang tampil sudah tercentang
+            var visibleCbs = panel.querySelectorAll('tbody tr[data-rdl-row]:not([style*="display: none"]) .rdl-row-cb');
+            var allChecked = visibleCbs.length > 0 && Array.prototype.every.call(visibleCbs, function(cb){ return cb.checked; });
+            var master = document.getElementById('rdlSelectAll_' + catKey);
+            var masterLabel = document.getElementById('rdlSelectAllLabel_' + catKey);
+            if (master) master.checked = allChecked;
+            if (masterLabel) masterLabel.textContent = allChecked ? 'Batalkan semua' : 'Pilih semua';
 
             panel.querySelectorAll('tbody .rdl-row-cb').forEach(function(cb){
               var tr = cb.closest('tr');
