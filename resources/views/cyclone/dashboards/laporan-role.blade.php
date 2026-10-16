@@ -485,13 +485,44 @@ document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>{const m
     if(this.disabled)return;
     this.disabled=true;
     document.getElementById('konfirmasiKendalaBatal')?.setAttribute('disabled','disabled');
-    closeKonfirm();
+    // JANGAN tutup popup konfirmasi di sini. Sebelumnya popup langsung hilang
+    // sementara halaman belum pindah (server lambat), sehingga klik/tap kedua
+    // pada "Ya, Kirim" menembus ke <input type=file> transparan di bawahnya
+    // (dropzone Lampiran) dan membuka folder laptop/HP, padahal kendala
+    // tetap terkirim. Popup dibiarkan terbuka (jadi penghalang klik) dengan
+    // status "Mengirim..." sampai browser berpindah halaman.
+    form.dataset.submitting='1';
+    var yaBtn=this;
+    yaBtn.dataset.labelAsli=yaBtn.textContent;
+    yaBtn.textContent='Mengirim...';
+    var lampiranInput=document.getElementById('kendala_lampiran');
+    if(lampiranInput)lampiranInput.style.pointerEvents='none';
     form.dataset.confirmed='1';
     form.requestSubmit?form.requestSubmit():form.submit();
+    // Jaring pengaman: kalau 20 detik tidak pindah halaman (mis. koneksi putus),
+    // kembalikan tampilan supaya pengguna tidak terkunci.
+    setTimeout(unlockKirim,20000);
   });
+  function unlockKirim(){
+    if(form.dataset.submitting!=='1')return;
+    form.dataset.submitting='';
+    form.dataset.confirmed='';
+    var yaBtn=document.getElementById('konfirmasiKendalaYa');
+    if(yaBtn){yaBtn.disabled=false;if(yaBtn.dataset.labelAsli)yaBtn.textContent=yaBtn.dataset.labelAsli;}
+    document.getElementById('konfirmasiKendalaBatal')?.removeAttribute('disabled');
+    var lampiranInput=document.getElementById('kendala_lampiran');
+    if(lampiranInput)lampiranInput.style.pointerEvents='';
+    closeKonfirm();
+  }
+  // Tombol Back/bfcache: halaman dipulihkan dari cache dalam keadaan terkunci.
+  window.addEventListener('pageshow',function(e){if(e.persisted)unlockKirim();});
+  // Lapis kedua: selama proses kirim, klik apa pun ke input lampiran dibatalkan.
+  document.getElementById('kendala_lampiran')?.addEventListener('click',function(e){
+    if(form.dataset.submitting==='1'){e.preventDefault();e.stopPropagation();}
+  },true);
   document.getElementById('konfirmasiKendalaBatal')?.addEventListener('click',closeKonfirm);
   document.addEventListener('keydown',e=>{
-    if(e.key==='Escape'&&konfirmOverlay.classList.contains('open'))closeKonfirm();
+    if(e.key==='Escape'&&konfirmOverlay.classList.contains('open')&&form.dataset.submitting!=='1')closeKonfirm();
   });
   // Validasi wajib-diisi custom untuk form Kirim Laporan Kendala (Kasansi) --
   // niru pola yang sama dipakai di modal "Buat Permintaan Laporan" &
