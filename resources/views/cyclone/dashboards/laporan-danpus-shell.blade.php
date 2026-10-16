@@ -19,7 +19,7 @@
      #riwayat .dtbl). Riwayat Pimpinan sekarang kartu (#riwayat, lihat
      danpus-permintaan-arsip-mode -> initRiwayatCardFilter/syncRiwayatCards),
      jadi kedua partial itu inert / malah bikin konflik <select> filter. --}}
-@include('cyclone.dashboards.partials.danpus-kendala-kasansi-realtime')
+@include('cyclone.dashboards.partials.danpus-kendala-kasansi-realtime', ['tanpaToast' => true])
 {{-- Surat Keluar/Arsip Surat/Surat Masuk Pimpinan sebelumnya SAMA SEKALI
      gak realtime (partial ini gak pernah di-include di sini) -- id
      container (#suratTerkirimGrid/#suratArsipBody/#suratMasukGrid) sama

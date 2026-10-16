@@ -1,3 +1,8 @@
+{{-- $tanpaToast = true (dipakai dashboard Danpus): baris kendala tetap disisipkan live,
+     tapi toast hijau "Ada 1 kendala baru masuk dari Kasansi." TIDAK dimunculkan karena
+     Danpus sudah menerima notifikasi lonceng (toast "Notifikasi baru") untuk kejadian
+     yang sama -- sebelumnya muncul dobel. --}}
+@php $tanpaToast = $tanpaToast ?? false; @endphp
 <style>
 /* Baris kendala baru yang disisipkan live -- fade+slide halus, senada sama
    animasi .tab-panel.active (fadeIn .25s) yang sudah ada di dash-styles. */
@@ -8,6 +13,7 @@
 (function(){
   var endpoint='{{ route('laporan-kendala.realtime') }}';
   var lastSeen=0,polling=false,initial=true;
+  var TANPA_TOAST=@json((bool) $tanpaToast);
   function poll(){
     if(polling)return;polling=true;
     fetch(endpoint+'?since='+(initial?0:lastSeen)+'&_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}})
@@ -30,7 +36,7 @@
             });
           }
         }
-        if(!initial&&inserted>0&&window.cycloneShowToast){
+        if(!TANPA_TOAST&&!initial&&inserted>0&&window.cycloneShowToast){
           // Teks ini kendala LANGSUNG (bukan tembusan) -- lihat
           // tembusan-kendala-realtime.blade.php (Satuan) buat toast serupa
           // tapi datanya beda, teksnya sengaja dibedain biar gak keliatan
