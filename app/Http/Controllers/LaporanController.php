@@ -697,6 +697,15 @@ class LaporanController extends Controller
             ]);
         }
 
+        // Beri tahu satuan pengirim (badge + popup + suara di dashboard-nya)
+        // bahwa hasil akhir laporannya sudah diputuskan. Catatan progres
+        // sudah ditolak lebih awal (abort_if di atas), jadi aman.
+        if ($laporan->satuan_id) {
+            foreach (\App\Models\User::where('satuan_id', $laporan->satuan_id)->where('id', '!=', $user->id)->get() as $penerimaHasil) {
+                $penerimaHasil->notify(new \App\Notifications\LaporanStatusDiputuskan($laporan));
+            }
+        }
+
         ActivityLog::catat('laporan.status', "Memperbarui status laporan \"{$laporan->perihal}\" menjadi {$laporan->status}.", $user, [
             'laporan_id' => $laporan->id,
             'status' => $laporan->status,
