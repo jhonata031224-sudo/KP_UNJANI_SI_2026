@@ -378,8 +378,10 @@ window.openSuratDetail = function(button){
     tujuanValueWrap.style.flexWrap = 'wrap';
     document.getElementById('suratDetailTujuan').textContent = button.dataset.tujuan || '-';
     var tujuanKode = document.getElementById('suratDetailTujuanKode');
-    tujuanKode.textContent = button.dataset.tujuanKode || '';
-    tujuanKode.style.display = button.dataset.tujuanKode ? '' : 'none';
+    // Tujuan cukup satu keterangan (mis. "Danpus (Komandan Pusat Pussiberad)");
+    // pill kode satuan disembunyikan karena duplikat dengan teks tujuan.
+    tujuanKode.textContent = '';
+    tujuanKode.style.display = 'none';
   }
   if (context === 'keluar' && tujuanHops.length > 1 && subDariEl) {
     subDariEl.textContent = 'Kepada ' + (tujuanHops[0].nama || '-') + ' \u00b7 diteruskan lewat ' + tujuanHops.length + ' langkah';
