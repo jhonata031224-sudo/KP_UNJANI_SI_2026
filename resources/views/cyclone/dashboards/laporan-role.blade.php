@@ -1021,17 +1021,51 @@ document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>{const m
     e.preventDefault();
     konfirmOverlay.classList.add('open');
   });
+  // Input file transparan dropzone Lampiran (menutupi kotak lampiran di modal).
+  function lampiranInputs(){return form.querySelectorAll('.lampiran-dropzone-input');}
+  function kunciLampiran(on){lampiranInputs().forEach(function(el){el.style.pointerEvents=on?'none':'';});}
+  // Lapis pengaman: selama proses kirim (+ jeda singkat sesudahnya), klik apa pun
+  // ke input lampiran dibatalkan supaya picker file tidak terbuka.
+  lampiranInputs().forEach(function(el){
+    el.addEventListener('click',function(e){
+      if(form.dataset.submitting==='1'){e.preventDefault();e.stopPropagation();}
+    },true);
+  });
   document.getElementById('konfirmasiKirimYa')?.addEventListener('click',function(){
-    closeKonfirm();
-    if(window.cycloneSubmitKirimLaporanForm){
-      window.cycloneSubmitKirimLaporanForm(form);
-    }else{
+    if(form.dataset.submitting==='1')return;
+    if(!window.cycloneSubmitKirimLaporanForm){
+      closeKonfirm();
       form.dataset.confirmed='1';
       form.requestSubmit?form.requestSubmit():form.submit();
+      return;
     }
+    // JANGAN tutup popup konfirmasi sebelum proses kirim (fetch) selesai.
+    // Dulu popup langsung hilang sementara server masih memproses, sehingga
+    // klik/tap kedua pada "Ya, Kirim" menembus ke <input type=file> transparan
+    // di bawahnya dan membuka folder laptop/HP, padahal laporan tetap
+    // terkirim. Popup dibiarkan jadi penghalang klik dengan status "Mengirim...".
+    form.dataset.submitting='1';
+    var yaBtn=this, batalBtn=document.getElementById('konfirmasiKirimBatal');
+    var labelAsli=yaBtn.textContent;
+    yaBtn.disabled=true; yaBtn.textContent='Mengirim...';
+    if(batalBtn)batalBtn.disabled=true;
+    kunciLampiran(true);
+    function selesai(){
+      // Teks tombol bisa sudah diganti wizard (mode create/edit) -- hanya
+      // kembalikan kalau masih "Mengirim...".
+      if(yaBtn.textContent==='Mengirim...')yaBtn.textContent=labelAsli;
+      yaBtn.disabled=false;
+      if(batalBtn)batalBtn.disabled=false;
+      closeKonfirm();
+      // Tahan sebentar sesudah popup tertutup untuk meredam klik susulan.
+      setTimeout(function(){form.dataset.submitting='';kunciLampiran(false);},600);
+    }
+    Promise.resolve(window.cycloneSubmitKirimLaporanForm(form)).then(selesai,selesai);
   });
   document.getElementById('konfirmasiKirimBatal')?.addEventListener('click',closeKonfirm);
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&konfirmOverlay.classList.contains('open'))closeKonfirm()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&konfirmOverlay.classList.contains('open')&&form.dataset.submitting!=='1')closeKonfirm()});
+  // Tombol Back/bfcache: pastikan tidak terkunci.
+  window.addEventListener('pageshow',function(e){if(e.persisted){form.dataset.submitting='';kunciLampiran(false);closeKonfirm();}});
 })();
 (function(){
   var overlay=document.getElementById('konfirmasiSuratOverlay');
