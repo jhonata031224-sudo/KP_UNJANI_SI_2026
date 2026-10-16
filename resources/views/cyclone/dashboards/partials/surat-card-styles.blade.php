@@ -109,13 +109,16 @@
    standar "nested overflow clip", bukan cuma andalkan mask-image trick). */
 #suratDetailModal .report-modal-card{overflow:hidden;padding:0;display:flex;flex-direction:column}
 #suratDetailModal .report-modal-card>.surat-detail-scroll{overflow-y:auto;overflow-x:hidden;padding:22px;flex:1;min-height:0}
-.surat-detail-body{display:grid;grid-template-columns:1.2fr 1fr;gap:0 28px}
-.surat-detail-col{display:flex;flex-direction:column}
+.surat-detail-body{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:0 28px}
+.surat-detail-col{display:flex;flex-direction:column;min-width:0}
 .surat-detail-col-left{border-right:1px solid var(--border-soft);padding-right:28px}
-.surat-detail-item{padding:11px 13px;border:1px solid var(--border-soft);border-radius:10px;background:var(--panel-alt);margin-bottom:10px}
+.surat-detail-item{padding:11px 13px;border:1px solid var(--border-soft);border-radius:10px;background:var(--panel-alt);margin-bottom:10px;min-width:0;max-width:100%;box-sizing:border-box}
+.surat-detail-item>div{min-width:0}
 .surat-detail-item:last-child{margin-bottom:0}
 .surat-detail-item-label{font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
-.surat-detail-item-value{font-size:13.5px;font-weight:600;color:var(--text);line-height:1.55;white-space:pre-wrap}
+.surat-detail-item-value{font-size:13.5px;font-weight:600;color:var(--text);line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;min-width:0}
+.surat-detail-item-value>span{min-width:0;overflow-wrap:anywhere}
+.surat-detail-item-value .satuan-pill{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .surat-detail-item-row{display:flex;gap:10px;margin-bottom:10px}
 /* Daftar Tindakan per-poin (disposisi bisa lebih dari satu) */
 .surat-tindakan-list{display:flex;flex-direction:column;gap:6px;margin-top:2px}
@@ -343,7 +346,7 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
    nambah tombol baru di surat-detail-modal.blade.php, tambahkan juga
    id-nya di selector bawah ini. */
 #suratDetailModal .modal-actions .btn[hidden]{display:none!important}
-@media(max-width:700px){.surat-detail-body{grid-template-columns:1fr}.surat-detail-col-left{border-right:none;padding-right:0;padding-bottom:20px;border-bottom:1px solid var(--border-soft);margin-bottom:20px}}
+@media(max-width:700px){.surat-detail-body{grid-template-columns:minmax(0,1fr)}.surat-detail-col-left{border-right:none;padding-right:0;padding-bottom:20px;border-bottom:1px solid var(--border-soft);margin-bottom:20px}}
 /* Filter tambahan (Tanggal dari/sampai, Jenis Surat, Satuan) khusus grid
    Arsip Surat -- numpang gaya input .rpt-filter-search input yang sama
    biar nyatu sama search+sort bar yang udah ada (lihat initSuratCardSearch
