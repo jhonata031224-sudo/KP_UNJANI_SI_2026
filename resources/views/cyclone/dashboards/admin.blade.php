@@ -268,6 +268,31 @@
   .dl-foot p{font-size:11.5px;color:var(--text-dim);}
   @media(max-width:640px){.dl-section-head{flex-direction:column;}.dl-download{align-self:stretch;}.dl-download-btn{width:100%;justify-content:center;}.dl-search-row{flex-direction:column;align-items:stretch;}.dl-search-count{margin-left:0;}.dl-foot{flex-direction:column;align-items:stretch;text-align:center;}}
 
+  /* ===== Arsip Data > Data Surat (#tblDlSurat) -- hanya tabel ini ===== */
+  /* Desktop/tablet: kolom Satuan Pengirim s.d. Dibuat (judul + isi) rata tengah */
+  @media(min-width:641px){
+    #tblDlSurat th:nth-child(n+3),
+    #tblDlSurat td:nth-child(n+3){text-align:center;}
+  }
+  /* HP: tiap surat jadi kartu rapi -- Perihal sebagai judul kartu, sisanya
+     baris "label kiri : isi kanan" yang diberi label (sebelumnya tanpa label) */
+  @media(max-width:640px){
+    #tblDlSurat tr{padding:6px 16px 4px;}
+    #tblDlSurat td:nth-child(1):not([colspan]){display:none;}
+    #tblDlSurat td:nth-child(2){display:block;text-align:left;padding:12px 0 12px;font-size:14.5px;line-height:1.4;overflow-wrap:anywhere;}
+    #tblDlSurat td:nth-child(2)::before{content:none;}
+    #tblDlSurat td:nth-child(n+3){align-items:center;gap:16px;}
+    #tblDlSurat td:nth-child(n+3)::before{padding-top:0;white-space:nowrap;}
+    #tblDlSurat td:nth-child(3)::before{content:"Satuan Pengirim";}
+    #tblDlSurat td:nth-child(4)::before{content:"Satuan Tujuan";}
+    #tblDlSurat td:nth-child(5)::before{content:"Prioritas";}
+    #tblDlSurat td:nth-child(6)::before{content:"Status";}
+    #tblDlSurat td:nth-child(7)::before{content:"Dibuat";}
+    #tblDlSurat td:nth-child(3),
+    #tblDlSurat td:nth-child(4){min-width:0;overflow-wrap:anywhere;}
+    #tblDlSurat td:nth-child(7){white-space:normal!important;}
+  }
+
 </style>
 </head>
 <body>
