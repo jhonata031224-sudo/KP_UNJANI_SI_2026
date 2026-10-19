@@ -238,6 +238,7 @@
 @include('cyclone.dashboards.partials.surat-detail-modal')
 @include('cyclone.dashboards.partials.surat-teruskan-modal')
 @include('cyclone.dashboards.partials.surat-balasan-modal')
+@include('cyclone.dashboards.partials.lampiran-preview-lightbox')
 <div class="confirm-overlay" id="konfirmasiKendalaOverlay"><div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="konfirmasiKendalaTitle"><div class="confirm-icon" style="background:var(--gold-dim);color:var(--gold-bright)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg></div><h3 id="konfirmasiKendalaTitle">Kirim Laporan Kendala?</h3><p>Pastikan data yang kamu isi sudah benar. Laporan kendala yang sudah terkirim tidak dapat diedit lagi.</p><div class="confirm-actions"><button type="button" class="btn" id="konfirmasiKendalaBatal">Batal</button><button type="button" class="btn btn-primary" id="konfirmasiKendalaYa">Ya, Kirim</button></div></div></div>
 <div class="confirm-overlay" id="konfirmasiSuratOverlay"><div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="konfirmasiSuratTitle"><div class="confirm-icon" style="background:var(--success-dim);color:var(--success-bright)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M20 6 9 17l-5-5"></path></svg></div><h3 id="konfirmasiSuratTitle">Konfirmasi Surat?</h3><p id="konfirmasiSuratBody">Konfirmasi surat ini? Pengirim akan mengetahui bahwa surat sudah diterima.</p><div class="confirm-actions"><button type="button" class="btn" id="konfirmasiSuratBatal">Batal</button><button type="button" class="btn" id="konfirmasiSuratYa">Ya, Konfirmasi</button></div></div></div>
 <form method="POST" id="formKonfirmasiSurat" style="display:none"><input type="hidden" name="_token" id="formKonfirmasiSuratToken"><input type="hidden" name="_method" value="PATCH"></form>
@@ -572,6 +573,11 @@ document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>{const m
   const errEl=document.getElementById('kendalaLampiranError');
   if(!zone||!input||!list)return;
   const LAMPIRAN_TOTAL_MAX_BYTES=10*1024*1024;
+  // Kartu pratinjau (gambar / halaman 1 PDF) di bawah daftar file; klik -> pembesar.
+  const previewGrid=document.createElement('div');
+  previewGrid.className='lpv-thumb-grid';
+  previewGrid.hidden=true;
+  list.insertAdjacentElement('afterend',previewGrid);
   let staged=[];
   let stagedUrls=[];
   function formatSize(bytes){
@@ -609,6 +615,7 @@ document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>{const m
       const name=document.createElement('a');
       name.className='lampiran-file-row-name';
       name.href=url;name.target='_blank';name.rel='noopener';
+      name.addEventListener('click',function(e){if(window.cycloneLampiranPreview){e.preventDefault();window.cycloneLampiranPreview.open({file:file,name:file.name})}});
       name.textContent=file.name;
       const size=document.createElement('span');
       size.className='lampiran-file-row-size';
@@ -627,6 +634,7 @@ document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>{const m
       row.appendChild(icon);row.appendChild(info);row.appendChild(removeBtn);
       list.appendChild(row);
     });
+    if(window.cycloneLampiranPreview)window.cycloneLampiranPreview.renderGrid(previewGrid,staged.map(function(f){return {file:f,name:f.name}}));
     if(emptyEl)emptyEl.hidden=staged.length>0;
     if(staged.length>0)clearError();
   }
@@ -855,6 +863,15 @@ document.getElementById('kirimSuratOpen')?.addEventListener('click',()=>{const m
       renderFallback(file,frame);
     }
     previewEl.appendChild(frame);
+    // Klik kotak pratinjau -> terbuka jendela pembesar (lihat
+    // partials/lampiran-preview-lightbox.blade.php). Tampilan kotak lama tidak diubah.
+    frame.classList.add('lpv-clickable');
+    frame.setAttribute('role','button');
+    frame.tabIndex=0;
+    frame.title='Klik untuk memperbesar pratinjau';
+    const bukaPembesar=function(){if(window.cycloneLampiranPreview)window.cycloneLampiranPreview.open({file:file,name:file.name})};
+    frame.addEventListener('click',bukaPembesar);
+    frame.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();bukaPembesar()}});
   }
   function showLampiranError(text){
     zone.classList.add('field-invalid');

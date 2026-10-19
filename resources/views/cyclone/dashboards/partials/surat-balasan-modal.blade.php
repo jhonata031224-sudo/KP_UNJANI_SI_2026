@@ -148,6 +148,21 @@
     // hapus) -- pola sama dengan .lampiran-file-row di modal Buat Surat/
     // Kirim Laporan/Kirim Kendala, lihat CSS-nya di
     // permintaan-laporan-deadline-styles.blade.php.
+    // Kartu pratinjau (gambar / halaman 1 PDF) di bawah daftar file; klik -> pembesar
+    // (lihat lampiran-preview-lightbox.blade.php).
+    var previewGrid = null;
+    function renderPreviewGrid(file){
+        if (!previewGrid){
+            previewGrid = document.createElement('div');
+            previewGrid.className = 'lpv-thumb-grid';
+            previewGrid.hidden = true;
+            fileList.insertAdjacentElement('afterend', previewGrid);
+        }
+        if (window.cycloneLampiranPreview){
+            window.cycloneLampiranPreview.renderGrid(previewGrid, file ? [{ file: file, name: file.name }] : []);
+        }
+    }
+
     function render(){
         // Hapus semua baris file tapi pertahankan div empty-state
         Array.from(fileList.children).forEach(function(el){
@@ -155,6 +170,7 @@
         });
         var file = fileInput.files && fileInput.files[0];
         if (fileEmpty) fileEmpty.style.display = file ? 'none' : '';
+        renderPreviewGrid(file);
         if (!file) return;
 
         var badge = (window.cycloneLampiranBadge && window.cycloneLampiranBadge(file.name)) || {text: 'FILE', cls: 'lfx-other'};

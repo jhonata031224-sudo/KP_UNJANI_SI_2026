@@ -917,7 +917,15 @@
         var name=document.createElement(data.url?'a':'span');
         name.className='lampiran-file-row-name';
         name.textContent=data.nama||'Lampiran';
-        if(data.url){ name.href=data.url; name.target='_blank'; name.rel='noopener'; }
+        if(data.url){
+            name.href=data.url; name.target='_blank'; name.rel='noopener';
+            // Klik nama file -> jendela pembesar (lihat lampiran-preview-lightbox.blade.php).
+            name.addEventListener('click',function(e){
+                if(!window.cycloneLampiranPreview) return;
+                e.preventDefault();
+                window.cycloneLampiranPreview.open(data.file?{file:data.file,name:data.nama}:{url:data.url,name:data.nama});
+            });
+        }
         var size=document.createElement('span');
         size.className='lampiran-file-row-size';
         size.textContent=data.kind==='existing'?'Tersimpan':(data.size||'');
@@ -972,8 +980,22 @@
         state.staged.forEach(function(file,idx){
             var url=URL.createObjectURL(file);
             state.stagedUrls.push(url);
-            listBox.appendChild(buildLampiranRow(zone,{ kind:'staged', idx:idx, nama:file.name, size:formatLampiranSize(file.size), url:url }));
+            listBox.appendChild(buildLampiranRow(zone,{ kind:'staged', idx:idx, nama:file.name, size:formatLampiranSize(file.size), url:url, file:file }));
         });
+        // Kartu pratinjau (gambar / halaman 1 PDF) di bawah daftar file; klik -> pembesar.
+        var previewGrid=document.getElementById('lampiranPreviewGrid');
+        if(!previewGrid){
+            previewGrid=document.createElement('div');
+            previewGrid.id='lampiranPreviewGrid';
+            previewGrid.className='lpv-thumb-grid';
+            previewGrid.hidden=true;
+            listBox.insertAdjacentElement('afterend',previewGrid);
+        }
+        if(window.cycloneLampiranPreview){
+            window.cycloneLampiranPreview.renderGrid(previewGrid,
+                state.existing.map(function(item){ return { url:item.url, name:item.nama }; })
+                    .concat(state.staged.map(function(file){ return { file:file, name:file.name }; })));
+        }
         if(emptyEl) emptyEl.hidden=total>0;
     }
     // Dipanggil tiap kali modal dibuka (create ATAU edit) buat reset daftar
