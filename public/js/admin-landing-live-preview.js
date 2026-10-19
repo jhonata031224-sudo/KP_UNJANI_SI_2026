@@ -110,7 +110,7 @@
     var inner = d.querySelector('.hero-inner');
     if (!inner) return;
 
-    setText(inner.querySelector('.eyebrow'), val('hero_eyebrow'));
+    setText(inner.querySelector('.eyebrow'), String(val('hero_eyebrow') || '').trim());
 
     var h1 = inner.querySelector('h1');
     if (h1) {

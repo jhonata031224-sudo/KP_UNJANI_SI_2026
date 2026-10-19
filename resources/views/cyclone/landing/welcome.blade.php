@@ -735,6 +735,10 @@
     padding:5px 11px;width:fit-content;font-weight:600;
     box-shadow:var(--chip-shadow);
   }
+  /* Label kecil dikosongkan di Pengaturan Umum -> chip (padding/border/latar)
+     ikut hilang total, tidak menyisakan kotak kosong. */
+  .eyebrow:empty,
+  .hero-stats-bg .eyebrow:empty{display:none!important;}
   .hero-stats-bg .pill{
     background:var(--chip-bg);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
     font-weight:600;box-shadow:var(--chip-shadow);
@@ -1448,7 +1452,7 @@
     <section class="hero" id="tentang">
       <div class="wrap hero-inner">
         <div data-reveal>
-          <div class="eyebrow">{{ $pengaturan->hero_eyebrow }}</div>
+          <div class="eyebrow">{{ trim((string) $pengaturan->hero_eyebrow) }}</div>
           <h1>{{ $pengaturan->hero_judul_awal }}<em>{{ $pengaturan->hero_judul_aksen }}</em></h1>
           <h2>{{ $pengaturan->hero_subjudul }}</h2>
           <p>{{ $pengaturan->hero_deskripsi }}</p>
