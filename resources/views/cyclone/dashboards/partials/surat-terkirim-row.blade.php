@@ -9,6 +9,9 @@
     // Kartu Surat Keluar Danpus: keterangan "Diteruskan" tidak ditampilkan
     // (alurnya tetap berjalan; status tetap dikirim ke modal via data-status).
     $sembunyikanBadge = strtoupper($satuan->kode ?? '') === 'DANPUS' && $badgeLabel === 'Diteruskan';
+    // Tampilan saja: di kartu Kasansi, tujuan (selalu Danpus) ditulis sebagai
+    // teks biasa tanpa pembungkus pill kuning, sama seperti kartu Arsip Surat.
+    $tujuanTanpaPill = in_array(strtoupper($satuan->kode ?? ''), \App\Models\Satuan::KODE_KOTAMA, true);
 
     // Riwayat untuk timeline
     // Sembunyikan isi surat (catatan langkah Buat Surat / Surat Keluar berisi
@@ -83,7 +86,7 @@
     <div class="surat-file-card-title">{{ $s->perihal }}</div>
     {{-- Cover kartu Danpus: keterangan "Kepada" disembunyikan (tujuan tetap tampil di dalam modal Detail). --}}
     @if(strtoupper($satuan->kode ?? '') !== 'DANPUS')
-    <div><div class="surat-file-card-dari-label">Kepada</div><div class="surat-file-card-dari-value surat-tujuan-flow surat-tujuan-flow-sm">@foreach($tujuanHops as $hop)@if(!$loop->first)<span class="surat-tujuan-flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>@endif<span class="surat-tujuan-flow-step{{ $loop->last ? ' is-final' : '' }}">{{ $hop['nama'] }}</span>@endforeach</div></div>
+    <div><div class="surat-file-card-dari-label">Kepada</div>@if($tujuanTanpaPill)<div class="surat-file-card-dari-value"><span>{{ $tujuanChainDisplay }}</span></div>@else<div class="surat-file-card-dari-value surat-tujuan-flow surat-tujuan-flow-sm">@foreach($tujuanHops as $hop)@if(!$loop->first)<span class="surat-tujuan-flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>@endif<span class="surat-tujuan-flow-step{{ $loop->last ? ' is-final' : '' }}">{{ $hop['nama'] }}</span>@endforeach</div>@endif</div>
     @endif
     <div class="surat-file-card-divider"></div>
     <div class="surat-file-card-meta"><span class="surat-file-card-meta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span><div><div class="surat-file-card-meta-label">Tanggal Dibuat</div><div class="surat-file-card-meta-value">{{ $s->created_at->translatedFormat('d M Y H:i') }}</div></div></div>

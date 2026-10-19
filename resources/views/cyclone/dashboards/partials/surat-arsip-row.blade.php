@@ -30,6 +30,11 @@
 
     $lawan = $tampilKe ? $pilihanSaya : ($isSent ? $s->tujuanSatuan : $s->satuan);
     $labelLawan = ($tampilKe || $isSent) ? 'Ke' : 'Dari';
+    // Tampilan saja: untuk Kasansi, kartu yang lawannya Danpus tidak perlu
+    // label kode "DANPUS" lagi karena namanya sudah tertulis di atasnya
+    // (Danpus (Komandan Pusat Pussiberad)) -- supaya tidak dobel. Alur tetap.
+    $sembunyikanKodeDanpus = in_array(strtoupper($satuan->kode ?? ''), \App\Models\Satuan::KODE_KOTAMA, true)
+        && strtoupper($lawan->kode ?? '') === 'DANPUS';
     // Pengirim ASLI surat (tetap sama untuk semua sisi) -- dipakai untuk data "Dari" di modal.
     $dariSatuan = $s->satuan;
 
@@ -98,7 +103,7 @@
     @endif
     <span class="status-badge {{ $s->badgeClass() }} surat-file-card-badge">{{ $s->labelStatus() }}</span>
     <div class="surat-file-card-title">{{ $s->perihal }}</div>
-    <div><div class="surat-file-card-dari-label">{{ $labelLawan }}</div><div class="surat-file-card-dari-value"><span>{{ $lawan->nama ?? '-' }}</span><span class="satuan-pill">{{ $lawan->kode ?? $lawan->nama ?? '-' }}</span></div></div>
+    <div><div class="surat-file-card-dari-label">{{ $labelLawan }}</div><div class="surat-file-card-dari-value"><span>{{ $lawan->nama ?? '-' }}</span>@unless($sembunyikanKodeDanpus)<span class="satuan-pill">{{ $lawan->kode ?? $lawan->nama ?? '-' }}</span>@endunless</div></div>
     <div class="surat-file-card-divider"></div>
     <div class="surat-file-card-meta"><span class="surat-file-card-meta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span><div><div class="surat-file-card-meta-label">Tanggal Dibuat</div><div class="surat-file-card-meta-value">{{ $s->created_at->translatedFormat('d M Y H:i') }}</div></div></div>
     <div class="surat-file-card-divider"></div>
