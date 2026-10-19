@@ -277,11 +277,13 @@
   /* HP: tiap surat jadi kartu rapi -- Perihal sebagai judul kartu, sisanya
      baris "label kiri : isi kanan" yang diberi label (sebelumnya tanpa label) */
   @media(max-width:640px){
-    #tblDlSurat tr{padding:6px 16px 4px;}
+    #tblDlSurat tr{padding:0 16px;overflow:hidden;border:1px solid var(--border-strong,var(--border));}
     #tblDlSurat td:nth-child(1):not([colspan]){display:none;}
-    #tblDlSurat td:nth-child(2){display:block;text-align:left;padding:12px 0 12px;font-size:14.5px;line-height:1.4;overflow-wrap:anywhere;}
-    #tblDlSurat td:nth-child(2)::before{content:none;}
-    #tblDlSurat td:nth-child(n+3){align-items:center;gap:16px;}
+    /* Bagian Perihal = "kepala" kartu: latar pembeda penuh selebar kartu + label kecil + garis tegas di bawahnya */
+    #tblDlSurat td:nth-child(2){display:block;text-align:left;margin:0 -16px;padding:14px 16px;background:var(--gold-dim,rgba(255,152,0,.10));border-bottom:1px solid var(--border-strong,var(--border));font-size:15px;line-height:1.4;overflow-wrap:anywhere;}
+    #tblDlSurat td:nth-child(2)::before{content:"Perihal";display:block;margin-bottom:6px;padding-top:0;color:var(--gold-bright,#FF9800);}
+    #tblDlSurat td:nth-child(n+3){align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--border-strong,var(--border));}
+    #tblDlSurat td:nth-child(7){border-bottom:none;}
     #tblDlSurat td:nth-child(n+3)::before{padding-top:0;white-space:nowrap;}
     #tblDlSurat td:nth-child(3)::before{content:"Satuan Pengirim";}
     #tblDlSurat td:nth-child(4)::before{content:"Satuan Tujuan";}
