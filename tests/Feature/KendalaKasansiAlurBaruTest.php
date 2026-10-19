@@ -111,7 +111,23 @@ class KendalaKasansiAlurBaruTest extends TestCase
     {
         $this->actingAs($this->u['SILIWANGI'])
             ->post(route('laporan-kendala.store'), ['kategori' => 'x'])
-            ->assertSessionHasErrors(['perihal', 'deskripsi', 'prioritas']);
+            ->assertSessionHasErrors(['perihal', 'deskripsi'])
+            ->assertSessionDoesntHaveErrors('prioritas');
+    }
+
+    public function test_prioritas_tidak_lagi_dipilih_dan_tersimpan_bawaan_sedang(): void
+    {
+        Notification::fake();
+
+        $payload = $this->payload();
+        unset($payload['prioritas']);
+
+        $this->actingAs($this->u['SILIWANGI'])
+            ->post(route('laporan-kendala.store'), $payload)
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertSame('Sedang', LaporanKendala::firstOrFail()->prioritas);
     }
 
     public function test_hanya_kasansi_yang_boleh_mengirim(): void

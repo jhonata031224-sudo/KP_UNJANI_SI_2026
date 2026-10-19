@@ -133,7 +133,7 @@ class LaporanKendalaController extends Controller
     public function store(Request $request): RedirectResponse
     {
         // Lampiran OPSIONAL: laporan boleh dikirim hanya dengan perihal,
-        // kategori (opsional), isi kendala, dan prioritas. Kalau ada lampiran,
+        // kategori (opsional), dan isi kendala. Kalau ada lampiran,
         // aturan format/ukuran lama tetap berlaku (semua format, <=10 MB per
         // file, <=10 MB total). Tidak ada lagi tembusan -- field 'tembusan_ke'
         // yang masih dikirim klien lama diabaikan (tidak divalidasi/disimpan).
@@ -141,7 +141,6 @@ class LaporanKendalaController extends Controller
             'perihal' => ['required', 'string', 'max:255'],
             'kategori' => ['nullable', 'string', 'max:255'],
             'deskripsi' => ['required', 'string', 'max:10000'],
-            'prioritas' => ['required', 'in:Tinggi,Sedang,Rendah'],
             'lampiran' => ['nullable', 'array'],
             'lampiran.*' => ['nullable', 'file', 'max:10240'],
         ]);
@@ -188,7 +187,10 @@ class LaporanKendalaController extends Controller
                 'perihal' => $validated['perihal'],
                 'kategori' => $validated['kategori'] ?? null,
                 'deskripsi' => $validated['deskripsi'],
-                'prioritas' => $validated['prioritas'],
+                // Pilihan prioritas sudah dihapus dari form Kirim Kendala.
+                // Kolom tetap diisi nilai bawaan supaya tampilan lama
+                // (kartu/notifikasi/arsip) yang masih membaca prioritas aman.
+                'prioritas' => 'Sedang',
                 'status' => LaporanKendala::STATUS_MENUNGGU_KONFIRMASI,
             ]);
 
