@@ -39,7 +39,7 @@
 </style>
 
 <div class="profile-dropdown-view" id="profileNotifView" style="display:none;">
-    <div class="profile-modal-title">Notifikasi</div>
+    <div class="profile-modal-title">Tentang Notifikasi</div>
     <p class="help-intro">Atur notifikasi yang muncul di perangkat kamu, bahkan saat {{ $pengaturan?->namaSistem() ?? "Cyclone" }} sedang tidak dibuka.</p>
 
     {{-- Box peringatan permission browser --}}
