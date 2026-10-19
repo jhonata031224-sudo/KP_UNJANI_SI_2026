@@ -44,7 +44,15 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
     // "/" -- dari refresh, atau redirect back() setelah submit form -- harus
     // kembali ke dashboard. reflash() menjaga pesan sukses/gagal (flash
     // session) agar tidak hilang di lompatan perantara ini.
-    if ($request->user()) {
+    // Pengecualian: ?lp_preview=1 dipakai iframe "Pratinjau Langsung" di Admin >
+    // Pengaturan Umum untuk menampilkan landing page ASLI. Kalau di-redirect ke
+    // dashboard, iframe memuat dashboard (yang membuka tab Pengaturan Umum dan
+    // memuat iframe lagi) -> rekursi tanpa akhir, halaman lemot, dan flash toast
+    // (mis. "berhasil disimpan") tertelan permintaan iframe. Hanya Admin yang boleh.
+    $lpPreviewAdmin = $request->boolean('lp_preview')
+        && strtoupper(trim((string) $request->user()?->satuan?->kode)) === 'ADMIN';
+
+    if ($request->user() && ! $lpPreviewAdmin) {
         $request->session()->reflash();
 
         return redirect()->route('dashboard', $request->query());
