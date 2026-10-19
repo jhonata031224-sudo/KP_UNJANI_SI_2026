@@ -272,6 +272,34 @@
 </head>
 <body>
 <script>
+// Pengatur beban polling (hanya halaman Admin). Dashboard Admin menjalankan
+// belasan poller (KPI 2 dtk, notifikasi/sesi/log/reset-password 3-5 dtk, dst)
+// ke server PHP yang worker-nya sedikit -- permintaan menumpuk dan seluruh
+// admin terasa lemot/delay. Pembungkus ini TIDAK mengubah kode poller satu per
+// satu, hanya setInterval berinterval 1,5-5 detik:
+//  1) minimal 5 detik antar-tick (POLL_MIN_MS),
+//  2) tick dilewati saat tab browser tersembunyi, dan saat tab Pengaturan Umum
+//     sedang dibuka (body.lp-active) -- data dashboard lain tidak sedang
+//     dilihat, jadi polling-nya hanya membebani server selagi Admin mengedit.
+// Interval <1,5 dtk (mis. jam relatif 1 dtk, tanpa network) tidak disentuh.
+// Ubah POLL_MIN_MS bila ingin lebih cepat/lambat.
+(function () {
+  var POLL_MIN_MS = 5000, nativeSetInterval = window.setInterval;
+  window.setInterval = function (fn, ms) {
+    var extra = Array.prototype.slice.call(arguments, 2);
+    ms = Number(ms);
+    if (typeof fn !== 'function' || !(ms >= 1500 && ms < POLL_MIN_MS)) {
+      return nativeSetInterval.apply(window, arguments);
+    }
+    return nativeSetInterval.call(window, function () {
+      if (document.hidden) return;
+      if (document.body && document.body.classList.contains('lp-active')) return;
+      return fn.apply(this, extra);
+    }, POLL_MIN_MS);
+  };
+})();
+</script>
+<script>
 // Anti-kedip tab aktif: tab yang aktif secara default di HTML selalu
 // "dashboard" (lihat data-tab-panel="dashboard" section.tab-panel active
 // di bawah), sedangkan tab yang SEBENARNYA terakhir dibuka Admin (mis.
@@ -6369,6 +6397,7 @@
             form.addEventListener('submit', function(e){
               try { sessionStorage.removeItem(LP_DRAFT_KEY); } catch (ex) {}
               if (typeof lpRestorePanelsToStore === 'function') lpRestorePanelsToStore();
+              lpShowSavingInModal();
 
               var heroVideoInput = form.querySelector('[data-lp-video="hero_video"]');
               var hasVideo = heroVideoInput && heroVideoInput.files && heroVideoInput.files.length > 0;
@@ -6416,6 +6445,7 @@
                     }
                   } catch(ex){}
                   window.cycloneShowToast && window.cycloneShowToast('error', errMsg);
+                lpClearSavingState();
                   if(lpSubmitBtn){ lpSubmitBtn.disabled = false; lpSubmitBtn.textContent = 'Simpan Konten Landing'; }
                   if(lpUploadProgress) lpUploadProgress.style.display = 'none';
                 }
@@ -6424,6 +6454,7 @@
               xhr.addEventListener('error', function(){
                 window.cycloneShowToast && window.cycloneShowToast('error',
                   'Koneksi terputus saat mengunggah video. Periksa internet dan coba lagi.');
+                lpClearSavingState();
                 if(lpSubmitBtn){ lpSubmitBtn.disabled = false; lpSubmitBtn.textContent = 'Simpan Konten Landing'; }
                 if(lpUploadProgress) lpUploadProgress.style.display = 'none';
               });
@@ -6431,6 +6462,7 @@
               xhr.addEventListener('timeout', function(){
                 window.cycloneShowToast && window.cycloneShowToast('error',
                   'Waktu upload habis (timeout). Coba lagi atau gunakan video yang lebih kecil.');
+                lpClearSavingState();
                 if(lpSubmitBtn){ lpSubmitBtn.disabled = false; lpSubmitBtn.textContent = 'Simpan Konten Landing'; }
                 if(lpUploadProgress) lpUploadProgress.style.display = 'none';
               });
@@ -6505,6 +6537,22 @@
                 }
               }
               lpMovedPanels = [];
+            }
+
+            // Saat Simpan, panel isian dikembalikan ke form (supaya datanya ikut
+            // terkirim) -- tanpa ini modal yang masih terbuka jadi KOSONG sampai
+            // halaman reload. Tampilkan status "Menyimpan..." di badan modal dan
+            // kunci tombol Simpan modal agar tidak terklik dua kali.
+            function lpShowSavingInModal(){
+              if (!modalBackdrop || !modalBackdrop.classList.contains('is-open') || !modalBody) return;
+              modalBody.innerHTML = '<div id="lpSavingState" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:260px;color:var(--text-muted,#64748b);font-size:14px;"><span style="width:34px;height:34px;border:3px solid rgba(255,152,0,.25);border-top-color:#FF9800;border-radius:50%;animation:lpUploadSpin .8s linear infinite;"></span><span>Menyimpan perubahan...</span></div>';
+              if (modalSaveBtn) modalSaveBtn.disabled = true;
+              if (modalCancelBtn) modalCancelBtn.disabled = true;
+            }
+            function lpClearSavingState(){
+              if (modalSaveBtn) modalSaveBtn.disabled = false;
+              if (modalCancelBtn) modalCancelBtn.disabled = false;
+              if (document.getElementById('lpSavingState')) lpCloseModal();
             }
 
             function lpCloseModal(){
