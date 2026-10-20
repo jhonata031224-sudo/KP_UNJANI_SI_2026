@@ -6967,7 +6967,7 @@
       <section class="tab-panel" data-tab-panel="setelan-notifikasi">
         <div class="section-head panel">
           <h2>Setelan Notifikasi</h2>
-          <p>Fitur push notification (notifikasi yang muncul di luar sistem/tab tertutup) selalu aktif untuk seluruh pengguna dan tidak dapat dimatikan. Kirim pengumuman ke semua pengguna dari sini.</p>
+          <p>Atur push notification (notifikasi yang muncul di luar sistem/tab tertutup) untuk seluruh pengguna, dan kirim pengumuman ke semua pengguna dari sini.</p>
         </div>
 
 
@@ -6987,6 +6987,65 @@
           .sn-opt-panel input:checked ~ .sn-opt-panel-card{border-color:var(--gold,#FF9800);background:var(--gold-dim,rgba(201,122,0,.08));box-shadow:0 8px 22px rgba(0,0,0,.18);transform:translateY(-1px);}
           .sn-opt-panel input:checked ~ .sn-opt-panel-card .sn-opt-panel-title{color:var(--gold-bright,#FF9800);}
         </style>
+
+        <style>
+          .pn-switch-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border:1px solid var(--border-soft);border-radius:12px;background:var(--panel-alt);}
+          .pn-switch-label{font-size:13px;font-weight:700;color:var(--text);}
+          .pn-switch-sub{font-size:11.5px;color:var(--text-muted);margin-top:3px;line-height:1.5;}
+          .pn-switch{position:relative;display:inline-block;width:44px;height:24px;flex:0 0 auto;}
+          .pn-switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;}
+          .pn-switch-track{position:absolute;inset:0;border-radius:999px;background:var(--border-soft);transition:background .15s ease;}
+          .pn-switch-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s ease;}
+          .pn-switch input:checked ~ .pn-switch-track{background:#22c55e;}
+          .pn-switch input:checked ~ .pn-switch-thumb{transform:translateX(20px);}
+          .pn-badge{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;}
+          .pn-badge.on{background:rgba(34,197,94,.12);color:#22c55e;}
+          .pn-badge.off{background:rgba(200,59,59,.12);color:var(--red,#c83b3b);}
+        </style>
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel-head">
+            <div><h3>Push Notification (Global)</h3><p>Saklar untuk seluruh pengguna. Berlaku langsung begitu diubah.</p></div>
+            <span class="pn-badge {{ $pengaturan->notifikasi_push_aktif ? 'on' : 'off' }}">{{ $pengaturan->notifikasi_push_aktif ? 'AKTIF' : 'NONAKTIF' }}</span>
+          </div>
+          <form method="POST" action="{{ route('admin.setelan.notifikasi.toggle') }}" id="pnToggleForm" style="padding:18px 22px;display:flex;flex-direction:column;gap:10px;">
+            @csrf
+            @method('PATCH')
+            <div class="pn-switch-row">
+              <div>
+                <div class="pn-switch-label">Aktifkan push notification untuk semua pengguna</div>
+                <div class="pn-switch-sub">Saat nonaktif, tidak ada notifikasi OS (di luar tab/sistem) yang dikirim ke siapapun. Lonceng notifikasi di dalam sistem tetap berjalan seperti biasa.</div>
+              </div>
+              <label class="pn-switch">
+                <input type="checkbox" name="aktif" value="1" id="pnToggleInput" @checked($pengaturan->notifikasi_push_aktif)>
+                <span class="pn-switch-track"></span>
+                <span class="pn-switch-thumb"></span>
+              </label>
+            </div>
+          </form>
+        </div>
+        <script>
+        (function () {
+          var input = document.getElementById('pnToggleInput');
+          var form = document.getElementById('pnToggleForm');
+          if (!input || !form) return;
+          input.addEventListener('change', function () {
+            // Dimatikan = berdampak ke SEMUA pengguna -> minta konfirmasi dulu.
+            if (!input.checked && !window.confirm('Matikan push notification untuk SEMUA pengguna? Notifikasi di luar sistem tidak akan dikirim sampai dinyalakan lagi.')) {
+              input.checked = true;
+              return;
+            }
+            // JANGAN disable checkbox sebelum submit -- input disabled tidak ikut
+            // terkirim, jadi "aktif" hilang dan terbaca mati.
+            // Checkbox yang tidak dicentang tidak terkirim -> kirim aktif=0 eksplisit.
+            if (!input.checked) {
+              var off = document.createElement('input');
+              off.type = 'hidden'; off.name = 'aktif'; off.value = '0';
+              form.appendChild(off);
+            }
+            form.submit();
+          });
+        })();
+        </script>
 
         <div class="panel" style="margin-top:16px;">
           <div class="panel-head"><div><h3>Kirim Pengumuman</h3><p>Pesan akan masuk ke lonceng notifikasi seluruh pengguna, dan ke notifikasi OS (push) bagi yang sudah mengizinkan.</p></div></div>

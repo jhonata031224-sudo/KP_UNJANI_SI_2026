@@ -15,14 +15,16 @@ use Illuminate\Support\Facades\Storage;
 class NotifikasiSettingController extends Controller
 {
     /**
-     * Fitur push notification WAJIB selalu aktif untuk seluruh pengguna --
-     * dianggap krusial (mis. notifikasi kendala/laporan darurat) sehingga
-     * tidak boleh dimatikan siapapun, termasuk Admin. Endpoint ini sengaja
-     * DIPERTAHANKAN (bukan dihapus) supaya request lama/eksternal ke rute
-     * ini tidak 404, tapi apapun yang dikirim akan selalu dipaksa menjadi
-     * aktif -- efeknya toggle "mati" sudah tidak punya jalan lagi, baik
-     * dari UI (lihat admin.blade.php, switch sekarang dikunci/disabled)
-     * maupun dari request manual ke rute ini.
+     * Saklar GLOBAL push notification (notifikasi OS yang muncul di luar
+     * tab/sistem) untuk SELURUH pengguna -- diatur Admin dari menu Setelan ->
+     * Notifikasi. Efek saat dimatikan (sudah ditegakkan di server, bukan
+     * cuma tampilan):
+     *  - WebPushChannel::send() tidak mengirim push apapun ke siapapun,
+     *    meski subscription-nya masih tersimpan;
+     *  - InjectWebPushUi tidak menyuntik skrip/menu push ke halaman manapun.
+     * Lonceng notifikasi in-app, popup, dan banner Mode Maintenance TIDAK
+     * ikut mati -- hanya jalur push OS-nya. Saat dinyalakan lagi, semua
+     * subscription yang sudah ada langsung berfungsi kembali.
      */
     public function updateToggle(Request $request): RedirectResponse
     {
@@ -30,14 +32,25 @@ class NotifikasiSettingController extends Controller
             'aktif' => ['sometimes', 'boolean'],
         ]);
 
+        $aktif = $request->boolean('aktif');
+
         $pengaturan = Pengaturan::current();
-        if (! $pengaturan->notifikasi_push_aktif) {
-            $pengaturan->update(['notifikasi_push_aktif' => true]);
-        }
+        $pengaturan->update(['notifikasi_push_aktif' => $aktif]);
+
+        ActivityLog::catat(
+            'setelan.notifikasi.toggle',
+            $aktif
+                ? 'Mengaktifkan push notification untuk seluruh pengguna.'
+                : 'Menonaktifkan push notification untuk seluruh pengguna.',
+            null,
+            ['notifikasi_push_aktif' => $aktif]
+        );
 
         return back()->with(
             'status',
-            'Fitur push notifikasi bersifat wajib aktif dan tidak bisa dimatikan.'
+            $aktif
+                ? 'Push notification diaktifkan untuk seluruh pengguna.'
+                : 'Push notification dinonaktifkan untuk seluruh pengguna. Lonceng notifikasi di dalam sistem tetap berjalan.'
         );
     }
 

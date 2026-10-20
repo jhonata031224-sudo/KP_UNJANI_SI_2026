@@ -55,7 +55,9 @@
     </div>
 
     <div class="notif-setting-card">
-        {{-- Row 1: Push notification -- selalu aktif --}}
+        {{-- Row 1: Push notification -- status mengikuti saklar GLOBAL Admin
+             (Setelan -> Notifikasi). Pengguna tidak bisa mengubahnya sendiri. --}}
+        @php $pushGlobalAktif = (bool) ($pengaturan?->notifikasi_push_aktif ?? true); @endphp
         <div class="notif-setting-row">
             <div class="notif-setting-row-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -65,12 +67,12 @@
             </div>
             <div class="notif-setting-row-body">
                 <div class="notif-setting-row-label">Notifikasi Push (di luar sistem)</div>
-                <div class="notif-setting-row-desc">Terima notifikasi di tray OS meski {{ $pengaturan?->namaSistem() ?? "Cyclone" }} tidak dibuka. Selalu aktif untuk semua pengguna &mdash; dianggap penting (mis. notifikasi kendala/laporan darurat) sehingga tidak dapat dimatikan secara manual.</div>
+                <div class="notif-setting-row-desc">Terima notifikasi di tray OS meski {{ $pengaturan?->namaSistem() ?? "Cyclone" }} tidak dibuka. @if($pushGlobalAktif)Diatur oleh Admin untuk semua pengguna dan saat ini aktif.@else Saat ini dinonaktifkan oleh Admin untuk semua pengguna, jadi tidak ada notifikasi yang dikirim di luar sistem.@endif</div>
             </div>
             <div class="notif-setting-row-right">
-                <span class="notif-status-pill aktif">
+                <span class="notif-status-pill {{ $pushGlobalAktif ? 'aktif' : 'mati' }}">
                     <svg viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
-                    Selalu Aktif
+                    {{ $pushGlobalAktif ? 'Aktif' : 'Dinonaktifkan Admin' }}
                 </span>
             </div>
         </div>
