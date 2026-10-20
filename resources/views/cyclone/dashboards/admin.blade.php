@@ -6880,25 +6880,11 @@
           <div class="panel-head"><div><h3>Kirim Pengumuman</h3><p>Pesan akan masuk ke lonceng notifikasi penerima, dan ke notifikasi OS (push) bagi yang sudah mengizinkan.</p></div></div>
           <form method="POST" action="{{ route('admin.setelan.notifikasi.broadcast') }}" class="sn-broadcast-form" id="snBroadcastForm">
             @csrf
-            <div class="sn-field">
-              <label>Kategori Pengumuman</label>
-              <div class="sn-panel-row">
-                <label class="sn-opt-panel">
-                  <input type="radio" name="kategori" value="keterangan" checked>
-                  <div class="sn-opt-panel-card">
-                    <div class="sn-opt-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>Keterangan</div>
-                    <div class="sn-opt-panel-desc">Info umum, sekadar pemberitahuan. Di lonceng penerima tidak ditandai "belum dibaca" & tidak bisa diklik.</div>
-                  </div>
-                </label>
-                <label class="sn-opt-panel">
-                  <input type="radio" name="kategori" value="maintenance">
-                  <div class="sn-opt-panel-card">
-                    <div class="sn-opt-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a2 2 0 0 0 2.8 2.8l6-6a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.8-2.8Z"></path></svg>Maintenance</div>
-                    <div class="sn-opt-panel-desc">Pemeliharaan sistem/butuh perhatian. Ditandai "belum dibaca" & bisa diklik penerima utk buka detail lengkap.</div>
-                  </div>
-                </label>
-              </div>
-            </div>
+            {{-- Kategori "Maintenance" SENGAJA dihapus dari form ini: pengumuman
+                 pemeliharaan HANYA lewat menu Kelola Sistem -> Mode Maintenance
+                 (saklar itu yang mengirim notifikasi & banner), supaya tidak
+                 dobel/bentrok. Pengumuman manual di sini selalu "keterangan". --}}
+            <input type="hidden" name="kategori" value="keterangan">
 
             <div class="sn-field">
               <label>Tujuan Pengumuman</label>

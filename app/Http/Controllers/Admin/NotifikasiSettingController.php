@@ -60,7 +60,6 @@ class NotifikasiSettingController extends Controller
         $validated = $request->validate([
             'judul' => ['required', 'string', 'max:100'],
             'pesan' => ['required', 'string', 'max:500'],
-            'kategori' => ['required', 'string', 'in:maintenance,keterangan'],
             'tujuan' => ['required', 'string', 'in:semua,pimpinan,satuan'],
             'satuan_id' => ['required_if:tujuan,satuan', 'nullable', 'integer', 'exists:satuans,id'],
         ], [
@@ -68,13 +67,18 @@ class NotifikasiSettingController extends Controller
             'pesan.required' => 'Isi pesan wajib diisi.',
             'judul.max' => 'Judul maksimal 100 karakter.',
             'pesan.max' => 'Isi pesan maksimal 500 karakter.',
-            'kategori.required' => 'Kategori pengumuman wajib dipilih.',
-            'kategori.in' => 'Kategori pengumuman tidak valid.',
             'tujuan.required' => 'Tujuan pengumuman wajib dipilih.',
             'tujuan.in' => 'Tujuan pengumuman tidak valid.',
             'satuan_id.required_if' => 'Pilih satuan tujuan terlebih dahulu.',
             'satuan_id.exists' => 'Satuan tujuan tidak ditemukan.',
         ]);
+
+        // Pengumuman manual SELALU berkategori 'keterangan'. Kategori
+        // 'maintenance' sengaja tidak bisa dipilih dari sini -- notifikasi
+        // pemeliharaan hanya dikirim oleh saklar Mode Maintenance
+        // (MaintenanceSettingController), supaya tidak dobel/bentrok.
+        // Nilai 'kategori' dari request (mis. form lama) diabaikan.
+        $validated['kategori'] = 'keterangan';
 
         [$penerima, $labelTujuan] = match ($validated['tujuan']) {
             'pimpinan' => [
