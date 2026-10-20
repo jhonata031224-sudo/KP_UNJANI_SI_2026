@@ -542,7 +542,7 @@ window.openSuratDetail = function(button){
 
   var riwayats = [];
   try { riwayats = JSON.parse(button.dataset.riwayat || '[]'); } catch(e){}
-  // URL lampiran balasan yang sudah tampil di Riwayat Alur (fase naik) --
+  // URL lampiran (surat awal & balasan) yang sudah tampil di Riwayat Alur --
   // dipakai untuk menyembunyikan panel "Dokumen" supaya tidak dobel.
   var lampiranDiRiwayat = [];
 
@@ -706,9 +706,10 @@ window.openSuratDetail = function(button){
       return el;
     }
 
-    // Lampiran surat awal sudah tersedia di panel "Dokumen" (tombol Unduh), jadi
-    // tidak diulang di step "Dibuat" maupun di step "Diteruskan" kalau file-nya
-    // masih sama. Tautan hanya muncul di step yang membawa file BARU.
+    // Lampiran surat awal sekarang tampil sebagai tautan di step "Dibuat" (sama
+    // seperti lampiran di step "Balasan Dikirim"), jadi panel "Dokumen" terpisah
+    // disembunyikan. Tidak diulang di step "Diteruskan" kalau file-nya masih
+    // sama -- tautan hanya muncul lagi di step yang membawa file BARU.
     var lampiranAwalUrl = '';
     riwayats.forEach(function(r){ if (!lampiranAwalUrl && r.aksi_kode === 'BUAT_SURAT' && r.lampiran_url) lampiranAwalUrl = r.lampiran_url; });
 
@@ -727,10 +728,12 @@ window.openSuratDetail = function(button){
         var r = l.r;
         var infoBuat = stepIconAndClass('BUAT_SURAT');
         var olehBuat = 'Oleh ' + r.pengirim + (r.penerima ? ' → ' + r.penerima : '') + (r.siklus > 1 ? ' (Siklus ' + r.siklus + ')' : '');
+        // Lampiran surat awal tampil sebagai tautan di step ini (bukan di panel Dokumen).
+        if (r.lampiran_url) lampiranDiRiwayat.push(r.lampiran_url);
         el = bangunItem(nomor, isLast, true, infoBuat.cls, svgWrap(infoBuat.icon),
           '<div class="surat-detail-timeline-title">Dibuat</div>' +
           '<div class="surat-detail-timeline-sub">' + escHtml(olehBuat) + '</div>' +
-          metaHtml(r.tanggal) + extraRiwayatHtml(r, false, true) + paralelChipsHtml(r.paralel));
+          metaHtml(r.tanggal) + extraRiwayatHtml(r, false, false) + paralelChipsHtml(r.paralel));
 
       } else if (l.tipe === 'balasan') {
         // Step 1 fase NAIK: satuan mengirim balasan (padanan "Dibuat" di fase turun).
