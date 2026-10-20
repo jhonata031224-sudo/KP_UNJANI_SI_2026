@@ -279,6 +279,14 @@
   .profile-modal-overlay.open{opacity:1;visibility:visible;pointer-events:auto;}
   .profile-modal-card{width:460px;max-width:100%;max-height:88vh;overflow-y:auto;position:relative;box-sizing:border-box;background:var(--panel);border:1px solid var(--border-soft);border-radius:20px;box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 32px 80px rgba(0,0,0,.5);padding:28px 32px 28px;transform:translateY(14px) scale(.97);transition:transform .2s ease;}
   .profile-modal-overlay.open .profile-modal-card{transform:translateY(0) scale(1);}
+  /* Scrollbar modal profil (Pengaturan Akun / Tentang Notifikasi / Bantuan): track transparan
+     + diberi jarak atas-bawah sebesar radius kartu, supaya sudut kanan atas & bawah tetap
+     melengkung (bukan terpotong track scrollbar bawaan browser yang kotak). */
+  .profile-modal-card::-webkit-scrollbar{width:12px;}
+  .profile-modal-card::-webkit-scrollbar-track{background:transparent;margin:20px 0;}
+  .profile-modal-card::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;border:3px solid transparent;background-clip:padding-box;}
+  .profile-modal-card::-webkit-scrollbar-thumb:hover{background:var(--gold);background-clip:padding-box;}
+  @supports not selector(::-webkit-scrollbar){.profile-modal-card{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}}
   .profile-modal-close{position:absolute;top:20px;right:16px;width:36px;height:36px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-sizing:border-box;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;transition:border-color .2s ease,color .2s ease,transform .2s ease;}
   .profile-modal-close:hover{border-color:var(--red);color:var(--red);transform:rotate(90deg);}
   .profile-modal-close svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;}
