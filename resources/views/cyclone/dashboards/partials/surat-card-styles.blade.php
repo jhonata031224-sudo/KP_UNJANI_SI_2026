@@ -357,17 +357,6 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
 .rpt-filter-date-wrap input[type="date"]{box-sizing:border-box;height:38px;border:1px solid var(--border-soft);border-radius:9px;background:var(--panel-alt);color:var(--text);font:inherit;font-size:12px;padding:8px 10px;color-scheme:inherit}
 .rpt-filter-date-wrap input[type="date"]:focus{outline:0;border-color:var(--gold-bright);box-shadow:0 0 0 3px rgba(201,122,0,.10)}
 @media(max-width:700px){.rpt-filter-date-wrap{width:100%}.rpt-filter-date-wrap input[type="date"]{flex:1;min-width:0}}
-/* Asal Surat (Arsip Urdal): dua tombol toggle, gayanya sama dengan .dl-tab di Arsip Data admin
-   (kotak sudut 10px; tidak aktif = kuning lembut, aktif = kuning gradasi). */
-.surat-asal-toggle{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 14px}
-.surat-asal-toggle button{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;border:1px solid transparent;background:var(--gold-dim);color:var(--gold-bright);font-family:var(--body);font-size:13.5px;font-weight:700;cursor:pointer;transition:background .15s ease,color .15s ease,box-shadow .15s ease}
-.surat-asal-toggle button svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-.surat-asal-toggle button[aria-pressed="true"]{background:linear-gradient(135deg,var(--gold-solid-bright),var(--gold-solid));color:var(--on-gold);box-shadow:0 8px 20px -8px rgba(217,146,11,.55)}
-.surat-asal-toggle button[aria-pressed="false"]:hover{background:var(--hover-tint);color:var(--text)}
-.surat-asal-toggle button:focus-visible{outline:0;box-shadow:0 0 0 3px rgba(201,122,0,.22)}
-.surat-asal-toggle .surat-asal-count{min-width:22px;height:20px;padding:0 6px;border-radius:6px;background:rgba(255,255,255,.55);color:inherit;font-size:11.5px;font-weight:800;line-height:20px;text-align:center}
-.surat-asal-toggle button[aria-pressed="true"] .surat-asal-count{background:rgba(36,26,5,.16)}
-@media(max-width:700px){#arsip-surat .surat-asal-toggle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#arsip-surat .surat-asal-toggle button{width:100%;justify-content:center;padding:10px 8px;font-size:13px;white-space:nowrap}}
 /* Mobile: filter Arsip Surat jadi grid 2 kolom (search tetap 1 baris penuh).
    Urutan: Satuan|Status, Dari|Sampai, Jenis Surat|Urutan, lalu counter. */
 @media(max-width:700px){
@@ -405,7 +394,6 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
     var bar=document.createElement('div');
     bar.className='rpt-filter-bar';
     var extraHtml='';
-    var adaAsal=false;
     if(extraFilters){
       // Jenis Surat: opsinya dibangun dari nilai yang BENERAN ada di kartu
       // yang ke-render (data-jenis-filter), bukan hardcode -- jadi otomatis
@@ -442,11 +430,13 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
       var statusOpts=Object.keys(statusSet).sort().map(function(s){
         return '<option value="'+s+'">'+s+'</option>';
       }).join('');
-      // Asal Surat (HANYA Arsip Urdal, kartu bawa data-asal): bukan select di filter bar,
-      // tapi dua tombol toggle kuning terpisah (dibuat setelah bar, lihat asalWrap).
-      // 'danpus' = dikeluarkan dari sisi Danpus, 'satuan' = satuan lain langsung ke Danpus.
+      // Filter Asal Surat: HANYA muncul untuk Arsip Urdal (kartu bawa data-asal).
+      // 'danpus' = dikeluarkan dari sisi Danpus, 'satuan' = dikeluarkan langsung
+      // oleh satuan lain ke Danpus.
+      var adaAsal=false;
       initialCards.forEach(function(c){ if(c.dataset.asal)adaAsal=true; });
-      extraHtml='<select class="rpt-filter-select" aria-label="Filter satuan"><option value="all">Semua Satuan</option>'+satuanOpts+'</select>'+
+      var asalHtml=adaAsal?'<select class="rpt-filter-select" aria-label="Filter asal surat"><option value="all">Semua Asal Surat</option><option value="danpus">Dikeluarkan Danpus</option><option value="satuan">Satuan lain ke Danpus</option></select>':'';
+      extraHtml=asalHtml+'<select class="rpt-filter-select" aria-label="Filter satuan"><option value="all">Semua Satuan</option>'+satuanOpts+'</select>'+
         '<select class="rpt-filter-select" aria-label="Filter status"><option value="all">Semua Status</option>'+statusOpts+'</select>'+
         '<div class="rpt-filter-date-wrap"><label for="'+gridId+'DariDate">Dari</label><input type="date" id="'+gridId+'DariDate" aria-label="Tanggal dari"></div>'+
         '<div class="rpt-filter-date-wrap"><label for="'+gridId+'SampaiDate">Sampai</label><input type="date" id="'+gridId+'SampaiDate" aria-label="Tanggal sampai"></div>'+
@@ -474,27 +464,7 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
     var jenisSelect=extraFilters?bar.querySelector('select[aria-label="Filter jenis surat"]'):null;
     var satuanSelect=extraFilters?bar.querySelector('select[aria-label="Filter satuan"]'):null;
     var statusSelect=extraFilters?bar.querySelector('select[aria-label="Filter status"]'):null;
-    // Toggle Asal Surat: tombol kuning terpisah, di atas bar filter. Tidak ada yang
-    // aktif / dua-duanya aktif = tampil semua; satu aktif = hanya asal itu.
-    var asalWrap=null;
-    var asalState={danpus:false,satuan:false};
-    if(extraFilters&&adaAsal){
-      asalWrap=document.createElement('div');
-      asalWrap.className='surat-asal-toggle';
-      asalWrap.setAttribute('role','group');
-      asalWrap.setAttribute('aria-label','Asal surat');
-      asalWrap.innerHTML='<button type="button" data-asal="danpus" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>Dikeluarkan Danpus <span class="surat-asal-count">0</span></button>'+
-        '<button type="button" data-asal="satuan" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Satuan lain ke Danpus <span class="surat-asal-count">0</span></button>';
-      panel.insertBefore(asalWrap,bar);
-      asalWrap.addEventListener('click',function(e){
-        var btn=e.target.closest?e.target.closest('button[data-asal]'):null;
-        if(!btn)return;
-        var k=btn.dataset.asal;
-        asalState[k]=!asalState[k];
-        btn.setAttribute('aria-pressed',asalState[k]?'true':'false');
-        apply();
-      });
-    }
+    var asalSelect=extraFilters?bar.querySelector('select[aria-label="Filter asal surat"]'):null;
     var dariInput=extraFilters?bar.querySelector('input[aria-label="Tanggal dari"]'):null;
     var sampaiInput=extraFilters?bar.querySelector('input[aria-label="Tanggal sampai"]'):null;
     var count=bar.querySelector('.rpt-filter-count');
@@ -544,8 +514,7 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
       var jenisVal=jenisSelect?jenisSelect.value:'all';
       var satuanVal=satuanSelect?satuanSelect.value:'all';
       var statusVal=statusSelect?statusSelect.value:'all';
-      var asalFilter=(asalWrap&&asalState.danpus!==asalState.satuan)?(asalState.danpus?'danpus':'satuan'):'all';
-      var asalCount={danpus:0,satuan:0};
+      var asalVal=asalSelect?asalSelect.value:'all';
       var dariSec=(dariInput&&dariInput.value)?startOfDaySeconds(dariInput.value):null;
       var sampaiSec=(sampaiInput&&sampaiInput.value)?endOfDaySeconds(sampaiInput.value):null;
       var visible=0;
@@ -554,8 +523,7 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
         if(match&&jenisVal!=='all')match=item.dataset.jenisFilter===jenisVal;
         if(match&&satuanVal!=='all')match=item.dataset.satuanKode===satuanVal;
         if(match&&statusVal!=='all')match=item.dataset.status===statusVal;
-        if(item.dataset.asal&&asalCount[item.dataset.asal]!==undefined)asalCount[item.dataset.asal]++;
-        if(match&&asalFilter!=='all')match=item.dataset.asal===asalFilter;
+        if(match&&asalVal!=='all')match=item.dataset.asal===asalVal;
         if(match&&(dariSec!==null||sampaiSec!==null)){
           var createdAt=Number(item.dataset.createdAt);
           if(dariSec!==null&&createdAt<dariSec)match=false;
@@ -565,12 +533,6 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
         if(match)visible++;
       });
       count.textContent=visible+' dari '+items.length+' surat';
-      if(asalWrap){
-        asalWrap.querySelectorAll('button[data-asal]').forEach(function(b){
-          var n=b.querySelector('.surat-asal-count');
-          if(n)n.textContent=String(asalCount[b.dataset.asal]||0);
-        });
-      }
       searchEmpty.style.display=visible===0?'':'none';
       applying=false;
     }
@@ -585,6 +547,7 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
     if(jenisSelect)jenisSelect.addEventListener('change',apply);
     if(satuanSelect)satuanSelect.addEventListener('change',apply);
     if(statusSelect)statusSelect.addEventListener('change',apply);
+    if(asalSelect)asalSelect.addEventListener('change',apply);
     if(dariInput)dariInput.addEventListener('change',apply);
     if(sampaiInput)sampaiInput.addEventListener('change',apply);
 
