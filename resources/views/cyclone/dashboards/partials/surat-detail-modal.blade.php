@@ -310,7 +310,37 @@ window.openSuratDetail = function(button){
   if (!alurHops.length) { try { alurHops = JSON.parse(button.dataset.alurHops || '[]'); } catch(e){ alurHops = []; } }
   var arrowSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
 
-  if (tujuanHops.length > 1) {
+  // Danpus: "Tujuan" cukup menampilkan JALUR KIRIM saja (mis. Wadan > Satlak Kal)
+  // sebagai satu baris chip. Rincian bolak-balik (Alur Turun / Alur Naik + balasan)
+  // sudah ada di "Riwayat Alur" di sisi kanan, jadi tidak diulang di sini.
+  var tujuanRingkas = button.dataset.tujuanRingkas === '1' && tujuanHops.length > 1;
+  var jalurKirim = tujuanHops;
+  if (tujuanRingkas) {
+    var rankRingkas = function(nm){
+      nm = String(nm || '').toLowerCase();
+      if (/danpus|komandan pusat/.test(nm)) return 3;
+      if (/wadan|wakil komandan/.test(nm)) return 2;
+      return 1;
+    };
+    // Ambil langkah dari awal sampai tepat sebelum surat mulai naik (dibalas ke atas).
+    jalurKirim = [];
+    for (var ji = 0; ji < tujuanHops.length; ji++) {
+      if (ji > 0 && rankRingkas(tujuanHops[ji].nama) > rankRingkas(tujuanHops[ji - 1].nama)) break;
+      jalurKirim.push(tujuanHops[ji]);
+    }
+  }
+
+  if (tujuanRingkas) {
+    tujuanValueWrap.className = 'surat-detail-item-value surat-tujuan-flow';
+    tujuanValueWrap.style.display = 'flex';
+    tujuanValueWrap.style.alignItems = 'center';
+    tujuanValueWrap.style.gap = '8px';
+    tujuanValueWrap.style.flexWrap = 'wrap';
+    tujuanValueWrap.innerHTML = jalurKirim.map(function(hop, idx){
+      return (idx > 0 ? '<span class="surat-tujuan-flow-arrow" aria-hidden="true">' + arrowSvg + '</span>' : '') +
+        '<span class="surat-tujuan-flow-step' + (idx === jalurKirim.length - 1 ? ' is-final' : '') + '">' + escHtml(hop.nama || '-') + '</span>';
+    }).join('');
+  } else if (tujuanHops.length > 1) {
     // Alur diteruskan lebih dari 1 langkah -- tampilkan sebagai chip alur
     // workflow (mis. Wadan → Satlak Dukteksi) supaya satuan perantara
     // tetap kelihatan jelas, bukan teks digabung jadi satu baris.
@@ -384,7 +414,9 @@ window.openSuratDetail = function(button){
     tujuanKode.style.display = 'none';
   }
   if (context === 'keluar' && tujuanHops.length > 1 && subDariEl) {
-    subDariEl.textContent = 'Kepada ' + (tujuanHops[0].nama || '-') + ' \u00b7 diteruskan lewat ' + tujuanHops.length + ' langkah';
+    subDariEl.textContent = tujuanRingkas
+      ? 'Kepada ' + (tujuanHops[0].nama || '-')
+      : 'Kepada ' + (tujuanHops[0].nama || '-') + ' \u00b7 diteruskan lewat ' + tujuanHops.length + ' langkah';
   }
   var tujuanItem = document.getElementById('suratDetailTujuanItem');
   if (tujuanItem) tujuanItem.style.display = (button.dataset.hideTujuan === '1') ? 'none' : '';

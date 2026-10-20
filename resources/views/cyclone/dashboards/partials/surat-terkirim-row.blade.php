@@ -115,6 +115,7 @@
         data-siklus="{{ $s->siklus }}"
         data-disposisi="{{ e($s->disposisi_terakhir ?? $s->disposisi ?? '') }}"
         data-hide-disposisi="{{ strtoupper($satuan->kode ?? '') === 'DANPUS' ? '1' : '0' }}"
+        data-tujuan-ringkas="{{ strtoupper($satuan->kode ?? '') === 'DANPUS' ? '1' : '0' }}"
         data-tindakan="{{ json_encode($s->tindakan_terakhir ?? $s->tindakan ?? []) }}"
         data-riwayat="{{ $riwayatJson }}"
         data-can-confirm="0"
