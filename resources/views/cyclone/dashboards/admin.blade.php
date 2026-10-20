@@ -644,6 +644,74 @@
   </div>
 </div>
 
+{{-- Konfirmasi GENERIK Admin (pengganti confirm() bawaan browser) -- gaya
+     .confirm-overlay/.confirm-box sama dengan popup konfirmasi lain di sistem.
+     Dipakai lewat window.cycloneAdminConfirm({title, body, okLabel, tone, icon}, onOk, onCancel). --}}
+<div class="confirm-overlay" id="adminKonfirmasiOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="adminKonfirmasiTitle" aria-describedby="adminKonfirmasiBody">
+    <div class="confirm-icon" id="adminKonfirmasiIcon"></div>
+    <h3 id="adminKonfirmasiTitle">Lanjutkan?</h3>
+    <p id="adminKonfirmasiBody"></p>
+    <div class="confirm-actions">
+      <button type="button" class="btn" id="adminKonfirmasiBatal">Batal</button>
+      <button type="button" class="btn btn-ghost-red" id="adminKonfirmasiYa">Ya, Lanjutkan</button>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var overlay = document.getElementById('adminKonfirmasiOverlay');
+  if (!overlay) return;
+  var iconEl = document.getElementById('adminKonfirmasiIcon');
+  var titleEl = document.getElementById('adminKonfirmasiTitle');
+  var bodyEl = document.getElementById('adminKonfirmasiBody');
+  var okBtn = document.getElementById('adminKonfirmasiYa');
+  var cancelBtn = document.getElementById('adminKonfirmasiBatal');
+  var onOk = null, onCancel = null;
+
+  var ICONS = {
+    trash: '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M4 7h16"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><path d="M18 7l-.8 12.1a1.8 1.8 0 0 1-1.8 1.7H8.6a1.8 1.8 0 0 1-1.8-1.7L6 7"></path></svg>',
+    bellOff: '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M13.7 21a2 2 0 0 1-3.4 0"></path><path d="M18.6 14c.9-1.5 1.4-3.2 1.4-5a8 8 0 0 0-12-6.9"></path><path d="M6 8a8 8 0 0 0-.3 2.3c0 4-1.7 5.7-1.7 5.7h12"></path><path d="M3 3l18 18"></path></svg>'
+  };
+
+  function tutup(batal) {
+    overlay.classList.remove('open');
+    var cb = batal ? onCancel : null;
+    onOk = null; onCancel = null;
+    if (cb) cb();
+  }
+
+  // tone: 'danger' (merah, default) | 'warn' (emas, sama seperti konfirmasi tambah/ubah).
+  window.cycloneAdminConfirm = function (opt, ok, batal) {
+    opt = opt || {};
+    var warn = opt.tone === 'warn';
+    titleEl.textContent = opt.title || 'Lanjutkan?';
+    bodyEl.textContent = opt.body || '';
+    okBtn.textContent = opt.okLabel || 'Ya, Lanjutkan';
+    okBtn.className = 'btn ' + (warn ? 'btn-primary' : 'btn-ghost-red');
+    iconEl.innerHTML = ICONS[opt.icon] || ICONS.trash;
+    if (warn) { iconEl.style.background = 'var(--gold-dim)'; iconEl.style.color = 'var(--gold-bright)'; }
+    else { iconEl.style.background = ''; iconEl.style.color = ''; }
+    onOk = typeof ok === 'function' ? ok : null;
+    onCancel = typeof batal === 'function' ? batal : null;
+    overlay.classList.add('open');
+    cancelBtn.focus();
+  };
+
+  okBtn.addEventListener('click', function () {
+    var cb = onOk;
+    overlay.classList.remove('open');
+    onOk = null; onCancel = null;
+    if (cb) cb();
+  });
+  cancelBtn.addEventListener('click', function () { tutup(true); });
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) tutup(true); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) tutup(true);
+  });
+})();
+</script>
+
 <div class="user-modal-overlay" id="tambahSatuanModal">
   <div class="user-modal-card" role="dialog" aria-modal="true" aria-label="Tambah Satuan">
     <div class="user-modal-head">
@@ -7028,12 +7096,7 @@
           var input = document.getElementById('pnToggleInput');
           var form = document.getElementById('pnToggleForm');
           if (!input || !form) return;
-          input.addEventListener('change', function () {
-            // Dimatikan = berdampak ke SEMUA pengguna -> minta konfirmasi dulu.
-            if (!input.checked && !window.confirm('Matikan push notification untuk SEMUA pengguna? Notifikasi di luar sistem tidak akan dikirim sampai dinyalakan lagi.')) {
-              input.checked = true;
-              return;
-            }
+          function kirim() {
             // JANGAN disable checkbox sebelum submit -- input disabled tidak ikut
             // terkirim, jadi "aktif" hilang dan terbaca mati.
             // Checkbox yang tidak dicentang tidak terkirim -> kirim aktif=0 eksplisit.
@@ -7043,6 +7106,18 @@
               form.appendChild(off);
             }
             form.submit();
+          }
+          input.addEventListener('change', function () {
+            if (input.checked) { kirim(); return; }
+            // Dimatikan = berdampak ke SEMUA pengguna -> minta konfirmasi (popup
+            // bergaya sistem, bukan confirm() bawaan browser). Batal -> saklar balik ON.
+            window.cycloneAdminConfirm({
+              title: 'Matikan Push Notification?',
+              body: 'Notifikasi di luar sistem tidak akan dikirim ke SEMUA pengguna sampai dinyalakan lagi. Lonceng notifikasi di dalam sistem tetap berjalan.',
+              okLabel: 'Ya, Matikan',
+              tone: 'warn',
+              icon: 'bellOff'
+            }, kirim, function () { input.checked = true; });
           });
         })();
         </script>
@@ -7157,9 +7232,12 @@
             }
             if (deleteBtn && deleteForm) {
               deleteBtn.addEventListener('click', function () {
-                if (window.confirm('Hapus suara notifikasi ini? Notifikasi baru tidak akan berbunyi lagi sampai Admin mengunggah suara baru.')) {
-                  deleteForm.submit();
-                }
+                window.cycloneAdminConfirm({
+                  title: 'Hapus Suara Notifikasi?',
+                  body: 'Notifikasi baru tidak akan berbunyi lagi sampai Admin mengunggah suara baru.',
+                  okLabel: 'Ya, Hapus',
+                  icon: 'trash'
+                }, function () { deleteForm.submit(); });
               });
             }
             if (playBtn && preview) {
@@ -7231,9 +7309,12 @@
 
           if (deleteBtn && deleteForm) {
             deleteBtn.addEventListener('click', function () {
-              if (window.confirm('Hapus gambar Struktur Organisasi? Menu Struktur Organisasi di dashboard Kasansi akan kosong sampai gambar baru diunggah.')) {
-                deleteForm.submit();
-              }
+              window.cycloneAdminConfirm({
+                title: 'Hapus Gambar Struktur Organisasi?',
+                body: 'Menu Struktur Organisasi di dashboard Kasansi akan kosong sampai gambar baru diunggah.',
+                okLabel: 'Ya, Hapus',
+                icon: 'trash'
+              }, function () { deleteForm.submit(); });
             });
           }
         })();
