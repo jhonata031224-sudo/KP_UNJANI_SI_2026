@@ -331,15 +331,15 @@ window.openSuratDetail = function(button){
   }
 
   if (tujuanRingkas) {
-    tujuanValueWrap.className = 'surat-detail-item-value surat-tujuan-flow';
-    tujuanValueWrap.style.display = 'flex';
-    tujuanValueWrap.style.alignItems = 'center';
-    tujuanValueWrap.style.gap = '8px';
-    tujuanValueWrap.style.flexWrap = 'wrap';
-    tujuanValueWrap.innerHTML = jalurKirim.map(function(hop, idx){
-      return (idx > 0 ? '<span class="surat-tujuan-flow-arrow" aria-hidden="true">' + arrowSvg + '</span>' : '') +
-        '<span class="surat-tujuan-flow-step' + (idx === jalurKirim.length - 1 ? ' is-final' : '') + '">' + escHtml(hop.nama || '-') + '</span>';
-    }).join('');
+    // Teks biasa (tanpa pembungkus elips/chip): satu satuan per baris, dengan
+    // panah kecil abu-abu ke bawah di antaranya. Dibungkus <div> sendiri supaya
+    // tidak terpengaruh gaya inline sisa dari cabang tampilan lain.
+    tujuanValueWrap.className = 'surat-detail-item-value';
+    tujuanValueWrap.innerHTML = '<div class="tujuan-ringkas" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%">' +
+      jalurKirim.map(function(hop, idx){
+        return (idx > 0 ? '<span class="surat-tujuan-flow-arrow" aria-hidden="true" style="transform:rotate(90deg);margin-left:3px">' + arrowSvg + '</span>' : '') +
+          '<span>' + escHtml(hop.nama || '-') + '</span>';
+      }).join('') + '</div>';
   } else if (tujuanHops.length > 1) {
     // Alur diteruskan lebih dari 1 langkah -- tampilkan sebagai chip alur
     // workflow (mis. Wadan → Satlak Dukteksi) supaya satuan perantara
