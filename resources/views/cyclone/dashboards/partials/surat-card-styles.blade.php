@@ -403,21 +403,18 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
       // dikunci cuma ISI & tombol buka kartunya (lihat
       // .surat-file-card-locked di surat-arsip-row.blade.php), bukan
       // keberadaannya di daftar/filter.
-      // Filter Satuan & Status: opsinya juga dibangun dari nilai yang
-      // BENERAN ada di kartu yang ke-render (data-satuan-kode/-nama &
-      // data-status), sama seperti Jenis Surat -- jadi otomatis nyesuain
-      // per satuan/dashboard (WADAN, Urdal, dst) tanpa hardcode daftar
-      // satuan/status di JS.
+      // Filter Satuan: opsinya juga dibangun dari nilai yang BENERAN ada di
+      // kartu yang ke-render (data-satuan-kode/-nama), sama seperti Jenis
+      // Surat -- jadi otomatis nyesuain per satuan/dashboard (WADAN, Urdal,
+      // dst) tanpa hardcode daftar satuan di JS. Filter Status sengaja
+      // TIDAK ada: surat di Arsip pasti sudah selesai & dikonfirmasi.
       var jenisSet={};
       var satuanMap={};
-      var statusSet={};
       initialCards.forEach(function(c){
         var p=c.dataset.jenisFilter;
         if(p)jenisSet[p]=true;
         var sk=c.dataset.satuanKode;
         if(sk)satuanMap[sk]=c.dataset.satuanNama||sk;
-        var st=c.dataset.status;
-        if(st)statusSet[st]=true;
       });
       var jenisOpts=Object.keys(jenisSet).sort().map(function(p){
         return '<option value="'+p+'">'+p+'</option>';
@@ -427,9 +424,6 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
       }).map(function(k){
         return '<option value="'+k+'">'+satuanMap[k]+'</option>';
       }).join('');
-      var statusOpts=Object.keys(statusSet).sort().map(function(s){
-        return '<option value="'+s+'">'+s+'</option>';
-      }).join('');
       // Filter Asal Surat: HANYA muncul untuk Arsip Urdal (kartu bawa data-asal).
       // 'danpus' = dikeluarkan dari sisi Danpus, 'satuan' = dikeluarkan langsung
       // oleh satuan lain ke Danpus.
@@ -437,7 +431,6 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
       initialCards.forEach(function(c){ if(c.dataset.asal)adaAsal=true; });
       var asalHtml=adaAsal?'<select class="rpt-filter-select" aria-label="Filter asal surat"><option value="all">Semua Asal Surat</option><option value="danpus">Dikeluarkan Danpus</option><option value="satuan">Satuan lain ke Danpus</option></select>':'';
       extraHtml=asalHtml+'<select class="rpt-filter-select" aria-label="Filter satuan"><option value="all">Semua Satuan</option>'+satuanOpts+'</select>'+
-        '<select class="rpt-filter-select" aria-label="Filter status"><option value="all">Semua Status</option>'+statusOpts+'</select>'+
         '<div class="rpt-filter-date-wrap"><label for="'+gridId+'DariDate">Dari</label><input type="date" id="'+gridId+'DariDate" aria-label="Tanggal dari"></div>'+
         '<div class="rpt-filter-date-wrap"><label for="'+gridId+'SampaiDate">Sampai</label><input type="date" id="'+gridId+'SampaiDate" aria-label="Tanggal sampai"></div>'+
         '<select class="rpt-filter-select" aria-label="Filter jenis surat"><option value="all">Semua Jenis Surat</option>'+jenisOpts+'</select>';
@@ -463,7 +456,6 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
     var sortSelect=selects[selects.length-1];
     var jenisSelect=extraFilters?bar.querySelector('select[aria-label="Filter jenis surat"]'):null;
     var satuanSelect=extraFilters?bar.querySelector('select[aria-label="Filter satuan"]'):null;
-    var statusSelect=extraFilters?bar.querySelector('select[aria-label="Filter status"]'):null;
     var asalSelect=extraFilters?bar.querySelector('select[aria-label="Filter asal surat"]'):null;
     var dariInput=extraFilters?bar.querySelector('input[aria-label="Tanggal dari"]'):null;
     var sampaiInput=extraFilters?bar.querySelector('input[aria-label="Tanggal sampai"]'):null;
@@ -513,7 +505,6 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
       var q=(input.value||'').trim().toLowerCase();
       var jenisVal=jenisSelect?jenisSelect.value:'all';
       var satuanVal=satuanSelect?satuanSelect.value:'all';
-      var statusVal=statusSelect?statusSelect.value:'all';
       var asalVal=asalSelect?asalSelect.value:'all';
       var dariSec=(dariInput&&dariInput.value)?startOfDaySeconds(dariInput.value):null;
       var sampaiSec=(sampaiInput&&sampaiInput.value)?endOfDaySeconds(sampaiInput.value):null;
@@ -522,7 +513,6 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
         var match=!q||(item.dataset.search||'').indexOf(q)!==-1;
         if(match&&jenisVal!=='all')match=item.dataset.jenisFilter===jenisVal;
         if(match&&satuanVal!=='all')match=item.dataset.satuanKode===satuanVal;
-        if(match&&statusVal!=='all')match=item.dataset.status===statusVal;
         if(match&&asalVal!=='all')match=item.dataset.asal===asalVal;
         if(match&&(dariSec!==null||sampaiSec!==null)){
           var createdAt=Number(item.dataset.createdAt);
@@ -546,7 +536,6 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
     sortSelect.addEventListener('change',apply);
     if(jenisSelect)jenisSelect.addEventListener('change',apply);
     if(satuanSelect)satuanSelect.addEventListener('change',apply);
-    if(statusSelect)statusSelect.addEventListener('change',apply);
     if(asalSelect)asalSelect.addEventListener('change',apply);
     if(dariInput)dariInput.addEventListener('change',apply);
     if(sampaiInput)sampaiInput.addEventListener('change',apply);
