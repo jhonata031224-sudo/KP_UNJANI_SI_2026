@@ -661,7 +661,10 @@ class DashboardController
         // masuk Arsip. Satuan bawaan alur (Danpus/Wadan/Urdal) tidak terkena.
         $bolehKirimBalasan = LaporanSurat::satuanBolehKirimBalasanNaik($kode);
 
-        $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
+        $suratArsip = $kode === 'URDAL'
+            // Urdal = arsip pusat: semua surat yang sudah selesai (filter Asal di UI).
+            ? LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])->arsipPusat()->latest()->get()->unique('id')->values()
+            : LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
             ->where(function ($q) use ($satuan, $bolehKirimBalasan) {
                 $q->where(function ($sub) use ($satuan) {
                     $sub->where('satuan_id', $satuan->id)

@@ -150,7 +150,10 @@ class LaporanSuratController extends Controller
         //       pengirim atau penerima di riwayat alur), tapi sekarang tanggung jawabnya
         //       sudah pindah ke satuan lain -- tetap tercatat sebagai riwayat historis di
         //       Arsip, supaya tidak "hilang" begitu saja setelah diteruskan lebih lanjut.
-        $arsip = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
+        $arsip = $kodeSatuan === 'URDAL'
+            // Urdal = arsip pusat: semua surat yang sudah selesai (filter Asal di UI).
+            ? LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])->arsipPusat()->latest()->get()->unique('id')->values()
+            : LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'tembusans'])
             ->where(function ($q) use ($satuan, $isDanpus) {
                 // (a) Pengirim asli -- nunggu is_selesai, bukan status per-langkah.
                 //     Khusus Danpus: is_selesai ATAU alur 3 step sudah terpenuhi

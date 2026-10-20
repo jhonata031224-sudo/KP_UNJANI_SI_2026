@@ -430,7 +430,13 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
       var statusOpts=Object.keys(statusSet).sort().map(function(s){
         return '<option value="'+s+'">'+s+'</option>';
       }).join('');
-      extraHtml='<select class="rpt-filter-select" aria-label="Filter satuan"><option value="all">Semua Satuan</option>'+satuanOpts+'</select>'+
+      // Filter Asal Surat: HANYA muncul untuk Arsip Urdal (kartu bawa data-asal).
+      // 'danpus' = dikeluarkan dari sisi Danpus, 'satuan' = dikeluarkan langsung
+      // oleh satuan lain ke Danpus.
+      var adaAsal=false;
+      initialCards.forEach(function(c){ if(c.dataset.asal)adaAsal=true; });
+      var asalHtml=adaAsal?'<select class="rpt-filter-select" aria-label="Filter asal surat"><option value="all">Semua Asal Surat</option><option value="danpus">Dikeluarkan Danpus</option><option value="satuan">Satuan lain ke Danpus</option></select>':'';
+      extraHtml=asalHtml+'<select class="rpt-filter-select" aria-label="Filter satuan"><option value="all">Semua Satuan</option>'+satuanOpts+'</select>'+
         '<select class="rpt-filter-select" aria-label="Filter status"><option value="all">Semua Status</option>'+statusOpts+'</select>'+
         '<div class="rpt-filter-date-wrap"><label for="'+gridId+'DariDate">Dari</label><input type="date" id="'+gridId+'DariDate" aria-label="Tanggal dari"></div>'+
         '<div class="rpt-filter-date-wrap"><label for="'+gridId+'SampaiDate">Sampai</label><input type="date" id="'+gridId+'SampaiDate" aria-label="Tanggal sampai"></div>'+
@@ -458,6 +464,7 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
     var jenisSelect=extraFilters?bar.querySelector('select[aria-label="Filter jenis surat"]'):null;
     var satuanSelect=extraFilters?bar.querySelector('select[aria-label="Filter satuan"]'):null;
     var statusSelect=extraFilters?bar.querySelector('select[aria-label="Filter status"]'):null;
+    var asalSelect=extraFilters?bar.querySelector('select[aria-label="Filter asal surat"]'):null;
     var dariInput=extraFilters?bar.querySelector('input[aria-label="Tanggal dari"]'):null;
     var sampaiInput=extraFilters?bar.querySelector('input[aria-label="Tanggal sampai"]'):null;
     var count=bar.querySelector('.rpt-filter-count');
@@ -507,6 +514,7 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
       var jenisVal=jenisSelect?jenisSelect.value:'all';
       var satuanVal=satuanSelect?satuanSelect.value:'all';
       var statusVal=statusSelect?statusSelect.value:'all';
+      var asalVal=asalSelect?asalSelect.value:'all';
       var dariSec=(dariInput&&dariInput.value)?startOfDaySeconds(dariInput.value):null;
       var sampaiSec=(sampaiInput&&sampaiInput.value)?endOfDaySeconds(sampaiInput.value):null;
       var visible=0;
@@ -515,6 +523,7 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
         if(match&&jenisVal!=='all')match=item.dataset.jenisFilter===jenisVal;
         if(match&&satuanVal!=='all')match=item.dataset.satuanKode===satuanVal;
         if(match&&statusVal!=='all')match=item.dataset.status===statusVal;
+        if(match&&asalVal!=='all')match=item.dataset.asal===asalVal;
         if(match&&(dariSec!==null||sampaiSec!==null)){
           var createdAt=Number(item.dataset.createdAt);
           if(dariSec!==null&&createdAt<dariSec)match=false;
@@ -538,6 +547,7 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
     if(jenisSelect)jenisSelect.addEventListener('change',apply);
     if(satuanSelect)satuanSelect.addEventListener('change',apply);
     if(statusSelect)statusSelect.addEventListener('change',apply);
+    if(asalSelect)asalSelect.addEventListener('change',apply);
     if(dariInput)dariInput.addEventListener('change',apply);
     if(sampaiInput)sampaiInput.addEventListener('change',apply);
 

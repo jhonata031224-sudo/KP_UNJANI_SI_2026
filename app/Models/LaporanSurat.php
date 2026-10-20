@@ -210,6 +210,35 @@ class LaporanSurat extends Model
             });
     }
 
+    /**
+     * ARSIP PUSAT (Urdal): semua surat yang sudah selesai, dari sisi manapun.
+     *   - is_selesai = true (surat satuan lain -> Danpus yang dikonfirmasi
+     *     Danpus, surat Danpus yang sudah berputar penuh, atau "Selesai" manual), ATAU
+     *   - surat buatan Danpus yang alur turunnya sudah tuntas (Wadan sudah
+     *     meneruskan & satuan tujuan akhir sudah konfirmasi).
+     * Dipakai oleh Arsip Surat Urdal (render awal & polling realtime).
+     */
+    public function scopeArsipPusat(Builder $query): Builder
+    {
+        return $query->where(function ($q) {
+            $q->where('is_selesai', true)
+              ->orWhere(function ($d) {
+                  $d->whereHas('satuan', fn ($s) => $s->where('kode', 'DANPUS'))
+                    ->alurTuntasSisiPengirim();
+              });
+        });
+    }
+
+    /**
+     * Asal surat untuk filter Arsip Urdal:
+     *   'danpus' = dikeluarkan dari sisi Danpus (pembuat surat = Danpus),
+     *   'satuan' = dikeluarkan langsung oleh satuan lain ke Danpus.
+     */
+    public function asalArsip(): string
+    {
+        return strtoupper((string) ($this->satuan->kode ?? '')) === 'DANPUS' ? 'danpus' : 'satuan';
+    }
+
     /** Kebalikan persis scopeAlurTuntasSisiPengirim() -- dipakai query Surat Keluar. */
     public function scopeAlurBelumTuntasSisiPengirim(Builder $query): Builder
     {
