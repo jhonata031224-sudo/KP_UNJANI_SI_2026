@@ -357,15 +357,17 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
 .rpt-filter-date-wrap input[type="date"]{box-sizing:border-box;height:38px;border:1px solid var(--border-soft);border-radius:9px;background:var(--panel-alt);color:var(--text);font:inherit;font-size:12px;padding:8px 10px;color-scheme:inherit}
 .rpt-filter-date-wrap input[type="date"]:focus{outline:0;border-color:var(--gold-bright);box-shadow:0 0 0 3px rgba(201,122,0,.10)}
 @media(max-width:700px){.rpt-filter-date-wrap{width:100%}.rpt-filter-date-wrap input[type="date"]{flex:1;min-width:0}}
-/* Asal Surat (Arsip Urdal): dua tombol toggle kuning terpisah di atas bar filter. */
-.surat-asal-toggle{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}
-.surat-asal-toggle button{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;border-radius:999px;border:1px solid var(--border-soft);background:var(--panel-alt);color:var(--text-muted);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;transition:background .15s,border-color .15s,color .15s,transform .15s}
-.surat-asal-toggle button:hover{border-color:var(--gold-bright);color:var(--text)}
+/* Asal Surat (Arsip Urdal): dua tombol toggle, gayanya sama dengan .dl-tab di Arsip Data admin
+   (kotak sudut 10px; tidak aktif = kuning lembut, aktif = kuning gradasi). */
+.surat-asal-toggle{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 14px}
+.surat-asal-toggle button{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;border:1px solid transparent;background:var(--gold-dim);color:var(--gold-bright);font-family:var(--body);font-size:13.5px;font-weight:700;cursor:pointer;transition:background .15s ease,color .15s ease,box-shadow .15s ease}
+.surat-asal-toggle button svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.surat-asal-toggle button[aria-pressed="true"]{background:linear-gradient(135deg,var(--gold-solid-bright),var(--gold-solid));color:var(--on-gold);box-shadow:0 8px 20px -8px rgba(217,146,11,.55)}
+.surat-asal-toggle button[aria-pressed="false"]:hover{background:var(--hover-tint);color:var(--text)}
 .surat-asal-toggle button:focus-visible{outline:0;box-shadow:0 0 0 3px rgba(201,122,0,.22)}
-.surat-asal-toggle button[aria-pressed="true"]{background:var(--gold-bright);border-color:var(--gold-bright);color:#2b1a00}
-.surat-asal-toggle .surat-asal-count{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:rgba(0,0,0,.08);font-size:11px;line-height:20px;text-align:center}
-.surat-asal-toggle button[aria-pressed="true"] .surat-asal-count{background:rgba(43,26,0,.16)}
-@media(max-width:700px){#arsip-surat .surat-asal-toggle button{flex:1 1 0;padding:0 10px;font-size:12px}}
+.surat-asal-toggle .surat-asal-count{min-width:22px;height:20px;padding:0 6px;border-radius:6px;background:rgba(255,255,255,.55);color:inherit;font-size:11.5px;font-weight:800;line-height:20px;text-align:center}
+.surat-asal-toggle button[aria-pressed="true"] .surat-asal-count{background:rgba(36,26,5,.16)}
+@media(max-width:700px){#arsip-surat .surat-asal-toggle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#arsip-surat .surat-asal-toggle button{width:100%;justify-content:center;padding:10px 8px;font-size:13px;white-space:nowrap}}
 /* Mobile: filter Arsip Surat jadi grid 2 kolom (search tetap 1 baris penuh).
    Urutan: Satuan|Status, Dari|Sampai, Jenis Surat|Urutan, lalu counter. */
 @media(max-width:700px){
@@ -481,8 +483,8 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
       asalWrap.className='surat-asal-toggle';
       asalWrap.setAttribute('role','group');
       asalWrap.setAttribute('aria-label','Asal surat');
-      asalWrap.innerHTML='<button type="button" data-asal="danpus" aria-pressed="false">Dikeluarkan Danpus <span class="surat-asal-count">0</span></button>'+
-        '<button type="button" data-asal="satuan" aria-pressed="false">Satuan lain ke Danpus <span class="surat-asal-count">0</span></button>';
+      asalWrap.innerHTML='<button type="button" data-asal="danpus" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>Dikeluarkan Danpus <span class="surat-asal-count">0</span></button>'+
+        '<button type="button" data-asal="satuan" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Satuan lain ke Danpus <span class="surat-asal-count">0</span></button>';
       panel.insertBefore(asalWrap,bar);
       asalWrap.addEventListener('click',function(e){
         var btn=e.target.closest?e.target.closest('button[data-asal]'):null;
