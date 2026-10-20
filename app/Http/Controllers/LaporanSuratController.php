@@ -608,14 +608,23 @@ class LaporanSuratController extends Controller
         $isSuratMurniKeDanpus = strtoupper((string) $satuan->kode) === 'DANPUS'
             && ! in_array($kodePengirimAsli, ['DANPUS', 'WADAN'], true);
 
+        // Surat BUATAN Danpus sendiri yang sudah berputar (Danpus -> Wadan ->
+        // satuan -> balasan -> Wadan) lalu kembali & dikonfirmasi Danpus:
+        // putaran penuh selesai, jadi otomatis tuntas (pindah ke Arsip Surat,
+        // Hasil/RC ke Urdal) tanpa Danpus perlu menekan "Selesai" lagi.
+        $isSuratDanpusKembali = strtoupper((string) $satuan->kode) === 'DANPUS'
+            && $kodePengirimAsli === 'DANPUS';
+        $perluTuntaskan = $isSuratDanpusKembali && ! $laporanSurat->isSelesai();
+
         $laporanSurat->update(array_merge([
             'status'            => LaporanSurat::STATUS_DIKONFIRMASI,
             'dikonfirmasi_at'   => now(),
             'dikonfirmasi_oleh' => $user->id,
-        ], $isSuratMurniKeDanpus ? ['is_selesai' => true] : []));
+        ], $isSuratMurniKeDanpus ? ['is_selesai' => true] : [],
+           $perluTuntaskan ? ['is_selesai' => true, 'selesai_at' => now(), 'selesai_oleh' => $user->id] : []));
 
         // Catat riwayat konfirmasi penerima
-        LaporanSuratRiwayat::create([
+        $riwayatKonfirmasi = LaporanSuratRiwayat::create([
             'laporan_surat_id'   => $laporanSurat->id,
             'siklus'             => $laporanSurat->siklus,
             'aksi'               => LaporanSuratRiwayat::AKSI_KONFIRMASI,
@@ -623,8 +632,14 @@ class LaporanSuratController extends Controller
             'user_id'            => $user->id,
             'catatan'            => $isSuratMurniKeDanpus
                 ? "Surat dikonfirmasi / ACC & Diterima oleh {$satuan->nama}. Surat dianggap tuntas -- tindak lanjut (jika ada) dibuat sebagai Surat Keluar baru oleh Danpus."
-                : "Surat dikonfirmasi / ACC & Diterima oleh {$satuan->nama}.",
+                : ($perluTuntaskan
+                    ? "Surat dikonfirmasi / ACC & Diterima oleh {$satuan->nama}. Alur surat tuntas -- Hasil / Record Copy (RC) masuk ke Urdal."
+                    : "Surat dikonfirmasi / ACC & Diterima oleh {$satuan->nama}."),
         ]);
+
+        if ($perluTuntaskan) {
+            $this->kirimHasilRcKeUrdal($laporanSurat, $riwayatKonfirmasi);
+        }
 
         // Danpus (ujung alur) konfirmasi / ACC surat -> kabari satuan terkait
         // lewat notifikasi INFORMASI (lonceng + suara + push popup; tidak bisa
@@ -975,6 +990,31 @@ class LaporanSuratController extends Controller
     }
 
     /**
+     * Hasil / Record Copy (RC) surat yang tuntas masuk ke Urdal sebagai
+     * tembusan jenis HASIL_RC + notifikasi ke user Urdal. Dipakai oleh
+     * selesai() (manual) dan konfirmasi() (otomatis, surat buatan Danpus
+     * yang sudah kembali & dikonfirmasi Danpus).
+     */
+    private function kirimHasilRcKeUrdal(LaporanSurat $laporanSurat, LaporanSuratRiwayat $riwayat): void
+    {
+        $urdalSatuan = Satuan::where('kode', 'URDAL')->first();
+        if (! $urdalSatuan) {
+            return;
+        }
+
+        LaporanSuratTembusan::create([
+            'laporan_surat_id'         => $laporanSurat->id,
+            'laporan_surat_riwayat_id' => $riwayat->id,
+            'satuan_id'                => $urdalSatuan->id,
+            'jenis'                    => LaporanSuratTembusan::JENIS_HASIL_RC,
+        ]);
+
+        foreach (User::where('satuan_id', $urdalSatuan->id)->get() as $u) {
+            $u->notify(new LaporanSuratBaruDiterima($laporanSurat));
+        }
+    }
+
+    /**
      * Keputusan Danpus: PILIHAN A - Selesai.
      * Surat dianggap selesai, Hasil / Record Copy (RC) otomatis masuk ke Urdal.
      */
@@ -1010,19 +1050,7 @@ class LaporanSuratController extends Controller
         ]);
 
         // Requirement 8A & 10: Hasil/RC masuk ke Urdal
-        $urdalSatuan = Satuan::where('kode', 'URDAL')->first();
-        if ($urdalSatuan) {
-            LaporanSuratTembusan::create([
-                'laporan_surat_id'         => $laporanSurat->id,
-                'laporan_surat_riwayat_id' => $riwayat->id,
-                'satuan_id'                => $urdalSatuan->id,
-                'jenis'                    => LaporanSuratTembusan::JENIS_HASIL_RC,
-            ]);
-
-            foreach (User::where('satuan_id', $urdalSatuan->id)->get() as $u) {
-                $u->notify(new LaporanSuratBaruDiterima($laporanSurat));
-            }
-        }
+        $this->kirimHasilRcKeUrdal($laporanSurat, $riwayat);
 
         ActivityLog::catat('laporan-surat.selesai', "Menyelesaikan surat \"{$laporanSurat->perihal}\". Hasil/RC masuk ke Urdal.", $user, [
             'laporan_surat_id' => $laporanSurat->id,

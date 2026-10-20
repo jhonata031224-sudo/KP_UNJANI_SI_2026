@@ -186,25 +186,27 @@ class LaporanSurat extends Model
     }
 
     /**
-     * Satuan PERANTARA di alur surat Danpus (Danpus -> Wadan -> Satuan).
-     * Satuan tujuan akhir yang dipilih Wadan adalah satuan SELAIN keduanya.
+     * Satuan PERANTARA di alur surat Danpus dari sisi PENGIRIM (Danpus -> Wadan -> Satuan).
+     * Hanya Wadan: selama surat masih dipegang Wadan, alurnya belum tuntas.
+     * Danpus BUKAN perantara lagi -- kalau surat buatan Danpus sudah kembali
+     * ke Danpus dan dikonfirmasi, berarti putaran penuh sudah selesai.
      */
-    const KODE_PERANTARA_ALUR_DANPUS = ['DANPUS', 'WADAN'];
+    const KODE_PERANTARA_SISI_PENGIRIM = ['WADAN'];
 
     /**
-     * Alur 3 step sudah terpenuhi dari sudut pandang PENGIRIM ASLI (Danpus):
-     *   1) Danpus membuat surat,
-     *   2) Wadan konfirmasi & meneruskan,
-     *   3) satuan tujuan akhir pilihan Wadan sudah konfirmasi.
-     * Artinya pemegang surat saat ini bukan lagi Danpus/Wadan DAN sudah
-     * berstatus dikonfirmasi. Surat seperti ini otomatis pindah dari Surat
-     * Keluar ke Arsip Surat Danpus (tanpa menunggu aksi "Selesai" manual).
+     * Alur sudah terpenuhi dari sudut pandang PENGIRIM ASLI (Danpus):
+     *   - alur turun : Danpus membuat surat -> Wadan konfirmasi & meneruskan ->
+     *                  satuan tujuan akhir konfirmasi, ATAU
+     *   - alur naik  : satuan membalas -> Wadan meneruskan -> Danpus konfirmasi.
+     * Artinya surat sudah berstatus dikonfirmasi dan pemegang saat ini
+     * BUKAN Wadan. Surat seperti ini otomatis pindah dari Surat Keluar ke
+     * Arsip Surat Danpus (tanpa menunggu aksi "Selesai" manual).
      */
     public function scopeAlurTuntasSisiPengirim(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_DIKONFIRMASI)
             ->whereHas('tujuanSatuan', function ($t) {
-                $t->whereNotIn('kode', self::KODE_PERANTARA_ALUR_DANPUS);
+                $t->whereNotIn('kode', self::KODE_PERANTARA_SISI_PENGIRIM);
             });
     }
 
@@ -215,7 +217,7 @@ class LaporanSurat extends Model
             $q->where('status', '!=', self::STATUS_DIKONFIRMASI)
               ->orWhereNull('status')
               ->orWhereDoesntHave('tujuanSatuan', function ($t) {
-                  $t->whereNotIn('kode', self::KODE_PERANTARA_ALUR_DANPUS);
+                  $t->whereNotIn('kode', self::KODE_PERANTARA_SISI_PENGIRIM);
               });
         });
     }
