@@ -331,14 +331,19 @@ window.openSuratDetail = function(button){
   }
 
   if (tujuanRingkas) {
-    // Teks biasa (tanpa pembungkus elips/chip): satu satuan per baris, dengan
-    // panah kecil abu-abu ke bawah di antaranya. Dibungkus <div> sendiri supaya
-    // tidak terpengaruh gaya inline sisa dari cabang tampilan lain.
+    // Alur kirim sebagai langkah bernomor yang tersambung garis vertikal
+    // (1 Dikirim ke -> 2 Diteruskan ke), supaya urutannya langsung terbaca
+    // bahkan oleh pengguna awam. Memakai ulang gaya .tujuan-fase-step/-no/-txt
+    // (lihat surat-card-styles) TANPA blok fase, ikon, dan baris "Aksi".
+    // Dibungkus <div> sendiri supaya tidak terpengaruh gaya inline sisa dari
+    // cabang tampilan lain.
     tujuanValueWrap.className = 'surat-detail-item-value';
-    tujuanValueWrap.innerHTML = '<div class="tujuan-ringkas" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%">' +
+    tujuanValueWrap.innerHTML = '<div class="tujuan-fase-steps tujuan-ringkas" style="--fase:#2476ad;width:100%;white-space:normal">' +
       jalurKirim.map(function(hop, idx){
-        return (idx > 0 ? '<span class="surat-tujuan-flow-arrow" aria-hidden="true" style="transform:rotate(90deg);margin-left:3px">' + arrowSvg + '</span>' : '') +
-          '<span>' + escHtml(hop.nama || '-') + '</span>';
+        return '<span class="tujuan-fase-step">' +
+          '<span class="tujuan-fase-no" aria-hidden="true">' + (idx + 1) + '</span>' +
+          '<span class="tujuan-fase-txt"><small class="tujuan-fase-peran">' + (idx === 0 ? 'Dikirim ke' : 'Diteruskan ke') + '</small>' +
+          '<span class="tujuan-fase-nama">' + escHtml(hop.nama || '-') + '</span></span></span>';
       }).join('') + '</div>';
   } else if (tujuanHops.length > 1) {
     // Alur diteruskan lebih dari 1 langkah -- tampilkan sebagai chip alur
