@@ -3993,7 +3993,7 @@
             </div>
             <div>
               <h2>Mode Maintenance</h2>
-              <p>Saat aktif, pengguna non-Admin tetap bisa login dan membaca/melihat data, tapi TIDAK bisa melakukan aksi yang mengubah data (buat, edit, hapus, kirim, submit, konfirmasi/ACC, disposisi, upload, dsb). Admin selalu tetap bisa bekerja normal.</p>
+              <p>Saat aktif, pengguna target (semua pengguna non-Admin, atau hanya satuan tertentu seperti Danpus) tetap bisa login dan membaca/melihat data, tapi TIDAK bisa melakukan aksi yang mengubah data (buat, edit, hapus, kirim, submit, konfirmasi/ACC, disposisi, upload, dsb). Admin selalu tetap bisa bekerja normal, begitu juga pengguna di luar target.</p>
             </div>
           </div>
         </div>
@@ -4015,6 +4015,26 @@
           .mm-field label{display:block;font-size:11.5px;font-weight:700;color:var(--text-muted);margin-bottom:5px;}
           .mm-field textarea{width:100%;box-sizing:border-box;border:1px solid var(--border-soft);border-radius:9px;padding:9px 12px;font-family:var(--body);font-size:12.5px;background:var(--panel-alt);color:var(--text);resize:vertical;min-height:80px;}
           .mm-field-hint{font-size:11px;color:var(--text-dim,var(--text-muted));margin-top:5px;}
+          .mm-target-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+          @media(max-width:640px){.mm-target-row{grid-template-columns:1fr;}}
+          .mm-target-opt{position:relative;display:block;cursor:pointer;margin:0 !important;}
+          .mm-target-opt input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;}
+          .mm-target-card{height:100%;box-sizing:border-box;background:var(--panel-alt);border:1.5px solid var(--border-soft);border-radius:12px;padding:12px 14px;transition:border-color .15s ease,background .15s ease;}
+          .mm-target-title{font-size:13px;font-weight:700;color:var(--text);}
+          .mm-target-desc{font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5;font-weight:400;}
+          .mm-target-opt input:checked ~ .mm-target-card{border-color:var(--gold,#FF9800);background:var(--gold-dim,rgba(201,122,0,.08));}
+          .mm-target-opt input:checked ~ .mm-target-card .mm-target-title{color:var(--gold-bright,#FF9800);}
+          .mm-picker{margin-top:12px;padding:14px 16px;border:1px dashed var(--border-soft);border-radius:12px;background:var(--panel-alt);}
+          .mm-picker-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+          .mm-picker-count{margin-left:auto;font-size:11.5px;color:var(--text-muted);}
+          .mm-picker-scroll{max-height:320px;overflow-y:auto;padding-right:4px;}
+          .mm-group + .mm-group{margin-top:12px;}
+          .mm-group-title{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim,var(--text-muted));margin-bottom:6px;}
+          .mm-group-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 12px;}
+          .mm-chk{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text);margin:0 !important;font-weight:400 !important;cursor:pointer;}
+          .mm-chk input{margin:0;flex:0 0 auto;}
+          .mm-error{font-size:11.5px;color:var(--red,#c83b3b);margin-top:8px;font-weight:600;}
+          .mm-status-note{font-size:11.5px;color:var(--text-muted);padding:0 22px;margin-top:-6px;}
         </style>
 
         <div class="panel" style="margin-top:16px;">
@@ -4027,13 +4047,36 @@
               {{ $pengaturan->mode_maintenance_aktif ? 'AKTIF' : 'NONAKTIF' }}
             </span>
           </div>
+          @php
+            $mmTargetIds = $pengaturan->maintenanceTargetSatuanIds();
+            $mmTargetMode = old('target', $mmTargetIds ? 'satuan' : 'semua');
+            $mmCheckedIds = collect(old('satuan_ids', $mmTargetIds))->map(fn ($v) => (int) $v)->all();
+            $mmKatLabel = [
+              \App\Models\Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
+              \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+              \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
+              \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
+              \App\Models\Satuan::KATEGORI_SATLAK => 'Satlak',
+              \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
+            ];
+            // Satuan Admin tidak pernah jadi target (Admin selalu dikecualikan).
+            $mmSatuanGroups = $semuaSatuan
+              ->reject(fn ($s) => $s->kategori === \App\Models\Satuan::KATEGORI_ADMIN || strtoupper(trim((string) $s->kode)) === 'ADMIN')
+              ->groupBy('kategori');
+          @endphp
+          @if($pengaturan->mode_maintenance_aktif)
+            <div class="mm-status-note" style="padding-top:14px;">
+              Target saat ini:
+              <strong>{{ $mmTargetIds ? $semuaSatuan->whereIn('id', $mmTargetIds)->pluck('nama')->join(', ') : 'seluruh pengguna non-Admin' }}</strong>
+            </div>
+          @endif
           <form method="POST" action="{{ route('admin.setelan.maintenance.toggle') }}" class="mm-panel-body" id="mmForm">
             @csrf
             @method('PATCH')
             <div class="mm-switch-row">
               <div>
                 <div class="mm-switch-row-label">Aktifkan Mode Maintenance</div>
-                <div class="mm-switch-row-sub">Pengguna non-Admin tidak bisa buat/<wbr>edit/<wbr>hapus/<wbr>kirim/<wbr>konfirmasi/<wbr>disposisi data selama mode ini aktif.</div>
+                <div class="mm-switch-row-sub">Pengguna target tidak bisa buat/<wbr>edit/<wbr>hapus/<wbr>kirim/<wbr>konfirmasi/<wbr>disposisi data selama mode ini aktif.</div>
               </div>
               <label class="mm-switch">
                 <input type="checkbox" name="aktif" value="1" id="mmAktifInput" @checked($pengaturan->mode_maintenance_aktif)>
@@ -4043,9 +4086,55 @@
             </div>
 
             <div class="mm-field">
+              <label>Target Maintenance</label>
+              <div class="mm-target-row">
+                <label class="mm-target-opt">
+                  <input type="radio" name="target" value="semua" data-mm-target @checked($mmTargetMode !== 'satuan')>
+                  <div class="mm-target-card">
+                    <div class="mm-target-title">Semua pengguna (non-Admin)</div>
+                    <div class="mm-target-desc">Untuk perbaikan sistem menyeluruh. Seluruh pengguna selain Admin terkena.</div>
+                  </div>
+                </label>
+                <label class="mm-target-opt">
+                  <input type="radio" name="target" value="satuan" data-mm-target @checked($mmTargetMode === 'satuan')>
+                  <div class="mm-target-card">
+                    <div class="mm-target-title">Satuan tertentu</div>
+                    <div class="mm-target-desc">Hanya pengguna di satuan yang dipilih, mis. Danpus saja saat role itu dikembangkan/diperbaiki. Satuan lain tetap normal.</div>
+                  </div>
+                </label>
+              </div>
+
+              <div class="mm-picker" id="mmSatuanPicker" style="display:none;">
+                <div class="mm-picker-tools">
+                  <button type="button" class="btn btn-ghost btn-sm" data-mm-pilih="semua">Pilih semua</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-mm-pilih="kosong">Kosongkan</button>
+                  <span class="mm-picker-count" id="mmPickerCount"></span>
+                </div>
+                <div class="mm-picker-scroll">
+                  @foreach($mmKatLabel as $mmKatKey => $mmKatNama)
+                    @continue(($mmSatuanGroups->get($mmKatKey) ?? collect())->isEmpty())
+                    <div class="mm-group">
+                      <div class="mm-group-title">{{ $mmKatNama }}</div>
+                      <div class="mm-group-items">
+                        @foreach($mmSatuanGroups->get($mmKatKey) as $mmSatuan)
+                          <label class="mm-chk" title="{{ $mmSatuan->kode }}">
+                            <input type="checkbox" name="satuan_ids[]" value="{{ $mmSatuan->id }}" data-mm-satuan @checked(in_array((int) $mmSatuan->id, $mmCheckedIds, true))>
+                            <span>{{ $mmSatuan->nama }}</span>
+                          </label>
+                        @endforeach
+                      </div>
+                    </div>
+                  @endforeach
+                </div>
+              </div>
+              @error('satuan_ids')<div class="mm-error">{{ $message }}</div>@enderror
+              <div class="mm-field-hint">Admin selalu dikecualikan. Pengguna di luar target tidak terblokir dan tidak menerima notifikasi maintenance.</div>
+            </div>
+
+            <div class="mm-field">
               <label>Pesan Maintenance (opsional)</label>
               <textarea name="pesan" maxlength="500" placeholder="Sistem sedang dalam pemeliharaan. Aktivitas pengiriman dan perubahan data sementara dinonaktifkan hingga pemeliharaan selesai.">{{ old('pesan', $pengaturan->mode_maintenance_pesan) }}</textarea>
-              <div class="mm-field-hint">Ditampilkan di banner pengguna non-Admin. Kosongkan untuk memakai pesan default.</div>
+              <div class="mm-field-hint">Ditampilkan di banner pengguna target. Kosongkan untuk memakai pesan default.</div>
             </div>
 
             <div>
@@ -4053,6 +4142,50 @@
             </div>
           </form>
         </div>
+
+        <script>
+        (function () {
+          var form = document.getElementById('mmForm');
+          var picker = document.getElementById('mmSatuanPicker');
+          if (!form || !picker) return;
+          var radios = form.querySelectorAll('[data-mm-target]');
+          var boxes = form.querySelectorAll('[data-mm-satuan]');
+          var count = document.getElementById('mmPickerCount');
+          var aktif = document.getElementById('mmAktifInput');
+
+          function modeSatuan() {
+            var r = form.querySelector('[data-mm-target]:checked');
+            return !!r && r.value === 'satuan';
+          }
+          function hitung() {
+            var n = 0;
+            boxes.forEach(function (b) { if (b.checked) n++; });
+            if (count) count.textContent = n + ' satuan dipilih';
+            return n;
+          }
+          function sinkron() {
+            picker.style.display = modeSatuan() ? '' : 'none';
+            hitung();
+          }
+          radios.forEach(function (r) { r.addEventListener('change', sinkron); });
+          boxes.forEach(function (b) { b.addEventListener('change', hitung); });
+          form.querySelectorAll('[data-mm-pilih]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var centang = btn.getAttribute('data-mm-pilih') === 'semua';
+              boxes.forEach(function (b) { b.checked = centang; });
+              hitung();
+            });
+          });
+          form.addEventListener('submit', function (e) {
+            if (aktif && aktif.checked && modeSatuan() && hitung() === 0) {
+              e.preventDefault();
+              var msg = 'Pilih minimal satu satuan target maintenance, atau pilih "Semua pengguna".';
+              if (window.cycloneShowToast) window.cycloneShowToast('error', msg); else alert(msg);
+            }
+          });
+          sinkron();
+        })();
+        </script>
       </section>
 
       {{-- ===== ARSIP DATA (dulu "Data Laporan") ===== --}}
@@ -6837,25 +6970,6 @@
           <p>Fitur push notification (notifikasi yang muncul di luar sistem/tab tertutup) selalu aktif untuk seluruh pengguna dan tidak dapat dimatikan. Kirim pengumuman ke semua pengguna dari sini.</p>
         </div>
 
-        @php
-          // Kategori satuan yang bisa dipilih spesifik sebagai tujuan
-          // pengumuman (opsi "Satuan Tertentu") -- sengaja TIDAK termasuk
-          // 'pimpinan' (sudah ada opsi cepat "Pimpinan" sendiri) maupun
-          // 'admin' (bukan target pengumuman). Urutan & label sama dengan
-          // yang dipakai di form "Permintaan Laporan" Pimpinan supaya
-          // konsisten.
-          $snTujuanKategoriMap = [
-            \App\Models\Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
-            \App\Models\Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
-            \App\Models\Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
-            \App\Models\Satuan::KATEGORI_SATLAK => 'Satlak',
-            \App\Models\Satuan::KATEGORI_KOTAMA => 'Kasansi',
-          ];
-          $snSatuanByKategori = $semuaSatuan->groupBy('kategori');
-          $snSatuanByKategoriJson = collect($snTujuanKategoriMap)->keys()->mapWithKeys(function ($snKey) use ($snSatuanByKategori) {
-            return [$snKey => $snSatuanByKategori->get($snKey, collect())->map(fn ($s) => ['id' => $s->id, 'nama' => $s->nama])->values()];
-          });
-        @endphp
 
         <style>
           .sn-broadcast-form{display:flex;flex-direction:column;gap:18px;padding:18px 22px;}
@@ -6872,12 +6986,10 @@
           .sn-opt-panel-desc{font-size:11px;color:var(--text-muted);margin-top:5px;line-height:1.5;}
           .sn-opt-panel input:checked ~ .sn-opt-panel-card{border-color:var(--gold,#FF9800);background:var(--gold-dim,rgba(201,122,0,.08));box-shadow:0 8px 22px rgba(0,0,0,.18);transform:translateY(-1px);}
           .sn-opt-panel input:checked ~ .sn-opt-panel-card .sn-opt-panel-title{color:var(--gold-bright,#FF9800);}
-          .sn-satuan-picker{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;padding:14px 16px;border:1px dashed var(--border-soft);border-radius:12px;background:var(--panel-alt);}
-          .sn-satuan-picker .sn-field{flex:1 1 220px;margin:0;}
         </style>
 
         <div class="panel" style="margin-top:16px;">
-          <div class="panel-head"><div><h3>Kirim Pengumuman</h3><p>Pesan akan masuk ke lonceng notifikasi penerima, dan ke notifikasi OS (push) bagi yang sudah mengizinkan.</p></div></div>
+          <div class="panel-head"><div><h3>Kirim Pengumuman</h3><p>Pesan akan masuk ke lonceng notifikasi seluruh pengguna, dan ke notifikasi OS (push) bagi yang sudah mengizinkan.</p></div></div>
           <form method="POST" action="{{ route('admin.setelan.notifikasi.broadcast') }}" class="sn-broadcast-form" id="snBroadcastForm">
             @csrf
             {{-- Kategori "Maintenance" SENGAJA dihapus dari form ini: pengumuman
@@ -6886,51 +6998,10 @@
                  dobel/bentrok. Pengumuman manual di sini selalu "keterangan". --}}
             <input type="hidden" name="kategori" value="keterangan">
 
-            <div class="sn-field">
-              <label>Tujuan Pengumuman</label>
-              <div class="sn-panel-row">
-                <label class="sn-opt-panel">
-                  <input type="radio" name="tujuan" value="semua" checked data-sn-tujuan-radio>
-                  <div class="sn-opt-panel-card">
-                    <div class="sn-opt-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Semua Pengguna</div>
-                    <div class="sn-opt-panel-desc">Terkirim ke seluruh pengguna yang terdaftar di sistem.</div>
-                  </div>
-                </label>
-                <label class="sn-opt-panel">
-                  <input type="radio" name="tujuan" value="pimpinan" data-sn-tujuan-radio>
-                  <div class="sn-opt-panel-card">
-                    <div class="sn-opt-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6Z"></path></svg>Pimpinan</div>
-                    <div class="sn-opt-panel-desc">Hanya Danpus & Wadan yang menerima.</div>
-                  </div>
-                </label>
-                <label class="sn-opt-panel">
-                  <input type="radio" name="tujuan" value="satuan" data-sn-tujuan-radio>
-                  <div class="sn-opt-panel-card">
-                    <div class="sn-opt-panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path></svg>Satuan Tertentu</div>
-                    <div class="sn-opt-panel-desc">Pilih satu satuan spesifik sebagai penerima.</div>
-                  </div>
-                </label>
-              </div>
-
-              <div class="sn-satuan-picker" id="snSatuanPicker" style="display:none;">
-                <div class="sn-field">
-                  <label for="snKategoriSatuan">Kategori Satuan</label>
-                  <select id="snKategoriSatuan">
-                    <option value="">Pilih kategori...</option>
-                    @foreach($snTujuanKategoriMap as $snKey => $snLabel)
-                      @continue(($snSatuanByKategori->get($snKey) ?? collect())->isEmpty())
-                      <option value="{{ $snKey }}">{{ $snLabel }}</option>
-                    @endforeach
-                  </select>
-                </div>
-                <div class="sn-field">
-                  <label for="snSatuanId">Pilih Satuan</label>
-                  <select name="satuan_id" id="snSatuanId" disabled>
-                    <option value="">Pilih kategori dulu...</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+            {{-- Tujuan pengumuman dikunci ke SEMUA pengguna (pilihan Pimpinan/Satuan
+                 Tertentu dihapus). Penargetan per-pengguna/satuan kini hanya ada
+                 di Mode Maintenance. Server juga memaksa 'semua'. --}}
+            <input type="hidden" name="tujuan" value="semua">
 
             <div class="sn-field">
               <label for="snJudul">Judul</label>
@@ -6946,59 +7017,6 @@
           </form>
         </div>
 
-        <script>
-        (function () {
-          var picker = document.getElementById('snSatuanPicker');
-          var kategoriSelect = document.getElementById('snKategoriSatuan');
-          var satuanSelect = document.getElementById('snSatuanId');
-          var tujuanRadios = document.querySelectorAll('[data-sn-tujuan-radio]');
-          if (!picker || !kategoriSelect || !satuanSelect || !tujuanRadios.length) return;
-
-          var SATUAN_BY_KATEGORI = @json($snSatuanByKategoriJson);
-
-          function toggleSatuanPicker() {
-            var current = document.querySelector('[data-sn-tujuan-radio]:checked');
-            var tampilkan = !!current && current.value === 'satuan';
-            picker.style.display = tampilkan ? '' : 'none';
-            satuanSelect.required = tampilkan;
-            if (!tampilkan) {
-              kategoriSelect.value = '';
-              satuanSelect.innerHTML = '<option value="">Pilih kategori dulu...</option>';
-              satuanSelect.disabled = true;
-            }
-          }
-
-          tujuanRadios.forEach(function (radio) {
-            radio.addEventListener('change', toggleSatuanPicker);
-          });
-
-          kategoriSelect.addEventListener('change', function () {
-            var daftar = SATUAN_BY_KATEGORI[kategoriSelect.value] || [];
-            satuanSelect.innerHTML = '';
-            if (!daftar.length) {
-              satuanSelect.disabled = true;
-              var kosong = document.createElement('option');
-              kosong.value = '';
-              kosong.textContent = 'Tidak ada satuan pada kategori ini';
-              satuanSelect.appendChild(kosong);
-              return;
-            }
-            satuanSelect.disabled = false;
-            var placeholder = document.createElement('option');
-            placeholder.value = '';
-            placeholder.textContent = 'Pilih satuan...';
-            satuanSelect.appendChild(placeholder);
-            daftar.forEach(function (item) {
-              var opt = document.createElement('option');
-              opt.value = item.id;
-              opt.textContent = item.nama;
-              satuanSelect.appendChild(opt);
-            });
-          });
-
-          toggleSatuanPicker();
-        })();
-        </script>
 
         @php
           // Verifikasi file suara benar-benar ada di disk, bukan cuma

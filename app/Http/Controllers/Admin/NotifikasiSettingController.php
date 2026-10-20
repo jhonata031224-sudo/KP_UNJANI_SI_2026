@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Pengaturan;
-use App\Models\Satuan;
 use App\Models\User;
 use App\Notifications\PengumumanBroadcastAdmin;
 use Illuminate\Http\RedirectResponse;
@@ -47,30 +46,18 @@ class NotifikasiSettingController extends Controller
      * in-app penerima, dan ke notifikasi OS (push) utk yang sudah
      * mengizinkan & fitur push global sedang aktif.
      *
-     * Tujuan pengumuman ada 3 pilihan (lihat "Tujuan Pengumuman" di
-     * admin.blade.php):
-     *  - 'semua'   : seluruh pengguna terdaftar (perilaku lama, default)
-     *  - 'pimpinan': hanya user yang satuannya berkategori Pimpinan
-     *                (Danpus & Wadan)
-     *  - 'satuan'  : hanya user yang terdaftar pada satu satuan spesifik
-     *                (satuan_id), mis. "Satlak Dak (Penindakan)"
+     * Tujuan SELALU semua pengguna (kategori selalu 'keterangan').
      */
     public function broadcast(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'judul' => ['required', 'string', 'max:100'],
             'pesan' => ['required', 'string', 'max:500'],
-            'tujuan' => ['required', 'string', 'in:semua,pimpinan,satuan'],
-            'satuan_id' => ['required_if:tujuan,satuan', 'nullable', 'integer', 'exists:satuans,id'],
         ], [
             'judul.required' => 'Judul pengumuman wajib diisi.',
             'pesan.required' => 'Isi pesan wajib diisi.',
             'judul.max' => 'Judul maksimal 100 karakter.',
             'pesan.max' => 'Isi pesan maksimal 500 karakter.',
-            'tujuan.required' => 'Tujuan pengumuman wajib dipilih.',
-            'tujuan.in' => 'Tujuan pengumuman tidak valid.',
-            'satuan_id.required_if' => 'Pilih satuan tujuan terlebih dahulu.',
-            'satuan_id.exists' => 'Satuan tujuan tidak ditemukan.',
         ]);
 
         // Pengumuman manual SELALU berkategori 'keterangan'. Kategori
@@ -80,20 +67,14 @@ class NotifikasiSettingController extends Controller
         // Nilai 'kategori' dari request (mis. form lama) diabaikan.
         $validated['kategori'] = 'keterangan';
 
-        [$penerima, $labelTujuan] = match ($validated['tujuan']) {
-            'pimpinan' => [
-                User::whereHas('satuan', fn ($q) => $q->where('kategori', Satuan::KATEGORI_PIMPINAN))->get(),
-                'Pimpinan (Danpus & Wadan)',
-            ],
-            'satuan' => [
-                User::where('satuan_id', $validated['satuan_id'])->get(),
-                'satuan '.(Satuan::find($validated['satuan_id'])->nama ?? '-'),
-            ],
-            default => [User::all(), 'semua pengguna'],
-        };
+        // Pengumuman manual SELALU ke SEMUA pengguna (pilihan tujuan
+        // Pimpinan/Satuan Tertentu dihapus). Penargetan per-satuan hanya
+        // ada di Mode Maintenance (MaintenanceSettingController).
+        $penerima = User::all();
+        $labelTujuan = 'semua pengguna';
 
         if ($penerima->isEmpty()) {
-            return back()->withErrors(['satuan_id' => 'Tidak ada pengguna terdaftar pada tujuan yang dipilih.'])->withInput();
+            return back()->withErrors(['judul' => 'Belum ada pengguna terdaftar.'])->withInput();
         }
 
         NotificationFacade::send($penerima, new PengumumanBroadcastAdmin($validated['judul'], $validated['pesan'], $validated['kategori']));
@@ -102,7 +83,7 @@ class NotifikasiSettingController extends Controller
             'setelan.notifikasi.broadcast',
             "Mengirim pengumuman \"{$validated['judul']}\" ke {$labelTujuan} ({$penerima->count()} pengguna).",
             null,
-            ['judul' => $validated['judul'], 'pesan' => $validated['pesan'], 'kategori' => $validated['kategori'], 'tujuan' => $validated['tujuan'], 'satuan_id' => $validated['satuan_id'] ?? null, 'jumlah_penerima' => $penerima->count()]
+            ['judul' => $validated['judul'], 'pesan' => $validated['pesan'], 'kategori' => $validated['kategori'], 'tujuan' => 'semua', 'jumlah_penerima' => $penerima->count()]
         );
 
         return back()->with('status', "Pengumuman terkirim ke {$labelTujuan} ({$penerima->count()} pengguna).");

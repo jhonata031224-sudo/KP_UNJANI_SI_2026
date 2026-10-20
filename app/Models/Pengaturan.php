@@ -14,14 +14,61 @@ class Pengaturan extends Model
         'fitur','tentang_deskripsi','tentang_nama_resmi','tentang_nama_lama','tentang_fungsi_utama',
         'tentang_moto_judul','tentang_moto_deskripsi','website','sosial_media','landing_content',
         'notifikasi_push_aktif','struktur_organisasi_path','makna_logo','notifikasi_sound_path',
-        'mode_maintenance_aktif','mode_maintenance_pesan',
+        'mode_maintenance_aktif','mode_maintenance_pesan','mode_maintenance_satuan_ids',
     ];
 
     protected $casts = [
         'fitur' => 'array','sosial_media' => 'array','landing_content' => 'array','notifikasi_push_aktif' => 'boolean',
         'hero_blur_level' => 'integer','hero_overlay_intensity' => 'integer','makna_logo' => 'array',
-        'mode_maintenance_aktif' => 'boolean',
+        'mode_maintenance_aktif' => 'boolean','mode_maintenance_satuan_ids' => 'array',
     ];
+
+    /**
+     * Id satuan yang menjadi target Mode Maintenance. Array kosong = SEMUA
+     * pengguna non-Admin (default & perilaku lama).
+     *
+     * @return array<int, int>
+     */
+    public function maintenanceTargetSatuanIds(): array
+    {
+        return collect($this->mode_maintenance_satuan_ids ?? [])
+            ->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
+    }
+
+    /**
+     * SATU sumber kebenaran: apakah Mode Maintenance berlaku untuk pengguna
+     * ini? Dipakai penegakan server (EnforceMaintenanceMode), banner/UI
+     * (InjectMaintenanceUi) dan polling status (MaintenanceStatusController)
+     * supaya ketiganya selalu sepakat. Admin tidak pernah terkena; target
+     * kosong = semua non-Admin; target terisi = hanya satuan yang dipilih.
+     */
+    public function maintenanceBerlakuUntuk(?User $user): bool
+    {
+        if (! $user || ! $this->mode_maintenance_aktif) {
+            return false;
+        }
+
+        if (strtoupper(trim((string) $user->satuan?->kode)) === 'ADMIN') {
+            return false;
+        }
+
+        $target = $this->maintenanceTargetSatuanIds();
+
+        return $target === [] || in_array((int) $user->satuan_id, $target, true);
+    }
+
+    /**
+     * Pengguna NON-Admin yang terkena maintenance untuk target tertentu
+     * (dikeyBy id) -- dipakai menentukan siapa yang perlu diberi notifikasi
+     * saat status/target berubah. $satuanIds kosong = semua non-Admin.
+     */
+    public static function penggunaTerdampak(array $satuanIds): \Illuminate\Support\Collection
+    {
+        return User::whereHas('satuan', fn ($q) => $q->whereRaw('UPPER(TRIM(kode)) != ?', ['ADMIN']))
+            ->when($satuanIds !== [], fn ($q) => $q->whereIn('satuan_id', $satuanIds))
+            ->get()
+            ->keyBy('id');
+    }
 
     /**
      * Pesan yang ditampilkan ke pengguna non-Admin (banner + respons

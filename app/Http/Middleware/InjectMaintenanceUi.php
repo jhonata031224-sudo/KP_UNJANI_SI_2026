@@ -47,7 +47,8 @@ class InjectMaintenanceUi
         // disembunyikan (hidden) selagi maintenance mati, dan skrip polling
         // /maintenance/status yang menyalakan/mematikannya.
         $pengaturan = Pengaturan::current();
-        $aktif      = (bool) $pengaturan->mode_maintenance_aktif;
+        // Per-pengguna: aktif hanya kalau pengguna ini termasuk target maintenance.
+        $aktif      = $pengaturan->maintenanceBerlakuUntuk($user);
 
         $contentType = (string) $response->headers->get('Content-Type');
         if ($contentType !== '' && ! str_contains($contentType, 'text/html')) {

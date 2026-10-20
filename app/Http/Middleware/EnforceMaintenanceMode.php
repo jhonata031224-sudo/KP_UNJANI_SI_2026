@@ -31,8 +31,11 @@ use Symfony\Component\HttpFoundation\Response;
  *    SENGAJA tetap dibuka supaya tidak merusak fitur yang sudah berjalan,
  *    terutama sistem notifikasi (unread indicator, tandai dibaca) yang
  *    diminta TETAP utuh saat maintenance.
+ *  - Maintenance bisa ditarget: semua non-Admin (default) atau hanya satuan
+ *    tertentu (Pengaturan::maintenanceBerlakuUntuk()). Pengguna di luar
+ *    target lolos seperti biasa.
  *  - Selain itu, request perubahan data (POST/PUT/PATCH/DELETE) pengguna
- *    non-Admin DITOLAK di sini -- terlepas dari tombol di UI sempat
+ *    target DITOLAK di sini -- terlepas dari tombol di UI sempat
  *    diklik atau tidak.
  */
 class EnforceMaintenanceMode
@@ -70,8 +73,10 @@ class EnforceMaintenanceMode
             return $next($request);
         }
 
+        // Maintenance bisa menarget SEMUA non-Admin atau hanya satuan tertentu
+        // (mis. Danpus saja) -- pengguna di luar target lolos normal.
         $pengaturan = Pengaturan::current();
-        if (! $pengaturan->mode_maintenance_aktif) {
+        if (! $pengaturan->maintenanceBerlakuUntuk($user)) {
             return $next($request);
         }
 

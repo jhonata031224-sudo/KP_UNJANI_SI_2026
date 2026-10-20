@@ -25,11 +25,11 @@ class MaintenanceStatusController extends Controller
     {
         $user = $request->user()->load('satuan');
 
-        // Admin tidak pernah terdampak maintenance (sama seperti
-        // EnforceMaintenanceMode & InjectMaintenanceUi).
-        $isAdmin    = strtoupper(trim((string) $user->satuan?->kode)) === 'ADMIN';
+        // Admin tidak pernah terdampak, dan pengguna di luar target maintenance
+        // (kalau Admin menarget satuan tertentu) juga tidak -- logika tunggal
+        // yang sama dengan EnforceMaintenanceMode & InjectMaintenanceUi.
         $pengaturan = Pengaturan::current();
-        $aktif      = ! $isAdmin && (bool) $pengaturan->mode_maintenance_aktif;
+        $aktif      = $pengaturan->maintenanceBerlakuUntuk($user);
 
         return response()->json([
             'aktif' => $aktif,
