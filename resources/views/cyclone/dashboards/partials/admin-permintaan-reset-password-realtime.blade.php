@@ -45,7 +45,9 @@
           var sortSelect = document.getElementById('tblResetPasswordSort');
           if (sortSelect && window.terapkanTabelSort) window.terapkanTabelSort('tblResetPassword', sortSelect.value);
           else if (window.terapkanTabelFilter) window.terapkanTabelFilter('tblResetPassword');
-          if (window.cycloneShowToast) {
+          // Dobel dengan popup lonceng (PermintaanResetPasswordBaru) untuk
+          // kejadian yang sama -> toast ini cuma cadangan kalau lonceng nonaktif.
+          if (window.CYCLONE_NOTIFIKASI_AKTIF !== true && window.cycloneShowToast) {
             window.cycloneShowToast('success', inserted === 1 ? 'Ada 1 permintaan ganti password baru.' : 'Ada ' + inserted + ' permintaan ganti password baru.');
           }
         }

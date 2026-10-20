@@ -381,7 +381,16 @@
       unlockAll();
     }
 
-    if (tampilkanToast && berubahAktif && window.cycloneShowToast) {
+    // Perubahan status oleh Admin SUDAH diumumkan lewat notifikasi lonceng
+    // (MaintenanceSettingController -> PengumumanBroadcastAdmin) yang muncul
+    // sebagai popup melayang dari polling lonceng (notification-controls).
+    // Toast di sini dulu ikut muncul bersamaan -> DOBEL. Sekarang cuma jadi
+    // cadangan kalau lonceng tidak aktif untuk pengguna ini (modul
+    // notifikasi dimatikan / halaman tanpa lonceng), sama seperti pola di
+    // surat-terkirim-realtime. Toast akibat KLIK aksi yang diblok (notify()
+    // dari handler klik/submit/fetch di atas) tidak terpengaruh.
+    var loncengAktif = window.CYCLONE_NOTIFIKASI_AKTIF === true;
+    if (tampilkanToast && berubahAktif && !loncengAktif && window.cycloneShowToast) {
       if (aktif) notify();   // throttle: tidak dobel dengan toast dari aksi yang baru diblok
       else window.cycloneShowToast('success', 'Pemeliharaan selesai. Sistem kembali normal.');
     }
