@@ -373,6 +373,7 @@ class LaporanSurat extends Model
     protected function isDikonfirmasiSepihakDariSudutPandang(?int $viewerSatuanId): bool
     {
         return $viewerSatuanId !== null
+            && ! $this->isSelesai()
             && (int) $viewerSatuanId === (int) $this->satuan_id
             && (int) $this->tujuan_satuan_id !== (int) $viewerSatuanId
             && $this->status === self::STATUS_DIKONFIRMASI;
@@ -386,8 +387,13 @@ class LaporanSurat extends Model
      */
     public function labelStatus(?int $viewerSatuanId = null): string
     {
+        // Label "Selesai" HANYA untuk surat yang diselesaikan lewat aksi Selesai
+        // eksplisit (status = Selesai). Surat yang tuntas otomatis -- mis. surat
+        // satuan -> Danpus yang dikonfirmasi Danpus, atau putaran penuh surat
+        // Danpus -- memang is_selesai = true (supaya pindah ke Arsip) tapi
+        // statusnya tetap Dikonfirmasi, jadi labelnya juga "Dikonfirmasi".
         if ($this->isSelesai()) {
-            return 'Selesai';
+            return $this->status === self::STATUS_SELESAI ? 'Selesai' : 'Dikonfirmasi';
         }
 
         if ($this->isDikonfirmasiSepihakDariSudutPandang($viewerSatuanId)) {
@@ -404,7 +410,7 @@ class LaporanSurat extends Model
     public function badgeClass(?int $viewerSatuanId = null): string
     {
         if ($this->isSelesai()) {
-            return 'status-disetujui';
+            return $this->status === self::STATUS_SELESAI ? 'status-disetujui' : 'status-dikonfirmasi';
         }
 
         if ($this->isDikonfirmasiSepihakDariSudutPandang($viewerSatuanId)) {
