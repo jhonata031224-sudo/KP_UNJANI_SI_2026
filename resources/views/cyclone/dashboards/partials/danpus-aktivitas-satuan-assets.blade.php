@@ -3,12 +3,16 @@
      timeline & pencarian laporan yang menarget section[id^="satlak-"]
      .section-block / .clean-table-wrap. --}}
 <style>
-.akt-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px;padding:5px;border:1px solid var(--p-border);border-radius:12px;background:var(--p-surface-2);width:fit-content;max-width:100%}
-.akt-tab{display:inline-flex;align-items:center;gap:7px;border:0;background:transparent;color:var(--p-muted);font:inherit;font-size:12px;font-weight:700;padding:8px 14px;border-radius:9px;cursor:pointer}
-.akt-tab:hover{color:var(--p-text)}
-.akt-tab.is-active{background:var(--p-surface);color:var(--p-text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.akt-tab-count{font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px;background:var(--p-border);color:var(--p-muted)}
+/* Bilah tab (Laporan | Surat | Kendala): dibungkus panel; putih saat tidak dipilih, kuning (gaya .dl-tab admin) saat dipilih */
+.akt-tabs{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 20px;padding:14px 16px;border:1px solid var(--p-border);border-radius:16px;background:var(--p-surface);box-shadow:var(--p-shadow);width:100%;box-sizing:border-box}
+.akt-tab{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--p-border);background:var(--p-surface);color:var(--p-text);font:inherit;font-size:13.5px;font-weight:700;padding:10px 18px;border-radius:10px;cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease,box-shadow .15s ease}
+.akt-tab:not(.is-active):hover{border-color:var(--gold-solid,#FF9800);color:var(--p-text)}
+.akt-tab.is-active{border-color:transparent;background:linear-gradient(135deg,var(--gold-solid-bright,#FF9800),var(--gold-solid,#FF9800));color:var(--on-gold,#241a05);box-shadow:0 8px 20px -8px rgba(217,146,11,.55)}
+.akt-tab-count{font-size:11px;font-weight:800;padding:1px 8px;border-radius:999px;background:var(--p-surface-2);color:var(--p-muted);border:1px solid var(--p-border)}
+.akt-tab.is-active .akt-tab-count{background:rgba(36,26,5,.16);color:var(--on-gold,#241a05);border-color:transparent}
 .akt-tab-alert{font-size:10px;font-weight:800;min-width:18px;text-align:center;padding:1px 6px;border-radius:999px;background:#d97706;color:#fff}
+.akt-tab.is-active .akt-tab-alert{background:#fff;color:#b45309}
+@media(max-width:640px){.akt-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.akt-tab{width:100%;justify-content:center;padding:10px 8px;font-size:13px;white-space:nowrap}}
 .akt-view[hidden]{display:none!important}
 .akt-kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:0 0 12px}
 .akt-kpi{border:1px solid var(--p-border);background:var(--p-surface-2);border-radius:12px;padding:11px 14px;display:flex;flex-direction:column;gap:4px}
