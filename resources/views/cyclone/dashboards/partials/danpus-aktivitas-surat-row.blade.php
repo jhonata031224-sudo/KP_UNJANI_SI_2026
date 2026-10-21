@@ -116,14 +116,6 @@
         <span class="akt-srow-meta">{{ $nomorSurat }} &middot; {{ $kategori }} &middot; {{ $s->created_at->translatedFormat('d M Y') }} &middot; {{ $s->satuan->kode ?? '-' }} &rarr; {{ $s->tujuanSatuan->kode ?? '-' }}</span>
       </span>
     </div>
-    <span class="akt-srow-tags">
-      <span class="akt-st akt-st-{{ $tone }}">{{ $labelStatus }}</span>
-      <span class="akt-tag">{{ $isKeluar ? '↑ Keluar' : '↓ Masuk' }}</span>
-      @if($s->diarsipkan)<span class="akt-tag akt-tag-arsip">Arsip</span>@endif
-      @if($s->menungguDanpus)<span class="akt-tag akt-tag-perlu">Menunggu Danpus</span>@endif
-      @if($s->balasanDikirim)<span class="akt-tag">Balasan dikirim</span>@endif
-      @if($s->hanyaTembusan)<span class="akt-tag">Tembusan</span>@endif
-    </span>
   </summary>
 
   <div class="danpus-report-content">
