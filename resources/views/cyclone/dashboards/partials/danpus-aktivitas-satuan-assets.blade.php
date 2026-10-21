@@ -3,16 +3,18 @@
      timeline & pencarian laporan yang menarget section[id^="satlak-"]
      .section-block / .clean-table-wrap. --}}
 <style>
-/* Bilah tab (Laporan | Surat | Kendala): dibungkus panel; putih saat tidak dipilih, kuning (gaya .dl-tab admin) saat dipilih */
-.akt-tabs{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 20px;padding:14px 16px;border:1px solid var(--p-border);border-radius:16px;background:var(--p-surface);box-shadow:var(--p-shadow);width:100%;box-sizing:border-box}
-.akt-tab{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--p-border);background:var(--p-surface);color:var(--p-text);font:inherit;font-size:13.5px;font-weight:700;padding:10px 18px;border-radius:10px;cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease,box-shadow .15s ease}
-.akt-tab:not(.is-active):hover{border-color:var(--gold-solid,#FF9800);color:var(--p-text)}
-.akt-tab.is-active{border-color:transparent;background:linear-gradient(135deg,var(--gold-solid-bright,#FF9800),var(--gold-solid,#FF9800));color:var(--on-gold,#241a05);box-shadow:0 8px 20px -8px rgba(217,146,11,.55)}
-.akt-tab-count{font-size:11px;font-weight:800;padding:1px 8px;border-radius:999px;background:var(--p-surface-2);color:var(--p-muted);border:1px solid var(--p-border)}
-.akt-tab.is-active .akt-tab-count{background:rgba(36,26,5,.16);color:var(--on-gold,#241a05);border-color:transparent}
+/* Satu kartu pembungkus: toggle (gaya .dl-tab admin) di atas, konten aktivitas di bawah, dipisah garis */
+.akt-card{background:var(--p-surface);border:1px solid var(--p-border);border-radius:16px;padding:20px;box-shadow:var(--p-shadow);margin-bottom:20px}
+.akt-card .section-block{background:transparent;border:0;border-radius:0;box-shadow:none;padding:0;margin:0}
+.akt-tabs{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 20px;padding:0 0 20px;border-bottom:1px solid var(--border-soft,var(--p-border))}
+.akt-tab{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;border:1px solid transparent;background:var(--gold-dim);color:var(--gold-bright);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;transition:background .15s ease,color .15s ease,box-shadow .15s ease}
+.akt-tab:not(.is-active):hover{background:var(--hover-tint);color:var(--p-text)}
+.akt-tab.is-active{background:linear-gradient(135deg,var(--gold-solid-bright,#FF9800),var(--gold-solid,#FF9800));color:var(--on-gold,#241a05);box-shadow:0 8px 20px -8px rgba(217,146,11,.55)}
+.akt-tab-count{font-size:11px;font-weight:800;padding:1px 8px;border-radius:999px;background:rgba(255,152,0,.18);color:var(--gold-bright)}
+.akt-tab.is-active .akt-tab-count{background:rgba(36,26,5,.16);color:var(--on-gold,#241a05)}
 .akt-tab-alert{font-size:10px;font-weight:800;min-width:18px;text-align:center;padding:1px 6px;border-radius:999px;background:#d97706;color:#fff}
 .akt-tab.is-active .akt-tab-alert{background:#fff;color:#b45309}
-@media(max-width:640px){.akt-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.akt-tab{width:100%;justify-content:center;padding:10px 8px;font-size:13px;white-space:nowrap}}
+@media(max-width:640px){.akt-card{padding:15px}.akt-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.akt-tab{width:100%;justify-content:center;padding:10px 8px;font-size:13px;white-space:nowrap}}
 .akt-view[hidden]{display:none!important}
 .akt-kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:0 0 12px}
 .akt-kpi{border:1px solid var(--p-border);background:var(--p-surface-2);border-radius:12px;padding:11px 14px;display:flex;flex-direction:column;gap:4px}
