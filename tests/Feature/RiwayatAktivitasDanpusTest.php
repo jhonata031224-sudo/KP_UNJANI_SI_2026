@@ -284,7 +284,7 @@ class RiwayatAktivitasDanpusTest extends TestCase
         $html = $this->actingAs($this->u['DANPUS'])->get('/dashboard')->assertOk()->getContent();
         $panel = $this->panel($html, $this->s['SATLAKKAL']->id);
 
-        $this->assertStringContainsString('class="akt-srow"', $panel);
+        $this->assertStringContainsString('class="danpus-report-dropdown akt-srow"', $panel);
         $this->assertStringNotContainsString('surat-file-card', $panel);
 
         $urutan = [
@@ -301,7 +301,7 @@ class RiwayatAktivitasDanpusTest extends TestCase
         }
         // langkah yang melibatkan Satlak Kal disorot, dan langkah terakhir berstatus current
         $this->assertStringContainsString('melibatkan Satlak Kal', $panel);
-        $this->assertStringContainsString('akt-flow-step is-current is-terkait', $panel);
+        $this->assertStringContainsString('danpus-activity-item is-current is-menunggu', $panel);
     }
 
     public function test_catatan_alur_rahasia_tersamar_tetapi_surat_biasa_terlihat(): void

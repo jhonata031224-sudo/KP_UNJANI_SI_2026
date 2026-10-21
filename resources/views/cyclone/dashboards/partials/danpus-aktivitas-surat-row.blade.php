@@ -100,7 +100,7 @@
         ];
     })->toJson();
 @endphp
-<details class="akt-srow"
+<details class="danpus-report-dropdown akt-srow"
      data-surat-id="{{ $s->id }}"
      data-created-at="{{ $s->created_at->timestamp }}"
      data-search="{{ strtolower($nomorSurat.' '.$s->perihal.' '.$kategori.' '.($s->satuan->nama ?? '').' '.($s->tujuanSatuan->nama ?? '')) }}"
@@ -108,12 +108,14 @@
      data-status="{{ $labelStatus }}"
      data-arsip="{{ $s->diarsipkan ? '1' : '0' }}"
      data-perlu="{{ $s->menungguDanpus ? '1' : '0' }}">
-  <summary class="akt-srow-sum">
-    <span class="akt-srow-chev" aria-hidden="true"></span>
-    <span class="akt-srow-main">
-      <span class="akt-srow-title">{{ $s->perihal }}</span>
-      <span class="akt-srow-meta">{{ $nomorSurat }} &middot; {{ $kategori }} &middot; {{ $s->created_at->translatedFormat('d M Y') }} &middot; {{ $s->satuan->kode ?? '-' }} &rarr; {{ $s->tujuanSatuan->kode ?? '-' }}</span>
-    </span>
+  <summary>
+    <div class="danpus-report-summary-main">
+      <span class="danpus-report-chevron" aria-hidden="true"></span>
+      <span class="akt-srow-main">
+        <span class="danpus-report-subject">{{ $s->perihal }}</span>
+        <span class="akt-srow-meta">{{ $nomorSurat }} &middot; {{ $kategori }} &middot; {{ $s->created_at->translatedFormat('d M Y') }} &middot; {{ $s->satuan->kode ?? '-' }} &rarr; {{ $s->tujuanSatuan->kode ?? '-' }}</span>
+      </span>
+    </div>
     <span class="akt-srow-tags">
       <span class="akt-st akt-st-{{ $tone }}">{{ $labelStatus }}</span>
       <span class="akt-tag">{{ $isKeluar ? '↑ Keluar' : '↓ Masuk' }}</span>
@@ -124,28 +126,30 @@
     </span>
   </summary>
 
-  <div class="akt-srow-body">
-    <ol class="akt-flow" aria-label="Alur surat {{ $nomorSurat }}">
+  <div class="danpus-report-content">
+    <div class="danpus-activity-log" aria-label="Alur surat {{ $nomorSurat }}">
       @foreach($langkah as $l)
-      <li class="akt-flow-step is-{{ $l['state'] }}{{ $l['terkait'] ? ' is-terkait' : '' }}">
-        <span class="akt-flow-dot" aria-hidden="true"></span>
-        <div class="akt-flow-content">
-          <div class="akt-flow-head">
-            <span class="akt-flow-title">{{ $l['judul'] }}</span>
-            @if($l['tanggal'])<span class="akt-flow-date">{{ $l['tanggal'] }}</span>@endif
+      <article class="danpus-activity-item is-{{ $l['state'] }}{{ $l['state'] === 'current' ? ' is-menunggu' : '' }}">
+        <div class="danpus-activity-dot"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></div>
+        @unless($loop->last)<div class="danpus-activity-line"></div>@endunless
+        <div class="danpus-activity-card">
+          <div class="danpus-activity-head">
+            <div class="danpus-activity-stage">{{ $l['judul'] }}</div>
+            @if($l['tanggal'])<div class="danpus-activity-date">{{ $l['tanggal'] }}</div>@endif
           </div>
           @if($l['dari'] || $l['ke'])
-          <div class="akt-flow-route">{{ $l['dari'] ?? '-' }} @if($l['ke'])&rarr; {{ $l['ke'] }}@endif</div>
+          <div class="danpus-activity-description akt-step-route">{{ $l['dari'] ?? '-' }} @if($l['ke'])&rarr; {{ $l['ke'] }}@endif</div>
           @endif
-          @if($l['disposisi'] !== '')<div class="akt-flow-note"><b>Disposisi:</b> {{ $l['disposisi'] }}</div>@endif
-          @if(! empty($l['tindakan']))<div class="akt-flow-note"><b>Tindakan:</b> {{ implode(', ', $l['tindakan']) }}</div>@endif
-          @if($l['tembusan'] !== '')<div class="akt-flow-note"><b>Tembusan:</b> {{ $l['tembusan'] }}</div>@endif
-          @if($l['catatan'] !== '')<div class="akt-flow-note">{{ \Illuminate\Support\Str::limit($l['catatan'], 160) }}</div>@endif
+          @if($l['disposisi'] !== '')<div class="danpus-activity-description"><b>Disposisi:</b> {{ $l['disposisi'] }}</div>@endif
+          @if(! empty($l['tindakan']))<div class="danpus-activity-description"><b>Tindakan:</b> {{ implode(', ', $l['tindakan']) }}</div>@endif
+          @if($l['tembusan'] !== '')<div class="danpus-activity-description"><b>Tembusan:</b> {{ $l['tembusan'] }}</div>@endif
+          @if($l['catatan'] !== '')<div class="danpus-activity-description">{{ \Illuminate\Support\Str::limit($l['catatan'], 160) }}</div>@endif
+          <span class="danpus-activity-state">{{ $l['state'] === 'current' ? 'Menunggu' : 'Selesai' }}</span>
           @if($l['terkait'])<span class="akt-flow-self">melibatkan {{ $m['nama'] ?? 'satuan ini' }}</span>@endif
         </div>
-      </li>
+      </article>
       @endforeach
-    </ol>
+    </div>
 
     <div class="akt-srow-actions">
       <button type="button" class="akt-btn" onclick="openSuratDetail(this)"
