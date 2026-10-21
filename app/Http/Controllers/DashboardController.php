@@ -14,6 +14,7 @@ use App\Models\PermintaanLaporan;
 use App\Models\PermintaanResetPassword;
 use App\Models\Satuan;
 use App\Models\User;
+use App\Support\AktivitasSatuanDanpus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -397,6 +398,7 @@ class DashboardController
         }
         $monitoringPimpinanSatlak = collect();
         $laporanPimpinanSatlak = collect();
+        $aktivitasDanpus = null;
         if ($modePimpinan) {
             $satuanPimpinanIds = Satuan::whereIn('kode', $kodeSatuanPelaksanaUrut)->pluck('id');
             // Tiap checkpoint progres tersimpan sebagai baris Laporan
@@ -462,6 +464,17 @@ class DashboardController
                 'diterima' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count(),
                 'ditolak' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count(),
             ]);
+            // ===== Riwayat Aktivitas Danpus: tambahan Surat & Kendala per satuan =====
+            // HANYA akun DANPUS (Wadan tidak berubah) dan murni baca -- tidak
+            // menyentuh $laporanPimpinanSatlak / $monitoringPimpinanSatlak di
+            // atas (penggabungan progres, revisi, status laporan tetap utuh).
+            // Sumber data & batas hak akses: lihat App\Support\AktivitasSatuanDanpus.
+            if ($kode === 'DANPUS') {
+                $aktivitasDanpus = AktivitasSatuanDanpus::bangun(
+                    Satuan::whereIn('id', $satuanPimpinanIds)->get(),
+                    $satuan
+                );
+            }
             // ===== Laporan Kendala: 21 Kasansi (Kotama) -> DANPUS =====
             // Kasansi kirim kendala/laporan rutin bebas kapan saja (tidak
             // terikat Permintaan Laporan) LANGSUNG ke Danpus. Danpus & Wadan
@@ -610,7 +623,7 @@ class DashboardController
             // digarap per satuan tanpa saling nyenggol.
             $shellPimpinan = $kode === 'WADAN' ? 'cyclone.dashboards.laporan-wadan-shell' : 'cyclone.dashboards.laporan-danpus-shell';
 
-            return view($shellPimpinan, compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporanPimpinan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk','kendalaArsip','suratMasuk','suratTerkirim','suratArsip','satuanSuratTujuanPilihan') + ['pengaturan' => Pengaturan::current()]);
+            return view($shellPimpinan, compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporanPimpinan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk','kendalaArsip','suratMasuk','suratTerkirim','suratArsip','satuanSuratTujuanPilihan') + ['pengaturan' => Pengaturan::current(), 'aktivitasDanpus' => $aktivitasDanpus]);
         }
         // Terlambat/Dibatalkan dihitung dari SELURUH permintaan laporan yang
         // ditujukan ke satuan ini, bukan $permintaanLaporan (yang sengaja
