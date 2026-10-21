@@ -113,7 +113,6 @@
       <span class="danpus-report-chevron" aria-hidden="true"></span>
       <span class="akt-srow-main">
         <span class="danpus-report-subject">{{ $s->perihal }}</span>
-        <span class="akt-srow-meta">{{ $nomorSurat }} &middot; {{ $kategori }} &middot; {{ $s->created_at->translatedFormat('d M Y') }} &middot; {{ $s->satuan->kode ?? '-' }} &rarr; {{ $s->tujuanSatuan->kode ?? '-' }}</span>
       </span>
     </div>
   </summary>
