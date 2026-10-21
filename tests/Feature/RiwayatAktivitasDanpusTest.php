@@ -274,6 +274,61 @@ class RiwayatAktivitasDanpusTest extends TestCase
         $this->assertMatchesRegularExpression('/data-akt-tab="laporan">Laporan <span class="akt-tab-count">3<\/span>/', $panel);
     }
 
+    public function test_alur_surat_tampil_berurutan_dengan_langkah_menunggu_dan_sorotan_satuan(): void
+    {
+        $surat = $this->surat('DANPUS', 'WADAN', ['perihal' => 'Perintah Alur Uji']);
+        $surat->update(['tujuan_satuan_id' => $this->s['SATLAKKAL']->id]);
+        $this->riwayat($surat, LaporanSuratRiwayat::AKSI_KONFIRMASI, 'WADAN', 'WADAN');
+        $this->riwayat($surat, LaporanSuratRiwayat::AKSI_TERUSKAN, 'WADAN', 'SATLAKKAL');
+
+        $html = $this->actingAs($this->u['DANPUS'])->get('/dashboard')->assertOk()->getContent();
+        $panel = $this->panel($html, $this->s['SATLAKKAL']->id);
+
+        $this->assertStringContainsString('class="akt-srow"', $panel);
+        $this->assertStringNotContainsString('surat-file-card', $panel);
+
+        $urutan = [
+            'Surat Dibuat',
+            'Dikonfirmasi / ACC &amp; Diterima',
+            'Diteruskan dengan Disposisi &amp; Tindakan',
+            'Menunggu konfirmasi Satlak Kal',
+        ];
+        $pos = -1;
+        foreach ($urutan as $judul) {
+            $p = strpos($panel, $judul, $pos + 1);
+            $this->assertNotFalse($p, "Langkah '$judul' tidak ditemukan / tidak berurutan");
+            $pos = $p;
+        }
+        // langkah yang melibatkan Satlak Kal disorot, dan langkah terakhir berstatus current
+        $this->assertStringContainsString('melibatkan Satlak Kal', $panel);
+        $this->assertStringContainsString('akt-flow-step is-current is-terkait', $panel);
+    }
+
+    public function test_catatan_alur_rahasia_tersamar_tetapi_surat_biasa_terlihat(): void
+    {
+        $r = $this->surat('SILIWANGI', 'DANPUS', ['prioritas' => 'Rahasia', 'perihal' => 'Surat Rahasia Uji']);
+        $r->riwayats()->update(['catatan' => 'CATATAN-RAHASIA-QQ']);
+        $b = $this->surat('SILIWANGI', 'DANPUS', ['prioritas' => 'Tinggi', 'perihal' => 'Surat Biasa Uji']);
+        $b->riwayats()->update(['catatan' => 'CATATAN-BIASA-QQ']);
+
+        $html = $this->actingAs($this->u['DANPUS'])->get('/dashboard')->assertOk()->getContent();
+
+        $this->assertStringContainsString('Surat Rahasia Uji', $html);
+        $this->assertStringNotContainsString('CATATAN-RAHASIA-QQ', $html);
+        $this->assertStringContainsString('CATATAN-BIASA-QQ', $html);
+    }
+
+    public function test_surat_tuntas_tanpa_riwayat_selesai_diberi_langkah_penutup_arsip(): void
+    {
+        $this->surat('DANPUS', 'SATLAKKAL', ['perihal' => 'Surat Tuntas Uji', 'status' => LaporanSurat::STATUS_DIKONFIRMASI]);
+
+        $html = $this->actingAs($this->u['DANPUS'])->get('/dashboard')->assertOk()->getContent();
+        $panel = $this->panel($html, $this->s['SATLAKKAL']->id);
+
+        $this->assertStringContainsString('Alur tuntas, masuk arsip', $panel);
+        $this->assertStringContainsString('data-arsip="1"', $panel);
+    }
+
     /** Ambil markup section#satlak-{id}. */
     private function panel(string $html, int $id): string
     {

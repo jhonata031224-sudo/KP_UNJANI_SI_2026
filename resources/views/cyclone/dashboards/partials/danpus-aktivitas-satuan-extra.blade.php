@@ -33,7 +33,7 @@
     <div class="akt-kpi"><span>Menunggu Konfirmasi</span><b class="tone-amber">{{ $rk['surat_menunggu'] }}</b></div>
     <div class="akt-kpi"><span>Diarsipkan</span><b>{{ $rk['surat_arsip'] }}</b></div>
   </div>
-  <p class="akt-note">Surat yang melibatkan {{ $m['nama'] }} (pengirim, penerima, atau tembusan). Hanya untuk dilihat; tindakan surat tetap lewat menu Surat.</p>
+  <p class="akt-note">Surat yang melibatkan {{ $m['nama'] }} (pengirim, penerima, atau tembusan). Klik satu baris untuk melihat alurnya. Hanya untuk dilihat; tindakan surat tetap lewat menu Surat.</p>
   @if($suratList->isNotEmpty())
   <div class="akt-toolbar" data-akt-toolbar>
     <div class="akt-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" data-akt-f="q" placeholder="Cari nomor, perihal, atau satuan..." aria-label="Cari surat" autocomplete="off"></div>
@@ -44,9 +44,9 @@
   </div>
   <div class="akt-count" data-akt-count data-akt-unit="surat">Menampilkan {{ $suratList->count() }} dari {{ $suratList->count() }} surat</div>
   @endif
-  <div class="surat-file-grid" data-akt-grid data-akt-card=".surat-file-card">
+  <div class="akt-list" data-akt-grid data-akt-card=".akt-srow">
     @forelse($suratList as $s)
-      @include('cyclone.dashboards.partials.danpus-aktivitas-surat-card', ['s' => $s, 'sid' => $sid, 'danpusId' => $satuan->id])
+      @include('cyclone.dashboards.partials.danpus-aktivitas-surat-row', ['s' => $s, 'sid' => $sid, 'danpusId' => $satuan->id, 'm' => $m])
     @empty
       <div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg><div class="empty-state-title">Belum ada aktivitas surat dari/untuk {{ $m['nama'] }}</div></div>
     @endforelse

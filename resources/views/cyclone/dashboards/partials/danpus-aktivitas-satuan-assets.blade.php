@@ -34,6 +34,44 @@
 .akt-chip-perlu{color:#fff;background:#d97706;border-color:#d97706}
 .akt-side-badge{margin-left:auto;font-size:9.5px;font-weight:800;min-width:17px;text-align:center;padding:1px 6px;border-radius:999px;background:#d97706;color:#fff}
 .akt-toolbar .styled-select-wrap{width:auto;min-width:150px;max-width:200px;flex:0 0 auto}
+/* ===== Daftar Surat ringkas + alur (tab Surat) ===== */
+.akt-list{display:flex;flex-direction:column;gap:8px}
+.akt-srow{border:1px solid var(--p-border);border-radius:12px;background:var(--p-surface-2);overflow:hidden}
+.akt-srow[open]{background:var(--p-surface)}
+.akt-srow-sum{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:12px 14px}
+.akt-srow-sum::-webkit-details-marker{display:none}
+.akt-srow-sum:hover{background:var(--hover-tint,rgba(0,0,0,.03))}
+.akt-srow-chev{width:8px;height:8px;flex:0 0 auto;border-right:2px solid var(--p-muted);border-bottom:2px solid var(--p-muted);transform:rotate(-45deg);transition:transform .18s ease}
+.akt-srow[open] .akt-srow-chev{transform:rotate(45deg)}
+.akt-srow-main{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.akt-srow-title{font-size:12.5px;font-weight:800;color:var(--p-text);line-height:1.4;word-break:break-word}
+.akt-srow-meta{font-size:10.5px;color:var(--p-muted);line-height:1.4}
+.akt-srow-tags{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end;flex:0 1 auto;max-width:48%}
+.akt-st{display:inline-flex;align-items:center;font-size:9.5px;font-weight:800;padding:3px 9px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
+.akt-st-wait{color:#b45309;background:rgba(217,119,6,.12);border-color:rgba(217,119,6,.35)}
+.akt-st-ok{color:#1f7a4f;background:rgba(61,186,126,.14);border-color:rgba(61,186,126,.4)}
+.akt-st-info{color:#2476ad;background:rgba(52,152,219,.1);border-color:rgba(52,152,219,.3)}
+.akt-srow-body{padding:4px 16px 14px 34px;border-top:1px solid var(--p-border)}
+.akt-flow{list-style:none;margin:12px 0 4px;padding:0}
+.akt-flow-step{position:relative;display:grid;grid-template-columns:14px minmax(0,1fr);column-gap:12px;padding:0 0 14px}
+.akt-flow-step:last-child{padding-bottom:2px}
+.akt-flow-step::before{content:"";position:absolute;left:6px;top:16px;bottom:-2px;width:0;border-left:2px dotted var(--p-border)}
+.akt-flow-step:last-child::before{display:none}
+.akt-flow-dot{width:14px;height:14px;border-radius:50%;box-sizing:border-box;margin-top:2px;border:2px solid var(--p-border);background:var(--p-surface)}
+.akt-flow-step.is-done .akt-flow-dot{background:var(--p-green,#16a34a);border-color:var(--p-green,#16a34a)}
+.akt-flow-step.is-current .akt-flow-dot{border-color:#d97706;background:var(--p-surface);box-shadow:0 0 0 3px rgba(217,119,6,.18)}
+.akt-flow-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.akt-flow-title{font-size:12px;font-weight:700;color:var(--p-text)}
+.akt-flow-step.is-current .akt-flow-title{color:#b45309}
+.akt-flow-date{font-size:10px;font-family:var(--mono,monospace);color:var(--p-muted);white-space:nowrap}
+.akt-flow-route{font-size:11px;color:var(--p-muted);margin-top:2px}
+.akt-flow-note{font-size:10.5px;color:var(--p-muted);margin-top:3px;line-height:1.5;word-break:break-word}
+.akt-flow-self{display:inline-block;margin-top:5px;font-size:9.5px;font-weight:700;color:#d97706;background:rgba(217,119,6,.1);border-radius:6px;padding:2px 7px}
+.akt-srow-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px dashed var(--p-border)}
+.akt-btn{font:inherit;font-size:11.5px;font-weight:700;color:var(--p-text);background:var(--p-surface-2);border:1px solid var(--p-border);border-radius:8px;padding:7px 13px;cursor:pointer}
+.akt-btn:hover{border-color:#FF9800}
+@media(max-width:700px){.akt-srow-sum{flex-wrap:wrap}.akt-srow-tags{max-width:100%;justify-content:flex-start;flex-basis:100%;padding-left:20px}.akt-srow-body{padding-left:16px}}
+
 @media(max-width:700px){.akt-search{max-width:100%;flex-basis:100%}.akt-toolbar .styled-select-wrap{flex:1 1 calc(50% - 5px);min-width:0;max-width:none}}
 </style>
 <script>
