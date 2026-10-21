@@ -24,7 +24,7 @@
 </div>
 @else
 @if($tampilSurat)
-@php $suratList = $aktivitasDanpus['surat'][$sid]; $statusSurat = $suratList->map(fn ($x) => $x->labelStatus($sid))->unique()->sort()->values(); @endphp
+@php $suratList = $aktivitasDanpus['surat'][$sid]; @endphp
 <div class="akt-view" data-akt-view="surat" hidden>
 <div class="section-block">
   <div class="section-head-clean"><div><h2>Aktivitas Surat {{ $m['nama'] }}</h2><p>Surat yang melibatkan {{ $m['nama'] }} (pengirim, penerima, atau tembusan). Klik satu baris untuk melihat alurnya. Hanya untuk dilihat; tindakan surat tetap lewat menu Surat.</p></div></div>
@@ -39,8 +39,6 @@
   <div class="akt-toolbar" data-akt-toolbar>
     <div class="akt-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" data-akt-f="q" placeholder="Cari nomor, perihal, atau satuan..." aria-label="Cari surat" autocomplete="off"></div>
     <select data-akt-f="arah" aria-label="Filter arah surat"><option value="">Masuk &amp; keluar</option><option value="masuk">Surat masuk</option><option value="keluar">Surat keluar</option></select>
-    <select data-akt-f="status" aria-label="Filter status surat"><option value="">Semua status</option>@foreach($statusSurat as $st)<option value="{{ $st }}">{{ $st }}</option>@endforeach</select>
-    <select data-akt-f="arsip" aria-label="Filter arsip"><option value="">Berjalan &amp; arsip</option><option value="0">Masih berjalan</option><option value="1">Diarsipkan</option></select>
     <select data-akt-f="sort" aria-label="Urutkan surat"><option value="newest">Terbaru</option><option value="oldest">Terlama</option></select>
   </div>
   <div class="akt-count" data-akt-count data-akt-unit="surat">Menampilkan {{ $suratList->count() }} dari {{ $suratList->count() }} surat</div>
