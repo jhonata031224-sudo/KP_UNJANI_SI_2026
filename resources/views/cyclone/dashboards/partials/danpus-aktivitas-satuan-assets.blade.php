@@ -33,7 +33,8 @@
 .akt-chip{font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--p-surface-2);color:var(--p-muted);border:1px solid var(--p-border)}
 .akt-chip-perlu{color:#fff;background:#d97706;border-color:#d97706}
 .akt-side-badge{margin-left:auto;font-size:9.5px;font-weight:800;min-width:17px;text-align:center;padding:1px 6px;border-radius:999px;background:#d97706;color:#fff}
-@media(max-width:700px){.akt-search{max-width:100%;flex-basis:100%}}
+.akt-toolbar .styled-select-wrap{width:auto;min-width:150px;max-width:200px;flex:0 0 auto}
+@media(max-width:700px){.akt-search{max-width:100%;flex-basis:100%}.akt-toolbar .styled-select-wrap{flex:1 1 calc(50% - 5px);min-width:0;max-width:none}}
 </style>
 <script>
 (function(){
