@@ -243,6 +243,34 @@ class SuratBalasanNaikTest extends TestCase
         Notification::assertSentToTimes($this->u['SATLAKDUKTEK'], LaporanSuratBalasanDikonfirmasi::class, 1);
     }
 
+    public function test_surat_danpus_pindah_dari_surat_keluar_ke_arsip_setelah_danpus_acc_balasan(): void
+    {
+        $surat = $this->suratTurunSampaiDuktekAcc();
+        $this->kirimBalasan($surat)->assertSessionHasNoErrors();
+        $this->actingAs($this->u['WADAN'])->patchJson("/laporan-surat/{$surat->id}/konfirmasi")->assertOk();
+        $this->actingAs($this->u['WADAN'])->post("/laporan-surat/{$surat->id}/ke-danpus")->assertSessionHasNoErrors();
+
+        // Balasan sudah balik ke Danpus tapi BELUM di-ACC: masih menunggu keputusan Danpus
+        // -> tetap di Surat Keluar, belum di Arsip.
+        $danpus = $this->realtime('DANPUS');
+        $this->assertStringContainsString('TEST BALASAN', $danpus['terkirim_items_html']);
+        $this->assertStringNotContainsString('TEST BALASAN', $danpus['arsip_items_html']);
+
+        // Danpus ACC balasan itu -> proses selesai: PINDAH ke Arsip Surat dan KELUAR dari Surat Keluar
+        // (tidak boleh tampil ganda di dua tempat).
+        $this->actingAs($this->u['DANPUS'])->patchJson("/laporan-surat/{$surat->id}/konfirmasi")->assertOk();
+        $danpus = $this->realtime('DANPUS');
+        $this->assertStringNotContainsString('TEST BALASAN', $danpus['terkirim_items_html']);
+        $this->assertStringContainsString('TEST BALASAN', $danpus['arsip_items_html']);
+        $this->assertSame(1, preg_match_all('/<div class="surat-file-card[" ]/', $danpus['arsip_items_html']));
+
+        // Load awal halaman (query scope DashboardController) konsisten dengan realtime.
+        $id = $this->s['DANPUS']->id;
+        $this->assertFalse(LaporanSurat::where('satuan_id', $id)->where('is_selesai', false)->alurBelumTuntasSisiPengirim()->exists());
+        $this->assertTrue(LaporanSurat::where('satuan_id', $id)
+            ->where(fn ($f) => $f->where('is_selesai', true)->orWhere(fn ($t) => $t->alurTuntasSisiPengirim()))->exists());
+    }
+
     public function test_notifikasi_balasan_dikonfirmasi_hanya_keterangan_tanpa_url(): void
     {
         $surat = $this->suratTurunSampaiDuktekAcc();
