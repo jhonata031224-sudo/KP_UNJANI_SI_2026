@@ -137,10 +137,9 @@
           @if($l['dari'] || $l['ke'])
           <div class="akt-flow-route">{{ $l['dari'] ?? '-' }} @if($l['ke'])&rarr; {{ $l['ke'] }}@endif</div>
           @endif
-          @if($l['disposisi'] !== '' || ! empty($l['tindakan']))
-          <div class="akt-flow-note">@if($l['disposisi'] !== '')Disposisi: {{ $l['disposisi'] }}@endif @if(! empty($l['tindakan']))@if($l['disposisi'] !== '') &middot; @endif Tindakan: {{ implode(', ', $l['tindakan']) }}@endif</div>
-          @endif
-          @if($l['tembusan'] !== '')<div class="akt-flow-note">Tembusan: {{ $l['tembusan'] }}</div>@endif
+          @if($l['disposisi'] !== '')<div class="akt-flow-note"><b>Disposisi:</b> {{ $l['disposisi'] }}</div>@endif
+          @if(! empty($l['tindakan']))<div class="akt-flow-note"><b>Tindakan:</b> {{ implode(', ', $l['tindakan']) }}</div>@endif
+          @if($l['tembusan'] !== '')<div class="akt-flow-note"><b>Tembusan:</b> {{ $l['tembusan'] }}</div>@endif
           @if($l['catatan'] !== '')<div class="akt-flow-note">{{ \Illuminate\Support\Str::limit($l['catatan'], 160) }}</div>@endif
           @if($l['terkait'])<span class="akt-flow-self">melibatkan {{ $m['nama'] ?? 'satuan ini' }}</span>@endif
         </div>
