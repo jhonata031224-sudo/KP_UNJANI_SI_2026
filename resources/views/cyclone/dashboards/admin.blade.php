@@ -274,7 +274,13 @@
   @media(min-width:641px){
     #tblDlSurat th:nth-child(n+3),
     #tblDlSurat td:nth-child(n+3){text-align:center;}
+    #tblDlSurat th:nth-child(8),
+    #tblDlSurat td:nth-child(8){text-align:left;}
   }
+  /* Kolom Lampiran: cukup URL (tanpa pratinjau), boleh turun baris agar tidak melebarkan tabel/kartu */
+  #tblDlSurat .dl-lampiran-url{display:block;color:var(--gold-bright,#FF9800);text-decoration:underline;font-size:12px;line-height:1.45;overflow-wrap:anywhere;word-break:break-all;}
+  #tblDlSurat .dl-lampiran-url + .dl-lampiran-url{margin-top:4px;}
+  #tblDlSurat td.dl-lampiran-cell{max-width:340px;min-width:0;}
   /* HP: tiap surat jadi kartu rapi -- Perihal sebagai judul kartu, sisanya
      baris "label kiri : isi kanan" yang diberi label (sebelumnya tanpa label) */
   @media(max-width:640px){
@@ -284,16 +290,19 @@
     #tblDlSurat td:nth-child(2){display:block;text-align:left;margin:0 -16px;padding:14px 16px;background:var(--gold-dim,rgba(255,152,0,.10));border-bottom:1px solid var(--border-strong,var(--border));font-size:15px;line-height:1.4;overflow-wrap:anywhere;}
     #tblDlSurat td:nth-child(2)::before{content:"Perihal";display:block;margin-bottom:6px;padding-top:0;color:var(--gold-bright,#FF9800);}
     #tblDlSurat td:nth-child(n+3){align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--border-strong,var(--border));}
-    #tblDlSurat td:nth-child(7){border-bottom:none;}
+    #tblDlSurat td:nth-child(8){border-bottom:none;}
     #tblDlSurat td:nth-child(n+3)::before{padding-top:0;white-space:nowrap;}
     #tblDlSurat td:nth-child(3)::before{content:"Satuan Pengirim";}
     #tblDlSurat td:nth-child(4)::before{content:"Satuan Tujuan";}
     #tblDlSurat td:nth-child(5)::before{content:"Prioritas";}
     #tblDlSurat td:nth-child(6)::before{content:"Status";}
     #tblDlSurat td:nth-child(7)::before{content:"Dibuat";}
+    #tblDlSurat td:nth-child(8)::before{content:"Lampiran";}
     #tblDlSurat td:nth-child(3),
     #tblDlSurat td:nth-child(4){min-width:0;overflow-wrap:anywhere;}
     #tblDlSurat td:nth-child(7){white-space:normal!important;}
+    #tblDlSurat td.dl-lampiran-cell{max-width:none;text-align:right;align-items:flex-start;}
+    #tblDlSurat td.dl-lampiran-cell .dl-lampiran-url{text-align:right;}
   }
 
 </style>
@@ -4565,7 +4574,7 @@
 
             <div class="tbl-wrap tbl-scroll" style="max-height:420px;">
               <table class="dtbl" id="tblDlSurat">
-                <thead><tr><th>No</th><th>Perihal</th><th>Satuan Pengirim</th><th>Satuan Tujuan</th><th>Prioritas</th><th>Status</th><th>Dibuat</th></tr></thead>
+                <thead><tr><th>No</th><th>Perihal</th><th>Satuan Pengirim</th><th>Satuan Tujuan</th><th>Prioritas</th><th>Status</th><th>Dibuat</th><th>Lampiran</th></tr></thead>
                 <tbody>
                   @forelse($suratSemuaAdmin->sortByDesc('created_at')->values() as $i => $s)
                   <tr data-filter-value="{{ $s->labelStatus() }}" data-search-value="{{ strtolower(($s->perihal ?? '').' '.($s->satuan?->nama ?? '').' '.($s->tujuanSatuan?->nama ?? '').' '.($s->disposisi_terakhir ?? $s->disposisi ?? '')) }}">
@@ -4576,9 +4585,23 @@
                     <td>{{ $s->prioritas ?: '-' }}</td>
                     <td><span class="badge">{{ $s->labelStatus() }}</span></td>
                     <td style="white-space:nowrap;" data-tanggal="{{ $s->created_at?->format('Y-m-d') }}">{{ $s->created_at?->format('d/m/Y H:i') }}</td>
+                    @php
+                      // Lampiran surat: lampiran utama + lampiran di riwayat (teruskan/balasan), tanpa duplikat.
+                      $lampiranSurat = collect();
+                      if ($s->lampiran_path) { $lampiranSurat->push($s->lampiran_path); }
+                      foreach ($s->riwayats as $rw) { if ($rw->lampiran_path) { $lampiranSurat->push($rw->lampiran_path); } }
+                      $lampiranSurat = $lampiranSurat->unique()->values();
+                    @endphp
+                    <td class="dl-lampiran-cell">
+                      @forelse($lampiranSurat as $lp)
+                        <a class="dl-lampiran-url" href="{{ asset('storage/'.$lp) }}" target="_blank" rel="noopener">{{ asset('storage/'.$lp) }}</a>
+                      @empty
+                        <span style="color:var(--text-dim);">-</span>
+                      @endforelse
+                    </td>
                   </tr>
                   @empty
-                  <tr><td colspan="7"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"></path><path d="m4 6 8 7 8-7"></path></svg><div class="empty-state-title">Belum ada surat</div></div></td></tr>
+                  <tr><td colspan="8"><div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"></path><path d="m4 6 8 7 8-7"></path></svg><div class="empty-state-title">Belum ada surat</div></div></td></tr>
                   @endforelse
                 </tbody>
               </table>
