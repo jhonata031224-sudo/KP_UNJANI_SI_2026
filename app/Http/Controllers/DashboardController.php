@@ -624,13 +624,19 @@ class DashboardController
 
             $satuanSuratTujuanPilihan = Satuan::where('id', '!=', $satuan->id)->where('kode', '!=', 'ADMIN')->get()->sortBy($urutkanSatuan)->values();
 
+            // Total Surat di kartu KPI: WADAN mencakup juga surat sisi DANPUS (lihat
+            // suratKpiDanpus()). DANPUS tetap memakai rumus biasa (nilai null).
+            $suratSemuaTercatat = $kode === 'WADAN'
+                ? $suratMasuk->concat($suratTerkirim)->concat($suratArsip)->concat($this->suratKpiDanpus())->unique('id')->values()
+                : null;
+
             // DANPUS & WADAN dulunya 1 view bareng (laporan-danpus-shell & laporan-wadan-shell).
             // Sekarang dipisah jadi file sendiri-sendiri (isi & wewenang
             // TETAP SAMA persis) supaya perombakan menu Surat ke depan bisa
             // digarap per satuan tanpa saling nyenggol.
             $shellPimpinan = $kode === 'WADAN' ? 'cyclone.dashboards.laporan-wadan-shell' : 'cyclone.dashboards.laporan-danpus-shell';
 
-            return view($shellPimpinan, compact('user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporanPimpinan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk','kendalaArsip','suratMasuk','suratTerkirim','suratArsip','satuanSuratTujuanPilihan') + ['pengaturan' => Pengaturan::current(), 'aktivitasDanpus' => $aktivitasDanpus]);
+            return view($shellPimpinan, compact('suratSemuaTercatat','user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporanPimpinan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk','kendalaArsip','suratMasuk','suratTerkirim','suratArsip','satuanSuratTujuanPilihan') + ['pengaturan' => Pengaturan::current(), 'aktivitasDanpus' => $aktivitasDanpus]);
         }
         // Terlambat/Dibatalkan dihitung dari SELURUH permintaan laporan yang
         // ditujukan ke satuan ini, bukan $permintaanLaporan (yang sengaja
@@ -821,6 +827,70 @@ class DashboardController
     }
 
     /**
+     * Surat yang "tercatat" di sisi DANPUS. Dipakai KPI Total Surat milik WADAN:
+     * Wadan = wakil Danpus yang sewaktu-waktu menangani pekerjaan Danpus, jadi
+     * totalnya ikut mencakup surat Danpus. Rumusnya SAMA dengan blok pimpinan di
+     * pelaporan() untuk $kode === 'DANPUS' (surat masuk, tembusan masuk, terkirim,
+     * arsip); tanpa eager-load karena cuma dipakai untuk hitungan.
+     */
+    private function suratKpiDanpus(bool $rumusRingkas = false): Collection
+    {
+        $danpus = Satuan::where('kode', 'DANPUS')->first();
+        if (! $danpus) {
+            return collect();
+        }
+
+        // Rumus ringkas = rumus endpoint KPI realtime (pimpinanKpiRealtime) yang lebih
+        // sederhana daripada render awal; dipakai di sana supaya angka WADAN tidak lebih
+        // kecil dari angka DANPUS yang dihitung endpoint yang sama.
+        if ($rumusRingkas) {
+            return LaporanSurat::where(fn ($q) => $q->where('tujuan_satuan_id', $danpus->id)->where('status', LaporanSurat::STATUS_MENUNGGU))
+                ->orWhere(fn ($q) => $q->where('satuan_id', $danpus->id)->where('status', LaporanSurat::STATUS_MENUNGGU))
+                ->orWhere(fn ($q) => $q->where(fn ($x) => $x->where('satuan_id', $danpus->id)->orWhere('tujuan_satuan_id', $danpus->id))
+                    ->where('status', LaporanSurat::STATUS_DIKONFIRMASI))
+                ->get();
+        }
+
+        $masuk = LaporanSurat::where('tujuan_satuan_id', $danpus->id)
+            ->where('is_selesai', false)
+            ->where('status', LaporanSurat::STATUS_MENUNGGU)
+            ->whereHas('riwayats', fn ($rq) => $rq->where('penerima_satuan_id', $danpus->id))
+            ->get();
+
+        $tembusanMasuk = LaporanSurat::where('is_selesai', false)
+            ->whereHas('tembusans', fn ($tq) => $tq->where('satuan_id', $danpus->id)->whereNull('dikonfirmasi_at'))
+            ->where('tujuan_satuan_id', '!=', $danpus->id)
+            ->get();
+
+        $terkirim = LaporanSurat::where('satuan_id', $danpus->id)
+            ->where('is_selesai', false)
+            ->alurBelumTuntasSisiPengirim()
+            ->get();
+
+        $arsip = LaporanSurat::where(function ($q) use ($danpus) {
+                $q->where(function ($sub) use ($danpus) {
+                    $sub->where(function ($own) use ($danpus) {
+                            $own->where('satuan_id', $danpus->id)
+                                ->where(function ($fin) {
+                                    $fin->where('is_selesai', true)
+                                        ->orWhere(fn ($t) => $t->alurTuntasSisiPengirim());
+                                });
+                        })
+                        ->orWhere('tujuan_satuan_id', $danpus->id);
+                })->where(function ($st) {
+                    $st->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
+                       ->orWhere('is_selesai', true);
+                });
+            })
+            ->orWhere(fn ($q) => $q->whereHas('tembusans', fn ($tq) => $tq->where('satuan_id', $danpus->id)->whereNotNull('dikonfirmasi_at')))
+            ->orWhere(fn ($q) => $q->where('is_selesai', true)
+                ->whereHas('tembusans', fn ($tq) => $tq->where('satuan_id', $danpus->id)->where('jenis', LaporanSuratTembusan::JENIS_HASIL_RC)))
+            ->get();
+
+        return $masuk->concat($tembusanMasuk)->concat($terkirim)->concat($arsip)->unique('id')->values();
+    }
+
+    /**
      * Poll realtime buat SELURUH Beranda Pimpinan -- 3 kartu KPI, donut
      * Distribusi Status, chart Tren Aktivitas, Surat Terbaru, Kendala
      * Kasansi Terbaru. Digabung jadi SATU response/SATU siklus poll (bukan
@@ -934,6 +1004,10 @@ class DashboardController
                 'suratMasuk' => $suratMasuk,
                 'suratTerkirim' => $suratTerkirim,
                 'suratArsip' => $suratArsip,
+                // WADAN: total surat ikut mencakup sisi DANPUS (sama dengan render awal di pelaporan()).
+                'suratSemuaTercatat' => $kode === 'WADAN'
+                    ? $suratMasuk->concat($suratTerkirim)->concat($suratArsip)->concat($this->suratKpiDanpus(true))->unique('id')->values()
+                    : null,
                 'kendalaMasuk' => $kendalaMasuk,
                 'kendalaArsip' => $kendalaArsip,
             ])->render(),
