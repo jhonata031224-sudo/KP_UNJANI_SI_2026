@@ -14,13 +14,15 @@
     $tampilKendala = $adaData && ($modulAktif['kendala'] ?? true) && ($aktivitasDanpus['kendalaDidukung'][$sid] ?? false);
     $rk = $adaData ? $aktivitasDanpus['ringkasan'][$sid] : [];
     $lapRows = $laporanPimpinanSatlak->where('satuan_id', $sid);
+    // Akun yang sedang melihat (DANPUS atau WADAN) -- dipakai di tooltip tab.
+    $sebutPelihat = strtoupper((string) ($satuan->kode ?? '')) === 'WADAN' ? 'Wadan' : 'Danpus';
 @endphp
 @if($adaData && ($tampilSurat || $tampilKendala))
 @if($part === 'tabs')
 <div class="akt-tabs" role="tablist" aria-label="Kategori aktivitas {{ $m['nama'] }}" data-akt-tabs="{{ $sid }}">
-  <button type="button" class="akt-tab is-active" role="tab" aria-selected="true" data-akt-tab="laporan">Laporan <span class="akt-tab-count">{{ $lapRows->count() }}</span>@if(($m['menunggu'] ?? 0) > 0)<span class="akt-tab-alert" title="Laporan menunggu keputusan Danpus">{{ $m['menunggu'] }}</span>@endif</button>
-  @if($tampilSurat)<button type="button" class="akt-tab" role="tab" aria-selected="false" data-akt-tab="surat">Surat <span class="akt-tab-count">{{ $rk['surat_total'] }}</span>@if($rk['surat_menunggu_danpus'] > 0)<span class="akt-tab-alert" title="Surat menunggu konfirmasi Danpus">{{ $rk['surat_menunggu_danpus'] }}</span>@endif</button>@endif
-  @if($tampilKendala)<button type="button" class="akt-tab" role="tab" aria-selected="false" data-akt-tab="kendala">Kendala <span class="akt-tab-count">{{ $rk['kendala_total'] }}</span>@if($rk['kendala_menunggu'] > 0)<span class="akt-tab-alert" title="Kendala menunggu konfirmasi Danpus">{{ $rk['kendala_menunggu'] }}</span>@endif</button>@endif
+  <button type="button" class="akt-tab is-active" role="tab" aria-selected="true" data-akt-tab="laporan">Laporan <span class="akt-tab-count">{{ $lapRows->count() }}</span>@if(($m['menunggu'] ?? 0) > 0)<span class="akt-tab-alert" title="Laporan menunggu keputusan {{ $sebutPelihat }}">{{ $m['menunggu'] }}</span>@endif</button>
+  @if($tampilSurat)<button type="button" class="akt-tab" role="tab" aria-selected="false" data-akt-tab="surat">Surat <span class="akt-tab-count">{{ $rk['surat_total'] }}</span>@if($rk['surat_menunggu_danpus'] > 0)<span class="akt-tab-alert" title="Surat menunggu konfirmasi {{ $sebutPelihat }}">{{ $rk['surat_menunggu_danpus'] }}</span>@endif</button>@endif
+  @if($tampilKendala)<button type="button" class="akt-tab" role="tab" aria-selected="false" data-akt-tab="kendala">Kendala <span class="akt-tab-count">{{ $rk['kendala_total'] }}</span>@if($rk['kendala_menunggu'] > 0)<span class="akt-tab-alert" title="Kendala menunggu konfirmasi {{ $sebutPelihat }}">{{ $rk['kendala_menunggu'] }}</span>@endif</button>@endif
 </div>
 @else
 @if($tampilSurat)
@@ -66,7 +68,7 @@
   @endif
   <div class="kcard-grid" data-akt-grid data-akt-card=".kcard">
     @forelse($kendalaList as $k)
-      @include('cyclone.dashboards.partials.danpus-aktivitas-kendala-card', ['k' => $k, 'namaDanpus' => $satuan->nama])
+      @include('cyclone.dashboards.partials.danpus-aktivitas-kendala-card', ['k' => $k, 'namaDanpus' => $aktivitasDanpus['danpusNama'] ?? $satuan->nama])
     @empty
       <div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><div class="empty-state-title">Belum ada laporan kendala dari {{ $m['nama'] }}</div></div>
     @endforelse

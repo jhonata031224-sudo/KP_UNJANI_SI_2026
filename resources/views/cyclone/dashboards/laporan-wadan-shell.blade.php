@@ -4,6 +4,7 @@
 @include('cyclone.dashboards.partials.danpus-laporan-request-realtime')
 @include('cyclone.dashboards.partials.danpus-ringkasan-submenu-hide')
 @include('cyclone.dashboards.partials.danpus-activity-dropdown')
+@include('cyclone.dashboards.partials.danpus-aktivitas-satuan-assets')
 @include('cyclone.dashboards.partials.danpus-log-search')
 @include('cyclone.dashboards.partials.danpus-report-table-filter')
 @include('cyclone.dashboards.partials.styled-select')

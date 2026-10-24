@@ -21,8 +21,10 @@ use Illuminate\Support\Collection;
  *    salah satu satuan yang dipantau. Satuan non-pimpinan di sistem ini cuma
  *    bisa mengirim surat KE Danpus (tujuan dikunci di
  *    LaporanSuratController::store), jadi Danpus selalu menjadi pihak dalam
- *    alurnya. Surat yang dibuat Wadan (tujuan bebas, Danpus bukan pihak)
- *    SENGAJA tidak ikut.
+ *    alurnya. Untuk akun DANPUS, surat yang dibuat Wadan (tujuan bebas,
+ *    Danpus bukan pihak) SENGAJA tidak ikut. Untuk akun WADAN (parameter
+ *    $pelihat), surat buatan Wadan sendiri ikut, supaya aktivitas yang
+ *    dilakukannya tampil di satuan tujuan.
  *  - Kendala: hanya kendala bertujuan DANPUS dari satuan yang dipantau
  *    (alur Kendala Kasansi -> Danpus).
  *
@@ -51,10 +53,13 @@ class AktivitasSatuanDanpus
      *   ringkasan: array<int, array<string,int>>
      * }
      */
-    public static function bangun(Collection $satuanList, ?Satuan $danpus): array
+    public static function bangun(Collection $satuanList, ?Satuan $danpus, ?Satuan $pelihat = null): array
     {
-        $hasil = ['surat' => [], 'kendala' => [], 'kendalaDidukung' => [], 'ringkasan' => []];
+        $hasil = ['surat' => [], 'kendala' => [], 'kendalaDidukung' => [], 'ringkasan' => [], 'danpusNama' => $danpus?->nama];
         $danpusId = $danpus?->id;
+        // $pelihat = akun yang sedang membuka menu (DANPUS atau WADAN). Default
+        // DANPUS supaya perilaku akun DANPUS tidak berubah sama sekali.
+        $pelihatId = ($pelihat ?? $danpus)?->id;
         $idDipantau = $satuanList->pluck('id')->map(fn ($i) => (int) $i)->all();
 
         $suratSemua = collect();
@@ -63,7 +68,10 @@ class AktivitasSatuanDanpus
                     'satuan', 'tujuanSatuan', 'dikonfirmasiOleh',
                     'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan',
                 ])
-                ->whereIn('satuan_id', array_merge($idDipantau, [$danpusId]))
+                ->whereIn('satuan_id', array_values(array_unique(array_filter(
+                    array_merge($idDipantau, [$danpusId, $pelihatId]),
+                    fn ($i) => $i !== null
+                ))))
                 ->latest()
                 ->get();
         }
@@ -81,7 +89,7 @@ class AktivitasSatuanDanpus
             $sid = (int) $satuan->id;
 
             $surat = self::suratUntukSatuan($suratSemua, $sid)
-                ->map(function (LaporanSurat $s) use ($sid, $danpusId) {
+                ->map(function (LaporanSurat $s) use ($sid, $pelihatId) {
                     $s->arahUntukSatuan = (int) $s->satuan_id === $sid ? 'keluar' : 'masuk';
                     $s->balasanDikirim = $s->riwayats->contains(
                         fn ($r) => $r->aksi === LaporanSuratRiwayat::AKSI_SURAT_KELUAR && (int) $r->pengirim_satuan_id === $sid
@@ -90,10 +98,12 @@ class AktivitasSatuanDanpus
                         && (int) $s->tujuan_satuan_id !== $sid
                         && ! $s->riwayats->contains(fn ($r) => (int) $r->penerima_satuan_id === $sid || (int) $r->pengirim_satuan_id === $sid);
                     $s->diarsipkan = self::suratDiarsipkan($s);
-                    $s->menungguDanpus = $danpusId !== null
+                    // Nama properti dipertahankan (dipakai view), artinya "menunggu
+                    // tindakan akun yang sedang melihat" (DANPUS atau WADAN).
+                    $s->menungguDanpus = $pelihatId !== null
                         && ! $s->isSelesai()
                         && $s->status === LaporanSurat::STATUS_MENUNGGU
-                        && (int) $s->tujuan_satuan_id === (int) $danpusId;
+                        && (int) $s->tujuan_satuan_id === (int) $pelihatId;
 
                     return $s;
                 })
@@ -122,8 +132,8 @@ class AktivitasSatuanDanpus
                 'kendala_total'          => $kendala->count(),
                 'kendala_menunggu'       => $kendalaMenunggu,
                 'kendala_dikonfirmasi'   => $kendala->count() - $kendalaMenunggu,
-                // Yang butuh aksi Danpus langsung: surat bertujuan Danpus yang
-                // belum dikonfirmasi + kendala yang belum dikonfirmasi.
+                // Yang butuh aksi akun pelihat langsung: surat bertujuan dia
+                // yang belum dikonfirmasi + kendala yang belum dikonfirmasi.
                 'perlu_tindak_lanjut'    => $suratMenungguDanpus + $kendalaMenunggu,
             ];
         }

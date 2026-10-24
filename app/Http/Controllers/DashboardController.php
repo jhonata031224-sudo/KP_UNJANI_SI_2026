@@ -464,14 +464,21 @@ class DashboardController
                 'diterima' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count(),
                 'ditolak' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count(),
             ]);
-            // ===== Riwayat Aktivitas Danpus: tambahan Surat & Kendala per satuan =====
-            // HANYA akun DANPUS (Wadan tidak berubah) dan murni baca -- tidak
+            // ===== Riwayat Aktivitas Pimpinan: tambahan Surat & Kendala per satuan =====
+            // Akun DANPUS dan WADAN tampil sama persis. Murni baca -- tidak
             // menyentuh $laporanPimpinanSatlak / $monitoringPimpinanSatlak di
             // atas (penggabungan progres, revisi, status laporan tetap utuh).
             // Sumber data & batas hak akses: lihat App\Support\AktivitasSatuanDanpus.
-            if ($kode === 'DANPUS') {
+            // Kolom Surat/Kendala dihitung dari sudut pandang Danpus (alur
+            // Kasansi/Satlak -> Danpus), sedangkan "perlu tindak lanjut" dan
+            // aturan surat Rahasia mengikuti akun yang sedang login.
+            if (in_array($kode, ['DANPUS', 'WADAN'], true)) {
+                $satuanDanpusAktivitas = $kode === 'DANPUS'
+                    ? $satuan
+                    : Satuan::where('kode', 'DANPUS')->first();
                 $aktivitasDanpus = AktivitasSatuanDanpus::bangun(
                     Satuan::whereIn('id', $satuanPimpinanIds)->get(),
+                    $satuanDanpusAktivitas,
                     $satuan
                 );
             }
