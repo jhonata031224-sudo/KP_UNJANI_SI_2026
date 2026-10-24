@@ -800,6 +800,14 @@ class DashboardController
         // pimpinan-kendala-terbaru-list.blade.php) apa adanya.
         // "Surat Terbaru" = 5 surat (masuk+terkirim+arsip) MILIK SATUAN INI
         // paling baru -- pola sama persis $pimpSuratTerbaru Pimpinan.
+        // Total Surat di kartu KPI dashboard. Urdal = penampung SELURUH surat (alur Surat otomatis
+        // menambahkan Urdal sebagai tembusan view-only), jadi totalnya semua surat yang tercatat --
+        // bukan cuma yang masuk/terkirim/arsip miliknya (surat berproses tanpa baris tembusan Urdal
+        // sebelumnya tidak terhitung dan totalnya jadi 0). Satuan lain tetap memakai rumus lama.
+        $suratSemuaTercatat = $kode === 'URDAL'
+            ? LaporanSurat::query()->get(['id', 'created_at'])
+            : $suratMasuk->concat($suratTerkirim)->concat($suratArsip);
+
         $satuanSuratTerbaru = $suratMasuk->concat($suratTerkirim)->concat($suratArsip)->sortByDesc('created_at')->take(5)->values();
         // "Kendala Kasansi Terbaru": hanya Kasansi yang punya kendala sendiri
         // (partial ini butuh row LaporanKendala ASLI: ->perihal/->status/
@@ -809,7 +817,7 @@ class DashboardController
             : collect();
         $satuanKendalaTerbaru = $satuanKendalaTerbaruSumber->sortByDesc('created_at')->take(5)->values();
 
-        return view('cyclone.dashboards.laporan-role-shell', compact('user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk','suratKal','suratDak','suratSisos') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'satuanTotalPelaporan' => $satuanTotalPelaporan, 'kendalaKasansiKpiAktif' => $kendalaKasansiKpiAktif, 'kendalaKasansiKpiArsip' => $kendalaKasansiKpiArsip, 'satuanStatusDist' => $satuanStatusDist, 'satuanTotalStatus' => $satuanTotalStatus, 'satuanSuratTerbaru' => $satuanSuratTerbaru, 'satuanKendalaTerbaru' => $satuanKendalaTerbaru, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $satuanDisetujui, 'ditolak' => $satuanDitolak, 'terlambat' => $satuanTerlambat, 'dibatalkan' => $satuanDibatalkan]]);
+        return view('cyclone.dashboards.laporan-role-shell', compact('suratSemuaTercatat','user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk','suratKal','suratDak','suratSisos') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'satuanTotalPelaporan' => $satuanTotalPelaporan, 'kendalaKasansiKpiAktif' => $kendalaKasansiKpiAktif, 'kendalaKasansiKpiArsip' => $kendalaKasansiKpiArsip, 'satuanStatusDist' => $satuanStatusDist, 'satuanTotalStatus' => $satuanTotalStatus, 'satuanSuratTerbaru' => $satuanSuratTerbaru, 'satuanKendalaTerbaru' => $satuanKendalaTerbaru, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $satuanDisetujui, 'ditolak' => $satuanDitolak, 'terlambat' => $satuanTerlambat, 'dibatalkan' => $satuanDibatalkan]]);
     }
 
     /**
@@ -1020,6 +1028,10 @@ class DashboardController
                 'suratMasuk' => $suratMasuk,
                 'suratTerkirim' => $suratTerkirim,
                 'suratArsip' => $suratArsip,
+                // Urdal = semua surat tercatat (sama dengan dashboard awal; lihat pelaporan()).
+                'suratSemuaTercatat' => $kode === 'URDAL'
+                    ? LaporanSurat::query()->get(['id', 'created_at'])
+                    : $suratMasuk->concat($suratTerkirim)->concat($suratArsip),
                 'kendalaMasuk' => $kendalaTerkirim,
                 'kendalaArsip' => $kendalaArsip,
             ])->render(),

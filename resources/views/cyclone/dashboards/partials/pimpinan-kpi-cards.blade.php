@@ -52,7 +52,8 @@
     return $d.' L '.$w.' '.round($ys[$cnt-1],2).' L '.$w.' '.$h.' Z';
   };
   $pimpSerTotal = $pimpHari->map(fn($day)=>$laporanPimpinanSatlak->filter(fn($l)=>$l->created_at?->isSameDay($day))->count())->all();
-  $pimpSuratSemua = $suratMasuk->concat($suratTerkirim)->concat($suratArsip);
+  // $suratSemuaTercatat dikirim controller khusus satuan role (Urdal = semua surat); DANPUS/WADAN tidak mengirimnya.
+  $pimpSuratSemua = isset($suratSemuaTercatat) ? $suratSemuaTercatat : $suratMasuk->concat($suratTerkirim)->concat($suratArsip);
   $pimpSerSurat = $pimpHari->map(fn($day)=>$pimpSuratSemua->filter(fn($s)=>$s->created_at?->isSameDay($day))->count())->all();
   $pimpKendalaSemua = $kendalaMasuk->concat($kendalaArsip);
   $pimpSerKendala = $pimpHari->map(fn($day)=>$pimpKendalaSemua->filter(fn($p)=>$p->created_at?->isSameDay($day))->count())->all();
