@@ -2432,5 +2432,20 @@
 
 </script>
 <script src="{{ asset('js/landing-content.js') }}"></script>
+<script>
+/* Halaman login (landing): hapus status sidebar & tab aktif yang tersisa di
+   sessionStorage dari sesi sebelumnya, supaya setelah login semua submenu
+   sidebar mulai dalam keadaan tertutup (bukan terbuka karena sisa sesi lama). */
+(function(){try{
+  var prefix=['cyclone-pimpinan-group-','cyclone-role-group-','cyclone-admin-group-'];
+  var exact=['cyclone-pimpinan-active-tab','cyclone-role-active-tab','cyclone-admin-active-tab'];
+  var hapus=[];
+  for(var i=0;i<sessionStorage.length;i++){
+    var k=sessionStorage.key(i);
+    if(exact.indexOf(k)!==-1||prefix.some(function(p){return k.indexOf(p)===0}))hapus.push(k);
+  }
+  hapus.forEach(function(k){sessionStorage.removeItem(k)});
+}catch(e){}})();
+</script>
 </body>
 </html>
