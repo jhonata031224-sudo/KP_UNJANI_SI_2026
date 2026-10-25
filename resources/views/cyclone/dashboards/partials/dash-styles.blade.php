@@ -838,6 +838,10 @@
     #tblLogAktivitas td:nth-child(3)::before,#tblDlAktivitas td:nth-child(3)::before{content:"Aksi";}
     #tblLogAktivitas td:nth-child(4)::before,#tblDlAktivitas td:nth-child(4)::before{content:"Deskripsi";}
     #tblLogAktivitas td:nth-child(5)::before,#tblDlAktivitas td:nth-child(5)::before{content:"IP";}
+    /* Isi Deskripsi (Riwayat Aktivitas & Data Aktivitas) di mode kartu HP: rata kiri-kanan (justify), bukan cuma
+       rata kanan. Baris terakhir rata kiri (standar justify); teks 1 baris tetap menempel kanan
+       karena lebar itemnya menyusut mengikuti isi. Label "DESKRIPSI" tidak terpengaruh. */
+    #tblLogAktivitas td:nth-child(4),#tblDlAktivitas td:nth-child(4){text-align:justify;text-align-last:left;text-justify:inter-word;}
 
     #tblRiwayatBackup td:nth-child(1)::before{content:"Nama File";}
     #tblRiwayatBackup td:nth-child(2)::before{content:"Ukuran";}
