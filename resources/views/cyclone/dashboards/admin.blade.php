@@ -5460,7 +5460,6 @@
                         <span>Video</span>
                       </label>
                     </div>
-                    <small>Beralih tipe tidak menghapus file yang sudah diunggah sebelumnya — kalau nanti mau balik lagi, tidak perlu unggah ulang.</small>
                   </div>
 
                   {{-- ----- Sub-opsi: GAMBAR ----- --}}
@@ -6131,7 +6130,9 @@
             /* Catatan di atas, tombol Tutup & Simpan bersandingan rata kanan di pojok kanan bawah. */
             .lp-landing-modal-foot{flex-direction:column;align-items:stretch;gap:10px;}
             .lp-landing-modal-foot-actions{flex-direction:row;justify-content:flex-end;gap:8px;}
-            .lp-landing-modal-foot-actions .btn{width:auto;flex:0 0 auto;justify-content:center;}
+            /* Ukuran disamakan dengan modal Tambah/Ubah Pengguna: tinggi 36px, huruf 11px, padding 14px. */
+            .lp-landing-modal-foot-actions .btn{width:auto;flex:0 0 auto;justify-content:center;display:inline-flex;align-items:center;height:36px;padding:0 14px;font-size:11px;letter-spacing:.06em;white-space:nowrap;}
+            .lp-landing-modal-foot-actions .btn svg{width:14px;height:14px;}
             .lp-landing-modal-notice{justify-content:flex-start;}
           }
           @keyframes lpFadeIn{ from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:none;} }
@@ -6274,12 +6275,18 @@
              lebih cuma latar abu-abu kosong di kanan tombol GAMBAR/VIDEO).
              align-self:flex-start mengembalikannya jadi selebar isinya
              saja (sesuai display:inline-flex di bawah). */
-          .lp-bg-type-toggle{display:inline-flex;align-self:flex-start;max-width:100%;gap:6px;padding:5px;border-radius:14px;background:var(--panel-alt);border:1px solid var(--border-soft);}
+          /* Gambar & Video = DUA tombol terpisah (masing-masing punya kotak & garis sendiri, ada jarak di antaranya),
+             bukan lagi satu kapsul segmented/toggle. */
+          .lp-bg-type-toggle{display:inline-flex;align-self:flex-start;max-width:100%;gap:10px;padding:0;border-radius:0;background:none;border:none;}
+          @media(max-width:640px){
+            .lp-bg-type-toggle{display:flex;align-self:stretch;width:100%;}
+            .lp-bg-type-option{flex:1 1 0;min-width:0;justify-content:center;}
+          }
           .lp-bg-type-option{
             position:relative;display:flex;align-items:center;gap:7px;
-            padding:9px 18px;border-radius:10px;cursor:pointer;
+            padding:10px 18px;border-radius:12px;cursor:pointer;
             font-size:12.5px;font-weight:700;letter-spacing:.02em;
-            color:var(--text-muted);background:transparent;
+            color:var(--text-muted);background:var(--panel-alt);border:1px solid var(--border-soft);
             transition:background .18s ease,color .18s ease,box-shadow .18s ease,transform .12s ease;
           }
           .lp-bg-type-option:active{transform:scale(.97);}
@@ -6300,13 +6307,13 @@
              gagal semua. Dipisah begini, ".is-active" (jalur utama, selalu
              jalan lewat JS) tetap aman walau :has() nggak didukung. */
           .lp-bg-type-option.is-active{
-            background:var(--gold-dim);
+            background:var(--gold-dim);border-color:var(--gold);
             color:var(--gold-bright);
             box-shadow:0 3px 10px rgba(255,152,0,.2), inset 0 0 0 1px var(--gold);
           }
           .lp-bg-type-option.is-active .lp-bg-type-icon{opacity:1;}
           .lp-bg-type-option:has(input:checked){
-            background:var(--gold-dim);
+            background:var(--gold-dim);border-color:var(--gold);
             color:var(--gold-bright);
             box-shadow:0 3px 10px rgba(255,152,0,.2), inset 0 0 0 1px var(--gold);
           }
