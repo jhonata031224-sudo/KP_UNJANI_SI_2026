@@ -6421,6 +6421,51 @@
           .lp-image-placeholder{box-sizing:border-box;border-radius:12px;border:2px dashed var(--border-strong);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:14px;font-size:11.5px;line-height:1.5;color:var(--text-muted);background:var(--panel-alt);}
           .lp-image-placeholder svg{display:block;flex-shrink:0;}
           .lp-delete-img-btn{align-self:center;min-height:32px;height:32px;padding:0 13px;font-size:11px;}
+
+          /* ===== Latar Belakang Beranda (sub-panel Gambar & Video) =====
+             Susunan: preview di atas; di bawahnya tombol "Ganti Gambar/Video" (kiri) dan
+             "Hapus Gambar/Video" (kanan) BERSANDING, sama tinggi, dan dipusatkan sebagai
+             satu pasangan. Pakai flex-wrap + justify-content:center, dengan ::after
+             selebar 100% sebagai pemutus baris (preview selalu di baris sendiri).
+             - gap kolom 0 + margin-left di tombol Hapus: kalau Hapus disembunyikan (belum
+               ada file), tombol Ganti/Pilih File tetap tepat di tengah.
+             - .cyclone-file-wrap (dibuat JS) di-display:contents supaya tombol pemicu & nama
+               file jadi item flex langsung; nama file (kalau ada file dipilih) turun ke
+               baris sendiri di tengah, tidak merusak kesejajaran dua tombol.
+             Hanya berlaku di .lp-bg-type-panel -> Logo & Struktur Organisasi tidak berubah.
+             !important + prefix modal diperlukan karena .lp-landing-modal-body
+             .lp-hero-image-row di atas memakai display:flex!important. */
+          .lp-bg-type-panel .lp-hero-image-row,
+          .lp-landing-modal-body .lp-bg-type-panel .lp-hero-image-row{
+            display:flex!important;
+            flex-direction:row!important;
+            flex-wrap:wrap!important;
+            justify-content:center!important;
+            align-items:center!important;
+            column-gap:0!important;
+            row-gap:0!important;
+            gap:0!important;
+            margin:0!important;
+            width:100%;box-sizing:border-box;
+          }
+          .lp-bg-type-panel .lp-hero-image-row .lp-hero-preview-frame,
+          .lp-bg-type-panel .lp-hero-image-row .lp-image-placeholder{order:0;flex:0 0 auto;}
+          .lp-bg-type-panel .lp-hero-image-row::after{content:"";order:1;flex:0 0 100%;height:0;}
+          .lp-bg-type-panel .lp-hero-image-row .cyclone-file-wrap{display:contents!important;}
+          .lp-bg-type-panel .lp-hero-image-row .cyclone-file-trigger{order:2;flex:0 0 auto;margin-top:16px;}
+          .lp-bg-type-panel .lp-hero-image-row .lp-delete-img-btn{order:3;flex:0 0 auto;margin:16px 0 0 10px!important;}
+          .lp-bg-type-panel .lp-hero-image-row .cyclone-file-name{
+            order:4;flex:0 0 100%;margin-top:10px;text-align:center;max-width:100%;
+          }
+          .lp-bg-type-panel .lp-hero-image-row .cyclone-file-name:empty{display:none;}
+          /* Dua tombol: tinggi, huruf, radius & padding disamakan persis. */
+          .lp-bg-type-panel .lp-hero-image-row .cyclone-file-trigger,
+          .lp-bg-type-panel .lp-hero-image-row .lp-delete-img-btn{
+            box-sizing:border-box;height:38px;min-height:38px;padding:0 15px;
+            display:inline-flex;align-items:center;justify-content:center;gap:7px;
+            font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.03em;line-height:1;
+            text-transform:uppercase;border-radius:8px;white-space:nowrap;
+          }
           /* BG (Gambar Latar Beranda): rasio landscape, mengikuti bentuk asli
              foto latar (bukan kotak seperti logo) -- object-fit:cover supaya
              foto memenuhi kotak tanpa gepeng/distorsi. Ukuran diperbesar
