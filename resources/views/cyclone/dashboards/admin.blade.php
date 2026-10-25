@@ -282,6 +282,16 @@
   #tblDlSurat .dl-lampiran-url{display:block;color:var(--gold-bright,#FF9800);text-decoration:underline;font-size:12px;line-height:1.45;overflow-wrap:anywhere;word-break:break-all;}
   #tblDlSurat .dl-lampiran-url + .dl-lampiran-url{margin-top:4px;}
   #tblDlSurat td.dl-lampiran-cell{max-width:340px;min-width:0;}
+  /* Label singkat hanya tampil di HP; desktop tetap URL lengkap */
+  #tblDlSurat .dl-lampiran-short{display:none;}
+  @media(max-width:640px){
+    #tblDlSurat .dl-lampiran-full{display:none;}
+    #tblDlSurat .dl-lampiran-short{display:inline;}
+    /* tautan ditumpuk rata kanan, 1 baris per lampiran, tidak lagi memanjang ke samping */
+    #tblDlSurat td.dl-lampiran-cell{max-width:none;}
+    #tblDlSurat .dl-lampiran-list{display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-left:auto;}
+    #tblDlSurat .dl-lampiran-list .dl-lampiran-url{display:inline-block;margin:0;white-space:nowrap;word-break:normal;overflow-wrap:normal;font-size:13px;}
+  }
   /* HP: tiap surat jadi kartu rapi -- Perihal sebagai judul kartu, sisanya
      baris "label kiri : isi kanan" yang diberi label (sebelumnya tanpa label) */
   @media(max-width:640px){
@@ -4599,11 +4609,14 @@
                       $lampiranSurat = $lampiranSurat->unique()->values();
                     @endphp
                     <td class="dl-lampiran-cell">
+                      <div class="dl-lampiran-list">
                       @forelse($lampiranSurat as $lp)
-                        <a class="dl-lampiran-url" href="{{ asset('storage/'.$lp) }}" target="_blank" rel="noopener">{{ asset('storage/'.$lp) }}</a>
+                        @php $lpExt = strtoupper(pathinfo($lp, PATHINFO_EXTENSION) ?: 'FILE'); @endphp
+                        <a class="dl-lampiran-url" href="{{ asset('storage/'.$lp) }}" target="_blank" rel="noopener" title="{{ basename($lp) }}"><span class="dl-lampiran-full">{{ asset('storage/'.$lp) }}</span><span class="dl-lampiran-short">Lampiran {{ $loop->iteration }} &middot; {{ $lpExt }}</span></a>
                       @empty
                         <span style="color:var(--text-dim);">-</span>
                       @endforelse
+                      </div>
                     </td>
                   </tr>
                   @empty
