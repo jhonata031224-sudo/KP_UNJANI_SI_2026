@@ -6416,10 +6416,12 @@
              kotak Gambar BG (lihat "#lpHeroImagePreviewImg" di bawah)
              supaya kotak pratinjau Gambar <-> Video terlihat konsisten
              saat berpindah tipe. */
-          #lpHeroVideoPreviewVideo{width:460px;height:259px;object-fit:cover;object-position:center;background:#000;}
-          #lpHeroVideoPreviewPlaceholder{width:460px;height:259px;}
-          @media(max-width:760px){#lpHeroVideoPreviewVideo,#lpHeroVideoPreviewPlaceholder{width:100%;max-width:400px;}}
-          @media(max-width:560px){#lpHeroVideoPreviewVideo,#lpHeroVideoPreviewPlaceholder{max-width:340px;}}
+          /* Ukuran pratinjau Video & Gambar sekarang mengikuti LEBAR KARTU (container), bukan
+             lebar jendela browser: dulu width:460px + @media(max-width:760px) -> di jendela
+             desktop yang lebar tapi modalnya sempit (~430px, kartu punya padding 18px), kotak
+             460px meluber keluar panel ("offside"). Sekarang: lebar 100% dari baris, maksimal
+             460px, rasio tetap 460:259 lewat aspect-ratio. Lihat blok bersama di bawah. */
+          #lpHeroVideoPreviewVideo{background:#000;}
           .lp-hero-image-row .cyclone-file-wrap{align-self:center;flex:0 0 auto;min-width:200px;justify-content:center;}
           /* Tombol "Pilih File", preview gambar, & tombol "Hapus Latar
              Belakang" semuanya rata tengah (align-items:center di parent
@@ -6523,10 +6525,19 @@
              foto memenuhi kotak tanpa gepeng/distorsi. Ukuran diperbesar
              (280x158 -> 460x259, tetap rasio ~16:9) supaya lebih jelas
              kelihatan. */
-          #lpHeroImagePreviewImg{width:460px;height:259px;object-fit:cover;object-position:center;}
-          #lpHeroImagePreviewPlaceholder{width:460px;height:259px;}
-          @media(max-width:760px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{width:100%;max-width:400px;}}
-          @media(max-width:560px){#lpHeroImagePreviewImg,#lpHeroImagePreviewPlaceholder{max-width:340px;}}
+          /* Pratinjau Latar Belakang (Gambar & Video): fluid mengikuti lebar kartu, rasio 460:259. */
+          #lpHeroImagePreviewImg,
+          #lpHeroVideoPreviewVideo{
+            display:block;width:100%;height:auto;aspect-ratio:460 / 259;box-sizing:border-box;
+            object-fit:cover;object-position:center;
+          }
+          #lpHeroImagePreviewFrame,
+          #lpHeroVideoPreviewFrame,
+          #lpHeroImagePreviewPlaceholder,
+          #lpHeroVideoPreviewPlaceholder{width:100%;max-width:460px;min-width:0;box-sizing:border-box;}
+          #lpHeroImagePreviewPlaceholder,
+          #lpHeroVideoPreviewPlaceholder{height:auto;aspect-ratio:460 / 259;}
+          .lp-bg-type-panel{min-width:0;max-width:100%;}
           #strukturOrgForm{max-width:100%;box-sizing:border-box;}
           #strukturOrgForm .lp-hero-image-row{width:100%;box-sizing:border-box;}
           @media(max-width:760px){#strukturOrgPreviewImg,#strukturOrgPreviewPlaceholder{width:100%;max-width:360px;}}
