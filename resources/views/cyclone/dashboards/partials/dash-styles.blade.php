@@ -893,12 +893,13 @@
     #tblSesiAktif td:nth-child(6) .btn{width:100%;justify-content:center;text-align:center;padding:11px 14px;}
 
     /* ===== Cadangan Data (mobile) ===== */
-    /* 2 tombol aksi (Buat Cadangan / Unggah File Cadangan): sampingan dalam satu baris (masing-masing separuh lebar kartu), tinggi 36px & ukuran teks sama */
-    .main .content section[data-tab-panel="backup"] .backup-action-row{padding:16px!important;}
+    /* 2 tombol aksi (Buat Cadangan / Unggah File Cadangan): grid 2 kolom SAMA lebar, sebaris, rata kiri-kanan
+       sejajar judul kartu (padding baris dihapus karena panel sudah punya padding), tinggi 36px, teks tidak meluber. */
+    .main .content section[data-tab-panel="backup"] .backup-action-row{padding:4px 0 0!important;margin:0!important;}
     .main .content section[data-tab-panel="backup"] .backup-action-row .backup-create-form,
-    .main .content section[data-tab-panel="backup"] .backup-action-row .backup-create-form .backup-create-actions{width:100%!important;}
-    .main .content section[data-tab-panel="backup"] .backup-action-row .backup-create-form .backup-create-actions{flex-direction:row!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;}
-    .main .content section[data-tab-panel="backup"] .backup-action-row .backup-create-actions>.btn{flex:1 1 0!important;min-width:0!important;width:auto!important;height:36px!important;min-height:36px!important;justify-content:center!important;text-align:center!important;white-space:nowrap!important;padding:0 8px!important;font-size:11px!important;letter-spacing:.04em!important;}
+    .main .content section[data-tab-panel="backup"] .backup-action-row .backup-create-form .backup-create-actions{width:100%!important;max-width:100%!important;margin:0!important;padding:0!important;box-sizing:border-box!important;}
+    .main .content section[data-tab-panel="backup"] .backup-action-row .backup-create-form .backup-create-actions{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important;align-items:center!important;justify-content:stretch!important;}
+    .main .content section[data-tab-panel="backup"] .backup-action-row .backup-create-actions>.btn{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-width:0!important;max-width:100%!important;height:36px!important;min-height:36px!important;margin:0!important;padding:0 6px!important;box-sizing:border-box!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:11px!important;letter-spacing:.03em!important;}
     /* Riwayat Backup: kartu per file. Selector diperkuat (pakai id + !important) karena
        admin-ui-consistency memaksa lebar kolom 20%, rata tengah, & table-layout:fixed untuk desktop. */
     .main .content [data-tab-panel="backup"] #tblRiwayatBackup{width:100%!important;table-layout:auto!important;}
