@@ -2437,6 +2437,13 @@
    sessionStorage dari sesi sebelumnya, supaya setelah login semua submenu
    sidebar mulai dalam keadaan tertutup (bukan terbuka karena sisa sesi lama). */
 (function(){try{
+  /* JANGAN jalan di dalam iframe "Pratinjau Langsung" (Admin > Pengaturan Umum, ?lp_preview=1).
+     Iframe sama-origin berbagi sessionStorage dengan halaman admin pembungkusnya; tanpa
+     pengecualian ini, tiap kali pratinjau dimuat (tepat saat tab Pengaturan Umum dibuka) skrip
+     di bawah menghapus 'cyclone-admin-active-tab' milik admin -> setelah Simpan (reload penuh)
+     tab tidak bisa dipulihkan, Admin terlempar ke Dashboard & sidebar kembali tertutup. */
+  if(window.self!==window.top)return;
+  if(/[?&]lp_preview=1(&|$)/.test(location.search))return;
   var prefix=['cyclone-pimpinan-group-','cyclone-role-group-','cyclone-admin-group-'];
   var exact=['cyclone-pimpinan-active-tab','cyclone-role-active-tab','cyclone-admin-active-tab'];
   var hapus=[];
