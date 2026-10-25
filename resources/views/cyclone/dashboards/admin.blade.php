@@ -297,19 +297,17 @@
     #tblDlSurat th:nth-child(8),
     #tblDlSurat td:nth-child(8){text-align:left;}
   }
-  /* Kolom Lampiran: cukup URL (tanpa pratinjau), boleh turun baris agar tidak melebarkan tabel/kartu */
-  #tblDlSurat .dl-lampiran-url{display:block;color:var(--gold-bright,#FF9800);text-decoration:underline;font-size:12px;line-height:1.45;overflow-wrap:anywhere;word-break:break-all;}
-  #tblDlSurat .dl-lampiran-url + .dl-lampiran-url{margin-top:4px;}
-  #tblDlSurat td.dl-lampiran-cell{max-width:340px;min-width:0;}
-  /* Label singkat hanya tampil di HP; desktop tetap URL lengkap */
-  #tblDlSurat .dl-lampiran-short{display:none;}
+  /* Kolom Lampiran (desktop & HP SAMA): label ringkas "Lampiran 1 · PDF" sebagai tautan ke berkas
+     (URL penuh tidak ditampilkan, tetap ada di href & tooltip nama berkas). Tiap lampiran 1 baris,
+     ditumpuk rapi; desktop rata kiri (sesuai header kolom), HP rata kanan (lihat media query). */
+  #tblDlSurat .dl-lampiran-full{display:none;}
+  #tblDlSurat .dl-lampiran-short{display:inline;}
+  #tblDlSurat td.dl-lampiran-cell{max-width:none;min-width:0;white-space:nowrap;}
+  #tblDlSurat .dl-lampiran-list{display:flex;flex-direction:column;align-items:flex-start;gap:6px;}
+  #tblDlSurat .dl-lampiran-url{display:inline-block;margin:0;color:var(--gold-bright,#FF9800);text-decoration:underline;font-size:13px;line-height:1.45;white-space:nowrap;word-break:normal;overflow-wrap:normal;}
   @media(max-width:640px){
-    #tblDlSurat .dl-lampiran-full{display:none;}
-    #tblDlSurat .dl-lampiran-short{display:inline;}
     /* tautan ditumpuk rata kanan, 1 baris per lampiran, tidak lagi memanjang ke samping */
-    #tblDlSurat td.dl-lampiran-cell{max-width:none;}
-    #tblDlSurat .dl-lampiran-list{display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-left:auto;}
-    #tblDlSurat .dl-lampiran-list .dl-lampiran-url{display:inline-block;margin:0;white-space:nowrap;word-break:normal;overflow-wrap:normal;font-size:13px;}
+    #tblDlSurat .dl-lampiran-list{align-items:flex-end;margin-left:auto;}
   }
   /* HP: tiap surat jadi kartu rapi -- Perihal sebagai judul kartu, sisanya
      baris "label kiri : isi kanan" yang diberi label (sebelumnya tanpa label) */
