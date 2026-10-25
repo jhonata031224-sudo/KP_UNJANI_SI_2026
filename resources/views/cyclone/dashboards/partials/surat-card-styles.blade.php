@@ -358,7 +358,7 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
 .rpt-filter-date-wrap input[type="date"]:focus{outline:0;border-color:var(--gold-bright);box-shadow:0 0 0 3px rgba(201,122,0,.10)}
 @media(max-width:700px){.rpt-filter-date-wrap{width:100%}.rpt-filter-date-wrap input[type="date"]{flex:1;min-width:0}}
 /* Mobile: filter Arsip Surat jadi grid 2 kolom (search tetap 1 baris penuh).
-   Urutan: Satuan|Status, Dari|Sampai, Jenis Surat|Urutan, lalu counter. */
+   Urutan: Satuan|Jenis Surat, Dari|Sampai, Urutan, lalu counter. */
 @media(max-width:700px){
   #arsip-surat .rpt-filter-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   #arsip-surat .rpt-filter-bar>*{min-width:0}
@@ -431,9 +431,9 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
       initialCards.forEach(function(c){ if(c.dataset.asal)adaAsal=true; });
       var asalHtml=adaAsal?'<select class="rpt-filter-select" aria-label="Filter asal surat"><option value="all">Semua Asal Surat</option><option value="danpus">Dikeluarkan Danpus</option><option value="satuan">Satuan lain ke Danpus</option></select>':'';
       extraHtml=asalHtml+'<select class="rpt-filter-select" aria-label="Filter satuan"><option value="all">Semua Satuan</option>'+satuanOpts+'</select>'+
+        '<select class="rpt-filter-select" aria-label="Filter jenis surat"><option value="all">Semua Jenis Surat</option>'+jenisOpts+'</select>'+
         '<div class="rpt-filter-date-wrap"><label for="'+gridId+'DariDate">Dari</label><input type="date" id="'+gridId+'DariDate" aria-label="Tanggal dari"></div>'+
-        '<div class="rpt-filter-date-wrap"><label for="'+gridId+'SampaiDate">Sampai</label><input type="date" id="'+gridId+'SampaiDate" aria-label="Tanggal sampai"></div>'+
-        '<select class="rpt-filter-select" aria-label="Filter jenis surat"><option value="all">Semua Jenis Surat</option>'+jenisOpts+'</select>';
+        '<div class="rpt-filter-date-wrap"><label for="'+gridId+'SampaiDate">Sampai</label><input type="date" id="'+gridId+'SampaiDate" aria-label="Tanggal sampai"></div>';
     }
     bar.innerHTML='<div class="rpt-filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off" placeholder="'+searchPlaceholder+'" aria-label="'+searchPlaceholder+'"></div>'+extraHtml+'<select class="rpt-filter-select" aria-label="Urutkan"><option value="newest">Terbaru</option><option value="oldest">Terlama</option></select><span class="rpt-filter-count"></span>';
     // .panel di grid Surat cuma bungkus panel-head (judul+deskripsi+tombol)
