@@ -82,12 +82,102 @@
     return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[\r\n]+/g, '');
   }
 
+  // ---------------------------------------------- perbesar pratinjau (mobile)
+
+  var ZOOM_LEVELS = [0.35, 0.5, 0.75, 1]; // skala terhadap lebar desktop 1440px
+  var zoomed = false;
+  var zoomIdx = 1;
+  var zoomBar = null;
+  var mqMobile = window.matchMedia ? window.matchMedia('(max-width: 760px)') : null;
+
+  function isMobile() { return !!mqMobile && mqMobile.matches; }
+  function frameBox() { return viewport && viewport.parentNode; }
+
+  function updateZoomUi() {
+    if (!zoomBar) return;
+    var lbl = zoomBar.querySelector('[data-lp-zoom-label]');
+    var bIn = zoomBar.querySelector('[data-lp-zoom="in"]');
+    var bOut = zoomBar.querySelector('[data-lp-zoom="out"]');
+    if (lbl) lbl.textContent = Math.round(ZOOM_LEVELS[zoomIdx] * 100) + '%';
+    if (bIn) bIn.disabled = zoomIdx >= ZOOM_LEVELS.length - 1;
+    if (bOut) bOut.disabled = zoomIdx <= 0;
+  }
+
+  function buildZoomBar(box) {
+    if (zoomBar) return zoomBar;
+    zoomBar = document.createElement('div');
+    zoomBar.className = 'lp-zoom-bar';
+    zoomBar.innerHTML =
+      '<span class="lp-zoom-title">Pratinjau Langsung</span>' +
+      '<div class="lp-zoom-ctrl">' +
+        '<button type="button" class="lp-zoom-btn" data-lp-zoom="out" aria-label="Perkecil">&minus;</button>' +
+        '<span class="lp-zoom-label" data-lp-zoom-label>50%</span>' +
+        '<button type="button" class="lp-zoom-btn" data-lp-zoom="in" aria-label="Perbesar">+</button>' +
+      '</div>' +
+      '<button type="button" class="lp-zoom-close" data-lp-zoom="close">Tutup</button>';
+    box.insertBefore(zoomBar, box.firstChild);
+    zoomBar.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('[data-lp-zoom]') : null;
+      if (!b) return;
+      var a = b.getAttribute('data-lp-zoom');
+      if (a === 'close') closeZoom();
+      else if (a === 'in' && zoomIdx < ZOOM_LEVELS.length - 1) { zoomIdx++; fit(); updateZoomUi(); }
+      else if (a === 'out' && zoomIdx > 0) { zoomIdx--; fit(); updateZoomUi(); }
+    });
+    return zoomBar;
+  }
+
+  function openZoom() {
+    var box = frameBox();
+    if (!box || zoomed || !isMobile()) return;
+    buildZoomBar(box);
+    zoomed = true;
+    box.classList.add('lp-zoomed');
+    document.body.classList.add('lp-zoom-lock');
+    updateZoomUi();
+    fit();
+    setTimeout(fit, 80); // hitung ulang setelah layout layar penuh terpasang
+  }
+
+  function closeZoom() {
+    if (!zoomed) return;
+    var box = frameBox();
+    zoomed = false;
+    if (box) box.classList.remove('lp-zoomed');
+    document.body.classList.remove('lp-zoom-lock');
+    fit();
+  }
+
+  // Lapisan ketuk di atas iframe (event klik di dalam iframe tidak sampai ke halaman admin).
+  function ensureZoomHit() {
+    if (!viewport || viewport.querySelector('.lp-zoom-hit')) return;
+    var hit = document.createElement('button');
+    hit.type = 'button';
+    hit.className = 'lp-zoom-hit';
+    hit.setAttribute('aria-label', 'Perbesar pratinjau landing page');
+    hit.innerHTML = '<span>Ketuk untuk memperbesar</span>';
+    hit.addEventListener('click', openZoom);
+    viewport.appendChild(hit);
+  }
+
   // ---------------------------------------------------------- layout & fit
 
   function fit() {
     if (!frame || !viewport) return;
     var width = viewport.clientWidth;
     if (width < 50) return; // tab masih tersembunyi; dihitung ulang saat dibuka
+
+    // Mode perbesar (mobile): iframe diskalakan memakai level zoom, bukan dicocokkan
+    // ke lebar kartu; viewport (layar penuh) bisa digeser ke samping.
+    if (zoomed) {
+      var zs = ZOOM_LEVELS[zoomIdx];
+      var vh = viewport.clientHeight;
+      if (vh < 50) return;
+      frame.style.width = DESIGN_WIDTH + 'px';
+      frame.style.height = Math.ceil(vh / zs) + 'px';
+      frame.style.transform = 'scale(' + zs + ')';
+      return;
+    }
 
     var scale = Math.min(1, width / DESIGN_WIDTH);
     var height = Math.round(Math.max(460, Math.min(820, window.innerHeight * 0.74)));
@@ -525,9 +615,13 @@
 
     if (window.ResizeObserver && viewport) new ResizeObserver(fit).observe(viewport);
     window.addEventListener('resize', fit, { passive: true });
+
+    ensureZoomHit();
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeZoom(); });
+    window.addEventListener('resize', function () { if (zoomed && !isMobile()) closeZoom(); }, { passive: true });
   }
 
-  window.lpLivePreview = { activate: activate, refresh: schedule, focus: focus, fit: fit };
+  window.lpLivePreview = { activate: activate, refresh: schedule, focus: focus, fit: fit, zoom: openZoom, closeZoom: closeZoom };
 
   function boot() {
     frame = byId(FRAME_ID);

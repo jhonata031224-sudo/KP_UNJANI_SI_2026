@@ -6545,6 +6545,51 @@
           .lp-live-viewport{position:relative;width:100%;height:560px;overflow:hidden;background:#0d120f;}
           .lp-live-frame{position:absolute;top:0;left:0;display:block;width:1440px;max-width:none;border:0;transform-origin:0 0;background:#151e19;}
 
+          /* ===== Pratinjau Langsung: ketuk untuk memperbesar (mobile) =====
+             Di HP iframe diskalakan ke lebar kartu (kecil sekali). Ketuk pratinjau ->
+             terbuka layar penuh dengan skala lebih besar yang bisa digeser, + tombol
+             perbesar/perkecil & Tutup (diatur public/js/admin-landing-live-preview.js). */
+          .lp-zoom-hit,.lp-zoom-bar{display:none;}
+          body.lp-zoom-lock{overflow:hidden;}
+          @media(max-width:760px){
+            .lp-zoom-hit{
+              display:flex;position:absolute;inset:0;z-index:3;align-items:flex-end;justify-content:center;
+              padding:12px;margin:0;border:0;background:transparent;cursor:zoom-in;font-family:inherit;
+              -webkit-tap-highlight-color:transparent;
+            }
+            .lp-zoom-hit span{
+              display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;
+              background:rgba(15,17,21,.78);color:#fff;font-size:12px;font-weight:700;letter-spacing:.01em;
+              border:1px solid rgba(255,255,255,.22);box-shadow:0 6px 16px rgba(0,0,0,.35);
+            }
+            .lp-browser-frame.lp-zoomed{
+              position:fixed;inset:0;z-index:100600;width:100%;max-width:none;margin:0;border:0;border-radius:0;
+              display:flex;flex-direction:column;background:var(--panel);box-shadow:none;
+            }
+            .lp-browser-frame.lp-zoomed .lp-browser-bar{display:none;}
+            .lp-browser-frame.lp-zoomed .lp-zoom-hit{display:none;}
+            .lp-browser-frame.lp-zoomed .lp-zoom-bar{
+              display:flex;align-items:center;justify-content:space-between;gap:10px;flex:0 0 auto;
+              padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top,0px));
+              background:var(--panel);border-bottom:1px solid var(--border-soft);
+            }
+            .lp-zoom-title{font-size:13px;font-weight:700;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+            .lp-zoom-ctrl{display:inline-flex;align-items:center;gap:6px;margin-left:auto;}
+            .lp-zoom-label{min-width:44px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--text-muted);}
+            .lp-zoom-btn{
+              width:36px;height:36px;border-radius:10px;border:1px solid var(--border-soft);background:var(--panel-alt);
+              color:var(--text);font-size:18px;font-weight:700;line-height:1;cursor:pointer;
+            }
+            .lp-zoom-btn:disabled{opacity:.4;cursor:default;}
+            .lp-zoom-close{
+              height:36px;padding:0 14px;border-radius:10px;border:1px solid var(--gold,#ff9800);background:var(--gold-dim,rgba(255,152,0,.12));
+              color:var(--gold-bright,#ff9800);font-size:13px;font-weight:700;cursor:pointer;
+            }
+            .lp-browser-frame.lp-zoomed .lp-live-viewport{
+              height:auto!important;flex:1 1 auto;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;
+            }
+          }
+
         </style>
 
         <script>
