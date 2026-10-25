@@ -10,6 +10,7 @@ use App\Models\Satuan;
 use App\Models\User;
 use App\Notifications\LaporanSuratBalasanDikonfirmasi;
 use App\Notifications\LaporanSuratBaruDiterima;
+use App\Notifications\LaporanSuratTembusanDiketahui;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -1148,6 +1149,43 @@ class LaporanSuratController extends Controller
     }
 
     /**
+     * Beri tahu semua pihak terkait bahwa satuan penerima Tembusan / View Only sudah
+     * mengetahui surat: Danpus, Wadan, Urdal, satuan pengirim & tujuan surat, serta
+     * pengirim/penerima langkah (riwayat) yang membuat tembusan itu (mis. satuan yang
+     * mengirim balasan). Satuan yang baru saja mengonfirmasi tidak ikut diberi tahu.
+     * Kegagalan kirim tidak boleh menggagalkan konfirmasi itu sendiri.
+     */
+    private function beritahuTembusanDiketahui(LaporanSurat $surat, LaporanSuratTembusan $tembusan, Satuan $yangMengetahui): void
+    {
+        try {
+            $riwayat = $tembusan->riwayat;
+
+            $satuanIds = Satuan::whereIn('kode', ['DANPUS', 'WADAN', 'URDAL'])->pluck('id')
+                ->merge([
+                    $surat->satuan_id,
+                    $surat->tujuan_satuan_id,
+                    $riwayat?->pengirim_satuan_id,
+                    $riwayat?->penerima_satuan_id,
+                ])
+                ->filter()
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->reject(fn ($id) => $id === (int) $yangMengetahui->id)
+                ->values();
+
+            if ($satuanIds->isEmpty()) {
+                return;
+            }
+
+            foreach (User::whereIn('satuan_id', $satuanIds)->get() as $penerima) {
+                $penerima->notify(new LaporanSuratTembusanDiketahui($surat, $yangMengetahui->nama));
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    /**
      * Konfirmasi tanda mengetahui bagi penerima Tembusan / View Only.
      */
     public function konfirmasiTembusan(Request $request, LaporanSurat $laporanSurat): RedirectResponse
@@ -1160,10 +1198,17 @@ class LaporanSuratController extends Controller
             ->where('satuan_id', $satuan->id)
             ->firstOrFail();
 
+        // Hanya konfirmasi PERTAMA yang memberi tahu pihak lain (klik ganda tidak mengulang notifikasi).
+        $sudahDikonfirmasiSebelumnya = $tembusan->dikonfirmasi_at !== null;
+
         $tembusan->update([
             'dikonfirmasi_at'   => now(),
             'dikonfirmasi_oleh' => $user->id,
         ]);
+
+        if (! $sudahDikonfirmasiSebelumnya) {
+            $this->beritahuTembusanDiketahui($laporanSurat, $tembusan, $satuan);
+        }
 
         ActivityLog::catat('laporan-surat.konfirmasi-tembusan', "Mengkonfirmasi tanda mengetahui surat \"{$laporanSurat->perihal}\".", $user, [
             'laporan_surat_id' => $laporanSurat->id,
