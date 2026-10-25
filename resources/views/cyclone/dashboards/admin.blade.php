@@ -3135,6 +3135,18 @@
             [data-tab-panel="log-aktivitas"] > .panel > .panel-head,
             [data-tab-panel="log-aktivitas"] > .panel > .dl-search-row{background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;padding:16px;margin-bottom:12px;}
           }
+          /* Filter Riwayat Aktivitas (mobile): search selebar kartu; Dari | Sampai sebaris; Kategori | Reset sebaris.
+             Semua tepi kiri-kanan sejajar (grid 2 kolom sama lebar), tinggi seragam 36px. */
+          @media (max-width:640px){
+            [data-tab-panel="log-aktivitas"] .dl-search-row .table-search-wrap{max-width:none!important;width:100%;}
+            [data-tab-panel="log-aktivitas"] #logFilterForm{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:end;width:100%;}
+            [data-tab-panel="log-aktivitas"] #logFilterForm .dl-date-filter{min-width:0;}
+            [data-tab-panel="log-aktivitas"] #logFilterForm input.table-filter{width:100%;min-width:0;height:36px;box-sizing:border-box;padding:0 8px;font-size:12px;}
+            [data-tab-panel="log-aktivitas"] #logFilterForm .styled-select-wrap,
+            [data-tab-panel="log-aktivitas"] #logFilterForm select.dl-kategori-filter{grid-column:1;width:100%!important;min-width:0!important;max-width:none!important;flex:none!important;}
+            [data-tab-panel="log-aktivitas"] #logFilterForm .styled-select-trigger{height:36px;font-size:12px;padding:0 9px;}
+            [data-tab-panel="log-aktivitas"] #logFilterForm .dl-filter-reset{grid-column:2;width:100%;height:36px;}
+          }
         </style>
         <div class="panel">
           <div class="panel-head"><div><h2>Riwayat Aktivitas</h2><p>Rekam jejak login, logout, dan seluruh aksi kelola sistem oleh Admin.</p></div></div>
