@@ -115,7 +115,7 @@ class ResetDataLaporanController extends Controller
 
         try {
             // 1. Kategori: Laporan & Kendala
-            $laporans = Laporan::with(['satuan', 'user'])->latest('id')->limit(150)->get();
+            $laporans = Laporan::with(['satuan', 'user', 'lampirans'])->latest('id')->limit(150)->get();
             foreach ($laporans as $row) {
                 $detail['laporan'][] = [
                     'key' => 'laporan:'.$row->id,
@@ -129,11 +129,12 @@ class ResetDataLaporanController extends Controller
                     'tanggal' => $row->created_at ? $row->created_at->translatedFormat('d M Y H:i') : '-',
                     'status' => $row->status ?: 'Terkirim',
                     'lampiran' => !empty($row->lampiran_path),
+                    'lampiran_files' => self::daftarLampiran($row->semuaLampiran->map(fn ($x) => ['path' => $x->path, 'nama' => $x->nama_asli])->all()),
                     'ts' => $row->created_at ? $row->created_at->timestamp : 0,
                 ];
             }
 
-            $kendalas = LaporanKendala::with(['satuan', 'user'])->latest('id')->limit(150)->get();
+            $kendalas = LaporanKendala::with(['satuan', 'user', 'lampirans'])->latest('id')->limit(150)->get();
             foreach ($kendalas as $row) {
                 $detail['laporan'][] = [
                     'key' => 'kendala:'.$row->id,
@@ -147,6 +148,7 @@ class ResetDataLaporanController extends Controller
                     'tanggal' => $row->created_at ? $row->created_at->translatedFormat('d M Y H:i') : '-',
                     'status' => $row->status ?: 'Terkirim',
                     'lampiran' => !empty($row->lampiran_path),
+                    'lampiran_files' => self::daftarLampiran($row->semuaLampiran->map(fn ($x) => ['path' => $x->path, 'nama' => $x->nama_asli])->all()),
                     'ts' => $row->created_at ? $row->created_at->timestamp : 0,
                 ];
             }
@@ -207,6 +209,10 @@ class ResetDataLaporanController extends Controller
                     'tanggal' => $row->created_at ? $row->created_at->translatedFormat('d M Y H:i') : '-',
                     'status' => $row->labelStatus(),
                     'lampiran' => !empty($row->lampiran_path),
+                    'lampiran_files' => self::daftarLampiran(array_merge(
+                        [['path' => $row->lampiran_path, 'nama' => $row->lampiran_nama_asli]],
+                        $row->riwayats->map(fn ($r) => ['path' => $r->lampiran_path, 'nama' => $r->lampiran_nama_asli])->all()
+                    )),
                     'ts' => $row->created_at ? $row->created_at->timestamp : 0,
                 ];
             }
@@ -215,6 +221,31 @@ class ResetDataLaporanController extends Controller
         }
 
         return $detail;
+    }
+
+    /**
+     * Ubah daftar [path, nama] lampiran jadi [url, nama] siap pakai di view admin:
+     * path kosong dilewati & path ganda digabung. URL memakai pola yang sama dengan
+     * view lain (asset('storage/'.path), disk "public"). Hanya untuk tampilan.
+     *
+     * @param  array<int, array{path:?string, nama:?string}>  $files
+     * @return array<int, array{url:string, nama:string}>
+     */
+    private static function daftarLampiran(array $files): array
+    {
+        $hasil = [];
+        foreach ($files as $f) {
+            $path = $f['path'] ?? null;
+            if (empty($path) || isset($hasil[$path])) {
+                continue;
+            }
+            $hasil[$path] = [
+                'url' => asset('storage/'.ltrim($path, '/')),
+                'nama' => ($f['nama'] ?? '') !== '' ? $f['nama'] : basename($path),
+            ];
+        }
+
+        return array_values($hasil);
     }
 
     /**

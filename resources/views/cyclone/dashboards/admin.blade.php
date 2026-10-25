@@ -3565,6 +3565,9 @@
           .rdl-user-name{font-size:11px;color:var(--text-muted);margin-top:2px;}
           .rdl-alur-ket{font-size:10.5px;color:var(--text-dim);margin-top:2px;}
           .rdl-sp-label{display:none;}
+          .rdl-lamp-list{display:inline-flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;}
+          .rdl-lamp-link{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:var(--success);text-decoration:none;border-bottom:1px solid transparent;cursor:pointer;}
+          .rdl-lamp-link:hover,.rdl-lamp-link:focus-visible{border-bottom-color:currentColor;outline:none;}
 
           .rdl-date{font-family:var(--mono);font-size:11px;color:var(--text-muted);white-space:nowrap;}
           .rdl-status-pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:10.5px;font-weight:700;text-transform:uppercase;background:var(--panel);border:1px solid var(--border-soft);color:var(--text-muted);}
@@ -3873,8 +3876,18 @@
                           <span class="rdl-status-pill">{{ $item['status'] }}</span>
                         </td>
                         <td class="rdl-lampiran-td rdl-col-center" data-label="Lampiran" style="text-align:center;">
-                          @if(!empty($item['lampiran']))
-                            <span title="Ada lampiran berkas" style="color:var(--success);font-weight:700;display:inline-flex;align-items:center;gap:3px;font-size:11px;">
+                          @php $lampFiles = $item['lampiran_files'] ?? []; @endphp
+                          @if(!empty($lampFiles))
+                            <span class="rdl-lamp-list">
+                              @foreach($lampFiles as $lf)
+                                <a href="{{ $lf['url'] }}" target="_blank" rel="noopener noreferrer" class="rdl-lamp-link" title="Buka lampiran: {{ $lf['nama'] }}">
+                                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                                  Ada{{ count($lampFiles) > 1 ? ' '.($loop->iteration) : '' }}
+                                </a>
+                              @endforeach
+                            </span>
+                          @elseif(!empty($item['lampiran']))
+                            <span title="Ada lampiran berkas (berkas tidak ditemukan)" style="color:var(--success);font-weight:700;display:inline-flex;align-items:center;gap:3px;font-size:11px;">
                               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                               Ada
                             </span>
