@@ -370,6 +370,12 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
   #arsip-surat .rpt-filter-date-wrap input[type="date"]{flex:1 1 0;width:0;min-width:0;padding:8px 4px 8px 7px;font-size:11px}
   #arsip-surat .rpt-filter-date-wrap input[type="date"]::-webkit-calendar-picker-indicator{margin:0 0 0 2px;padding:0;width:13px;height:13px}
   #arsip-surat .rpt-filter-count{grid-column:1/-1;width:auto;margin-left:0}
+  /* Arsip Urdal (ada filter Asal): Asal|Satuan, Jenis|Urutan, Dari|Sampai.
+     Urutan DOM: search, asal, satuan, jenis, dari, sampai, urutan, counter. */
+  #arsip-surat .rpt-filter-bar-asal>:nth-child(7){order:4}
+  #arsip-surat .rpt-filter-bar-asal>:nth-child(5){order:5}
+  #arsip-surat .rpt-filter-bar-asal>:nth-child(6){order:6}
+  #arsip-surat .rpt-filter-bar-asal>:nth-child(8){order:7}
 }
 </style>
 <script>
@@ -430,6 +436,7 @@ html[data-theme="light"] .surat-tindakan-check{color:#a85a00}
       var adaAsal=false;
       initialCards.forEach(function(c){ if(c.dataset.asal)adaAsal=true; });
       var asalHtml=adaAsal?'<select class="rpt-filter-select" aria-label="Filter asal surat"><option value="all">Semua Asal Surat</option><option value="danpus">Dikeluarkan Danpus</option><option value="satuan">Satuan lain ke Danpus</option></select>':'';
+      if(adaAsal)bar.classList.add('rpt-filter-bar-asal');
       extraHtml=asalHtml+'<select class="rpt-filter-select" aria-label="Filter satuan"><option value="all">Semua Satuan</option>'+satuanOpts+'</select>'+
         '<select class="rpt-filter-select" aria-label="Filter jenis surat"><option value="all">Semua Jenis Surat</option>'+jenisOpts+'</select>'+
         '<div class="rpt-filter-date-wrap"><label for="'+gridId+'DariDate">Dari</label><input type="date" id="'+gridId+'DariDate" aria-label="Tanggal dari"></div>'+
