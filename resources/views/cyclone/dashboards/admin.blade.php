@@ -6604,6 +6604,17 @@
              perbesar/perkecil & Tutup (diatur public/js/admin-landing-live-preview.js). */
           .lp-zoom-hit,.lp-zoom-bar{display:none;}
           body.lp-zoom-lock{overflow:hidden;}
+          /* Frame zoom (position:fixed) berada di dalam .content yang punya z-index:1
+             (stacking context), sedangkan topbar fixed = 100000 & sidebar = 100010 ada
+             di luar .content. Tanpa ini topbar/sidebar menimpa bagian atas pratinjau
+             sehingga bilah zoom & navbar landing kepotong. Pola sama dengan
+             body.lp-modal-lock .content di atas. */
+          body.lp-zoom-lock .content{z-index:200001;}
+          body.lp-zoom-lock .sidebar,
+          body.lp-zoom-lock .topbar{
+            backdrop-filter:none!important;
+            -webkit-backdrop-filter:none!important;
+          }
           @media(max-width:760px){
             .lp-zoom-hit{
               display:flex;position:absolute;inset:0;z-index:3;align-items:flex-end;justify-content:center;
