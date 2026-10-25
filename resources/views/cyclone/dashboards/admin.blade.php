@@ -7429,11 +7429,11 @@
              Tombol ada di .panel-head & filter di .table-toolbar (induk berbeda), jadi keduanya di-"lebur" ke
              grid .panel lewat display:contents lalu ditata dengan order. Desktop tidak berubah. */
           @media (max-width:640px){
-            [data-tab-panel="reset-password"] > .panel{display:grid;grid-template-columns:minmax(0,1fr) 128px;column-gap:10px;row-gap:12px;align-items:center;}
+            [data-tab-panel="reset-password"] > .panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:10px;row-gap:12px;align-items:center;}
             [data-tab-panel="reset-password"] > .panel > .panel-head,
             [data-tab-panel="reset-password"] > .panel > .table-toolbar{display:contents;}
             [data-tab-panel="reset-password"] > .panel > .panel-head > div:first-child{grid-column:1/-1;order:1;margin:0;}
-            [data-tab-panel="reset-password"] #btnHapusRiwayatResetPassword{grid-column:1;order:2;justify-self:start;height:38px;padding:0 12px;font-size:11px;letter-spacing:.06em;white-space:nowrap;margin:0;}
+            [data-tab-panel="reset-password"] #btnHapusRiwayatResetPassword{grid-column:1;order:2;justify-self:stretch;width:100%;height:38px;box-sizing:border-box;padding:0 8px;font-size:11px;letter-spacing:.06em;white-space:nowrap;margin:0;display:inline-flex;align-items:center;justify-content:center;}
             [data-tab-panel="reset-password"] .table-toolbar .styled-select-wrap,
             [data-tab-panel="reset-password"] #tblResetPasswordSort{grid-column:2;order:2;width:100%;min-width:0;margin:0;}
             [data-tab-panel="reset-password"] .table-toolbar .styled-select-trigger{height:38px;font-size:11px;padding:0 9px;}
