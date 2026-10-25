@@ -3564,6 +3564,7 @@
           .rdl-satuan-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--border-soft);color:var(--text);}
           .rdl-user-name{font-size:11px;color:var(--text-muted);margin-top:2px;}
           .rdl-alur-ket{font-size:10.5px;color:var(--text-dim);margin-top:2px;}
+          .rdl-sp-label{display:none;}
 
           .rdl-date{font-family:var(--mono);font-size:11px;color:var(--text-muted);white-space:nowrap;}
           .rdl-status-pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:10.5px;font-weight:700;text-transform:uppercase;background:var(--panel);border:1px solid var(--border-soft);color:var(--text-muted);}
@@ -3652,21 +3653,24 @@
             }
             .rdl-date{white-space:normal;}
 
-            /* Rapikan kartu mobile: baris "Satuan & Pengaju" berisi 3 elemen (badge satuan, nama
-               pengaju, keterangan alur) -- dulu dijejer menyamping dalam 1 flex row sehingga sempit,
-               teks tertekuk per-kata & meluber keluar kartu. Sekarang: label di atas, isi ditumpuk
-               ke bawah rata kiri selebar kartu. Baris lain (Tanggal/Status/Lampiran) tetap label
-               kiri - nilai kanan, dengan font label yang seragam. */
-            table.rdl-table td[data-label="Satuan & Pengaju"]{
-              flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px;text-align:left !important;
+            /* Kartu mobile: "Satuan", "Pengaju" (dan "Alur" kalau ada) sekarang BARIS TERPISAH, masing-masing
+               label di kiri - nilai di kanan, sama seperti baris Tanggal/Status/Lampiran. Sel pembungkusnya
+               (.rdl-sp-td) tidak lagi jadi 1 baris flex berisi label tunggal "Satuan & Pengaju". */
+            table.rdl-table td.rdl-sp-td{display:block;grid-column:1 / -1;padding-top:0;border-top:0;text-align:left !important;}
+            table.rdl-table td.rdl-sp-td::before{content:none !important;}
+            .rdl-sp-row{
+              display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:30px;
+              padding-top:8px;border-top:1px dashed var(--border-soft);text-align:right;
             }
-            table.rdl-table td[data-label="Satuan & Pengaju"] > *{text-align:left;max-width:100%;min-width:0;}
-            table.rdl-table td[data-label="Satuan & Pengaju"] .rdl-satuan-badge{
-              align-self:flex-start;white-space:normal;word-break:break-word;line-height:1.35;font-size:11.5px;padding:4px 9px;
-            }
-            table.rdl-table td[data-label="Satuan & Pengaju"] .rdl-user-name{margin-top:0;font-size:12px;line-height:1.4;overflow-wrap:anywhere;}
-            table.rdl-table td[data-label="Satuan & Pengaju"] .rdl-alur-ket{
-              margin-top:2px;padding:7px 9px;border-radius:8px;background:var(--panel-alt, var(--panel));
+            .rdl-sp-row + .rdl-sp-row{margin-top:8px;}
+            .rdl-sp-label{display:block;flex:0 0 auto;font-family:inherit;font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--text-dim);text-align:left;}
+            .rdl-sp-row > :not(.rdl-sp-label){min-width:0;max-width:100%;text-align:right;}
+            .rdl-sp-row .rdl-satuan-badge{white-space:normal;word-break:break-word;line-height:1.35;font-size:11.5px;padding:4px 9px;text-align:right;}
+            .rdl-sp-row .rdl-user-name{margin-top:0;font-size:12px;line-height:1.4;color:var(--text);overflow-wrap:anywhere;}
+            .rdl-sp-alur{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px;}
+            .rdl-sp-alur > :not(.rdl-sp-label){text-align:left;}
+            .rdl-sp-alur .rdl-alur-ket{
+              margin-top:0;padding:7px 9px;border-radius:8px;background:var(--panel-alt, var(--panel));
               border:1px solid var(--border-soft);font-size:11px;line-height:1.5;color:var(--text-muted);overflow-wrap:anywhere;
             }
             /* Label seragam (sans) di semua baris info; tanggal tetap angka rapi (tabular). */
@@ -3848,11 +3852,20 @@
                             <span class="rdl-item-subtype rdl-subtype-{{ $item['subtipe_badge'] ?? 'gold' }}">{{ $item['subtipe'] }}</span>
                           </div>
                         </td>
-                        <td class="rdl-col-center" data-label="Satuan &amp; Pengaju">
-                          <span class="rdl-satuan-badge">{{ $item['satuan'] }}</span>
-                          <div class="rdl-user-name">{{ $item['user'] }}</div>
+                        <td class="rdl-col-center rdl-sp-td" data-label="Satuan &amp; Pengaju">
+                          <div class="rdl-sp-row">
+                            <span class="rdl-sp-label">Satuan</span>
+                            <span class="rdl-satuan-badge">{{ $item['satuan'] }}</span>
+                          </div>
+                          <div class="rdl-sp-row">
+                            <span class="rdl-sp-label">Pengaju</span>
+                            <div class="rdl-user-name">{{ $item['user'] }}</div>
+                          </div>
                           @if(!empty($item['alur_ket']))
-                            <div class="rdl-alur-ket">{{ $item['alur_ket'] }}</div>
+                            <div class="rdl-sp-row rdl-sp-alur">
+                              <span class="rdl-sp-label">Alur</span>
+                              <div class="rdl-alur-ket">{{ $item['alur_ket'] }}</div>
+                            </div>
                           @endif
                         </td>
                         <td class="rdl-date" data-label="Tanggal">{{ $item['tanggal'] }}</td>
