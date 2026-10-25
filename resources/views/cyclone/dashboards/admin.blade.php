@@ -2833,6 +2833,16 @@
           .perm-global-select-all span{font-size:11.5px;font-weight:700;color:var(--text);white-space:nowrap;}
           .perm-global-select-all.is-all-active{border-color:var(--gold-bright);background:var(--gold-dim);}
           .perm-global-select-all.is-all-active span{color:var(--gold-bright);}
+          /* Desktop: rapatkan jarak toolbar supaya keterangan "x dari y modul aktif (Kategori)" -- termasuk
+             yang panjang seperti "(Unsur Pembantu Pimpinan)" -- tetap SEBARIS di kanan tombol kategori,
+             sama seperti saat "Kasansi" dipilih, tidak turun ke baris kedua. Kalau layar memang terlalu
+             sempit & terpaksa turun baris, blok keterangan + checkbox tetap rata kanan (bukan kiri). */
+          @media (min-width:641px){
+            .perm-global-toolbar{padding:12px 14px;gap:12px;}
+            .perm-filter-group{gap:5px;}
+            .perm-filter-btn{padding:0 10px;}
+            .perm-global-actions{margin-left:auto;gap:10px;}
+          }
           /* Mobile: filter kategori jadi grid 2 kolom rata (tanpa celah kiri/kanan), tombol aksi selebar kotak */
           @media (max-width:640px){
             .perm-global-toolbar{flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:12px;padding:12px;box-sizing:border-box;max-width:100%;}
