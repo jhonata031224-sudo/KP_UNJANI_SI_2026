@@ -5967,13 +5967,17 @@
           .lp-landing-modal-body::-webkit-scrollbar-thumb:hover{background:var(--text-muted)!important;}
 
           /* Sub-panel di dalam modal (mis. Makna Logo, Moto, Identitas Instansi, Fitur 1..4) */
+          /* Panel abu DIHAPUS (dulu latar abu + border + padding 18/20 -> kartu putih di dalamnya
+             jadi bertumpuk abu > putih). Sekarang panel hanya pembungkus transparan: judul
+             section = teks biasa, lalu kartu-kartu putih selebar penuh area modal (selebar
+             panel abu yang lama). Lihat juga ".lp-tab-panel > .form-grid" & ".lp-card" di bawah. */
           .lp-landing-modal-body .lp-tab-panel{
             display:block!important;
-            background:var(--panel-alt)!important;
-            border:1px solid var(--border-soft)!important;
-            border-radius:12px!important;
-            padding:18px 20px!important;
-            margin-bottom:16px!important;
+            background:none!important;
+            border:0!important;
+            border-radius:0!important;
+            padding:0!important;
+            margin-bottom:20px!important;
             box-shadow:none!important;
             animation:lpFadeIn .18s ease;
           }
@@ -5984,9 +5988,9 @@
           /* Header sub-panel di dalam modal */
           .lp-landing-modal-body .panel-head{
             display:block!important;
-            margin-bottom:14px!important;
-            padding-bottom:10px!important;
-            border-bottom:1px solid var(--border-soft)!important;
+            margin-bottom:12px!important;
+            padding:0 2px!important;
+            border-bottom:0!important;
           }
           /* Khusus panel tunggal (seperti Judul & Deskripsi Utama), sembunyikan panel-head agar tidak dobel */
           .lp-landing-modal-body .lp-tab-panel:only-child > .panel-head{
@@ -6016,13 +6020,32 @@
           }
 
           /* Kartu item di dalam modal (Makna Logo poin 1..10, kartu sosial media, dsb) */
-          .lp-landing-modal-body .lp-card,
           .lp-landing-modal-body .lp-sosmed-row{
             background:var(--panel)!important;
             border:1px solid var(--border-soft)!important;
             border-radius:10px!important;
             padding:14px 16px!important;
             margin-bottom:12px!important;
+          }
+          /* Kartu putih seragam: sama persis dengan blok isian (.lp-tab-panel > .form-grid). */
+          .lp-landing-modal-body .lp-card,
+          .lp-landing-modal-body .lp-tab-panel > .form-grid{
+            background:var(--panel)!important;
+            border:1px solid var(--border-soft)!important;
+            border-radius:14px!important;
+            padding:16px 18px!important;
+            margin-bottom:14px!important;
+            box-shadow:0 1px 2px rgba(15,23,42,.03)!important;
+            box-sizing:border-box!important;
+          }
+          .lp-landing-modal-body .lp-tab-panel > .form-grid{margin-bottom:0!important;}
+          /* Satu-satunya kotak di dalam kartu: item berulang (Poin Makna Logo 1..10, dst.). */
+          .lp-landing-modal-body .lp-card .lp-card{
+            background:var(--panel-alt)!important;
+            border-radius:12px!important;
+            padding:14px 16px!important;
+            margin-bottom:12px!important;
+            box-shadow:none!important;
           }
           .lp-landing-modal-body .lp-card:last-child,
           .lp-landing-modal-body .lp-sosmed-row:last-child{
