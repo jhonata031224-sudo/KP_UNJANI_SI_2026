@@ -7412,6 +7412,24 @@
 
       {{-- ===== PERMINTAAN RESET PASSWORD ===== --}}
       <section class="tab-panel" data-tab-panel="reset-password">
+        <style>
+          /* Mobile: baris "Hapus Riwayat" (kiri) + filter Terbaru/Terlama (kanan, diperkecil) sejajar satu baris.
+             Tombol ada di .panel-head & filter di .table-toolbar (induk berbeda), jadi keduanya di-"lebur" ke
+             grid .panel lewat display:contents lalu ditata dengan order. Desktop tidak berubah. */
+          @media (max-width:640px){
+            [data-tab-panel="reset-password"] > .panel{display:grid;grid-template-columns:minmax(0,1fr) 128px;column-gap:10px;row-gap:12px;align-items:center;}
+            [data-tab-panel="reset-password"] > .panel > .panel-head,
+            [data-tab-panel="reset-password"] > .panel > .table-toolbar{display:contents;}
+            [data-tab-panel="reset-password"] > .panel > .panel-head > div:first-child{grid-column:1/-1;order:1;margin:0;}
+            [data-tab-panel="reset-password"] #btnHapusRiwayatResetPassword{grid-column:1;order:2;justify-self:start;height:38px;padding:0 12px;font-size:11px;letter-spacing:.06em;white-space:nowrap;margin:0;}
+            [data-tab-panel="reset-password"] .table-toolbar .styled-select-wrap,
+            [data-tab-panel="reset-password"] #tblResetPasswordSort{grid-column:2;order:2;width:100%;min-width:0;margin:0;}
+            [data-tab-panel="reset-password"] .table-toolbar .styled-select-trigger{height:38px;font-size:11px;padding:0 9px;}
+            [data-tab-panel="reset-password"] .table-toolbar .table-search-wrap{grid-column:1/-1;order:3;margin:0;}
+            [data-tab-panel="reset-password"] .table-toolbar .table-filter-count{grid-column:1/-1;order:4;margin:0;}
+            [data-tab-panel="reset-password"] > .panel > .tbl-wrap{grid-column:1/-1;order:5;}
+          }
+        </style>
         <div class="panel">
           <div class="panel-head">
             <div><h2>Permintaan Ganti Password</h2><p>Permintaan ganti kata sandi yang dikirim pengguna lewat menu "Pengaturan Akun".</p></div>
