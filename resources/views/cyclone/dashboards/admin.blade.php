@@ -3650,8 +3650,35 @@
             table.rdl-table td.rdl-lampiran-td::before{
               content:attr(data-label);flex:0 0 auto;font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--text-dim);text-align:left;
             }
-            table.rdl-table td[data-label="Satuan & Pengaju"] > *{text-align:right;}
             .rdl-date{white-space:normal;}
+
+            /* Rapikan kartu mobile: baris "Satuan & Pengaju" berisi 3 elemen (badge satuan, nama
+               pengaju, keterangan alur) -- dulu dijejer menyamping dalam 1 flex row sehingga sempit,
+               teks tertekuk per-kata & meluber keluar kartu. Sekarang: label di atas, isi ditumpuk
+               ke bawah rata kiri selebar kartu. Baris lain (Tanggal/Status/Lampiran) tetap label
+               kiri - nilai kanan, dengan font label yang seragam. */
+            table.rdl-table td[data-label="Satuan & Pengaju"]{
+              flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px;text-align:left !important;
+            }
+            table.rdl-table td[data-label="Satuan & Pengaju"] > *{text-align:left;max-width:100%;min-width:0;}
+            table.rdl-table td[data-label="Satuan & Pengaju"] .rdl-satuan-badge{
+              align-self:flex-start;white-space:normal;word-break:break-word;line-height:1.35;font-size:11.5px;padding:4px 9px;
+            }
+            table.rdl-table td[data-label="Satuan & Pengaju"] .rdl-user-name{margin-top:0;font-size:12px;line-height:1.4;overflow-wrap:anywhere;}
+            table.rdl-table td[data-label="Satuan & Pengaju"] .rdl-alur-ket{
+              margin-top:2px;padding:7px 9px;border-radius:8px;background:var(--panel-alt, var(--panel));
+              border:1px solid var(--border-soft);font-size:11px;line-height:1.5;color:var(--text-muted);overflow-wrap:anywhere;
+            }
+            /* Label seragam (sans) di semua baris info; tanggal tetap angka rapi (tabular). */
+            table.rdl-table td.rdl-date{font-family:inherit;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text);}
+            table.rdl-table td[data-label="Satuan & Pengaju"]::before,
+            table.rdl-table td.rdl-date::before,
+            table.rdl-table td[data-label="Status"]::before,
+            table.rdl-table td.rdl-lampiran-td::before{font-family:inherit;text-transform:none;}
+            table.rdl-table td.rdl-date,
+            table.rdl-table td[data-label="Status"],
+            table.rdl-table td.rdl-lampiran-td{min-height:30px;}
+            table.rdl-table td.rdl-title-td{overflow-wrap:anywhere;}
           }
 
           /* ===== Mode pilih: 1 tombol "Hapus" -> checkbox muncul, hapus banyak sekaligus ===== */
