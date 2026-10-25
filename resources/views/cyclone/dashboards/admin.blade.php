@@ -7124,6 +7124,34 @@
               return true;
             }
 
+            /* Pratinjau LANGSUNG slider Blur Latar & Kepekatan Overlay: saat digeser,
+               filter blur + opacity overlay di pratinjau Gambar & Video ikut berubah
+               seketika. Hanya mengubah 2 properti CSS (hemat, tanpa request ke server);
+               nilai tetap disimpan lewat tombol Simpan seperti biasa. Dibatasi 1x per
+               frame lewat requestAnimationFrame supaya tetap ringan. */
+            (function(){
+              var blurEl = document.getElementById('lpHeroBlur');
+              var ovEl   = document.getElementById('lpHeroOverlay');
+              if(!blurEl && !ovEl) return;
+              var medias = [document.getElementById('lpHeroImagePreviewImg'), document.getElementById('lpHeroVideoPreviewVideo')];
+              var overlays = [document.getElementById('lpHeroImagePreviewOverlay'), document.getElementById('lpHeroVideoPreviewOverlay')];
+              var queued = false;
+              function apply(){
+                queued = false;
+                if(blurEl){
+                  var b = Math.max(0, Math.min(20, parseInt(blurEl.value, 10) || 0));
+                  medias.forEach(function(m){ if(m) m.style.filter = 'blur(' + b + 'px)'; });
+                }
+                if(ovEl){
+                  var o = Math.max(0, Math.min(100, parseInt(ovEl.value, 10) || 0)) / 100;
+                  overlays.forEach(function(el){ if(el) el.style.opacity = o; });
+                }
+              }
+              function schedule(){ if(!queued){ queued = true; requestAnimationFrame(apply); } }
+              if(blurEl) blurEl.addEventListener('input', schedule);
+              if(ovEl) ovEl.addEventListener('input', schedule);
+            })();
+
             var heroImageInput = form.querySelector('[data-lp-image="hero_image"]');
             if(heroImageInput){
               heroImageInput.addEventListener('change', function(){
