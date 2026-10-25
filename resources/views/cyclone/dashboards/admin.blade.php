@@ -269,6 +269,10 @@
   .dl-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;}
   .dl-foot p{font-size:11.5px;color:var(--text-dim);}
   @media(max-width:640px){.dl-section-head{flex-direction:column;}.dl-download{align-self:stretch;}.dl-download-btn{width:100%;justify-content:center;}.dl-search-row{flex-direction:column;align-items:stretch;}.dl-search-count{margin-left:0;}.dl-foot{flex-direction:column;align-items:stretch;text-align:center;}}
+  /* Data Pelaporan: dropdown Status + Urutan dibungkus .dl-pel-selects. Desktop: "menghilang"
+     (display:contents) sehingga keduanya mengalir sebaris bersama filter lain seperti Data Pengguna.
+     Mobile: jadi grid 2 kolom sama lebar (Status | Urutan), menggantikan baris Kategori | Reset. */
+  .dl-pel-selects{display:contents;}
   /* Arsip Data (Data Pengguna / Aktivitas / Surat), mobile: filter ditata grid 2 kolom sama lebar --
      Cari penuh; Dari | Sampai sebaris; Kategori | Reset sebaris. Tepi kiri-kanan sejajar, tinggi seragam 36px. */
   @media(max-width:640px){
@@ -281,6 +285,8 @@
     .dl-section .dl-search-row .styled-select-trigger{height:36px;font-size:12px;padding:0 9px;}
     .dl-section .dl-search-row .dl-filter-reset{grid-column:2;width:100%;height:36px;}
     .dl-section .dl-search-row .dl-search-count{grid-column:1/-1;margin:0;}
+    .dl-section .dl-search-row .dl-pel-selects{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;}
+    .dl-section .dl-search-row .dl-pel-selects .styled-select-wrap{grid-column:auto;}
   }
 
   /* ===== Arsip Data > Data Surat (#tblDlSurat) -- hanya tabel ini ===== */
@@ -4403,33 +4409,42 @@
               </div>
             </div>
 
-            {{-- Search+filter+sort di sini SENGAJA dibuat SAMA PERSIS dengan
-                 punya Pimpinan (initRiwayatCardFilter() di
-                 danpus-permintaan-arsip-mode.blade.php) -- class .rpt-filter-*
-                 sama (CSS-nya di-include lewat danpus-report-table-filter.blade.php
-                 di bawah), tanpa filter tanggal/kategori/tombol Unduh yang
-                 memang tidak ada di kartu Pimpinan. --}}
-            <div class="rpt-filter-bar" id="dlPelaporanFilterBar">
-              <div class="rpt-filter-search">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
-                <input type="search" autocomplete="off" id="dlPelaporanSearch" placeholder="Cari perihal atau tujuan satuan..." aria-label="Cari perihal atau tujuan satuan...">
+            {{-- Filter Data Pelaporan: tata letak & gaya DISAMAKAN dengan Data Pengguna
+                 (.dl-search-row: Cari, Dari/Sampai tanggal) -- TANPA tombol Unduh,
+                 tombol refresh, dan dropdown Kategori. Di tempat Kategori ada filter
+                 Status dan Urutan (Terbaru / Terlama). Logikanya tetap di
+                 initDlPelaporanFilter() (kartu, bukan tabel). --}}
+            <div class="dl-search-row" id="dlPelaporanFilterBar">
+              <div class="table-search-wrap" style="max-width:280px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+                <input type="text" class="table-search" autocomplete="off" id="dlPelaporanSearch" placeholder="Cari perihal atau tujuan satuan..." aria-label="Cari perihal atau tujuan satuan...">
               </div>
-              <select class="rpt-filter-select" id="dlPelaporanStatusFilter" aria-label="Filter status">
-                <option value="all">Semua Status</option>
-                <option value="Terbaru">Terbaru</option>
-                <option value="Sedang diproses">Sedang diproses</option>
-                <option value="Menunggu">Menunggu</option>
-                <option value="Revisi">Revisi</option>
-                <option value="Terlambat">Terlambat</option>
-                <option value="Dibatalkan">Dibatalkan</option>
-                <option value="Disetujui">Disetujui</option>
-                <option value="Ditolak">Ditolak</option>
-              </select>
-              <select class="rpt-filter-select" id="dlPelaporanSort" aria-label="Urutkan">
-                <option value="terbaru">Dibuat Terbaru</option>
-                <option value="terlama">Dibuat Terlama</option>
-              </select>
-              <span class="rpt-filter-count" id="dlPelaporanCount"></span>
+              <div class="dl-date-filter">
+                <label for="dlPelaporanDari">Dari</label>
+                <input type="date" id="dlPelaporanDari" class="table-filter" max="{{ now()->format('Y-m-d') }}">
+              </div>
+              <div class="dl-date-filter">
+                <label for="dlPelaporanSampai">Sampai</label>
+                <input type="date" id="dlPelaporanSampai" class="table-filter" max="{{ now()->format('Y-m-d') }}" value="{{ now()->format('Y-m-d') }}">
+              </div>
+              <div class="dl-pel-selects">
+                <select class="table-filter dl-kategori-filter" id="dlPelaporanStatusFilter" aria-label="Filter status">
+                  <option value="all">Semua Status</option>
+                  <option value="Terbaru">Terbaru</option>
+                  <option value="Sedang diproses">Sedang diproses</option>
+                  <option value="Menunggu">Menunggu</option>
+                  <option value="Revisi">Revisi</option>
+                  <option value="Terlambat">Terlambat</option>
+                  <option value="Dibatalkan">Dibatalkan</option>
+                  <option value="Disetujui">Disetujui</option>
+                  <option value="Ditolak">Ditolak</option>
+                </select>
+                <select class="table-filter dl-kategori-filter" id="dlPelaporanSort" aria-label="Urutkan">
+                  <option value="terbaru">Terbaru</option>
+                  <option value="terlama">Terlama</option>
+                </select>
+              </div>
+              <span class="dl-search-count" id="dlPelaporanCount"></span>
             </div>
 
             {{-- TANPA .tbl-wrap.tbl-scroll (max-height+overflow-y:auto) yang
@@ -5039,6 +5054,8 @@
           var statusSelect=document.getElementById('dlPelaporanStatusFilter');
           var sortSelect=document.getElementById('dlPelaporanSort');
           var count=document.getElementById('dlPelaporanCount');
+          var dariEl=document.getElementById('dlPelaporanDari');
+          var sampaiEl=document.getElementById('dlPelaporanSampai');
 
           var emptyBox=document.createElement('div');
           emptyBox.className='empty-state';emptyBox.style.display='none';
@@ -5092,11 +5109,25 @@
 
             var q=(input.value||'').trim().toLowerCase();
             var statusFilter=statusSelect.value;
+            // Rentang tanggal (Dari/Sampai) dibaca dari data-created-at (detik, unix).
+            // "Sampai" dihitung sampai akhir hari itu (23:59:59) supaya hari tsb ikut.
+            var dariMs=null,sampaiMs=null;
+            if(dariEl&&dariEl.value){var dp=dariEl.value.split('-');dariMs=new Date(+dp[0],+dp[1]-1,+dp[2],0,0,0,0).getTime();}
+            if(sampaiEl&&sampaiEl.value){var sp=sampaiEl.value.split('-');sampaiMs=new Date(+sp[0],+sp[1]-1,+sp[2],23,59,59,999).getTime();}
             var visible=0;
             items.forEach(function(item){
               var matchesSearch=!q||(item.dataset.search||'').indexOf(q)!==-1;
               var matchesStatus=statusFilter==='all'||item.dataset.status===statusFilter;
-              var match=matchesSearch&&matchesStatus;
+              var matchesDate=true;
+              if(dariMs!==null||sampaiMs!==null){
+                var tsMs=Number(item.dataset.createdAt)*1000;
+                if(!tsMs){matchesDate=false;}
+                else{
+                  if(dariMs!==null&&tsMs<dariMs)matchesDate=false;
+                  if(sampaiMs!==null&&tsMs>sampaiMs)matchesDate=false;
+                }
+              }
+              var match=matchesSearch&&matchesStatus&&matchesDate;
               item.style.display=match?'':'none';
               if(match)visible++;
             });
@@ -5106,6 +5137,8 @@
           input.addEventListener('input',apply);
           statusSelect.addEventListener('change',apply);
           sortSelect.addEventListener('change',apply);
+          if(dariEl)dariEl.addEventListener('change',apply);
+          if(sampaiEl)sampaiEl.addEventListener('change',apply);
           // Diekspos supaya sinkronisasi realtime di bawah bisa minta ulang
           // sort/filter/empty-state tiap ada kartu baru/berubah/hilang.
           window.cycloneRefreshAdminDataPelaporanFilter=apply;
