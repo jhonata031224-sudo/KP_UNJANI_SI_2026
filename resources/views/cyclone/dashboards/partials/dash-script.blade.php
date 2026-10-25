@@ -15,7 +15,7 @@
   (function(){function clean(root){if(!root)return;var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),n,a=[];while(n=w.nextNode())a.push(n);a.forEach(function(t){if(t.nodeValue&&t.nodeValue.trim())t.nodeValue=t.nodeValue.replace(/\s*\/\/\s*/g,' ').replace(/(^|\s)[-—](?=\s|$)/g,'$1').replace(/ {2,}/g,' ')})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){clean(document.body)});else clean(document.body)})();
 </script>
 @if(isset($pengaturan))
-<script src="{{ asset('js/admin-landing-editor.js') }}"></script>
+<script src="{{ asset('js/admin-landing-editor.js') }}?v={{ filemtime(public_path('js/admin-landing-editor.js')) }}"></script>
 <script src="{{ asset('js/admin-landing-live-preview.js') }}?v={{ filemtime(public_path('js/admin-landing-live-preview.js')) }}"></script>
 <script src="{{ asset('js/role-access-layout.js') }}"></script>
 @endif

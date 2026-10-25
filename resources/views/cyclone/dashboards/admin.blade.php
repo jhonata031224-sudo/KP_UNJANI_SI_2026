@@ -6422,21 +6422,28 @@
           .lp-image-placeholder svg{display:block;flex-shrink:0;}
           .lp-delete-img-btn{align-self:center;min-height:32px;height:32px;padding:0 13px;font-size:11px;}
 
-          /* ===== Latar Belakang Beranda (sub-panel Gambar & Video) =====
-             Susunan: preview di atas; di bawahnya tombol "Ganti Gambar/Video" (kiri) dan
-             "Hapus Gambar/Video" (kanan) BERSANDING, sama tinggi, dan dipusatkan sebagai
-             satu pasangan. Pakai flex-wrap + justify-content:center, dengan ::after
-             selebar 100% sebagai pemutus baris (preview selalu di baris sendiri).
+          /* ===== Latar Belakang Beranda (sub-panel Gambar & Video) + Logo Landing Page =====
+             Susunan: preview di atas; di bawahnya tombol "Ganti Gambar/Video/Logo" (kiri) dan
+             "Hapus ..." (kanan) BERSANDING, sama tinggi, dan dipusatkan sebagai satu
+             pasangan. Pakai flex-wrap + justify-content:center, dengan ::after selebar 100%
+             sebagai pemutus baris (preview selalu di baris sendiri).
              - gap kolom 0 + margin-left di tombol Hapus: kalau Hapus disembunyikan (belum
                ada file), tombol Ganti/Pilih File tetap tepat di tengah.
-             - .cyclone-file-wrap (dibuat JS) di-display:contents supaya tombol pemicu & nama
-               file jadi item flex langsung; nama file (kalau ada file dipilih) turun ke
+             - pembungkus tombol dari JS (.cyclone-file-wrap untuk Gambar/Video,
+               .landing-file-picker untuk Logo) di-display:contents supaya tombol pemicu &
+               nama file jadi item flex langsung; nama file (kalau ada file dipilih) turun ke
                baris sendiri di tengah, tidak merusak kesejajaran dua tombol.
-             Hanya berlaku di .lp-bg-type-panel -> Logo & Struktur Organisasi tidak berubah.
-             !important + prefix modal diperlukan karena .lp-landing-modal-body
+             - Logo: <label.landing-file-button> sebelumnya ditimpa
+               ".lp-landing-modal-body .form-field label{display:block!important}" (ikon jatuh
+               ke atas teks) & ".lp-tab-panel .form-field label span{color:gold}" (teks oranye);
+               di sini keduanya dikembalikan ke gaya tombol yang sama dengan tombol lain.
+             Hanya berlaku di .lp-bg-type-panel & .lp-logo-row -> Struktur Organisasi tidak
+             berubah. !important + prefix modal diperlukan karena .lp-landing-modal-body
              .lp-hero-image-row di atas memakai display:flex!important. */
           .lp-bg-type-panel .lp-hero-image-row,
-          .lp-landing-modal-body .lp-bg-type-panel .lp-hero-image-row{
+          .lp-landing-modal-body .lp-bg-type-panel .lp-hero-image-row,
+          .lp-hero-image-row.lp-logo-row,
+          .lp-landing-modal-body .lp-hero-image-row.lp-logo-row{
             display:flex!important;
             flex-direction:row!important;
             flex-wrap:wrap!important;
@@ -6449,22 +6456,44 @@
             width:100%;box-sizing:border-box;
           }
           .lp-bg-type-panel .lp-hero-image-row .lp-hero-preview-frame,
-          .lp-bg-type-panel .lp-hero-image-row .lp-image-placeholder{order:0;flex:0 0 auto;}
-          .lp-bg-type-panel .lp-hero-image-row::after{content:"";order:1;flex:0 0 100%;height:0;}
-          .lp-bg-type-panel .lp-hero-image-row .cyclone-file-wrap{display:contents!important;}
-          .lp-bg-type-panel .lp-hero-image-row .cyclone-file-trigger{order:2;flex:0 0 auto;margin-top:16px;}
-          .lp-bg-type-panel .lp-hero-image-row .lp-delete-img-btn{order:3;flex:0 0 auto;margin:16px 0 0 10px!important;}
-          .lp-bg-type-panel .lp-hero-image-row .cyclone-file-name{
-            order:4;flex:0 0 100%;margin-top:10px;text-align:center;max-width:100%;
+          .lp-bg-type-panel .lp-hero-image-row .lp-image-placeholder,
+          .lp-hero-image-row.lp-logo-row .lp-current-image,
+          .lp-hero-image-row.lp-logo-row .lp-image-placeholder{order:0;flex:0 0 auto;}
+          .lp-bg-type-panel .lp-hero-image-row::after,
+          .lp-hero-image-row.lp-logo-row::after{content:"";order:1;flex:0 0 100%;height:0;}
+          .lp-bg-type-panel .lp-hero-image-row .cyclone-file-wrap,
+          .lp-hero-image-row.lp-logo-row .landing-file-picker{display:contents!important;}
+          .lp-bg-type-panel .lp-hero-image-row .cyclone-file-trigger,
+          .lp-hero-image-row.lp-logo-row .landing-file-picker label.landing-file-button{order:2;flex:0 0 auto;margin:16px 0 0!important;}
+          .lp-bg-type-panel .lp-hero-image-row .lp-delete-img-btn,
+          .lp-hero-image-row.lp-logo-row .lp-delete-img-btn{order:3;flex:0 0 auto;margin:16px 0 0 10px!important;}
+          .lp-bg-type-panel .lp-hero-image-row .cyclone-file-name,
+          .lp-hero-image-row.lp-logo-row .landing-file-name{
+            order:4;flex:0 0 100%;margin-top:10px!important;text-align:center;max-width:100%!important;justify-content:center!important;
           }
           .lp-bg-type-panel .lp-hero-image-row .cyclone-file-name:empty{display:none;}
           /* Dua tombol: tinggi, huruf, radius & padding disamakan persis. */
           .lp-bg-type-panel .lp-hero-image-row .cyclone-file-trigger,
-          .lp-bg-type-panel .lp-hero-image-row .lp-delete-img-btn{
-            box-sizing:border-box;height:38px;min-height:38px;padding:0 15px;
-            display:inline-flex;align-items:center;justify-content:center;gap:7px;
-            font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.03em;line-height:1;
-            text-transform:uppercase;border-radius:8px;white-space:nowrap;
+          .lp-hero-image-row.lp-logo-row .landing-file-picker label.landing-file-button,
+          .lp-bg-type-panel .lp-hero-image-row .lp-delete-img-btn,
+          .lp-hero-image-row.lp-logo-row .lp-delete-img-btn{
+            box-sizing:border-box;height:38px!important;min-height:38px;min-width:0!important;padding:0 15px!important;
+            display:inline-flex;align-items:center!important;justify-content:center!important;gap:7px!important;
+            font-family:var(--mono)!important;font-size:11px!important;font-weight:700!important;letter-spacing:.03em!important;line-height:1!important;
+            text-transform:uppercase!important;border-radius:8px;white-space:nowrap;
+          }
+          /* Tombol Ganti Logo (label): teks ikut warna tombol (bukan oranye dari aturan "label span"),
+             ikon & teks sebaris. */
+          .lp-hero-image-row.lp-logo-row .landing-file-picker label.landing-file-button{
+            display:inline-flex!important;
+            color:var(--text)!important;background:var(--panel-alt)!important;border:1px solid var(--border)!important;
+          }
+          .lp-hero-image-row.lp-logo-row .landing-file-picker label.landing-file-button span{
+            color:inherit!important;font:inherit!important;letter-spacing:inherit!important;text-transform:inherit!important;
+            display:inline!important;height:auto!important;line-height:1!important;
+          }
+          .lp-hero-image-row.lp-logo-row .landing-file-picker label.landing-file-button:hover{
+            border-color:var(--gold-bright)!important;background:var(--panel)!important;color:var(--text)!important;
           }
           /* BG (Gambar Latar Beranda): rasio landscape, mengikuti bentuk asli
              foto latar (bukan kotak seperti logo) -- object-fit:cover supaya
