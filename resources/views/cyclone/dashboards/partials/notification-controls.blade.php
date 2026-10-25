@@ -241,7 +241,7 @@
     // (bukan `new Audio()` tiap kali) supaya file-nya sudah ter-preload di
     // browser dan tidak ada jeda saat diputar. Kalau Admin belum
     // mengunggah suara apapun, NOTIF_SOUND_URL null -> variabel ini tetap
-    // null & pemutaran di bawah otomatis dilewati (silent, tidak error).
+    // null & yang diputar adalah bunyi bawaan (bunyiBawaan) -- bukan senyap.
     var notifSoundAudio = NOTIF_SOUND_URL ? new Audio(NOTIF_SOUND_URL) : null;
     if (notifSoundAudio) notifSoundAudio.preload = 'auto';
 
@@ -254,8 +254,69 @@
     var notifKnownIds = {};
     notifications.forEach(function (n) { notifKnownIds[String(n.id)] = true; });
 
+    // Suara BAWAAN (dibuat lewat Web Audio, tanpa file): dipakai kalau Admin belum
+    // mengunggah suara kustom, supaya SEMUA notifikasi tetap berbunyi -- bukan senyap.
+    var notifAudioCtx = null;
+    function ambilAudioCtx() {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      if (!notifAudioCtx) notifAudioCtx = new AC();
+      return notifAudioCtx;
+    }
+    function bunyiBawaan() {
+      try {
+        var ctx = ambilAudioCtx();
+        if (!ctx) return;
+        if (ctx.state === 'suspended' && ctx.resume) ctx.resume();
+        var t0 = ctx.currentTime;
+        // dua nada naik pendek (ding-dong), lembut & tidak mengagetkan
+        [[880, 0], [1318.5, 0.16]].forEach(function (n) {
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          var mulai = t0 + n[1];
+          osc.type = 'sine';
+          osc.frequency.value = n[0];
+          gain.gain.setValueAtTime(0.0001, mulai);
+          gain.gain.exponentialRampToValueAtTime(0.28, mulai + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, mulai + 0.5);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(mulai);
+          osc.stop(mulai + 0.55);
+        });
+      } catch (e) {}
+    }
+
+    // Browser memblokir suara otomatis sebelum pengguna berinteraksi dengan halaman.
+    // Pada sentuhan/klik/tombol PERTAMA, "buka kunci" audio (putar senyap sekejap)
+    // supaya notifikasi berikutnya sudah boleh berbunyi.
+    var audioTerbuka = false;
+    function bukaKunciAudio() {
+      if (audioTerbuka) return;
+      audioTerbuka = true;
+      try {
+        var ctx = ambilAudioCtx();
+        if (ctx && ctx.state === 'suspended' && ctx.resume) ctx.resume();
+        if (notifSoundAudio) {
+          var vol = notifSoundAudio.volume;
+          notifSoundAudio.volume = 0;
+          var pr = notifSoundAudio.play();
+          if (pr && typeof pr.then === 'function') {
+            pr.then(function () { notifSoundAudio.pause(); notifSoundAudio.currentTime = 0; notifSoundAudio.volume = vol; })
+              .catch(function () { notifSoundAudio.volume = vol; });
+          } else { notifSoundAudio.volume = vol; }
+        }
+      } catch (e) {}
+      ['pointerdown', 'touchstart', 'keydown'].forEach(function (ev) {
+        document.removeEventListener(ev, bukaKunciAudio, true);
+      });
+    }
+    ['pointerdown', 'touchstart', 'keydown'].forEach(function (ev) {
+      document.addEventListener(ev, bukaKunciAudio, { capture: true, passive: true });
+    });
+
     function mainkanSuaraNotifikasi() {
-      if (!notifSoundAudio) return;
+      if (!notifSoundAudio) { bunyiBawaan(); return; }
       try {
         notifSoundAudio.currentTime = 0;
         var p = notifSoundAudio.play();

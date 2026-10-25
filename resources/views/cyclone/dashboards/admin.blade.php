@@ -7542,7 +7542,7 @@
           }
         </style>
         <div class="panel" style="margin-top:16px;">
-          <div class="panel-head"><div><h3>Suara Notifikasi</h3><p>Pasang satu file suara yang akan otomatis berbunyi di navbar semua dashboard (Admin, Pimpinan, dan semua Satuan) setiap kali ada notifikasi baru masuk ke lonceng.</p></div></div>
+          <div class="panel-head"><div><h3>Suara Notifikasi</h3><p>Semua notifikasi baru di navbar semua dashboard (Admin, Pimpinan, dan semua Satuan) otomatis berbunyi. Pasang satu file suara di sini untuk mengganti bunyi bawaan sistem.</p></div></div>
           <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;">
             @if($notifSoundExists)
               <div class="ns-status">
@@ -7556,8 +7556,8 @@
             @else
               <div class="kcard-empty" style="padding:20px 14px;">
                 <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="var(--text-dim)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                <div class="kcard-empty-title">Belum ada suara notifikasi</div>
-                <div class="kcard-empty-sub">Notifikasi masih senyap sampai kamu unggah satu file suara di bawah.</div>
+                <div class="kcard-empty-title">Belum ada suara kustom</div>
+                <div class="kcard-empty-sub">Notifikasi memakai bunyi bawaan sistem sampai kamu unggah satu file suara di bawah.</div>
               </div>
             @endif
 
