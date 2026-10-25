@@ -93,7 +93,7 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
 .cyclone-backup-upload-drop input[type="file"]{width:100%;box-sizing:border-box;color:var(--text);font-size:12px;}
 .cyclone-backup-upload-meta{margin-top:9px;font-size:11px;color:var(--text-dim);line-height:1.5;}
 .cyclone-backup-upload-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px;}.cyclone-backup-upload-actions .btn{font-weight:700!important;}
-@media(max-width:600px){.cyclone-backup-upload-modal{padding:14px;}.cyclone-backup-upload-card{padding:18px;}.cyclone-backup-upload-actions{flex-direction:column-reverse;}.cyclone-backup-upload-actions .btn{width:100%;}}
+@media(max-width:600px){.cyclone-backup-upload-modal{padding:14px;}.cyclone-backup-upload-card{padding:18px;}.cyclone-backup-upload-actions{flex-direction:row;justify-content:flex-end;align-items:center;gap:8px;}.cyclone-backup-upload-actions .btn{width:auto;flex:0 0 auto;height:36px;padding:0 14px;font-size:11px;letter-spacing:.06em;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;}}
 </style>
 
 <script>

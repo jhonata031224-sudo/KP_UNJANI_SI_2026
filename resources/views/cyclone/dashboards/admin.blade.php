@@ -3294,6 +3294,11 @@
             [data-tab-panel="backup"] .backup-riwayat-panel::before{display:none;}
             [data-tab-panel="backup"] .backup-riwayat-panel > .panel-head,
             [data-tab-panel="backup"] .backup-riwayat-panel > .log-filter-row{background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;padding:16px;margin:0 0 12px;}
+            /* Filter tanggal: Dari | Sampai | Reset sebaris, lebih kecil, rata (justify) selebar kartu */
+            [data-tab-panel="backup"] #backupFilterRow{flex-direction:row;flex-wrap:nowrap;align-items:flex-end;justify-content:space-between;gap:8px;}
+            [data-tab-panel="backup"] #backupFilterRow .log-filter-field{flex:1 1 0;min-width:0;}
+            [data-tab-panel="backup"] #backupFilterRow .table-filter{width:100%;min-width:0;height:36px;box-sizing:border-box;padding:0 8px;font-size:12px;}
+            [data-tab-panel="backup"] #backupFilterRow .log-filter-reset{width:36px;height:36px;flex:0 0 36px;}
             /* Mode terang: tiap panel/kartu diberi bayangan hitam blur seperti panel lain */
             :root[data-theme="light"] [data-tab-panel="backup"] .backup-riwayat-panel > .panel-head,
             :root[data-theme="light"] [data-tab-panel="backup"] .backup-riwayat-panel > .log-filter-row,
