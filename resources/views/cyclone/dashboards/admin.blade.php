@@ -158,11 +158,12 @@
   @media(max-width:640px){.user-modal-actions{flex-direction:row;align-items:center;justify-content:flex-end;}}
   @media(max-width:640px){.user-modal-card{padding:20px;}}
   /* Modal Satuan (Tambah & Ubah) + Tambah/Ubah Pengguna, mobile: tombol Batal & Simpan
-     bersandingan dalam satu baris, rata kanan di pojok kanan bawah (Batal di kiri Simpan).
+     bersandingan dalam satu baris, rata kanan di pojok kanan bawah (Batal di kiri Simpan),
+     ukuran dikecilkan (36px, padding 14px) supaya keduanya lebih rapat ke kanan.
      (Sebelumnya bertumpuk & di tengah: Simpan di atas, Batal di bawah.) */
   @media(max-width:640px){
     #tambahSatuanModal .user-modal-actions,#ubahSatuanModal .user-modal-actions,#tambahPenggunaModal .user-modal-actions,#ubahPenggunaModal .user-modal-actions{flex-direction:row;align-items:center;justify-content:flex-end;gap:10px;margin-top:8px;}
-    #tambahSatuanModal .user-modal-actions .btn,#ubahSatuanModal .user-modal-actions .btn,#tambahPenggunaModal .user-modal-actions .btn,#ubahPenggunaModal .user-modal-actions .btn{width:auto;flex:0 0 auto;align-self:auto;height:44px;padding:0 22px;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;}
+    #tambahSatuanModal .user-modal-actions .btn,#ubahSatuanModal .user-modal-actions .btn,#tambahPenggunaModal .user-modal-actions .btn,#ubahPenggunaModal .user-modal-actions .btn{width:auto;flex:0 0 auto;align-self:auto;height:36px;padding:0 14px;font-size:11px;letter-spacing:.06em;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;}
   }
   /* Form di dalam modal dibuat 1 kolom terus (bukan ikut breakpoint global .form-grid),
      supaya opsi teks panjang di dropdown Satuan tidak memepetkan/merusak layout 2 kolom
