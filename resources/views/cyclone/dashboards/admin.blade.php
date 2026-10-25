@@ -269,6 +269,19 @@
   .dl-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;}
   .dl-foot p{font-size:11.5px;color:var(--text-dim);}
   @media(max-width:640px){.dl-section-head{flex-direction:column;}.dl-download{align-self:stretch;}.dl-download-btn{width:100%;justify-content:center;}.dl-search-row{flex-direction:column;align-items:stretch;}.dl-search-count{margin-left:0;}.dl-foot{flex-direction:column;align-items:stretch;text-align:center;}}
+  /* Arsip Data (Data Pengguna / Aktivitas / Surat), mobile: filter ditata grid 2 kolom sama lebar --
+     Cari penuh; Dari | Sampai sebaris; Kategori | Reset sebaris. Tepi kiri-kanan sejajar, tinggi seragam 36px. */
+  @media(max-width:640px){
+    .dl-section .dl-search-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:end;}
+    .dl-section .dl-search-row .table-search-wrap{grid-column:1/-1;max-width:none!important;width:100%;}
+    .dl-section .dl-search-row .dl-date-filter{min-width:0;}
+    .dl-section .dl-search-row .dl-date-filter .table-filter{width:100%;min-width:0;height:36px;box-sizing:border-box;padding:0 8px;font-size:12px;}
+    .dl-section .dl-search-row .styled-select-wrap,
+    .dl-section .dl-search-row select.dl-kategori-filter{grid-column:1;width:100%!important;max-width:none!important;min-width:0!important;flex:none!important;}
+    .dl-section .dl-search-row .styled-select-trigger{height:36px;font-size:12px;padding:0 9px;}
+    .dl-section .dl-search-row .dl-filter-reset{grid-column:2;width:100%;height:36px;}
+    .dl-section .dl-search-row .dl-search-count{grid-column:1/-1;margin:0;}
+  }
 
   /* ===== Arsip Data > Data Surat (#tblDlSurat) -- hanya tabel ini ===== */
   /* Desktop/tablet: kolom Satuan Pengirim s.d. Dibuat (judul + isi) rata tengah */
