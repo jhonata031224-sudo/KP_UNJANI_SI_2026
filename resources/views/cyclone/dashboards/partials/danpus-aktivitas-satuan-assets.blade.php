@@ -34,7 +34,6 @@
 .akt-card-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .akt-link-tindak{font-size:11.5px;font-weight:700;color:#d97706;text-decoration:none}
 .akt-link-tindak:hover{text-decoration:underline}
-.akt-kcard-info{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;font-size:10.5px;color:var(--p-muted)}
 .akt-card-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
 .akt-chip{font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--p-surface-2);color:var(--p-muted);border:1px solid var(--p-border)}
 .akt-chip-perlu{color:#fff;background:#d97706;border-color:#d97706}

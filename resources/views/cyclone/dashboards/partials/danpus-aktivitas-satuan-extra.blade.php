@@ -52,12 +52,8 @@
 @if($tampilKendala)
 @php $kendalaList = $aktivitasDanpus['kendala'][$sid]; @endphp
 <div class="akt-view" data-akt-view="kendala" hidden>
-  <div class="akt-kpi-row">
-    <div class="akt-kpi"><span>Total Kendala</span><b>{{ $rk['kendala_total'] }}</b></div>
-    <div class="akt-kpi"><span>Menunggu Konfirmasi</span><b class="tone-amber">{{ $rk['kendala_menunggu'] }}</b></div>
-    <div class="akt-kpi"><span>Dikonfirmasi</span><b class="tone-green">{{ $rk['kendala_dikonfirmasi'] }}</b></div>
-  </div>
-  <p class="akt-note">Laporan kendala {{ $m['nama'] }} ke Danpus. Konfirmasi dilakukan di menu Kendala Kasansi.</p>
+<div class="section-block">
+  <div class="section-head-clean"><div><h2>Aktivitas Kendala {{ $m['nama'] }}</h2><p>Laporan kendala {{ $m['nama'] }} ke Danpus. Klik satu baris untuk melihat alurnya. Hanya untuk dilihat; konfirmasi tetap lewat menu Kendala Kasansi.</p></div></div>
   @if($kendalaList->isNotEmpty())
   <div class="akt-toolbar" data-akt-toolbar>
     <div class="akt-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" data-akt-f="q" placeholder="Cari perihal kendala..." aria-label="Cari kendala" autocomplete="off"></div>
@@ -66,14 +62,15 @@
   </div>
   <div class="akt-count" data-akt-count data-akt-unit="kendala">Menampilkan {{ $kendalaList->count() }} dari {{ $kendalaList->count() }} kendala</div>
   @endif
-  <div class="kcard-grid" data-akt-grid data-akt-card=".kcard">
+  <div class="akt-list" data-akt-grid data-akt-card=".akt-krow">
     @forelse($kendalaList as $k)
-      @include('cyclone.dashboards.partials.danpus-aktivitas-kendala-card', ['k' => $k, 'namaDanpus' => $aktivitasDanpus['danpusNama'] ?? $satuan->nama])
+      @include('cyclone.dashboards.partials.danpus-aktivitas-kendala-row', ['k' => $k, 'namaDanpus' => $aktivitasDanpus['danpusNama'] ?? $satuan->nama, 'm' => $m])
     @empty
       <div class="empty-state"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><div class="empty-state-title">Belum ada laporan kendala dari {{ $m['nama'] }}</div></div>
     @endforelse
   </div>
   <div class="empty-state akt-nomatch" data-akt-nomatch style="display:none"><div class="empty-state-title">Tidak ada kendala yang cocok dengan pencarian/filter.</div></div>
+</div>
 </div>
 @endif
 @endif
