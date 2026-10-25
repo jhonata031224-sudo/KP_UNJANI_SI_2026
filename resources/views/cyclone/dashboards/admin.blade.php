@@ -6128,11 +6128,13 @@
             .lp-landing-modal-body .form-grid{grid-template-columns:1fr!important;}
             .lp-landing-modal-head,.lp-landing-modal-body,.lp-landing-modal-foot{padding:14px 16px!important;}
             /* Catatan di atas, tombol Tutup & Simpan bersandingan rata kanan di pojok kanan bawah. */
-            .lp-landing-modal-foot{flex-direction:column;align-items:stretch;gap:10px;}
-            .lp-landing-modal-foot-actions{flex-direction:row;justify-content:flex-end;gap:8px;}
-            /* Ukuran disamakan dengan modal Tambah/Ubah Pengguna: tinggi 36px, huruf 11px, padding 14px. */
-            .lp-landing-modal-foot-actions .btn{width:auto;flex:0 0 auto;justify-content:center;display:inline-flex;align-items:center;height:36px;padding:0 14px;font-size:11px;letter-spacing:.06em;white-space:nowrap;}
-            .lp-landing-modal-foot-actions .btn svg{width:14px;height:14px;}
+            /* align-items WAJIB !important: aturan dasar .lp-landing-modal-foot memakai align-items:center!important,
+               sehingga di mobile (kolom) grup tombol ikut terpusat, bukan nempel ke kanan. */
+            .lp-landing-modal-foot{flex-direction:column;align-items:stretch!important;gap:10px!important;}
+            .lp-landing-modal-foot-actions{flex-direction:row;justify-content:flex-end;align-self:stretch;width:100%;gap:6px;}
+            /* Tombol diperkecil: tinggi 32px, huruf 10px, padding 10px, tanpa bayangan; menempel di pojok kanan bawah. */
+            .lp-landing-modal-foot-actions .btn{width:auto;flex:0 0 auto;justify-content:center;display:inline-flex;align-items:center;height:32px;padding:0 10px;font-size:10px;letter-spacing:.05em;white-space:nowrap;box-shadow:none;}
+            .lp-landing-modal-foot-actions .btn svg{width:12px;height:12px;margin-right:4px;}
             .lp-landing-modal-notice{justify-content:flex-start;}
           }
           @keyframes lpFadeIn{ from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:none;} }
