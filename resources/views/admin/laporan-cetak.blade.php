@@ -55,7 +55,7 @@
     <thead><tr><th>#</th><th>Perihal</th><th>Satuan Pengirim</th><th>Satuan Tujuan</th><th>Prioritas</th><th>Status</th><th>Dibuat</th></tr></thead>
     <tbody>
       @foreach($semuaSurat as $i => $s)
-      <tr><td>{{ $i + 1 }}</td><td>{{ $s->perihal ?: '-' }}</td><td>{{ $s->satuan?->nama ?? '-' }}</td><td>{{ $s->tujuanSatuan?->nama ?? '-' }}</td><td>{{ $s->prioritas ?: '-' }}</td><td>{{ $s->labelStatus() }}</td><td>{{ $s->created_at?->format('d/m/Y H:i') }}</td></tr>
+      <tr><td>{{ $i + 1 }}</td><td>{{ $s->perihalUntuk(auth()->user()?->satuan_id) ?: '-' }}</td><td>{{ $s->satuan?->nama ?? '-' }}</td><td>{{ $s->tujuanSatuan?->nama ?? '-' }}</td><td>{{ $s->prioritas ?: '-' }}</td><td>{{ $s->labelStatus() }}</td><td>{{ $s->created_at?->format('d/m/Y H:i') }}</td></tr>
       @endforeach
     </tbody>
   </table>

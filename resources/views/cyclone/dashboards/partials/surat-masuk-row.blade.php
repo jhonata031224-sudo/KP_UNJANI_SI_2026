@@ -1,4 +1,8 @@
 @php
+    // Surat Rahasia: perihal & lampiran hanya untuk yang berhak (LaporanSurat::bolehLihatIsi).
+    $vidRahasia    = $satuan->id ?? null;
+    $bolehIsi      = $s->bolehLihatIsi($vidRahasia);
+    $perihalTampil = $s->perihalUntuk($vidRahasia);
     // Tentukan apakah satuan ini adalah penerima utama atau tembusan/view-only
     $isTujuanUtama = (int) $s->tujuan_satuan_id === (int) $satuan->id;
     $kodeSatuan    = strtoupper((string) $satuan->kode);
@@ -104,7 +108,7 @@
     // Kelompokkan tembusan per riwayat_id agar bisa ditempel ke step TERUSKAN
     $tembusanPerRiwayat = $s->tembusans->groupBy('laporan_surat_riwayat_id');
 
-    $riwayatJson  = $riwayats->map(function ($r) use ($sembunyikanIsiRahasia, $aksiBerisiIsiSurat, $tembusanPerRiwayat) {
+    $riwayatJson  = $riwayats->map(function ($r) use ($sembunyikanIsiRahasia, $aksiBerisiIsiSurat, $tembusanPerRiwayat, $s, $bolehIsi, $vidRahasia) {
         // Cabang paralel: satuan yang ikut menerima di waktu yang sama (view_only / tembusan)
         // tapi bukan penerima utama -- ditampilkan sebagai "parallel" di timeline
         $tembusanStep = $tembusanPerRiwayat->get($r->id, collect());
@@ -125,8 +129,8 @@
             'catatan'         => ($sembunyikanIsiRahasia && in_array($r->aksi, $aksiBerisiIsiSurat, true)) ? '' : $r->catatan,
             'disposisi'       => $r->disposisi,
             'tindakan'        => $r->tindakan,
-            'lampiran_url'    => $r->lampiran_path ? asset('storage/' . $r->lampiran_path) : null,
-            'lampiran_nama'   => $r->lampiran_nama_asli,
+            'lampiran_url'    => $bolehIsi ? $s->lampiranUrlUntuk($r->lampiran_path, $vidRahasia, $r->id) : null,
+            'lampiran_nama'   => $bolehIsi ? $r->lampiran_nama_asli : null,
             'tanggal'         => $r->created_at->translatedFormat('d M Y H:i'),
             'siklus'          => $r->siklus,
             'paralel'         => $paralel, // penerima paralel/bersamaan (Urdal view-only, dst)
@@ -159,17 +163,17 @@
     $disposisiAktif = $s->disposisi_terakhir ?? $s->disposisi;
     $tindakanAktif  = $s->tindakan_terakhir ?? $s->tindakan;
 @endphp
-<div class="surat-file-card" data-surat-id="{{ $s->id }}" data-created-at="{{ $s->created_at->timestamp }}" data-search="{{ strtolower($s->perihal.' '.($s->satuan->nama ?? '').' '.($s->satuan->kode ?? '')) }}" data-prioritas="{{ $s->prioritas }}">
+<div class="surat-file-card" data-surat-id="{{ $s->id }}" data-created-at="{{ $s->created_at->timestamp }}" data-search="{{ strtolower($perihalTampil.' '.($s->satuan->nama ?? '').' '.($s->satuan->kode ?? '')) }}" data-prioritas="{{ $s->prioritas }}">
     <div class="surat-file-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
     <span class="status-badge {{ $badgeCls }} surat-file-card-badge">{{ $badgeLabel }}</span>
-    <div class="surat-file-card-title">{{ $s->perihal }}</div>
+    <div class="surat-file-card-title">{{ $perihalTampil }}</div>
     <div><div class="surat-file-card-dari-label">Dari</div><div class="surat-file-card-dari-value"><span>{{ $s->satuan->nama ?? '-' }}</span><span class="satuan-pill">{{ $s->satuan->kode ?? $s->satuan->nama ?? '-' }}</span></div></div>
     <div class="surat-file-card-divider"></div>
     <div class="surat-file-card-meta"><span class="surat-file-card-meta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span><div><div class="surat-file-card-meta-label">Tanggal Dibuat</div><div class="surat-file-card-meta-value">{{ $s->created_at->translatedFormat('d M Y H:i') }}</div></div></div>
     <div class="surat-file-card-divider"></div>
     <button type="button" class="surat-file-card-btn" onclick="openSuratDetail(this)"
         data-context="masuk"
-        data-perihal="{{ e($s->perihal) }}"
+        data-perihal="{{ e($perihalTampil) }}"
         data-tujuan="{{ e($satuan->nama ?? '-') }}"
         data-tujuan-kode="{{ e($satuan->kode ?? '') }}"
         data-alur-hops="{{ $alurHops->toJson() }}"
@@ -187,9 +191,9 @@
         data-dibuat-tanggal="{{ e($s->created_at->translatedFormat('d M Y H:i')) }}"
         data-dikonfirmasi-oleh="{{ e($s->dikonfirmasiOleh->name ?? '') }}"
         data-dikonfirmasi-tanggal="{{ $s->dikonfirmasi_at ? e($s->dikonfirmasi_at->translatedFormat('d M Y H:i')) : '' }}"
-        data-lampiran-url="{{ $s->lampiran_path ? asset('storage/'.$s->lampiran_path) : '' }}"
-        data-lampiran-nama="{{ $s->lampiran_path ? ($s->lampiran_nama_asli ?: basename($s->lampiran_path)) : '' }}"
-        data-lampiran-size="{{ $s->lampiran_size ?? '' }}"
+        data-lampiran-url="{{ $bolehIsi ? ($s->lampiranUrlUntuk($s->lampiran_path, $vidRahasia) ?? '') : '' }}"
+        data-lampiran-nama="{{ ($bolehIsi && $s->lampiran_path) ? ($s->lampiran_nama_asli ?: basename($s->lampiran_path)) : '' }}"
+        data-lampiran-size="{{ $bolehIsi ? ($s->lampiran_size ?? '') : '' }}"
         data-surat-id="{{ $s->id }}"
         data-is-selesai="{{ $s->isSelesai() ? '1' : '0' }}"
         data-siklus="{{ $s->siklus }}"
@@ -236,7 +240,7 @@
     @if($canKirimBalasan)
     <button type="button" class="surat-file-card-kirim" onclick="bukaKirimBalasanSurat(this)"
         data-induk-id="{{ $s->id }}"
-        data-perihal="{{ e($s->perihal) }}"
+        data-perihal="{{ e($perihalTampil) }}"
         data-action="{{ route('laporan-surat.store') }}"
     ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>Kirim Surat</button>
     @endif

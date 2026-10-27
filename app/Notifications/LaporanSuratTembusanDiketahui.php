@@ -32,10 +32,14 @@ class LaporanSuratTembusanDiketahui extends Notification
 
     public function toDatabase($notifiable): array
     {
+        // Surat Rahasia: samarkan perihal bagi pihak yang tidak berhak melihatnya.
+        $this->surat->loadMissing('riwayats');
+        $perihal = $this->surat->perihalUntuk($notifiable->satuan_id ?? null);
+
         return [
             'laporan_surat_id' => $this->surat->id,
-            'perihal'          => $this->surat->perihal,
-            'pesan'            => "{$this->oleh} sudah mengetahui surat \"{$this->surat->perihal}\".",
+            'perihal'          => $perihal,
+            'pesan'            => "{$this->oleh} sudah mengetahui surat \"{$perihal}\".",
             'tipe'             => 'surat_info',
         ];
     }

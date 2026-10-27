@@ -58,11 +58,12 @@ class LaporanSuratRiwayat extends Model
 
     public function getLampiranSizeAttribute(): ?string
     {
-        if (! $this->lampiran_path || ! Storage::disk('public')->exists($this->lampiran_path)) {
+        $disk = LaporanSurat::diskLampiranAda($this->lampiran_path);
+        if (! $disk) {
             return null;
         }
 
-        $bytes = Storage::disk('public')->size($this->lampiran_path);
+        $bytes = Storage::disk($disk)->size($this->lampiran_path);
 
         return $bytes < 1024 * 1024
             ? max(1, round($bytes / 1024)) . ' KB'

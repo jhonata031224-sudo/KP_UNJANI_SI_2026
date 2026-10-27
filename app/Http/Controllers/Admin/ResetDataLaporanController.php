@@ -201,7 +201,7 @@ class ResetDataLaporanController extends Controller
                     'tipe' => 'surat',
                     'subtipe' => 'Surat',
                     'subtipe_badge' => 'purple',
-                    'judul' => $row->perihal ?: 'Surat #'.$row->id,
+                    'judul' => $row->perihalUntuk(auth()->user()?->satuan_id) ?: 'Surat #'.$row->id,
                     'satuan' => self::jalurAlurSurat($row),
                     'alur_ket' => self::keteranganAlurSurat($row),
                     'grup' => self::grupSurat($row),
@@ -209,7 +209,9 @@ class ResetDataLaporanController extends Controller
                     'tanggal' => $row->created_at ? $row->created_at->translatedFormat('d M Y H:i') : '-',
                     'status' => $row->labelStatus(),
                     'lampiran' => !empty($row->lampiran_path),
-                    'lampiran_files' => self::daftarLampiran(array_merge(
+                    // Surat Rahasia: tautan/nama berkas tidak ditampilkan ke Admin (hanya penanda).
+                    'lampiran_rahasia' => $row->isRahasia(),
+                    'lampiran_files' => $row->isRahasia() ? [] : self::daftarLampiran(array_merge(
                         [['path' => $row->lampiran_path, 'nama' => $row->lampiran_nama_asli]],
                         $row->riwayats->map(fn ($r) => ['path' => $r->lampiran_path, 'nama' => $r->lampiran_nama_asli])->all()
                     )),
@@ -641,7 +643,7 @@ class ResetDataLaporanController extends Controller
                             if ($row) {
                                 // Hapus berkas lampiran surat utama
                                 if (!empty($row->lampiran_path)) {
-                                    Storage::disk('public')->delete($row->lampiran_path);
+                                    LaporanSurat::hapusBerkasLampiran($row->lampiran_path); // disk publik & privat (rahasia)
                                 }
 
                                 // Hapus berkas lampiran di setiap riwayat alur (disposisi/teruskan/balasan)
@@ -650,7 +652,7 @@ class ResetDataLaporanController extends Controller
                                     ->whereNotNull('lampiran_path')
                                     ->pluck('lampiran_path')
                                     ->filter()
-                                    ->each(fn ($p) => Storage::disk('public')->delete($p));
+                                    ->each(fn ($p) => LaporanSurat::hapusBerkasLampiran($p));
 
                                 // Bersihkan tembusan/view-only & riwayat alur di semua satuan/pengguna terkait
                                 DB::table('laporan_surat_tembusans')->where('laporan_surat_id', $id)->delete();
@@ -706,7 +708,10 @@ class ResetDataLaporanController extends Controller
                             ->whereNotNull($t['file_column'])
                             ->pluck($t['file_column'])
                             ->filter()
-                            ->each(fn ($path) => Storage::disk('public')->delete($path));
+                            ->each(function ($path) {
+                                Storage::disk('public')->delete($path);
+                                Storage::disk(LaporanSurat::DISK_RAHASIA)->delete($path); // lampiran surat rahasia
+                            });
                     }
 
                     $totalBarisTerhapus += DB::table($t['table'])->count();

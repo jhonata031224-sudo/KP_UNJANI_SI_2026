@@ -361,6 +361,135 @@ class LaporanSurat extends Model
         return (string) $this->deskripsi;
     }
 
+    // ------------------------------------------------------------------
+    // Surat RAHASIA: siapa yang boleh melihat isinya (perihal & lampiran)
+    // ------------------------------------------------------------------
+
+    /** Label pengganti perihal bagi pihak yang tidak berhak melihat surat rahasia. */
+    public const LABEL_PERIHAL_RAHASIA = 'Surat Rahasia';
+
+    /** Disk PRIVAT untuk lampiran surat Rahasia (config/filesystems.php; tidak bisa dibuka lewat URL publik). */
+    public const DISK_RAHASIA = 'rahasia';
+
+    /**
+     * Satuan yang TIDAK pernah berhak membaca isi surat rahasia walau terlibat di
+     * alur: Wadan (hanya meneruskan), Urdal (view-only / arsip) & Admin (pengawas).
+     */
+    public const KODE_TANPA_AKSES_RAHASIA = ['WADAN', 'URDAL', 'ADMIN'];
+
+    /** @var array<int,string> memo kode satuan per request. */
+    private static array $kodeSatuanMemo = [];
+
+    private static function kodeSatuan(int $satuanId): string
+    {
+        return self::$kodeSatuanMemo[$satuanId]
+            ??= strtoupper((string) Satuan::whereKey($satuanId)->value('kode'));
+    }
+
+    /**
+     * Boleh melihat ISI surat (perihal asli & lampiran)?
+     *   - Bukan rahasia -> semua pihak.
+     *   - Rahasia       -> pengirim asli (Danpus), dan satuan yang terlibat langsung
+     *                      sebagai tujuan/penerima/pengirim langkah (mis. satuan tujuan
+     *                      akhir & satuan pengirim balasan) KECUALI Wadan, Urdal, Admin
+     *                      (lihat KODE_TANPA_AKSES_RAHASIA). Pihak lain (transit,
+     *                      tembusan, view-only) hanya tahu "ada surat rahasia".
+     * Alur surat TIDAK berubah: pihak yang tidak berhak tetap bisa meneruskan/
+     * mengonfirmasi, hanya isinya tersembunyi.
+     */
+    public function bolehLihatIsi(?int $viewerSatuanId): bool
+    {
+        if (! $this->isRahasia()) {
+            return true;
+        }
+        if (! $viewerSatuanId) {
+            return false;
+        }
+
+        $v = (int) $viewerSatuanId;
+        if ($v === (int) $this->satuan_id) {
+            return true;
+        }
+        if (in_array(self::kodeSatuan($v), self::KODE_TANPA_AKSES_RAHASIA, true)) {
+            return false;
+        }
+        if ($v === (int) $this->tujuan_satuan_id) {
+            return true;
+        }
+
+        return $this->riwayats->contains(
+            fn ($r) => in_array($v, [(int) $r->pengirim_satuan_id, (int) $r->penerima_satuan_id], true)
+        );
+    }
+
+    /** Perihal yang boleh ditampilkan ke satuan $viewerSatuanId. */
+    public function perihalUntuk(?int $viewerSatuanId): string
+    {
+        return $this->bolehLihatIsi($viewerSatuanId)
+            ? (string) $this->perihal
+            : self::LABEL_PERIHAL_RAHASIA;
+    }
+
+    /** Perihal untuk catatan netral (log aktivitas dsb.) -- tak pernah membocorkan perihal rahasia. */
+    public function perihalLog(): string
+    {
+        return $this->isRahasia()
+            ? self::LABEL_PERIHAL_RAHASIA . ' #' . $this->id
+            : (string) $this->perihal;
+    }
+
+    /**
+     * URL berkas lampiran untuk $viewerSatuanId. Surat biasa: URL publik seperti sebelumnya.
+     * Surat rahasia: lewat route ber-otorisasi (berkas ada di disk privat); null bila tak berhak.
+     */
+    public function lampiranUrlUntuk(?string $path, ?int $viewerSatuanId, ?int $riwayatId = null): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+        if (! $this->isRahasia()) {
+            return asset('storage/' . $path);
+        }
+        if (! $this->bolehLihatIsi($viewerSatuanId)) {
+            return null;
+        }
+
+        return $riwayatId
+            ? route('laporan-surat.lampiran-riwayat', [$this->id, $riwayatId])
+            : route('laporan-surat.lampiran', $this->id);
+    }
+
+    /** Disk untuk menyimpan lampiran BARU milik surat ini. */
+    public function diskLampiranBaru(): string
+    {
+        return $this->isRahasia() ? self::DISK_RAHASIA : 'public';
+    }
+
+    /** Hapus berkas lampiran dari disk publik DAN privat (berkas hanya ada di salah satunya). */
+    public static function hapusBerkasLampiran(?string $path): void
+    {
+        if (! $path) {
+            return;
+        }
+        Storage::disk('public')->delete($path);
+        Storage::disk(self::DISK_RAHASIA)->delete($path);
+    }
+
+    /** Disk tempat berkas $path sebenarnya berada (privat lebih dulu, lalu publik); null bila tidak ada. */
+    public static function diskLampiranAda(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+        foreach ([self::DISK_RAHASIA, 'public'] as $disk) {
+            if (Storage::disk($disk)->exists($path)) {
+                return $disk;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Status surat sudah "pindah tangan" (dikonfirmasi diterima oleh
      * pemegang saat ini) TAPI dilihat dari sudut pandang $viewerSatuanId
@@ -431,11 +560,12 @@ class LaporanSurat extends Model
      */
     public function getLampiranSizeAttribute(): ?string
     {
-        if (! $this->lampiran_path || ! Storage::disk('public')->exists($this->lampiran_path)) {
+        $disk = self::diskLampiranAda($this->lampiran_path);
+        if (! $disk) {
             return null;
         }
 
-        $bytes = Storage::disk('public')->size($this->lampiran_path);
+        $bytes = Storage::disk($disk)->size($this->lampiran_path);
 
         return $bytes < 1024 * 1024
             ? max(1, round($bytes / 1024)) . ' KB'

@@ -28,12 +28,20 @@ class LaporanSuratBaruDiterima extends Notification
 
     public function toDatabase($notifiable): array
     {
+        // Surat Rahasia: perihal asli hanya untuk pihak yang berhak (lihat
+        // LaporanSurat::bolehLihatIsi); pihak lain (Wadan, Urdal, dst) melihat "Surat Rahasia".
+        $this->surat->loadMissing('riwayats');
+        $perihal = $this->surat->perihalUntuk($notifiable->satuan_id ?? null);
+        $pesan = $this->pesan !== null
+            ? str_replace((string) $this->surat->perihal, $perihal, $this->pesan)
+            : "Surat baru dari {$this->surat->satuan->nama}: {$perihal}";
+
         return [
             'laporan_surat_id' => $this->surat->id,
             'satuan_asal' => $this->surat->satuan->nama,
-            'perihal' => $this->surat->perihal,
+            'perihal' => $perihal,
             'prioritas' => $this->surat->prioritas,
-            'pesan' => $this->pesan ?? "Surat baru dari {$this->surat->satuan->nama}: {$this->surat->perihal}",
+            'pesan' => $pesan,
             // Section #surat-masuk ada persis sama di dashboard Satuan
             // maupun Pimpinan, jadi aman dipakai apa adanya utk siapapun
             // penerimanya.

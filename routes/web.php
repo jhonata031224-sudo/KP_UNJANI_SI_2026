@@ -215,6 +215,13 @@ Route::post('/laporan-surat/{laporanSurat}/disposisi-ulang', [LaporanSuratContro
 Route::patch('/laporan-surat/{laporanSurat}/konfirmasi-tembusan', [LaporanSuratController::class, 'konfirmasiTembusan'])
     ->middleware(['auth', 'modul:surat'])
     ->name('laporan-surat.konfirmasi-tembusan');
+// Lampiran surat Rahasia (disk privat) -- diperiksa hak aksesnya di controller.
+Route::get('/laporan-surat/{laporanSurat}/lampiran', [LaporanSuratController::class, 'lampiran'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.lampiran');
+Route::get('/laporan-surat/{laporanSurat}/riwayat/{riwayat}/lampiran', [LaporanSuratController::class, 'lampiran'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.lampiran-riwayat');
 Route::delete('/laporan-surat/{laporanSurat}', [LaporanSuratController::class, 'destroy'])
     ->middleware(['auth', 'modul:surat'])
     ->name('laporan-surat.destroy');

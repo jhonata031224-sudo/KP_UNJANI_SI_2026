@@ -44,6 +44,10 @@ class LaporanSuratBalasanDikonfirmasi extends Notification
 
     public function toDatabase($notifiable): array
     {
+        // Surat Rahasia: samarkan perihal bagi pihak yang tidak berhak melihatnya.
+        $this->surat->loadMissing('riwayats');
+        $perihal = $this->surat->perihalUntuk($notifiable->satuan_id ?? null);
+
         // PENGIRIM ASLI (satuan bawahan, mis. Kasansi): notifikasi bisa diklik
         // dan mengarah ke Arsip Surat, tempat suratnya sekarang berada. Tanpa
         // 'tipe' => 'surat_info' supaya lonceng memperlakukannya sebagai
@@ -56,12 +60,12 @@ class LaporanSuratBalasanDikonfirmasi extends Notification
             $tab = $this->tab
                 ?? (($this->oleh === 'Danpus' || $this->surat->is_selesai) ? '#arsip-surat' : '#kirim-surat');
             $pesan = $this->sampai
-                ? "Surat \"{$this->surat->perihal}\" sudah sampai dan dikonfirmasi (ACC) oleh {$this->oleh}."
-                : "Surat \"{$this->surat->perihal}\" sudah dikonfirmasi (ACC) oleh {$this->oleh}.";
+                ? "Surat \"{$perihal}\" sudah sampai dan dikonfirmasi (ACC) oleh {$this->oleh}."
+                : "Surat \"{$perihal}\" sudah dikonfirmasi (ACC) oleh {$this->oleh}.";
 
             return [
                 'laporan_surat_id' => $this->surat->id,
-                'perihal'          => $this->surat->perihal,
+                'perihal'          => $perihal,
                 'pesan'            => $pesan,
                 'url'              => route('dashboard').$tab,
             ];
@@ -70,8 +74,8 @@ class LaporanSuratBalasanDikonfirmasi extends Notification
         // Pengirim balasan naik: tetap informasi saja (tidak bisa diklik).
         return [
             'laporan_surat_id' => $this->surat->id,
-            'perihal'          => $this->surat->perihal,
-            'pesan'            => "Balasan surat \"{$this->surat->perihal}\" sudah dikonfirmasi (ACC) oleh Danpus.",
+            'perihal'          => $perihal,
+            'pesan'            => "Balasan surat \"{$perihal}\" sudah dikonfirmasi (ACC) oleh Danpus.",
             'tipe'             => 'surat_info',
         ];
     }

@@ -15,6 +15,10 @@
   (SR-000123), sama dengan kartu pemantauan Duktek.
 --}}
 @php
+    // Surat Rahasia: perihal & lampiran hanya untuk yang berhak (LaporanSurat::bolehLihatIsi).
+    $vidRahasia    = $danpusId;
+    $bolehIsi      = $s->bolehLihatIsi($vidRahasia);
+    $perihalTampil = $s->perihalUntuk($vidRahasia);
     $isKeluar = ($s->arahUntukSatuan ?? 'masuk') === 'keluar';
     $nomorSurat = 'SR-' . str_pad((string) $s->id, 6, '0', STR_PAD_LEFT);
     $labelStatus = $s->labelStatus($sid);
@@ -31,7 +35,7 @@
     $tembusanPerRiwayat = $s->tembusans->groupBy('laporan_surat_riwayat_id');
 
     // ---- Alur: langkah dari riwayat nyata + (jika ada) langkah posisi sekarang ----
-    $langkah = $s->riwayats->map(function ($r) use ($sid, $sembunyikanIsi, $aksiBerisiIsi, $tembusanPerRiwayat) {
+    $langkah = $s->riwayats->map(function ($r) use ($sid, $sembunyikanIsi, $aksiBerisiIsi, $tembusanPerRiwayat, $s, $bolehIsi, $vidRahasia) {
         return [
             'judul'     => $r->labelAksi(),
             'dari'      => $r->pengirimSatuan->nama ?? null,
@@ -74,7 +78,7 @@
         ];
     }
 
-    $riwayatJson = $s->riwayats->map(function ($r) use ($sembunyikanIsi, $aksiBerisiIsi, $tembusanPerRiwayat) {
+    $riwayatJson = $s->riwayats->map(function ($r) use ($sembunyikanIsi, $aksiBerisiIsi, $tembusanPerRiwayat, $s, $bolehIsi, $vidRahasia) {
         $paralel = $tembusanPerRiwayat->get($r->id, collect())->map(fn ($t) => [
             'satuan'           => $t->satuan->nama ?? '-',
             'satuan_kode'      => $t->satuan->kode ?? '-',
@@ -92,8 +96,8 @@
             'catatan'       => ($sembunyikanIsi && in_array($r->aksi, $aksiBerisiIsi, true)) ? '' : $r->catatan,
             'disposisi'     => $r->disposisi,
             'tindakan'      => $r->tindakan,
-            'lampiran_url'  => $r->lampiran_path ? asset('storage/' . $r->lampiran_path) : null,
-            'lampiran_nama' => $r->lampiran_nama_asli,
+            'lampiran_url'  => $bolehIsi ? $s->lampiranUrlUntuk($r->lampiran_path, $vidRahasia, $r->id) : null,
+            'lampiran_nama' => $bolehIsi ? $r->lampiran_nama_asli : null,
             'tanggal'       => $r->created_at->translatedFormat('d M Y H:i'),
             'siklus'        => $r->siklus,
             'paralel'       => $paralel,
@@ -103,7 +107,7 @@
 <details class="danpus-report-dropdown akt-srow"
      data-surat-id="{{ $s->id }}"
      data-created-at="{{ $s->created_at->timestamp }}"
-     data-search="{{ strtolower($nomorSurat.' '.$s->perihal.' '.$kategori.' '.($s->satuan->nama ?? '').' '.($s->tujuanSatuan->nama ?? '')) }}"
+     data-search="{{ strtolower($nomorSurat.' '.$perihalTampil.' '.$kategori.' '.($s->satuan->nama ?? '').' '.($s->tujuanSatuan->nama ?? '')) }}"
      data-arah="{{ $isKeluar ? 'keluar' : 'masuk' }}"
      data-status="{{ $labelStatus }}"
      data-arsip="{{ $s->diarsipkan ? '1' : '0' }}"
@@ -112,7 +116,7 @@
     <div class="danpus-report-summary-main">
       <span class="danpus-report-chevron" aria-hidden="true"></span>
       <span class="akt-srow-main">
-        <span class="danpus-report-subject">{{ $s->perihal }}</span>
+        <span class="danpus-report-subject">{{ $perihalTampil }}</span>
       </span>
     </div>
   </summary>
@@ -145,7 +149,7 @@
     <div class="akt-srow-actions">
       <button type="button" class="akt-btn" onclick="openSuratDetail(this)"
         data-context="arsip"
-        data-perihal="{{ e($s->perihal) }}"
+        data-perihal="{{ e($perihalTampil) }}"
         data-tujuan="{{ e($s->tujuanSatuan->nama ?? '-') }}"
         data-tujuan-kode="{{ e($s->tujuanSatuan->kode ?? '') }}"
         data-kategori="{{ e($kategori) }}"
@@ -161,9 +165,9 @@
         data-dibuat-tanggal="{{ e($s->created_at->translatedFormat('d M Y H:i')) }}"
         data-dikonfirmasi-oleh="{{ e($s->dikonfirmasiOleh->name ?? '') }}"
         data-dikonfirmasi-tanggal="{{ $s->dikonfirmasi_at ? e($s->dikonfirmasi_at->translatedFormat('d M Y H:i')) : '' }}"
-        data-lampiran-url="{{ $s->lampiran_path ? asset('storage/'.$s->lampiran_path) : '' }}"
-        data-lampiran-nama="{{ $s->lampiran_path ? ($s->lampiran_nama_asli ?: basename($s->lampiran_path)) : '' }}"
-        data-lampiran-size="{{ $s->lampiran_size ?? '' }}"
+        data-lampiran-url="{{ $bolehIsi ? ($s->lampiranUrlUntuk($s->lampiran_path, $vidRahasia) ?? '') : '' }}"
+        data-lampiran-nama="{{ ($bolehIsi && $s->lampiran_path) ? ($s->lampiran_nama_asli ?: basename($s->lampiran_path)) : '' }}"
+        data-lampiran-size="{{ $bolehIsi ? ($s->lampiran_size ?? '') : '' }}"
         data-surat-id="{{ $s->id }}"
         data-is-selesai="{{ $s->isSelesai() ? '1' : '0' }}"
         data-siklus="{{ $s->siklus }}"

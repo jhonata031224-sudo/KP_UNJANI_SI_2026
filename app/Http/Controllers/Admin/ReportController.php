@@ -113,8 +113,10 @@ class ReportController extends Controller
     public function exportSuratExcel(Request $request)
     {
         $surat = $this->filteredSurat($request);
+        // Surat Rahasia: perihal disamarkan untuk Admin (LaporanSurat::bolehLihatIsi).
+        $vidAdmin = $request->user()?->satuan_id;
         $rows = $surat->map(fn ($s) => [
-            $s->perihal ?: '-',
+            $s->perihalUntuk($vidAdmin) ?: '-',
             $s->satuan?->nama ?: '-',
             $s->tujuanSatuan?->nama ?: '-',
             $s->prioritas ?: '-',
@@ -354,10 +356,11 @@ class ReportController extends Controller
             ->latest('created_at')
             ->get();
 
+        $vidAdmin = $request->user()?->satuan_id;
         if ($q !== '') {
-            $surat = $surat->filter(function ($s) use ($q) {
+            $surat = $surat->filter(function ($s) use ($q, $vidAdmin) {
                 $haystack = mb_strtolower(trim(implode(' ', [
-                    $s->perihal, $s->satuan?->nama ?? '', $s->tujuanSatuan?->nama ?? '',
+                    $s->perihalUntuk($vidAdmin), $s->satuan?->nama ?? '', $s->tujuanSatuan?->nama ?? '',
                     $s->disposisi_terakhir ?? $s->disposisi ?? '',
                 ])));
 

@@ -61,13 +61,17 @@
     // cuma isinya yang dikunci, bukan keberadaannya yang disembunyikan.
     $sembunyikanIsiRahasia = $s->isRahasia() && (int) ($satuan->id ?? 0) !== (int) $s->satuan_id;
     $rahasiaTerkunci       = $sembunyikanIsiRahasia;
+    // Surat Rahasia: perihal & lampiran mengikuti kunci kartu di atas (hanya pengirim asli).
+    $vidRahasia   = $satuan->id ?? null;
+    $bolehIsi     = ! $rahasiaTerkunci;
+    $perihalTampil = $rahasiaTerkunci ? \App\Models\LaporanSurat::LABEL_PERIHAL_RAHASIA : (string) $s->perihal;
     $aksiBerisiIsiSurat    = [\App\Models\LaporanSuratRiwayat::AKSI_BUAT_SURAT, \App\Models\LaporanSuratRiwayat::AKSI_SURAT_KELUAR];
     $riwayats    = $s->riwayats;
 
     // Kelompokkan tembusan per riwayat_id agar bisa ditempel ke step TERUSKAN
     $tembusanPerRiwayat = $s->tembusans->groupBy('laporan_surat_riwayat_id');
 
-    $riwayatJson = $riwayats->map(function ($r) use ($sembunyikanIsiRahasia, $aksiBerisiIsiSurat, $tembusanPerRiwayat) {
+    $riwayatJson = $riwayats->map(function ($r) use ($sembunyikanIsiRahasia, $aksiBerisiIsiSurat, $tembusanPerRiwayat, $s, $bolehIsi, $vidRahasia) {
         // Cabang paralel: satuan yang ikut menerima di waktu yang sama (view_only / tembusan)
         $tembusanStep = $tembusanPerRiwayat->get($r->id, collect());
         $paralel = $tembusanStep->map(fn ($t) => [
@@ -87,22 +91,22 @@
             'catatan'       => ($sembunyikanIsiRahasia && in_array($r->aksi, $aksiBerisiIsiSurat, true)) ? '' : $r->catatan,
             'disposisi'     => $r->disposisi,
             'tindakan'      => $r->tindakan,
-            'lampiran_url'  => $r->lampiran_path ? asset('storage/' . $r->lampiran_path) : null,
-            'lampiran_nama' => $r->lampiran_nama_asli,
+            'lampiran_url'  => $bolehIsi ? $s->lampiranUrlUntuk($r->lampiran_path, $vidRahasia, $r->id) : null,
+            'lampiran_nama' => $bolehIsi ? $r->lampiran_nama_asli : null,
             'tanggal'       => $r->created_at->translatedFormat('d M Y H:i'),
             'siklus'        => $r->siklus,
             'paralel'       => $paralel, // penerima paralel/bersamaan (Urdal view-only, dst)
         ];
     })->toJson();
 @endphp
-<div class="surat-file-card{{ $rahasiaTerkunci ? ' surat-file-card-locked' : '' }}" data-surat-id="{{ $s->id }}" data-created-at="{{ $s->created_at->timestamp }}" data-search="{{ strtolower($s->perihal.' '.($lawan->nama ?? '').' '.($lawan->kode ?? '')) }}" data-prioritas="{{ $s->prioritas }}" data-jenis-filter="{{ $s->prioritas }}" data-satuan-kode="{{ $lawan->kode ?? '' }}" data-satuan-nama="{{ $lawan->nama ?? ($lawan->kode ?? '-') }}" data-status="{{ $s->labelStatus() }}"@if(strtoupper($satuan->kode ?? '') === 'URDAL') data-asal="{{ $s->asalArsip() }}"@endif>
+<div class="surat-file-card{{ $rahasiaTerkunci ? ' surat-file-card-locked' : '' }}" data-surat-id="{{ $s->id }}" data-created-at="{{ $s->created_at->timestamp }}" data-search="{{ strtolower($perihalTampil.' '.($lawan->nama ?? '').' '.($lawan->kode ?? '')) }}" data-prioritas="{{ $s->prioritas }}" data-jenis-filter="{{ $s->prioritas }}" data-satuan-kode="{{ $lawan->kode ?? '' }}" data-satuan-nama="{{ $lawan->nama ?? ($lawan->kode ?? '-') }}" data-status="{{ $s->labelStatus() }}"@if(strtoupper($satuan->kode ?? '') === 'URDAL') data-asal="{{ $s->asalArsip() }}"@endif>
     @if($rahasiaTerkunci)
     <div class="surat-file-card-icon surat-file-card-icon-locked"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2.2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></div>
     @else
     <div class="surat-file-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
     @endif
     <span class="status-badge {{ $s->badgeClass() }} surat-file-card-badge">{{ $s->labelStatus() }}</span>
-    <div class="surat-file-card-title">{{ $s->perihal }}</div>
+    <div class="surat-file-card-title">{{ $perihalTampil }}</div>
     <div><div class="surat-file-card-dari-label">{{ $labelLawan }}</div><div class="surat-file-card-dari-value"><span>{{ $lawan->nama ?? '-' }}</span>@unless($sembunyikanKodeDanpus)<span class="satuan-pill">{{ $lawan->kode ?? $lawan->nama ?? '-' }}</span>@endunless</div></div>
     <div class="surat-file-card-divider"></div>
     <div class="surat-file-card-meta"><span class="surat-file-card-meta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span><div><div class="surat-file-card-meta-label">Tanggal Dibuat</div><div class="surat-file-card-meta-value">{{ $s->created_at->translatedFormat('d M Y H:i') }}</div></div></div>
@@ -117,7 +121,7 @@
     @else
     <button type="button" class="surat-file-card-btn" onclick="openSuratDetail(this)"
         data-context="arsip"
-        data-perihal="{{ e($s->perihal) }}"
+        data-perihal="{{ e($perihalTampil) }}"
         data-tujuan="{{ e(($tampilKe || $isSent) ? ($lawan->nama ?? '-') : ($satuan->nama ?? '-')) }}"
         data-tujuan-kode="{{ e(($tampilKe || $isSent) ? ($lawan->kode ?? '') : ($satuan->kode ?? '')) }}"
         data-kategori="{{ e($s->kategori ?: 'Umum') }}"
@@ -133,9 +137,9 @@
         data-dibuat-tanggal="{{ e($s->created_at->translatedFormat('d M Y H:i')) }}"
         data-dikonfirmasi-oleh="{{ e($s->dikonfirmasiOleh->name ?? '') }}"
         data-dikonfirmasi-tanggal="{{ $s->dikonfirmasi_at ? e($s->dikonfirmasi_at->translatedFormat('d M Y H:i')) : '' }}"
-        data-lampiran-url="{{ $s->lampiran_path ? asset('storage/'.$s->lampiran_path) : '' }}"
-        data-lampiran-nama="{{ $s->lampiran_path ? ($s->lampiran_nama_asli ?: basename($s->lampiran_path)) : '' }}"
-        data-lampiran-size="{{ $s->lampiran_size ?? '' }}"
+        data-lampiran-url="{{ $bolehIsi ? ($s->lampiranUrlUntuk($s->lampiran_path, $vidRahasia) ?? '') : '' }}"
+        data-lampiran-nama="{{ ($bolehIsi && $s->lampiran_path) ? ($s->lampiran_nama_asli ?: basename($s->lampiran_path)) : '' }}"
+        data-lampiran-size="{{ $bolehIsi ? ($s->lampiran_size ?? '') : '' }}"
         data-surat-id="{{ $s->id }}"
         data-is-selesai="{{ $s->isSelesai() ? '1' : '0' }}"
         data-siklus="{{ $s->siklus }}"

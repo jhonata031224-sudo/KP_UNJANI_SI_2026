@@ -350,7 +350,11 @@ class LaporanSuratController extends Controller
         $tujuan = Satuan::findOrFail($validated['tujuan_satuan_id']);
 
         $lampiranFile = $request->file('lampiran');
-        $lampiranPath = $lampiranFile->store('lampiran-surat', 'public');
+        // Surat Rahasia: lampiran disimpan di disk PRIVAT (tidak bisa dibuka lewat URL publik).
+        $diskLampiran = ($isDanpus && ($validated['prioritas'] ?? null) === LaporanSurat::PRIORITAS_DANPUS_RAHASIA)
+            ? LaporanSurat::DISK_RAHASIA
+            : 'public';
+        $lampiranPath = $lampiranFile->store('lampiran-surat', $diskLampiran);
         abort_if(! $lampiranPath, 500, 'Gagal menyimpan file lampiran ke server.');
 
         // Pembuatan Surat Baru Standar
@@ -410,7 +414,7 @@ class LaporanSuratController extends Controller
             $penerima->notify(new LaporanSuratBaruDiterima($surat));
         }
 
-        ActivityLog::catat('laporan-surat.create', "Mengirim surat \"{$surat->perihal}\" ke {$tujuan->nama}.", $user, [
+        ActivityLog::catat('laporan-surat.create', "Mengirim surat \"{$surat->perihalLog()}\" ke {$tujuan->nama}.", $user, [
             'laporan_surat_id' => $surat->id,
             'tujuan_satuan'    => $tujuan->nama,
             'prioritas'        => $surat->prioritas,
@@ -484,7 +488,7 @@ class LaporanSuratController extends Controller
         );
 
         $lampiranFile = $request->file('lampiran');
-        $lampiranPath = $lampiranFile->store('lampiran-surat', 'public');
+        $lampiranPath = $lampiranFile->store('lampiran-surat', $induk->diskLampiranBaru());
         abort_if(! $lampiranPath, 500, 'Gagal menyimpan file lampiran ke server.');
         $lampiranNama = $lampiranFile->getClientOriginalName();
 
@@ -542,7 +546,7 @@ class LaporanSuratController extends Controller
             ));
         }
 
-        ActivityLog::catat('laporan-surat.balasan', "Mengirim balasan surat \"{$induk->perihal}\" ke {$wadan->nama}.", $user, [
+        ActivityLog::catat('laporan-surat.balasan', "Mengirim balasan surat \"{$induk->perihalLog()}\" ke {$wadan->nama}.", $user, [
             'laporan_surat_id' => $induk->id,
             'tujuan_satuan'    => $wadan->nama,
         ]);
@@ -579,7 +583,7 @@ class LaporanSuratController extends Controller
                 'dikonfirmasi_oleh' => $user->id,
             ]);
 
-            ActivityLog::catat('laporan-surat.konfirmasi-tembusan', "Mengkonfirmasi tanda terima surat \"{$laporanSurat->perihal}\".", $user, [
+            ActivityLog::catat('laporan-surat.konfirmasi-tembusan', "Mengkonfirmasi tanda terima surat \"{$laporanSurat->perihalLog()}\".", $user, [
                 'laporan_surat_id' => $laporanSurat->id,
                 'jenis_tembusan'   => $tembusanRow->jenis,
             ]);
@@ -735,7 +739,7 @@ class LaporanSuratController extends Controller
             }
         }
 
-        ActivityLog::catat('laporan-surat.konfirmasi', "Mengkonfirmasi surat \"{$laporanSurat->perihal}\" dari {$laporanSurat->satuan->nama}.", $user, [
+        ActivityLog::catat('laporan-surat.konfirmasi', "Mengkonfirmasi surat \"{$laporanSurat->perihalLog()}\" dari {$laporanSurat->satuan->nama}.", $user, [
             'laporan_surat_id' => $laporanSurat->id,
             'pengirim_satuan'  => $laporanSurat->satuan->nama,
         ]);
@@ -838,7 +842,7 @@ class LaporanSuratController extends Controller
 
         if ($request->hasFile('lampiran')) {
             $file             = $request->file('lampiran');
-            $lampiranPath     = $file->store('lampiran-surat', 'public');
+            $lampiranPath     = $file->store('lampiran-surat', $laporanSurat->diskLampiranBaru());
             $lampiranNamaAsli = $file->getClientOriginalName();
         }
 
@@ -888,7 +892,7 @@ class LaporanSuratController extends Controller
             $p->notify(new LaporanSuratBaruDiterima($laporanSurat));
         }
 
-        ActivityLog::catat('laporan-surat.teruskan', "Meneruskan surat \"{$laporanSurat->perihal}\" ke {$tujuan->nama}.", $user, [
+        ActivityLog::catat('laporan-surat.teruskan', "Meneruskan surat \"{$laporanSurat->perihalLog()}\" ke {$tujuan->nama}.", $user, [
             'laporan_surat_id' => $laporanSurat->id,
             'tujuan_satuan'    => $tujuan->nama,
             'disposisi'        => $validated['disposisi'],
@@ -937,7 +941,7 @@ class LaporanSuratController extends Controller
             $p->notify(new LaporanSuratBaruDiterima($laporanSurat));
         }
 
-        ActivityLog::catat('laporan-surat.ke-danpus', "Meneruskan surat \"{$laporanSurat->perihal}\" kembali ke Danpus.", $user, [
+        ActivityLog::catat('laporan-surat.ke-danpus', "Meneruskan surat \"{$laporanSurat->perihalLog()}\" kembali ke Danpus.", $user, [
             'laporan_surat_id' => $laporanSurat->id,
         ]);
 
@@ -986,7 +990,7 @@ class LaporanSuratController extends Controller
             $p->notify(new LaporanSuratBaruDiterima($laporanSurat));
         }
 
-        ActivityLog::catat('laporan-surat.ke-wadan', "Meneruskan surat \"{$laporanSurat->perihal}\" ke Wadan.", $user, [
+        ActivityLog::catat('laporan-surat.ke-wadan', "Meneruskan surat \"{$laporanSurat->perihalLog()}\" ke Wadan.", $user, [
             'laporan_surat_id' => $laporanSurat->id,
         ]);
 
@@ -1056,7 +1060,7 @@ class LaporanSuratController extends Controller
         // Requirement 8A & 10: Hasil/RC masuk ke Urdal
         $this->kirimHasilRcKeUrdal($laporanSurat, $riwayat);
 
-        ActivityLog::catat('laporan-surat.selesai', "Menyelesaikan surat \"{$laporanSurat->perihal}\". Hasil/RC masuk ke Urdal.", $user, [
+        ActivityLog::catat('laporan-surat.selesai', "Menyelesaikan surat \"{$laporanSurat->perihalLog()}\". Hasil/RC masuk ke Urdal.", $user, [
             'laporan_surat_id' => $laporanSurat->id,
         ]);
 
@@ -1102,7 +1106,7 @@ class LaporanSuratController extends Controller
 
         if ($request->hasFile('lampiran')) {
             $file             = $request->file('lampiran');
-            $lampiranPath     = $file->store('lampiran-surat', 'public');
+            $lampiranPath     = $file->store('lampiran-surat', $laporanSurat->diskLampiranBaru());
             $lampiranNamaAsli = $file->getClientOriginalName();
         }
 
@@ -1139,7 +1143,7 @@ class LaporanSuratController extends Controller
             $p->notify(new LaporanSuratBaruDiterima($laporanSurat));
         }
 
-        ActivityLog::catat('laporan-surat.disposisi-ulang', "Membuat disposisi baru untuk surat \"{$laporanSurat->perihal}\" (Siklus {$siklusBaru}).", $user, [
+        ActivityLog::catat('laporan-surat.disposisi-ulang', "Membuat disposisi baru untuk surat \"{$laporanSurat->perihalLog()}\" (Siklus {$siklusBaru}).", $user, [
             'laporan_surat_id' => $laporanSurat->id,
             'siklus'           => $siklusBaru,
             'tujuan_satuan'    => $tujuan->nama,
@@ -1186,6 +1190,34 @@ class LaporanSuratController extends Controller
     }
 
     /**
+     * Buka/unduh berkas lampiran surat Rahasia (disk privat) -- hanya untuk pihak yang
+     * berhak (LaporanSurat::bolehLihatIsi). Tanpa $riwayat = lampiran utama surat;
+     * dengan $riwayat = lampiran langkah (mis. balasan). Surat biasa tetap memakai URL publik.
+     */
+    public function lampiran(Request $request, LaporanSurat $laporanSurat, ?LaporanSuratRiwayat $riwayat = null)
+    {
+        $laporanSurat->loadMissing('riwayats');
+        abort_unless($laporanSurat->bolehLihatIsi($request->user()->satuan_id), 403, 'Anda tidak berhak membuka lampiran surat ini.');
+
+        if ($riwayat) {
+            abort_unless((int) $riwayat->laporan_surat_id === (int) $laporanSurat->id, 404);
+            $path = $riwayat->lampiran_path;
+            $nama = $riwayat->lampiran_nama_asli;
+        } else {
+            $path = $laporanSurat->lampiran_path;
+            $nama = $laporanSurat->lampiran_nama_asli;
+        }
+
+        $disk = LaporanSurat::diskLampiranAda($path);
+        abort_unless($disk, 404, 'Berkas lampiran tidak ditemukan.');
+
+        return Storage::disk($disk)->response($path, $nama ?: basename($path), [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    /**
      * Konfirmasi tanda mengetahui bagi penerima Tembusan / View Only.
      */
     public function konfirmasiTembusan(Request $request, LaporanSurat $laporanSurat): RedirectResponse
@@ -1210,7 +1242,7 @@ class LaporanSuratController extends Controller
             $this->beritahuTembusanDiketahui($laporanSurat, $tembusan, $satuan);
         }
 
-        ActivityLog::catat('laporan-surat.konfirmasi-tembusan', "Mengkonfirmasi tanda mengetahui surat \"{$laporanSurat->perihal}\".", $user, [
+        ActivityLog::catat('laporan-surat.konfirmasi-tembusan', "Mengkonfirmasi tanda mengetahui surat \"{$laporanSurat->perihalLog()}\".", $user, [
             'laporan_surat_id' => $laporanSurat->id,
             'jenis'            => $tembusan->jenis,
         ]);
@@ -1227,9 +1259,11 @@ class LaporanSuratController extends Controller
         abort_unless((int) $laporanSurat->satuan_id === (int) $satuan->id, 403);
 
         if ($laporanSurat->lampiran_path) {
+            // berkas bisa di disk publik (surat biasa) atau privat (surat rahasia)
             Storage::disk('public')->delete($laporanSurat->lampiran_path);
+            Storage::disk(LaporanSurat::DISK_RAHASIA)->delete($laporanSurat->lampiran_path);
         }
-        $perihal = $laporanSurat->perihal;
+        $perihal = $laporanSurat->perihalLog();
         $laporanSurat->delete();
 
         ActivityLog::catat('laporan-surat.delete', "Menghapus surat \"{$perihal}\" dari Arsip Surat.", $user, [

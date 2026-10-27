@@ -38,6 +38,21 @@ return [
             'report' => false,
         ],
 
+        /*
+         * Lampiran surat RAHASIA. TIDAK ter-link ke public/ (tidak bisa dibuka lewat URL);
+         * hanya lewat LaporanSuratController::lampiran() yang memeriksa hak akses.
+         * Di hosting dengan volume terpisah (mis. Railway), arahkan LAMPIRAN_RAHASIA_ROOT ke
+         * folder yang berada di dalam volume agar berkas tidak hilang saat redeploy, dan di LUAR
+         * storage/app/public (folder itu terbuka lewat URL /storage).
+         */
+        'rahasia' => [
+            'driver' => 'local',
+            'root' => env('LAMPIRAN_RAHASIA_ROOT', storage_path('app/private/rahasia')),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

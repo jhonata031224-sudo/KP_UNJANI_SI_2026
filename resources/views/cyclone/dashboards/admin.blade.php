@@ -3901,9 +3901,9 @@
                               @endforeach
                             </span>
                           @elseif(!empty($item['lampiran']))
-                            <span title="Ada lampiran berkas (berkas tidak ditemukan)" style="color:var(--success);font-weight:700;display:inline-flex;align-items:center;gap:3px;font-size:11px;">
+                            <span title="{{ !empty($item['lampiran_rahasia']) ? 'Lampiran surat rahasia (tidak ditampilkan)' : 'Ada lampiran berkas (berkas tidak ditemukan)' }}" style="color:var(--success);font-weight:700;display:inline-flex;align-items:center;gap:3px;font-size:11px;">
                               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                              Ada
+                              {{ !empty($item['lampiran_rahasia']) ? 'Dirahasiakan' : 'Ada' }}
                             </span>
                           @else
                             <span style="color:var(--text-dim);font-size:12px;">-</span>
@@ -4694,9 +4694,9 @@
                 <thead><tr><th>No</th><th>Perihal</th><th>Satuan Pengirim</th><th>Satuan Tujuan</th><th>Prioritas</th><th>Status</th><th>Dibuat</th><th>Lampiran</th></tr></thead>
                 <tbody>
                   @forelse($suratSemuaAdmin->sortByDesc('created_at')->values() as $i => $s)
-                  <tr data-filter-value="{{ $s->labelStatus() }}" data-search-value="{{ strtolower(($s->perihal ?? '').' '.($s->satuan?->nama ?? '').' '.($s->tujuanSatuan?->nama ?? '').' '.($s->disposisi_terakhir ?? $s->disposisi ?? '')) }}">
+                  <tr data-filter-value="{{ $s->labelStatus() }}" data-search-value="{{ strtolower($s->perihalUntuk(auth()->user()?->satuan_id).' '.($s->satuan?->nama ?? '').' '.($s->tujuanSatuan?->nama ?? '').' '.($s->disposisi_terakhir ?? $s->disposisi ?? '')) }}">
                     <td>{{ $i + 1 }}</td>
-                    <td><strong>{{ $s->perihal ?: '-' }}</strong></td>
+                    <td><strong>{{ $s->perihalUntuk(auth()->user()?->satuan_id) ?: '-' }}</strong></td>
                     <td>{{ $s->satuan?->nama_keterangan ?? $s->satuan?->nama ?? '-' }}</td>
                     <td>{{ $s->tujuanSatuan?->nama_keterangan ?? $s->tujuanSatuan?->nama ?? '-' }}</td>
                     <td>{{ $s->prioritas ?: '-' }}</td>
@@ -4704,18 +4704,21 @@
                     <td style="white-space:nowrap;" data-tanggal="{{ $s->created_at?->format('Y-m-d') }}">{{ $s->created_at?->format('d/m/Y H:i') }}</td>
                     @php
                       // Lampiran surat: lampiran utama + lampiran di riwayat (teruskan/balasan), tanpa duplikat.
+                      // Surat Rahasia: Admin tidak berhak -> URL tidak ditampilkan ("Dirahasiakan").
+                      $vidAdm = auth()->user()?->satuan_id;
+                      $adaLampiran = (bool) $s->lampiran_path;
                       $lampiranSurat = collect();
-                      if ($s->lampiran_path) { $lampiranSurat->push($s->lampiran_path); }
-                      foreach ($s->riwayats as $rw) { if ($rw->lampiran_path) { $lampiranSurat->push($rw->lampiran_path); } }
-                      $lampiranSurat = $lampiranSurat->unique()->values();
+                      if ($s->lampiran_path) { $lampiranSurat->push(['path' => $s->lampiran_path, 'url' => $s->lampiranUrlUntuk($s->lampiran_path, $vidAdm)]); }
+                      foreach ($s->riwayats as $rw) { if ($rw->lampiran_path) { $adaLampiran = true; $lampiranSurat->push(['path' => $rw->lampiran_path, 'url' => $s->lampiranUrlUntuk($rw->lampiran_path, $vidAdm, $rw->id)]); } }
+                      $lampiranSurat = $lampiranSurat->filter(fn ($x) => $x['url'])->unique('url')->values();
                     @endphp
                     <td class="dl-lampiran-cell">
                       <div class="dl-lampiran-list">
                       @forelse($lampiranSurat as $lp)
-                        @php $lpExt = strtoupper(pathinfo($lp, PATHINFO_EXTENSION) ?: 'FILE'); @endphp
-                        <a class="dl-lampiran-url" href="{{ asset('storage/'.$lp) }}" target="_blank" rel="noopener" title="{{ basename($lp) }}"><span class="dl-lampiran-full">{{ asset('storage/'.$lp) }}</span><span class="dl-lampiran-short">Lampiran {{ $loop->iteration }} &middot; {{ $lpExt }}</span></a>
+                        @php $lpExt = strtoupper(pathinfo($lp['path'], PATHINFO_EXTENSION) ?: 'FILE'); @endphp
+                        <a class="dl-lampiran-url" href="{{ $lp['url'] }}" target="_blank" rel="noopener" title="{{ basename($lp['path']) }}"><span class="dl-lampiran-full">{{ $lp['url'] }}</span><span class="dl-lampiran-short">Lampiran {{ $loop->iteration }} &middot; {{ $lpExt }}</span></a>
                       @empty
-                        <span style="color:var(--text-dim);">-</span>
+                        <span style="color:var(--text-dim);">{{ $adaLampiran ? 'Dirahasiakan' : '-' }}</span>
                       @endforelse
                       </div>
                     </td>
