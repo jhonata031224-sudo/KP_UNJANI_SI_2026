@@ -149,7 +149,12 @@ class BackupController extends Controller
         $connection = (string) Config::get('database.default');
 
         if ($connection !== 'mysql') {
-            return back()->with('error', 'Restore saat ini hanya tersedia untuk database MySQL.');
+            return back()->with('error', 'Pemulihan saat ini hanya tersedia untuk database MySQL.');
+        }
+
+        // Pemulihan hanya untuk file yang diunggah lewat "Unggah File Cadangan".
+        if (! str_starts_with(basename($filename), 'uploaded_')) {
+            return back()->with('error', 'Pemulihan hanya tersedia untuk file cadangan yang diunggah.');
         }
 
         try {
@@ -167,7 +172,7 @@ class BackupController extends Controller
 
             ActivityLog::catat('backup.restore', "Restore database dari backup \"{$filename}\". Safety backup: ".basename($safetyFilename).'.');
 
-            return back()->with('status', 'Restore berhasil. Safety backup sebelum restore: '.basename($safetyFilename).'.');
+            return back()->with('status', 'Pemulihan berhasil. Cadangan pengaman sebelum pemulihan: '.basename($safetyFilename).'.');
         } catch (\Throwable $e) {
             Log::error('Gagal restore backup database.', [
                 'filename' => $filename,
@@ -175,7 +180,7 @@ class BackupController extends Controller
                 'exception' => $e,
             ]);
 
-            return back()->with('error', 'Restore gagal. Database tidak diubah jika proses gagal pada tahap validasi; periksa log server.');
+            return back()->with('error', 'Pemulihan gagal. Database tidak diubah jika proses gagal pada tahap validasi; periksa log server.');
         }
     }
 
