@@ -47,6 +47,17 @@ if [ "$MIGRATE_EXIT" -ne 0 ] && [ "${ALLOW_MIGRATE_FAIL:-0}" != "1" ]; then
   exit 1
 fi
 
+# Seed awal HANYA bila tabel users masih kosong (database Railway baru), supaya
+# akun Admin awal (lihat SatuanSeeder) ada dan bisa login untuk memulihkan
+# backup lewat Admin > Cadangan Data. Bila users sudah berisi, dilewati --
+# jadi tidak pernah menimpa password/data pada database yang sudah berjalan.
+echo "==> [3.5/5] seed awal (hanya jika users kosong)"
+set +e
+timeout 120 php artisan db:seed-jika-kosong
+SEED_EXIT=$?
+set -e
+echo "==> [3.5/5] exit code: $SEED_EXIT"
+
 echo "==> [4/5] storage:link"
 php artisan storage:link || true
 echo "==> [4/5] OK"
