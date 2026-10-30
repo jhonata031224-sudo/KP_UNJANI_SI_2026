@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Jabatan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,11 @@ class JabatanController extends Controller
             'deskripsi' => ['nullable', 'string', 'max:255'],
         ]);
 
-        Jabatan::create($validated);
+        $jabatan = Jabatan::create($validated);
+
+        ActivityLog::catat('jabatan.create', "Menambahkan data jabatan \"{$jabatan->nama}\".", $request->user(), [
+            'jabatan_id' => $jabatan->id,
+        ]);
 
         return back()->with('status', 'Data jabatan berhasil ditambahkan.');
     }
@@ -29,16 +34,26 @@ class JabatanController extends Controller
 
         $jabatan->update($validated);
 
+        ActivityLog::catat('jabatan.update', "Memperbarui data jabatan \"{$jabatan->nama}\".", $request->user(), [
+            'jabatan_id' => $jabatan->id,
+        ]);
+
         return back()->with('status', 'Data jabatan berhasil diperbarui.');
     }
 
-    public function destroy(Jabatan $jabatan): RedirectResponse
+    public function destroy(Request $request, Jabatan $jabatan): RedirectResponse
     {
         if ($jabatan->personels()->exists()) {
             return back()->with('error', 'Jabatan masih dipakai oleh data personel dan tidak bisa dihapus.');
         }
 
+        $nama = $jabatan->nama;
+        $jabatanId = $jabatan->id;
         $jabatan->delete();
+
+        ActivityLog::catat('jabatan.delete', "Menghapus data jabatan \"{$nama}\".", $request->user(), [
+            'jabatan_id' => $jabatanId,
+        ]);
 
         return back()->with('status', 'Data jabatan berhasil dihapus.');
     }

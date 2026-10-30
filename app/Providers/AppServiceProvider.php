@@ -2,7 +2,8 @@
 
 namespace App\Providers;
 
-use App\Models\Pengumuman;
+use App\Models\Pengaturan;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -18,23 +19,43 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap any application services.
+     *
+     * Share $pengaturan ke SEMUA view (termasuk error pages) sehingga
+     * nama sistem (judul_awal + judul_aksen) di <title> tab browser
+     * selalu sinkron dengan nilai yang disimpan admin di Pengaturan Umum.
+     *
+     * PENTING: pakai View::composer('*', ...) (LAZY), BUKAN View::share()
+     * langsung (EAGER). View::share() di sini akan mengeksekusi
+     * Pengaturan::current() -- yang query + firstOrCreate ke DB -- setiap
+     * kali aplikasi Laravel di-boot, termasuk saat `composer install`
+     * menjalankan `artisan package:discover` (bagian standar Laravel di
+     * post-autoload-dump). Itu kejadian di tahap BUILD Railway, yang
+     * belum ada akses ke host DB internal (mis. mysql.railway.internal
+     * cuma bisa di-resolve saat runtime/deploy) -- build pun gagal dengan
+     * error koneksi PDO. Dengan View::composer('*', ...), query ke DB
+     * baru benar-benar jalan waktu ada view yang di-render (permintaan
+     * HTTP sungguhan), bukan waktu framework sekadar di-boot untuk
+     * command console seperti package:discover/key:generate.
      */
     public function boot(): void
     {
-        // Pengumuman aktif dibagikan ke semua view dashboard satuan, supaya
-        // banner-nya bisa tampil tanpa mengubah tiap method di DashboardController.
-        // Pakai daftar nama view eksplisit (bukan wildcard "dashboards.*") supaya
-        // partial (dash-styles/dash-script) yang di-@include tiap halaman tidak
-        // ikut memicu query berulang.
-        $viewDashboard = [
-            'admin', 'danpus', 'wadan', 'satlakkal', 'satlaksisos', 'satlakdak',
-            'satlakduktek', 'binfung', 'binum', 'diklat', 'binmat', 'sdir', 'generic',
-        ];
-        View::composer(
-            array_map(fn ($nama) => "siberad.dashboards.$nama", $viewDashboard),
-            function ($view) {
-                $view->with('pengumumanAktif', Pengumuman::where('aktif', true)->latest()->get());
-            }
-        );
+        // PENTING: Laravel TIDAK otomatis menyinkronkan locale Carbon dengan
+        // config('app.locale'). Tanpa baris ini, semua translatedFormat()
+        // dan diffForHumans() di seluruh sistem (kartu tanggal, "X menit
+        // lalu" pada notifikasi/sesi aktif/log aktivitas, dst) diam-diam
+        // jatuh ke Bahasa Inggris ("Friday", "seconds ago") meskipun
+        // APP_LOCALE sudah diatur ke 'id' -- menyebabkan campur bahasa
+        // Indonesia & Inggris pada tampilan yang sama.
+        Carbon::setLocale(config('app.locale', 'id'));
+
+        View::composer('*', function ($view): void {
+            // Cache statis per-request: satu halaman bisa merender banyak
+            // view/partial (layout + child view), tanpa ini tiap partial
+            // akan query DB sendiri-sendiri padahal datanya sama persis.
+            static $pengaturan = null;
+            $pengaturan ??= Pengaturan::current();
+
+            $view->with('pengaturan', $pengaturan);
+        });
     }
 }

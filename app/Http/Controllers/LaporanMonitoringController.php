@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\LaporanMonitoring;
 use App\Models\LaporanMonitoringLampiran;
 use App\Models\Satuan;
@@ -54,6 +55,13 @@ class LaporanMonitoringController extends Controller
 
         $this->simpanLampiran($request, $laporan, $user->id);
 
+        ActivityLog::catat(
+            $dikirim ? 'laporan-monitoring.kirim' : 'laporan-monitoring.draft',
+            ($dikirim ? 'Mengirim' : 'Menyimpan draft')." laporan monitoring & recovery \"{$laporan->jenis_kegiatan}\".",
+            $user,
+            ['laporan_monitoring_id' => $laporan->id],
+        );
+
         if ($dikirim) {
             $this->notifikasiDanpus($laporan, $danpus);
 
@@ -90,6 +98,10 @@ class LaporanMonitoringController extends Controller
 
         $this->simpanLampiran($request, $laporanMonitoring, $request->user()->id);
 
+        ActivityLog::catat('laporan-monitoring.update', "Memperbarui laporan monitoring & recovery \"{$laporanMonitoring->jenis_kegiatan}\".", $request->user(), [
+            'laporan_monitoring_id' => $laporanMonitoring->id,
+        ]);
+
         return back()->with('status', 'Laporan berhasil diperbarui.');
     }
 
@@ -111,6 +123,10 @@ class LaporanMonitoringController extends Controller
         ]);
 
         $this->notifikasiDanpus($laporanMonitoring, $danpus);
+
+        ActivityLog::catat('laporan-monitoring.kirim', "Mengirim ulang laporan monitoring & recovery \"{$laporanMonitoring->jenis_kegiatan}\" ke DANPUS.", $request->user(), [
+            'laporan_monitoring_id' => $laporanMonitoring->id,
+        ]);
 
         return back()->with('status', 'Laporan berhasil dikirim ke DANPUS.');
     }
@@ -134,6 +150,10 @@ class LaporanMonitoringController extends Controller
 
         $this->simpanLampiran($request, $laporanMonitoring, $user->id);
 
+        ActivityLog::catat('laporan-monitoring.upload-lampiran', "Mengunggah lampiran pada laporan monitoring & recovery \"{$laporanMonitoring->jenis_kegiatan}\".", $user, [
+            'laporan_monitoring_id' => $laporanMonitoring->id,
+        ]);
+
         return back()->with('status', 'Lampiran berhasil diunggah.');
     }
 
@@ -146,8 +166,13 @@ class LaporanMonitoringController extends Controller
         abort_unless($laporan->user_id === $request->user()->id, 403);
         abort_unless(in_array($laporan->status, ['Draft', 'Dikirim', 'Direvisi'], true), 403);
 
+        $namaFile = $lampiran->nama_file;
         Storage::disk('public')->delete($lampiran->path);
         $lampiran->delete();
+
+        ActivityLog::catat('laporan-monitoring.hapus-lampiran', "Menghapus lampiran \"{$namaFile}\" dari laporan monitoring & recovery \"{$laporan->jenis_kegiatan}\".", $request->user(), [
+            'laporan_monitoring_id' => $laporan->id,
+        ]);
 
         return back()->with('status', 'Lampiran berhasil dihapus.');
     }
@@ -165,7 +190,13 @@ class LaporanMonitoringController extends Controller
             Storage::disk('public')->delete($l->path);
         }
 
+        $jenisKegiatan = $laporanMonitoring->jenis_kegiatan;
+        $laporanId = $laporanMonitoring->id;
         $laporanMonitoring->delete();
+
+        ActivityLog::catat('laporan-monitoring.delete', "Menghapus draft laporan monitoring & recovery \"{$jenisKegiatan}\".", $request->user(), [
+            'laporan_monitoring_id' => $laporanId,
+        ]);
 
         return back()->with('status', 'Draft laporan berhasil dihapus.');
     }

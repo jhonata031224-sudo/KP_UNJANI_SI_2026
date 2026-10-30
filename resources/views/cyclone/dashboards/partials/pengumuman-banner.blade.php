@@ -1,0 +1,60 @@
+<style>
+@media(max-width:900px){.side-collapse-btn{display:none!important;}}
+</style>
+<style>
+/* CATATAN: aturan untuk .lp-hero-image-row, .lp-current-image (kotak
+   pratinjau BG/Logo), .lp-layout, dan .lp-preview-panel SENGAJA tidak lagi
+   didefinisikan di sini -- dulu duplikat dengan aturan di admin.blade.php
+   dan karena pakai !important, versi di sini selalu menang lalu bikin
+   layout preview BG/Logo berantakan/boros spasi. Sumber kebenaran tunggal
+   untuk class-class itu sekarang HANYA di <style> dalam admin.blade.php
+   (dekat kartu "Konten Halaman Landing"). Jangan ditambahkan lagi di sini.
+   Layout Konten Landing sekarang 1 kolom (editor di atas, Pratinjau
+   Langsung tetap di bawah, landscape) -- lihat admin.blade.php.
+   Ukuran input/gap/padding di bawah ini SUDAH dirapatkan (bukan ukuran
+   asli dari fitur Pengumuman yang sudah dihapus) supaya tab Konten
+   Landing tidak kepanjangan, tapi label tetap dibuat jelas & mudah
+   dibaca. */
+.lp-panel{border-radius:16px!important;box-shadow:0 8px 28px rgba(15,23,42,.06)!important;overflow:hidden}
+/* CATATAN (fix): dulu ".lp-panel>.panel-head" dikasih padding kiri/kanan
+   24px SENDIRI (di atas padding 24px milik ".panel"-nya sendiri), dari
+   masa saat "Latar Belakang Beranda", "Judul & Deskripsi Utama", dsb
+   masih jadi SUB-BAGIAN di dalam satu kartu gabungan "Konten Halaman
+   Landing". Sekarang tiap bagian itu sudah jadi kartu ".panel" berdiri
+   sendiri-sendiri (lihat admin.blade.php), jadi padding tambahan itu
+   dobel dengan padding kartu-nya sendiri -- akibatnya judul (h3/p) di
+   ".panel-head" kelihatan geser ke kanan dibanding isi form-grid di
+   bawahnya yang cuma kena padding kartu (tidak ikut kena padding
+   tambahan ini). padding:0 di sini menghilangkan dobelnya, biar rata
+   kiri sama seperti isi lain di kartu yang sama. */
+.lp-panel>.panel-head{padding:0!important;border-bottom:0!important}.lp-panel>.panel-head h3{font-family:var(--display)!important;font-size:19px!important;font-weight:700!important;letter-spacing:.01em!important}.lp-panel>.panel-head p{margin-top:4px!important;font-size:12.5px!important;color:var(--text-muted)!important}.lp-panel form{padding:0 24px 92px!important}.lp-tabs{gap:8px!important;margin:0 0 14px!important;padding:0 0 14px!important;border-bottom:1px solid var(--border-soft)!important}.lp-tab{min-height:38px!important;padding:8px 16px!important;border-radius:22px!important;font-size:12.5px!important;background:var(--panel-alt)!important;border-color:var(--border-soft)!important}.lp-tab.active{background:var(--gold-dim)!important;border-color:var(--gold)!important;color:var(--gold-bright)!important}.lp-tab-panel:not(.panel){padding-top:0!important}
+/* CATATAN (fix): ".lp-tab-panel" dipakai untuk 2 hal berbeda -- (1) sebagai
+   pembungkus deskripsi tab di dalam kartu "Konten Halaman Landing" (tanpa
+   class ".panel", cuma butuh padding-top:0 biar rapat ke tab di atasnya),
+   dan (2) sebagai kartu ".panel" tersendiri (mis. "Judul & Deskripsi
+   Utama", "Latar Belakang Beranda", dst) yang ikut pakai class
+   ".lp-tab-panel" HANYA supaya JS tab-switching bisa sembunyikan/
+   tampilkan-nya bareng tab yang aktif. Rule padding-top:0 di atas dulu
+   ke-apply juga ke kartu ".panel" ini (karena sama-sama ".lp-tab-panel"),
+   sehingga judul (h3) di ".panel-head" jadi mepet ke sisi ATAS kartu --
+   beda dengan isi form-grid di bawahnya yang tetap kena padding normal
+   dari ".panel". ":not(.panel)" di atas membatasi rule itu supaya cuma
+   kena versi (1), dan baris di bawah ini memastikan kartu ".panel" versi
+   (2) tetap pakai padding atas normal (24px, sama seperti sisi kiri/
+   kanan/bawahnya) supaya judulnya tidak lagi kelihatan mepet. */
+.panel.lp-tab-panel{padding-top:24px!important}.lp-tab-desc{margin:0 0 14px!important;padding:9px 14px 9px 36px!important;position:relative;border:1px solid rgba(59,130,246,.18)!important;border-radius:10px!important;background:rgba(59,130,246,.07)!important;color:var(--text-muted)!important;line-height:1.5!important;font-size:12px!important}.lp-tab-desc::before{content:'i';position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#3b82f6;color:#fff;font-family:var(--mono);font-size:10px;font-weight:700}.lp-tab-panel .form-grid{gap:12px 16px!important}.lp-tab-panel .form-field{min-width:0}.lp-tab-panel .form-field label{display:block;margin-bottom:6px!important;font-family:var(--body)!important;font-size:12px!important;font-weight:700!important;letter-spacing:.01em!important;color:var(--text)!important;line-height:1.4!important}.lp-tab-panel .form-field input,.lp-tab-panel .form-field select,.lp-tab-panel .form-field textarea{width:100%!important;min-height:40px!important;border-radius:10px!important;padding:9px 12px!important;font-family:var(--body)!important;font-size:13.5px!important;background:var(--panel)!important;border:1px solid var(--border)!important;box-shadow:none!important}.lp-tab-panel .form-field textarea{min-height:68px!important;resize:none;line-height:1.5}.lp-tab-panel .form-field input:focus,.lp-tab-panel .form-field select:focus,.lp-tab-panel .form-field textarea:focus{outline:none!important;border-color:var(--gold)!important;box-shadow:0 0 0 3px var(--gold-dim)!important}.lp-card{border-radius:12px!important;padding:12px 14px!important;margin-bottom:10px!important;background:var(--panel-alt)!important}.lp-card-title{font-family:var(--body)!important;font-size:11px!important;letter-spacing:.08em!important;margin-bottom:8px!important}.lp-form-actions{margin-top:16px!important;padding-top:14px!important;border-top:1px solid var(--border-soft)!important;display:flex!important;justify-content:flex-start!important}.lp-form-actions .btn{min-height:42px!important;padding:9px 20px!important;border-radius:10px!important;font-size:12px!important;font-weight:700!important;letter-spacing:.03em!important}.lp-preview-panel>.panel-head{padding:20px 24px 14px!important}.lp-preview-body{padding:0 24px 24px!important}.lp-browser-frame{border-radius:12px!important}.lp-tab-panel .form-field input[type=range]{width:100%!important;min-height:auto!important;padding:0!important;border:none!important;background:transparent!important;accent-color:var(--gold);cursor:pointer;margin:8px 0 2px}
+.lp-tab-panel .form-field input[type=range]:focus{box-shadow:none!important}
+.lp-tab-panel .form-field label span{color:var(--gold-bright);font-weight:700}
+@media(max-width:760px){.lp-panel>.panel-head{padding:0!important}.lp-panel form{padding:0 16px 88px!important}.lp-tab{flex:1 1 calc(50% - 8px);justify-content:center}}
+</style>
+@include('cyclone.dashboards.partials.profile-enhancements')
+@include('cyclone.dashboards.partials.notification-controls')
+@include('cyclone.dashboards.partials.push-permission-menu')
+@include('cyclone.dashboards.partials.admin-ui-consistency')
+<script>
+(function(){function initSidebarBackdrop(sidebar){if(!sidebar||sidebar.dataset.backdropBound==='1')return;sidebar.dataset.backdropBound='1';var backdrop=document.createElement('div');backdrop.className='sidebar-backdrop';backdrop.setAttribute('aria-hidden','true');if(sidebar.parentNode)sidebar.parentNode.insertBefore(backdrop,sidebar.nextSibling);else document.body.appendChild(backdrop);backdrop.addEventListener('click',function(){sidebar.classList.remove('open')});function sync(){backdrop.classList.toggle('open',sidebar.classList.contains('open'))}new MutationObserver(sync).observe(sidebar,{attributes:true,attributeFilter:['class']});sync()}function enforceMobileSidebarExpanded(sidebar){if(!sidebar||sidebar.dataset.mobileExpandBound==='1')return;sidebar.dataset.mobileExpandBound='1';function apply(){if(window.innerWidth<=900)sidebar.classList.remove('collapsed')}apply();window.addEventListener('resize',apply)}function initRoleUi(){var sidebar=document.getElementById('sidebar'),menuBtn=document.getElementById('menuBtn');if(sidebar){initSidebarBackdrop(sidebar);enforceMobileSidebarExpanded(sidebar);}if(menuBtn&&sidebar&&!menuBtn.dataset.uiBound){menuBtn.dataset.uiBound='1';menuBtn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();sidebar.classList.toggle('open')})}var themeBtn=document.getElementById('themeToggleBtn');if(themeBtn&&!themeBtn.dataset.uiBound){themeBtn.dataset.uiBound='1';var key='cyclone-theme';function applyTheme(theme){if(theme==='light')document.documentElement.setAttribute('data-theme','light');else document.documentElement.removeAttribute('data-theme');themeBtn.setAttribute('aria-pressed',theme==='light'?'true':'false')}var saved='dark';try{saved=localStorage.getItem(key)||'dark'}catch(err){}applyTheme(saved);themeBtn.addEventListener('click',function(){var current=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark',next=current==='light'?'dark':'light';try{localStorage.setItem(key,next)}catch(err){}applyTheme(next)})}var profileBtn=document.getElementById('profileMenuBtn'),profileDrop=document.getElementById('profileDropdown');if(profileBtn&&profileDrop&&!profileBtn.dataset.uiBound){profileBtn.dataset.uiBound='1';profileBtn.addEventListener('click',function(e){e.stopPropagation();profileDrop.classList.toggle('open')});document.addEventListener('click',function(e){if(!profileDrop.parentElement.contains(e.target))profileDrop.classList.remove('open')})}window.openProfileModal=window.openProfileModal||function(id){var overlay=document.getElementById('profileModalOverlay');if(!overlay)return;overlay.querySelectorAll('.profile-dropdown-view').forEach(function(view){view.style.display=view.id===id?'block':'none'});overlay.classList.add('open');if(profileDrop)profileDrop.classList.remove('open')};var closeProfile=document.getElementById('profileModalCloseBtn');if(closeProfile&&!closeProfile.dataset.uiBound){closeProfile.dataset.uiBound='1';closeProfile.addEventListener('click',function(){var overlay=document.getElementById('profileModalOverlay');if(overlay)overlay.classList.remove('open')})}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initRoleUi);else initRoleUi()})();
+</script>
+<script>
+(function(){function normalisasiNamaLogAktivitas(){var table=document.getElementById('tblLogAktivitas');if(!table)return;var normalisasi={'BINMAT':'Binmat','BINFUNG':'Binfung','BINUM':'Binum','DIKLAT':'Diklat'};table.querySelectorAll('tbody tr').forEach(function(row){var cells=row.children;if(cells.length<2)return;var pengguna=cells[1],teks=pengguna.textContent;Object.keys(normalisasi).forEach(function(nama){teks=teks.replace(new RegExp('\\b'+nama+'\\b','g'),normalisasi[nama])});pengguna.textContent=teks})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',normalisasiNamaLogAktivitas);else normalisasiNamaLogAktivitas()})();
+</script>
+

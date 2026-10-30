@@ -16,11 +16,13 @@ class ActivityLog extends Model
         'aksi',
         'deskripsi',
         'ip_address',
+        'context',
         'created_at',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
+        'context' => 'array',
     ];
 
     public function user(): BelongsTo
@@ -28,13 +30,24 @@ class ActivityLog extends Model
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Catat satu baris log aktivitas. Dipanggil dari controller mana pun
-     * (login/logout, CRUD pengguna, CRUD satuan, dll.) untuk mengisi menu
-     * "Monitoring Aktivitas Sistem" & "Laporan Pengguna & Aktivitas".
-     */
-    public static function catat(string $aksi, ?string $deskripsi = null, ?User $user = null): self
+    public function getNamaPenggunaAttribute($value): ?string
     {
+        return match (strtoupper((string) $value)) {
+            'BINMAT' => 'Binmat',
+            'BINFUNG' => 'Binfung',
+            'BINUM' => 'Binum',
+            'DIKLAT' => 'Diklat',
+            default => $value,
+        };
+    }
+
+    /** Catat aktivitas manual maupun aktivitas otomatis dari middleware. */
+    public static function catat(
+        string $aksi,
+        ?string $deskripsi = null,
+        ?User $user = null,
+        ?array $context = null,
+    ): self {
         $user = $user ?? RequestFacade::user();
 
         return static::create([
@@ -43,6 +56,7 @@ class ActivityLog extends Model
             'aksi' => $aksi,
             'deskripsi' => $deskripsi,
             'ip_address' => RequestFacade::ip(),
+            'context' => $context,
             'created_at' => now(),
         ]);
     }

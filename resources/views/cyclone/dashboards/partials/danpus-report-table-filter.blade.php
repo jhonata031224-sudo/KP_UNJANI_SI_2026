@@ -1,0 +1,254 @@
+<style>
+/* Pencarian & filter tabel laporan -- dipakai bersama oleh Pimpinan dan halaman
+   role. Lebar kotak cari & dropdown-nya sengaja disamain persis sama
+   danpus-log-search.blade.php (acuan gaya "1 sistem" di Log Aktivitas) --
+   select-nya sendiri gak perlu CSS custom sama sekali, ke-enhance otomatis
+   sama styled-select.blade.php (trigger + menu melayang) yang jalan buat
+   SEMUA <select> di halaman lewat MutationObserver, jadi persis kelihatan
+   sama kayak dropdown "Terbaru/Terlama" di Log Aktivitas. */
+.rpt-filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 14px}
+.rpt-filter-search{position:relative;width:330px;max-width:100%}
+.rpt-filter-search svg{position:absolute;left:11px;top:50%;width:16px;height:16px;transform:translateY(-50%);color:var(--p-muted,var(--text-muted));pointer-events:none}
+.rpt-filter-search input{box-sizing:border-box;width:100%;height:38px;border:1px solid var(--p-border,var(--border));border-radius:9px;outline:0;background:var(--p-surface-2,var(--panel-alt));color:var(--p-text,var(--text));font:inherit;font-size:12px;padding:8px 11px 8px 35px}
+.rpt-filter-search input:focus{border-color:var(--p-accent,var(--gold-bright));box-shadow:0 0 0 3px rgba(201,122,0,.10)}
+.rpt-filter-search input::placeholder{color:var(--p-muted,var(--text-muted))}
+.rpt-filter-count{font-size:10px;color:var(--p-muted,var(--text-muted));white-space:nowrap;margin-left:auto}
+@media(max-width:700px){.rpt-filter-bar{gap:7px}.rpt-filter-search{width:100%}.rpt-filter-count{width:100%;margin-left:0}}
+</style>
+<script>
+(function(){
+  function buildSelect(filterDef){
+    // Gak perlu class/CSS custom -- styled-select.blade.php otomatis
+    // nge-enhance select polos jadi trigger+menu melayang yang sama
+    // gayanya kayak dropdown "Terbaru/Terlama" di Log Aktivitas.
+    var select=document.createElement('select');
+    select.setAttribute('aria-label',filterDef.label);
+    filterDef.options.forEach(function(opt){var o=document.createElement('option');o.value=opt.value;o.textContent=opt.label;select.appendChild(o);});
+    return select;
+  }
+
+  function initReportFilter(cfg){
+    var section=document.getElementById(cfg.sectionId);
+    if(!section||section.dataset.rptFilterReady==='1')return;
+    var table=section.querySelector(cfg.tableSelector);
+    var anchor=section.querySelector(cfg.anchorSelector);
+    if(!table||!anchor)return;
+
+    var tbody=table.querySelector('tbody');
+    var rows=[];
+    var tbodyObserver=null;
+    var tableObserver=null;
+    var raf=0;
+    var applying=false;
+    var emptyRow=null;
+
+    function prepareRow(row){
+      if(cfg.prepareRow)cfg.prepareRow(row);
+    }
+
+    function collectRows(){
+      if(!tbody)return;
+      // Buang baris statis (bukan baris data asli -- gak ada data-search --
+      // dan bukan juga baris empty-state kita sendiri) yang nyangkut di
+      // tbody, misalnya sisa blok fallback kosong dari Blade. Kalau
+      // dibiarkan, baris itu bakal tampil BARENGAN sama pesan kosong
+      // dinamis di bawah (dobel).
+      Array.from(tbody.querySelectorAll(':scope > tr')).forEach(function(tr){
+        if(!tr.hasAttribute('data-search') && !tr.classList.contains('rpt-filter-empty-row') && !tr.classList.contains('rpt-filter-detail-row'))tr.remove();
+      });
+      rows=Array.from(tbody.querySelectorAll(':scope > tr')).filter(function(tr){return tr.hasAttribute('data-search');});
+      rows.forEach(function(row,i){
+        if(row.dataset.rptOrder==null)row.dataset.rptOrder=String(i);
+        prepareRow(row);
+      });
+    }
+
+    // Icon + markup empty-state disamain persis sama pola .empty-state/
+    // .empty-state-title yang dipakai di seluruh app (dash-styles.blade.php),
+    // bukan style kotak sendiri -- biar "Belum ada X" kelihatan sama gayanya
+    // di mana-mana, cuma isi icon+teksnya beda tergantung section.
+    var EMPTY_ICON_SEARCH='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted,var(--text-muted))" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>';
+    var EMPTY_ICON_NONE='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--p-muted,var(--text-muted))" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h3"></path></svg>';
+
+    function ensureEmptyRow(){
+      if(!tbody||cfg.showEmpty===false)return;
+      emptyRow=tbody.querySelector(':scope > tr.rpt-filter-empty-row');
+      if(emptyRow)return;
+      emptyRow=document.createElement('tr');
+      emptyRow.className='rpt-filter-empty-row';
+      emptyRow.style.display='none';
+      var emptyTd=document.createElement('td');
+      emptyTd.colSpan=table.querySelectorAll('thead th').length||1;
+      var emptyBox=document.createElement('div');
+      emptyBox.className='empty-state';
+      emptyTd.appendChild(emptyBox);emptyRow.appendChild(emptyTd);tbody.appendChild(emptyRow);
+    }
+
+    var bar=document.createElement('div');bar.className='rpt-filter-bar';
+    var searchWrap=document.createElement('div');searchWrap.className='rpt-filter-search';
+    searchWrap.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" autocomplete="off">';
+    var input=searchWrap.querySelector('input');input.placeholder=cfg.searchPlaceholder;input.setAttribute('aria-label',cfg.searchPlaceholder);bar.appendChild(searchWrap);
+
+    var selects=(cfg.filters||[]).map(function(filterDef){var select=buildSelect(filterDef);bar.appendChild(select);return {el:select,attr:filterDef.attr};});
+    var sortSelect=null,sortValue='newest';
+    if(cfg.sortable){sortSelect=buildSelect({label:'Urutkan',options:[{value:'newest',label:'Terbaru'},{value:'oldest',label:'Terlama'}]});bar.appendChild(sortSelect);}
+    var count=document.createElement('span');count.className='rpt-filter-count';bar.appendChild(count);
+    anchor.insertAdjacentElement('afterend',bar);
+
+    function apply(){
+      if(!tbody)return;
+      collectRows();ensureEmptyRow();
+      applying=true;
+      // Baris "detail" (.rpt-filter-detail-row, mis. dropdown checklist task
+      // di bawah baris Permintaan Laporan pimpinan) bukan baris data sendiri
+      // -- gak punya data-search, gak dihitung/di-sort/di-cari terpisah,
+      // tapi harus tetap NEMPEL & ikut pindah bareng baris pemiliknya
+      // (row.nextElementSibling) supaya gak salah pasangan pas di-sort.
+      var detailOf=new Map();
+      rows.forEach(function(row){
+        var d=row.nextElementSibling;
+        if(d&&d.classList.contains('rpt-filter-detail-row'))detailOf.set(row,d);
+      });
+      if(sortSelect){
+        rows.sort(function(a,b){var diff=Number(a.dataset.rptOrder)-Number(b.dataset.rptOrder);return sortValue==='oldest'?-diff:diff;});
+        // Baris data yang punya detail-row nempel (dropdown task) bikin
+        // row.nextElementSibling nunjuk ke detail-row itu, BUKAN ke baris
+        // data berikutnya -- kalau gak di-skip dulu, pengecekan ini SELALU
+        // nganggep butuh reorder walau urutannya udah bener, jadi tiap
+        // polling history nyegerin data, semua baris (+ detail-row-nya)
+        // ke-lepas-pasang ulang ke DOM tanpa perlu. Efeknya: kalau lepas-
+        // pasang itu kebetulan nimpa persis pas user mousedown->click baris
+        // yang sama, Chrome bisa batalin event click-nya -- dropdown task
+        // jadi kelihatan "gak mau kebuka" scara acak/intermiten.
+        var needsReorder=rows.some(function(row,i){
+          var actualNext=row.nextElementSibling;
+          if(actualNext===detailOf.get(row))actualNext=actualNext.nextElementSibling;
+          return actualNext!==(rows[i+1]||emptyRow);
+        });
+        if(needsReorder){
+          if(tableObserver)tableObserver.disconnect();
+          if(tbodyObserver)tbodyObserver.disconnect();
+          rows.forEach(function(row){
+            tbody.insertBefore(row,emptyRow);
+            var d=detailOf.get(row);
+            if(d)tbody.insertBefore(d,emptyRow);
+          });
+          if(tableObserver)tableObserver.observe(table,{childList:true,subtree:true});
+          if(tbody&&tbodyObserver)tbodyObserver.observe(tbody,{childList:true,subtree:true});
+        }
+      }
+      var q=(input.value||'').trim().toLowerCase();
+      var visible=0;
+      rows.forEach(function(row){
+        var matchesSearch=!q||(row.dataset.search||'').indexOf(q)!==-1;
+        var matchesFilters=selects.every(function(s){return s.el.value==='all'||row.dataset[s.attr]===s.el.value;});
+        var match=matchesSearch&&matchesFilters;
+        row.style.display=match?'':'none';
+        var detail=detailOf.get(row);
+        if(detail)detail.style.display=match?'':'none';
+        if(match)visible++;
+      });
+      count.textContent=visible+' dari '+rows.length+' data';
+      if(emptyRow){
+        var emptyBox=emptyRow.querySelector('.empty-state');
+        if(emptyBox){
+          // Beda pesan tergantung PENYEBAB 0 hasilnya: kalau tabelnya emang
+          // belum ada data sama sekali (rows.length===0), selalu bilang
+          // "Belum ada X" -- gak peduli user lagi ngetik di kotak cari atau
+          // enggak, soalnya emang gak ada apa-apa buat dicari. Pesan "tidak
+          // sesuai pencarian/filter" cuma relevan kalau DATANYA ADA tapi
+          // kefilter jadi 0 (rows.length>0, visible===0).
+          var showingNoneMsg=rows.length===0;
+          var text=showingNoneMsg?(cfg.emptyTextNone||'Belum ada data.'):cfg.emptyText;
+          emptyBox.innerHTML=(showingNoneMsg?EMPTY_ICON_NONE:EMPTY_ICON_SEARCH)+'<div class="empty-state-title">'+text+'</div>';
+        }
+        emptyRow.style.display=visible===0?'':'none';
+      }
+      applying=false;
+    }
+
+    function scheduleApply(){
+      if(raf)return;
+      raf=requestAnimationFrame(function(){raf=0;if(!applying)bindTbody();apply();});
+    }
+
+    function bindTbody(){
+      var next=table.querySelector('tbody');
+      if(!next)return;
+      if(next!==tbody){
+        if(tbodyObserver)tbodyObserver.disconnect();
+        tbody=next;
+        emptyRow=null;
+        ensureEmptyRow();
+        collectRows();
+        tbodyObserver=new MutationObserver(function(){if(!applying)scheduleApply();});
+        tbodyObserver.observe(tbody,{childList:true,subtree:true});
+      }
+    }
+
+    input.addEventListener('input',apply);
+    selects.forEach(function(s){s.el.addEventListener('change',apply);});
+    if(sortSelect)sortSelect.addEventListener('change',function(){sortValue=sortSelect.value;apply();});
+
+    tableObserver=new MutationObserver(function(){scheduleApply();});
+    tableObserver.observe(table,{childList:true,subtree:true});
+
+    bindTbody();apply();
+    section.dataset.rptFilterReady='1';
+  }
+
+  function boot(){
+    initReportFilter({
+      sectionId:'masuk',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari pengirim atau perihal...',emptyText:'Tidak ada laporan masuk yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan masuk.',
+      filters:[{label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]}],sortable:true
+    });
+    // Riwayat Laporan Pimpinan dulu section #status berupa <table class="clean-table">.
+    // Sekarang sudah jadi #riwayat berupa grid KARTU (lihat laporan-pimpinan.blade.php)
+    // -- search + filter status + sort-nya ditangani initRiwayatCardFilter() di
+    // danpus-permintaan-arsip-mode.blade.php (numpang gaya .rpt-filter-* yang sama).
+    // initReportFilter di sini cuma jalan buat <table>, jadi blok lama dibuang.
+    initReportFilter({
+      sectionId:'kendala-kasansi',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari satuan atau perihal...',emptyText:'Tidak ada laporan kendala yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan kendala.',
+      filters:[
+        {label:'Filter status',attr:'kendalaStatus',options:[{value:'all',label:'Semua Status'},{value:'Menunggu',label:'Menunggu'},{value:'Ditindaklanjuti',label:'Ditindaklanjuti'},{value:'Selesai',label:'Selesai'},{value:'Ditolak',label:'Ditolak'}]},
+        {label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]}
+      ],sortable:true,
+      prepareRow:function(row){row.dataset.kendalaStatus=(row.querySelector('td:nth-child(4)')?.textContent||'').trim();}
+    });
+    // "Permintaan Laporan" milik Pimpinan sudah bukan <table> lagi (sekarang
+    // grid kartu, lihat laporan-pimpinan.blade.php) -- initReportFilter di
+    // sini cuma jalan buat struktur <table>, jadi search+filter+sort-nya
+    // sekarang ditangani initCardFilter() sendiri di
+    // danpus-permintaan-arsip-mode.blade.php (numpang gaya .rpt-filter-*
+    // yang sama biar tetap "1 sistem").
+
+    var filterPrioritas=[{label:'Filter prioritas',attr:'prioritas',options:[{value:'all',label:'Semua Prioritas'},{value:'Tinggi',label:'Tinggi'},{value:'Sedang',label:'Sedang'},{value:'Rendah',label:'Rendah'}]}];
+    initReportFilter({
+      sectionId:'riwayat',tableSelector:'.dtbl',anchorSelector:'.panel-head',searchPlaceholder:'Cari perihal atau tujuan...',emptyText:'Tidak ada laporan yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan.',
+      filters:[
+        {label:'Filter status',attr:'reportStatus',options:[{value:'all',label:'Semua Status'},{value:'Sedang diproses',label:'Sedang diproses'},{value:'Menunggu',label:'Menunggu'},{value:'Revisi',label:'Revisi'},{value:'Terlambat',label:'Terlambat'},{value:'Dibatalkan',label:'Dibatalkan'},{value:'Ditolak',label:'Ditolak'},{value:'Disetujui',label:'Disetujui'}]},
+        filterPrioritas[0]
+      ],sortable:true,
+      prepareRow:function(row){
+        var raw=(row.querySelector('td:nth-child(4)')?.textContent||'').trim().toLowerCase();
+        row.dataset.reportStatus=raw.includes('terl')?'Terlambat':raw.includes('batal')?'Dibatalkan':raw.includes('tolak')?'Ditolak':(raw.includes('setuj')||raw.includes('diterima'))?'Disetujui':raw.includes('revisi')?'Revisi':raw.includes('menunggu')?'Menunggu':(raw.includes('progres')||raw.includes('proses'))?'Sedang diproses':'Sedang diproses';
+      }
+    });
+    initReportFilter({
+      sectionId:'masuk',tableSelector:'.dtbl',anchorSelector:'.section-head',searchPlaceholder:'Cari pengirim atau perihal...',emptyText:'Tidak ada laporan masuk yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan masuk.',filters:filterPrioritas
+    });
+    initReportFilter({
+      sectionId:'monitoring',tableSelector:'.dtbl',anchorSelector:'.monitor-grid',searchPlaceholder:'Cari satlak atau perihal...',emptyText:'Tidak ada laporan dari 3 Satlak yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada laporan dari 3 Satlak.',filters:filterPrioritas
+    });
+    initReportFilter({
+      sectionId:'arsip-kendala-kasansi',tableSelector:'.clean-table',anchorSelector:'.section-head-clean',searchPlaceholder:'Cari pengirim atau perihal...',emptyText:'Tidak ada arsip kendala yang sesuai dengan pencarian/filter.',emptyTextNone:'Belum ada kendala yang diarsipkan.',filters:filterPrioritas
+    });
+    // 'surat-masuk' & 'arsip-surat' SENGAJA gak lagi didaftarkan di sini --
+    // panelnya sudah jadi grid kartu (.surat-file-grid, bukan
+    // <table class="dtbl"> lagi), jadi cari+urutnya sekarang dihandel
+    // initSuratCardSearch() di surat-card-styles.blade.php (sama kayak
+    // grid Surat Keluar).
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+</script>

@@ -17,7 +17,7 @@ class LaporanMonitoringStatusDiubah extends Notification
 
     public function via($notifiable): array
     {
-        return ['database'];
+        return ['database', \App\Notifications\Channels\WebPushChannel::class];
     }
 
     public function toDatabase($notifiable): array

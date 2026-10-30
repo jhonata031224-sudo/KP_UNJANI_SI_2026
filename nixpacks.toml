@@ -1,15 +1,22 @@
 [phases.setup]
-nixPkgs = ["php82", "php82Packages.composer", "nodejs_20"]
+# ffmpeg disertakan supaya binary `ffprobe` tersedia di server -- dipakai
+# SettingController::getDurasiVideoDetik() untuk mengecek durasi video latar
+# beranda (batas 1 menit) sebelum disimpan. Kalau paket ini hilang, validasi
+# durasi otomatis dilewati (lihat komentar di getDurasiVideoDetik()), jadi
+# fitur upload tidak sampai mati total, tapi durasi lebih dari 1 menit bisa
+# lolos tanpa terdeteksi -- disarankan JANGAN dihapus dari daftar ini.
+nixPkgs = ["php82", "php82Extensions.bcmath", "php82Extensions.gd", "php82Packages.composer", "nodejs_20", "ffmpeg"]
 
 [phases.install]
 cmds = [
   "composer install --no-dev --optimize-autoloader",
-  "npm ci"
+  "composer dump-autoload --optimize --no-dev",
+  "npm ci --include=dev"
 ]
 
 [phases.build]
 cmds = [
-  "npm run build"
+  "node node_modules/vite/bin/vite.js build"
 ]
 
 [start]

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Personel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,11 @@ class PersonelController extends Controller
 
         $validated['dicatat_oleh'] = $request->user()->id;
 
-        Personel::create($validated);
+        $personel = Personel::create($validated);
+
+        ActivityLog::catat('personel.create', "Menambahkan data personel \"{$personel->nama}\" ({$personel->nrp}).", $request->user(), [
+            'personel_id' => $personel->id,
+        ]);
 
         return back()->with('status', 'Data personel berhasil ditambahkan.');
     }
@@ -31,15 +36,26 @@ class PersonelController extends Controller
 
         $personel->update($validated);
 
+        ActivityLog::catat('personel.update', "Memperbarui data personel \"{$personel->nama}\" ({$personel->nrp}).", $request->user(), [
+            'personel_id' => $personel->id,
+        ]);
+
         return back()->with('status', 'Data personel berhasil diperbarui.');
     }
 
     /**
      * Hapus data personel beserta riwayat mutasi & dokumennya (cascade).
      */
-    public function destroy(Personel $personel): RedirectResponse
+    public function destroy(Request $request, Personel $personel): RedirectResponse
     {
+        $nama = $personel->nama;
+        $nrp = $personel->nrp;
+        $personelId = $personel->id;
         $personel->delete();
+
+        ActivityLog::catat('personel.delete', "Menghapus data personel \"{$nama}\" ({$nrp}).", $request->user(), [
+            'personel_id' => $personelId,
+        ]);
 
         return back()->with('status', 'Data personel berhasil dihapus.');
     }

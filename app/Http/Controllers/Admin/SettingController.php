@@ -7,53 +7,488 @@ use App\Models\ActivityLog;
 use App\Models\Pengaturan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\Process\ExecutableFinder;
+use Symfony\Component\Process\Process;
 
 class SettingController extends Controller
 {
-    /**
-     * Perbarui seluruh konten halaman landing (beranda/hero, fitur, tentang,
-     * kontak & sosial media). Gambar hero disimpan di storage/app/public/pengaturan.
-     */
+    public function verifyLandingAccess(Request $request)
+    {
+        if ($request->input('action') === 'revoke') {
+            $request->session()->forget([
+                'pengaturan_umum_terverifikasi',
+                'pengaturan_umum_terverifikasi_at',
+                'captcha_code',
+            ]);
+            return response()->json(['ok' => true, 'access' => false]);
+        }
+
+        $key = 'admin-landing-access:'.$request->user()->id.'|'.$request->ip();
+
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $seconds = RateLimiter::availableIn($key);
+            return response()->json([
+                'message' => 'Terlalu banyak percobaan. Coba lagi dalam '.$seconds.' detik.',
+            ], 429);
+        }
+
+        RateLimiter::increment($key, 60);
+
+        $validated = $request->validate([
+            'password' => ['required', 'string'],
+            'captcha' => ['required', 'string', 'size:5'],
+        ], [
+            'password.required' => 'Password wajib diisi.',
+            'captcha.required' => 'Captcha wajib diisi.',
+            'captcha.size' => 'Captcha harus terdiri dari 5 karakter.',
+        ]);
+
+        $captchaExpected = (string) $request->session()->pull('captcha_code', '');
+        $captchaGiven = (string) $validated['captcha'];
+
+        // Password akses Pengaturan Umum = password login Admin yang sedang aktif
+        // (tidak ada password terpisah / override lewat environment variable).
+        $passwordGiven = trim((string) $validated['password']);
+        $passwordValid = Hash::check($passwordGiven, (string) $request->user()->password);
+        $captchaValid = $captchaExpected !== '' && hash_equals($captchaExpected, $captchaGiven);
+
+        if (! $passwordValid || ! $captchaValid) {
+            ActivityLog::catat('pengaturan.landing.access_denied', 'Percobaan membuka Pengaturan Umum ditolak karena password atau captcha tidak valid.');
+
+            // Pesan dipisah per-field (bukan digabung generik) supaya Admin
+            // tidak salah menebak mana yang sebenarnya keliru saat gagal.
+            if (! $passwordValid && ! $captchaValid) {
+                $pesan = 'Password dan captcha salah. Periksa ulang keduanya.';
+            } elseif (! $passwordValid) {
+                $pesan = 'Password salah. Gunakan password login Admin Anda.';
+            } else {
+                $pesan = 'Kode captcha salah atau sudah kedaluwarsa. Captcha baru sudah dimuat ulang, coba masukkan lagi.';
+            }
+
+            return response()->json(['message' => $pesan], 422);
+        }
+
+        RateLimiter::clear($key);
+        $request->session()->put('pengaturan_umum_terverifikasi', true);
+        $request->session()->put('pengaturan_umum_terverifikasi_at', now()->timestamp);
+
+        // CATATAN: sengaja TIDAK memanggil $request->session()->regenerate() di sini.
+        // regenerate() otomatis me-regenerate token CSRF juga (lihat Illuminate\Session\Store::regenerate()),
+        // sehingga token _token yang sudah ter-render di form #landingForm (dimuat sebelum modal
+        // verifikasi ini dibuka) langsung basi walau form belum pernah di-refresh. Efeknya: submit
+        // form landing SELALU gagal dengan 419 setelah verifikasi password+captcha berhasil.
+        // Rate limiting + captcha di atas sudah cukup mencegah brute force, jadi regenerate ID sesi
+        // di sini tidak diperlukan untuk keamanan.
+
+        ActivityLog::catat('pengaturan.landing.access_granted', 'Konfirmasi akses Pengaturan Umum berhasil.');
+
+        return response()->json([
+            'ok' => true,
+            'access' => true,
+            // Dikirim balik agar sisi klien bisa sinkronkan token CSRF di halaman
+            // (defense-in-depth kalau suatu saat sesi diregenerate oleh middleware lain).
+            'csrf_token' => $request->session()->token(),
+        ]);
+    }
+
     public function updateLanding(Request $request): RedirectResponse
     {
+        // Sengaja TIDAK ada batas waktu (TTL) di sini -- akses berlaku terus
+        // selama sesi verifikasi belum dicabut (revoke), yaitu ketika Admin
+        // pindah dari tab Pengaturan Umum ke tab lain (lihat JS di
+        // admin-pengaturan-access.blade.php). Gerbang password + captcha di
+        // awal sudah dianggap cukup, jadi tidak perlu re-verifikasi berkala.
+        $verified = $request->session()->get('pengaturan_umum_terverifikasi', false);
+
+        if (! $verified) {
+            $request->session()->forget(['pengaturan_umum_terverifikasi', 'pengaturan_umum_terverifikasi_at']);
+            return back()->with('error', 'Akses Pengaturan Umum belum diverifikasi. Masukkan password dan captcha terlebih dahulu.');
+        }
+
+        // Naikkan batas waktu eksekusi PHP untuk request ini saja -- file
+        // video bisa mendekati 100 MB sehingga proses store ke disk (terutama
+        // volume Railway yang I/O-nya bisa lambat) melebihi default 30 detik.
+        // max_input_time juga di-set di railway-start.sh tapi set_time_limit()
+        // ini mengatur sisi EKSEKUSI (setelah data sudah diterima) dan berlaku
+        // di level per-request, lebih aman daripada hanya mengandalkan flag -d
+        // di level proses server yang bisa berbeda di environment non-Railway.
+        @set_time_limit(300);
+
+        // DIAGNOSTIK SEMENTARA: pesan "hero_video.uploaded" ("Kemungkinan
+        // ukurannya terlalu besar") cuma TEBAKAN Laravel -- rule 'uploaded'
+        // sebenarnya gagal untuk SEMUA kode error PHP upload (bukan cuma
+        // ukuran), termasuk UPLOAD_ERR_PARTIAL, UPLOAD_ERR_NO_TMP_DIR,
+        // UPLOAD_ERR_CANT_WRITE, dsb. Baris ini mencatat kode error PHP
+        // MENTAH (dari $_FILES, sebelum dibungkus Laravel/UploadedFile)
+        // via error_log() supaya tetap kebaca di stderr proses `php artisan
+        // serve` (dan ikut tertangkap log deploy Railway) walau
+        // LOG_CHANNEL Laravel (storage/logs, tidak kebaca dari Railway)
+        // tidak dipakai. HAPUS blok ini setelah penyebab pastinya ketemu.
+        if (isset($_FILES['hero_video'])) {
+            $f = $_FILES['hero_video'];
+            error_log(sprintf(
+                '[DIAG hero_video upload] error_code=%s name=%s size=%s tmp_name_exists=%s upload_tmp_dir=%s sys_tmp=%s | RUNTIME ini: upload_max_filesize=%s post_max_size=%s memory_limit=%s php_sapi=%s php_ini_loaded_file=%s',
+                $f['error'] ?? 'null',
+                $f['name'] ?? 'null',
+                $f['size'] ?? 'null',
+                (! empty($f['tmp_name']) && is_uploaded_file($f['tmp_name'])) ? 'yes' : 'no',
+                ini_get('upload_tmp_dir') ?: '(default)',
+                sys_get_temp_dir(),
+                ini_get('upload_max_filesize'),
+                ini_get('post_max_size'),
+                ini_get('memory_limit'),
+                PHP_SAPI,
+                php_ini_loaded_file() ?: '(none)'
+            ));
+        }
+
         $validated = $request->validate([
-            'hero_eyebrow' => ['nullable', 'string', 'max:255'],
-            'hero_judul_awal' => ['nullable', 'string', 'max:50'],
-            'hero_judul_aksen' => ['nullable', 'string', 'max:50'],
-            'hero_subjudul' => ['nullable', 'string', 'max:255'],
-            'hero_deskripsi' => ['nullable', 'string', 'max:2000'],
-            'hero_image' => ['nullable', 'image', 'max:4096'],
-            'fitur' => ['required', 'array', 'size:4'],
-            'fitur.*.judul' => ['required', 'string', 'max:100'],
-            'fitur.*.deskripsi' => ['required', 'string', 'max:500'],
-            'tentang_deskripsi' => ['nullable', 'string', 'max:4000'],
-            'tentang_moto_judul' => ['nullable', 'string', 'max:255'],
-            'tentang_moto_deskripsi' => ['nullable', 'string', 'max:2000'],
-            'alamat' => ['nullable', 'string', 'max:1000'],
-            'email_kontak' => ['nullable', 'email', 'max:255'],
-            'telepon_kontak' => ['nullable', 'string', 'max:30'],
-            'website' => ['nullable', 'url', 'max:255'],
-            'sosial_media' => ['required', 'array'],
-            'sosial_media.*.platform' => ['required', 'string', 'max:30'],
-            'sosial_media.*.label' => ['nullable', 'string', 'max:100'],
-            'sosial_media.*.url' => ['nullable', 'url', 'max:500'],
+            'hero_eyebrow'=>['nullable','string','max:255'],
+            'hero_judul_awal'=>['nullable','string','max:50'],
+            'hero_judul_aksen'=>['nullable','string','max:50'],
+            'hero_subjudul'=>['nullable','string','max:255'],
+            'hero_deskripsi'=>['nullable','string','max:2000'],
+            'hero_image'=>['nullable','image','max:5120'],
+            // hero_bg_type: menentukan latar hero yang DIPAKAI di landing page
+            // ('gambar' atau 'video') -- kolom gambar & video sengaja disimpan
+            // terpisah (lihat migration 2026_09_08_000001) supaya Admin bisa
+            // bolak-balik ganti tipe tanpa upload ulang.
+            'hero_bg_type'=>['nullable','in:gambar,video'],
+            // Video latar beranda: dibatasi 100 MB (dinaikkan dari 15 MB
+            // supaya video pendek berkualitas lebih tinggi tetap muat) --
+            // format mp4/webm/mov senada dengan validasi upload video
+            // Postingan (lihat PostinganController). Durasi maksimal 1 menit
+            // dicek terpisah lewat rule closure 'durasi_video_maks_60_detik'
+            // di bawah (butuh ffprobe, lihat getDurasiVideoDetik()) karena
+            // Laravel tidak punya rule bawaan untuk durasi media.
+            // CATATAN PERBAIKAN: sebelumnya pakai rule 'mimes:mp4,webm,mov,quicktime'
+            // bawaan Laravel -- rule itu menebak tipe file dari ISI BYTE file
+            // (via fileinfo/libmagic), BUKAN dari ekstensi nama file yang
+            // diunggah. Banyak video .mp4 hasil rekam layar HP (game recorder
+            // dsb) punya struktur container yang membuat libmagic di server
+            // salah menebak tipenya, sehingga file .mp4 ASLI & VALID tetap
+            // ditolak "format tidak valid" (dilaporkan Admin berulang kali).
+            // "quicktime" di daftar lama itu sendiri juga bukan ekstensi file
+            // yang sah (seharusnya "mov"), jadi rule lama memang salah sejak
+            // awal. Diganti closure validasiFormatVideo() di bawah yang
+            // memvalidasi dari EKSTENSI ASLI nama file + MIME type, dengan
+            // ffprobe (validasiDurasiVideoMaksimal) tetap jadi pengaman lapis
+            // kedua yang membaca isi video sungguhan.
+            'hero_video'=>['nullable','file','max:102400', function ($attribute, $value, $fail) {
+                $this->validasiFormatVideo($value, $fail);
+            }, function ($attribute, $value, $fail) {
+                $this->validasiDurasiVideoMaksimal($value, $fail, 60);
+            }],
+            // hero_blur_level: efek blur langsung di foto latar (px, 0-20).
+            // hero_overlay_intensity: kepekatan lapisan gradient di atas foto (%, 0-100).
+            // Kedua efek ini dipakai bersama untuk latar gambar MAUPUN video.
+            'hero_blur_level'=>['nullable','integer','min:0','max:20'],
+            'hero_overlay_intensity'=>['nullable','integer','min:0','max:100'],
+            'logo_file'=>['nullable','image','max:5120'],
+            'fitur'=>['required','array','size:4'],
+            'fitur.*.judul'=>['required','string','max:100'],
+            'fitur.*.deskripsi'=>['required','string','max:500'],
+            'tentang_deskripsi'=>['nullable','string','max:4000'],
+            'tentang_nama_resmi'=>['nullable','string','max:255'],
+            'tentang_nama_lama'=>['nullable','string','max:255'],
+            'tentang_fungsi_utama'=>['nullable','string','max:1000'],
+            'tentang_moto_judul'=>['nullable','string','max:255'],
+            'tentang_moto_deskripsi'=>['nullable','string','max:2000'],
+            // makna_logo: 10 poin keterangan makna lambang yang tampil di modal
+            // "Makna Logo" pada landing page. 'size:10' memastikan jumlahnya
+            // tetap 10 poin sesuai jumlah nomor pada diagram di modal.
+            'makna_logo'=>['nullable','array','size:10'],
+            'makna_logo.*.judul'=>['nullable','string','max:100'],
+            'makna_logo.*.keterangan'=>['nullable','string','max:600'],
+            'alamat'=>['nullable','string','max:1000'],
+            'email_kontak'=>['nullable','email','max:255'],
+            'telepon_kontak'=>['nullable','string','max:30'],
+            'website'=>['nullable','url','max:255'],
+            'sosial_media'=>['required','array'],
+            'sosial_media.*.platform'=>['required','string','max:30'],
+            'sosial_media.*.label'=>['nullable','string','max:100'],
+            'sosial_media.*.url'=>['nullable','url','max:500'],
+            'landing_content'=>['nullable','string','max:30000'],
+        ], [
+            // Tanpa pesan custom di sini, kegagalan upload hero_image/logo_file
+            // jatuh ke pesan bawaan Laravel dalam bahasa Inggris (locale app
+            // ini 'en', tidak ada resources/lang/id) -- termasuk pesan generik
+            // "The hero image failed to upload." yang bikin Admin bingung soal
+            // apa yang sebenarnya salah. Pesan di bawah menutupi 3 skenario:
+            // 1) 'uploaded' (rule implisit bawaan Laravel untuk field file) --
+            //    gagal di LEVEL PHP SEBELUM validasi ukuran sempat jalan,
+            //    biasanya karena file melebihi batas upload PHP di server.
+            // 2) 'max' -- file berhasil terkirim tapi lebih besar dari 5 MB.
+            // 3) 'image' -- file terkirim tapi bukan format gambar yang valid.
+            'hero_image.uploaded' => 'Gambar latar beranda gagal diunggah. Kemungkinan ukurannya terlalu besar -- pastikan ukuran file maksimal 5 MB.',
+            'hero_image.max' => 'Ukuran gambar latar beranda maksimal 5 MB. Silakan kompres atau pilih foto lain.',
+            'hero_image.image' => 'File gambar latar beranda tidak valid. Gunakan format JPG, PNG, atau WEBP.',
+            'hero_video.uploaded' => 'Video latar beranda gagal diunggah. Kemungkinan ukurannya terlalu besar -- pastikan ukuran file maksimal 100 MB.',
+            'hero_video.max' => 'Ukuran video latar beranda maksimal 100 MB. Silakan kompres atau pilih video lain.',
+            // Pesan format tidak valid untuk hero_video sekarang dilempar
+            // LANGSUNG oleh closure validasiFormatVideo() lewat $fail(), jadi
+            // tidak perlu key 'hero_video.mimes' lagi di sini (rule 'mimes'
+            // sudah tidak dipakai -- lihat komentar di rule validasi atas).
+            'logo_file.uploaded' => 'Logo gagal diunggah. Kemungkinan ukurannya terlalu besar -- pastikan ukuran file maksimal 5 MB.',
+            'logo_file.max' => 'Ukuran logo maksimal 5 MB. Silakan kompres atau pilih foto lain.',
+            'logo_file.image' => 'File logo tidak valid. Gunakan format JPG, PNG, atau WEBP.',
         ]);
 
         $pengaturan = Pengaturan::current();
 
+        // Kumpulan label gambar yang gagal BENERAN tersimpan di disk (walau
+        // Laravel tidak melempar exception) -- lihat catatan panjang di
+        // storeVerifiedImage() untuk kenapa pengecekan manual ini perlu ada.
+        $gagalSimpanGambar = [];
+
         if ($request->hasFile('hero_image')) {
-            if ($pengaturan->hero_image_path) {
-                Storage::disk('public')->delete($pengaturan->hero_image_path);
+            $path = $this->storeHeroImage($request->file('hero_image'), 'pengaturan');
+            if ($path) {
+                if ($pengaturan->hero_image_path) Storage::disk('public')->delete($pengaturan->hero_image_path);
+                $validated['hero_image_path'] = $path;
+            } else {
+                $gagalSimpanGambar[] = 'Gambar latar (BG) beranda';
+                unset($validated['hero_image']);
             }
-            $validated['hero_image_path'] = $request->file('hero_image')->store('pengaturan', 'public');
         }
-        unset($validated['hero_image']);
+        if ($request->hasFile('hero_video')) {
+            $path = $this->storeVerifiedImage($request->file('hero_video'), 'pengaturan');
+            if ($path) {
+                if ($pengaturan->hero_video_path) Storage::disk('public')->delete($pengaturan->hero_video_path);
+                $validated['hero_video_path'] = $path;
+            } else {
+                $gagalSimpanGambar[] = 'Video latar beranda';
+                unset($validated['hero_video']);
+            }
+        }
+        if ($request->hasFile('logo_file')) {
+            $path = $this->storeVerifiedImage($request->file('logo_file'), 'pengaturan');
+            if ($path) {
+                if ($pengaturan->logo_path) Storage::disk('public')->delete($pengaturan->logo_path);
+                $validated['logo_path'] = $path;
+            } else {
+                $gagalSimpanGambar[] = 'Logo';
+                unset($validated['logo_file']);
+            }
+        }
 
+        if (!empty($validated['landing_content'])) {
+            $decoded = json_decode($validated['landing_content'], true);
+            if (is_array($decoded)) $validated['landing_content'] = $decoded;
+            else unset($validated['landing_content']);
+        } else {
+            unset($validated['landing_content']);
+        }
+
+        unset($validated['hero_image'], $validated['hero_video'], $validated['logo_file']);
         $pengaturan->update($validated);
+        ActivityLog::catat('pengaturan.landing.update', 'Memperbarui seluruh konten halaman landing (branding, navigasi, beranda, fitur, tentang, kontak, footer).');
 
-        ActivityLog::catat('pengaturan.landing.update', 'Memperbarui konten halaman landing (beranda, fitur, tentang, kontak).');
+        // Field lain (teks, fitur, kontak, dst) tetap tersimpan sekalipun ada
+        // gambar yang gagal -- tapi Admin HARUS tahu gambarnya tidak
+        // benar-benar ke-upload, supaya tidak mengira semuanya sukses
+        // seperti sebelumnya (409/logo baru tampak "kosong" tanpa penjelasan).
+        if (! empty($gagalSimpanGambar)) {
+            return back()->with('error',
+                implode(' & ', $gagalSimpanGambar).' GAGAL disimpan ke server (storage tidak bisa ditulis). '
+                .'Konten lain sudah tersimpan. Coba upload ulang gambar; kalau gagal terus, cek log server / kapasitas volume Railway.'
+            );
+        }
 
         return back()->with('status', 'Konten halaman landing berhasil disimpan.');
+    }
+
+    /**
+     * Simpan file upload ke disk 'public' lalu VERIFIKASI file-nya benar-benar
+     * ada & tidak kosong (0 byte) di disk sesudahnya.
+     *
+     * Kenapa perlu: disk 'public' disetel throw=false (lihat
+     * config/filesystems.php), jadi UploadedFile::store() bisa saja tidak
+     * melempar exception sama sekali walau penulisan file ke disk sebenarnya
+     * gagal (mis. mount volume Railway lagi bermasalah/read-only sesaat,
+     * disk penuh, dsb) -- request tetap dianggap "berhasil", path tetap
+     * disimpan ke kolom logo_path/hero_image_path di database, padahal
+     * file fisiknya tidak pernah benar-benar ada. Efeknya: Admin nyimpen,
+     * dapat pesan sukses, tapi gambar hilang/kosong di landing page --
+     * kadang baru ketahuan berselang lama sesudahnya, bukan saat itu juga.
+     *
+     * Dengan verifikasi manual ini, kegagalan tulis fisik langsung ketahuan
+     * DI REQUEST YANG SAMA, jadi bisa dikasih tahu ke Admin saat itu juga.
+     *
+     * Catatan: nama method ini "Image" tapi isinya generik (store + verifikasi
+     * fisik di disk) -- dipakai juga untuk file video (hero_video, lihat
+     * updateLanding()), bukan cuma gambar.
+     */
+    /**
+     * Simpan gambar latar hero dalam versi yang sudah dikecilkan (maks 1920px,
+     * WebP/JPEG) supaya ringan dimuat di HP. Kalau pengecilan tidak bisa/perlu
+     * (GD tidak ada, sudah kecil, memori kurang), pakai file asli seperti biasa.
+     */
+    private function storeHeroImage($file, string $folder): ?string
+    {
+        try {
+            $opt = \App\Support\ImageOptimizer::optimize($file->getRealPath());
+            if ($opt) {
+                $path = $folder.'/'.\Illuminate\Support\Str::random(40).'.'.$opt['ext'];
+                if (Storage::disk('public')->put($path, $opt['data']) && Storage::disk('public')->size($path) > 0) {
+                    return $path;
+                }
+                Storage::disk('public')->delete($path);
+            }
+        } catch (\Throwable $e) {
+            // abaikan -> jatuh ke penyimpanan file asli di bawah
+        }
+
+        return $this->storeVerifiedImage($file, $folder);
+    }
+
+    private function storeVerifiedImage($file, string $folder): ?string
+    {
+        $path = $file->store($folder, 'public');
+
+        if (! $path || ! Storage::disk('public')->exists($path) || Storage::disk('public')->size($path) < 1) {
+            if ($path) Storage::disk('public')->delete($path);
+
+            return null;
+        }
+
+        return $path;
+    }
+
+    public function deleteLandingImage(Request $request, string $tipe): RedirectResponse
+    {
+        // Guard akses sama persis dengan updateLanding() -- tanpa TTL, cukup
+        // sudah lolos verifikasi password + captcha di awal (lihat komentar
+        // di updateLanding()).
+        $verified = $request->session()->get('pengaturan_umum_terverifikasi', false);
+
+        if (! $verified) {
+            $request->session()->forget(['pengaturan_umum_terverifikasi', 'pengaturan_umum_terverifikasi_at']);
+            return back()->with('error', 'Akses Pengaturan Umum belum diverifikasi. Masukkan password dan captcha terlebih dahulu.');
+        }
+
+        $kolom = match ($tipe) {
+            'logo' => 'logo_path',
+            'hero_video' => 'hero_video_path',
+            default => 'hero_image_path',
+        };
+        $label = match ($tipe) {
+            'logo' => 'Logo',
+            'hero_video' => 'Video latar beranda',
+            default => 'Gambar latar (BG) beranda',
+        };
+
+        $pengaturan = Pengaturan::current();
+
+        if ($pengaturan->{$kolom}) {
+            Storage::disk('public')->delete($pengaturan->{$kolom});
+            $pengaturan->update([$kolom => null]);
+            ActivityLog::catat('pengaturan.landing.image_delete', $label.' landing page dihapus.');
+        }
+
+        return back()->with('status', $label.' berhasil dihapus.');
+    }
+
+    /**
+     * Rule validasi closure untuk field hero_video: memastikan file yang
+     * diunggah benar video dengan format MP4/WEBM/MOV.
+     *
+     * Sengaja TIDAK memakai rule bawaan Laravel `mimes:` (yang menebak tipe
+     * file dari isi byte via fileinfo/libmagic) karena penebakan itu kerap
+     * SALAH untuk video .mp4 hasil rekam layar HP (struktur container yang
+     * tidak umum bikin libmagic salah tebak), sehingga video yang sebenarnya
+     * valid ditolak. Di sini validasi dilakukan dari EKSTENSI ASLI nama file
+     * yang diunggah (jauh lebih dapat diandalkan untuk kasus ini) DIBANTU
+     * MIME type sebagai cek tambahan -- lolos salah satu saja sudah cukup.
+     * Verifikasi bahwa isinya BENAR video yang bisa dibaca tetap dilakukan
+     * terpisah oleh validasiDurasiVideoMaksimal() lewat ffprobe.
+     */
+    private function validasiFormatVideo($file, callable $fail): void
+    {
+        if (! $file) return;
+
+        $ekstensiDiizinkan = ['mp4', 'webm', 'mov', 'm4v', 'qt'];
+        $mimeDiizinkan = [
+            'video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v',
+            'application/mp4', 'video/mp4v-es', 'video/x-msvideo',
+        ];
+
+        $ekstensiAsli = strtolower((string) $file->getClientOriginalExtension());
+        if (in_array($ekstensiAsli, $ekstensiDiizinkan, true)) return;
+
+        // Fallback: kalau nama file tidak punya ekstensi yang cocok (mis.
+        // hasil rename tanpa ekstensi), masih dicoba lewat MIME type yang
+        // dilaporkan browser/OS saat upload.
+        $mimeAsli = strtolower((string) $file->getClientMimeType());
+        if (in_array($mimeAsli, $mimeDiizinkan, true)) return;
+
+        $fail('Format video latar beranda tidak valid. Gunakan format MP4, WEBM, atau MOV.');
+    }
+
+    /**
+     * Rule validasi closure untuk field hero_video: menolak video yang
+     * durasinya lebih dari $maksDetik detik (dipakai dengan 60 = 1 menit).
+     *
+     * Dicek pakai `ffprobe` (bagian dari paket ffmpeg, lihat nixpacks.toml)
+     * lewat Symfony Process alih-alih paket PHP tambahan supaya tidak nambah
+     * dependency composer baru. Kalau ffprobe TIDAK ditemukan di server (mis.
+     * environment lokal developer yang belum install ffmpeg) atau gagal
+     * dibaca durasinya karena sebab lain, validasi ini SENGAJA DILEWATI
+     * (tidak menolak upload) -- supaya fitur upload video tidak ikut mati
+     * total gara-gara satu binary opsional hilang. Batas ukuran 100 MB di
+     * rule 'max' tetap jadi pengaman utama pada kondisi itu.
+     */
+    private function validasiDurasiVideoMaksimal($file, callable $fail, int $maksDetik): void
+    {
+        if (! $file) return;
+
+        $durasi = $this->getDurasiVideoDetik($file->getRealPath());
+
+        if ($durasi === null) return; // ffprobe tidak tersedia / gagal baca -- lewati saja
+
+        if ($durasi > $maksDetik) {
+            $durasiBulat = (int) ceil($durasi);
+            $fail("Durasi video latar beranda {$durasiBulat} detik, melebihi batas maksimal {$maksDetik} detik (1 menit). Silakan potong videonya terlebih dahulu.");
+        }
+    }
+
+    /**
+     * Baca durasi video (dalam detik, boleh pecahan) lewat `ffprobe`.
+     * Return null kalau ffprobe tidak ada di PATH server atau proses gagal --
+     * caller (validasiDurasiVideoMaksimal) menganggap null sebagai "lewati
+     * pengecekan", bukan "durasi 0 detik".
+     */
+    private function getDurasiVideoDetik(string $path): ?float
+    {
+        try {
+            $ffprobeBin = (new ExecutableFinder())->find('ffprobe');
+            if (! $ffprobeBin) return null;
+
+            $process = new Process([
+                $ffprobeBin,
+                '-v', 'error',
+                '-show_entries', 'format=duration',
+                '-of', 'default=noprint_wrappers=1:nokey=1',
+                $path,
+            ]);
+            $process->setTimeout(10);
+            $process->run();
+
+            if (! $process->isSuccessful()) return null;
+
+            $output = trim($process->getOutput());
+            if ($output === '' || ! is_numeric($output)) return null;
+
+            return (float) $output;
+        } catch (\Throwable $e) {
+            // Jangan sampai kegagalan pengecekan durasi (proses/exec dinonaktifkan
+            // di beberapa hosting shared) bikin seluruh form Pengaturan Umum error.
+            Log::warning('Gagal membaca durasi video hero_video via ffprobe: '.$e->getMessage());
+            return null;
+        }
     }
 }

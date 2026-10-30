@@ -1,12 +1,16 @@
 <?php
 
 use App\Http\Controllers\Admin\BackupController;
-use App\Http\Controllers\Admin\PengumumanController;
+use App\Http\Controllers\Admin\BackupFileController;
+use App\Http\Controllers\Admin\PermintaanResetPasswordController as AdminPermintaanResetPasswordController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\ResetDataLaporanController;
 use App\Http\Controllers\Admin\SatuanController;
 use App\Http\Controllers\Admin\SessionController;
+use App\Http\Controllers\Admin\NotifikasiSettingController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\StrukturOrganisasiController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AkunMedsosController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -16,40 +20,91 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DukunganTeknisController;
 use App\Http\Controllers\JabatanController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\LaporanKendalaController;
+use App\Http\Controllers\LaporanSuratController;
 use App\Http\Controllers\LaporanMonitoringController;
 use App\Http\Controllers\LaporanPublikasiController;
 use App\Http\Controllers\LogUjiPengembanganController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\PangkatController;
+use App\Http\Controllers\PermintaanLaporanController;
+use App\Http\Controllers\PermintaanResetPasswordController;
 use App\Http\Controllers\PersonelController;
 use App\Http\Controllers\PersonelDokumenController;
 use App\Http\Controllers\PersonelMutasiController;
 use App\Http\Controllers\PostinganController;
+use App\Http\Controllers\ProfilFotoController;
 use App\Http\Controllers\ProyekRisetController;
 use App\Models\Pengaturan;
-use App\Models\Satuan;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    // Satuan dikelompokkan per kategori untuk ditampilkan di dropdown login.
-    $satuans = Satuan::orderBy('urutan')->get()->groupBy('kategori');
+Route::get('/', function (\Illuminate\Http\Request $request) {
+    // Alamat dashboard disamarkan jadi "/" di address bar (lihat
+    // public/js/cyclone-url-mask.js). Maka bagi pengguna yang sudah login,
+    // "/" -- dari refresh, atau redirect back() setelah submit form -- harus
+    // kembali ke dashboard. reflash() menjaga pesan sukses/gagal (flash
+    // session) agar tidak hilang di lompatan perantara ini.
+    // Pengecualian: ?lp_preview=1 dipakai iframe "Pratinjau Langsung" di Admin >
+    // Pengaturan Umum untuk menampilkan landing page ASLI. Kalau di-redirect ke
+    // dashboard, iframe memuat dashboard (yang membuka tab Pengaturan Umum dan
+    // memuat iframe lagi) -> rekursi tanpa akhir, halaman lemot, dan flash toast
+    // (mis. "berhasil disimpan") tertelan permintaan iframe. Hanya Admin yang boleh.
+    $lpPreviewAdmin = $request->boolean('lp_preview')
+        && strtoupper(trim((string) $request->user()?->satuan?->kode)) === 'ADMIN';
 
-    return view('siberad.landing.welcome', [
-        'satuans' => $satuans,
+    if ($request->user() && ! $lpPreviewAdmin) {
+        $request->session()->reflash();
+
+        return redirect()->route('dashboard', $request->query());
+    }
+
+    return view('cyclone.landing.welcome', [
         'pengaturan' => Pengaturan::current(),
     ]);
 });
 
-// Form login berada di landing page (modal), bukan halaman tersendiri.
-// Route GET ini mencegah error 405 kalau ada yang membuka /login langsung
-// atau saat middleware auth mengarahkan pengguna yang belum login ke sini.
+// Manifest PWA dinamis: nama app (pop-up "Instal" & nama setelah terinstal)
+// mengikuti nama sistem di Pengaturan admin, bukan hardcode.
+Route::get('/manifest.webmanifest', function () {
+    $nama = Pengaturan::current()->namaSistem();
+
+    return response()->json([
+        'name' => $nama.' - Sistem Pendukung Operasional',
+        'short_name' => $nama,
+        'description' => 'Sistem Pendukung Operasional '.$nama,
+        'id' => '/dashboard',
+        'start_url' => '/dashboard',
+        'scope' => '/',
+        'display' => 'standalone',
+        'background_color' => '#06090c',
+        'theme_color' => '#06090c',
+        'orientation' => 'any',
+        'icons' => [
+            ['src' => '/images/icon-192.png', 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => '/images/icon-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => '/images/icon-maskable-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'],
+        ],
+    ], 200, [
+        'Content-Type' => 'application/manifest+json',
+        'Cache-Control' => 'no-cache',
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+})->name('manifest');
+
+Route::get('/landing-config', function () {
+    $p = Pengaturan::current();
+    $config = $p->landingConfig();
+    // Sama seperti welcome.blade.php: TIDAK fallback ke logo/gambar bawaan
+    // lagi kalau Admin sudah menghapusnya -- biar konsisten "ikut kosong".
+    $config['logo_url'] = $p->logo_path ? asset('storage/'.$p->logo_path) : null;
+    $config['background_url'] = $p->hero_image_path ? asset('storage/'.$p->hero_image_path) : null;
+    return response()->json(['config' => $config]);
+});
+
 Route::get('/login', function () {
     return redirect('/');
 });
 
-// Gambar captcha untuk form login — di-generate ulang tiap kali diminta.
 Route::get('/captcha/image', [CaptchaController::class, 'image'])->name('captcha.image');
-
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('login');
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
@@ -57,246 +112,292 @@ Route::get('/dashboard', DashboardController::class)
     ->middleware('auth')
     ->name('dashboard');
 
-// Kirim laporan dari satuan pengirim (mis. Satuan Pelaksanaan Dukungan Teknologi) ke DANPUS,
-// sekaligus memicu notifikasi database ke seluruh akun DANPUS.
-Route::post('/laporan', [LaporanController::class, 'store'])
+Route::get('/dashboard/pimpinan-kpi/realtime', [DashboardController::class, 'pimpinanKpiRealtime'])
     ->middleware('auth')
+    ->name('dashboard.pimpinan-kpi.realtime');
+
+Route::get('/dashboard/satuan-kpi/realtime', [DashboardController::class, 'satuanKpiRealtime'])
+    ->middleware('auth')
+    ->name('dashboard.satuan-kpi.realtime');
+
+Route::get('/dashboard/admin-kpi/realtime', [DashboardController::class, 'adminKpiRealtime'])
+    ->middleware('auth')
+    ->name('dashboard.admin-kpi.realtime');
+
+Route::post('/laporan', [LaporanController::class, 'store'])
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan.store');
 
-// Hapus laporan dari riwayat — hanya satuan tujuan (mis. DANPUS) yang boleh
-// menghapus laporan yang ditujukan kepadanya (dicek di controller).
+Route::get('/laporan/log-aktivitas/realtime', [LaporanController::class, 'realtime'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('laporan.log-aktivitas.realtime');
+
+Route::get('/laporan/permintaan-laporan/long-poll', [LaporanController::class, 'tungguPerubahanPermintaan'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('laporan.permintaan-laporan.long-poll');
+
+Route::patch('/laporan/{laporan}/status', [LaporanController::class, 'updateStatus'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('laporan.status');
+
+Route::patch('/laporan/{laporan}/progres', [LaporanController::class, 'updateProgres'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('laporan.update-progres');
+
 Route::delete('/laporan/{laporan}', [LaporanController::class, 'destroy'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan.destroy');
 
+// ===== Permintaan Laporan & Deadline dari DANPUS/WADAN =====
+Route::get('/permintaan-laporan', [PermintaanLaporanController::class, 'index'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('permintaan-laporan.index');
+Route::get('/permintaan-laporan/realtime', [PermintaanLaporanController::class, 'realtime'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('permintaan-laporan.realtime');
+Route::post('/permintaan-laporan', [PermintaanLaporanController::class, 'store'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('permintaan-laporan.store');
+Route::patch('/permintaan-laporan/{permintaanLaporan}/mulai', [PermintaanLaporanController::class, 'mulai'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('permintaan-laporan.mulai');
+Route::patch('/permintaan-laporan/{permintaanLaporan}/batal', [PermintaanLaporanController::class, 'batal'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('permintaan-laporan.batal');
+Route::patch('/permintaan-laporan/{permintaanLaporan}/deadline', [PermintaanLaporanController::class, 'editDeadline'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('permintaan-laporan.edit-deadline');
+Route::patch('/permintaan-laporan/{permintaanLaporan}/revisi', [PermintaanLaporanController::class, 'revisiDariRiwayat'])
+    ->middleware(['auth', 'modul:laporan'])
+    ->name('permintaan-laporan.revisi');
+
+// ===== Laporan Kendala Kasansi (21 Sansidam) langsung ke Danpus =====
+Route::post('/laporan-kendala', [LaporanKendalaController::class, 'store'])
+    ->middleware(['auth', 'modul:kendala'])
+    ->name('laporan-kendala.store');
+Route::get('/laporan-kendala/realtime', [LaporanKendalaController::class, 'realtime'])
+    ->middleware(['auth', 'modul:kendala'])
+    ->name('laporan-kendala.realtime');
+Route::patch('/laporan-kendala/{laporanKendala}/konfirmasi', [LaporanKendalaController::class, 'konfirmasi'])
+    ->middleware(['auth', 'modul:kendala'])
+    ->name('laporan-kendala.konfirmasi');
+Route::delete('/laporan-kendala/{laporanKendala}', [LaporanKendalaController::class, 'destroy'])
+    ->middleware(['auth', 'modul:kendala'])
+    ->name('laporan-kendala.destroy');
+
+// ===== Surat Kasansi (21 Sansidam) ke SATU tujuan bebas =====
+// Status: menunggu_konfirmasi -> dikonfirmasi (oleh penerima).
+// Surat masuk Arsip Surat pengirim hanya setelah dikonfirmasi.
+Route::post('/laporan-surat', [LaporanSuratController::class, 'store'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.store');
+Route::get('/laporan-surat/realtime', [LaporanSuratController::class, 'realtime'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.realtime');
+Route::patch('/laporan-surat/{laporanSurat}/konfirmasi', [LaporanSuratController::class, 'konfirmasi'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.konfirmasi');
+Route::post('/laporan-surat/{laporanSurat}/teruskan', [LaporanSuratController::class, 'teruskan'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.teruskan');
+Route::post('/laporan-surat/{laporanSurat}/ke-danpus', [LaporanSuratController::class, 'kembalikanKeDanpus'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.ke-danpus');
+Route::post('/laporan-surat/{laporanSurat}/ke-wadan', [LaporanSuratController::class, 'teruskanKeWadan'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.ke-wadan');
+Route::post('/laporan-surat/{laporanSurat}/selesai', [LaporanSuratController::class, 'selesai'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.selesai');
+Route::post('/laporan-surat/{laporanSurat}/disposisi-ulang', [LaporanSuratController::class, 'disposisiUlang'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.disposisi-ulang');
+Route::patch('/laporan-surat/{laporanSurat}/konfirmasi-tembusan', [LaporanSuratController::class, 'konfirmasiTembusan'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.konfirmasi-tembusan');
+// Lampiran surat Rahasia (disk privat) -- diperiksa hak aksesnya di controller.
+Route::get('/laporan-surat/{laporanSurat}/lampiran', [LaporanSuratController::class, 'lampiran'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.lampiran');
+Route::get('/laporan-surat/{laporanSurat}/riwayat/{riwayat}/lampiran', [LaporanSuratController::class, 'lampiran'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.lampiran-riwayat');
+Route::delete('/laporan-surat/{laporanSurat}', [LaporanSuratController::class, 'destroy'])
+    ->middleware(['auth', 'modul:surat'])
+    ->name('laporan-surat.destroy');
+
 // ===== Laporan Publikasi ke DANPUS (Satuan Pelaksanaan Siber Sosial) =====
-// Dipakai fitur Buat Laporan Publikasi, Draft, Kirim ke DANPUS, Upload
-// Dokumentasi, dan Hapus Draft pada dashboard Satuan Pelaksanaan Siber Sosial.
 Route::post('/laporan-publikasi', [LaporanPublikasiController::class, 'store'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-publikasi.store');
-
 Route::patch('/laporan-publikasi/{laporanPublikasi}', [LaporanPublikasiController::class, 'update'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-publikasi.update');
-
 Route::post('/laporan-publikasi/{laporanPublikasi}/kirim', [LaporanPublikasiController::class, 'kirim'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-publikasi.kirim');
-
 Route::post('/laporan-publikasi/{laporanPublikasi}/dokumentasi', [LaporanPublikasiController::class, 'uploadDokumentasi'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-publikasi.upload-dokumentasi');
-
 Route::delete('/laporan-publikasi-dokumen/{dokumen}', [LaporanPublikasiController::class, 'destroyDokumentasi'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-publikasi-dokumen.destroy');
-
 Route::delete('/laporan-publikasi/{laporanPublikasi}', [LaporanPublikasiController::class, 'destroy'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-publikasi.destroy');
 
-// ===== Laporan Monitoring & Recovery ke DANPUS (Satuan Pelaksanaan Penangkalan) =====
-// Dipakai fitur Buat Laporan Monitoring & Recovery, Draft, Kirim/Kirim Ulang
-// (setelah Direvisi), Upload Lampiran, dan Hapus Draft pada dashboard Satuan Pelaksanaan Penangkalan.
+// ===== Laporan Monitoring & Recovery ke DANPUS =====
 Route::post('/laporan-monitoring', [LaporanMonitoringController::class, 'store'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-monitoring.store');
-
 Route::patch('/laporan-monitoring/{laporanMonitoring}', [LaporanMonitoringController::class, 'update'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-monitoring.update');
-
 Route::post('/laporan-monitoring/{laporanMonitoring}/kirim', [LaporanMonitoringController::class, 'kirim'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-monitoring.kirim');
-
 Route::post('/laporan-monitoring/{laporanMonitoring}/lampiran', [LaporanMonitoringController::class, 'uploadLampiran'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-monitoring.upload-lampiran');
-
 Route::delete('/laporan-monitoring-lampiran/{lampiran}', [LaporanMonitoringController::class, 'destroyLampiran'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-monitoring-lampiran.destroy');
-
 Route::delete('/laporan-monitoring/{laporanMonitoring}', [LaporanMonitoringController::class, 'destroy'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-monitoring.destroy');
-
-// Aksi DANPUS: Setujui / Tolak / Minta Revisi laporan monitoring dari Satuan Pelaksanaan Penangkalan.
 Route::patch('/laporan-monitoring/{laporanMonitoring}/status', [DanpusLaporanMonitoringController::class, 'updateStatus'])
-    ->middleware('auth')
+    ->middleware(['auth', 'modul:laporan'])
     ->name('laporan-monitoring.update-status');
 
-Route::post('/notifikasi/baca-semua', [NotifikasiController::class, 'bacaSemua'])
+// ===== Foto Profil (semua role) =====
+Route::post('/profil/foto', [ProfilFotoController::class, 'update'])
     ->middleware('auth')
-    ->name('notifikasi.baca-semua');
+    ->name('profil-foto.update');
+Route::delete('/profil/foto', [ProfilFotoController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('profil-foto.destroy');
+
+// ===== Permintaan Ganti Password (Pimpinan/Satuan -> Admin) =====
+Route::post('/permintaan-reset-password', [PermintaanResetPasswordController::class, 'store'])
+    ->middleware('auth')
+    ->name('permintaan-reset-password.store');
+// Dipoll pengaju buat tahu (realtime) begitu Admin menyetujui/menolak
+// permintaannya -> form balik ke semula + toast, tanpa reload.
+Route::get('/permintaan-reset-password/status', [PermintaanResetPasswordController::class, 'status'])
+    ->middleware('auth')
+    ->name('permintaan-reset-password.status');
+
+// Status Mode Maintenance (polling realtime banner + kunci tombol di klien,
+// lihat partials/maintenance-banner.blade.php). Sengaja TANPA middleware
+// modul: berlaku untuk semua pengguna login & method GET selalu lolos
+// EnforceMaintenanceMode.
+Route::get('/maintenance/status', [\App\Http\Controllers\MaintenanceStatusController::class, 'show'])
+    ->middleware('auth')
+    ->name('maintenance.status');
+Route::get('/notifikasi/realtime', [NotifikasiController::class, 'realtime'])
+    ->middleware(['auth', 'modul:notifikasi'])
+    ->name('notifikasi.realtime');
+Route::delete('/notifikasi/{notifikasi}', [NotifikasiController::class, 'hapus'])
+    ->middleware(['auth', 'modul:notifikasi'])
+    ->name('notifikasi.hapus');
+Route::patch('/notifikasi/{notifikasi}/baca', [NotifikasiController::class, 'baca'])
+    ->middleware(['auth', 'modul:notifikasi'])
+    ->name('notifikasi.baca');
+Route::delete('/notifikasi', [NotifikasiController::class, 'hapusSemua'])
+    ->middleware(['auth', 'modul:notifikasi'])
+    ->name('notifikasi.hapus-semua');
+
+// Push subscription (notifikasi di luar sistem/browser tertutup) --
+// sengaja TIDAK diikat modul:notifikasi, karena on/off-nya diatur lewat
+// izin browser masing-masing user, bukan konfigurasi per-satuan.
+Route::post('/push/subscribe', [\App\Http\Controllers\PushSubscriptionController::class, 'store'])
+    ->middleware('auth')
+    ->name('push.subscribe');
+Route::post('/push/unsubscribe', [\App\Http\Controllers\PushSubscriptionController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('push.unsubscribe');
+Route::get('/push/diagnosa', [\App\Http\Controllers\PushSubscriptionController::class, 'diagnosa'])
+    ->middleware('auth')
+    ->name('push.diagnosa');
+
+// Toggle preferensi push notification per-user (on/off dari panel Notifikasi Kasansi)
+Route::post('/notifikasi/toggle-user', [\App\Http\Controllers\UserNotifikasiController::class, 'toggle'])
+    ->middleware('auth')
+    ->name('notifikasi.toggle-user');
 
 // ===== Manajemen Akun Media Sosial =====
-// Akun resmi yang dikelola satuan (mis. Instagram resmi Satuan Pelaksanaan Siber Sosial),
-// dipakai fitur "Manajemen Akun Media Sosial".
-Route::post('/akun-medsos', [AkunMedsosController::class, 'store'])
-    ->middleware('auth')
-    ->name('akun-medsos.store');
-
-Route::patch('/akun-medsos/{akunMedsos}', [AkunMedsosController::class, 'update'])
-    ->middleware('auth')
-    ->name('akun-medsos.update');
-
-Route::delete('/akun-medsos/{akunMedsos}', [AkunMedsosController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('akun-medsos.destroy');
+Route::post('/akun-medsos', [AkunMedsosController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('akun-medsos.store');
+Route::patch('/akun-medsos/{akunMedsos}', [AkunMedsosController::class, 'update'])->middleware(['auth', 'modul:laporan'])->name('akun-medsos.update');
+Route::delete('/akun-medsos/{akunMedsos}', [AkunMedsosController::class, 'destroy'])->middleware(['auth', 'modul:laporan'])->name('akun-medsos.destroy');
 
 // ===== Postingan Media Sosial =====
-// Mencakup fitur "Membuat Posting", "Menjadwalkan Posting", "Kalender
-// Konten", "Upload Foto/Video", "Monitoring Engagement", "Statistik
-// Performa", dan "Arsip Seluruh Posting".
-Route::post('/posting', [PostinganController::class, 'store'])
-    ->middleware('auth')
-    ->name('posting.store');
-
-Route::post('/posting/{posting}/terbitkan', [PostinganController::class, 'terbitkan'])
-    ->middleware('auth')
-    ->name('posting.terbitkan');
-
-Route::patch('/posting/{posting}/engagement', [PostinganController::class, 'updateEngagement'])
-    ->middleware('auth')
-    ->name('posting.engagement');
-
-Route::delete('/posting/{posting}', [PostinganController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('posting.destroy');
+Route::post('/posting', [PostinganController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('posting.store');
+Route::post('/posting/{posting}/terbitkan', [PostinganController::class, 'terbitkan'])->middleware(['auth', 'modul:laporan'])->name('posting.terbitkan');
+Route::patch('/posting/{posting}/engagement', [PostinganController::class, 'updateEngagement'])->middleware(['auth', 'modul:laporan'])->name('posting.engagement');
+Route::delete('/posting/{posting}', [PostinganController::class, 'destroy'])->middleware(['auth', 'modul:laporan'])->name('posting.destroy');
 
 // ===== Satuan Pelaksanaan Dukungan Teknologi =====
-// Mencakup fitur "Riset & Pengembangan" (CRUD proyek riset), "Log Uji &
-// Pengembangan", dan "Log Dukungan Teknis" ke Satuan Pelaksanaan Penangkalan,
-// Siber Sosial, dan Penindakan.
-Route::post('/proyek-riset', [ProyekRisetController::class, 'store'])
-    ->middleware('auth')
-    ->name('proyek-riset.store');
+Route::post('/proyek-riset', [ProyekRisetController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('proyek-riset.store');
+Route::patch('/proyek-riset/{proyekRiset}', [ProyekRisetController::class, 'update'])->middleware(['auth', 'modul:laporan'])->name('proyek-riset.update');
+Route::delete('/proyek-riset/{proyekRiset}', [ProyekRisetController::class, 'destroy'])->middleware(['auth', 'modul:laporan'])->name('proyek-riset.destroy');
+Route::post('/log-uji', [LogUjiPengembanganController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('log-uji.store');
+Route::delete('/log-uji/{logUjiPengembangan}', [LogUjiPengembanganController::class, 'destroy'])->middleware(['auth', 'modul:laporan'])->name('log-uji.destroy');
+Route::post('/dukungan-teknis', [DukunganTeknisController::class, 'store'])->middleware(['auth', 'modul:laporan'])->name('dukungan-teknis.store');
+Route::delete('/dukungan-teknis/{dukunganTeknisLog}', [DukunganTeknisController::class, 'destroy'])->middleware(['auth', 'modul:laporan'])->name('dukungan-teknis.destroy');
 
-Route::patch('/proyek-riset/{proyekRiset}', [ProyekRisetController::class, 'update'])
-    ->middleware('auth')
-    ->name('proyek-riset.update');
+// ===== Administrasi Personel =====
+Route::post('/personel', [PersonelController::class, 'store'])->middleware(['auth', 'modul:laporan', 'satuan:BINFUNG,ADMIN'])->name('personel.store');
+Route::patch('/personel/{personel}', [PersonelController::class, 'update'])->middleware(['auth', 'modul:laporan', 'satuan:BINFUNG,ADMIN'])->name('personel.update');
+Route::delete('/personel/{personel}', [PersonelController::class, 'destroy'])->middleware(['auth', 'modul:laporan', 'satuan:BINFUNG,ADMIN'])->name('personel.destroy');
+Route::post('/pangkat', [PangkatController::class, 'store'])->middleware(['auth', 'modul:laporan', 'satuan:BINFUNG,ADMIN'])->name('pangkat.store');
+Route::patch('/pangkat/{pangkat}', [PangkatController::class, 'update'])->middleware(['auth', 'modul:laporan', 'satuan:BINFUNG,ADMIN'])->name('pangkat.update');
+Route::delete('/pangkat/{pangkat}', [PangkatController::class, 'destroy'])->middleware(['auth', 'modul:laporan', 'satuan:BINFUNG,ADMIN'])->name('pangkat.destroy');
+Route::post('/jabatan', [JabatanController::class, 'store'])->middleware(['auth', 'modul:laporan', 'satuan:BINFUNG,ADMIN'])->name('jabatan.store');
+Route::patch('/jabatan/{jabatan}', [JabatanController::class, 'update'])->middleware(['auth', 'modul:laporan', 'satuan:BINFUNG,ADMIN'])->name('jabatan.update');
+Route::delete('/jabatan/{jabatan}', [JabatanController::class, 'destroy'])->middleware(['auth', 'modul:laporan', 'satuan:BINFUNG,ADMIN'])->name('jabatan.destroy');
+Route::post('/personel-mutasi', [PersonelMutasiController::class, 'store'])->middleware(['auth', 'modul:laporan', 'satuan:BINFUNG,ADMIN'])->name('personel-mutasi.store');
+Route::patch('/personel-mutasi/{mutasi}', [PersonelMutasiController::class, 'update'])->middleware(['auth', 'modul:laporan', 'satuan:BINFUNG,ADMIN'])->name('personel-mutasi.update');
+Route::delete('/personel-mutasi/{mutasi}', [PersonelMutasiController::class, 'destroy'])->middleware(['auth', 'modul:laporan', 'satuan:BINFUNG,ADMIN'])->name('personel-mutasi.destroy');
+Route::post('/personel-dokumen', [PersonelDokumenController::class, 'store'])->middleware(['auth', 'modul:laporan', 'satuan:BINFUNG,ADMIN'])->name('personel-dokumen.store');
+Route::delete('/personel-dokumen/{dokumen}', [PersonelDokumenController::class, 'destroy'])->middleware(['auth', 'modul:laporan', 'satuan:BINFUNG,ADMIN'])->name('personel-dokumen.destroy');
 
-Route::delete('/proyek-riset/{proyekRiset}', [ProyekRisetController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('proyek-riset.destroy');
-
-Route::post('/log-uji', [LogUjiPengembanganController::class, 'store'])
-    ->middleware('auth')
-    ->name('log-uji.store');
-
-Route::delete('/log-uji/{logUjiPengembangan}', [LogUjiPengembanganController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('log-uji.destroy');
-
-Route::post('/dukungan-teknis', [DukunganTeknisController::class, 'store'])
-    ->middleware('auth')
-    ->name('dukungan-teknis.store');
-
-Route::delete('/dukungan-teknis/{dukunganTeknisLog}', [DukunganTeknisController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('dukungan-teknis.destroy');
-
-// ===== Administrasi Personel (Binfung) =====
-// Mencakup fitur "Data Personel", "Tambah/Edit Personel", "Mutasi",
-// "Pangkat", "Jabatan", "Satuan" (referensi), "Upload Dokumen", dan
-// "Riwayat" pada dashboard Binfung.
-Route::post('/personel', [PersonelController::class, 'store'])
-    ->middleware('auth')
-    ->name('personel.store');
-
-Route::patch('/personel/{personel}', [PersonelController::class, 'update'])
-    ->middleware('auth')
-    ->name('personel.update');
-
-Route::delete('/personel/{personel}', [PersonelController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('personel.destroy');
-
-Route::post('/pangkat', [PangkatController::class, 'store'])
-    ->middleware('auth')
-    ->name('pangkat.store');
-
-Route::patch('/pangkat/{pangkat}', [PangkatController::class, 'update'])
-    ->middleware('auth')
-    ->name('pangkat.update');
-
-Route::delete('/pangkat/{pangkat}', [PangkatController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('pangkat.destroy');
-
-Route::post('/jabatan', [JabatanController::class, 'store'])
-    ->middleware('auth')
-    ->name('jabatan.store');
-
-Route::patch('/jabatan/{jabatan}', [JabatanController::class, 'update'])
-    ->middleware('auth')
-    ->name('jabatan.update');
-
-Route::delete('/jabatan/{jabatan}', [JabatanController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('jabatan.destroy');
-
-Route::post('/personel-mutasi', [PersonelMutasiController::class, 'store'])
-    ->middleware('auth')
-    ->name('personel-mutasi.store');
-
-Route::patch('/personel-mutasi/{mutasi}', [PersonelMutasiController::class, 'update'])
-    ->middleware('auth')
-    ->name('personel-mutasi.update');
-
-Route::delete('/personel-mutasi/{mutasi}', [PersonelMutasiController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('personel-mutasi.destroy');
-
-Route::post('/personel-dokumen', [PersonelDokumenController::class, 'store'])
-    ->middleware('auth')
-    ->name('personel-dokumen.store');
-
-Route::delete('/personel-dokumen/{dokumen}', [PersonelDokumenController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('personel-dokumen.destroy');
-
-// ===== Kelola Sistem (Admin) =====
-// Seluruh route di sini khusus untuk akun bersatuan ADMIN, ditegakkan oleh
-// middleware 'admin'. Mencakup CRUD Pengguna, CRUD Satlak, Role & Hak
-// Akses, Pengaturan Sistem, Backup Database, dan Laporan Pengguna &
-// Aktivitas (Export PDF/Excel) — fitur-fitur pada Dashboard Admin.
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Manajemen Pengguna (CRUD User)
     Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
     Route::patch('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
-    Route::post('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('users.reset-password');
-
-    // Manajemen Satlak
     Route::post('/satuan', [SatuanController::class, 'store'])->name('satuan.store');
     Route::patch('/satuan/{satuan}', [SatuanController::class, 'update'])->name('satuan.update');
     Route::delete('/satuan/{satuan}', [SatuanController::class, 'destroy'])->name('satuan.destroy');
-
-    // Manajemen Role & Hak Akses
     Route::patch('/satuan/{satuan}/permissions', [PermissionController::class, 'update'])->name('satuan.permissions');
-
-    // Pengaturan Konten Landing Page (Beranda, Fitur, Tentang, Kontak)
-    Route::patch('/pengaturan/landing', [SettingController::class, 'updateLanding'])->name('pengaturan.landing.update');
-
-    // Backup Database (opsional)
+    Route::match(['POST','PATCH'], '/pengaturan/landing', [SettingController::class, 'updateLanding'])->name('pengaturan.landing.update');
+    Route::delete('/pengaturan/landing/gambar/{tipe}', [SettingController::class, 'deleteLandingImage'])->whereIn('tipe', ['logo', 'hero_image', 'hero_video'])->name('pengaturan.landing.image.destroy');
     Route::post('/backup', [BackupController::class, 'store'])->name('backup.store');
+    Route::post('/backup/upload', [BackupFileController::class, 'store'])->name('backup.upload');
     Route::get('/backup/{filename}/download', [BackupController::class, 'download'])->name('backup.download');
-
-    // Laporan Pengguna & Aktivitas + Export PDF/Excel
+    Route::post('/backup/{filename}/restore', [BackupController::class, 'restore'])->name('backup.restore');
+    Route::delete('/backup/{filename}', [BackupFileController::class, 'destroy'])->name('backup.destroy');
     Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
-    Route::get('/laporan/cetak', [ReportController::class, 'printView'])->name('laporan.cetak');
+    Route::get('/laporan/aktivitas-terbaru', [ReportController::class, 'aktivitasTerbaru'])->name('laporan.aktivitas-terbaru');
+    Route::get('/log-aktivitas/rentang', [ReportController::class, 'logAktivitasRentang'])->name('log-aktivitas.rentang');
+    Route::get('/laporan/cetak/{jenis}', [ReportController::class, 'printView'])
+        ->whereIn('jenis', ['pengguna', 'aktivitas', 'surat'])
+        ->name('laporan.cetak');
     Route::get('/laporan/export/pengguna', [ReportController::class, 'exportUsersExcel'])->name('laporan.export-pengguna');
     Route::get('/laporan/export/aktivitas', [ReportController::class, 'exportActivityExcel'])->name('laporan.export-aktivitas');
-
-    // Pengumuman (broadcast ke seluruh satuan, tampil sebagai banner di dashboard)
-    Route::post('/pengumuman', [PengumumanController::class, 'store'])->name('pengumuman.store');
-    Route::patch('/pengumuman/{pengumuman}/toggle', [PengumumanController::class, 'toggle'])->name('pengumuman.toggle');
-    Route::delete('/pengumuman/{pengumuman}', [PengumumanController::class, 'destroy'])->name('pengumuman.destroy');
-
-    // Monitoring Sesi Login Aktif (paksa logout satu perangkat/browser)
+    Route::get('/laporan/export/surat', [ReportController::class, 'exportSuratExcel'])->name('laporan.export-surat');
+    Route::get('/sessions/realtime', [SessionController::class, 'realtime'])->name('sessions.realtime');
     Route::delete('/sessions/{id}', [SessionController::class, 'destroy'])->name('sessions.destroy');
+    Route::get('/permintaan-reset-password/realtime', [AdminPermintaanResetPasswordController::class, 'realtime'])->name('permintaan-reset-password.realtime');
+    Route::patch('/permintaan-reset-password/{permintaanResetPassword}/setujui', [AdminPermintaanResetPasswordController::class, 'setujui'])->name('permintaan-reset-password.setujui');
+    Route::patch('/permintaan-reset-password/{permintaanResetPassword}/tolak', [AdminPermintaanResetPasswordController::class, 'tolak'])->name('permintaan-reset-password.tolak');
+    Route::delete('/permintaan-reset-password/riwayat', [AdminPermintaanResetPasswordController::class, 'hapusRiwayat'])->name('permintaan-reset-password.hapus-riwayat');
+    Route::post('/reset-data-laporan/access', [ResetDataLaporanController::class, 'verifyAccess'])->name('reset-data-laporan.access');
+    Route::delete('/reset-data-laporan', [ResetDataLaporanController::class, 'destroy'])->name('reset-data-laporan.destroy');
+    Route::patch('/setelan/notifikasi/toggle', [NotifikasiSettingController::class, 'updateToggle'])->name('setelan.notifikasi.toggle');
+    Route::patch('/setelan/maintenance/toggle', [\App\Http\Controllers\Admin\MaintenanceSettingController::class, 'update'])->name('setelan.maintenance.toggle');
+    Route::post('/setelan/notifikasi/broadcast', [NotifikasiSettingController::class, 'broadcast'])->name('setelan.notifikasi.broadcast');
+    Route::post('/setelan/notifikasi/suara', [NotifikasiSettingController::class, 'updateSuara'])->name('setelan.notifikasi.suara.update');
+    Route::delete('/setelan/notifikasi/suara', [NotifikasiSettingController::class, 'destroySuara'])->name('setelan.notifikasi.suara.destroy');
+    Route::post('/struktur-organisasi', [StrukturOrganisasiController::class, 'update'])->name('struktur-organisasi.update');
+    Route::delete('/struktur-organisasi', [StrukturOrganisasiController::class, 'destroy'])->name('struktur-organisasi.destroy');
 });

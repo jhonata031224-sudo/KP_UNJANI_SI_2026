@@ -2,877 +2,1238 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Admin\BackupController;
+use App\Http\Controllers\Admin\ResetDataLaporanController;
 use App\Models\ActivityLog;
-use App\Models\DukunganTeknisLog;
-use App\Models\Jabatan;
 use App\Models\Laporan;
-use App\Models\LaporanMonitoring;
-use App\Models\LaporanPublikasi;
-use App\Models\LogUjiPengembangan;
-use App\Models\Pangkat;
+use App\Models\LaporanKendala;
+use App\Models\LaporanSurat;
+use App\Models\LaporanSuratTembusan;
 use App\Models\Pengaturan;
-use App\Models\Pengumuman;
-use App\Models\Personel;
-use App\Models\PersonelDokumen;
-use App\Models\PersonelMutasi;
-use App\Models\ProyekRiset;
+use App\Models\PermintaanLaporan;
+use App\Models\PermintaanResetPassword;
 use App\Models\Satuan;
 use App\Models\User;
+use App\Support\AktivitasSatuanDanpus;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
-class DashboardController extends Controller
+class DashboardController
 {
-    /**
-     * Mengarahkan user ke halaman dashboard sesuai satuan (role) tempat ia login.
-     * Seluruh 12 role sudah punya halaman dashboard khusus (ADMIN, DANPUS, WADAN,
-     * Satuan Pelaksanaan Penangkalan, Satuan Pelaksanaan Siber Sosial, Satuan Pelaksanaan Penindakan, Satuan Pelaksanaan Dukungan Teknologi,
-     * Binfung, Binum, Diklat, Binmat, SDIR). ADMIN bukan satuan operasional —
-     * perannya khusus mengelola akun pengguna, data satuan, dan permintaan
-     * reset password. Dashboard generik tetap dipertahankan sebagai fallback
-     * jika ada satuan baru di kemudian hari.
-     */
     public function __invoke(Request $request): View
     {
         $user = $request->user()->load('satuan');
         $satuan = $user->satuan;
-
-        // Normalisasi kode (trim + uppercase) supaya pencocokan di bawah tidak
-        // meleset gara-gara spasi tersembunyi atau perbedaan huruf besar/kecil
-        // pada data di database — penyebab dashboard jatuh ke tampilan generic
-        // padahal view khususnya sudah ada.
         $kode = $satuan?->kode ? strtoupper(trim($satuan->kode)) : null;
-
-        return match ($kode) {
-            'ADMIN' => $this->admin($user, $satuan),
-            'DANPUS' => $this->danpus($user, $satuan),
-            'WADAN' => $this->wadan($user, $satuan),
-            'SATLAKKAL' => $this->satlakKal($user, $satuan),
-            'SATLAKSISOS' => $this->satlakSisos($user, $satuan),
-            'SATLAKDAK' => $this->satlakDak($user, $satuan),
-            'SATLAKDUKTEK' => $this->satlakDuktek($user, $satuan),
-            'BINFUNG' => $this->binfung($user, $satuan),
-            'BINUM' => $this->binum($user, $satuan),
-            'DIKLAT' => $this->diklat($user, $satuan),
-            'BINMAT' => $this->binmat($user, $satuan),
-            'SDIR' => $this->sdir($user, $satuan),
-            default => view('siberad.dashboards.generic', ['user' => $user, 'satuan' => $satuan]),
-        };
+        // Sumber tunggal utk menu/section mana yang boleh dirender di dashboard
+        // user -- lihat Satuan::modulAktif(). Dipakai bareng dgn enforcement di
+        // EnsureModulAktif (route-level) supaya menu yang disembunyikan disini
+        // juga beneran diblokir kalau diakses langsung lewat URL.
+        $modulAktif = $satuan
+            ? collect(Satuan::MODUL_HAK_AKSES)->keys()->mapWithKeys(fn ($key) => [$key => $satuan->modulAktif($key)])->all()
+            : collect(Satuan::MODUL_HAK_AKSES)->keys()->mapWithKeys(fn ($key) => [$key => true])->all();
+        if ($kode === 'ADMIN') return $this->admin($request, $user, $satuan, $modulAktif);
+        return $this->pelaporan($user, $satuan, $kode, $modulAktif);
     }
 
-    /**
-     * ADMIN — pengelola sistem: akun pengguna, data satuan, dan permintaan
-     * reset password yang dikirim dari halaman "Pengaturan Akun" tiap satuan.
-     */
-    private function admin($user, $satuan): View
+    private function admin(Request $request, $user, $satuan, array $modulAktif): View
     {
-        $semuaPengguna = User::with('satuan')->orderBy('name')->get();
-        $semuaSatuan = Satuan::withCount('users')->orderBy('urutan')->get();
-
-        $permintaanResetPassword = [
-            ['satuan' => 'Satuan Pelaksanaan Siber Sosial', 'catatan' => 'Lupa kata sandi lama', 'tanggal' => '02 Agu 2026', 'status' => 'Menunggu', 'status_class' => 'amber'],
-            ['satuan' => 'Pembinaan Materil', 'catatan' => 'Akun terkunci setelah beberapa kali salah input', 'tanggal' => '01 Agu 2026', 'status' => 'Menunggu', 'status_class' => 'amber'],
-            ['satuan' => 'Pendidikan dan Latihan', 'catatan' => 'Pergantian operator baru', 'tanggal' => '29 Jul 2026', 'status' => 'Selesai', 'status_class' => 'green'],
-        ];
-
-        // ===== Data untuk grafik Dashboard =====
-
-        // Grafik 1: distribusi jumlah pengguna per kategori satuan.
-        $labelKategori = [
-            Satuan::KATEGORI_SATLAK => 'Satlak',
-            Satuan::KATEGORI_DIREKTORAT => 'Direktorat',
-            Satuan::KATEGORI_PIMPINAN => 'Pimpinan',
-            Satuan::KATEGORI_ADMIN => 'Admin',
-        ];
-        $distribusiPenggunaKategori = $semuaSatuan
-            ->groupBy('kategori')
-            ->map(fn ($group, $kategori) => [
-                'kategori' => $labelKategori[$kategori] ?? ucfirst($kategori),
-                'jumlah' => $group->sum('users_count'),
-            ])
-            ->values();
-
-        // Grafik 2: status permintaan reset password.
-        $statusResetPassword = collect($permintaanResetPassword)
-            ->groupBy('status')
-            ->map(fn ($group, $status) => ['status' => $status, 'jumlah' => $group->count()])
-            ->values();
-
-        // Grafik 3: kelengkapan akun tiap satuan (sudah vs belum punya akun).
-        $satuanSudahPunyaAkun = $semuaSatuan->where('users_count', '>', 0)->count();
-        $satuanBelumPunyaAkun = $semuaSatuan->where('users_count', 0)->count();
-
-        // Log aktivitas sistem — dipakai tab "Log Aktivitas" (Monitoring
-        // Aktivitas Sistem). Diambil dari tabel activity_logs yang diisi
-        // otomatis dari login/logout dan seluruh aksi CRUD Admin.
-        $logAktivitas = ActivityLog::with('user')->latest('created_at')->limit(200)->get();
-
-        // Daftar backup database yang sudah pernah dibuat.
-        $daftarBackup = app(\App\Http\Controllers\Admin\BackupController::class)->index();
-
-        // Pengumuman — dikelola admin, tampil sebagai banner di seluruh dashboard satuan.
-        $daftarPengumuman = Pengumuman::with('pembuat')->latest()->get();
-
-        // Sesi login aktif (SESSION_DRIVER=database) — dipakai tab "Sesi Aktif"
-        // untuk memantau siapa saja yang sedang login dan bisa paksa logout.
+        // Urutan tampil: Admin -> Pimpinan -> Direktorat -> Satuan (bukan
+        // urutan alfabet/urutan input), sesuai jenjang role di organisasi.
+        // Logika urut-nya di User::terurutOrganisasi() -- dipakai juga di
+        // respons AJAX Tambah/Ubah/Hapus Pengguna biar urutannya konsisten
+        // tanpa reload.
+        $semuaPengguna = User::terurutOrganisasi();
+        // Urutan satuan (dipakai tab "Data Satuan" & "Hak Akses Pengguna")
+        // SELALU ikut jenjang organisasi resmi lewat Satuan::kunciUrutSatuan()
+        // -- Danpus -> Wadan -> Urdal -> Pok Analis -> 4 Sdir -> 4 Satlak --
+        // bukan urutan alfabet ataupun kapan satuan dibuat. Satuan baru yang
+        // kodenya belum ada di Satuan::urutanDalamKategori() otomatis jatuh
+        // ke urutan terakhir dalam kategorinya (created_at/id sebagai
+        // penentu akhir kalau ada beberapa satuan baru sekaligus). Logika
+        // urut-nya di Satuan::terurut() -- dipakai juga di respons AJAX
+        // Tambah/Ubah Satuan biar urutannya konsisten tanpa reload.
+        $semuaSatuan = Satuan::terurut();
+        $permintaanResetPassword = PermintaanResetPassword::with(['user.satuan', 'diprosesOleh'])->latest()->get();
+        // 3 chart kecil Beranda (radar/donut/tren) -- diekstrak ke method
+        // private (bukan dihitung inline di sini) SUPAYA adminKpiRealtime()
+        // di bawah bisa manggil algoritma yang SAMA PERSIS buat refresh
+        // realtime-nya, gak ada 2 salinan logika yang gampang drift kalau
+        // salah satu diubah lupa yang satu lagi.
+        $distribusiPenggunaKategori = $this->distribusiPenggunaKategoriRadar($semuaSatuan);
+        $statusLaporanSistem = $this->statusLaporanSistem();
+        $trenAktivitas = $this->trenAktivitas();
+        // Log aktivitas defaultnya cuma nampilin kemarin-hari ini (1 hari
+        // terakhir) -- total baris di tabel activity_logs bakal terus
+        // bertambah seiring waktu, jadi kalau ditarik semua sekaligus (atau
+        // di-cap angka tetap kayak limit(200) sebelumnya) baik render-nya
+        // berat maupun cacah "X dari Y data" di UI jadi nyesatin (nampilin
+        // seolah itu semua data, padahal cuma potongan terbaru). Dihitung
+        // dari now() setiap request, jadi default-nya otomatis geser
+        // mengikuti tanggal berjalan tanpa perlu diubah manual. Filter
+        // tanggal ini query langsung dari database sesuai rentang yang
+        // diminta, sehingga hitungannya selalu akurat terhadap apa yang
+        // sedang ditampilkan.
+        $logSampai = $request->filled('log_sampai')
+            ? \Carbon\Carbon::parse($request->query('log_sampai'))->endOfDay()
+            : now()->endOfDay();
+        $logDari = $request->filled('log_dari')
+            ? \Carbon\Carbon::parse($request->query('log_dari'))->startOfDay()
+            : now()->subDays(1)->startOfDay();
+        $logAktivitas = ActivityLog::with('user.satuan')
+            ->whereBetween('created_at', [$logDari, $logSampai])
+            ->latest('created_at')
+            ->get();
+        // Tab "Data Pelaporan" (Arsip Data) -- SEMUA permintaan laporan dari
+        // Pimpinan ke satuan, baik yang sudah diarsipkan (archived_at
+        // terisi) MAUPUN yang masih aktif/belum diarsipkan. Global scope
+        // hideArchivedOnPimpinanDashboard di model PermintaanLaporan cuma
+        // nge-filter kalau request()->is('dashboard') DAN role DANPUS/WADAN
+        // -- Admin (kode ADMIN) tidak kena, jadi query polos ini otomatis
+        // sudah termasuk yang arsip juga.
+        // Eager-load 'laporans' (jamak, dipakai isSedangRevisi()) & rantai
+        // 'tasks.laporans.lampirans' (dipakai hitung "x/y tugas selesai" +
+        // isi modal "Lihat Progres" -- checklist per task, tiap task bisa
+        // punya checkpoint Laporan dengan lampirannya sendiri) -- tanpa ini
+        // kartu+modal di admin.blade.php bakal lazy-load semuanya PER BARIS
+        // PER TASK (N+1 berlapis).
+        $semuaPelaporan = PermintaanLaporan::with(['tujuanSatuan', 'laporan', 'laporans', 'tasks.laporans.lampirans'])->latest()->get();
+        $daftarBackup = app(BackupController::class)->index();
+        // Hanya sesi yang benar-benar terautentikasi yang ditampilkan.
+        // Baris guest dengan user_id NULL tidak termasuk sesi login aktif.
         $sesiAktif = DB::table('sessions')
+            ->whereNotNull('sessions.user_id')
             ->leftJoin('users', 'sessions.user_id', '=', 'users.id')
             ->orderByDesc('sessions.last_activity')
             ->get([
                 'sessions.id',
+                'sessions.user_id',
                 'sessions.ip_address',
                 'sessions.user_agent',
                 'sessions.last_activity',
+                'sessions.login_at',
+                'sessions.geo_kota',
+                'sessions.geo_region',
+                'sessions.geo_negara',
+                'sessions.geo_isp',
+                'sessions.geo_lat',
+                'sessions.geo_lon',
+                'sessions.geo_sumber',
                 'users.name as user_name',
             ]);
+        $sesiAktif = \App\Helpers\SesiAnomaliDetector::tandai($sesiAktif);
+        // Satuan pengirim laporan = semua satuan SELAIN Admin & Pimpinan
+        // (Admin cuma pengelola sistem, Pimpinan/Danpus-Wadan cuma
+        // menerima & meninjau, bukan pengirim). Dihitung otomatis dari
+        // kategori, bukan daftar kode manual, supaya kategori satuan baru
+        // (mis. Kotama) otomatis ikut kehitung tanpa perlu diedit lagi di
+        // sini tiap kali ada satuan baru.
+        $kodeSatuanPengirim = Satuan::whereNotIn('kategori', [Satuan::KATEGORI_ADMIN, Satuan::KATEGORI_PIMPINAN])
+            ->pluck('kode')
+            ->all();
+        // "Total Pelaporan" di sini (KPI atas & kolom Rekap Laporan) dihitung
+        // PER PERIHAL (1 permintaan_laporan_id = 1 Perihal), bukan per baris
+        // -- satu Perihal yang di-update progresnya berkali-kali (beberapa
+        // baris checkpoint "Progres") tetap dihitung SATU laporan, bukan
+        // sebanyak baris checkpoint-nya. Lihat hitungLaporanPerPerihal().
+        // Samain sama aturan yang sudah dipakai di dashboard Pimpinan
+        // (DashboardController::index).
+        $laporanRekapMentah = Laporan::whereIn('satuan_id', Satuan::whereIn('kode', $kodeSatuanPengirim)->pluck('id'))
+            ->with('lampirans')
+            ->get();
+        // Dipakai partial admin-kpi-cards.blade.php buat hitung sparkline 7
+        // hari terakhir kartu KPI "Total Surat" (jumlah keseluruhan sistem,
+        // sama seperti $stats['total_surat'] di bawah). Eager-load satuan
+        // pengirim & tujuan supaya tabel "Data Surat" di Arsip Data (admin.
+        // blade.php) tidak N+1 query pas nampilin nama satuan tiap baris.
+        $suratSemuaAdmin = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats'])->get();
 
-        // Rekap laporan lintas Satlak — ringkasan jumlah laporan & statusnya
-        // per satuan pelaksana, dipakai tab "Rekap Laporan".
-        $rekapLaporanSatuan = Satuan::where('kategori', Satuan::KATEGORI_SATLAK)
-            ->withCount([
-                'laporanTerkirim as total_laporan',
-                'laporanTerkirim as laporan_menunggu' => fn ($q) => $q->where('status', 'Menunggu'),
-                'laporanTerkirim as laporan_disetujui' => fn ($q) => $q->where('status', 'Disetujui DANPUS'),
-                'laporanTerkirim as laporan_ditolak' => fn ($q) => $q->where('status', 'Ditolak DANPUS'),
-            ])
-            ->orderBy('urutan')
+        return view('cyclone.dashboards.admin', compact('user','satuan','semuaPengguna','semuaSatuan','permintaanResetPassword','distribusiPenggunaKategori','statusLaporanSistem','trenAktivitas','logAktivitas','semuaPelaporan','daftarBackup','sesiAktif','logDari','logSampai','laporanRekapMentah','suratSemuaAdmin') + ['pengaturan' => Pengaturan::current(), 'sesiSayaId' => session()->getId(), 'modulHakAkses' => Satuan::MODUL_HAK_AKSES, 'modulAktif' => $modulAktif, 'resetDataKategori' => ResetDataLaporanController::KATEGORI, 'resetDataCounts' => ResetDataLaporanController::hitungPerKategori(), 'resetDataDetails' => ResetDataLaporanController::ambilDetailPerKategori(), 'stats' => ['total_pengguna' => $semuaPengguna->count(), 'total_satuan' => $semuaSatuan->count(), 'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah), 'total_surat' => LaporanSurat::count(), 'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count()]]);
+    }
+
+    public function adminKpiRealtime(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user()->load('satuan');
+        $kode = $user->satuan?->kode ? strtoupper(trim($user->satuan->kode)) : null;
+        abort_unless($kode === 'ADMIN', 403);
+
+        $semuaPengguna = User::terurutOrganisasi();
+        $semuaSatuan = Satuan::terurut();
+        $permintaanResetPassword = PermintaanResetPassword::with(['user.satuan', 'diprosesOleh'])->latest()->get();
+        $kodeSatuanPengirim = Satuan::whereNotIn('kategori', [Satuan::KATEGORI_ADMIN, Satuan::KATEGORI_PIMPINAN])->pluck('kode')->all();
+        $laporanRekapMentah = Laporan::whereIn('satuan_id', Satuan::whereIn('kode', $kodeSatuanPengirim)->pluck('id'))->with('lampirans')->get();
+        $suratSemuaAdmin = LaporanSurat::get();
+        // Kartu "Aktivitas Terbaru" cuma butuh 5 aksi terbaru -- default
+        // rentang tanggal SAMA kayak yang dipakai admin() (1 hari terakhir),
+        // bukan seluruh histori, biar query-nya ringan tiap poll (1 detik).
+        $logAktivitasTerbaru = ActivityLog::with('user.satuan')
+            ->whereBetween('created_at', [now()->subDays(1)->startOfDay(), now()->endOfDay()])
+            ->latest('created_at')
+            ->take(5)
             ->get();
 
-        return view('siberad.dashboards.admin', [
-            'user' => $user,
-            'satuan' => $satuan,
-            'semuaPengguna' => $semuaPengguna,
-            'semuaSatuan' => $semuaSatuan,
-            'permintaanResetPassword' => $permintaanResetPassword,
-            'distribusiPenggunaKategori' => $distribusiPenggunaKategori,
-            'statusResetPassword' => $statusResetPassword,
-            'kelengkapanAkunSatuan' => [
-                'sudah' => $satuanSudahPunyaAkun,
-                'belum' => $satuanBelumPunyaAkun,
-            ],
-            'pengaturan' => Pengaturan::current(),
-            'logAktivitas' => $logAktivitas,
-            'daftarBackup' => $daftarBackup,
-            'daftarPengumuman' => $daftarPengumuman,
-            'sesiAktif' => $sesiAktif,
-            'sesiSayaId' => session()->getId(),
-            'rekapLaporanSatuan' => $rekapLaporanSatuan,
-            'modulHakAkses' => Satuan::MODUL_HAK_AKSES,
-            'stats' => [
-                'total_pengguna' => $semuaPengguna->count(),
-                'total_satuan' => $semuaSatuan->count(),
-                'reset_password_pending' => collect($permintaanResetPassword)->where('status_class', 'amber')->count(),
-                'satuan_tanpa_pengguna' => $semuaSatuan->where('users_count', 0)->count(),
-            ],
+        $stats = [
+            'total_pengguna' => $semuaPengguna->count(),
+            'total_satuan' => $semuaSatuan->count(),
+            'total_laporan' => $this->hitungLaporanPerPerihal($laporanRekapMentah),
+            'total_surat' => $suratSemuaAdmin->count(),
+            'reset_password_pending' => $permintaanResetPassword->where('status', PermintaanResetPassword::STATUS_MENUNGGU)->count(),
+        ];
+        // 3 chart kecil Beranda (radar "Pengguna per Kategori Satuan", donut
+        // "Distribusi Status Laporan", "Tren Aktivitas") -- dulu cuma
+        // dirender sekali pas load awal (admin()), sekarang ikut di-refresh
+        // tiap poll juga lewat method private yang sama biar gak ada 2
+        // salinan logika (lihat komentar di distribusiPenggunaKategoriRadar/
+        // statusLaporanSistem/trenAktivitas).
+        $statusLaporanSistem = $this->statusLaporanSistem();
+        $adminStatusDist = [
+            ['label' => 'Disetujui',  'color' => '#22c55e', 'labelColor' => '#22c55e', 'count' => $statusLaporanSistem['disetujui']],
+            ['label' => 'Ditolak',    'color' => '#ef4444', 'labelColor' => '#ef4444', 'count' => $statusLaporanSistem['ditolak']],
+            ['label' => 'Terlambat',  'color' => '#ff6b6b', 'labelColor' => '#ff6b6b', 'count' => $statusLaporanSistem['terlambat']],
+            ['label' => 'Dibatalkan', 'color' => '#c1121f', 'labelColor' => '#e5484d', 'count' => $statusLaporanSistem['dibatalkan']],
+        ];
+
+        return response()->json([
+            'kpis_html' => view('cyclone.dashboards.partials.admin-kpi-cards', [
+                'stats' => $stats,
+                'semuaPengguna' => $semuaPengguna,
+                'semuaSatuan' => $semuaSatuan,
+                'laporanRekapMentah' => $laporanRekapMentah,
+                'suratSemuaAdmin' => $suratSemuaAdmin,
+                'permintaanResetPassword' => $permintaanResetPassword,
+            ])->render(),
+            'reset_password_terbaru_html' => view('cyclone.dashboards.partials.admin-reset-password-terbaru-list', [
+                'permintaanResetPasswordTerbaru' => $permintaanResetPassword->take(5),
+            ])->render(),
+            'aktivitas_terbaru_html' => view('cyclone.dashboards.partials.admin-aktivitas-terbaru-list', [
+                'logAktivitasTerbaru' => $logAktivitasTerbaru,
+            ])->render(),
+            'radar_kategori' => $this->distribusiPenggunaKategoriRadar($semuaSatuan),
+            'status_laporan' => $statusLaporanSistem,
+            'status_donut_total' => array_sum($statusLaporanSistem),
+            'status_bd_html' => view('cyclone.dashboards.partials.pimpinan-status-distribusi-list', [
+                'pimpStatusDist' => $adminStatusDist,
+            ])->render(),
+            'tren_aktivitas' => $this->trenAktivitas(),
+            'server_time' => now()->toIso8601String(),
+        ], 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
         ]);
     }
 
-    /**
-     * DANPUS — penerima laporan tertinggi, persetujuan akhir, pantauan seluruh satuan.
-     */
-    private function danpus($user, $satuan): View
+    private function pelaporan($user, $satuan, ?string $kode, array $modulAktif): View
     {
-        // ADMIN bukan satuan operasional, jadi tidak ikut ditampilkan di
-        // pantauan status satuan milik DANPUS.
-        $semuaSatuan = Satuan::where('kode', '!=', 'ADMIN')->orderBy('urutan')->get();
+        abort_unless($satuan, 403, 'Akun belum terhubung ke satuan.');
+        $permintaanGantiPasswordPending = PermintaanResetPassword::where('user_id', $user->id)
+            ->where('status', PermintaanResetPassword::STATUS_MENUNGGU)
+            ->latest()
+            ->first();
+        // 'lampirans' ikut di-eager-load (dulu cuma 'tujuanSatuan') --
+        // dibutuhkan hitungLaporanPerPerihal() di bawah buat "Total
+        // Pelaporan" kartu KPI Beranda Satuan (mirror kartu KPI Pimpinan).
+        $laporanTerkirim = Laporan::with(['tujuanSatuan', 'lampirans'])->where('satuan_id', $satuan->id)->latest()->get();
+        // Urutan tampil: Admin -> Pimpinan -> Direktorat -> Satuan, lalu
+        // urutan tetap per-kode di dalam kategori yang sama (lihat
+        // Satuan::kunciUrutSatuan).
+        $urutkanSatuan = fn ($s) => Satuan::kunciUrutSatuan($s->kategori, $s->kode);
+        $kodeTujuanDiizinkan = Satuan::kodeTujuanUntuk($kode);
+        $tujuan = $kodeTujuanDiizinkan !== null
+            ? Satuan::whereIn('kode', $kodeTujuanDiizinkan)->get()->sortBy($urutkanSatuan)->values()
+            : Satuan::where('kode', '!=', 'ADMIN')->where('id', '!=', $satuan->id)->get()->sortBy($urutkanSatuan)->values();
+        $defaultDanpus = $tujuan->firstWhere('kode', 'DANPUS');
+        $mode = $kode === 'SATLAKDUKTEK' ? 'duktek' : 'standar';
+        $modePimpinan = in_array($kode, ['DANPUS', 'WADAN'], true);
+        $canReview = true;
+        $canSend = $kode !== 'DANPUS';
+        $description = match ($kode) {
+            'SATLAKKAL' => 'Pelaporan kegiatan pemantauan dan pemulihan. Tidak ada monitoring CPU, RAM, storage, network, atau data teknis perangkat.',
+            'SATLAKSISOS' => 'Pelaporan kegiatan publikasi, edukasi, informasi, dan aktivitas Siber Sosial.',
+            'SATLAKDAK' => 'Pelaporan hasil penindakan dan penanganan insiden keamanan siber secara ringkas.',
+            'SATLAKDUKTEK' => 'Pelaporan dukungan teknologi sekaligus monitoring ringkasan laporan dari tiga Satlak operasional.',
+            'BINFUNG' => 'Pelaporan kegiatan administrasi dan pembinaan fungsi tanpa mengelola data pribadi personel secara rinci.',
+            'BINUM' => 'Pelaporan kegiatan pembinaan dan pengawasan satuan.',
+            'DIKLAT' => 'Pelaporan kegiatan pendidikan, pelatihan, dan pengembangan kemampuan.',
+            'BINMAT' => 'Pelaporan kondisi dan kebutuhan material/perlengkapan tanpa membangun sistem inventaris penuh.',
+            'POKANALIS' => 'Pelaporan hasil analisis dan kajian sebagai satuan yang berdiri sendiri, lapor langsung ke Danpus.',
+            'URDAL' => 'Pelaporan urusan dalam sebagai satuan yang berdiri sendiri, lapor langsung ke Danpus.',
+            'WADAN' => 'Monitoring dan review laporan antar satuan sebagai bagian dari koordinasi.',
+            'DANPUS' => 'Pusat penerimaan, pemantauan, dan peninjauan laporan dari seluruh satuan.',
+            default => 'Pelaporan kegiatan dan koordinasi satuan melalui satu alur yang terukur.',
+        };
 
-        $statusSatuan = [
-            'SATLAKKAL' => ['label' => 'Ada Insiden', 'class' => 'bad', 'update' => '10 menit lalu'],
-            'SATLAKSISOS' => ['label' => 'Siaga', 'class' => 'warn', 'update' => '35 menit lalu'],
-            'SATLAKDAK' => ['label' => 'Normal', 'class' => 'ok', 'update' => '1 jam lalu'],
-            'SATLAKDUKTEK' => ['label' => 'Normal', 'class' => 'ok', 'update' => '2 jam lalu'],
-            'BINFUNG' => ['label' => 'Normal', 'class' => 'ok', 'update' => 'Hari ini'],
-            'BINUM' => ['label' => 'Normal', 'class' => 'ok', 'update' => 'Hari ini'],
-            'DIKLAT' => ['label' => 'Normal', 'class' => 'ok', 'update' => 'Hari ini'],
-            'BINMAT' => ['label' => 'Normal', 'class' => 'ok', 'update' => 'Kemarin'],
-            'SDIR' => ['label' => 'Normal', 'class' => 'ok', 'update' => 'Hari ini'],
-            'WADAN' => ['label' => 'Normal', 'class' => 'ok', 'update' => 'Hari ini'],
-            'DANPUS' => ['label' => 'Normal', 'class' => 'ok', 'update' => 'Hari ini'],
-        ];
+        // Urutan: Urdal -> Pok Analis -> 4 Sdir (Binfung, Binum, Bindiklat,
+        // Binmat) -> 4 Satlak (Kal, Dak, Siber Sos, Dukteksi) -> 21 Kotama
+        // (21 Sansidam aktif), sesuai urutan organisasi -- samain sama
+        // Satuan::kunciUrutSatuan(). 21 Kotama ditambahkan di akhir supaya
+        // monitoring Pimpinan ikut menampilkan data mereka, konsisten dengan
+        // $kodeSatuanPengirim yang sudah include Kotama lewat
+        // whereNotIn(['admin','pimpinan']) di bagian atas.
+        $kodeKotama = Satuan::KODE_KOTAMA;
+        $kodeSatuanPelaksanaUrut = array_merge([
+            'URDAL', 'POKANALIS',
+            'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT',
+            'SATLAKKAL', 'SATLAKDAK', 'SATLAKSISOS', 'SATLAKDUKTEK',
+        ], $kodeKotama);
+        $permintaanLaporan = $modePimpinan
+            ? PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan','laporans','tasks.laporans'])
+                ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS','WADAN']))
+                ->latest('id')
+                ->get()
+            : PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan','laporans','tasks'])
+                ->where('tujuan_satuan_id', $satuan->id)
+                // STATUS_DIBATALKAN ikut supaya kartu yang dibatalkan Pimpinan
+                // TETAP kelihatan satuan (read-only/locked), bukan ilang gitu
+                // aja -- sejajar dengan dashboard Pimpinan yang juga masih
+                // nampilin Dibatalkan di daftar aktif (bisa dibuka lagi lewat
+                // Edit Deadline). Baru pindah ke Riwayat kalau Pimpinan
+                // arsipkan manual (archived_at keisi).
+                ->whereIn('status', [PermintaanLaporan::STATUS_BELUM, PermintaanLaporan::STATUS_DIKERJAKAN, PermintaanLaporan::STATUS_PEMERIKSAAN, PermintaanLaporan::STATUS_DIBATALKAN])
+                // Terlambat yang sudah diarsipkan Pimpinan (lihat
+                // $riwayatLaporan di bawah) sengaja gak dobel nongol di sini
+                // lagi -- raw status-nya bisa aja masih "Sedang dikerjakan"
+                // (isTerlambat() dihitung live, bukan status tersimpan).
+                ->whereNull('archived_at')
+                ->latest('deadline_at')
+                ->get();
+        // Riwayat Laporan Pimpinan (#riwayat) -- KARTU read-only (partial
+        // permintaan-laporan-pimpinan-card mode riwayatMode), sejajar dengan
+        // Riwayat Laporan Satuan. Isinya SEMUA permintaan Danpus/Wadan yang
+        // sudah diarsipkan: keputusan akhir Disetujui/Ditolak (archived_at
+        // keisi otomatis di LaporanController::updateStatus) + Terlambat/
+        // Dibatalkan yang diarsipkan manual. Global scope hideArchivedOn...
+        // di-bypass di sini (kalau tidak, whereNotNull('archived_at') selalu
+        // kosong pas request /dashboard). Realtime-nya lewat endpoint
+        // permintaan-laporan.realtime?history=1.
+        $riwayatLaporanPimpinan = $modePimpinan
+            ? PermintaanLaporan::withoutGlobalScope('hideArchivedOnPimpinanDashboard')
+                ->with(['pembuat.satuan','tujuanSatuan','laporan','laporans','tasks.laporans'])
+                ->whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS','WADAN']))
+                ->whereNotNull('archived_at')
+                ->latest('archived_at')
+                ->get()
+            : collect();
+        // Riwayat Laporan (satuan) -- tampilannya SAMA persis kartu Permintaan
+        // Laporan (lihat permintaan-laporan-item.blade.php, yang otomatis
+        // render mode read-only "Lihat Progres" begitu laporan_id keisi ATAU
+        // Terlambat/Dibatalkan) -- isinya SEMUA permintaan yang sudah
+        // diarsipkan: (1) Selesai (Disetujui/Ditolak Pimpinan, archived_at
+        // keisi otomatis di LaporanController::updateStatus()), (2) Terlambat/
+        // Dibatalkan yang SENGAJA diarsipkan Pimpinan (bukan diperpanjang
+        // deadline-nya) lewat PermintaanLaporanController::archive().
+        $riwayatLaporan = $modePimpinan
+            ? collect()
+            : PermintaanLaporan::with(['pembuat.satuan','tujuanSatuan','laporan','laporans','tasks'])
+                ->where('tujuan_satuan_id', $satuan->id)
+                ->whereNotNull('archived_at')
+                ->latest('archived_at')
+                ->get();
+        $satuanPermintaanLaporan = $modePimpinan
+            ? Satuan::whereIn('kode', $kodeSatuanPelaksanaUrut)->get()
+                ->sortBy(fn ($s) => array_search($s->kode, $kodeSatuanPelaksanaUrut))
+                ->values()
+            : collect();
 
-        // Laporan asli yang dikirim langsung ke DANPUS (mis. dari Satuan
-        // Pelaksanaan Dukungan Teknologi). Tidak ada lagi data dummy — semua
-        // baris di tabel "Laporan Masuk" sekarang murni berasal dari database.
-        $laporanMasukFinal = Laporan::with('satuan')
-            ->where('tujuan_satuan_id', $satuan->id)
+        $monitoringSatlak = collect(); $laporanSatlak = collect();
+        $suratKal = collect(); $suratDak = collect(); $suratSisos = collect();
+        if ($mode === 'duktek') {
+            $satlakIds = Satuan::whereIn('kode', ['SATLAKKAL','SATLAKSISOS','SATLAKDAK'])->pluck('id');
+            $laporanSatlak = Laporan::with(['satuan','tujuanSatuan'])->whereIn('satuan_id', $satlakIds)->latest()->get();
+            $monitoringSatlak = Satuan::whereIn('kode', ['SATLAKKAL','SATLAKSISOS','SATLAKDAK'])->get()->sortBy($urutkanSatuan)->values()->map(fn ($satlak) => ['nama' => $satlak->nama, 'total' => $laporanSatlak->where('satuan_id',$satlak->id)->count()]);
+
+            // ===== Monitoring Surat 3 Satlak (Duktek, view-only) =====
+            // Tambahan terpisah dari $laporanSatlak di atas -- TIDAK
+            // mengubah/menyentuh logic Laporan yang sudah ada. Satu query
+            // gabungan dulu (semua surat yang menyinggung salah satu dari
+            // 3 Satlak, lewat kolom asli/relasi yang SUDAH ADA di
+            // LaporanSurat: satuan_id, tujuan_satuan_id, riwayats,
+            // tembusans), baru dikelompokkan per-Satlak di bawah supaya
+            // query DB cuma jalan sekali.
+            $satlakIdList = $satlakIds->values();
+            $suratSatlakSemua = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
+                ->where(function ($q) use ($satlakIdList) {
+                    $q->whereIn('satuan_id', $satlakIdList)
+                      ->orWhereIn('tujuan_satuan_id', $satlakIdList)
+                      ->orWhereHas('riwayats', function ($rq) use ($satlakIdList) {
+                          $rq->whereIn('penerima_satuan_id', $satlakIdList)
+                             ->orWhereIn('pengirim_satuan_id', $satlakIdList);
+                      })
+                      ->orWhereHas('tembusans', function ($tq) use ($satlakIdList) {
+                          $tq->whereIn('satuan_id', $satlakIdList);
+                      });
+                })
+                ->latest()
+                ->get();
+
+            // Per-Satlak: "Keluar" kalau Satlak itu pengirim ASLI surat
+            // (satuan_id) -- sisanya ("diterima/ditujukan ke/sedang
+            // ditangani", termasuk tembusan) dianggap "Masuk", sesuai
+            // definisi yang diminta. arahUntukSatlak ditempel per baris
+            // supaya kartu tahu badge apa yang harus ditampilkan tanpa
+            // menghitung ulang.
+            $suratUntukSatlak = function (?int $satlakId) use ($suratSatlakSemua) {
+                if (! $satlakId) {
+                    return collect();
+                }
+
+                return $suratSatlakSemua->filter(function ($s) use ($satlakId) {
+                    return (int) $s->satuan_id === $satlakId
+                        || (int) $s->tujuan_satuan_id === $satlakId
+                        || $s->riwayats->contains(fn ($r) => (int) $r->penerima_satuan_id === $satlakId || (int) $r->pengirim_satuan_id === $satlakId)
+                        || $s->tembusans->contains(fn ($t) => (int) $t->satuan_id === $satlakId);
+                })->map(function ($s) use ($satlakId) {
+                    $s->arahUntukSatlak = ((int) $s->satuan_id === $satlakId) ? 'keluar' : 'masuk';
+
+                    return $s;
+                })->sortByDesc('created_at')->values();
+            };
+
+            $satlakKalId = Satuan::where('kode', 'SATLAKKAL')->value('id');
+            $satlakDakId = Satuan::where('kode', 'SATLAKDAK')->value('id');
+            $satlakSisosId = Satuan::where('kode', 'SATLAKSISOS')->value('id');
+            $suratKal = $suratUntukSatlak($satlakKalId);
+            $suratDak = $suratUntukSatlak($satlakDakId);
+            $suratSisos = $suratUntukSatlak($satlakSisosId);
+        }
+        $monitoringPimpinanSatlak = collect();
+        $laporanPimpinanSatlak = collect();
+        $aktivitasDanpus = null;
+        if ($modePimpinan) {
+            $satuanPimpinanIds = Satuan::whereIn('kode', $kodeSatuanPelaksanaUrut)->pluck('id');
+            // Tiap checkpoint progres tersimpan sebagai baris Laporan
+            // tersendiri demi riwayat (lihat komentar di
+            // LaporanController::updateProgres) -- itu laporan beneran (ada
+            // isinya sendiri per tahap) jadi masing-masing tetap dihitung.
+            // Yang JANGAN ikut dobel-dihitung adalah laporan FINAL yang
+            // sempat ditolak/revisi lalu dikirim ulang (mis. Tahap Akhir ->
+            // ditolak -> Revisi -> ditolak lagi -> Revisi lagi -> disetujui):
+            // itu semua satu deliverable yang sama, cuma baris terbaru (hasil
+            // akhirnya sekarang) yang dihitung, versi-versi lama yang sudah
+            // "ketimpa" resubmit tidak.
+            $laporanPimpinanSatlak = Laporan::with([
+                    'satuan',
+                    'tujuanSatuan',
+                    'lampirans',
+                    // Global scope hideArchivedOnPimpinanDashboard (lihat
+                    // PermintaanLaporan::booted()) nge-filter permintaan yang
+                    // sudah diarsip supaya gak nongol lagi di tab Permintaan
+                    // Laporan yang aktif -- tapi timeline "Riwayat Aktivitas"
+                    // di sini butuh data permintaan-nya TERLEPAS dari status
+                    // arsip (laporan yang permintaannya udah diarsip/Selesai
+                    // tetap harus nampilin 5 tahap Permintaan Terkirim ->
+                    // Laporan Selesai, bukan jatuh ke fallback 3 tahap "laporan
+                    // tanpa permintaan"). Tanpa withoutGlobalScope ini,
+                    // permintaanLaporan() balik null begitu diarsip.
+                    'permintaanLaporan' => fn ($q) => $q->withoutGlobalScope('hideArchivedOnPimpinanDashboard'),
+                ])
+                ->whereIn('satuan_id', $satuanPimpinanIds)
+                ->latest()
+                ->get()
+                ->groupBy(fn ($l) => $l->permintaan_laporan_id ?? 'single-'.$l->id)
+                ->flatMap(function ($group) {
+                    $progres = $group->where('status', Laporan::STATUS_PROGRES);
+                    $final = $group->reject(fn ($l) => $l->status === Laporan::STATUS_PROGRES)->sortByDesc('id')->take(1);
+                    return $progres->merge($final);
+                })
+                ->values();
+            // "Ringkasan Aktivitas Seluruh Satuan" ngitung SEMUA permintaan
+            // yang ditugaskan ke satuan itu (terlepas udah dikerjakan atau
+            // belum) -- beda dari $permintaanLaporan yang sengaja udah
+            // difilter cuma yang masih actionable (tanpa Selesai/
+            // Dibatalkan) khusus buat tab "Permintaan Laporan".
+            $semuaPermintaanPimpinanSatlak = PermintaanLaporan::whereIn('tujuan_satuan_id', $satuanPimpinanIds)->get();
+            $monitoringPimpinanSatlak = Satuan::whereIn('id', $satuanPimpinanIds)->get()
+                ->sortBy(fn ($satuanPimpinan) => array_search($satuanPimpinan->kode, $kodeSatuanPelaksanaUrut))
+                ->values()
+                ->map(fn ($satuanPimpinan) => [
+                'id' => $satuanPimpinan->id,
+                'kode' => $satuanPimpinan->kode,
+                'nama' => $satuanPimpinan->nama,
+                // Dipakai di kartu "Ringkasan Aktivitas Seluruh Satuan" --
+                // beda dari 'total' (buat grafik "Laporan per Satuan"),
+                // ini ngitung SEMUA permintaan yang ditugaskan ke satuan
+                // itu, terlepas udah dikerjakan/ada laporannya atau belum.
+                'total_permintaan' => $semuaPermintaanPimpinanSatlak->where('tujuan_satuan_id', $satuanPimpinan->id)->count(),
+                // "Total Pelaporan" dihitung PER PERIHAL (1 permintaan_laporan_id
+                // = 1 Perihal), bukan per baris -- satu Perihal yang di-update
+                // progresnya berkali-kali (beberapa baris checkpoint "Progres")
+                // tetap dihitung SATU laporan. Lihat hitungLaporanPerPerihal().
+                'total' => $this->hitungLaporanPerPerihal($laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)),
+                'menunggu' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->where('status', 'Menunggu')->count(),
+                'diterima' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count(),
+                'ditolak' => $laporanPimpinanSatlak->where('satuan_id', $satuanPimpinan->id)->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count(),
+            ]);
+            // ===== Riwayat Aktivitas Pimpinan: tambahan Surat & Kendala per satuan =====
+            // Akun DANPUS dan WADAN tampil sama persis. Murni baca -- tidak
+            // menyentuh $laporanPimpinanSatlak / $monitoringPimpinanSatlak di
+            // atas (penggabungan progres, revisi, status laporan tetap utuh).
+            // Sumber data & batas hak akses: lihat App\Support\AktivitasSatuanDanpus.
+            // Kolom Surat/Kendala dihitung dari sudut pandang Danpus (alur
+            // Kasansi/Satlak -> Danpus), sedangkan "perlu tindak lanjut" dan
+            // aturan surat Rahasia mengikuti akun yang sedang login.
+            if (in_array($kode, ['DANPUS', 'WADAN'], true)) {
+                $satuanDanpusAktivitas = $kode === 'DANPUS'
+                    ? $satuan
+                    : Satuan::where('kode', 'DANPUS')->first();
+                $aktivitasDanpus = AktivitasSatuanDanpus::bangun(
+                    Satuan::whereIn('id', $satuanPimpinanIds)->get(),
+                    $satuanDanpusAktivitas,
+                    $satuan
+                );
+            }
+            // ===== Laporan Kendala: 21 Kasansi (Kotama) -> DANPUS =====
+            // Kasansi kirim kendala/laporan rutin bebas kapan saja (tidak
+            // terikat Permintaan Laporan) LANGSUNG ke Danpus. Danpus & Wadan
+            // berdua bisa melihat & menindaklanjuti -- disatukan lewat kode
+            // satuan Danpus supaya sengaja TIDAK bercampur dengan
+            // $permintaanLaporan (alur "kebutuhan khusus" yang diminta
+            // Danpus/Wadan lebih dulu), lihat komentar di
+            // LaporanKendalaController.
+            //
+            // Begitu Danpus menekan "Konfirmasi" (status jadi
+            // Dikonfirmasi, confirmed_at terisi), record otomatis pindah
+            // dari daftar "Kendala Kasansi" (masih actionable) ke submenu
+            // "Arsip Kendala Kasansi" -- makanya keduanya dipisah lewat
+            // whereNull/whereNotNull('confirmed_at'), BUKAN sekadar filter
+            // status, supaya laporan yang ditolak pun tetap bisa diarsipkan.
+            $danpusSatuanId = Satuan::where('kode', 'DANPUS')->value('id');
+            // Alur: Menunggu Konfirmasi -> Dikonfirmasi. Laporan langsung
+            // masuk ke sini begitu Kasansi mengirim (tidak ada tahap tembusan).
+            $kendalaMasuk = $danpusSatuanId
+                ? LaporanKendala::with(['satuan', 'lampirans'])
+                    ->where('tujuan_satuan_id', $danpusSatuanId)
+                    ->menungguKonfirmasi()
+                    ->latest()
+                    ->get()
+                : collect();
+            $kendalaArsip = $danpusSatuanId
+                ? LaporanKendala::with(['satuan', 'confirmedBy', 'lampirans'])->where('tujuan_satuan_id', $danpusSatuanId)->whereNotNull('confirmed_at')->latest('confirmed_at')->get()
+                : collect();
+
+            // ===== Surat Masuk: surat dari Kasansi ke SATU tujuan bebas,
+            // tanpa tembusan & tanpa progres -- lihat komentar
+            // LaporanSuratController. Danpus/Wadan bisa saja jadi salah
+            // satu tujuan surat, sama seperti satuan lain manapun. Cuma yang
+            // masih MENUNGGU -- yang sudah dikonfirmasi pindah ke $suratArsip
+            // di bawah (niru pola Surat Keluar: begitu dikonfirmasi, otomatis
+            // pindah ke Arsip Surat, bukan nyangkut selamanya di Surat Masuk).
+            $isDanpusKode = $kode === 'DANPUS';
+            // Wadan: surat masuk termasuk yang sudah dikonfirmasi TAPI belum
+            // diteruskan ke satuan -- surat baru pindah ke Arsip setelah
+            // Wadan klik "Teruskan Surat" (status berubah ke menunggu dengan
+            // tujuan_satuan_id baru / bukan Wadan lagi). Danpus tetap pakai
+            // filter STATUS_MENUNGGU saja (alur Danpus berbeda).
+            $isWadanKode = $kode === 'WADAN';
+            $suratMasukUtama = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
+                ->where('tujuan_satuan_id', $satuan->id)
+                ->where('is_selesai', false)
+                ->when($isWadanKode, function ($q) {
+                    // Wadan: ambil menunggu ATAU sudah dikonfirmasi (belum diteruskan)
+                    $q->whereIn('status', [LaporanSurat::STATUS_MENUNGGU, LaporanSurat::STATUS_DIKONFIRMASI]);
+                }, function ($q) {
+                    // Danpus & lainnya: hanya menunggu
+                    $q->where('status', LaporanSurat::STATUS_MENUNGGU);
+                })
+                ->when($isDanpusKode, function ($q) use ($satuan) {
+                    $q->whereHas('riwayats', function ($rq) use ($satuan) {
+                        $rq->where('penerima_satuan_id', $satuan->id);
+                    });
+                })
+                ->latest()
+                ->get();
+
+            $suratTembusanMasuk = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
+                ->where('is_selesai', false)
+                ->whereHas('tembusans', function ($tq) use ($satuan) {
+                    $tq->where('satuan_id', $satuan->id)
+                       ->whereNull('dikonfirmasi_at');
+                })
+                ->where('tujuan_satuan_id', '!=', $satuan->id)
+                ->latest()
+                ->get();
+
+            $suratMasuk = $suratMasukUtama->concat($suratTembusanMasuk)->unique('id')->values();
+
+            // ===== Menu Surat Danpus/Wadan =====
+            $suratTerkirim = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
+                ->where('satuan_id', $satuan->id)
+                ->where('is_selesai', false)
+                // Danpus: alur 3 step terpenuhi -> otomatis pindah ke Arsip.
+                ->when($isDanpusKode, fn ($q) => $q->alurBelumTuntasSisiPengirim())
+                ->latest()
+                ->get();
+
+            $suratArsip = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
+                ->where(function ($q) use ($satuan, $isWadanKode, $isDanpusKode) {
+                    $q->where(function ($sub) use ($satuan, $isWadanKode, $isDanpusKode) {
+                        $sub->where(function ($own) use ($satuan, $isDanpusKode) {
+                                // Pengirim asli. Khusus Danpus: baru masuk Arsip kalau
+                                // is_selesai ATAU alur 3 step terpenuhi (Wadan sudah
+                                // meneruskan & satuan tujuan akhir sudah konfirmasi) --
+                                // BUKAN cuma karena Wadan baru konfirmasi terima, biar
+                                // tidak tampil ganda di Surat Keluar & Arsip.
+                                $own->where('satuan_id', $satuan->id);
+                                if ($isDanpusKode) {
+                                    $own->where(function ($fin) {
+                                        $fin->where('is_selesai', true)
+                                            ->orWhere(fn ($t) => $t->alurTuntasSisiPengirim());
+                                    });
+                                }
+                            })
+                            ->orWhere(function ($tj) use ($satuan, $isWadanKode) {
+                                $tj->where('tujuan_satuan_id', $satuan->id);
+                                // Wadan: surat masuk yang statusnya DIKONFIRMASI
+                                // TAPI masih di tangan Wadan (belum diteruskan,
+                                // is_selesai masih false) SENGAJA dikecualikan
+                                // dari Arsip -- supaya tetap nyangkut & tetap
+                                // actionable (tombol Teruskan Surat) di Surat
+                                // Masuk sampai Wadan benar-benar meneruskannya
+                                // (tujuan_satuan_id pindah dari Wadan) atau
+                                // sampai alurnya tuntas (is_selesai).
+                                if ($isWadanKode) {
+                                    $tj->where(function ($w) {
+                                        $w->where('is_selesai', true)
+                                          ->orWhere('status', '!=', LaporanSurat::STATUS_DIKONFIRMASI);
+                                    });
+                                }
+                            });
+                    })
+                    ->where(function ($st) {
+                        $st->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
+                           ->orWhere('is_selesai', true);
+                    });
+                })
+                ->orWhere(function ($q) use ($satuan) {
+                    $q->whereHas('tembusans', function ($tq) use ($satuan) {
+                        $tq->where('satuan_id', $satuan->id)
+                           ->whereNotNull('dikonfirmasi_at');
+                    });
+                })
+                ->orWhere(function ($q) use ($satuan) {
+                    $q->where('is_selesai', true)
+                      ->whereHas('tembusans', function ($tq) use ($satuan) {
+                          $tq->where('satuan_id', $satuan->id)
+                             ->where('jenis', LaporanSuratTembusan::JENIS_HASIL_RC);
+                      });
+                })
+                ->latest()
+                ->get()
+                ->unique('id')
+                ->values();
+
+            $satuanSuratTujuanPilihan = Satuan::where('id', '!=', $satuan->id)->where('kode', '!=', 'ADMIN')->get()->sortBy($urutkanSatuan)->values();
+
+            // Total Surat di kartu KPI: WADAN mencakup juga surat sisi DANPUS (lihat
+            // suratKpiDanpus()). DANPUS tetap memakai rumus biasa (nilai null).
+            $suratSemuaTercatat = $kode === 'WADAN'
+                ? $suratMasuk->concat($suratTerkirim)->concat($suratArsip)->concat($this->suratKpiDanpus())->unique('id')->values()
+                : null;
+
+            // DANPUS & WADAN dulunya 1 view bareng (laporan-danpus-shell & laporan-wadan-shell).
+            // Sekarang dipisah jadi file sendiri-sendiri (isi & wewenang
+            // TETAP SAMA persis) supaya perombakan menu Surat ke depan bisa
+            // digarap per satuan tanpa saling nyenggol.
+            $shellPimpinan = $kode === 'WADAN' ? 'cyclone.dashboards.laporan-wadan-shell' : 'cyclone.dashboards.laporan-danpus-shell';
+
+            return view($shellPimpinan, compact('suratSemuaTercatat','user','satuan','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporanPimpinan','satuanPermintaanLaporan','permintaanGantiPasswordPending','modulAktif','kendalaMasuk','kendalaArsip','suratMasuk','suratTerkirim','suratArsip','satuanSuratTujuanPilihan') + ['pengaturan' => Pengaturan::current(), 'aktivitasDanpus' => $aktivitasDanpus]);
+        }
+        // Terlambat/Dibatalkan dihitung dari SELURUH permintaan laporan yang
+        // ditujukan ke satuan ini, bukan $permintaanLaporan (yang sengaja
+        // sudah difilter cuma yang masih actionable, tanpa Selesai/
+        // Dibatalkan, khusus buat daftar tugas di tab "Permintaan Laporan").
+        $permintaanLaporanSemua = PermintaanLaporan::where('tujuan_satuan_id', $satuan->id)->get();
+
+        // ===== Laporan Kendala: 21 Kasansi (Kotama) -> DANPUS =====
+        // Kasansi bisa kirim kendala/laporan rutin bebas kapan saja (tidak
+        // terikat Permintaan Laporan) LANGSUNG ke Danpus (bukan ke Satlak
+        // lagi) -- lihat komentar di LaporanKendalaController. Di sini cuma
+        // perlu riwayat kirim Kasansi sendiri; yang menerima & menindak
+        // lanjuti (Danpus/Wadan) sudah ditangani di cabang $modePimpinan di
+        // atas, jadi TIDAK bercampur dengan dashboard non-pimpinan ini.
+        $isKasansi = in_array($kode, Satuan::KODE_KOTAMA, true);
+        // Dipisah 2: yang masih aktif (belum dikonfirmasi Danpus) tetap di
+        // tab "Kirim Laporan", sedangkan yang statusnya sudah Dikonfirmasi
+        // otomatis pindah ke tab "Arsip Kendala" -- SENGAJA dipisah dari
+        // $laporanTerkirim/tab "Riwayat Laporan" di bawah karena itu untuk
+        // model Laporan biasa, bukan LaporanKendala.
+        $kendalaTerkirimSemua = $isKasansi
+            ? LaporanKendala::with(['tujuanSatuan', 'confirmedBy', 'lampirans'])->where('satuan_id', $satuan->id)->latest()->get()
+            : collect();
+        $kendalaTerkirim = $kendalaTerkirimSemua->where('status', '!=', LaporanKendala::STATUS_DIKONFIRMASI)->values();
+        $kendalaArsip = $kendalaTerkirimSemua->where('status', LaporanKendala::STATUS_DIKONFIRMASI)->values();
+
+        // ===== Surat: Kasansi (21 Sansidam), 4 Satlak, 4 Sdir (Pembinaan),
+        // Urdal, dan Pok Analis semuanya bisa Surat Keluar ke SATU tujuan bebas.
+        // $bisaKirimSurat sengaja DIPISAH dari $isKasansi agar logika Kendala
+        // (hanya Kasansi) tidak ikut terpengaruh.
+        // Surat berstatus 'menunggu_konfirmasi' tetap di Surat Keluar.
+        // Surat berstatus 'dikonfirmasi' pindah ke Arsip Surat.
+        $bisaKirimSurat = $isKasansi
+            || in_array($kode, Satuan::KODE_SATLAK, true)
+            || in_array($kode, Satuan::KODE_PEMBINAAN, true)
+            || in_array($kode, Satuan::KODE_UNSUR_PELAYANAN, true)
+            || in_array($kode, Satuan::KODE_UNSUR_PEMBANTU_PIMPINAN, true);
+        $suratTerkirim = $bisaKirimSurat
+            ? LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
+                ->where('satuan_id', $satuan->id)
+                ->where('is_selesai', false)
+                ->latest()
+                ->get()
+            : collect();
+
+        // Alur naik (balasan): surat turun dari Danpus yang sudah di-ACC satuan ini
+        // TAPI belum dibalas TETAP di Surat Masuk (tombol "Kirim Surat"), belum
+        // masuk Arsip. Satuan bawaan alur (Danpus/Wadan/Urdal) tidak terkena.
+        $bolehKirimBalasan = LaporanSurat::satuanBolehKirimBalasanNaik($kode);
+
+        $suratArsip = $kode === 'URDAL'
+            // Urdal = arsip pusat: semua surat yang sudah selesai (filter Asal di UI).
+            ? LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])->arsipPusat()->latest()->get()->unique('id')->values()
+            : LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
+            ->where(function ($q) use ($satuan, $bolehKirimBalasan) {
+                $q->where(function ($sub) use ($satuan) {
+                    $sub->where('satuan_id', $satuan->id)
+                        ->orWhere('tujuan_satuan_id', $satuan->id);
+                })
+                ->where(function ($st) use ($bolehKirimBalasan) {
+                    $st->where(function ($d) use ($bolehKirimBalasan) {
+                        $d->where('status', \App\Models\LaporanSurat::STATUS_DIKONFIRMASI);
+                        if ($bolehKirimBalasan) {
+                            $d->whereDoesntHave('satuan', fn ($a) => $a->where('kode', 'DANPUS'));
+                        }
+                    })->orWhere('is_selesai', true);
+                });
+            })
+            ->orWhere(function ($q) use ($satuan) {
+                $q->whereHas('tembusans', function ($tq) use ($satuan) {
+                    $tq->where('satuan_id', $satuan->id)
+                       ->whereNotNull('dikonfirmasi_at');
+                });
+            })
+            ->orWhere(function ($q) use ($satuan) {
+                $q->where('is_selesai', true)
+                  ->whereHas('tembusans', function ($tq) use ($satuan) {
+                      $tq->where('satuan_id', $satuan->id)
+                         ->where('jenis', LaporanSuratTembusan::JENIS_HASIL_RC);
+                  });
+            })
+            ->orWhere(function ($q) use ($satuan) {
+                // Pernah menangani (tercatat di riwayat alur) tapi surat sekarang
+                // sudah di satuan lain -- mis. balasan yang sudah dikirim satuan
+                // ini ke Wadan. Sama dengan bagian (d) Arsip di
+                // LaporanSuratController::realtime(), supaya render awal tidak
+                // beda dengan hasil polling.
+                $q->where('satuan_id', '!=', $satuan->id)
+                  ->where('tujuan_satuan_id', '!=', $satuan->id)
+                  ->whereHas('riwayats', function ($rq) use ($satuan) {
+                      $rq->where('pengirim_satuan_id', $satuan->id)
+                         ->orWhere('penerima_satuan_id', $satuan->id);
+                  });
+            })
             ->latest()
             ->get()
-            ->map(fn (Laporan $l) => [
-                'id' => $l->id,
-                'satuan' => $l->satuan->nama,
-                'perihal' => $l->perihal,
-                'diteruskan_oleh' => $l->satuan->nama, // dikirim langsung, bukan lewat WADAN
-                'tanggal' => $l->created_at->translatedFormat('d M Y'),
-                // Format ISO (YYYY-MM-DD) dipakai khusus untuk filter rentang
-                // tanggal di tab "Riwayat Laporan" — tidak ditampilkan langsung.
-                'tanggal_iso' => $l->created_at->format('Y-m-d'),
-                'prioritas' => $l->prioritas,
-                'prioritas_class' => match ($l->prioritas) {
-                    'Tinggi' => 'bad',
-                    'Sedang' => 'warn',
-                    default => 'ok',
-                },
-                'status' => $l->status,
-                'status_class' => match ($l->status) {
-                    'Disetujui DANPUS' => 'green',
-                    'Ditolak DANPUS' => 'bad',
-                    default => 'amber',
-                },
-                // URL lampiran PDF (kalau ada) — dipakai tombol "Lihat/Unduh PDF" di tabel.
-                // Butuh `php artisan storage:link` supaya folder storage/app/public bisa diakses lewat /storage/...
-                'lampiran_url' => $l->lampiran_path ? asset('storage/'.$l->lampiran_path) : null,
-            ])
-            ->toArray();
-
-        // Laporan Monitoring & Recovery yang masuk dari Satuan Pelaksanaan Penangkalan (REAL, dari DB)
-        // — DANPUS bisa Setujui / Tolak / Minta Revisi lewat tab ini.
-        $laporanMonitoringMasuk = LaporanMonitoring::where('tujuan_satuan_id', $satuan->id)
-            ->where('status', 'Dikirim')
-            ->with('satuan')
-            ->latest('tanggal_kirim')
-            ->get();
-
-        // Notifikasi laporan baru untuk DANPUS yang sedang login — ditampilkan
-        // di lonceng notifikasi pada topbar.
-        $notifikasi = $user->unreadNotifications;
-
-        // ===== Grafik 1: Distribusi status seluruh satuan (Normal / Siaga / Ada Insiden) =====
-        $jumlahPerStatusClass = collect($statusSatuan)->groupBy('class')->map->count();
-        $statusDistribusi = [
-            ['label' => 'Normal', 'jumlah' => $jumlahPerStatusClass->get('ok', 0)],
-            ['label' => 'Siaga', 'jumlah' => $jumlahPerStatusClass->get('warn', 0)],
-            ['label' => 'Ada Insiden', 'jumlah' => $jumlahPerStatusClass->get('bad', 0)],
-        ];
-
-        // ===== Grafik 2: Jumlah laporan masuk per tingkat prioritas =====
-        $jumlahPerPrioritas = collect($laporanMasukFinal)->groupBy('prioritas')->map->count();
-        $laporanPerPrioritas = [
-            ['label' => 'Tinggi', 'jumlah' => $jumlahPerPrioritas->get('Tinggi', 0)],
-            ['label' => 'Sedang', 'jumlah' => $jumlahPerPrioritas->get('Sedang', 0)],
-            ['label' => 'Rendah', 'jumlah' => $jumlahPerPrioritas->get('Rendah', 0)],
-        ];
-
-        // ===== Grafik 3: Satuan paling aktif melapor (jumlah laporan per satuan) =====
-        $laporanPerSatuanChart = collect($laporanMasukFinal)
-            ->groupBy('satuan')
-            ->map(fn ($grup, $nama) => ['satuan' => $nama, 'jumlah' => $grup->count()])
-            ->sortByDesc('jumlah')
-            ->values()
-            ->toArray();
-
-        return view('siberad.dashboards.danpus', [
-            'notifikasi' => $notifikasi,
-            'user' => $user,
-            'satuan' => $satuan,
-            'semuaSatuan' => $semuaSatuan,
-            'statusSatuan' => $statusSatuan,
-            'stats' => [
-                'total_satuan' => $semuaSatuan->count(),
-                'insiden_aktif' => 1,
-                'laporan_pending' => collect($laporanMasukFinal)->where('status', 'Menunggu')->count(),
-                'siaga_hijau' => $semuaSatuan->count() - 2,
-            ],
-            'laporanPrioritas' => [
-                ['satuan' => 'Satuan Pelaksanaan Penangkalan', 'perihal' => 'Serangan DDoS pada portal utama', 'prioritas' => 'Tinggi', 'prioritas_class' => 'bad', 'tanggal' => '02 Agu 2026', 'status' => 'Menunggu DANPUS', 'status_class' => 'amber'],
-                ['satuan' => 'Satuan Pelaksanaan Siber Sosial', 'perihal' => 'Hoaks rekrutmen mengatasnamakan TNI AD', 'prioritas' => 'Sedang', 'prioritas_class' => 'warn', 'tanggal' => '01 Agu 2026', 'status' => 'Menunggu DANPUS', 'status_class' => 'amber'],
-                ['satuan' => 'Satuan Pelaksanaan Penindakan', 'perihal' => 'Indikasi ransomware pada server unit', 'prioritas' => 'Tinggi', 'prioritas_class' => 'bad', 'tanggal' => '31 Jul 2026', 'status' => 'Disetujui', 'status_class' => 'green'],
-            ],
-            'laporanMasuk' => $laporanMasukFinal,
-            'laporanMonitoringMasuk' => $laporanMonitoringMasuk,
-            'statusDistribusi' => $statusDistribusi,
-            'laporanPerPrioritas' => $laporanPerPrioritas,
-            'laporanPerSatuanChart' => $laporanPerSatuanChart,
-        ]);
-    }
-
-    /**
-     * WADAN — verifikator laporan dari SDIR/Satlak sebelum diteruskan ke DANPUS.
-     */
-    private function wadan($user, $satuan): View
-    {
-        $laporanMasuk = [
-            ['satuan' => 'Satuan Pelaksanaan Penangkalan', 'perihal' => 'Serangan DDoS pada portal utama', 'tanggal' => '02 Agu 2026', 'prioritas' => 'Tinggi', 'prioritas_class' => 'bad', 'status' => 'Menunggu', 'status_class' => 'amber'],
-            ['satuan' => 'Satuan Pelaksanaan Siber Sosial', 'perihal' => 'Hoaks rekrutmen mengatasnamakan TNI AD', 'tanggal' => '01 Agu 2026', 'prioritas' => 'Sedang', 'prioritas_class' => 'warn', 'status' => 'Menunggu', 'status_class' => 'amber'],
-            ['satuan' => 'Satuan Pelaksanaan Penindakan', 'perihal' => 'Indikasi ransomware pada server unit', 'tanggal' => '31 Jul 2026', 'prioritas' => 'Tinggi', 'prioritas_class' => 'bad', 'status' => 'Menunggu', 'status_class' => 'amber'],
-            ['satuan' => 'Binfung', 'perihal' => 'Laporan penempatan 3 personel baru', 'tanggal' => '29 Jul 2026', 'prioritas' => 'Rendah', 'prioritas_class' => 'ok', 'status' => 'Diteruskan', 'status_class' => 'green'],
-        ];
-
-        $koordinasi = [
-            ['satuan' => 'Satuan Pelaksanaan Dukungan Teknologi', 'perihal' => 'Permintaan pengiriman 2 personel untuk riset AI', 'diminta_oleh' => 'SDIR', 'tanggal' => '30 Jul 2026', 'status' => 'Menunggu', 'status_class' => 'amber'],
-            ['satuan' => 'Diklat', 'perihal' => 'Koordinasi jadwal latihan gabungan', 'diminta_oleh' => 'SDIR', 'tanggal' => '28 Jul 2026', 'status' => 'Selesai', 'status_class' => 'green'],
-        ];
-
-        // ===== Grafik 1: Jumlah laporan masuk per tingkat prioritas =====
-        $jumlahPerPrioritas = collect($laporanMasuk)->groupBy('prioritas')->map->count();
-        $laporanPerPrioritas = [
-            ['label' => 'Tinggi', 'jumlah' => $jumlahPerPrioritas->get('Tinggi', 0)],
-            ['label' => 'Sedang', 'jumlah' => $jumlahPerPrioritas->get('Sedang', 0)],
-            ['label' => 'Rendah', 'jumlah' => $jumlahPerPrioritas->get('Rendah', 0)],
-        ];
-
-        // ===== Grafik 2: Satuan paling aktif melapor (jumlah laporan per satuan) =====
-        $laporanPerSatuanChart = collect($laporanMasuk)
-            ->groupBy('satuan')
-            ->map(fn ($grup, $nama) => ['satuan' => $nama, 'jumlah' => $grup->count()])
-            ->sortByDesc('jumlah')
-            ->values()
-            ->toArray();
-
-        // ===== Grafik 3: Status permintaan koordinasi (Menunggu vs Selesai) =====
-        $jumlahPerStatusKoordinasi = collect($koordinasi)->groupBy('status')->map->count();
-        $statusKoordinasi = [
-            ['label' => 'Menunggu', 'jumlah' => $jumlahPerStatusKoordinasi->get('Menunggu', 0)],
-            ['label' => 'Selesai', 'jumlah' => $jumlahPerStatusKoordinasi->get('Selesai', 0)],
-        ];
-
-        return view('siberad.dashboards.wadan', [
-            'user' => $user,
-            'satuan' => $satuan,
-            'stats' => [
-                'menunggu_verifikasi' => 4,
-                'diteruskan' => 12,
-                'satuan_aktif' => 7,
-                'permintaan_koordinasi' => 2,
-            ],
-            'aktivitasTerbaru' => [
-                ['satuan' => 'Satuan Pelaksanaan Penangkalan', 'perihal' => 'Serangan DDoS pada portal utama', 'tanggal' => '02 Agu 2026', 'status' => 'Menunggu Verifikasi', 'status_class' => 'amber'],
-                ['satuan' => 'Satuan Pelaksanaan Siber Sosial', 'perihal' => 'Hoaks rekrutmen mengatasnamakan TNI AD', 'tanggal' => '01 Agu 2026', 'status' => 'Menunggu Verifikasi', 'status_class' => 'amber'],
-                ['satuan' => 'SDIR', 'perihal' => 'Permintaan personel tambahan Satuan Pelaksanaan Dukungan Teknologi', 'tanggal' => '31 Jul 2026', 'status' => 'Diteruskan', 'status_class' => 'green'],
-            ],
-            'laporanMasuk' => $laporanMasuk,
-            'koordinasi' => $koordinasi,
-            'laporanPerPrioritas' => $laporanPerPrioritas,
-            'laporanPerSatuanChart' => $laporanPerSatuanChart,
-            'statusKoordinasi' => $statusKoordinasi,
-            'riwayatDiteruskan' => [
-                ['satuan' => 'Satuan Pelaksanaan Penindakan', 'perihal' => 'Indikasi ransomware pada server unit', 'tanggal' => '31 Jul 2026', 'status' => 'Disetujui DANPUS', 'status_class' => 'green'],
-                ['satuan' => 'Binmat', 'perihal' => 'Pengadaan perangkat pemantauan baru', 'tanggal' => '29 Jul 2026', 'status' => 'Disetujui DANPUS', 'status_class' => 'green'],
-                ['satuan' => 'Binfung', 'perihal' => 'Laporan penempatan 3 personel baru', 'tanggal' => '29 Jul 2026', 'status' => 'Menunggu DANPUS', 'status_class' => 'amber'],
-            ],
-        ]);
-    }
-
-    /**
-     * Satuan Pelaksanaan Penangkalan — pemantauan & pemulihan website/aset digital.
-     */
-    private function satlakKal($user, $satuan): View
-    {
-        // Fitur "Monitoring Sistem" (pemakaian resource CPU/RAM/Storage) sudah
-        // dihapus — Satuan Pelaksanaan Penangkalan sekarang fokus murni ke
-        // Laporan Kegiatan Pemantauan & Pemulihan (lihat di bawah).
-
-        // ===== Laporan Kegiatan Pemantauan & Pemulihan ke DANPUS (REAL, dari DB) =====
-        // Fitur inti Satuan Pelaksanaan Penangkalan: Buat Laporan, Draft, Riwayat, Status, Upload
-        // Lampiran, dan Detail Laporan (semua berbasis tabel ini).
-        $semuaLaporanMonitoring = LaporanMonitoring::where('satuan_id', $satuan->id)
-            ->with('lampiran', 'tujuanSatuan')
-            ->orderByDesc('created_at')
-            ->get();
-
-        $draftLaporanMonitoring = $semuaLaporanMonitoring->whereIn('status', ['Draft', 'Direvisi'])->values();
-        $statusLaporanMonitoring = $semuaLaporanMonitoring->where('status', '!=', 'Draft')->values();
-
-        // Dibangun di sini (bukan langsung di dalam @json() pada Blade) karena
-        // Blade meng-explode isi @json(...) berdasarkan koma untuk mencari
-        // parameter options/depth. Array kompleks dengan banyak koma di dalam
-        // @json() akan membuat hasil kompilasinya rusak (ParseError).
-        $laporanMonitoringData = $semuaLaporanMonitoring->keyBy('id')->map(function ($l) {
-            return [
-                'jenis_kegiatan' => $l->jenis_kegiatan,
-                'tanggal_kegiatan' => $l->tanggal_kegiatan?->translatedFormat('d M Y') ?? '—',
-                // Format ISO (YYYY-MM-DD) dipakai khusus untuk prefill input
-                // type="date" di form edit — tidak ditampilkan langsung.
-                'tanggal_kegiatan_raw' => $l->tanggal_kegiatan?->format('Y-m-d'),
-                'status' => $l->status,
-                'tanggal' => $l->tanggal_kirim?->translatedFormat('d M Y H:i') ?? '—',
-                'ringkasan_kegiatan' => $l->ringkasan_kegiatan,
-                'hasil' => $l->hasil,
-                'catatan_danpus' => $l->catatan_danpus,
-                'lampiran' => $l->lampiran->map(fn ($d) => [
-                    'nama' => $d->nama_file,
-                    'url' => asset('storage/'.$d->path),
-                ]),
-            ];
-        });
-
-        // Notifikasi status laporan (Disetujui/Ditolak/Direvisi) untuk user
-        // Satuan Pelaksanaan Penangkalan yang sedang login — ditampilkan di lonceng notifikasi topbar.
-        $notifikasi = $user->unreadNotifications;
-
-        return view('siberad.dashboards.satlakkal', [
-            'user' => $user,
-            'satuan' => $satuan,
-            'notifikasi' => $notifikasi,
-
-            'semuaLaporanMonitoring' => $semuaLaporanMonitoring,
-            'draftLaporanMonitoring' => $draftLaporanMonitoring,
-            'statusLaporanMonitoring' => $statusLaporanMonitoring,
-            'laporanMonitoringData' => $laporanMonitoringData,
-            'statsLaporanMonitoring' => [
-                'total' => $semuaLaporanMonitoring->count(),
-                'draft' => $semuaLaporanMonitoring->where('status', 'Draft')->count(),
-                'dikirim' => $semuaLaporanMonitoring->where('status', 'Dikirim')->count(),
-                'disetujui' => $semuaLaporanMonitoring->where('status', 'Disetujui')->count(),
-            ],
-        ]);
-    }
-
-
-    /**
-     * Satuan Pelaksanaan Siber Sosial — pengelolaan & pemantauan media sosial di daerah.
-     */
-    private function satlakSisos($user, $satuan): View
-    {
-        // ===== Laporan Publikasi ke DANPUS (REAL, dari DB) =====
-        // Satu-satunya fitur inti Satuan Pelaksanaan Siber Sosial sekarang: Dashboard, Buat
-        // Laporan Publikasi, Draft Laporan, Status Laporan, Riwayat Laporan,
-        // Upload Dokumentasi, dan Detail Laporan (semua berbasis tabel ini).
-        $semuaLaporanPublikasi = LaporanPublikasi::where('satuan_id', $satuan->id)
-            ->with('dokumentasi', 'tujuanSatuan')
-            ->orderByDesc('created_at')
-            ->get();
-
-        $draftLaporanPublikasi = $semuaLaporanPublikasi->where('status', 'Draft')->values();
-        $statusLaporanPublikasi = $semuaLaporanPublikasi->where('status', '!=', 'Draft')->values();
-
-        // Dibangun di sini (bukan langsung di dalam @json() pada Blade) karena
-        // Blade meng-explode isi @json(...) berdasarkan koma untuk mencari
-        // parameter options/depth. Array kompleks dengan banyak koma di dalam
-        // @json() akan membuat hasil kompilasinya rusak (ParseError).
-        $laporanPublikasiData = $semuaLaporanPublikasi->keyBy('id')->map(function ($l) {
-            return [
-                'judul' => $l->judul,
-                'platform' => $l->platform ?? '—',
-                'status' => $l->status,
-                'tanggal' => $l->tanggal_kirim?->translatedFormat('d M Y H:i') ?? '—',
-                'link' => $l->link_publikasi,
-                'deskripsi' => $l->deskripsi,
-                'dokumentasi' => $l->dokumentasi->map(fn ($d) => [
-                    'nama' => $d->nama_file,
-                    'url' => asset('storage/'.$d->path),
-                ]),
-            ];
-        });
-
-        return view('siberad.dashboards.satlaksisos', [
-            'user' => $user,
-            'satuan' => $satuan,
-
-            'stats' => [
-                'total_laporan' => $semuaLaporanPublikasi->count(),
-                'draft' => $draftLaporanPublikasi->count(),
-                'menunggu' => $semuaLaporanPublikasi->where('status', 'Menunggu')->count(),
-                'disetujui' => $semuaLaporanPublikasi->where('status', 'Disetujui DANPUS')->count(),
-            ],
-
-            'semuaLaporanPublikasi' => $semuaLaporanPublikasi,
-            'draftLaporanPublikasi' => $draftLaporanPublikasi,
-            'statusLaporanPublikasi' => $statusLaporanPublikasi,
-            'laporanPublikasiData' => $laporanPublikasiData,
-        ]);
-    }
-
-    /**
-     * Satuan Pelaksanaan Penindakan — penanganan aksi cyber: malware, ransomware, dan serangan.
-     */
-    private function satlakDak($user, $satuan): View
-    {
-        $ancamanTerdeteksi = [
-            ['nama' => 'Server File Sharing Ditjen', 'jenis' => 'Ransomware (Lockbit variant)', 'tingkat' => 'Kritis', 'tingkat_class' => 'bad', 'terdeteksi' => '8 menit lalu'],
-            ['nama' => 'Endpoint Staf Binmat #14', 'jenis' => 'Malware (Trojan)', 'tingkat' => 'Tinggi', 'tingkat_class' => 'bad', 'terdeteksi' => '40 menit lalu'],
-            ['nama' => 'Gateway Email Satuan Pelaksanaan Dukungan Teknologi', 'jenis' => 'Phishing campaign', 'tingkat' => 'Sedang', 'tingkat_class' => 'warn', 'terdeteksi' => '1 jam lalu'],
-            ['nama' => 'Jaringan Internal SDIR', 'jenis' => 'Percobaan brute force', 'tingkat' => 'Rendah', 'tingkat_class' => 'ok', 'terdeteksi' => '3 jam lalu'],
-        ];
-
-        $logPenanganan = [
-            ['aset' => 'Server File Sharing Ditjen', 'jenis' => 'Ransomware (Lockbit variant)', 'waktu' => '02 Agu 2026, 09:32', 'tindakan' => 'Isolasi jaringan, forensik disk, siapkan restore dari backup', 'status' => 'Berlangsung', 'status_class' => 'amber'],
-            ['aset' => 'Endpoint Staf Binmat #14', 'jenis' => 'Malware (Trojan)', 'waktu' => '02 Agu 2026, 09:00', 'tindakan' => 'Karantina endpoint, scan menyeluruh, reset kredensial', 'status' => 'Dalam Penanganan', 'status_class' => 'amber'],
-            ['aset' => 'Gateway Email Satuan Pelaksanaan Dukungan Teknologi', 'jenis' => 'Phishing campaign', 'waktu' => '02 Agu 2026, 08:20', 'tindakan' => 'Blokir domain pengirim, edukasi pengguna terdampak', 'status' => 'Selesai', 'status_class' => 'green'],
-            ['aset' => 'Portal Data Kodim', 'jenis' => 'Defacement (rujukan Satuan Pelaksanaan Penangkalan)', 'waktu' => '28 Jul 2026, 15:10', 'tindakan' => 'Analisis malware yang disisipkan, patch celah upload', 'status' => 'Selesai', 'status_class' => 'green'],
-        ];
-
-        // Data komposisi untuk 3 grafik mini di dashboard — diturunkan dari
-        // daftar ancaman & log penanganan yang sama, bukan angka acak baru.
-        $ancamanPerTingkat = collect($ancamanTerdeteksi)
-            ->groupBy('tingkat')
-            ->map(fn ($g, $tingkat) => ['tingkat' => $tingkat, 'jumlah' => $g->count()])
-            ->values();
-        $jenisAncamanChart = collect($ancamanTerdeteksi)
-            ->groupBy('jenis')
-            ->map(fn ($g, $jenis) => ['jenis' => $jenis, 'jumlah' => $g->count()])
-            ->values();
-        $statusPenangananChart = collect($logPenanganan)
-            ->groupBy('status')
-            ->map(fn ($g, $status) => ['status' => $status, 'jumlah' => $g->count()])
+            ->unique('id')
             ->values();
 
-        return view('siberad.dashboards.satlakdak', [
-            'user' => $user,
-            'satuan' => $satuan,
-            'ancamanTerdeteksi' => $ancamanTerdeteksi,
-            'ancamanPerTingkat' => $ancamanPerTingkat,
-            'jenisAncamanChart' => $jenisAncamanChart,
-            'statusPenangananChart' => $statusPenangananChart,
-            'stats' => [
-                'ancaman_aktif' => 2,
-                'ransomware' => 1,
-                'malware_dikarantina' => 6,
-                'insiden_selesai_bulan_ini' => 14,
-            ],
-            'insidenTerbaru' => [
-                ['aset' => 'Server File Sharing Ditjen', 'jenis' => 'Ransomware (Lockbit variant)', 'waktu' => '8 menit lalu', 'status' => 'Isolasi Jaringan', 'status_class' => 'bad'],
-                ['aset' => 'Endpoint Staf Binmat #14', 'jenis' => 'Malware (Trojan)', 'waktu' => '40 menit lalu', 'status' => 'Dikarantina', 'status_class' => 'warn'],
-            ],
-            'logPenanganan' => $logPenanganan,
-            'laporanPiket' => [
-                ['aset' => 'Server File Sharing Ditjen', 'perihal' => 'Indikasi ransomware mengenkripsi file bersama', 'pelapor' => 'Piket Satuan Pelaksanaan Penindakan', 'tanggal' => '02 Agu 2026', 'prioritas' => 'Tinggi', 'prioritas_class' => 'bad'],
-                ['aset' => 'Endpoint Staf Binmat #14', 'perihal' => 'Trojan terdeteksi via antivirus terpusat', 'pelapor' => 'Piket Satuan Pelaksanaan Penindakan', 'tanggal' => '02 Agu 2026', 'prioritas' => 'Sedang', 'prioritas_class' => 'warn'],
-            ],
-            'investigasi' => [
-                ['kasus' => 'INV-2026-014', 'aset' => 'Server File Sharing Ditjen', 'jenis' => 'Ransomware (Lockbit variant)', 'investigator' => 'Serma Ridho Pratama', 'mulai' => '02 Agu 2026', 'progres' => 65, 'status' => 'Berlangsung', 'status_class' => 'amber'],
-                ['kasus' => 'INV-2026-013', 'aset' => 'Endpoint Staf Binmat #14', 'jenis' => 'Malware (Trojan)', 'investigator' => 'Sertu Dimas Aditya', 'mulai' => '02 Agu 2026', 'progres' => 40, 'status' => 'Berlangsung', 'status_class' => 'amber'],
-                ['kasus' => 'INV-2026-012', 'aset' => 'Gateway Email Satuan Pelaksanaan Dukungan Teknologi', 'jenis' => 'Phishing campaign', 'investigator' => 'Serma Ridho Pratama', 'mulai' => '02 Agu 2026', 'progres' => 100, 'status' => 'Selesai', 'status_class' => 'green'],
-                ['kasus' => 'INV-2026-009', 'aset' => 'Portal Data Kodim', 'jenis' => 'Defacement', 'investigator' => 'Sertu Dimas Aditya', 'mulai' => '28 Jul 2026', 'progres' => 100, 'status' => 'Selesai', 'status_class' => 'green'],
-            ],
-            'timelinePenanganan' => [
-                ['waktu' => '02 Agu 2026, 09:32', 'judul' => 'Insiden Terdeteksi', 'deskripsi' => 'Sistem monitoring mendeteksi aktivitas enkripsi massal pada Server File Sharing Ditjen.', 'state' => 'done'],
-                ['waktu' => '02 Agu 2026, 09:40', 'judul' => 'Isolasi Jaringan', 'deskripsi' => 'Server diisolasi dari jaringan untuk mencegah penyebaran ransomware ke sistem lain.', 'state' => 'done'],
-                ['waktu' => '02 Agu 2026, 10:15', 'judul' => 'Forensik & Analisis', 'deskripsi' => 'Tim investigasi melakukan analisis disk image untuk identifikasi varian ransomware.', 'state' => 'active'],
-                ['waktu' => 'Menyusul', 'judul' => 'Pemulihan dari Backup', 'deskripsi' => 'Restorasi data dari backup terakhir setelah sistem dipastikan bersih.', 'state' => 'pending'],
-                ['waktu' => 'Menyusul', 'judul' => 'Laporan Akhir & Penutupan Kasus', 'deskripsi' => 'Penyusunan laporan investigasi lengkap dan rekomendasi mitigasi jangka panjang.', 'state' => 'pending'],
-            ],
-            'mitigasi' => [
-                ['aset' => 'Server File Sharing Ditjen', 'ancaman' => 'Ransomware (Lockbit variant)', 'tindakan' => 'Perkuat segmentasi jaringan & aktifkan backup terenkripsi harian', 'penanggung_jawab' => 'Serma Ridho Pratama', 'tenggat' => '10 Agu 2026', 'status' => 'Berjalan', 'status_class' => 'amber'],
-                ['aset' => 'Endpoint Staf Binmat #14', 'ancaman' => 'Malware (Trojan)', 'tindakan' => 'Update signature antivirus terpusat & audit endpoint lain', 'penanggung_jawab' => 'Sertu Dimas Aditya', 'tenggat' => '08 Agu 2026', 'status' => 'Berjalan', 'status_class' => 'amber'],
-                ['aset' => 'Gateway Email Satuan Pelaksanaan Dukungan Teknologi', 'ancaman' => 'Phishing campaign', 'tindakan' => 'Blokir domain pengirim & edukasi pengguna terdampak', 'penanggung_jawab' => 'Serma Ridho Pratama', 'tenggat' => '05 Agu 2026', 'status' => 'Selesai', 'status_class' => 'green'],
-            ],
-        ]);
-    }
+        $satuanSuratTujuanPilihan = $bisaKirimSurat
+            ? Satuan::where('id', '!=', $satuan->id)->where('kode', '!=', 'ADMIN')->get()->sortBy($urutkanSatuan)->values()
+            : collect();
 
-    /**
-     * Satuan Pelaksanaan Dukungan Teknologi — riset & pengembangan teknologi (AI, drone, dll).
-     */
-    private function satlakDuktek($user, $satuan): View
-    {
-        // Proyek riset & pengembangan (AI, drone, keamanan siber, dll) — dulunya
-        // data dummy, sekarang CRUD nyata lewat tab "Riset & Pengembangan".
-        $proyekRiset = ProyekRiset::where('satuan_id', $satuan->id)
-            ->orderByDesc('created_at')
-            ->get();
-
-        // Distribusi kategori proyek — untuk grafik komposisi riset.
-        $kategoriDistribusi = $proyekRiset
-            ->groupBy('kategori')
-            ->map(fn ($group, $kategori) => ['kategori' => $kategori, 'jumlah' => $group->count()])
-            ->values();
-
-        // Perbandingan progres antar Satlak — punya Duktek dihitung dari rata-rata
-        // progres proyek riset asli; 3 satlak lain tetap perbandingan simulasi
-        // karena metrik progres mereka bukan bagian dari modul ini.
-        $perbandinganSatlak = [
-            ['nama' => 'Dukungan Teknologi', 'singkatan' => 'Duktek', 'progres' => $proyekRiset->isNotEmpty() ? round($proyekRiset->avg('progres')) : 0, 'highlight' => true],
-            ['nama' => 'Penangkalan', 'singkatan' => 'Kal', 'progres' => 60, 'highlight' => false],
-            ['nama' => 'Siber Sosial', 'singkatan' => 'Sisos', 'progres' => 67, 'highlight' => false],
-            ['nama' => 'Penindakan', 'singkatan' => 'Dak', 'progres' => 50, 'highlight' => false],
-        ];
-
-        // Laporan yang sudah pernah dikirim satuan ini ke DANPUS — dipakai di
-        // tab "Status Laporan" dan "Riwayat Laporan", jadi bukan data dummy lagi.
-        $laporanTerkirim = Laporan::where('satuan_id', $satuan->id)
+        $suratMasukUtama = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
+            ->where('tujuan_satuan_id', $satuan->id)
+            ->where(function ($x) use ($satuan, $bolehKirimBalasan) {
+                $x->where('status', \App\Models\LaporanSurat::STATUS_MENUNGGU);
+                if ($bolehKirimBalasan) {
+                    $x->orWhere(fn ($m) => $m->menungguBalasanSatuan($satuan->id));
+                }
+            })
+            ->where('is_selesai', false)
             ->latest()
             ->get();
 
-        // Log uji & pengembangan — riwayat pengujian prototipe per proyek riset.
-        $logUji = LogUjiPengembangan::with('proyekRiset')
-            ->where('satuan_id', $satuan->id)
-            ->latest('waktu_uji')
-            ->get();
-
-        // Log dukungan teknis ke 3 Satlak operasional lain (Satuan Pelaksanaan
-        // Penangkalan, Siber Sosial, Penindakan).
-        $satuanTujuanDukungan = Satuan::whereIn('kode', ['SATLAKKAL', 'SATLAKSISOS', 'SATLAKDAK'])
-            ->orderBy('urutan')
-            ->get();
-        $dukunganTeknis = DukunganTeknisLog::with('satuanTujuan')
-            ->where('satuan_id', $satuan->id)
+        $suratTembusanMasuk = LaporanSurat::with(['satuan', 'tujuanSatuan', 'riwayats.pengirimSatuan', 'riwayats.penerimaSatuan', 'tembusans.satuan'])
+            ->where('is_selesai', false)
+            ->whereHas('tembusans', function ($tq) use ($satuan) {
+                $tq->where('satuan_id', $satuan->id)
+                   ->whereNull('dikonfirmasi_at');
+            })
+            ->where('tujuan_satuan_id', '!=', $satuan->id)
             ->latest()
             ->get();
 
-        return view('siberad.dashboards.satlakduktek', [
-            'user' => $user,
-            'satuan' => $satuan,
-            'proyekRiset' => $proyekRiset,
-            'laporanTerkirim' => $laporanTerkirim,
-            'kategoriDistribusi' => $kategoriDistribusi,
-            'perbandinganSatlak' => $perbandinganSatlak,
-            'stats' => [
-                'proyek_aktif' => $proyekRiset->where('status', '!=', 'Selesai')->count(),
-                'proyek_ai' => $proyekRiset->filter(fn ($p) => str_contains(strtolower($p->kategori), 'ai'))->count(),
-                'unit_drone_uji' => $logUji->count(),
-                'prototipe_selesai' => $proyekRiset->where('status', 'Selesai')->count(),
-            ],
-            'aktivitasTerbaru' => $logUji->take(2)->map(fn ($l) => [
-                'proyek' => $l->proyekRiset->nama ?? '-',
-                'kegiatan' => $l->kegiatan,
-                'waktu' => $l->waktu_uji?->diffForHumans() ?? '-',
-                'status' => $l->status,
-                'status_class' => $l->status === 'Selesai' ? 'ok' : 'warn',
-            ]),
-            'logUji' => $logUji,
-            'satuanTujuanDukungan' => $satuanTujuanDukungan,
-            'dukunganTeknis' => $dukunganTeknis,
-        ]);
+        $suratMasuk = $suratMasukUtama->concat($suratTembusanMasuk)->unique('id')->values();
+
+        // ===== 3 kartu KPI Beranda Satuan (Total Pelaporan/Surat/Kendala
+        // Kasansi) -- MIRROR PERSIS kartu KPI Beranda Pimpinan, pakai
+        // partial yang SAMA (partials/pimpinan-kpi-cards.blade.php) supaya
+        // style+algoritma sparkline gak pernah drift antara dua dashboard.
+        // Lihat satuanKpiRealtime() di bawah buat versi poll-nya.
+        // "Total Pelaporan" dihitung PER PERIHAL sama seperti versi
+        // Pimpinan (lihat hitungLaporanPerPerihal). "Total Kendala Kasansi"
+        // hanya relevan untuk Kasansi (21 Kotama): menghitung kendala yang
+        // MEREKA KIRIM ($kendalaTerkirim/$kendalaArsip). Satuan lain dapat
+        // koleksi kosong (hasil akhirnya 0, itu benar/bukan bug).
+        $satuanTotalPelaporan = $this->hitungLaporanPerPerihal($laporanTerkirim);
+        $kendalaKasansiKpiAktif = $kendalaTerkirim;
+        $kendalaKasansiKpiArsip = $kendalaArsip;
+
+        // ===== "Distribusi Status Laporan" (donut) Beranda Satuan -- MIRROR
+        // PERSIS kartu Distribusi Status Laporan Beranda Pimpinan (4
+        // kategori sama: Disetujui/Ditolak/Terlambat/Dibatalkan, warna sama,
+        // partial pimpinan-status-distribusi-list.blade.php dipakai
+        // bareng). Bedanya cuma cakupan datanya: punya Pimpinan seluruh
+        // satuan pelaksana, punya di sini cuma laporan/permintaan MILIK
+        // satuan ini sendiri ($laporanTerkirim/$permintaanLaporanSemua yang
+        // udah ada). Dipisah jadi variabel sendiri (bukan langsung di
+        // dalam array 'stats' di bawah) supaya gak hitung ulang filter yang
+        // sama 2x -- 'stats' di bawah REUSE variabel ini juga.
+        $satuanDisetujui = $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'setuj') || str_contains(strtolower((string)$l->status),'diterima'))->count();
+        $satuanDitolak = $laporanTerkirim->filter(fn($l) => str_contains(strtolower((string)$l->status),'tolak'))->count();
+        $satuanTerlambat = $permintaanLaporanSemua->filter(fn($p) => $p->isTerlambat())->count();
+        $satuanDibatalkan = $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count();
+        $satuanStatusDist = [
+            ['label' => 'Disetujui', 'color' => '#22c55e', 'labelColor' => '#22c55e', 'count' => $satuanDisetujui],
+            ['label' => 'Ditolak', 'color' => '#ef4444', 'labelColor' => '#ef4444', 'count' => $satuanDitolak],
+            ['label' => 'Terlambat', 'color' => '#ff6b6b', 'labelColor' => '#ff6b6b', 'count' => $satuanTerlambat],
+            ['label' => 'Dibatalkan', 'color' => '#c1121f', 'labelColor' => '#e5484d', 'count' => $satuanDibatalkan],
+        ];
+        $satuanTotalStatus = $satuanDisetujui + $satuanDitolak + $satuanTerlambat + $satuanDibatalkan;
+
+        // ===== "Surat Terbaru" & "Kendala Kasansi Terbaru" Beranda Satuan
+        // -- MIRROR PERSIS 2 kartu yang sama di Beranda Pimpinan, reuse
+        // partial yang SAMA (pimpinan-surat-terbaru-rows.blade.php &
+        // pimpinan-kendala-terbaru-list.blade.php) apa adanya.
+        // "Surat Terbaru" = 5 surat (masuk+terkirim+arsip) MILIK SATUAN INI
+        // paling baru -- pola sama persis $pimpSuratTerbaru Pimpinan.
+        // Total Surat di kartu KPI dashboard. Urdal = penampung SELURUH surat (alur Surat otomatis
+        // menambahkan Urdal sebagai tembusan view-only), jadi totalnya semua surat yang tercatat --
+        // bukan cuma yang masuk/terkirim/arsip miliknya (surat berproses tanpa baris tembusan Urdal
+        // sebelumnya tidak terhitung dan totalnya jadi 0). Satuan lain tetap memakai rumus lama.
+        $suratSemuaTercatat = $kode === 'URDAL'
+            ? LaporanSurat::query()->get(['id', 'created_at'])
+            : $suratMasuk->concat($suratTerkirim)->concat($suratArsip);
+
+        $satuanSuratTerbaru = $suratMasuk->concat($suratTerkirim)->concat($suratArsip)->sortByDesc('created_at')->take(5)->values();
+        // "Kendala Kasansi Terbaru": hanya Kasansi yang punya kendala sendiri
+        // (partial ini butuh row LaporanKendala ASLI: ->perihal/->status/
+        // ->satuan). Satuan lain tidak punya sumber -> koleksi kosong.
+        $satuanKendalaTerbaruSumber = $isKasansi
+            ? $kendalaTerkirimSemua
+            : collect();
+        $satuanKendalaTerbaru = $satuanKendalaTerbaruSumber->sortByDesc('created_at')->take(5)->values();
+
+        return view('cyclone.dashboards.laporan-role-shell', compact('suratSemuaTercatat','user','satuan','tujuan','defaultDanpus','laporanTerkirim','laporanSatlak','monitoringSatlak','monitoringPimpinanSatlak','laporanPimpinanSatlak','mode','modePimpinan','canReview','canSend','description','permintaanLaporan','riwayatLaporan','satuanPermintaanLaporan','permintaanGantiPasswordPending','isKasansi','bisaKirimSurat','kendalaTerkirim','kendalaArsip','suratTerkirim','suratArsip','satuanSuratTujuanPilihan','suratMasuk','suratKal','suratDak','suratSisos') + ['defaultTujuanId' => $defaultDanpus?->id, 'modulAktif' => $modulAktif, 'pengaturan' => Pengaturan::current(), 'satuanTotalPelaporan' => $satuanTotalPelaporan, 'kendalaKasansiKpiAktif' => $kendalaKasansiKpiAktif, 'kendalaKasansiKpiArsip' => $kendalaKasansiKpiArsip, 'satuanStatusDist' => $satuanStatusDist, 'satuanTotalStatus' => $satuanTotalStatus, 'satuanSuratTerbaru' => $satuanSuratTerbaru, 'satuanKendalaTerbaru' => $satuanKendalaTerbaru, 'stats' => ['dikirim' => $laporanTerkirim->count(), 'disetujui' => $satuanDisetujui, 'ditolak' => $satuanDitolak, 'terlambat' => $satuanTerlambat, 'dibatalkan' => $satuanDibatalkan]]);
     }
 
     /**
-     * Binfung — pembinaan fungsi: Administrasi Personel (Data Personel,
-     * Tambah/Edit Personel, Mutasi, Pangkat, Jabatan, Satuan, Upload
-     * Dokumen, Riwayat) dan Laporan. Seluruh data di bawah ini sudah
-     * ditarik langsung dari database (tabel personels, personel_mutasis,
-     * personel_dokumens, pangkats, jabatans, satuans) — tidak ada lagi
-     * data dummy untuk modul ini.
+     * Surat yang "tercatat" di sisi DANPUS. Dipakai KPI Total Surat milik WADAN:
+     * Wadan = wakil Danpus yang sewaktu-waktu menangani pekerjaan Danpus, jadi
+     * totalnya ikut mencakup surat Danpus. Rumusnya SAMA dengan blok pimpinan di
+     * pelaporan() untuk $kode === 'DANPUS' (surat masuk, tembusan masuk, terkirim,
+     * arsip); tanpa eager-load karena cuma dipakai untuk hitungan.
      */
-    private function binfung($user, $satuan): View
+    private function suratKpiDanpus(bool $rumusRingkas = false): Collection
     {
-        $semuaPersonel = Personel::with(['pangkat', 'jabatan', 'satuan'])
-            ->orderByDesc('created_at')
+        $danpus = Satuan::where('kode', 'DANPUS')->first();
+        if (! $danpus) {
+            return collect();
+        }
+
+        // Rumus ringkas = rumus endpoint KPI realtime (pimpinanKpiRealtime) yang lebih
+        // sederhana daripada render awal; dipakai di sana supaya angka WADAN tidak lebih
+        // kecil dari angka DANPUS yang dihitung endpoint yang sama.
+        if ($rumusRingkas) {
+            return LaporanSurat::where(fn ($q) => $q->where('tujuan_satuan_id', $danpus->id)->where('status', LaporanSurat::STATUS_MENUNGGU))
+                ->orWhere(fn ($q) => $q->where('satuan_id', $danpus->id)->where('status', LaporanSurat::STATUS_MENUNGGU))
+                ->orWhere(fn ($q) => $q->where(fn ($x) => $x->where('satuan_id', $danpus->id)->orWhere('tujuan_satuan_id', $danpus->id))
+                    ->where('status', LaporanSurat::STATUS_DIKONFIRMASI))
+                ->get();
+        }
+
+        $masuk = LaporanSurat::where('tujuan_satuan_id', $danpus->id)
+            ->where('is_selesai', false)
+            ->where('status', LaporanSurat::STATUS_MENUNGGU)
+            ->whereHas('riwayats', fn ($rq) => $rq->where('penerima_satuan_id', $danpus->id))
             ->get();
 
-        $semuaPangkat = Pangkat::withCount('personels')->orderBy('urutan')->get();
-        $semuaJabatan = Jabatan::withCount('personels')->orderBy('nama')->get();
-        $semuaSatuanRef = Satuan::withCount('personels')->orderBy('urutan')->get();
-
-        $semuaMutasi = PersonelMutasi::with(['personel', 'satuanAsal', 'satuanTujuan', 'jabatanAsal', 'jabatanTujuan'])
-            ->orderByDesc('created_at')
+        $tembusanMasuk = LaporanSurat::where('is_selesai', false)
+            ->whereHas('tembusans', fn ($tq) => $tq->where('satuan_id', $danpus->id)->whereNull('dikonfirmasi_at'))
+            ->where('tujuan_satuan_id', '!=', $danpus->id)
             ->get();
 
-        $mutasiMenunggu = $semuaMutasi->where('status', PersonelMutasi::STATUS_MENUNGGU);
-
-        $semuaDokumen = PersonelDokumen::with('personel')
-            ->orderByDesc('created_at')
+        $terkirim = LaporanSurat::where('satuan_id', $danpus->id)
+            ->where('is_selesai', false)
+            ->alurBelumTuntasSisiPengirim()
             ->get();
 
-        // ===== Riwayat gabungan: personel baru, mutasi, dan upload dokumen =====
-        $riwayat = collect()
-            ->concat($semuaPersonel->map(fn (Personel $p) => [
-                'jenis' => 'Personel Baru',
-                'nama' => $p->nama,
-                'keterangan' => 'Data personel baru dicatat'.($p->satuan ? ' di '.$p->satuan->nama : ''),
-                'tanggal' => $p->created_at,
-                'status_class' => 'ok',
-            ]))
-            ->concat($semuaMutasi->map(fn (PersonelMutasi $m) => [
-                'jenis' => 'Mutasi',
-                'nama' => $m->personel->nama ?? '-',
-                'keterangan' => 'Mutasi ke '.($m->satuanTujuan->nama ?? '-').' — '.$m->status,
-                'tanggal' => $m->created_at,
-                'status_class' => match ($m->status) {
-                    PersonelMutasi::STATUS_DISETUJUI => 'ok',
-                    PersonelMutasi::STATUS_DITOLAK => 'bad',
-                    default => 'warn',
-                },
-            ]))
-            ->concat($semuaDokumen->map(fn (PersonelDokumen $d) => [
-                'jenis' => 'Dokumen',
-                'nama' => $d->personel->nama ?? '-',
-                'keterangan' => 'Unggah dokumen '.$d->jenis_dokumen.' ('.$d->nama_file.')',
-                'tanggal' => $d->created_at,
-                'status_class' => 'ok',
-            ]))
-            ->sortByDesc('tanggal')
+        $arsip = LaporanSurat::where(function ($q) use ($danpus) {
+                $q->where(function ($sub) use ($danpus) {
+                    $sub->where(function ($own) use ($danpus) {
+                            $own->where('satuan_id', $danpus->id)
+                                ->where(function ($fin) {
+                                    $fin->where('is_selesai', true)
+                                        ->orWhere(fn ($t) => $t->alurTuntasSisiPengirim());
+                                });
+                        })
+                        ->orWhere('tujuan_satuan_id', $danpus->id);
+                })->where(function ($st) {
+                    $st->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
+                       ->orWhere('is_selesai', true);
+                });
+            })
+            ->orWhere(fn ($q) => $q->whereHas('tembusans', fn ($tq) => $tq->where('satuan_id', $danpus->id)->whereNotNull('dikonfirmasi_at')))
+            ->orWhere(fn ($q) => $q->where('is_selesai', true)
+                ->whereHas('tembusans', fn ($tq) => $tq->where('satuan_id', $danpus->id)->where('jenis', LaporanSuratTembusan::JENIS_HASIL_RC)))
+            ->get();
+
+        return $masuk->concat($tembusanMasuk)->concat($terkirim)->concat($arsip)->unique('id')->values();
+    }
+
+    /**
+     * Poll realtime buat SELURUH Beranda Pimpinan -- 3 kartu KPI, donut
+     * Distribusi Status, chart Tren Aktivitas, Surat Terbaru, Kendala
+     * Kasansi Terbaru. Digabung jadi SATU response/SATU siklus poll (bukan
+     * bikin poller terpisah per section) -- lihat catatan long-poll di
+     * bawah soal kenapa nambah poller baru di halaman ini berisiko.
+     *
+     * SEMPAT dicoba long-poll (request ditahan sampai ada perubahan, pola
+     * sama kayak LaporanController::tungguPerubahanPermintaan()) supaya
+     * update kerasa instan -- TAPI diukur langsung, hasilnya JAUH lebih
+     * lambat dari dugaan (9-13 detik buat request yang seharusnya maks
+     * ~4 detik), bukan karena query version-nya lambat (diukur terpisah,
+     * cuma ~3ms per iterasi), tapi karena tab dashboard ini SUDAH punya
+     * beberapa poller lain yang jalan otomatis tiap 4-5 detik (kendala,
+     * surat, permintaan-laporan, log-aktivitas) -- di server dev lokal
+     * Windows yang cuma 1 worker (lihat [[project_railway_worker_config]]),
+     * SATU request yang ditahan beberapa detik bikin semua poller lain itu
+     * ngantre di belakangnya, dan hasilnya malah lebih lambat daripada
+     * polling interval biasa. DIBATALKAN, balik ke polling interval pendek
+     * (lihat `syncPimpinanKpis` di laporan-danpus.blade.php & laporan-wadan.blade.php, tiap 1 detik)
+     * -- request-nya sendiri cepat & jarang nge-hold worker, jadi gak
+     * nyumbat poller lain. Kalau nanti mau coba long-poll lagi, JANGAN di
+     * halaman yang udah banyak poller lain kayak dashboard Pimpinan ini
+     * tanpa multi-worker (production Railway aman, 8 worker).
+     *
+     * Query di sini SENGAJA query baru yang lebih ringkas (bukan reuse query
+     * $laporanPimpinanSatlak/$suratMasuk dkk di pelaporan() di atas) karena
+     * versi di pelaporan() ikut eager-load relasi buat fitur LAIN di halaman
+     * yang sama (mis. Riwayat Aktivitas) -- di sini cuma butuh yang relevan
+     * buat hitungan KPI, biar query poll-nya ringan.
+     */
+    public function pimpinanKpiRealtime(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user()->load('satuan');
+        $satuan = $user->satuan;
+        $kode = $satuan?->kode ? strtoupper(trim($satuan->kode)) : null;
+        abort_unless(in_array($kode, ['DANPUS', 'WADAN'], true), 403);
+
+        $kodeSatuanPelaksanaUrut = array_merge([
+            'URDAL', 'POKANALIS',
+            'BINFUNG', 'BINUM', 'DIKLAT', 'BINMAT',
+            'SATLAKKAL', 'SATLAKDAK', 'SATLAKSISOS', 'SATLAKDUKTEK',
+        ], Satuan::KODE_KOTAMA);
+        $satuanPimpinanIds = Satuan::whereIn('kode', $kodeSatuanPelaksanaUrut)->pluck('id');
+
+        $laporanPimpinanSatlak = Laporan::with('lampirans')
+            ->whereIn('satuan_id', $satuanPimpinanIds)
+            ->latest()
+            ->get()
+            ->groupBy(fn ($l) => $l->permintaan_laporan_id ?? 'single-'.$l->id)
+            ->flatMap(function ($group) {
+                $progres = $group->where('status', Laporan::STATUS_PROGRES);
+                $final = $group->reject(fn ($l) => $l->status === Laporan::STATUS_PROGRES)->sortByDesc('id')->take(1);
+                return $progres->merge($final);
+            })
             ->values();
 
-        // ===== Grafik 1: Status personel (Aktif / Mutasi / Purna) =====
-        $statusPenempatan = collect([Personel::STATUS_AKTIF, Personel::STATUS_MUTASI, Personel::STATUS_PURNA])
-            ->map(fn ($s) => ['label' => $s, 'jumlah' => $semuaPersonel->where('status', $s)->count()]);
+        $danpusSatuanId = Satuan::where('kode', 'DANPUS')->value('id');
+        $suratMasuk = LaporanSurat::where('tujuan_satuan_id', $satuan->id)->where('status', LaporanSurat::STATUS_MENUNGGU)->get();
+        $suratTerkirim = LaporanSurat::where('satuan_id', $satuan->id)->where('status', LaporanSurat::STATUS_MENUNGGU)->get();
+        $suratArsip = LaporanSurat::where(function ($q) use ($satuan) {
+                $q->where('satuan_id', $satuan->id)->orWhere('tujuan_satuan_id', $satuan->id);
+            })->where('status', LaporanSurat::STATUS_DIKONFIRMASI)->get();
+        $kendalaMasuk = $danpusSatuanId
+            ? LaporanKendala::where('tujuan_satuan_id', $danpusSatuanId)->menungguKonfirmasi()->get()
+            : collect();
+        $kendalaArsip = $danpusSatuanId
+            ? LaporanKendala::where('tujuan_satuan_id', $danpusSatuanId)->whereNotNull('confirmed_at')->get()
+            : collect();
 
-        // ===== Grafik 2: Personel per satuan =====
-        $penempatanSatuan = $semuaSatuanRef
-            ->map(fn (Satuan $s) => ['satuan' => $s->nama, 'jumlah' => $s->personels_count])
-            ->filter(fn ($row) => $row['jumlah'] > 0)
+        $pimpTotalPelaporan = $this->hitungLaporanPerPerihal($laporanPimpinanSatlak);
+
+        // Distribusi Status (donut) -- versi ringkas dari perhitungan yang
+        // sama di laporan-danpus.blade.php & laporan-wadan.blade.php (Disetujui/Ditolak dari
+        // $laporanPimpinanSatlak, Terlambat/Dibatalkan dari PermintaanLaporan
+        // milik Danpus/Wadan). isTerlambat() cuma butuh kolom polos
+        // (laporan_id/status/deadline_at), jadi query di sini gak perlu
+        // eager-load apa-apa.
+        $permintaanLaporanPimpinan = PermintaanLaporan::whereHas('pembuat.satuan', fn ($q) => $q->whereIn('kode', ['DANPUS', 'WADAN']))->get();
+        $pimpTotalDisetujui = $laporanPimpinanSatlak->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count();
+        $pimpTotalDitolak = $laporanPimpinanSatlak->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count();
+        $pimpTotalTerlambat = $permintaanLaporanPimpinan->filter(fn ($p) => $p->isTerlambat())->count();
+        $pimpTotalDibatalkan = $permintaanLaporanPimpinan->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count();
+        $pimpStatusDist = [
+            ['label' => 'Disetujui', 'color' => '#22c55e', 'labelColor' => '#22c55e', 'count' => $pimpTotalDisetujui],
+            ['label' => 'Ditolak', 'color' => '#ef4444', 'labelColor' => '#ef4444', 'count' => $pimpTotalDitolak],
+            ['label' => 'Terlambat', 'color' => '#ff6b6b', 'labelColor' => '#ff6b6b', 'count' => $pimpTotalTerlambat],
+            ['label' => 'Dibatalkan', 'color' => '#c1121f', 'labelColor' => '#e5484d', 'count' => $pimpTotalDibatalkan],
+        ];
+        $pimpTotalStatus = $pimpTotalDisetujui + $pimpTotalDitolak + $pimpTotalTerlambat + $pimpTotalDibatalkan;
+
+        // Tren Aktivitas 7/30 hari -- sama persis logikanya kayak
+        // $pimpTrenBuat di laporan-danpus.blade.php & laporan-wadan.blade.php.
+        $pimpSuratSemuaTren = $suratMasuk->concat($suratTerkirim)->concat($suratArsip);
+        $pimpTrenBuat = function (int $n) use ($laporanPimpinanSatlak, $pimpSuratSemuaTren) {
+            return collect(range($n - 1, 0))->map(function ($k) use ($laporanPimpinanSatlak, $pimpSuratSemuaTren) {
+                $day = now()->startOfDay()->subDays($k);
+                $lap = $laporanPimpinanSatlak->filter(fn ($l) => $l->created_at?->isSameDay($day))->count();
+                $sur = $pimpSuratSemuaTren->filter(fn ($s) => $s->created_at?->isSameDay($day))->count();
+                return ['label' => $day->translatedFormat('d M'), 'laporan' => $lap, 'surat' => $sur, 'total' => $lap + $sur];
+            })->values();
+        };
+        $pimpTrenRentang = ['7' => $pimpTrenBuat(7), '30' => $pimpTrenBuat(30)];
+
+        $pimpSuratTerbaru = $pimpSuratSemuaTren->sortByDesc('created_at')->take(5)->values();
+        $pimpKendalaTerbaru = $kendalaMasuk->concat($kendalaArsip)->sortByDesc('created_at')->take(5)->values();
+
+        return response()->json([
+            'kpis_html' => view('cyclone.dashboards.partials.pimpinan-kpi-cards', [
+                'pimpTotalPelaporan' => $pimpTotalPelaporan,
+                'laporanPimpinanSatlak' => $laporanPimpinanSatlak,
+                'suratMasuk' => $suratMasuk,
+                'suratTerkirim' => $suratTerkirim,
+                'suratArsip' => $suratArsip,
+                // WADAN: total surat ikut mencakup sisi DANPUS (sama dengan render awal di pelaporan()).
+                'suratSemuaTercatat' => $kode === 'WADAN'
+                    ? $suratMasuk->concat($suratTerkirim)->concat($suratArsip)->concat($this->suratKpiDanpus(true))->unique('id')->values()
+                    : null,
+                'kendalaMasuk' => $kendalaMasuk,
+                'kendalaArsip' => $kendalaArsip,
+            ])->render(),
+            'status_bd_html' => view('cyclone.dashboards.partials.pimpinan-status-distribusi-list', [
+                'pimpStatusDist' => $pimpStatusDist,
+            ])->render(),
+            'status_donut_total' => $pimpTotalStatus,
+            'status_donut_counts' => [$pimpTotalDisetujui, $pimpTotalDitolak, $pimpTotalTerlambat, $pimpTotalDibatalkan],
+            'tren_data' => $pimpTrenRentang,
+            'surat_terbaru_html' => view('cyclone.dashboards.partials.pimpinan-surat-terbaru-rows', [
+                'pimpSuratTerbaru' => $pimpSuratTerbaru,
+                'satuan' => $satuan,
+            ])->render(),
+            'kendala_terbaru_html' => view('cyclone.dashboards.partials.pimpinan-kendala-terbaru-list', [
+                'pimpKendalaTerbaru' => $pimpKendalaTerbaru,
+            ])->render(),
+            'server_time' => now()->toIso8601String(),
+        ], 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
+    }
+
+    /**
+     * Poll realtime buat 3 kartu KPI Beranda Satuan (Total Pelaporan/Surat/
+     * Kendala Kasansi) -- MIRROR pimpinanKpiRealtime() di atas, cuma
+     * discoped ke satuan yang login sendiri (bukan cakupan seluruh satuan
+     * pelaksana kayak Pimpinan). Query di sini SENGAJA ringkas/tanpa
+     * eager-load relasi yang gak relevan buat KPI, pola sama seperti alasan
+     * di komentar pimpinanKpiRealtime() di atas.
+     */
+    public function satuanKpiRealtime(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user()->load('satuan');
+        $satuan = $user->satuan;
+        $kode = $satuan?->kode ? strtoupper(trim($satuan->kode)) : null;
+        abort_unless($satuan, 403);
+        // Danpus/Wadan pakai endpoint pimpinanKpiRealtime() sendiri (lihat
+        // di atas), Admin gak pernah nyampe ke dashboard Satuan sama
+        // sekali -- endpoint ini murni buat role non-Pimpinan/non-Admin.
+        abort_if(in_array($kode, ['ADMIN', 'DANPUS', 'WADAN'], true), 403);
+
+        $laporanTerkirim = Laporan::with('lampirans')->where('satuan_id', $satuan->id)->get();
+        $satuanTotalPelaporan = $this->hitungLaporanPerPerihal($laporanTerkirim);
+
+        // Alur naik (balasan): surat Danpus yang sudah di-ACC tapi belum dibalas
+        // dihitung Surat Masuk (bukan Arsip) -- sama dengan pelaporan() di atas.
+        $bolehKirimBalasan = LaporanSurat::satuanBolehKirimBalasanNaik($kode);
+        $suratMasuk = LaporanSurat::where('tujuan_satuan_id', $satuan->id)
+            ->where(function ($x) use ($satuan, $bolehKirimBalasan) {
+                $x->where('status', LaporanSurat::STATUS_MENUNGGU);
+                if ($bolehKirimBalasan) {
+                    $x->orWhere(fn ($m) => $m->menungguBalasanSatuan($satuan->id));
+                }
+            })->get();
+        $suratTerkirim = LaporanSurat::where('satuan_id', $satuan->id)->where('status', LaporanSurat::STATUS_MENUNGGU)->get();
+        $suratArsip = LaporanSurat::where(function ($q) use ($satuan) {
+                $q->where('satuan_id', $satuan->id)->orWhere('tujuan_satuan_id', $satuan->id);
+            })->where('status', LaporanSurat::STATUS_DIKONFIRMASI)
+            ->when($bolehKirimBalasan, fn ($q) => $q->whereDoesntHave('satuan', fn ($a) => $a->where('kode', 'DANPUS')))
+            ->get();
+
+        // "Total Kendala Kasansi" -- lihat komentar lengkap soal dua sumber
+        // saling eksklusif ini di pelaporan() (KPI render awal) di atas.
+        $isKasansi = in_array($kode, Satuan::KODE_KOTAMA, true);
+        $kendalaTerkirimSemua = $isKasansi
+            ? LaporanKendala::with('satuan')->where('satuan_id', $satuan->id)->get()
+            : collect();
+        $kendalaTerkirim = $kendalaTerkirimSemua->where('status', '!=', LaporanKendala::STATUS_DIKONFIRMASI)->values();
+        $kendalaArsip = $kendalaTerkirimSemua->where('status', LaporanKendala::STATUS_DIKONFIRMASI)->values();
+
+        // "Distribusi Status Laporan" (donut) -- lihat komentar lengkap di
+        // pelaporan() (KPI render awal) di atas soal 4 kategori & sumbernya.
+        $permintaanLaporanSemua = PermintaanLaporan::where('tujuan_satuan_id', $satuan->id)->get();
+        $satuanDisetujui = $laporanTerkirim->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'setuj') || str_contains(strtolower((string) $l->status), 'diterima'))->count();
+        $satuanDitolak = $laporanTerkirim->filter(fn ($l) => str_contains(strtolower((string) $l->status), 'tolak'))->count();
+        $satuanTerlambat = $permintaanLaporanSemua->filter(fn ($p) => $p->isTerlambat())->count();
+        $satuanDibatalkan = $permintaanLaporanSemua->where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count();
+        $satuanTotalStatus = $satuanDisetujui + $satuanDitolak + $satuanTerlambat + $satuanDibatalkan;
+
+        // "Surat Terbaru" & "Kendala Kasansi Terbaru" -- lihat komentar
+        // lengkap di pelaporan() (KPI render awal) di atas.
+        $satuanSuratTerbaru = $suratMasuk->concat($suratTerkirim)->concat($suratArsip)->sortByDesc('created_at')->take(5)->values();
+        $satuanKendalaTerbaruSumber = $isKasansi
+            ? $kendalaTerkirimSemua
+            : collect();
+        $satuanKendalaTerbaru = $satuanKendalaTerbaruSumber->sortByDesc('created_at')->take(5)->values();
+
+        return response()->json([
+            'kpis_html' => view('cyclone.dashboards.partials.pimpinan-kpi-cards', [
+                'pimpTotalPelaporan' => $satuanTotalPelaporan,
+                'laporanPimpinanSatlak' => $laporanTerkirim,
+                'suratMasuk' => $suratMasuk,
+                'suratTerkirim' => $suratTerkirim,
+                'suratArsip' => $suratArsip,
+                // Urdal = semua surat tercatat (sama dengan dashboard awal; lihat pelaporan()).
+                'suratSemuaTercatat' => $kode === 'URDAL'
+                    ? LaporanSurat::query()->get(['id', 'created_at'])
+                    : $suratMasuk->concat($suratTerkirim)->concat($suratArsip),
+                'kendalaMasuk' => $kendalaTerkirim,
+                'kendalaArsip' => $kendalaArsip,
+            ])->render(),
+            'status_bd_html' => view('cyclone.dashboards.partials.pimpinan-status-distribusi-list', [
+                'pimpStatusDist' => [
+                    ['label' => 'Disetujui', 'color' => '#22c55e', 'labelColor' => '#22c55e', 'count' => $satuanDisetujui],
+                    ['label' => 'Ditolak', 'color' => '#ef4444', 'labelColor' => '#ef4444', 'count' => $satuanDitolak],
+                    ['label' => 'Terlambat', 'color' => '#ff6b6b', 'labelColor' => '#ff6b6b', 'count' => $satuanTerlambat],
+                    ['label' => 'Dibatalkan', 'color' => '#c1121f', 'labelColor' => '#e5484d', 'count' => $satuanDibatalkan],
+                ],
+            ])->render(),
+            'status_donut_total' => $satuanTotalStatus,
+            'status_donut_counts' => [$satuanDisetujui, $satuanDitolak, $satuanTerlambat, $satuanDibatalkan],
+            'surat_terbaru_html' => view('cyclone.dashboards.partials.pimpinan-surat-terbaru-rows', [
+                'pimpSuratTerbaru' => $satuanSuratTerbaru,
+                'satuan' => $satuan,
+            ])->render(),
+            'kendala_terbaru_html' => view('cyclone.dashboards.partials.pimpinan-kendala-terbaru-list', [
+                'pimpKendalaTerbaru' => $satuanKendalaTerbaru,
+            ])->render(),
+            'server_time' => now()->toIso8601String(),
+        ], 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
+    }
+
+    /**
+     * "Total Pelaporan" (KPI Admin & Pimpinan, kolom Rekap Laporan, grafik
+     * "Laporan per Satuan") dihitung PER PERIHAL -- 1 permintaan_laporan_id
+     * (atau 1 baris tunggal tanpa Permintaan, key 'single-<id>') = 1 Perihal
+     * = 1 hitungan, BUKAN per baris Laporan. Satu Perihal yang progresnya
+     * di-update berkali-kali (beberapa baris checkpoint status "Progres")
+     * sebelum laporan finalnya tetap dihitung SATU, bukan sebanyak baris
+     * checkpoint-nya -- beda dari $laporanPimpinanSatlak sendiri (dipakai
+     * buat menunggu/diterima/ditolak & daftar Riwayat Aktivitas) yang
+     * SENGAJA menghitung tiap checkpoint progres sebagai baris tersendiri
+     * (lihat komentar di atas definisinya) -- cuma "Total Pelaporan" yang
+     * dikelompokkan per Perihal, bukan seluruh cara hitung lainnya.
+     *
+     * Sebuah Perihal ikut terhitung kalau SALAH SATU barisnya (checkpoint
+     * progres ataupun laporan final) ADA lampiran filenya -- baris progres
+     * tanpa lampiran dianggap sekadar update angka, bukan laporan yang
+     * beneran punya berkas.
+     */
+    private function hitungLaporanPerPerihal(Collection $laporan): int
+    {
+        return $laporan
+            ->groupBy(fn (Laporan $l) => $l->permintaan_laporan_id ?? 'single-'.$l->id)
+            ->filter(fn ($group) => $group->contains(fn (Laporan $l) => $l->semuaLampiran->isNotEmpty()))
+            ->count();
+    }
+
+    /**
+     * Data radar "Pengguna per Kategori Satuan" Beranda Admin -- 5 sumbu,
+     * BUKAN 7 kategori asli Satuan::KATEGORI_* apa adanya. Direktorat (4
+     * Sdir) + Unsur Pembantu Pimpinan (Pok Analis) SENGAJA digabung jadi 1
+     * sumbu "Unsur Pembantu Pimpinan" (sama-sama "membantu Danpus", lihat
+     * komentar Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN), Pimpinan dilabeli
+     * "Unsur Pimpinan", Satlak dilabeli "Unsur Pelaksana" -- sesuai
+     * referensi gambar yang diminta user. Kotama (21 Sansidam) SENGAJA
+     * tidak ikut, referensinya cuma minta 5 sumbu ini. Dipakai admin() (render
+     * awal) & adminKpiRealtime() (poll) -- SATU sumber biar gak drift.
+     */
+    private function distribusiPenggunaKategoriRadar(Collection $semuaSatuan): Collection
+    {
+        $radarKategoriMap = [
+            Satuan::KATEGORI_ADMIN => 'Admin',
+            Satuan::KATEGORI_PIMPINAN => 'Unsur Pimpinan',
+            Satuan::KATEGORI_DIREKTORAT => 'Unsur Pembantu Pimpinan',
+            Satuan::KATEGORI_UNSUR_PEMBANTU_PIMPINAN => 'Unsur Pembantu Pimpinan',
+            Satuan::KATEGORI_UNSUR_PELAYANAN => 'Unsur Pelayanan',
+            Satuan::KATEGORI_SATLAK => 'Unsur Pelaksana',
+        ];
+        $radarUrutan = ['Admin', 'Unsur Pimpinan', 'Unsur Pembantu Pimpinan', 'Unsur Pelayanan', 'Unsur Pelaksana'];
+
+        return $semuaSatuan->filter(fn ($s) => isset($radarKategoriMap[$s->kategori]))
+            ->groupBy(fn ($s) => $radarKategoriMap[$s->kategori])
+            ->map(fn ($group, $label) => ['kategori' => $label, 'jumlah' => $group->sum('users_count')])
+            ->sortBy(fn ($row) => array_search($row['kategori'], $radarUrutan))
             ->values();
-
-        // ===== Grafik 3: Distribusi jabatan =====
-        $distribusiJabatan = $semuaJabatan
-            ->map(fn (Jabatan $j) => ['jabatan' => $j->nama, 'jumlah' => $j->personels_count])
-            ->filter(fn ($row) => $row['jumlah'] > 0)
-            ->values();
-
-        return view('siberad.dashboards.binfung', [
-            'user' => $user,
-            'satuan' => $satuan,
-            'semuaPersonel' => $semuaPersonel,
-            'semuaPangkat' => $semuaPangkat,
-            'semuaJabatan' => $semuaJabatan,
-            'semuaSatuanRef' => $semuaSatuanRef,
-            'semuaMutasi' => $semuaMutasi,
-            'mutasiMenunggu' => $mutasiMenunggu,
-            'semuaDokumen' => $semuaDokumen,
-            'riwayat' => $riwayat,
-            'stats' => [
-                'personel_masuk_bulan_ini' => $semuaPersonel->where('created_at', '>=', now()->startOfMonth())->count(),
-                'menunggu_sk' => $mutasiMenunggu->count(),
-                'satuan_terisi' => $semuaSatuanRef->where('personels_count', '>', 0)->count(),
-                'total_personel' => $semuaPersonel->count(),
-            ],
-            'statusPenempatanChart' => $statusPenempatan,
-            'penempatanPerSatuanChart' => $penempatanSatuan,
-            'jabatanChart' => $distribusiJabatan,
-            'laporanPiket' => $mutasiMenunggu->map(fn (PersonelMutasi $m) => [
-                'nama' => $m->personel->nama ?? '-',
-                'perihal' => 'Pengajuan mutasi ke '.($m->satuanTujuan->nama ?? '-'),
-                'pelapor' => 'Piket Binfung',
-                'tanggal' => $m->created_at->translatedFormat('d M Y'),
-                'prioritas' => 'Sedang',
-                'prioritas_class' => 'warn',
-            ])->values(),
-        ]);
     }
 
     /**
-     * Binum — pembinaan umum: pengawasan satuan, lomba internal, personel baru.
+     * Data donut "Distribusi Status Laporan" Beranda Admin (disetujui/
+     * ditolak/terlambat/dibatalkan, seluruh sistem). Dipakai admin() (render
+     * awal) & adminKpiRealtime() (poll) -- SATU sumber biar gak drift.
      */
-    private function binum($user, $satuan): View
+    private function statusLaporanSistem(): array
     {
-        $pengawasanSatuan = [
-            ['satuan' => 'Satuan Pelaksanaan Penindakan', 'aspek' => 'Kepatuhan SOP penanganan insiden', 'hasil' => 'Baik', 'hasil_class' => 'ok', 'tanggal' => '01 Agu 2026'],
-            ['satuan' => 'Satuan Pelaksanaan Siber Sosial', 'aspek' => 'Disiplin pelaporan harian', 'hasil' => 'Perlu Perbaikan', 'hasil_class' => 'warn', 'tanggal' => '30 Jul 2026'],
-            ['satuan' => 'Binmat', 'aspek' => 'Administrasi inventaris', 'hasil' => 'Baik', 'hasil_class' => 'ok', 'tanggal' => '28 Jul 2026'],
-            ['satuan' => 'Satuan Pelaksanaan Dukungan Teknologi', 'aspek' => 'Keamanan dokumen riset', 'hasil' => 'Pelanggaran Ringan', 'hasil_class' => 'bad', 'tanggal' => '25 Jul 2026'],
+        return [
+            // Laporan bisa diputuskan lewat 2 jalur (Danpus ATAU Wadan, lihat
+            // LaporanController::updateStatus) -- status akhirnya "Disetujui
+            // DANPUS"/"Disetujui WADAN" (begitu juga Ditolak). Dulu cuma cek
+            // varian DANPUS doang, jadi laporan yang diputuskan Wadan gak
+            // ikut kehitung di sini walau udah kehitung di Distribusi Status
+            // Laporan versi Pimpinan (yang pakai str_contains 'setuj'/'tolak',
+            // otomatis nangkep kedua varian).
+            'disetujui' => Laporan::whereIn('status', ['Disetujui DANPUS', 'Disetujui WADAN'])->count(),
+            'ditolak' => Laporan::whereIn('status', ['Ditolak DANPUS', 'Ditolak WADAN'])->count(),
+            // Samain persis sama kondisi PermintaanLaporan::isTerlambat(),
+            // ditulis sebagai query (bukan ->get()->filter()) karena ini
+            // hitungan seluruh sistem, bisa banyak baris.
+            'terlambat' => PermintaanLaporan::whereNull('laporan_id')
+                ->whereNotIn('status', [PermintaanLaporan::STATUS_SELESAI, PermintaanLaporan::STATUS_PEMERIKSAAN, PermintaanLaporan::STATUS_DIBATALKAN])
+                ->where('deadline_at', '<', now())
+                ->count(),
+            'dibatalkan' => PermintaanLaporan::where('status', PermintaanLaporan::STATUS_DIBATALKAN)->count(),
         ];
-
-        return view('siberad.dashboards.binum', [
-            'user' => $user,
-            'satuan' => $satuan,
-            'pengawasanSatuan' => $pengawasanSatuan,
-            'stats' => [
-                'satuan_diawasi' => 11,
-                'lomba_aktif' => 1,
-                'personel_baru_diverifikasi' => 6,
-                'pelanggaran_tercatat' => 1,
-            ],
-            'aktivitasTerbaru' => [
-                ['satuan' => 'Satuan Pelaksanaan Dukungan Teknologi', 'kegiatan' => 'Temuan pelanggaran ringan keamanan dokumen riset', 'waktu' => '3 hari lalu', 'status' => 'Ditindaklanjuti', 'status_class' => 'warn'],
-                ['satuan' => 'Satuan Pelaksanaan Siber Sosial', 'kegiatan' => 'Evaluasi disiplin pelaporan harian', 'waktu' => '5 hari lalu', 'status' => 'Selesai', 'status_class' => 'ok'],
-            ],
-            'lombaInternal' => [
-                ['nama' => 'Lomba Satuan Terbaik Triwulan III', 'peserta' => '11 Satuan', 'periode' => 'Jul – Sep 2026', 'status' => 'Berlangsung', 'status_class' => 'amber'],
-                ['nama' => 'Lomba Kedisiplinan Pelaporan', 'peserta' => '11 Satuan', 'periode' => 'Apr – Jun 2026', 'status' => 'Selesai', 'status_class' => 'green'],
-            ],
-            'laporanPiket' => [
-                ['satuan' => 'Satuan Pelaksanaan Dukungan Teknologi', 'perihal' => 'Temuan pelanggaran ringan keamanan dokumen riset', 'pelapor' => 'Piket Binum', 'tanggal' => '25 Jul 2026', 'prioritas' => 'Sedang', 'prioritas_class' => 'warn'],
-            ],
-        ]);
     }
 
     /**
-     * Diklat — pendidikan dan latihan-latihan satuan.
+     * Data chart "Tren Aktivitas" Beranda Admin (dulu "Aktivitas 7 Hari
+     * Terakhir", sekarang ada toggle 7/30 hari niru "Tren Aktivitas"
+     * Pimpinan -- array 2 rentang dikirim sekaligus, toggle tombol di
+     * frontend cuma ganti chart.data lalu chart.update(), TANPA request
+     * ulang ke server). Dipakai admin() (render awal) & adminKpiRealtime()
+     * (poll) -- SATU sumber biar gak drift.
      */
-    private function diklat($user, $satuan): View
+    private function trenAktivitas(): array
     {
-        $programDiklat = [
-            ['nama' => 'Dikjur Operator Siber Dasar', 'kategori' => 'Pendidikan', 'peserta' => 24, 'progres' => 80, 'status' => 'Berjalan', 'status_class' => 'warn', 'selesai' => '20 Agu 2026'],
-            ['nama' => 'Latihan Gabungan Penanganan Insiden', 'kategori' => 'Latihan', 'peserta' => 40, 'progres' => 100, 'status' => 'Selesai', 'status_class' => 'ok', 'selesai' => '28 Jul 2026'],
-            ['nama' => 'Kursus Forensik Digital Lanjutan', 'kategori' => 'Pendidikan', 'peserta' => 12, 'progres' => 35, 'status' => 'Berjalan', 'status_class' => 'warn', 'selesai' => '15 Sep 2026'],
-            ['nama' => 'Latihan Simulasi Serangan Siber (Redteam)', 'kategori' => 'Latihan', 'peserta' => 18, 'progres' => 0, 'status' => 'Belum Mulai', 'status_class' => 'ok', 'selesai' => '10 Okt 2026'],
-        ];
+        $build = function (int $n) {
+            return collect(range($n - 1, 0))->map(function ($i) {
+                $tanggal = now()->subDays($i);
 
-        return view('siberad.dashboards.diklat', [
-            'user' => $user,
-            'satuan' => $satuan,
-            'programDiklat' => $programDiklat,
-            'stats' => [
-                'program_aktif' => 2,
-                'total_peserta' => 76,
-                'latihan_terjadwal' => 1,
-                'lulus_bulan_ini' => 40,
-            ],
-            'aktivitasTerbaru' => [
-                ['program' => 'Dikjur Operator Siber Dasar', 'kegiatan' => 'Ujian praktik tahap 3', 'waktu' => '3 jam lalu', 'status' => 'Berjalan', 'status_class' => 'warn'],
-                ['program' => 'Latihan Gabungan Penanganan Insiden', 'kegiatan' => 'Evaluasi akhir & penyerahan sertifikat', 'waktu' => 'Kemarin', 'status' => 'Selesai', 'status_class' => 'ok'],
-            ],
-            'jadwalLatihan' => [
-                ['nama' => 'Latihan Simulasi Serangan Siber (Redteam)', 'satuan_terlibat' => 'Satuan Pelaksanaan Penindakan, Satuan Pelaksanaan Penangkalan', 'lokasi' => 'Puslatpur Pussiberad', 'tanggal' => '10 Okt 2026', 'status' => 'Terjadwal', 'status_class' => 'amber'],
-                ['nama' => 'Kursus Forensik Digital Lanjutan', 'satuan_terlibat' => 'Satuan Pelaksanaan Penindakan', 'lokasi' => 'Ruang Kelas Diklat', 'tanggal' => 'Berlangsung s/d 15 Sep 2026', 'status' => 'Berlangsung', 'status_class' => 'amber'],
-                ['nama' => 'Dikjur Operator Siber Dasar Angkatan Berikutnya', 'satuan_terlibat' => 'Seluruh Satlak', 'lokasi' => 'Ruang Kelas Diklat', 'tanggal' => '01 Nov 2026', 'status' => 'Direncanakan', 'status_class' => 'ok'],
-            ],
-            'laporanPiket' => [
-                ['program' => 'Kursus Forensik Digital Lanjutan', 'perihal' => 'Permintaan tambahan modul praktik lab', 'pelapor' => 'Piket Diklat', 'tanggal' => '02 Agu 2026', 'prioritas' => 'Rendah', 'prioritas_class' => 'ok'],
-            ],
-        ]);
-    }
+                return ['label' => $tanggal->translatedFormat('d M'), 'jumlah' => ActivityLog::whereDate('created_at', $tanggal->toDateString())->count()];
+            })->values();
+        };
 
-    /**
-     * Binmat — pengurusan material/perlengkapan satuan.
-     */
-    private function binmat($user, $satuan): View
-    {
-        $inventaris = [
-            ['nama' => 'Firewall Appliance (unit)', 'kategori' => 'Perangkat Jaringan', 'jumlah' => 14, 'kondisi' => 'Baik', 'kondisi_class' => 'ok', 'update' => '1 hari lalu'],
-            ['nama' => 'Laptop Operasional Satlak', 'kategori' => 'Komputer', 'jumlah' => 62, 'kondisi' => 'Baik', 'kondisi_class' => 'ok', 'update' => '2 hari lalu'],
-            ['nama' => 'Drone Uji Satuan Pelaksanaan Dukungan Teknologi', 'kategori' => 'Alat Khusus', 'jumlah' => 4, 'kondisi' => 'Perlu Perawatan', 'kondisi_class' => 'warn', 'update' => 'Kemarin'],
-            ['nama' => 'Server Rack Pusat Data', 'kategori' => 'Perangkat Server', 'jumlah' => 6, 'kondisi' => 'Kritis (1 unit rusak)', 'kondisi_class' => 'bad', 'update' => '5 jam lalu'],
-        ];
-
-        return view('siberad.dashboards.binmat', [
-            'user' => $user,
-            'satuan' => $satuan,
-            'inventaris' => $inventaris,
-            'stats' => [
-                'total_item' => 86,
-                'permintaan_pending' => 3,
-                'kondisi_kritis' => 1,
-                'pengadaan_selesai_bulan_ini' => 2,
-            ],
-            'aktivitasTerbaru' => [
-                ['item' => 'Server Rack Pusat Data', 'kegiatan' => 'Laporan kerusakan 1 unit server, menunggu suku cadang', 'waktu' => '5 jam lalu', 'status' => 'Kritis', 'status_class' => 'bad'],
-                ['item' => 'Drone Uji Satuan Pelaksanaan Dukungan Teknologi', 'kegiatan' => 'Jadwal perawatan berkala unit drone', 'waktu' => 'Kemarin', 'status' => 'Perlu Perawatan', 'status_class' => 'warn'],
-            ],
-            'permintaanPengadaan' => [
-                ['item' => 'Suku cadang Server Rack Pusat Data', 'diajukan_oleh' => 'Binmat', 'tanggal' => '02 Agu 2026', 'prioritas' => 'Tinggi', 'prioritas_class' => 'bad', 'status' => 'Menunggu Persetujuan', 'status_class' => 'amber'],
-                ['item' => 'Komponen gimbal kamera drone', 'diajukan_oleh' => 'Satuan Pelaksanaan Dukungan Teknologi', 'tanggal' => '02 Agu 2026', 'prioritas' => 'Sedang', 'prioritas_class' => 'warn', 'status' => 'Menunggu Persetujuan', 'status_class' => 'amber'],
-                ['item' => 'Firewall Appliance tambahan', 'diajukan_oleh' => 'Satuan Pelaksanaan Penindakan', 'tanggal' => '29 Jul 2026', 'prioritas' => 'Sedang', 'prioritas_class' => 'warn', 'status' => 'Disetujui', 'status_class' => 'green'],
-            ],
-            'laporanPiket' => [
-                ['item' => 'Server Rack Pusat Data', 'perihal' => 'Kerusakan hardware pada 1 unit server', 'pelapor' => 'Piket Binmat', 'tanggal' => '02 Agu 2026', 'prioritas' => 'Tinggi', 'prioritas_class' => 'bad'],
-            ],
-        ]);
-    }
-
-    /**
-     * SDIR — koordinasi antar Satlak dan pelaporan ke DANPUS.
-     */
-    private function sdir($user, $satuan): View
-    {
-        $koordinasiSatlak = [
-            ['satuan' => 'Satuan Pelaksanaan Dukungan Teknologi', 'perihal' => 'Permintaan pengiriman 2 personel untuk riset AI', 'jenis' => 'Permintaan Personel', 'tanggal' => '30 Jul 2026', 'status' => 'Menunggu Binfung', 'status_class' => 'amber'],
-            ['satuan' => 'Diklat', 'perihal' => 'Koordinasi jadwal latihan gabungan', 'jenis' => 'Jadwal', 'tanggal' => '28 Jul 2026', 'status' => 'Selesai', 'status_class' => 'green'],
-            ['satuan' => 'Satuan Pelaksanaan Penindakan', 'perihal' => 'Koordinasi eskalasi insiden ransomware', 'jenis' => 'Insiden', 'tanggal' => '02 Agu 2026', 'status' => 'Berlangsung', 'status_class' => 'amber'],
-        ];
-
-        return view('siberad.dashboards.sdir', [
-            'user' => $user,
-            'satuan' => $satuan,
-            'koordinasiSatlak' => $koordinasiSatlak,
-            'stats' => [
-                'satlak_dikoordinasikan' => 4,
-                'laporan_diteruskan' => 9,
-                'permintaan_koordinasi_aktif' => 2,
-                'menunggu_wadan' => 3,
-            ],
-            'aktivitasTerbaru' => [
-                ['satuan' => 'Satuan Pelaksanaan Penindakan', 'kegiatan' => 'Koordinasi eskalasi insiden ransomware ke WADAN', 'waktu' => '1 jam lalu', 'status' => 'Berlangsung', 'status_class' => 'amber'],
-                ['satuan' => 'Satuan Pelaksanaan Dukungan Teknologi', 'kegiatan' => 'Meneruskan permintaan personel ke Binfung', 'waktu' => 'Kemarin', 'status' => 'Menunggu', 'status_class' => 'amber'],
-            ],
-            'laporanDiteruskan' => [
-                ['satuan' => 'Satuan Pelaksanaan Penangkalan', 'perihal' => 'Serangan DDoS pada portal utama', 'tanggal' => '02 Agu 2026', 'diteruskan_ke' => 'WADAN', 'status' => 'Menunggu', 'status_class' => 'amber'],
-                ['satuan' => 'Satuan Pelaksanaan Siber Sosial', 'perihal' => 'Hoaks rekrutmen mengatasnamakan TNI AD', 'tanggal' => '01 Agu 2026', 'diteruskan_ke' => 'WADAN', 'status' => 'Menunggu', 'status_class' => 'amber'],
-                ['satuan' => 'Satuan Pelaksanaan Penindakan', 'perihal' => 'Indikasi ransomware pada server unit', 'tanggal' => '31 Jul 2026', 'diteruskan_ke' => 'WADAN', 'status' => 'Diteruskan', 'status_class' => 'green'],
-            ],
-            'laporanPiket' => [
-                ['satuan' => 'Satuan Pelaksanaan Penindakan', 'perihal' => 'Permintaan koordinasi eskalasi insiden ransomware', 'pelapor' => 'Piket SDIR', 'tanggal' => '02 Agu 2026', 'prioritas' => 'Tinggi', 'prioritas_class' => 'bad'],
-            ],
-        ]);
+        return ['7' => $build(7), '30' => $build(30)];
     }
 }

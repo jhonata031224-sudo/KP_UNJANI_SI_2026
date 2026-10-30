@@ -13,7 +13,7 @@ class ExampleTest extends TestCase
      * Di-skip di CI: halaman ini pakai @vite() yang butuh hasil build
      * frontend (public/build/manifest.json). CI ini belum menjalankan
      * npm run build, jadi request ke "/" selalu 500 di lingkungan test —
-     * bukan bug di aplikasinya. Test ini tidak menguji fitur SIBERAD apa
+     * bukan bug di aplikasinya. Test ini tidak menguji fitur Cyclone apa
      * pun, cuma bawaan installer Laravel.
      */
     public function test_the_application_returns_a_successful_response(): void

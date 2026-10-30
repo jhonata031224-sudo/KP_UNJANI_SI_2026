@@ -6,10 +6,15 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Kolom "context" dipakai ActivityLog::catat() untuk menyimpan data
+     * terstruktur tambahan (mis. role, satuan, payload aksi) sebagai JSON —
+     * ditambahkan supaya cocok dengan $fillable & $casts di model ActivityLog.
+     */
     public function up(): void
     {
         Schema::table('activity_logs', function (Blueprint $table) {
-            $table->text('context')->nullable()->after('ip_address');
+            $table->json('context')->nullable()->after('ip_address');
         });
     }
 

@@ -1,8 +1,49 @@
 <?php
 
+use App\Http\Controllers\Admin\BackupController;
+use App\Http\Controllers\Admin\BackupFileController;
+use App\Http\Controllers\Admin\LandingAccessCaptchaController;
+use App\Http\Controllers\Admin\PermintaanResetPasswordController as AdminPermintaanResetPasswordController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\ReportCenterController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\SatuanController;
+use App\Http\Controllers\Admin\SessionController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\AkunMedsosController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\CaptchaController;
+use App\Http\Controllers\DanpusLaporanMonitoringController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DukunganTeknisController;
+use App\Http\Controllers\JabatanController;
+use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\LaporanMonitoringController;
+use App\Http\Controllers\LaporanPublikasiController;
+use App\Http\Controllers\LogUjiPengembanganController;
+use App\Http\Controllers\NotifikasiController;
+use App\Http\Controllers\PangkatController;
+use App\Http\Controllers\PermintaanLaporanController;
+use App\Http\Controllers\PermintaanResetPasswordController;
+use App\Http\Controllers\PersonelController;
+use App\Http\Controllers\PersonelDokumenController;
+use App\Http\Controllers\PersonelMutasiController;
+use App\Http\Controllers\PostinganController;
+use App\Http\Controllers\ProfilFotoController;
+use App\Http\Controllers\ProyekRisetController;
+use App\Http\Middleware\InjectAdminReportCenter;
+use App\Http\Middleware\InjectDashboardUi;
+use App\Http\Middleware\InjectPengaturanAccessUi;
+use App\Http\Middleware\InjectWebPushUi;
+use App\Http\Middleware\NormalizeClientIpFromEdge;
+use App\Http\Middleware\PreventHtmlPageCaching;
+use App\Http\Middleware\RemoveDecorativeSeparators;
+use App\Models\Pengaturan;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -10,14 +51,52 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
+        then: function (): void {
+            Route::middleware(['web', 'auth', \App\Http\Middleware\EnsureUserIsAdmin::class])
+                ->prefix('admin')
+                ->name('admin.')
+                ->group(function (): void {
+                    Route::post('/pengaturan/access', [SettingController::class, 'verifyLandingAccess'])
+                        ->name('pengaturan.access');
+                    Route::get('/pengaturan/captcha', [LandingAccessCaptchaController::class, 'image'])
+                        ->name('pengaturan.access-captcha');
+                    Route::get('/laporan/report-center/pengguna', [ReportCenterController::class, 'users'])
+                        ->name('laporan.report-center.users');
+                    Route::get('/laporan/report-center/aktivitas', [ReportCenterController::class, 'activities'])
+                        ->name('laporan.report-center.activities');
+                });
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Wajib di-prepend (jalan PALING AWAL, sebelum TrustProxies bawaan
+        // di bawah ini) -- lihat komentar di NormalizeClientIpFromEdge.
+        $middleware->prepend(NormalizeClientIpFromEdge::class);
         $middleware->trustProxies(at: '*');
+        // Gerbang keamanan Mode Maintenance. WAJIB di GRUP 'web' (diletakkan
+        // SETELAH StartSession/CSRF/SubstituteBindings), BUKAN di stack global
+        // via ->append(). Middleware global jalan SEBELUM session dimulai dan
+        // SEBELUM rute ditemukan, sehingga di sana $request->user() selalu
+        // null dan $request->route() selalu null -> middleware ini dulu
+        // meloloskan SEMUA request (maintenance tidak pernah benar-benar
+        // menolak apa pun di server). Di grup web, user & nama rute sudah
+        // tersedia, dan flash ->with('error') juga bisa tersimpan di session.
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnforceMaintenanceMode::class);
+        $middleware->append(PreventHtmlPageCaching::class);
+        $middleware->append(RemoveDecorativeSeparators::class);
+        $middleware->append(InjectDashboardUi::class);
+        $middleware->append(InjectPengaturanAccessUi::class);
+        $middleware->append(\App\Http\Middleware\InjectUrlMask::class);
+        $middleware->append(InjectAdminReportCenter::class);
+        $middleware->append(InjectWebPushUi::class);
+        $middleware->append(\App\Http\Middleware\InjectMobilePerf::class);
+        $middleware->append(\App\Http\Middleware\InjectMaintenanceUi::class);
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'modul' => \App\Http\Middleware\EnsureModulAktif::class,
+            'satuan' => \App\Http\Middleware\EnsureSatuanKode::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
+    ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();

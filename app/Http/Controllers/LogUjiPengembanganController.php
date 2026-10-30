@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\LogUjiPengembangan;
 use App\Models\ProyekRiset;
 use Illuminate\Http\RedirectResponse;
@@ -32,7 +33,11 @@ class LogUjiPengembanganController extends Controller
         $validated['satuan_id'] = $satuan->id;
         $validated['waktu_uji'] = $validated['waktu_uji'] ?? now();
 
-        LogUjiPengembangan::create($validated);
+        $log = LogUjiPengembangan::create($validated);
+
+        ActivityLog::catat('log-uji-pengembangan.create', "Mencatat log uji & pengembangan \"{$log->kegiatan}\".", $request->user(), [
+            'log_uji_pengembangan_id' => $log->id,
+        ]);
 
         return back()->with('status', 'Log uji & pengembangan berhasil dicatat.');
     }
@@ -42,7 +47,13 @@ class LogUjiPengembanganController extends Controller
         $satuan = $request->user()->load('satuan')->satuan;
         abort_unless($satuan && $logUjiPengembangan->satuan_id === $satuan->id, 403);
 
+        $kegiatan = $logUjiPengembangan->kegiatan;
+        $logId = $logUjiPengembangan->id;
         $logUjiPengembangan->delete();
+
+        ActivityLog::catat('log-uji-pengembangan.delete', "Menghapus log uji & pengembangan \"{$kegiatan}\".", $request->user(), [
+            'log_uji_pengembangan_id' => $logId,
+        ]);
 
         return back()->with('status', 'Log uji & pengembangan berhasil dihapus.');
     }

@@ -38,13 +38,38 @@ return [
             'report' => false,
         ],
 
+        /*
+         * Lampiran surat RAHASIA. TIDAK ter-link ke public/ (tidak bisa dibuka lewat URL);
+         * hanya lewat LaporanSuratController::lampiran() yang memeriksa hak akses.
+         * Di hosting dengan volume terpisah (mis. Railway), arahkan LAMPIRAN_RAHASIA_ROOT ke
+         * folder yang berada di dalam volume agar berkas tidak hilang saat redeploy, dan di LUAR
+         * storage/app/public (folder itu terbuka lewat URL /storage).
+         */
+        'rahasia' => [
+            'driver' => 'local',
+            'root' => env('LAMPIRAN_RAHASIA_ROOT', storage_path('app/private/rahasia')),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
+            // 'report' diaktifkan (bukan 'throw') supaya kalau ada operasi
+            // tulis/hapus file yang gagal (mis. permission volume Railway
+            // bermasalah, disk penuh, dll), errornya MASUK KE storage/logs
+            // (laravel.log) alih-alih ditelan diam-diam. Sebelumnya
+            // throw=false + report=false membuat kegagalan tulis file sama
+            // sekali tidak kelihatan -- form Pengaturan Umum tetap bilang
+            // "berhasil disimpan" padahal file logo/background sebenarnya
+            // tidak pernah tersimpan di disk (baru ketahuan belakangan
+            // karena linknya 404). 'throw' tetap false supaya alur upload
+            // existing tidak tiba-tiba melempar exception ke user.
             'throw' => false,
-            'report' => false,
+            'report' => true,
         ],
 
         's3' => [

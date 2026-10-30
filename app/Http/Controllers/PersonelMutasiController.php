@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Personel;
 use App\Models\PersonelMutasi;
 use Illuminate\Http\RedirectResponse;
@@ -26,7 +27,7 @@ class PersonelMutasiController extends Controller
 
         $personel = Personel::findOrFail($validated['personel_id']);
 
-        PersonelMutasi::create([
+        $mutasi = PersonelMutasi::create([
             'personel_id' => $personel->id,
             'satuan_asal_id' => $personel->satuan_id,
             'satuan_tujuan_id' => $validated['satuan_tujuan_id'],
@@ -40,6 +41,11 @@ class PersonelMutasiController extends Controller
         ]);
 
         $personel->update(['status' => Personel::STATUS_MUTASI]);
+
+        ActivityLog::catat('personel-mutasi.create', "Mengajukan mutasi personel \"{$personel->nama}\".", $request->user(), [
+            'personel_id' => $personel->id,
+            'personel_mutasi_id' => $mutasi->id,
+        ]);
 
         return back()->with('status', 'Pengajuan mutasi personel berhasil disimpan.');
     }
@@ -72,12 +78,23 @@ class PersonelMutasiController extends Controller
             $personel->update(['status' => Personel::STATUS_AKTIF]);
         }
 
+        ActivityLog::catat('personel-mutasi.update', "Memperbarui status mutasi personel \"{$personel->nama}\" menjadi {$validated['status']}.", $request->user(), [
+            'personel_id' => $personel->id,
+            'personel_mutasi_id' => $mutasi->id,
+        ]);
+
         return back()->with('status', 'Status mutasi berhasil diperbarui.');
     }
 
-    public function destroy(PersonelMutasi $mutasi): RedirectResponse
+    public function destroy(Request $request, PersonelMutasi $mutasi): RedirectResponse
     {
+        $namaPersonel = $mutasi->personel?->nama ?? '-';
+        $personelId = $mutasi->personel_id;
         $mutasi->delete();
+
+        ActivityLog::catat('personel-mutasi.delete', "Menghapus data mutasi personel \"{$namaPersonel}\".", $request->user(), [
+            'personel_id' => $personelId,
+        ]);
 
         return back()->with('status', 'Data mutasi berhasil dihapus.');
     }

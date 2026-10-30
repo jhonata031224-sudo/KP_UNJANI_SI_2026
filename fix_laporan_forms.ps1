@@ -1,7 +1,7 @@
 # Script: fix_laporan_forms.ps1
 # Fungsi: Mengganti form Tambah Laporan prototype menjadi form yang tersambung ke database
 
-$folder = "resources\views\siberad\dashboards"
+$folder = "resources\views\cyclone\dashboards"
 $files = Get-ChildItem -Path $folder -Filter "*.blade.php" -Recurse
 
 $oldForm = @'
