@@ -374,6 +374,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/backup', [BackupController::class, 'store'])->name('backup.store');
     Route::post('/backup/upload', [BackupFileController::class, 'store'])->name('backup.upload');
     Route::get('/backup/{filename}/download', [BackupController::class, 'download'])->name('backup.download');
+    Route::post('/backup/{filename}/restore', [BackupController::class, 'restore'])->name('backup.restore');
     Route::delete('/backup/{filename}', [BackupFileController::class, 'destroy'])->name('backup.destroy');
     Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/aktivitas-terbaru', [ReportController::class, 'aktivitasTerbaru'])->name('laporan.aktivitas-terbaru');
