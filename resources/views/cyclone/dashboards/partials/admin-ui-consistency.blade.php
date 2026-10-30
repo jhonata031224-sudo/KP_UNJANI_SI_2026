@@ -186,7 +186,13 @@ body:has(.side-nav-group) .topbar { border-bottom-color:var(--border-soft) !impo
       var ext=(file.name.split('.').pop()||'').toLowerCase();
       if(['sql','sqlite'].indexOf(ext)===-1){e.preventDefault();window.alert('Format backup hanya boleh .sql atau .sqlite.');return;}
       if(file.size>50*1024*1024){e.preventDefault();window.alert('Ukuran backup maksimal 50 MB.');return;}
-      if(!window.confirm('Upload backup ini ke riwayat backup?')){e.preventDefault();return;}
+      if(form.dataset.confirmed!=='1'){
+        e.preventDefault();
+        var ov=document.getElementById('unggahBackupOverlay');
+        if(ov){document.getElementById('unggahBackupNama').textContent=file.name;ov.classList.add('open');return;}
+        if(!window.confirm('Unggah file cadangan ini ke riwayat backup?'))return;
+        form.dataset.confirmed='1';form.submit();
+      }
     });
   }
   function boot(){window.setTimeout(initBackupUploadModal,80);}

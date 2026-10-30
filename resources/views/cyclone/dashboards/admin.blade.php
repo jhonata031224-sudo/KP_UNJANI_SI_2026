@@ -650,6 +650,37 @@
   </div>
 </div>
 
+<div class="confirm-overlay" id="unggahBackupOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="unggahBackupTitle">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M12 16V4"></path><path d="M7 9l5-5 5 5"></path><path d="M5 20h14"></path></svg>
+    </div>
+    <h3 id="unggahBackupTitle">Unggah File Cadangan?</h3>
+    <p>File <strong id="unggahBackupNama">ini</strong> akan ditambahkan ke Riwayat Backup. Data pada database belum berubah sebelum Anda menekan Pulihkan.</p>
+    <div class="confirm-actions">
+      <button type="button" class="btn" id="unggahBackupBatal">Batal</button>
+      <button type="button" class="btn btn-primary" id="unggahBackupYa">Ya, Unggah</button>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="pulihkanBackupOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="pulihkanBackupTitle">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.9"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v5h5"></path><path d="M12 8v4l3 2"></path></svg>
+    </div>
+    <h3 id="pulihkanBackupTitle">Pulihkan Data dari Backup?</h3>
+    <p>Semua data saat ini akan ditimpa dengan isi file <strong id="pulihkanBackupNama">ini</strong>. Cadangan pengaman dibuat otomatis sebelum pemulihan, dan Anda akan diminta login ulang setelah selesai.</p>
+    <form id="formPulihkanBackup" method="POST" action="">
+      @csrf
+      <div class="confirm-actions">
+        <button type="button" class="btn" id="pulihkanBackupBatal">Batal</button>
+        <button type="submit" class="btn btn-ghost-red" id="pulihkanBackupYa">Ya, Pulihkan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="confirm-overlay" id="resetDataLaporanOverlay">
   <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="resetDataLaporanTitle">
     <div class="confirm-icon">
@@ -2296,6 +2327,29 @@
         document.getElementById('hapusBackupBatal')?.addEventListener('click', () => document.getElementById('hapusBackupOverlay')?.classList.remove('open'));
         document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('hapusBackupOverlay')?.classList.remove('open'); });
 
+        // Konfirmasi Pulihkan (pengganti confirm() bawaan browser).
+        window.bukaPulihkanBackup = function (btn) {
+          document.getElementById('formPulihkanBackup').action = btn.dataset.action;
+          document.getElementById('pulihkanBackupNama').textContent = btn.dataset.nama || 'ini';
+          document.getElementById('pulihkanBackupYa').disabled = false;
+          document.getElementById('pulihkanBackupOverlay')?.classList.add('open');
+        };
+        document.getElementById('pulihkanBackupBatal')?.addEventListener('click', () => document.getElementById('pulihkanBackupOverlay')?.classList.remove('open'));
+        document.getElementById('formPulihkanBackup')?.addEventListener('submit', function () {
+          document.getElementById('pulihkanBackupYa').disabled = true;
+        });
+
+        // Konfirmasi Unggah (pengganti confirm() bawaan browser). Form unggah
+        // dibuat oleh admin-ui-consistency; modal ini hanya meminta persetujuan lalu mengirim form.
+        function tutupUnggahBackup() { document.getElementById('unggahBackupOverlay')?.classList.remove('open'); }
+        document.getElementById('unggahBackupBatal')?.addEventListener('click', tutupUnggahBackup);
+        document.getElementById('unggahBackupYa')?.addEventListener('click', function () {
+          var form = document.querySelector('.cyclone-backup-upload-modal form');
+          tutupUnggahBackup();
+          if (form) { form.dataset.confirmed = '1'; form.submit(); }
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { tutupUnggahBackup(); document.getElementById('pulihkanBackupOverlay')?.classList.remove('open'); } });
+
         // Dipakai tombol "Hapus BG" (statis) dan "Hapus Logo" (disuntik oleh
         // admin-landing-editor.js) di tab Pengaturan Umum -> Beranda.
         window.bukaHapusLandingGambar = function (btn) {
@@ -3408,11 +3462,9 @@
                     <div class="btn-row">
                       <a class="btn btn-sm" href="{{ route('admin.backup.download', $b['nama']) }}">Unduh</a>
                       @if(str_starts_with($b['nama'], 'uploaded_') && str_ends_with(strtolower($b['nama']), '.sql'))
-                      <form method="POST" action="{{ route('admin.backup.restore', $b['nama']) }}" style="display:inline;margin:0;"
-                        onsubmit="return confirm('Pulihkan data dari &quot;{{ $b['nama'] }}&quot;?\n\nSEMUA data saat ini akan ditimpa dengan isi file ini. Cadangan pengaman dibuat otomatis sebelum pemulihan.\n\nSetelah selesai Anda akan diminta login ulang.');">
-                        @csrf
-                        <button class="btn btn-sm" type="submit">Pulihkan</button>
-                      </form>
+                      <button class="btn btn-sm" type="button" onclick="bukaPulihkanBackup(this)"
+                        data-action="{{ route('admin.backup.restore', $b['nama']) }}"
+                        data-nama="{{ $b['nama'] }}">Pulihkan</button>
                       @endif
                       <button class="table-action-btn danger" type="button" onclick="bukaHapusBackup(this)"
                         data-action="{{ route('admin.backup.destroy', $b['nama']) }}"
