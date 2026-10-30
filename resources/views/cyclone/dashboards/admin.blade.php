@@ -3409,7 +3409,7 @@
                       <a class="btn btn-sm" href="{{ route('admin.backup.download', $b['nama']) }}">Unduh</a>
                       @if(str_starts_with($b['nama'], 'uploaded_') && str_ends_with(strtolower($b['nama']), '.sql'))
                       <form method="POST" action="{{ route('admin.backup.restore', $b['nama']) }}" style="display:inline;margin:0;"
-                        onsubmit="return confirm('Pulihkan data dari &quot;{{ $b['nama'] }}&quot;?\n\nSEMUA data saat ini akan ditimpa dengan isi file ini. Safety backup dibuat otomatis sebelum restore.\n\nSetelah selesai Anda akan diminta login ulang.');">
+                        onsubmit="return confirm('Pulihkan data dari &quot;{{ $b['nama'] }}&quot;?\n\nSEMUA data saat ini akan ditimpa dengan isi file ini. Cadangan pengaman dibuat otomatis sebelum pemulihan.\n\nSetelah selesai Anda akan diminta login ulang.');">
                         @csrf
                         <button class="btn btn-sm" type="submit">Pulihkan</button>
                       </form>
