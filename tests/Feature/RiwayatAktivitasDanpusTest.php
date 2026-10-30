@@ -232,16 +232,21 @@ class RiwayatAktivitasDanpusTest extends TestCase
         $this->assertStringNotContainsString('ISI-RAHASIA-XYZ', $html);
     }
 
-    public function test_wadan_dan_satuan_biasa_tidak_mendapat_tampilan_baru(): void
+    public function test_wadan_punya_tab_riwayat_aktivitas_sedangkan_satuan_biasa_tidak(): void
     {
         $this->surat('SILIWANGI', 'DANPUS');
         $this->kendala('SILIWANGI');
 
+        // Sejak Riwayat Aktivitas WADAN disamakan dengan DANPUS (commit b5864a5f),
+        // dashboard WADAN memuat tab Laporan/Surat/Kendala per satuan.
+        // str_contains + pesan singkat dipakai supaya kalau gagal, PHPUnit tidak
+        // mencetak seluruh HTML halaman (sebelumnya bikin CI macet belasan menit).
         $wadan = $this->actingAs($this->u['WADAN'])->get('/dashboard')->assertOk()->getContent();
-        $this->assertStringNotContainsString('data-akt-tabs', $wadan);
+        $this->assertTrue(str_contains($wadan, 'data-akt-tabs'), 'Dashboard WADAN seharusnya memuat tab Riwayat Aktivitas (data-akt-tabs).');
 
+        // Satuan biasa tetap tidak mendapat tampilan ini.
         $kasansi = $this->actingAs($this->u['SILIWANGI'])->get('/dashboard')->assertOk()->getContent();
-        $this->assertStringNotContainsString('data-akt-tabs', $kasansi);
+        $this->assertFalse(str_contains($kasansi, 'data-akt-tabs'), 'Dashboard satuan biasa tidak boleh memuat tab Riwayat Aktivitas.');
     }
 
     public function test_modul_surat_dan_kendala_nonaktif_menyembunyikan_tab_terkait(): void
