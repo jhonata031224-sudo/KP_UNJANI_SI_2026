@@ -11,6 +11,18 @@ if [ "$DB_CONNECTION" = "sqlite" ]; then
   touch "$DB_PATH"
 fi
 
+# Dukungan SSL untuk MySQL terkelola (mis. Aiven). Platform seperti Render hanya
+# menyimpan variable berupa teks, bukan file, jadi isi sertifikat CA (PEM) boleh
+# ditempel langsung ke variable DB_SSL_CA_CONTENT. Di sini ditulis ke file, lalu
+# MYSQL_ATTR_SSL_CA (dibaca config/database.php) diarahkan ke file tersebut.
+# Kalau DB_SSL_CA_CONTENT kosong, perilaku lama (Railway) tidak berubah.
+if [ -n "${DB_SSL_CA_CONTENT:-}" ]; then
+  DB_SSL_CA_FILE="/tmp/db-ca.pem"
+  printf '%s\n' "$DB_SSL_CA_CONTENT" > "$DB_SSL_CA_FILE"
+  export MYSQL_ATTR_SSL_CA="$DB_SSL_CA_FILE"
+  echo "==> [0/5] sertifikat CA database ditulis ke $DB_SSL_CA_FILE"
+fi
+
 echo "==> [1/5] config:clear"
 php artisan config:clear
 echo "==> [1/5] OK"
